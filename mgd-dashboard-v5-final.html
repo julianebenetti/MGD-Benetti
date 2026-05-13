@@ -433,7 +433,9 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 <!-- MOBILE BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner" style="grid-template-columns:repeat(5,1fr)">
-    <button class="bn-item active" id="bn-geral" onclick="goTab('geral');setBN('geral')">
+    <button class="bn-item active" id="bn-geral" onclick="goTab('geral');
+  // Garante que todos os outros panels estão ocultos
+  document.querySelectorAll('.panel:not(.active)').forEach(p => { p.style.display = 'none'; });setBN('geral')">
       <span class="bn-icon">📊</span><span class="bn-label">Geral</span>
     </button>
     <button class="bn-item" id="bn-resumo" onclick="goTab('resumo');setBN('resumo')">
@@ -1535,9 +1537,19 @@ function mergeDaily(dailyArrays) {
 // NAV
 // ══════════════════════════════════════════════════
 function goTab(tab) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  // Esconde todos os panels
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  var _panel = $('panel-' + tab); if(!_panel) return; _panel.classList.add('active');
+  
+  // Mostra o panel alvo
+  var _panel = document.getElementById('panel-' + tab);
+  if (!_panel) { console.warn('[goTab] panel não encontrado:', tab); return; }
+  _panel.classList.add('active');
+  _panel.style.display = 'block';
+  
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.getAttribute('onclick')?.includes(`'${tab}'`)) n.classList.add('active');
   });
