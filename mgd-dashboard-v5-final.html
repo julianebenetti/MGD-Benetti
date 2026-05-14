@@ -2,11 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src *; img-src * data: blob:; style-src * 'unsafe-inline';">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MGD — Central de Métricas</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #080810;
@@ -25,8 +23,8 @@
   --text: #eeeef8;
   --text2: #9090c0;
   --text3: #5a5a88;
-  --mono: 'Space Mono', 'Courier New', Consolas, monospace;
-  --sans: 'Syne', 'Segoe UI', Arial, sans-serif;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Syne', sans-serif;
   --c0: #4a9eff;
   --c1: #a066ff;
   --c2: #ff8c42;
@@ -434,9 +432,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 <!-- MOBILE BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner" style="grid-template-columns:repeat(5,1fr)">
-    <button class="bn-item active" id="bn-geral" onclick="goTab('geral');
-  // Garante que todos os outros panels estão ocultos
-  document.querySelectorAll('.panel:not(.active)').forEach(p => { p.style.display = 'none'; });setBN('geral')">
+    <button class="bn-item active" id="bn-geral" onclick="goTab('geral');setBN('geral')">
       <span class="bn-icon">📊</span><span class="bn-label">Geral</span>
     </button>
     <button class="bn-item" id="bn-resumo" onclick="goTab('resumo');setBN('resumo')">
@@ -638,7 +634,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <!-- ══ D0 — ANÁLISE DE CLIQUES ══ -->
     
 <div class="panel" id="panel-d0">
-  <div id="tbl-d0" style="display:none"></div>
       <div class="sec">Análise D0 — Cliques & CPC (Dia da Subida)</div>
       <div class="info-box" style="margin-bottom:20px">
         <b style="color:var(--accent)">🎯 Metodologia de Testes — Orçamento R$ 6,44/dia</b><br><br>
@@ -653,7 +648,35 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         <b style="color:var(--yellow)">⚠️</b> CPCs da manhã são sempre mais caros. Avalie após as 15h.
       </div>
       <div class="kpi-grid" id="kpis-d0"></div>
-      
+      <div class="sec">CPC & Cliques por Campanha</div>
+      <div class="table-wrap">
+        <div class="table-top" style="flex-wrap:wrap;gap:10px">
+          <div class="table-title">Diagnóstico D0 por Criativo</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <!-- Filtro CPC -->
+            <div class="filter-row">
+              <button class="filter-chip active" onclick="filterD0(this,'cpc','all')">Todos CPC</button>
+              <button class="filter-chip" onclick="filterD0(this,'cpc','ótimo')">✓ Ótimo</button>
+              <button class="filter-chip" onclick="filterD0(this,'cpc','aceitável')">~ Aceitável</button>
+              <button class="filter-chip" onclick="filterD0(this,'cpc','caro')">✗ Caro</button>
+            </div>
+            <!-- Filtro Status -->
+            <div class="filter-row">
+              <button class="filter-chip active" onclick="filterD0(this,'status','all')">Ativos+Pausados</button>
+              <button class="filter-chip active" onclick="filterD0(this,'status','ativo')">● Ativos</button>
+              <button class="filter-chip" onclick="filterD0(this,'status','pausado')">■ Pausados</button>
+            </div>
+            <!-- Filtro Mês -->
+            <div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 10px">
+              <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">Mês:</span>
+              <select id="d0MonthFilter" onchange="applyD0Filters()"
+                style="background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:9px;outline:none;cursor:pointer">
+                <option value="all">Todos</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="tbl-d0"></div>
 
         <!-- Comparativo Cliques Shopee vs Meta -->
         <div id="d0-clicks-compare" style="display:none;margin-top:24px">
@@ -669,8 +692,8 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
             <div style="display:flex;flex-direction:column;gap:3px">
               <span style="font-family:var(--mono);font-size:8px;color:var(--text3)">STATUS</span>
               <div class="filter-row">
-                <button class="filter-chip active" onclick="setClicksFilter(this,'status','all')">Todos</button>
-                <button class="filter-chip" onclick="setClicksFilter(this,'status','ativo')">● Ativos</button>
+                <button class="filter-chip" onclick="setClicksFilter(this,'status','all')">Todos</button>
+                <button class="filter-chip active" onclick="setClicksFilter(this,'status','ativo')">● Ativos</button>
                 <button class="filter-chip" onclick="setClicksFilter(this,'status','pausado')">■ Pausados</button>
               </div>
             </div>
@@ -705,7 +728,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
           <div id="clicks-diagnostics" style="display:none;margin-top:20px"></div>
         </div>
       </div>
-    
+    </div>
 
     <!-- ══ RESUMO DIÁRIO ══ -->
     <div class="panel" id="panel-resumo">
@@ -734,7 +757,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
     </div>
 
-    
+    </div>
 
     <!-- ══ CALCULADORA ══ -->
     <div class="panel" id="panel-calc">
@@ -794,8 +817,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
 
       <!-- ══ PLANEJAMENTO MENSAL ══ -->
-    <div class="panel" </div>
-id="panel-plan">
+    <div class="panel" id="panel-plan">
       <div style="font-size:20px;font-weight:800;margin-bottom:4px">Planejamento Mensal</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px">Distribuição estratégica do orçamento com base nas datas importantes do mês</div>
 
@@ -962,7 +984,7 @@ id="panel-plan">
         <div class="table-top"><div class="table-title">Distribuição Semanal</div></div>
         <div id="tbl-plan"></div>
       </div>
-    
+    </div>
 
     <!-- ══ VENDAS ORGÂNICAS ══ -->
     <div class="panel" id="panel-organico">
@@ -1396,6 +1418,25 @@ id="panel-plan">
         <div id="clicksCSVStatus" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px;display:none;padding:8px;background:var(--s2);border-radius:6px"></div>
       </div>
       <div class="api-card" style="margin-bottom:20px;border:1px solid var(--accent);background:rgba(232,184,75,.04)">
+  <!-- TOKEN BM01 -->
+  <div class="sec" style="margin-top:8px">🔑 Token — BM01 Benetti</div>
+  <div class="api-card" style="margin-bottom:20px;border:1px solid #8a5cf6">
+    <div class="api-card-head" style="color:#8a5cf6">🏢 BM01 - Benetti — Access Token</div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin:8px 0 12px">
+      Token separado para <b>CA01 - Benetti (act_3135770236625519)</b> — pertence ao BM01 - Benetti.<br>
+      Gere em: Meta Business Suite → BM01 → Configurações → Usuários do Sistema → Gerar Token
+    </div>
+    <div class="field">
+      <label>Token de Acesso — BM01 Benetti</label>
+      <textarea id="fbToken2" placeholder="EAAxxxxxxxxxxxxxxxxx... (token do BM01 - Benetti)"
+        style="width:100%;min-height:80px;background:var(--bg);border:1px solid #8a5cf6;color:var(--text);font-family:var(--mono);font-size:10px;padding:10px;border-radius:6px;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:6px">
+        ⚠️ Deve ter permissão <b>ads_read</b> · Começa com EAA
+      </div>
+    </div>
+  </div>
+
+
         <div class="api-card-head">📥 &nbsp;Importar CSV da Shopee — importa uma vez, Sync reusa automaticamente</div>
         <div class="info-box" style="margin-top:0;margin-bottom:16px">
           <b style="color:var(--accent)">Como exportar o CSV da Shopee:</b><br>
@@ -1427,7 +1468,7 @@ id="panel-plan">
         <b style="color:var(--green)">💾 Suas credenciais são salvas automaticamente</b> no navegador (localStorage) para não precisar digitar toda vez.<br>
         <b style="color:var(--yellow)">⚠️</b> Não use este dashboard em computadores compartilhados sem limpar depois.
       </div>
-    
+    </div>
 
   </div><!-- /content -->
 </div><!-- /main -->
@@ -1538,21 +1579,9 @@ function mergeDaily(dailyArrays) {
 // NAV
 // ══════════════════════════════════════════════════
 function goTab(tab) {
-  // Esconde todos os panels
-  document.querySelectorAll('.panel').forEach(p => {
-    p.classList.remove('active');
-    p.style.display = 'none';
-  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  
-  // Mostra o panel alvo
-  var _panel = document.getElementById('panel-' + tab);
-  if (!_panel) { console.warn('[goTab] panel não encontrado:', tab); return; }
-  _panel.classList.add('active');
-  _panel.style.display = 'block';
-  _panel.style.removeProperty('display'); // remove inline, deixa CSS agir
-  _panel.style.display = 'block'; // reaplica
-  
+  $('panel-' + tab).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.getAttribute('onclick')?.includes(`'${tab}'`)) n.classList.add('active');
   });
@@ -3625,12 +3654,15 @@ async function runFullSync() {
     const accounts = [];
 
     for (const cfg of ACCOUNTS_CONFIG) {
+      const accountToken = cfg.rawId === '3135770236625519'
+        ? (($('fbToken2')?.value||'').trim() || localStorage.getItem('mgd_fbToken2') || token)
+        : token;
       loading(true, `BUSCANDO ${cfg.fullName.toUpperCase()}...`);
       // Fix: read prefix/name from inputs at sync time
       const prefix = $(`prefix${cfg.id}`)?.value?.trim() || cfg.id + '_';
       const name   = $(`name${cfg.id}`)?.value?.trim()   || cfg.fullName;
       try {
-        const data = await fetchFB(token, cfg.accountId, days);
+        const data = await fetchFB(accountToken, cfg.accountId, days);
         accounts.push({ ...cfg, idx: parseInt(cfg.id), prefix, name, campaigns: data.campaigns, daily: data.daily });
       } catch (e) {
         console.warn(`Erro conta ${cfg.fullName}:`, e.message);
@@ -3748,7 +3780,7 @@ function renderD0(accounts) {
   );
 
   if (!allCamps.length) {
-    var _kpisD0 = $('kpis-d0'); if(_kpisD0) _kpisD0.innerHTML = '';
+    $('kpis-d0').innerHTML = '';
     $('tbl-d0').innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-t">Sem campanhas</div><div class="empty-s">Sincronize o Facebook para ver a análise D0</div></div>';
     return;
   }
@@ -3760,7 +3792,7 @@ function renderD0(accounts) {
   const cpcOk       = allCamps.filter(c => (c.cpc || 0) <= 0.20).length;
   const cpcCaro     = allCamps.filter(c => (c.cpc || 0) >  0.20).length;
 
-  var _kpisD02 = $('kpis-d0'); if(_kpisD02) _kpisD02.innerHTML = `
+  $('kpis-d0').innerHTML = `
     <div class="kpi ${avgCpc < 0.15 ? 'gk' : avgCpc <= 0.20 ? 'yk' : 'rk'}">
       <div class="kpi-lbl">CPC Médio Geral</div>
       <div class="kpi-val" style="font-size:20px">R$ ${fmt(avgCpc)}</div>
@@ -3850,7 +3882,7 @@ function renderD0(accounts) {
       </tr>`;
   }).join('');
 
-  var _tblD0 = $('tbl-d0'); if(_tblD0) _tblD0.innerHTML = `
+  $('tbl-d0').innerHTML = `
     <table>
       <thead><tr>
         <th>Campanha</th>
@@ -3872,7 +3904,7 @@ function renderD0(accounts) {
 
   // Atualiza comparativo de cliques se disponível
   renderClicksCompare();
-  if($('tbl-d0')) makeSortableById('tbl-d0');
+  makeSortableById('tbl-d0');
 }
 // ══════════════════════════════════════════════════
 // ══════════════════════════════════════════════════
@@ -4603,11 +4635,12 @@ function initChat() {
 // VENDAS ORGÂNICAS
 // ══════════════════════════════════════════════════
 function isOrganico(order) {
-  // Orgânico = sub_id sem padrão de data (ex: 15Abr26, 04Fev26, etc.)
+  // Orgânico = sub_id vazio OU sem padrão de data de campanha (ex: 15Abr26, 04Fev26)
   const subId = (order.subId || '').toLowerCase();
   // Padrão de data: 2 dígitos + 3 letras mês + 2 dígitos ano (ex: 15abr26, 04fev26)
   const temData = /\d{2}(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\d{2}/.test(subId);
-  return !temData && subId.length > 0;
+  // Orgânico: sem sub_id OU sub_id que não seja campanha paga
+  return !temData;
 }
 
 
@@ -4770,7 +4803,7 @@ function renderOrganico() {
   const totComm  = all.reduce((s,o)=>s+o.commission,0);
   const totValor = all.reduce((s,o)=>s+o.amount,0);
   const canaisMap = {};
-  all.forEach(o=>{ const c=o.canal||'Outros'; canaisMap[c]=(canaisMap[c]||0)+1; });
+  all.forEach(o=>{ const c=o.canal||'Sem canal'; canaisMap[c]=(canaisMap[c]||0)+1; });
   const canaisStr = Object.entries(canaisMap).map(([c,n])=>`${c}:${n}`).join(' · ');
   safeSet('chips-organico', `
     <div class="chip">Total: <b>${all.length} pedidos</b></div>
@@ -5079,7 +5112,7 @@ function importShopeeClicksCSV(input) {
       const headers = lines[0].split(sep).map(h=>h.trim().replace(/^"|"$/g,''));
       const hIdx = {}; headers.forEach((h,i) => { hIdx[h]=i; });
 
-      const COL_DATE  = 'Período dos Cliques';
+      const COL_DATE  = hIdx['Tempo dos Cliques'] !== undefined ? 'Tempo dos Cliques' : 'Período dos Cliques';
       const COL_SUBID = 'Sub_id';
 
       const clicks = [];
@@ -5098,6 +5131,8 @@ function importShopeeClicksCSV(input) {
       }
 
       STATE.shopeeClicks = clicks;
+      // Salva cliques no localStorage
+      try { localStorage.setItem('mgd_shopee_clicks_data', JSON.stringify({ clicks, savedAt: new Date().toISOString() })); } catch(e) {}
       const uniqueCamps = new Set(clicks.map(c=>c.subId)).size;
       if (statusEl) {
         statusEl.style.color='var(--green)';
@@ -5112,7 +5147,7 @@ function importShopeeClicksCSV(input) {
   reader.readAsText(file);
 }
 
-let clicksFilters = { status: 'all', diag: 'all' };
+let clicksFilters = { status: 'ativo', diag: 'all' };
 let clicksAllRows = []; // guarda todos os rows para re-renderizar com filtros
 
 function toggleClicksDetail(id) {
@@ -5226,7 +5261,14 @@ function renderClicksCompare() {
 
       // Monta linhas diárias
       const metaDates   = Object.keys(metaByNameDate[campNorm]||{});
-      const shopeeDates = Object.keys(shopeeBySubIdDate[campNorm]||{});
+      let shopeeKeyMatch = campNorm;
+      if (!shopeeBySubIdDate[campNorm]) {
+        const partial = Object.keys(shopeeBySubIdDate).find(k => 
+          k.startsWith(campNorm.substring(0,10)) || campNorm.startsWith(k.substring(0,10))
+        );
+        if (partial) shopeeKeyMatch = partial;
+      }
+      const shopeeDates = Object.keys(shopeeBySubIdDate[shopeeKeyMatch]||{});
       const allDates    = [...new Set([...metaDates,...shopeeDates])].sort().reverse();
 
       const dailyHtml = allDates.map(date => {
@@ -5250,18 +5292,37 @@ function renderClicksCompare() {
           <td style="font-family:var(--mono);font-size:9px">${mClk>0?mClk.toLocaleString('pt-BR'):'—'}</td>
           <td style="font-family:var(--mono);font-size:9px">${sClk>0?sClk.toLocaleString('pt-BR'):'—'}</td>
           <td style="font-family:var(--mono);font-size:9px;font-weight:700;color:${dCor}">${dPct>0?fmt(dPct,1)+'%':'—'}</td>
-          <td style="font-family:var(--mono);font-size:9px;color:var(--red)">${dDisc>0?'−'+dDisc.toLocaleString('pt-BR'):'—'}</td>
-          <td></td>
+          <td style="font-family:var(--mono);font-size:9px;font-weight:700;color:${mClk===0&&sClk===0?'var(--text3)':sClk>mClk?'var(--green)':dDisc>0?'var(--red)':'var(--text3)'}">
+            ${mClk===0&&sClk===0?'—':sClk>mClk?'+'+( sClk-mClk).toLocaleString('pt-BR'):dDisc>0?'-'+dDisc.toLocaleString('pt-BR'):'='}
+          </td>
+          <td style="font-family:var(--mono);font-size:8px;padding:4px 8px;max-width:160px">
+            ${(()=>{
+              const _cpc = (camp.dailyData||[]).find(x=>x.date===date)?.cpc||0;
+              const _spend = (camp.dailyData||[]).find(x=>x.date===date)?.spend||0;
+              if (mClk===0 && sClk===0) return '';
+              // Insight baseado no dia da campanha e métricas
+              if (dDReal===0) return '<span style="color:var(--yellow)">⚡ D0 — apenas CPC importa</span>';
+              if (_cpc>0.50) return '<span style="color:var(--red)">🚫 CPC exorbitante — pausar</span>';
+              if (_cpc>0.20) return '<span style="color:var(--yellow)">⚠️ CPC alto — monitorar</span>';
+              if (sClk>mClk*1.5) return '<span style="color:var(--green)">✅ Shopee engajando bem</span>';
+              if (sClk===0 && mClk>0) return '<span style="color:var(--red)">🔴 0 cliques Shopee — checar link</span>';
+              if (dPct<30) return '<span style="color:var(--red)">🔴 Discrepância crítica</span>';
+              if (dPct<50) return '<span style="color:var(--yellow)">⚠️ Discrepância alta</span>';
+              if (_cpc>0&&_cpc<=0.15) return '<span style="color:var(--green)">✅ CPC ótimo</span>';
+              if (_cpc>0.15&&_cpc<=0.20) return '<span style="color:var(--yellow)">~ CPC aceitável</span>';
+              return '';
+            })()}
+          </td>
         </tr>`;
       }).join('');
 
       const rowId = `clicks_detail_${campNorm.replace(/[^a-z0-9]/g,'_')}`;
 
       const html = `
-        <tr style="cursor:pointer" style="cursor:default">
+        <tr style="cursor:pointer" onclick="toggleClicksDetail('${rowId}')">
           <td style="font-family:var(--mono);font-size:10px">
             ${camp.name}
-            ${allDates.length>0?`<span style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-left:6px">${allDates.length}d</span>`:''}
+            ${allDates.length>0?`<span style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-left:6px">▼ ${allDates.length}d</span>`:''}
           </td>
           <td><span class="acc-badge">${acc.name}</span></td>
           <td style="font-family:var(--mono);font-size:9px;white-space:nowrap">
@@ -5274,10 +5335,12 @@ function renderClicksCompare() {
           <td style="font-family:var(--mono);font-weight:700">${metaClicks.toLocaleString('pt-BR')}</td>
           <td style="font-family:var(--mono)">${shopeeClk.toLocaleString('pt-BR')}</td>
           <td style="font-family:var(--mono);font-weight:700;color:${cor}">${pct>0?fmt(pct,1)+'%':'—'}</td>
-          <td style="font-family:var(--mono);color:var(--red)">${discr>0?'−'+discr.toLocaleString('pt-BR'):'—'}</td>
+          <td style="font-family:var(--mono);font-weight:700;color:${metaClicks===0&&shopeeClk===0?'var(--text3)':shopeeClk>=metaClicks?'var(--green)':'var(--red)'}">
+            ${metaClicks===0&&shopeeClk===0?'—':shopeeClk>metaClicks?'+'+( shopeeClk-metaClicks).toLocaleString('pt-BR'):metaClicks===shopeeClk?'=':`-${(metaClicks-shopeeClk).toLocaleString('pt-BR')}`}
+          </td>
           <td style="font-size:10px">${alerta}</td>
         </tr>
-        <tr id="${rowId}" style="display:table-row">
+        <tr id="${rowId}" style="display:none">
           <td colspan="9" style="padding:0">
             <table style="width:100%">
               <thead><tr style="background:var(--s3)">
@@ -6095,6 +6158,7 @@ function processShopeeCSV(text, days) {
       const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
       const m1 = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
       let orderDate = m2 ? `${m2[3]}-${m2[2]}-${m2[1]}` : m1 ? `${m1[1]}-${m1[2]}-${m1[3]}` : '';
+      if (orders.length < 3) console.log('[CSV ORDER]', { canal: hIdx['Canal'] !== undefined ? (cols[hIdx['Canal']]||'vazio') : 'coluna não existe', subId: cols[hIdx['Sub_id1']]||'' });
       orders.push({
         orderId:    cols[hIdx[COL_ORDER]] || `row_${i}`,
         paymentId:  hIdx['ID do pagamento'] !== undefined ? (cols[hIdx['ID do pagamento']]||'').trim() : '',
@@ -6104,7 +6168,10 @@ function processShopeeCSV(text, days) {
         commission: parseNum(cols[hIdx[commCol]]),
         status, date: orderDate,
         direta:  hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]]||'').toLowerCase().includes('mesma loja') : false,
-        canal:   hIdx['Canal'] !== undefined ? (cols[hIdx['Canal']]||'').trim() : '',
+        canal: (() => {
+          const canalCol = ['Canal','canal','Channel','channel','Tipo de Canal','Source'].find(c => hIdx[c] !== undefined);
+          return canalCol ? (cols[hIdx[canalCol]]||'').trim() : '';
+        })(),
         item:    hIdx['Nome do Item'] !== undefined ? (cols[hIdx['Nome do Item']]||'').trim() : '',
         itemId:  hIdx['ID do Item']   !== undefined ? (cols[hIdx['ID do Item']]  ||'').trim() : '',
         itemStatus: hIdx['Status do item do afiliado'] !== undefined ? (cols[hIdx['Status do item do afiliado']]||'').trim() : '',
@@ -6407,6 +6474,8 @@ function loadCreds() {
     const per  = localStorage.getItem('mgd_period');
     const be   = localStorage.getItem('mgd_breakeven');
     if (fbT && $('fbToken'))       $('fbToken').value       = fbT;
+    const fbT2 = localStorage.getItem('mgd_fbToken2');
+    if (fbT2 && $('fbToken2')) $('fbToken2').value = fbT2;
     if (sId  && $('shopAppId'))    $('shopAppId').value     = sId;
     if (sSec && $('shopSecret'))   $('shopSecret').value    = sSec;
     // periodDays sempre 90 — não restaura valor antigo do localStorage
@@ -7197,7 +7266,45 @@ function toggleAuditDetail(row) {
 
 // Carrega auditoria ao abrir a aba Performance do Mês
 
-window.addEventListener('DOMContentLoaded', () => { loadCreds(); loadTheme(); loadSidebarState(); loadHistoricalData(); });
+window.addEventListener('DOMContentLoaded', () => {
+  loadCreds(); loadTheme(); loadSidebarState(); loadHistoricalData();
+  // Restaura CSV da Shopee
+  try {
+    const csvData = localStorage.getItem('mgd_shopee_csv_data');
+    if (csvData) {
+      const { orders, summary, savedAt } = JSON.parse(csvData);
+      // Verifica se os dados têm canal preenchido (versão nova)
+      const temCanal = orders.some(o => o.canal && o.canal.length > 0);
+      if (!temCanal) {
+        // Dados antigos sem canal — limpa localStorage para forçar reimportação
+        localStorage.removeItem('mgd_shopee_csv_data');
+        console.log('[MIGRAÇÃO] CSV sem canal — reimporte necessário');
+        const el2 = $('csvStatus');
+        if (el2) { el2.style.display='block'; el2.style.color='var(--yellow)'; el2.textContent='⚠️ Reimporte o CSV da Shopee para ver canais completos'; }
+        return;
+      }
+      STATE.shopee = { orders, summary };
+      const d = new Date(savedAt).toLocaleDateString('pt-BR');
+      const el = $('csvStatus');
+      if (el) { el.style.display='block'; el.style.color='var(--green)'; el.textContent=`✓ CSV restaurado (salvo em ${d}) — ${orders.length} pedidos`; }
+      // Debug: canais únicos nos dados restaurados
+      const canaisUniq = [...new Set(orders.map(o=>o.canal||'(vazio)'))];
+      console.log('[CANAL DEBUG] Canais únicos no CSV:', canaisUniq);
+      console.log('[CANAL DEBUG] Exemplo de ordem:', orders[0]);
+    }
+  } catch(e) {}
+  // Restaura cliques da Shopee
+  try {
+    const clkData = localStorage.getItem('mgd_shopee_clicks_data');
+    if (clkData) {
+      const { clicks, savedAt } = JSON.parse(clkData);
+      STATE.shopeeClicks = clicks;
+      const d = new Date(savedAt).toLocaleDateString('pt-BR');
+      const el = $('clicksCSVStatus');
+      if (el) { el.style.display='block'; el.style.color='var(--green)'; el.textContent=`✓ Cliques restaurados (salvo em ${d}) — ${clicks.length} registros`; }
+    }
+  } catch(e) {}
+});
 
 // Re-renderiza cross ao girar o celular
 function getFilteredCross() {
