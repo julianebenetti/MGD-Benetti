@@ -95,18 +95,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .status-pill.loading{border-color:rgba(232,184,75,.3);color:var(--yellow);background:rgba(232,184,75,.06)}
 .blink{animation:blink 1.2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.content{flex:1;padding:26px}
+.content{flex:1;padding:26px 26px 26px 32px;min-width:0}
 
 /* PANELS */
 .panel{display:none}
-.panel.active{display:block}
+.panel.active{display:block;width:100%;box-sizing:border-box}
 
 /* SEC */
 .sec{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
 .sec::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* CHIPS */
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;min-height:0}
 .chip{font-family:var(--mono);font-size:9px;color:var(--text3);background:var(--s2);border:1px solid var(--border);padding:4px 11px;border-radius:4px}
 .chip b{color:var(--text)}
 
@@ -172,7 +172,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .day-spend{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px}
 
 /* TABLE */
-.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px}
+.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px;overflow-x:auto}
 .table-top{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .table-title{font-size:13px;font-weight:700}
 .filter-row{display:flex;gap:6px;flex-wrap:wrap}
@@ -306,6 +306,10 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
   .topbar{padding:12px 16px}
   .topbar-title{font-size:13px}
 }
+.chips:empty{margin-bottom:0;display:none;height:0;overflow:hidden}
+
+.panel.active>.sec:first-child,.panel.active>div:first-child>.sec{margin-top:0!important}
+
 /* KPI CUSTOM */
 .kpi-custom{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:18px;position:relative;overflow:hidden}
 .kpi-custom::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
@@ -460,37 +464,40 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="drawer-handle"></div>
     <div class="drawer-title">Menu</div>
 
-    <!-- Visão Geral -->
+    <!-- VISÃO -->
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">VISÃO</div>
     <div class="drawer-item" onclick="goTab('geral');setBN('geral');closeDrawer()">📊&nbsp; Geral Consolidado</div>
     <div class="drawer-item" onclick="goTab('resumo');setBN('resumo');closeDrawer()">📅&nbsp; Resumo Diário</div>
     <div class="drawer-item" onclick="goTab('cruzamento');setBN('cruzamento');closeDrawer()">🔀&nbsp; Análise de Campanhas</div>
     <div class="drawer-item" onclick="goTab('organico');setBN('cruzamento');closeDrawer()">🌿&nbsp; Vendas Orgânicas</div>
     <div class="drawer-item" onclick="goTab('calc');setBN('calc');closeDrawer()">📈&nbsp; Performance do Mês</div>
-    <div class="drawer-item" onclick="goTab('plan');setBN('plan');closeDrawer()">📆&nbsp; Planejamento Mensal</div>
+    <div class="drawer-item" onclick="goTab('plan');setBN('plan');closeDrawer()">📆&nbsp; Planejamento</div>
+
+    <!-- FERRAMENTAS -->
+    <div style="height:1px;background:var(--border);margin:8px 0"></div>
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">FERRAMENTAS</div>
+    <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise Do — Cliques</div>
     <div class="drawer-item" onclick="goTab('alertas');setBN('alertas');closeDrawer()">🚨&nbsp; Alertas D0-D7</div>
-    <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise D0 — Cliques</div>
     <div class="drawer-item" onclick="goTab('chat');setBN('chat');closeDrawer()">🤖&nbsp; Consultor MGD</div>
     <div class="drawer-item" onclick="goTab('glossario');setBN('chat');closeDrawer()">📖&nbsp; Glossário MGD</div>
-    <div class="drawer-item" onclick="goTab('cruzamento');setBN('cruzamento');closeDrawer()">🔀&nbsp; FB × Shopee (SUBID)</div>
-    <div class="drawer-item" onclick="goTab('alertas');setBN('alertas');closeDrawer()">🚨&nbsp; Alertas D0-D7</div>
-    <div class="drawer-item" onclick="goTab('chat');setBN('chat');closeDrawer()">🤖&nbsp; Consultor MGD</div>
-    <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise D0 — Cliques</div>
+    <div class="drawer-item" onclick="goTab('banco');setBN('banco');closeDrawer()">🗂️&nbsp; Banco de Produtos</div>
 
-    <!-- Contas -->
+    <!-- CONTAS -->
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">CONTAS</div>
     <div class="drawer-item" onclick="goTab('c0');setBN('contas');closeDrawer()">
-      <span class="drawer-dot" style="background:var(--c0)"></span>CA-Vem Economizar Agora<span class="drawer-id">...7541</span>
+      <span class="drawer-dot" style="background:var(--c0)"></span>CA-Vem Economizar<span class="drawer-id">...7541</span>
     </div>
     <div class="drawer-item" onclick="goTab('c1');setBN('contas');closeDrawer()">
       <span class="drawer-dot" style="background:var(--c1)"></span>CA-Dicas Benetti<span class="drawer-id">...8279</span>
     </div>
+    <div class="drawer-item" onclick="goTab('c2');setBN('contas');closeDrawer()">
+      <span class="drawer-dot" style="background:#8a5cf6"></span>CA01-Benetti<span class="drawer-id">...5519</span>
+    </div>
 
-    <!-- Config -->
+    <!-- CONFIG -->
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
-    <div class="drawer-item" onclick="goTab('banco');setBN('banco');closeDrawer()">🗂️&nbsp; Banco de Produtos</div>
-<div class="drawer-item" onclick="goTab('config');setBN('');closeDrawer()">⚙️&nbsp; Configurações & APIs</div>
+    <div class="drawer-item" onclick="goTab('config');setBN('');closeDrawer()">⚙️&nbsp; APIs & Credenciais</div>
     <div class="drawer-item" onclick="loadDemo();closeDrawer()">🎯&nbsp; Carregar DEMO</div>
   </div>
 </div>
@@ -992,6 +999,15 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px">Vendas que não vieram de anúncios — sub_id sem data no nome</div>
       <div class="chips" id="chips-organico"></div>
 
+      <!-- TABELA POR DIA -->
+      <div class="sec" style="margin-top:28px">📅 Por Dia</div>
+      <div class="table-wrap">
+        <div class="table-top">
+          <div class="table-title">Orgânico por Dia</div>
+          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)" id="organico-update"></span>
+        </div>
+        <div id="tbl-organico"></div>
+
       <!-- RANKING DE PRODUTOS -->
       <div class="sec" style="margin-top:8px">🏆 Ranking de Produtos Orgânicos</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px;background:var(--s2);border:1px solid var(--border);border-radius:8px;margin-bottom:14px">
@@ -1044,18 +1060,17 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
       <div id="tbl-ranking"></div>
 
-      <!-- TABELA POR DIA -->
-      <div class="sec" style="margin-top:28px">📅 Por Dia</div>
-      <div class="table-wrap">
-        <div class="table-top">
-          <div class="table-title">Orgânico por Dia</div>
-          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)" id="organico-update"></span>
-        </div>
-        <div id="tbl-organico"></div>
       </div>
     </div>
 
-    <!-- ══ GLOSSÁRIO MGD ══ -->
+   
+
+
+    </div>
+
+    
+
+<!-- ══ GLOSSÁRIO MGD ══ -->
     <div class="panel" id="panel-glossario">
       <div style="font-size:20px;font-weight:800;margin-bottom:4px">📖 Glossário MGD</div>
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:24px">Métricas, conceitos e regras da metodologia D0-D7</div>
@@ -1579,9 +1594,15 @@ function mergeDaily(dailyArrays) {
 // NAV
 // ══════════════════════════════════════════════════
 function goTab(tab) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  $('panel-' + tab).classList.add('active');
+  const _p = $('panel-' + tab);
+  if (!_p) return;
+  _p.classList.add('active');
+  _p.style.display = 'block';
+  // Reseta scroll ao trocar de aba
+  window.scrollTo(0, 0);
+  document.querySelector('.content')?.scrollTo(0, 0);
   document.querySelectorAll('.nav-item').forEach(n => {
     if (n.getAttribute('onclick')?.includes(`'${tab}'`)) n.classList.add('active');
   });
@@ -4650,10 +4671,10 @@ function isOrganico(order) {
 function isOrganico(order) {
   const subId = (order.subId || '').toLowerCase();
   const temData = /\d{2}(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\d{2}/.test(subId);
-  return !temData && subId.length > 0;
+  return !temData; // inclui sub_id vazio
 }
 
-let organicoFiltros = { canal: 'all', subid: '', mes: 'all' };
+let organicoFiltros = { canal: 'all', subid: '', mes: '2026-05' };
 
 let rankFilters = { sort: 'comm', topN: '25' };
 
