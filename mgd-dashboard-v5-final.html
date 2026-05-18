@@ -111,7 +111,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .chip b{color:var(--text)}
 
 /* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;min-height:0}
 .kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
 .kpi{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden}
 .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border2)}
@@ -307,6 +307,9 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
   .topbar-title{font-size:13px}
 }
 .chips:empty{margin-bottom:0;display:none;height:0;overflow:hidden}
+.kpi-grid:empty{display:none;height:0;margin:0;padding:0}
+.kpi-grid-3:empty{display:none;height:0;margin:0;padding:0}
+.kpi-custom:empty{display:none}
 
 .panel.active>.sec:first-child,.panel.active>div:first-child>.sec{margin-top:0!important}
 
@@ -686,7 +689,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         <div id="tbl-d0"></div>
 
         <!-- Comparativo Cliques Shopee vs Meta -->
-        <div id="d0-clicks-compare" style="display:none;margin-top:24px">
+        <div id="d0-clicks-compare" style="display:block;margin-top:24px">
           <div class="sec">📊 Comparativo de Cliques — Shopee vs Meta</div>
           <div class="info-box" style="margin-bottom:14px">
             <b style="color:var(--accent)">Por que comparar?</b> Na fase de testes (D0-D4), discrepâncias grandes entre cliques Meta e Shopee podem indicar problemas no link de afiliado, página de destino ou rastreamento.<br>
@@ -5226,8 +5229,15 @@ function renderClicksCompare() {
   const wrap = $('d0-clicks-compare');
   if (!el || !wrap) return;
   const clicks = STATE.shopeeClicks || [];
-  if (!clicks.length) { wrap.style.display='none'; return; }
   wrap.style.display='block';
+  if (!clicks.length) {
+    el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text3)">
+      <div style="font-size:28px;margin-bottom:8px">🖱️</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:6px">CSV de Cliques não importado</div>
+      <div style="font-family:var(--mono);font-size:9px">Vá em APIs & Credenciais → importe o Relatório de Cliques da Shopee</div>
+    </div>`;
+    return;
+  }
 
   // Agrupa cliques Shopee por subId E por data
   const shopeeBySubId     = {};   // total por campanha
