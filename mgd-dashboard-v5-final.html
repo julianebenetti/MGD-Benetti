@@ -412,7 +412,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="nav-item" onclick="goTab('cruzamento')"><span class="ni">🔀</span> Análise de Campanhas</div>
     <div class="nav-item" onclick="goTab('organico')"><span class="ni">🌿</span> Vendas Orgânicas</div>
     <div class="nav-item" onclick="goTab('calc')"><span class="ni">📈</span> Performance do Mês</div>
-    <div class="nav-item" onclick="goTab('plan')"><span class="ni">📆</span> Planejamento</div>
+    <div class="nav-item" onclick="goTab('plan')"><span class="ni">📋</span> Gestão de Campanhas</div>
     <div class="nav-section">Ferramentas</div>
     <div class="nav-item" onclick="goTab('alertas')"><span class="ni">🚨</span> Alertas D0-D7</div>
     <div class="nav-item" onclick="goTab('d0')"><span class="ni">🔍</span> Análise D0 — Cliques</div>
@@ -467,7 +467,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="drawer-item" onclick="goTab('cruzamento');setBN('cruzamento');closeDrawer()">🔀&nbsp; Análise de Campanhas</div>
     <div class="drawer-item" onclick="goTab('organico');setBN('cruzamento');closeDrawer()">🌿&nbsp; Vendas Orgânicas</div>
     <div class="drawer-item" onclick="goTab('calc');setBN('calc');closeDrawer()">📈&nbsp; Performance do Mês</div>
-    <div class="drawer-item" onclick="goTab('plan');setBN('plan');closeDrawer()">📆&nbsp; Planejamento Mensal</div>
+    <div class="drawer-item" onclick="goTab('plan');setBN('plan');closeDrawer()">📋&nbsp; Gestão de Campanhas</div>
 
     <!-- Ferramentas -->
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -735,8 +735,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
     </div>
 
-    </div>
-
     <!-- ══ CALCULADORA ══ -->
     <div class="panel" id="panel-calc">
       <div style="font-size:20px;font-weight:800;margin-bottom:4px">📈 Performance do Mês</div>
@@ -793,175 +791,31 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
         <div id="tbl-auditoria"></div>
       </div>
-
-      <!-- ══ PLANEJAMENTO MENSAL ══ -->
-    <div class="panel" id="panel-plan">
-      <div style="font-size:20px;font-weight:800;margin-bottom:4px">Planejamento Mensal</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px">Distribuição estratégica do orçamento com base nas datas importantes do mês</div>
-
-<!-- SIMULADOR -->
-      <div class="sec">Simulador de Meta</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-
-        <!-- ENTRADAS -->
-        <div class="api-card">
-          <div class="api-card-head">📥 Parâmetros</div>
-
-          <div class="field" style="margin-top:12px">
-            <label>Meta GMV (R$)</label>
-            <input type="number" id="simGMV" placeholder="ex: 200000" value="200000"
-              oninput="calcSimulator()"
-              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:6px;width:100%;outline:none;box-sizing:border-box">
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px">Faturamento total que quer atingir</div>
-          </div>
-
-          <div class="field" style="margin-top:12px">
-            <label>CPP — Custo por Pedido (R$)</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="number" id="simCPP" placeholder="ex: 2.38" step="0.01"
-                oninput="calcSimulator()"
-                style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:6px;flex:1;outline:none;box-sizing:border-box">
-              <button class="btn btn-ghost" style="font-size:9px;white-space:nowrap;padding:10px 12px" onclick="useRealCPP()">Usar real ↗</button>
-            </div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px">Investimento ÷ Nº Pedidos</div>
-          </div>
-
-          <div class="field" style="margin-top:12px">
-            <label>FPP — Faturamento por Pedido (R$)</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="number" id="simFPP" placeholder="ex: 50.61" step="0.01"
-                oninput="calcSimulator()"
-                style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:6px;flex:1;outline:none;box-sizing:border-box">
-              <button class="btn btn-ghost" style="font-size:9px;white-space:nowrap;padding:10px 12px" onclick="useRealFPP()">Usar real ↗</button>
-            </div>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px">Comissão ÷ Nº Pedidos</div>
-          </div>
-        </div>
-
-        <!-- RESULTADOS -->
-        <div class="api-card">
-          <div class="api-card-head">📊 Resultado</div>
-          <div style="margin-top:16px;display:flex;flex-direction:column;gap:14px">
-
-            <div style="background:var(--s2);border-radius:8px;padding:14px">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">INVESTIMENTO NECESSÁRIO</div>
-              <div id="simInvest" style="font-size:28px;font-weight:800;color:var(--accent)">R$ —</div>
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">(Meta ÷ FPP) × CPP</div>
-            </div>
-
-            <div style="background:var(--s2);border-radius:8px;padding:14px">
-              <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">INVESTIMENTO + IMPOSTO (14%)</div>
-              <div id="simInvestImp" style="font-size:22px;font-weight:800;color:var(--text)">R$ —</div>
-            </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-              <div style="background:var(--s2);border-radius:8px;padding:12px">
-                <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Nº PEDIDOS ESTIMADO</div>
-                <div id="simPedidos" style="font-size:18px;font-weight:800;margin-top:2px">—</div>
-              </div>
-              <div style="background:var(--s2);border-radius:8px;padding:12px">
-                <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">ROAS ESTIMADO</div>
-                <div id="simRoas" style="font-size:18px;font-weight:800;margin-top:2px">—</div>
-              </div>
-              <div style="background:var(--s2);border-radius:8px;padding:12px">
-                <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">INVESTIMENTO/DIA</div>
-                <div id="simDia" style="font-size:18px;font-weight:800;margin-top:2px">—</div>
-              </div>
-              <div style="background:var(--s2);border-radius:8px;padding:12px">
-                <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">PEDIDOS/DIA</div>
-                <div id="simPedDia" style="font-size:18px;font-weight:800;margin-top:2px">—</div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- FÓRMULAS -->
-      <div class="info-box">
-        <b style="color:var(--accent)">Como funciona:</b><br>
-        <b>CPP</b> (Custo por Pedido) = Investimento Meta ÷ Nº de Pedidos<br>
-        <b>FPP</b> (Faturamento por Pedido) = GMV ÷ Nº de Pedidos = Comissão ÷ Nº de Pedidos<br>
-        <b>Investimento necessário</b> = (Meta GMV ÷ FPP) × CPP<br><br>
-        <b style="color:var(--yellow)">Exemplo:</b> Meta R$200.000 · FPP R$50,61 · CPP R$2,38<br>
-        → Pedidos = 200.000 ÷ 50,61 = 3.952 pedidos<br>
-        → Investimento = 3.952 × 2,38 = <b style="color:var(--green)">R$ 9.406</b>
-      </div>
     </div>
 
-
-      <!-- CONFIGURAÇÃO DO MÊS -->
-      <div class="sec">Configurar Mês</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-        <div class="api-card">
-          <div class="api-card-head">📅 Mês e Orçamento</div>
-
-          <div class="field" style="margin-top:12px">
-            <label>Mês de planejamento</label>
-            <input type="month" id="planMonth"
-              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:10px;border-radius:6px;width:100%;outline:none;box-sizing:border-box"
-              onchange="loadPlanDatasEspeciais();buildPlanCalendar()">
-          </div>
-
-          <div class="field" style="margin-top:12px">
-            <label>Orçamento total do mês (R$)</label>
-            <input type="number" id="planBudget" placeholder="ex: 9406" step="100"
-              oninput="buildPlanCalendar(); try{localStorage.setItem('mgd_plan_budget', this.value);}catch(e){}"
-              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:6px;width:100%;outline:none;box-sizing:border-box">
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px">
-              Valor bruto (sem imposto) — geralmente o "Inv. necessário" da calculadora
-            </div>
-          </div>
-
-          <div style="margin-top:12px">
-            <button class="btn btn-ghost" style="font-size:9px" onclick="usePlanFromSimulator()">📊 Usar valor do simulador</button>
-          </div>
+    <!-- ══ GESTÃO DE CAMPANHAS ══ -->
+    <div class="panel" id="panel-plan">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:20px;font-weight:800">📋 Gestão de Campanhas</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Visão detalhada por campanha — dados FB × Shopee</div>
         </div>
-
-        <div class="api-card">
-          <div class="api-card-head">📌 Datas Importantes</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:12px;margin-top:8px">
-            Configure as datas especiais do mês. Elas definem como o orçamento é distribuído.
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <!-- Filtro status -->
+          <div class="filter-row">
+            <button class="filter-chip active" id="planFiltAll"    onclick="setPlanFilt('all',this)">Todas</button>
+            <button class="filter-chip"        id="planFiltAtivo"  onclick="setPlanFilt('ativo',this)">● Ativas</button>
+            <button class="filter-chip"        id="planFiltPausado" onclick="setPlanFilt('pausado',this)">■ Pausadas</button>
           </div>
-          <div id="planDatasEspeciais" style="display:flex;flex-direction:column;gap:8px"></div>
-          <button class="btn btn-ghost" style="font-size:9px;margin-top:10px;width:100%" onclick="addDataEspecial()">+ Adicionar data</button>
+          <!-- Filtro conta -->
+          <select id="planAccFilter" onchange="renderPlanCards()"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:6px;outline:none">
+            <option value="all">Todas as contas</option>
+          </select>
+          <span id="planCount" style="font-family:var(--mono);font-size:9px;color:var(--text3)"></span>
         </div>
       </div>
-
-      <!-- LÓGICA DE DISTRIBUIÇÃO -->
-      <div class="sec">Lógica de Distribuição</div>
-      <div class="info-box" style="margin-bottom:20px">
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-family:var(--mono);font-size:10px">
-          <span style="color:var(--red);font-weight:700">🔥 Até Data Dupla</span>
-          <span>Maior investimento diário (1.4x) — fase de testes, ROAS baixo é normal. Queimar o máximo para descobrir os criativos campeões.</span>
-          <span style="color:var(--green);font-weight:700">💰 D.Dupla→D15</span>
-          <span>Investimento normal (1.0x) — melhores dias de vendas do mês, já com criativos validados.</span>
-          <span style="color:var(--yellow);font-weight:700">⚖️ D15→Fim</span>
-          <span>Investimento reduzido (0.6x) — conservar caixa, rodar só os campeões.</span>
-        </div>
-      </div>
-
-      <!-- RESUMO DE DISTRIBUIÇÃO -->
-      <div id="planResumo" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px"></div>
-
-      <!-- CALENDÁRIO -->
-      <div class="sec">Calendário de Gastos</div>
-      <div style="margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:9px">
-          <span style="background:rgba(224,85,85,.2);color:var(--red);padding:2px 8px;border-radius:3px">🔥 Pré-Data Dupla</span>
-          <span style="background:rgba(62,207,142,.2);color:var(--green);padding:2px 8px;border-radius:3px">💰 Hot Period</span>
-          <span style="background:rgba(232,184,75,.15);color:var(--yellow);padding:2px 8px;border-radius:3px">⚖️ Final do Mês</span>
-          <span style="background:rgba(90,90,136,.2);color:var(--text3);padding:2px 8px;border-radius:3px">📅 Data Especial</span>
-        </div>
-      </div>
-      <div id="planCalendar" style="margin-bottom:24px"></div>
-
-      <!-- TABELA DETALHADA -->
-      <div class="sec">Detalhamento por Semana</div>
-      <div class="table-wrap">
-        <div class="table-top"><div class="table-title">Distribuição Semanal</div></div>
-        <div id="tbl-plan"></div>
-      </div>
+      <div id="plan-cards-grid" style="display:flex;flex-direction:column;gap:16px"></div>
     </div>
 
     <!-- ══ VENDAS ORGÂNICAS ══ -->
@@ -1187,85 +1041,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     </div>
 
     
-<!-- ══ BANCO DE PRODUTOS ══ -->
-<div class="panel" id="panel-banco">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-    <div>
-      <div style="font-size:20px;font-weight:800">🗂️ Banco de Produtos</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Performance real via FB × Shopee por sub_id</div>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <div class="filter-row">
-        <button class="filter-chip active" onclick="setBancoFilter('all',this)">Todos</button>
-        <button class="filter-chip" onclick="setBancoFilter('Testando',this)">🟡 Testando</button>
-        <button class="filter-chip" onclick="setBancoFilter('Escalando',this)">🟢 Escalando</button>
-        <button class="filter-chip" onclick="setBancoFilter('Pausado',this)">⏸ Pausado</button>
-        <button class="filter-chip" onclick="setBancoFilter('Vencedor',this)">⭐ Vencedor</button>
-      </div>
-      <input type="text" id="banco-search" placeholder="🔍 Buscar produto..." oninput="renderBancoGrid()"
-        style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:6px;outline:none;width:180px">
-      <select id="banco-mes-filter" onchange="renderBancoGrid()"
-        style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:6px;outline:none;cursor:pointer">
-        <option value="all">📅 Todos os meses</option>
-      </select>
-      <button class="btn btn-primary" onclick="openBancoModal()">+ Produto</button>
-    </div>
-  </div>
-  <div class="banco-summary" id="banco-summary"></div>
-  <div class="prod-grid" id="banco-grid"></div>
-  <div id="banco-empty" style="display:none;text-align:center;padding:60px 20px">
-    <div style="font-size:40px;opacity:.2;margin-bottom:12px">🗂️</div>
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Nenhum produto encontrado</div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px">Use o Consultor MGD e digite /produto para cadastrar</div>
-    <button class="btn btn-primary" onclick="openBancoModal()">+ Cadastrar produto</button>
-  </div>
-</div>
-
-<!-- MODAL CADASTRO -->
-<div class="banco-modal" id="bancoModal">
-  <div class="banco-modal-box">
-    <div class="banco-modal-head">
-      <div style="font-size:15px;font-weight:800" id="bancoModalTitle">➕ Cadastrar Produto</div>
-      <button onclick="closeBancoModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">×</button>
-    </div>
-    <div class="banco-modal-body">
-      <div class="bfield"><label>Nome do Produto</label><input id="bp-nome" placeholder="Ex: Pó de Unha Pérola"></div>
-      <div class="bfield-row">
-        <div class="bfield"><label>Nicho</label>
-          <select id="bp-nicho">
-            <option>Beleza & Cuidados Pessoais</option><option>Moda & Acessórios</option>
-            <option>Casa & Decoração</option><option>Utilidades Domésticas</option>
-            <option>Eletrônicos</option><option>Infantil</option>
-            <option>Saúde & Bem-estar</option><option>Esporte & Lazer</option><option>Outros</option>
-          </select>
-        </div>
-        <div class="bfield"><label>Status</label>
-          <select id="bp-status">
-            <option>Testando</option><option>Escalando</option>
-            <option>Pausado</option><option>Vencedor</option><option>Encerrado</option>
-          </select>
-        </div>
-      </div>
-      <div class="bfield"><label>Link Shopee</label><input id="bp-link" placeholder="https://s.shopee.com.br/..."></div>
-      <div class="bfield-row">
-        <div class="bfield"><label>Preço (R$)</label><input id="bp-preco" type="number" step="0.01"></div>
-        <div class="bfield"><label>Desconto (%)</label><input id="bp-desconto" type="number"></div>
-      </div>
-      <div class="bfield"><label>SKU</label><input id="bp-sku" placeholder="Ex: AUV-ZSH-ZMH"></div>
-      <div class="bfield">
-        <label>Sub_ids vinculados</label>
-        <div id="bp-subids-list"></div>
-        <button onclick="addSubidField()" style="background:none;border:1px dashed var(--border2);color:var(--text3);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono);font-size:9px;width:100%;margin-top:4px">+ Adicionar Sub_id</button>
-      </div>
-      <div class="bfield"><label>Observações</label><textarea id="bp-notas" placeholder="Insights, melhores horários, públicos..."></textarea></div>
-    </div>
-    <div class="banco-modal-foot">
-      <button class="btn btn-ghost" onclick="closeBancoModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="saveBancoProduto()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
-
 <!-- ══ CONFIG ══ -->
     <div class="panel" id="panel-config">
       <div class="sec">Token de Acesso — Facebook</div>
@@ -1408,8 +1183,13 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
         <div class="field">
           <label>Selecione o CSV de Cliques exportado da Shopee</label>
-          <input type="file" id="shopeeClicksCSV" accept=".csv" onchange="importShopeeClicksCSV(this)"
-            style="background:var(--bg);border:2px dashed var(--blue);color:var(--text2);padding:16px;border-radius:8px;width:100%;cursor:pointer;font-family:var(--mono);font-size:11px"/>
+          <input type="file" id="shopeeClicksCSV" accept=".csv,.CSV,.txt" onchange="importShopeeClicksCSV(this)"
+            style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"/>
+          <label for="shopeeClicksCSV"
+            style="display:block;width:100%;padding:18px;background:var(--bg);border:2px dashed var(--blue);color:var(--blue);font-family:var(--mono);font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;text-align:center;box-sizing:border-box">
+            📂 Toque aqui para selecionar o CSV de Cliques
+          </label>
+          <div id="clicksFileName" style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px;text-align:center"></div>
         </div>
         <div id="clicksCSVStatus" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px;display:none;padding:8px;background:var(--s2);border-radius:6px"></div>
       </div>
@@ -1426,8 +1206,13 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
         <div class="field">
           <label>Selecione o arquivo CSV exportado da Shopee</label>
-          <input type="file" id="shopeeCSV" accept=".csv" onchange="importShopeeCSV(this)"
-            style="background:var(--bg);border:2px dashed var(--accent);color:var(--text2);padding:16px;border-radius:8px;width:100%;cursor:pointer;font-family:var(--mono);font-size:11px"/>
+          <input type="file" id="shopeeCSV" accept=".csv,.CSV,.txt" onchange="importShopeeCSV(this)"
+            style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none"/>
+          <label for="shopeeCSV"
+            style="display:block;width:100%;padding:18px;background:var(--bg);border:2px dashed var(--accent);color:var(--accent);font-family:var(--mono);font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;text-align:center;box-sizing:border-box">
+            📂 Toque aqui para selecionar o CSV de Vendas
+          </label>
+          <div id="csvFileName" style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px;text-align:center"></div>
         </div>
         <div id="csvStatus" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:8px;display:none;padding:8px;background:var(--s2);border-radius:6px"></div>
         <div id="historicoStatus" style="font-family:var(--mono);font-size:10px;margin-top:8px;padding:8px;background:var(--s2);border-radius:6px;color:var(--green)">
@@ -1446,6 +1231,87 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         <b style="color:var(--yellow)">⚠️</b> Não use este dashboard em computadores compartilhados sem limpar depois.
       </div>
     </div>
+
+
+    <!-- ══ BANCO DE PRODUTOS ══ -->
+<div class="panel" id="panel-banco">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:800">🗂️ Banco de Produtos</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Performance real via FB × Shopee por sub_id</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <div class="filter-row">
+        <button class="filter-chip active" onclick="setBancoFilter('all',this)">Todos</button>
+        <button class="filter-chip" onclick="setBancoFilter('Testando',this)">🟡 Testando</button>
+        <button class="filter-chip" onclick="setBancoFilter('Escalando',this)">🟢 Escalando</button>
+        <button class="filter-chip" onclick="setBancoFilter('Pausado',this)">⏸ Pausado</button>
+        <button class="filter-chip" onclick="setBancoFilter('Vencedor',this)">⭐ Vencedor</button>
+      </div>
+      <input type="text" id="banco-search" placeholder="🔍 Buscar produto..." oninput="renderBancoGrid()"
+        style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:6px;outline:none;width:180px">
+      <select id="banco-mes-filter" onchange="renderBancoGrid()"
+        style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:6px;outline:none;cursor:pointer">
+        <option value="all">📅 Todos os meses</option>
+      </select>
+      <button class="btn btn-primary" onclick="openBancoModal()">+ Produto</button>
+    </div>
+  </div>
+  <div class="banco-summary" id="banco-summary"></div>
+  <div class="prod-grid" id="banco-grid"></div>
+  <div id="banco-empty" style="display:none;text-align:center;padding:60px 20px">
+    <div style="font-size:40px;opacity:.2;margin-bottom:12px">🗂️</div>
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Nenhum produto encontrado</div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px">Use o Consultor MGD e digite /produto para cadastrar</div>
+    <button class="btn btn-primary" onclick="openBancoModal()">+ Cadastrar produto</button>
+  </div>
+</div>
+
+<!-- MODAL CADASTRO -->
+<div class="banco-modal" id="bancoModal">
+  <div class="banco-modal-box">
+    <div class="banco-modal-head">
+      <div style="font-size:15px;font-weight:800" id="bancoModalTitle">➕ Cadastrar Produto</div>
+      <button onclick="closeBancoModal()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div class="banco-modal-body">
+      <div class="bfield"><label>Nome do Produto</label><input id="bp-nome" placeholder="Ex: Pó de Unha Pérola"></div>
+      <div class="bfield-row">
+        <div class="bfield"><label>Nicho</label>
+          <select id="bp-nicho">
+            <option>Beleza & Cuidados Pessoais</option><option>Moda & Acessórios</option>
+            <option>Casa & Decoração</option><option>Utilidades Domésticas</option>
+            <option>Eletrônicos</option><option>Infantil</option>
+            <option>Saúde & Bem-estar</option><option>Esporte & Lazer</option><option>Outros</option>
+          </select>
+        </div>
+        <div class="bfield"><label>Status</label>
+          <select id="bp-status">
+            <option>Testando</option><option>Escalando</option>
+            <option>Pausado</option><option>Vencedor</option><option>Encerrado</option>
+          </select>
+        </div>
+      </div>
+      <div class="bfield"><label>Link Shopee</label><input id="bp-link" placeholder="https://s.shopee.com.br/..."></div>
+      <div class="bfield-row">
+        <div class="bfield"><label>Preço (R$)</label><input id="bp-preco" type="number" step="0.01"></div>
+        <div class="bfield"><label>Desconto (%)</label><input id="bp-desconto" type="number"></div>
+      </div>
+      <div class="bfield"><label>SKU</label><input id="bp-sku" placeholder="Ex: AUV-ZSH-ZMH"></div>
+      <div class="bfield">
+        <label>Sub_ids vinculados</label>
+        <div id="bp-subids-list"></div>
+        <button onclick="addSubidField()" style="background:none;border:1px dashed var(--border2);color:var(--text3);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono);font-size:9px;width:100%;margin-top:4px">+ Adicionar Sub_id</button>
+      </div>
+      <div class="bfield"><label>Observações</label><textarea id="bp-notas" placeholder="Insights, melhores horários, públicos..."></textarea></div>
+    </div>
+    <div class="banco-modal-foot">
+      <button class="btn btn-ghost" onclick="closeBancoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveBancoProduto()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 
   </div><!-- /content -->
 </div><!-- /main -->
@@ -1566,7 +1432,7 @@ function goTab(tab) {
     geral: 'Geral Consolidado', resumo: 'Resumo Diário',
     cruzamento: 'Análise de Campanhas — FB × Shopee',
     organico: 'Vendas Orgânicas',
-    calc: 'Performance do Mês', plan: 'Planejamento Mensal',
+    calc: 'Performance do Mês', plan: 'Gestão de Campanhas',
     alertas: 'Alertas D0-D7', d0: 'Análise D0 — Cliques & CPC',
     chat: 'Consultor MGD', glossario: 'Glossário MGD',
     config: 'Configuração', c0: 'CA-Vem Economizar Agora', c1: 'CA-Dicas Benetti', c2: 'CA01-Benetti'
@@ -1576,7 +1442,7 @@ function goTab(tab) {
   // Sync mobile bottom nav
   const mobileMap = { geral:'geral', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'alertas', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas' };
   if (typeof setBN === 'function') setBN(mobileMap[tab] || '');
-  if (tab === 'plan') setTimeout(initPlanMonth, 50);
+  if (tab === 'plan') setTimeout(renderPlanCards, 50);
   if (tab === 'chat') setTimeout(initChat, 50);
   if (tab === 'banco') { setTimeout(() => { if(STATE.loaded) autoBancoStatus(); renderBancoGrid(); }, 50); }
   if (tab === 'calc') { setTimeout(() => { loadAudit(); renderAuditoria(); }, 50); }
@@ -3588,6 +3454,9 @@ function renderAll() {
   // ── ALERTAS
   renderAlerts(accounts, crossData);
 
+  // ── GESTÃO DE CAMPANHAS (cards)
+  renderPlanCards();
+
   STATE.loaded = true;
   autoBancoStatus();
   loadAudit(); renderAuditoria();
@@ -5097,6 +4966,8 @@ let D0_MONTH_FILTER  = 'all';
 
 function importShopeeClicksCSV(input) {
   const file = input.files[0]; if (!file) return;
+  const fnEl = $('clicksFileName');
+  if (fnEl) fnEl.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(0)} KB)`;
   const statusEl = $('clicksCSVStatus');
   if (statusEl) { statusEl.style.display='block'; statusEl.style.color='var(--text3)'; statusEl.textContent='Processando...'; }
 
@@ -6174,6 +6045,8 @@ function processShopeeCSV(text, days) {
 function importShopeeCSV(input) {
   const file = input.files[0];
   if (!file) return;
+  const fnEl = $('csvFileName');
+  if (fnEl) fnEl.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(0)} KB)`;
   const statusEl = $('csvStatus');
   statusEl.style.display = 'block';
   statusEl.style.color = 'var(--text3)';
@@ -6545,6 +6418,264 @@ function clearCreds() {
 }
 
 // Carrega credenciais salvas ao abrir
+
+// ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// GESTÃO DE CAMPANHAS — CARDS
+// ══════════════════════════════════════════════════
+let planFiltStatus = 'ativo'; // default: Ativas
+
+function setPlanFilt(val, btn) {
+  planFiltStatus = val;
+  document.querySelectorAll('#panel-plan .filter-chip').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderPlanCards();
+}
+
+function renderPlanCards() {
+  const grid = $('plan-cards-grid');
+  if (!grid) return;
+
+  if (!STATE.crossData?.length) {
+    grid.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:16px">📋</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text2)">Nenhuma campanha carregada</div>
+      <div style="font-family:var(--mono);font-size:11px;margin-bottom:20px">Sincronize o Facebook para ver os cards de campanha</div>
+      <button class="btn btn-primary" onclick="runFullSync()" style="font-size:12px;padding:10px 24px">↻ Sincronizar agora</button>
+    </div>`;
+    return;
+  }
+
+  // Popula filtro de contas
+  const accSel = $('planAccFilter');
+  if (accSel && accSel.options.length <= 1) {
+    const accs = [...new Set(STATE.crossData.map(c => c.account).filter(Boolean))];
+    accs.forEach(a => {
+      const o = document.createElement('option'); o.value = a; o.textContent = a;
+      accSel.appendChild(o);
+    });
+  }
+  const accFilter = accSel?.value || 'all';
+
+  // Filtra campanhas
+  let camps = STATE.crossData.filter(c => {
+    const st = (c.campStatus||'').toUpperCase() === 'ACTIVE' ? 'ativo' : 'pausado';
+    const statusOk = planFiltStatus === 'all' || st === planFiltStatus;
+    const accOk    = accFilter === 'all' || c.account === accFilter;
+    return statusOk && accOk;
+  });
+
+  safeText('planCount', `${camps.length} campanhas`);
+
+  if (!camps.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-t">Nenhuma campanha encontrada</div><div class="empty-s">Tente mudar os filtros acima</div></div>';
+    return;
+  }
+
+  grid.innerHTML = camps.map(c => buildPlanCard(c)).join('');
+}
+
+function buildPlanCard(c) {
+  const isAtiva   = (c.campStatus||'').toUpperCase() === 'ACTIVE';
+  const roas      = c.realRoas || 0;
+  const lucro     = c.lucro || 0;
+  const spend     = c.gastoReal || c.fbSpend || 0;
+  const comm      = c.shopeeCommLiq || 0;
+  const pedidos   = c.shopeeOrders || 0;
+  const diretas   = c.shopeeDiretas || 0;
+  const cpc       = c.cpc || 0;
+  const cpp       = pedidos > 0 ? spend / pedidos : 0;
+
+  // Busca dados da campanha original para budget e CTR
+  const campOrig = STATE.accounts?.flatMap(a => a.campaigns||[]).find(x => x.name === c.name);
+  const budget   = campOrig?.budget || 0;
+  const dReal    = campOrig?.startDate
+    ? Math.floor((new Date() - new Date(campOrig.startDate)) / 86400000)
+    : null;
+
+  // Classificação MGD
+  const cl = roas >= 2.0 ? { lbl:'CAMPEÃO',     cor:'var(--green)',  rec:'Escalar agressivamente 20-30%' }
+           : roas >= 1.5 ? { lbl:'BOM',          cor:'var(--green)',  rec:'Escalar gradualmente 5-15%' }
+           : roas >= 1.3 ? { lbl:'MEDIANO',      cor:'var(--yellow)', rec:'Manter. Não escalar ainda' }
+           : roas >= 1.0 ? { lbl:'FRACO',        cor:'var(--yellow)', rec:'Dar 24-48h ou pausar' }
+           : roas >  0   ? { lbl:'PÉSSIMO',      cor:'var(--red)',    rec:'Pausar imediatamente' }
+           :               { lbl:'SEM DADOS',    cor:'var(--text3)',  rec:'Aguardar conversões Shopee' };
+
+  // Fase D
+  const faseLabel = dReal === null ? '—'
+    : dReal === 0  ? 'D0 — SUBIDA'
+    : dReal <= 4   ? `D${dReal} — TESTE`
+    : dReal <= 9   ? `D${dReal} — PRÉ-ESCALA`
+    : dReal <= 14  ? `D${dReal} — ESCALA`
+    :                `D${dReal}`;
+  const faseCor = dReal === null ? 'var(--text3)'
+    : dReal <= 4  ? 'var(--accent)'
+    : dReal <= 9  ? 'var(--purple, #a855f7)'
+    :               'var(--green)';
+
+  // Tendência ROAS (últimos 3 dias vs 3 anteriores)
+  const dias = (c.dailyCross||[]).filter(d=>!d.aguardando&&d.roas>0).slice(-6);
+  let tendencia = '→';
+  if (dias.length >= 4) {
+    const rec  = dias.slice(-3).reduce((s,d)=>s+d.roas,0)/3;
+    const ant  = dias.slice(0,3).reduce((s,d)=>s+d.roas,0)/3;
+    tendencia  = rec > ant * 1.05 ? '↗' : rec < ant * 0.95 ? '↘' : '→';
+  }
+  const tendCor = tendencia==='↗'?'var(--green)':tendencia==='↘'?'var(--red)':'var(--text3)';
+
+  // Link FB Ads Manager
+  const fbLink = campOrig?.campaignId && campOrig?.accountId
+    ? `https://www.facebook.com/adsmanager/manage/campaigns?act=${campOrig.accountId}&selected_campaign_ids=${campOrig.campaignId}`
+    : '#';
+
+  // Tabela de dias (últimos 10, mais recente primeiro)
+  const diasTabela = [...(c.dailyCross||[])].reverse().slice(0, 10);
+  const tblRows = diasTabela.map(d => {
+    const dataBR = d.date ? new Date(d.date+'T12:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '—';
+    const diaSem = d.date ? new Date(d.date+'T12:00').toLocaleDateString('pt-BR',{weekday:'short'}) : '';
+    const roasCor = d.roas>=1.5?'var(--green)':d.roas>=1.3?'var(--yellow)':'var(--red)';
+    const lucroCor = d.lucro>=0?'var(--green)':'var(--red)';
+    const lucroStr = d.lucro>=0 ? `R$&nbsp;${fmt(d.lucro)}` : `-R$&nbsp;${fmt(Math.abs(d.lucro))}`;
+    const cpp_d = d.pedidos > 0 ? d.gastoReal / d.pedidos : 0;
+    const gmv_d = 0; // GMV por dia não disponível diretamente
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap">${dataBR} <span style="color:var(--text3);font-size:9px">${diaSem}</span> <span style="color:var(--accent);font-size:8px">D${d.day}</span></td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--red)">R$&nbsp;${fmt(d.gastoReal)}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--green)">${d.commission>0?'R$&nbsp;'+fmt(d.commission):'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${lucroCor}">${d.lucro!==0?lucroStr:'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${roasCor};font-weight:700">${d.roas>0?fmt(d.roas)+'x':'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${cpc<0.15?'var(--green)':cpc<=0.20?'var(--yellow)':'var(--red)'}">${d.cpc>0?'R$&nbsp;'+fmt(d.cpc):'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--yellow)">${cpp_d>0?'R$&nbsp;'+fmt(cpp_d):'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px">${d.pedidos||0}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--blue)">${d.diretas||0}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${budget>0?'R$&nbsp;'+fmt(budget):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const roasBadgeCor = roas>=1.5?'var(--green)':roas>=1.3?'var(--yellow)':roas>0?'var(--red)':'var(--text3)';
+  const accBadge = `<span class="acc-badge ab${c.accIdx}">${c.account||''}</span>`;
+
+  return `
+  <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;border-left:4px solid ${cl.cor}">
+
+    <!-- HEADER -->
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0">
+          <span style="font-size:13px;font-weight:800;font-family:var(--mono)">${c.name}</span>
+          ${accBadge}
+          <span style="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px;background:${isAtiva?'rgba(62,207,142,.15)':'rgba(255,255,255,.05)'};color:${isAtiva?'var(--green)':'var(--text3)'}">
+            ${isAtiva?'● ATIVA':'■ PAUSADA'}
+          </span>
+          ${dReal!==null?`<span style="font-family:var(--mono);font-size:9px;color:${faseCor};font-weight:700">${faseLabel}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-family:var(--mono);font-size:16px;font-weight:800;color:${roasBadgeCor};background:rgba(0,0,0,.2);padding:4px 12px;border-radius:6px">
+            ${roas>0?'↗ '+fmt(roas)+'x':'—'}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTRICAS PRINCIPAIS -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:1px solid var(--border)">
+      <div style="padding:12px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:3px">CUSTO (+14%)</div>
+        <div style="font-size:15px;font-weight:700;color:var(--red)">R$ ${fmt(spend)}</div>
+      </div>
+      <div style="padding:12px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:3px">COMISSÃO LÍQ.</div>
+        <div style="font-size:15px;font-weight:700;color:var(--green)">R$ ${fmt(comm)}</div>
+      </div>
+      <div style="padding:12px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:3px">LUCRO</div>
+        <div style="font-size:15px;font-weight:700;color:${lucro>=0?'var(--green)':'var(--red)'}">
+          ${lucro>=0?'':'-'}R$ ${fmt(Math.abs(lucro))}
+        </div>
+      </div>
+      <div style="padding:12px 14px">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:3px">TENDÊNCIA</div>
+        <div style="font-size:20px;color:${tendCor}">${tendencia}</div>
+      </div>
+    </div>
+
+    <!-- MÉTRICAS SECUNDÁRIAS -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border)">
+      <div style="padding:10px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">CPC</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${cpc<0.15?'var(--green)':cpc<=0.20?'var(--yellow)':'var(--red)'};margin-top:2px">R$ ${fmt(cpc)}</div>
+      </div>
+      <div style="padding:10px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">PEDIDOS</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;margin-top:2px">${pedidos}</div>
+      </div>
+      <div style="padding:10px 14px">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">V. DIRETAS</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--blue);margin-top:2px">${diretas}</div>
+      </div>
+      <div style="padding:10px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">CUSTO/PEDIDO</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--yellow);margin-top:2px">${cpp>0?'R$ '+fmt(cpp):'—'}</div>
+      </div>
+      <div style="padding:10px 14px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">ROAS TOTAL</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${roasBadgeCor};margin-top:2px">${roas>0?fmt(roas)+'x':'—'}</div>
+      </div>
+      <div style="padding:10px 14px">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">ORÇAMENTO/DIA</div>
+        <div style="font-family:var(--mono);font-size:14px;font-weight:700;margin-top:2px">${budget>0?'R$ '+fmt(budget):'—'}</div>
+      </div>
+    </div>
+
+    <!-- FASE MGD + RECOMENDAÇÃO -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.15);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:800;color:${cl.cor}">${cl.lbl}</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">${cl.rec}</span>
+    </div>
+
+    <!-- META ADS + VER DETALHE -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:0;border-bottom:1px solid var(--border)">
+      <div style="padding:14px 16px;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">META ADS</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:20px;border-radius:10px;background:${isAtiva?'var(--accent)':'var(--border)'};position:relative;transition:background .2s">
+              <div style="position:absolute;top:2px;${isAtiva?'right:2px':'left:2px'};width:16px;height:16px;border-radius:50%;background:white;transition:all .2s"></div>
+            </div>
+            <span style="font-size:13px;font-weight:700;color:${isAtiva?'var(--accent)':'var(--text3)'}">${isAtiva?'Ativa':'Pausada'}</span>
+          </div>
+          <span style="font-family:var(--mono);font-size:14px;font-weight:700">${budget>0?'R$ '+fmt(budget):'—'} <span style="font-size:14px;color:var(--accent)">✏️</span></span>
+        </div>
+      </div>
+      <div style="padding:14px 16px;display:flex;align-items:center">
+        <a href="${fbLink}" target="_blank" rel="noopener"
+          style="display:flex;align-items:center;gap:8px;background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:700;padding:10px 16px;border-radius:8px;text-decoration:none;white-space:nowrap">
+          Ver detalhe ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- TABELA DIÁRIA -->
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table style="width:100%;min-width:600px">
+        <thead><tr style="background:var(--s2)">
+          <th style="font-size:9px;padding:8px 14px;text-align:left;white-space:nowrap">Data</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">Custo</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">Comissão</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">Lucro</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">ROAS</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">CPC</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">CPP</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">Pedidos</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">V.Dir</th>
+          <th style="font-size:9px;padding:8px 10px;text-align:left">Orçamento</th>
+        </thead>
+        <tbody>${tblRows || '<tr><td colspan="10" style="padding:12px 14px;font-family:var(--mono);font-size:9px;color:var(--text3)">Sem dados diários disponíveis</td></tr>'}</tbody>
+      </table>
+    </div>
+
+  </div>`;
+}
 
 // ══════════════════════════════════════════════════
 // BANCO DE PRODUTOS
@@ -7350,7 +7481,12 @@ function applyDefaultFilters() {
     }
   });
 
-  // 5. Planejamento → mês vigente + orçamento salvo
+  // 5. Gestão de Campanhas → pré-selecionar Ativas
+  planFiltStatus = 'ativo';
+  const planFiltAtivo = $('planFiltAtivo');
+  const planFiltAll   = $('planFiltAll');
+  if (planFiltAll)   planFiltAll.classList.remove('active');
+  if (planFiltAtivo) planFiltAtivo.classList.add('active');
   const savedBudget = (() => { try { return localStorage.getItem('mgd_plan_budget') || ''; } catch(e) { return ''; } })();
   if (savedBudget) {
     const planBudgetEl = $('planBudget');
