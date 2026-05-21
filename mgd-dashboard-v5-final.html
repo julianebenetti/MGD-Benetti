@@ -415,6 +415,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="nav-item" onclick="goTab('plan')"><span class="ni">📋</span> Gestão de Campanhas</div>
     <div class="nav-section">Ferramentas</div>
     <div class="nav-item" onclick="goTab('alertas')"><span class="ni">🚨</span> Alertas D0-D7</div>
+    <div class="nav-item" onclick="goTab('financeiro')"><span class="ni">💳</span> Financeiro</div>
     <div class="nav-item" onclick="goTab('d0')"><span class="ni">🔍</span> Análise D0 — Cliques</div>
     <div class="nav-item" onclick="goTab('chat')"><span class="ni">🤖</span> Consultor MGD</div>
     <div class="nav-item" onclick="goTab('glossario')"><span class="ni">📖</span> Glossário MGD</div>
@@ -473,6 +474,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">FERRAMENTAS</div>
     <div class="drawer-item" onclick="goTab('alertas');setBN('alertas');closeDrawer()">🚨&nbsp; Alertas D0-D7</div>
+    <div class="drawer-item" onclick="goTab('financeiro');setBN('alertas');closeDrawer()">💳&nbsp; Financeiro</div>
     <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise D0 — Cliques</div>
     <div class="drawer-item" onclick="goTab('chat');setBN('chat');closeDrawer()">🤖&nbsp; Consultor MGD</div>
     <div class="drawer-item" onclick="goTab('glossario');setBN('chat');closeDrawer()">📖&nbsp; Glossário MGD</div>
@@ -791,6 +793,70 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
         <div id="tbl-auditoria"></div>
       </div>
+
+      <!-- CONFIGURAR MÊS -->
+      <div class="sec" style="margin-top:8px">Configurar Mês</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+        <div class="api-card">
+          <div class="api-card-head">📅 Mês e Orçamento</div>
+          <div class="field" style="margin-top:12px">
+            <label>Mês de planejamento</label>
+            <input type="month" id="planMonth"
+              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:10px;border-radius:6px;width:100%;outline:none;box-sizing:border-box"
+              onchange="loadPlanDatasEspeciais();buildPlanCalendar()">
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label>Orçamento total do mês (R$)</label>
+            <input type="number" id="planBudget" placeholder="ex: 9406" step="100"
+              oninput="buildPlanCalendar(); try{localStorage.setItem('mgd_plan_budget', this.value);}catch(e){}"
+              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:10px;border-radius:6px;width:100%;outline:none;box-sizing:border-box">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px">Valor bruto (sem imposto)</div>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn btn-ghost" style="font-size:9px" onclick="usePlanFromSimulator()">📊 Usar valor do simulador</button>
+          </div>
+        </div>
+        <div class="api-card">
+          <div class="api-card-head">📌 Datas Importantes</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:12px;margin-top:8px">Datas especiais do mês — definem como o orçamento é distribuído.</div>
+          <div id="planDatasEspeciais" style="display:flex;flex-direction:column;gap:8px"></div>
+          <button class="btn btn-ghost" style="font-size:9px;margin-top:10px;width:100%" onclick="addDataEspecial()">+ Adicionar data</button>
+        </div>
+      </div>
+
+      <!-- LÓGICA DE DISTRIBUIÇÃO -->
+      <div class="sec">Lógica de Distribuição</div>
+      <div class="info-box" style="margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 12px;font-family:var(--mono);font-size:10px">
+          <span style="color:var(--red);font-weight:700">🔥 Até Data Dupla</span>
+          <span>Maior investimento diário (1.4x) — fase de testes.</span>
+          <span style="color:var(--green);font-weight:700">💰 D.Dupla→D15</span>
+          <span>Investimento normal (1.0x) — melhores dias de vendas.</span>
+          <span style="color:var(--yellow);font-weight:700">⚖️ D15→Fim</span>
+          <span>Investimento reduzido (0.6x) — conservar caixa.</span>
+        </div>
+      </div>
+
+      <!-- RESUMO DE DISTRIBUIÇÃO -->
+      <div id="planResumo" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px"></div>
+
+      <!-- CALENDÁRIO DE GASTOS -->
+      <div class="sec">Calendário de Gastos</div>
+      <div style="margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:9px">
+          <span style="background:rgba(224,85,85,.2);color:var(--red);padding:2px 8px;border-radius:3px">🔥 Pré-Data Dupla</span>
+          <span style="background:rgba(62,207,142,.2);color:var(--green);padding:2px 8px;border-radius:3px">💰 Hot Period</span>
+          <span style="background:rgba(232,184,75,.15);color:var(--yellow);padding:2px 8px;border-radius:3px">⚖️ Final do Mês</span>
+        </div>
+      </div>
+      <div id="planCalendar" style="margin-bottom:24px"></div>
+
+      <!-- TABELA SEMANAL -->
+      <div class="sec">Detalhamento por Semana</div>
+      <div class="table-wrap">
+        <div class="table-top"><div class="table-title">Distribuição Semanal</div></div>
+        <div id="tbl-plan"></div>
+      </div>
     </div>
 
     <!-- ══ GESTÃO DE CAMPANHAS ══ -->
@@ -995,6 +1061,107 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:6px;text-align:center">
         Enter para enviar · Shift+Enter para nova linha · Contexto dos seus dados incluído automaticamente
       </div>
+    </div>
+
+    <!-- ══ FINANCEIRO ══ -->
+    <div class="panel" id="panel-financeiro">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-size:20px;font-weight:800">💳 Análise Financeira</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Gastos do cartão × Comissão Shopee — visão real de lucro</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="finMesFilter" onchange="renderFinanceiro()"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 10px;border-radius:6px;outline:none">
+            <option value="all">Todos os meses</option>
+          </select>
+          <button class="btn btn-ghost" style="font-size:10px;padding:6px 14px" onclick="$('finPDFInput').click()">📄 Importar Fatura PDF</button>
+          <input type="file" id="finPDFInput" accept=".pdf" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="importarFaturaPDF(this)"/>
+          <button class="btn btn-ghost" style="font-size:10px;padding:6px 14px" onclick="exportFinanceiro()">📥 Exportar CSV</button>
+        </div>
+      </div>
+
+      <!-- STATUS IMPORT -->
+      <div id="finImportStatus" style="display:none;padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-family:var(--mono);font-size:10px"></div>
+
+      <!-- KPIs DO MÊS -->
+      <div id="finKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px"></div>
+
+      <!-- GRÁFICO EVOLUÇÃO -->
+      <div class="sec">📈 Evolução Mensal</div>
+      <div id="finGrafico" style="margin-bottom:24px;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;overflow-x:auto"></div>
+
+      <!-- COMPARATIVO GASTO vs SHOPEE -->
+      <div class="sec">⚖️ Gasto Total vs Comissão Shopee</div>
+      <div id="finComparativo" style="margin-bottom:24px"></div>
+
+      <!-- TABELA POR CATEGORIA -->
+      <div class="sec">📊 Gastos por Categoria</div>
+      <div class="table-wrap" style="margin-bottom:24px"><div id="finTblCat"></div></div>
+
+      <!-- CONFERÊNCIA POR FATURA -->
+      <div class="sec" style="margin-top:8px">🔍 Conferência por Fatura</div>
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:24px">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px">
+          <!-- Seleciona fatura -->
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">FATURA</div>
+            <select id="confFaturaSelect" onchange="renderConferencia()"
+              style="width:100%;background:var(--bg);border:1px solid var(--accent);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:6px;outline:none">
+              <option value="">— Selecione a fatura —</option>
+            </select>
+          </div>
+          <!-- Valor pago na fatura -->
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">VALOR TOTAL PAGO NA FATURA (R$)</div>
+            <input type="number" id="confValorFatura" placeholder="ex: 10841.01" step="0.01"
+              oninput="renderConferencia()"
+              style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:6px;outline:none;box-sizing:border-box">
+          </div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:8px 14px;white-space:nowrap" onclick="salvarValorFatura()">💾 Salvar</button>
+        </div>
+
+        <!-- Painel de conferência -->
+        <div id="confPainel" style="display:none;margin-bottom:16px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px">
+            <div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">VALOR PAGO NA FATURA</div>
+              <div id="confValorPago" style="font-size:18px;font-weight:800;color:var(--text)">—</div>
+            </div>
+            <div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center">
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">LANÇAMENTOS CADASTRADOS</div>
+              <div id="confValorCad" style="font-size:18px;font-weight:800;color:var(--text)">—</div>
+            </div>
+            <div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center;border:1px solid var(--border)">
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">DIFERENÇA</div>
+              <div id="confDiff" style="font-size:18px;font-weight:800">—</div>
+              <div id="confDiffMsg" style="font-family:var(--mono);font-size:8px;margin-top:4px;color:var(--text3)"></div>
+            </div>
+          </div>
+          <!-- Barra de progresso de cobertura -->
+          <div style="background:var(--s2);border-radius:6px;overflow:hidden;height:6px;margin-bottom:4px">
+            <div id="confProgBar" style="height:100%;background:var(--green);border-radius:6px;transition:width .4s;width:0%"></div>
+          </div>
+          <div id="confProgLabel" style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:right"></div>
+        </div>
+
+        <!-- Tabela de lançamentos da fatura selecionada -->
+        <div id="confTblFatura" style="overflow-x:auto;-webkit-overflow-scrolling:touch"></div>
+      </div>
+
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div class="sec" style="margin-bottom:0">🧾 Lançamentos</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="finCatFilter" onchange="renderLancamentos()"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:6px;outline:none">
+            <option value="all">Todas categorias</option>
+          </select>
+          <input type="text" id="finSearch" placeholder="🔍 buscar..." oninput="renderLancamentos()"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 10px;border-radius:6px;outline:none;width:160px">
+        </div>
+      </div>
+      <div class="table-wrap"><div id="finTblLanc"></div></div>
     </div>
 
     <!-- ══ ALERTAS ══ -->
@@ -1434,18 +1601,19 @@ function goTab(tab) {
     organico: 'Vendas Orgânicas',
     calc: 'Performance do Mês', plan: 'Gestão de Campanhas',
     alertas: 'Alertas D0-D7', d0: 'Análise D0 — Cliques & CPC',
+    financeiro: 'Análise Financeira',
     chat: 'Consultor MGD', glossario: 'Glossário MGD',
     config: 'Configuração', c0: 'CA-Vem Economizar Agora', c1: 'CA-Dicas Benetti', c2: 'CA01-Benetti'
   };
   safeText('topbarTitle', titles[tab] || tab);
   safeText('topbarSub', STATE.loaded ? '— ' + new Date().toLocaleDateString('pt-BR') : '');
   // Sync mobile bottom nav
-  const mobileMap = { geral:'geral', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'alertas', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas' };
+  const mobileMap = { geral:'geral', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'alertas', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas', financeiro:'alertas' };
   if (typeof setBN === 'function') setBN(mobileMap[tab] || '');
-  if (tab === 'plan') setTimeout(renderPlanCards, 50);
+  if (tab === 'financeiro') setTimeout(() => { initHistoricoFaturas(); renderFinanceiro(); }, 50);
   if (tab === 'chat') setTimeout(initChat, 50);
   if (tab === 'banco') { setTimeout(() => { if(STATE.loaded) autoBancoStatus(); renderBancoGrid(); }, 50); }
-  if (tab === 'calc') { setTimeout(() => { loadAudit(); renderAuditoria(); }, 50); }
+  if (tab === 'calc') { setTimeout(() => { loadAudit(); renderAuditoria(); initPlanMonth(); }, 50); }
   if (tab === 'organico') setTimeout(renderOrganico, 50);
   if (tab === 'glossario') renderGlossario();
 }
@@ -3927,9 +4095,9 @@ function getMonthData(month, store, shopeeOrders, fbAccounts) {
   // Se fixado no store, usa esses dados
   if (store[month]?.fixed) {
     const s = store[month];
-    // Usa spend do store se disponível (manual), senão busca do FB ao vivo
-    const fbSpend = s.fbSpend !== undefined ? s.fbSpend :
-      (fbAccounts.flatMap(a=>a.daily).filter(d=>d.date?.startsWith(month)).reduce((sum,d)=>sum+d.spend,0));
+    // Usa spend do store se disponível e > 0, senão busca do FB ao vivo
+    const fbFromLive = fbAccounts.flatMap(a=>a.daily||[]).filter(d=>d.date?.startsWith(month)).reduce((sum,d)=>sum+d.spend,0);
+    const fbSpend = (s.fbSpend !== undefined && s.fbSpend > 0) ? s.fbSpend : fbFromLive;
     const impFB    = fbSpend * TAX_FB;
     const invest   = fbSpend + impFB;
     const impComm  = s.comm * TAX_COMM;
@@ -4065,6 +4233,7 @@ function renderCalcMensal(accounts, shopeeOrders) {
       <td style="white-space:nowrap">
         ${hasData?`<button class="btn btn-ghost" style="font-size:8px;padding:4px 7px" onclick="useMonthValues(${d.cpp},${d.fpp})">→ Sim</button>`:''}
         ${!d.fixed&&hasData?`<button class="btn btn-ghost" style="font-size:8px;padding:4px 7px;color:var(--green)" onclick="fixMonth('${m}')">🔒</button>`:''}
+        ${d.fixed&&!HISTORICAL_DATA[m]?`<button class="btn btn-ghost" style="font-size:8px;padding:4px 7px;color:var(--yellow)" onclick="unfixMonth('${m}')" title="Desfixar — volta a usar dados ao vivo">🔓</button>`:''}
         <button class="btn btn-ghost" style="font-size:8px;padding:4px 7px;color:var(--text3)" onclick="toggleManualEdit('${m}')" title="Editar">✏️</button>
       </td>
     </tr>${editFields}`;
@@ -4260,6 +4429,16 @@ function fixMonth(month) {
   const store = loadMonthlyStore();
   if (store[month]) { store[month].fixed = true; saveMonthlyStore(store); }
   renderCalcMensal(STATE.accounts||[], STATE.shopee?.orders||[]);
+}
+
+function unfixMonth(month) {
+  const store = loadMonthlyStore();
+  if (store[month]) {
+    delete store[month]; // Remove do store — volta a calcular ao vivo (FB API + Shopee CSV)
+    saveMonthlyStore(store);
+  }
+  renderCalcMensal(STATE.accounts||[], STATE.shopee?.orders||[]);
+  setStatus(`${month} desfixado — sincronize para atualizar com dados reais`, 'loading');
 }
 
 function exportMonthlyStore() {
@@ -6678,6 +6857,668 @@ function buildPlanCard(c) {
 }
 
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// FINANCEIRO — ANÁLISE DE FATURAS
+// ══════════════════════════════════════════════════
+const FIN_KEY = 'mgd_financeiro_v1';
+
+// Dados históricos pré-carregados das faturas enviadas
+const HISTORICO_FATURAS = [
+
+  // ══════════════════════════════════════════════════
+  // 2025-12 — Uniclass venc 01/01/2026 — R$ 35.979,96
+  // ══════════════════════════════════════════════════
+  {id:'2025-12-0',competencia:'2025-12',data:'07/11 a 24/12',descricao:'FACEBK* / FACEBK* (múltiplos) — Tráfego Meta Uniclass',valor:35192.52,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+  {id:'2025-12-1',competencia:'2025-12',data:'10/12',descricao:'ASA*CASULO SERVICOS DE — Coworking',valor:89.00,tipo:'debito',categoria:'Coworking',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+  {id:'2025-12-2',competencia:'2025-12',data:'06/12',descricao:'KIWIFY*MENTOESCAL 01/06',valor:187.64,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+  {id:'2025-12-3',competencia:'2025-12',data:'17/12',descricao:'KIWIFY*SuporteMar',valor:147.00,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+  {id:'2025-12-4',competencia:'2025-12',data:'17/12',descricao:'KIWIFY*AUTOMATISA',valor:107.00,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+  {id:'2025-12-5',competencia:'2025-12',data:'20/12',descricao:'PIX PAGARME SA',valor:249.63,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+  {id:'2025-12-6',competencia:'2025-12',data:'25/12',descricao:'ENCARGOS PIX + IOF PIX',valor:7.17,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Uniclasd_01-01-2026.pdf'},
+
+  // ══════════════════════════════════════════════════
+  // 2026-01 — Uniclass venc 01/02/2026 — R$ 27.559,77
+  // ══════════════════════════════════════════════════
+  {id:'2026-01-0',competencia:'2026-01',data:'25/12 a 22/01',descricao:'FACEBK* / FACEBK* (múltiplos) — Tráfego Meta Uniclass',valor:27168.83,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Uniclass_01-02-2026.pdf'},
+  {id:'2026-01-1',competencia:'2026-01',data:'10/01',descricao:'ASA*CASULO SERVICOS DE — Coworking',valor:89.00,tipo:'debito',categoria:'Coworking',arquivo:'Fatura_Itau_Uniclass_01-02-2026.pdf'},
+  {id:'2026-01-2',competencia:'2026-01',data:'12/01',descricao:'EC *PROMOBURN',valor:97.99,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-02-2026.pdf'},
+  {id:'2026-01-3',competencia:'2026-01',data:'06/12',descricao:'KIWIFY*MENTOESCAL 02/06',valor:187.44,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-02-2026.pdf'},
+  {id:'2026-01-4',competencia:'2026-01',data:'30/12',descricao:'KIWIFY*PACKPAPELA',valor:17.00,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-02-2026.pdf'},
+
+  // ══════════════════════════════════════════════════
+  // 2026-02 — Uniclass venc 01/03/2026 — R$ 15.548,78
+  // ══════════════════════════════════════════════════
+  {id:'2026-02-0',competencia:'2026-02',data:'26/01 a 19/02',descricao:'FACEBK* / FACEBK* (final 4893) — Tráfego Meta Uniclass',valor:10656.35,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-1',competencia:'2026-02',data:'31/01 a 21/02',descricao:'FACEBK* / FACEBK* (final 1172) — Tráfego Meta Uniclass',valor:4037.94,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-2',competencia:'2026-02',data:'05/02',descricao:'KIWIFY *TRAFRONALD — Consultoria Tráfego',valor:497.00,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-3',competencia:'2026-02',data:'10/02',descricao:'KIWIFY*MGDMentori 01/12',valor:614.84,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-4',competencia:'2026-02',data:'10/02',descricao:'ASA*CASULO SERVICOS DE — Coworking',valor:89.00,tipo:'debito',categoria:'Coworking',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-5',competencia:'2026-02',data:'21/02',descricao:'KIWIFY*PromosApp — Disparador WhatsApp',valor:127.00,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-6',competencia:'2026-02',data:'31/01',descricao:'HTM *Shopainel',valor:37.90,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-7',competencia:'2026-02',data:'06/12',descricao:'KIWIFY*MENTOESCAL 03/06',valor:187.64,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+  {id:'2026-02-8',competencia:'2026-02',data:'20/02',descricao:'EC *PROMOBURN — ESTORNO',valor:97.99,tipo:'credito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-03-2026.pdf'},
+
+  // ══════════════════════════════════════════════════
+  // 2026-03 (Azul) — venc 20/03/2026 — R$ 5.304,12
+  // ══════════════════════════════════════════════════
+  {id:'2026-03-azul-0',competencia:'2026-03',data:'06/03',descricao:'FACEBK *PPGLNF5YC2',valor:12.07,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-1',competencia:'2026-03',data:'06/03',descricao:'FACEBK *N3KJUGZYW2',valor:14.88,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-2',competencia:'2026-03',data:'08/03',descricao:'FACEBK *N6VSEHVYW2',valor:1161.86,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-3',competencia:'2026-03',data:'11/03',descricao:'FACEBK *CB25PHRYW2',valor:1161.95,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-4',competencia:'2026-03',data:'11/03',descricao:'FACEBK *839Y3F5XC2',valor:1663.76,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-5',competencia:'2026-03',data:'04/03',descricao:'FACEBK *F8WY3HRYW2',valor:420.98,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-6',competencia:'2026-03',data:'04/03',descricao:'FACEBK *TZKKFGMXC2',valor:644.77,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-7',competencia:'2026-03',data:'15/07',descricao:'Azul Linhas Aereas 08/12',valor:37.80,tipo:'debito',categoria:'Viagem',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-8',competencia:'2026-03',data:'27/11',descricao:'SEPHORA STORE 04/04',valor:32.25,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-9',competencia:'2026-03',data:'04/03',descricao:'COPYCAT APPS',valor:91.80,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+  {id:'2026-03-azul-10',competencia:'2026-03',data:'17/02',descricao:'ANUIDADE DIFERENCIADA 01/12',valor:62.00,tipo:'debito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_Azul_20-03-2026.pdf'},
+
+  // ══════════════════════════════════════════════════
+  // 2026-03 (Uniclass) — venc 01/04/2026 — R$ 14.852,48
+  // ══════════════════════════════════════════════════
+  {id:'2026-03-uni-0',competencia:'2026-03',data:'23/02 a 13/03',descricao:'FACEBK* (final 4893) — Tráfego Meta Uniclass',valor:4874.60,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-1',competencia:'2026-03',data:'22/02 a 24/03',descricao:'FACEBK* (final 1172) — Tráfego Meta Uniclass',valor:7729.43,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-2',competencia:'2026-03',data:'10/03',descricao:'ASA*CASULO SERVICOS DE — Coworking',valor:89.00,tipo:'debito',categoria:'Coworking',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-3',competencia:'2026-03',data:'10/02',descricao:'KIWIFY*MGDMentori 02/12',valor:614.84,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-4',competencia:'2026-03',data:'22/02',descricao:'KIWIFY*MGDvita — Mentoria Vitalício',valor:994.00,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-5',competencia:'2026-03',data:'21/03',descricao:'KIWIFY*PromosApp — Disparador WhatsApp',valor:127.00,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-6',competencia:'2026-03',data:'28/02',descricao:'HTM *Shopainel',valor:37.90,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-7',competencia:'2026-03',data:'06/12',descricao:'KIWIFY*MENTOESCAL 04/06',valor:187.64,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-8',competencia:'2026-03',data:'06/12',descricao:'KIWIFY*MENTOESCAL 05/06',valor:187.64,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-9',competencia:'2026-03',data:'10/02',descricao:'KIWIFY*MGDMentori 03/12',valor:614.84,tipo:'debito',categoria:'Mentoria/Cursos',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-10',competencia:'2026-03',data:'27/02',descricao:'JIM.COM LUCAS DO AMARAL',valor:10.34,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-11',competencia:'2026-03',data:'20/03',descricao:'MAGIC KIDS 01/03',valor:63.71,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-12',competencia:'2026-03',data:'20/03',descricao:'REST FRANGOASSADO CAIEIRAS',valor:29.90,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+  {id:'2026-03-uni-13',competencia:'2026-03',data:'21/03',descricao:'GIRLAN COSTA DE SOUZA',valor:97.02,tipo:'debito',categoria:'Outros',arquivo:'Fatura_Itau_Uniclass_01-04-2026.pdf'},
+
+  // ══════════════════════════════════════════════════
+  // 2026-04 (Azul) — venc 20/04/2026 — R$ 18.586,22
+  // ══════════════════════════════════════════════════
+  {id:'2026-04-azul-0',competencia:'2026-04',data:'13/03',descricao:'FACEBK *4ZP6JF9XC2',valor:178.03,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-1',competencia:'2026-04',data:'13/03',descricao:'FACEBK *BMKPDJ9ZW2',valor:355.29,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-2',competencia:'2026-04',data:'14/03',descricao:'FACEBK *LVC6RJDZW2',valor:1161.58,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-3',competencia:'2026-04',data:'14/03',descricao:'FACEBK *SMFS5FDK72',valor:90.83,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-4',competencia:'2026-04',data:'16/03',descricao:'FACEBK *JBP8DGHXC2',valor:1663.26,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-5',competencia:'2026-04',data:'17/03',descricao:'FACEBK *PAZ4XF5ZW2',valor:1161.19,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-6',competencia:'2026-04',data:'19/03',descricao:'FACEBK *CYA5HGRXC2',valor:1664.43,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-7',competencia:'2026-04',data:'23/03',descricao:'CAKTO PAY LT*comp',valor:47.99,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-8',competencia:'2026-04',data:'24/03',descricao:'FACEBK *A27C9HHXC2',valor:1663.83,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-9',competencia:'2026-04',data:'25/03',descricao:'FACEBK *MDD72GVJ72',valor:1890.78,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-10',competencia:'2026-04',data:'25/03',descricao:'FACEBK *M4XACJMZW2',valor:1161.64,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-11',competencia:'2026-04',data:'26/03',descricao:'FACEBK *6X4MNGZXC2',valor:998.18,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-12',competencia:'2026-04',data:'28/03',descricao:'FACEBK *RJQMHGDK72',valor:289.82,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-13',competencia:'2026-04',data:'28/03',descricao:'FACEBK *REH5DHRXC2',valor:784.12,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-14',competencia:'2026-04',data:'29/03',descricao:'FACEBK *8D3BTJMXC2',valor:273.59,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-15',competencia:'2026-04',data:'29/03',descricao:'FACEBK *4TUYZK9ZW2',valor:538.69,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-16',competencia:'2026-04',data:'29/03',descricao:'FACEBK *L2MCCG9Z22',valor:1179.27,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-17',competencia:'2026-04',data:'29/03',descricao:'FACEBK *5R3H4GMY22',valor:113.85,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-18',competencia:'2026-04',data:'31/03',descricao:'HTM *Shopainel',valor:37.90,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-19',competencia:'2026-04',data:'04/04',descricao:'FACEBK *2NPANL9ZW2',valor:1161.16,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-20',competencia:'2026-04',data:'06/04',descricao:'FACEBK *VK2CUKZYW2',valor:38.12,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-21',competencia:'2026-04',data:'07/04',descricao:'FACEBK *Q4YX2J9XC2',valor:1663.38,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-22',competencia:'2026-04',data:'07/04',descricao:'FACEBK *V6NKWL9ZW2',valor:127.33,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-23',competencia:'2026-04',data:'08/04',descricao:'FACEBK *TWJLGLRYW2',valor:113.61,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-24',competencia:'2026-04',data:'15/03',descricao:'AZUL LINHAS MRLMW',valor:343.60,tipo:'debito',categoria:'Viagem',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-25',competencia:'2026-04',data:'15/07',descricao:'Azul Linhas Aereas 09/12',valor:37.80,tipo:'debito',categoria:'Viagem',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-26',competencia:'2026-04',data:'16/03',descricao:'ASAASIP*61 253 80 — Consultoria/Coworking',valor:504.19,tipo:'debito',categoria:'Coworking',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-27',competencia:'2026-04',data:'14/03',descricao:'ANUIDADE DIFERENCI 01/12',valor:6.20,tipo:'debito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-28',competencia:'2026-04',data:'13/03',descricao:'ESTORNO ANUIDADE DIFERE',valor:62.00,tipo:'credito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-29',competencia:'2026-04',data:'23/03',descricao:'ESTORNO DE ANUIDADE DIF (Uniclass)',valor:62.00,tipo:'credito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+  {id:'2026-04-azul-30',competencia:'2026-04',data:'31/03',descricao:'1 MONTH — AICHATAPP.AI (ESTORNO)',valor:609.04,tipo:'credito',categoria:'Ferramentas',arquivo:'Fatura_Itau_Azul_20-04-2026.pdf'},
+
+  // ══════════════════════════════════════════════════
+  // 2026-05 — Azul venc 20/05/2026 — R$ 10.841,01
+  // ══════════════════════════════════════════════════
+  {id:'2026-05-0',competencia:'2026-05',data:'13/04',descricao:'FACEBK* 4N5MPMVXC2',valor:762.67,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-1',competencia:'2026-05',data:'13/04',descricao:'FACEBK *MVAT7LHZW2',valor:715.28,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-2',competencia:'2026-05',data:'13/04',descricao:'FACEBK *4PQB6J5K72',valor:465.75,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-3',competencia:'2026-05',data:'19/04',descricao:'FACEBK* ZTGCVLMXC2',valor:1663.09,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-4',competencia:'2026-05',data:'19/04',descricao:'FACEBK *MNMV7LMYW2',valor:1161.16,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-5',competencia:'2026-05',data:'22/04',descricao:'CAKTO PAY LT*comp',valor:47.99,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-6',competencia:'2026-05',data:'22/04',descricao:'CAKTO PAY LT*comp — ESTORNO',valor:47.99,tipo:'credito',categoria:'Ferramentas',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-7',competencia:'2026-05',data:'02/05',descricao:'FACEBK* W53V3MRXC2',valor:1663.21,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-8',competencia:'2026-05',data:'02/05',descricao:'FACEBK *C4NGBNMZW2',valor:1161.16,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-9',competencia:'2026-05',data:'09/05',descricao:'FACEBK *BX82BPM5W2',valor:11.55,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-10',competencia:'2026-05',data:'10/05',descricao:'FACEBK* A8ERSN56W2',valor:11.40,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-11',competencia:'2026-05',data:'10/05',descricao:'FACEBK *KH9MAPV5W2',valor:18.31,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-12',competencia:'2026-05',data:'11/05',descricao:'FACEBK* EHVGEPMXC2',valor:1663.30,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-13',competencia:'2026-05',data:'11/05',descricao:'FACEBK *M2XLZND5W2',valor:20.50,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-14',competencia:'2026-05',data:'12/05',descricao:'FACEBK *U4RWJMH5W2',valor:23.95,tipo:'debito',categoria:'Tráfego Meta',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-15',competencia:'2026-05',data:'26/03',descricao:'AICHATAPP.AI – 1 MONTH (USD 569,99)',valor:609.04,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-16',competencia:'2026-05',data:'24/04',descricao:'ANTHROPIC.COM – USD 247,50',valor:266.08,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-17',competencia:'2026-05',data:'28/04',descricao:'ANTHROPIC.COM – USD 50,00',valor:53.32,tipo:'debito',categoria:'Ferramentas',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-18',competencia:'2026-05',data:'16/04',descricao:'ASA*51 701 013 RONALDO – Coworking',valor:497.90,tipo:'debito',categoria:'Coworking',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-19',competencia:'2026-05',data:'15/07',descricao:'Azul Linhas Aereas 10/12',valor:37.80,tipo:'debito',categoria:'Viagem',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-20',competencia:'2026-05',data:'14/04',descricao:'ANUIDADE DIFERENCI 02/12',valor:6.20,tipo:'debito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-21',competencia:'2026-05',data:'13/05',descricao:'ESTORNO DE ANUIDADE DIF',valor:3.10,tipo:'credito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-22',competencia:'2026-05',data:'15/07',descricao:'Azul Linhas Aereas 11/12',valor:37.80,tipo:'debito',categoria:'Viagem',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+  {id:'2026-05-23',competencia:'2026-05',data:'14/04',descricao:'ANUIDADE DIFERENCI 03/12',valor:6.20,tipo:'debito',categoria:'Anuidade Cartão',arquivo:'Fatura_Itau_azul_20260519.pdf'},
+];
+
+// Carrega histórico no localStorage se ainda não existir
+function initHistoricoFaturas() {
+  try {
+    const atual = JSON.parse(localStorage.getItem(FIN_KEY)||'[]');
+    // IDs já existentes no localStorage
+    const idsExistentes = new Set(atual.map(l => l.id));
+    // Adiciona só os lançamentos históricos que ainda não estão
+    const novos = HISTORICO_FATURAS.filter(l => !idsExistentes.has(l.id));
+    if (novos.length > 0) {
+      const merged = [...atual, ...novos];
+      localStorage.setItem(FIN_KEY, JSON.stringify(merged));
+      console.log(`[FINANCEIRO] ${novos.length} lançamentos históricos mesclados`);
+    }
+  } catch(e) {}
+}
+
+const FIN_CATEGORIAS = {
+  'Tráfego Meta':     { icon:'🎯', cor:'var(--red)',    palavras:['facebk','facebook','meta ads','ads meta'] },
+  'Imposto Meta 14%': { icon:'📋', cor:'var(--red)',    palavras:['imposto 14%','*imposto','imposto meta'] },
+  'Mentoria/Cursos':  { icon:'📚', cor:'var(--accent)', palavras:['kiwify','mgdmentor','mentoescal','mentori','trafronald','consultoria tráfego','trafronald'] },
+  'Ferramentas':      { icon:'🛠️', cor:'var(--blue)',   palavras:['shopainel','shopanel','promosapp','cakto','disparador','anthropic','aichat','1 month'] },
+  'Coworking':        { icon:'🏢', cor:'var(--purple)', palavras:['coworking','casulo','assessoria','asa*'] },
+  'Imposto Shopee 6%':{ icon:'🛒', cor:'var(--green)',  palavras:['das –','das-','imposto sobre comiss','shopee - imposto'] },
+  'Receita Shopee':   { icon:'💰', cor:'var(--green)',  palavras:['comissões validadas','comissoes validadas'] },
+  'Viagem':           { icon:'✈️', cor:'var(--text3)',  palavras:['azul linhas','latam','gol ','voepass'] },
+  'Anuidade Cartão':  { icon:'💳', cor:'var(--text3)',  palavras:['anuidade'] },
+  'Outros':           { icon:'📦', cor:'var(--text3)',  palavras:[] },
+};
+
+function categorizarLancamento(descricao) {
+  const d = (descricao||'').toLowerCase();
+  for (const [cat, cfg] of Object.entries(FIN_CATEGORIAS)) {
+    if (cfg.palavras.some(p => d.includes(p))) return cat;
+  }
+  return 'Outros';
+}
+
+function loadFinanceiro() {
+  try { return JSON.parse(localStorage.getItem(FIN_KEY)||'[]'); } catch(e) { return []; }
+}
+function saveFinanceiro(data) {
+  try { localStorage.setItem(FIN_KEY, JSON.stringify(data)); } catch(e) { console.warn('Financeiro: erro ao salvar', e); }
+}
+
+// ── IMPORT PDF via Claude API
+async function importarFaturaPDF(input) {
+  const file = input.files[0]; if (!file) return;
+  input.value = '';
+  const statusEl = $('finImportStatus');
+  statusEl.style.display = 'block';
+  statusEl.style.color = 'var(--text3)';
+  statusEl.innerHTML = `⏳ Lendo PDF <b>${file.name}</b> (${(file.size/1024).toFixed(0)} KB)... aguarde`;
+
+  try {
+    // Lê PDF como base64
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = rej;
+      r.readAsDataURL(file);
+    });
+
+    statusEl.innerHTML = '🤖 Enviando para IA extrair lançamentos...';
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: `Você é um extrator de dados de faturas de cartão de crédito brasileiras.
+Extraia TODOS os lançamentos de compra/saque da fatura (excluindo resumos, totais, informações de limite).
+Retorne APENAS um JSON válido, sem texto adicional, sem markdown, no formato:
+{"competencia":"YYYY-MM","lancamentos":[{"data":"DD/MM","descricao":"texto original","valor":123.45,"tipo":"debito ou credito"}]}
+- valor sempre positivo
+- tipo: "credito" para estornos/pagamentos, "debito" para compras
+- competencia: mês/ano de competência da fatura (não vencimento)`,
+        messages: [{
+          role: 'user',
+          content: [{
+            type: 'document',
+            source: { type: 'base64', media_type: 'application/pdf', data: base64 }
+          }, {
+            type: 'text',
+            text: 'Extraia todos os lançamentos desta fatura de cartão de crédito. Retorne apenas o JSON.'
+          }]
+        }]
+      })
+    });
+
+    const data = await resp.json();
+    const txt = data.content?.find(b => b.type === 'text')?.text || '';
+    const clean = txt.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    const { competencia, lancamentos } = parsed;
+    if (!lancamentos?.length) throw new Error('Nenhum lançamento encontrado');
+
+    // Categoriza e salva
+    const lancsCategorizados = lancamentos.map((l, i) => ({
+      id: `${competencia}-${i}`,
+      competencia,
+      data: l.data,
+      descricao: l.descricao,
+      valor: parseFloat(l.valor) || 0,
+      tipo: l.tipo || 'debito',
+      categoria: categorizarLancamento(l.descricao),
+      arquivo: file.name,
+    }));
+
+    const existentes = loadFinanceiro().filter(l => l.competencia !== competencia);
+    saveFinanceiro([...existentes, ...lancsCategorizados]);
+
+    statusEl.style.color = 'var(--green)';
+    statusEl.innerHTML = `✅ <b>${competencia}</b> importado — ${lancsCategorizados.length} lançamentos extraídos de <b>${file.name}</b>. <span style="color:var(--text3)">Você pode revisar as categorias na tabela abaixo.</span>`;
+
+    renderFinanceiro();
+
+  } catch(e) {
+    statusEl.style.color = 'var(--red)';
+    statusEl.innerHTML = `❌ Erro ao processar PDF: ${e.message}. Tente novamente ou verifique se o PDF está legível.`;
+    console.error('importarFaturaPDF:', e);
+  }
+}
+
+// ── CONFERÊNCIA POR FATURA
+const CONF_KEY = 'mgd_conf_faturas_v1'; // { "arquivo|competencia": valorPago }
+
+function loadConfFaturas() {
+  try { return JSON.parse(localStorage.getItem(CONF_KEY)||'{}'); } catch(e) { return {}; }
+}
+function saveConfFaturas(obj) {
+  try { localStorage.setItem(CONF_KEY, JSON.stringify(obj)); } catch(e) {}
+}
+
+function populaConfSelect() {
+  const sel = $('confFaturaSelect');
+  if (!sel) return;
+  const todos = loadFinanceiro();
+  // Agrupa por arquivo + competência
+  const faturas = {};
+  todos.forEach(l => {
+    const key = `${l.arquivo||'?'}||${l.competencia}`;
+    if (!faturas[key]) faturas[key] = { arquivo: l.arquivo||'?', competencia: l.competencia, n: 0, total: 0 };
+    faturas[key].n++;
+    if (l.tipo === 'debito') faturas[key].total += l.valor;
+    else faturas[key].total -= l.valor;
+  });
+  const conf = loadConfFaturas();
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="">— Selecione a fatura —</option>';
+  Object.entries(faturas).sort((a,b) => a[1].competencia.localeCompare(b[1].competencia)).forEach(([key, f]) => {
+    const salvo = conf[key];
+    const label = `${f.competencia} · ${f.arquivo.replace('Fatura_Itau_','').replace('.pdf','').replace(/_/g,' ')} (${f.n} lançamentos)`;
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = label;
+    if (salvo) opt.textContent += ` ✓ R$${fmt(salvo)}`;
+    if (key === curVal) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  // Restaura valor pago salvo
+  if (curVal && conf[curVal]) {
+    const el = $('confValorFatura');
+    if (el && !el.value) el.value = conf[curVal];
+  }
+}
+
+function salvarValorFatura() {
+  const key = $('confFaturaSelect')?.value;
+  const val = parseFloat($('confValorFatura')?.value||0);
+  if (!key || !val) return;
+  const conf = loadConfFaturas();
+  conf[key] = val;
+  saveConfFaturas(conf);
+  populaConfSelect();
+  renderConferencia();
+  // Feedback
+  const status = $('finImportStatus');
+  if (status) {
+    status.style.display='block';
+    status.style.color='var(--green)';
+    status.textContent = `✅ Valor R$ ${fmt(val)} salvo para esta fatura`;
+    setTimeout(() => { status.style.display='none'; }, 3000);
+  }
+}
+
+function renderConferencia() {
+  const key = $('confFaturaSelect')?.value;
+  const painel = $('confPainel');
+  const tbl = $('confTblFatura');
+  if (!key) { if(painel) painel.style.display='none'; if(tbl) tbl.innerHTML=''; return; }
+
+  const [arquivo, competencia] = key.split('||');
+  const todos = loadFinanceiro();
+  const lançs = todos.filter(l => l.arquivo === arquivo && l.competencia === competencia);
+
+  // Restaura valor salvo no campo se vazio
+  const conf = loadConfFaturas();
+  const elVal = $('confValorFatura');
+  if (elVal && !elVal.value && conf[key]) elVal.value = conf[key];
+
+  const valorFatura = parseFloat(elVal?.value||0);
+  const totalCad = lançs.reduce((s,l) => l.tipo==='debito' ? s+l.valor : s-l.valor, 0);
+  const diff = valorFatura - totalCad;
+
+  if (painel) {
+    painel.style.display = 'block';
+    safeSet('confValorPago', valorFatura > 0 ? `R$ ${fmt(valorFatura)}` : '—');
+    safeSet('confValorCad', `R$ ${fmt(totalCad)}`);
+
+    const diffEl = $('confDiff');
+    const msgEl  = $('confDiffMsg');
+    const bar    = $('confProgBar');
+    const label  = $('confProgLabel');
+
+    if (valorFatura > 0) {
+      const pct = Math.min(100, (totalCad/valorFatura)*100);
+      const cor = Math.abs(diff) < 1 ? 'var(--green)' : diff > 0 ? 'var(--yellow)' : 'var(--red)';
+      if (diffEl) { diffEl.textContent = `${diff>=0?'+':''}R$ ${fmt(Math.abs(diff))}`; diffEl.style.color = cor; }
+      if (msgEl)  msgEl.textContent = Math.abs(diff) < 1 ? '✅ Conferido — tudo bateu!' : diff > 0 ? `⚠️ Faltam R$ ${fmt(diff)} lançamentos` : `🔴 R$ ${fmt(Math.abs(diff))} a mais que o esperado`;
+      if (bar)    { bar.style.width = pct+'%'; bar.style.background = pct >= 98 ? 'var(--green)' : pct >= 80 ? 'var(--yellow)' : 'var(--red)'; }
+      if (label)  label.textContent = `${fmt(pct,1)}% da fatura conferido (${lançs.length} lançamentos)`;
+    } else {
+      if (diffEl) { diffEl.textContent = '—'; diffEl.style.color = 'var(--text3)'; }
+      if (msgEl)  msgEl.textContent = 'Digite o valor total pago na fatura acima';
+      if (bar)    bar.style.width='0%';
+      if (label)  label.textContent = `${lançs.length} lançamentos cadastrados · R$ ${fmt(totalCad)} total`;
+    }
+  }
+
+  // Tabela de lançamentos
+  if (!tbl) return;
+  if (!lançs.length) { tbl.innerHTML='<div style="padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center">Nenhum lançamento cadastrado para esta fatura</div>'; return; }
+
+  // Agrupa por categoria para subtotais
+  const porCat = {};
+  lançs.forEach(l => { if(!porCat[l.categoria]) porCat[l.categoria]=0; porCat[l.categoria]+= l.tipo==='debito'?l.valor:-l.valor; });
+
+  const rows = [...lançs].sort((a,b) => a.categoria.localeCompare(b.categoria)).map(l => {
+    const cfg = FIN_CATEGORIAS[l.categoria]||{icon:'📦',cor:'var(--text3)'};
+    const valCor = l.tipo==='credito'?'var(--green)':'var(--red)';
+    const cats = Object.keys(FIN_CATEGORIAS).map(c=>`<option value="${c}" ${c===l.categoria?'selected':''}>${c}</option>`).join('');
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:9px;white-space:nowrap;color:var(--text3)">${l.data}</td>
+      <td style="font-size:10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.descricao}">${l.descricao}</td>
+      <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${valCor};white-space:nowrap;text-align:right">${l.tipo==='credito'?'+':'-'} R$ ${fmt(l.valor)}</td>
+      <td>
+        <select onchange="atualizarCatLanc('${l.id}',this.value)"
+          style="background:var(--s2);border:1px solid var(--border);color:${cfg.cor};font-family:var(--mono);font-size:9px;padding:3px 6px;border-radius:4px;outline:none">
+          ${cats}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Subtotais por categoria
+  const subRows = Object.entries(porCat).sort((a,b)=>b[1]-a[1]).map(([cat,v]) => {
+    const cfg = FIN_CATEGORIAS[cat]||{icon:'📦',cor:'var(--text3)'};
+    return `<tr style="background:var(--s2)">
+      <td colspan="2" style="font-family:var(--mono);font-size:9px;font-weight:700;color:${cfg.cor}">${cfg.icon} ${cat}</td>
+      <td style="font-family:var(--mono);font-size:9px;font-weight:700;color:${v>=0?'var(--red)':'var(--green)'};text-align:right">${v>=0?'- R$ '+fmt(v):'+ R$ '+fmt(Math.abs(v))}</td>
+      <td></td>
+    </tr>`;
+  }).join('');
+
+  tbl.innerHTML = `
+    <table style="width:100%;min-width:400px">
+      <thead><tr style="background:var(--s2)">
+        <th style="font-size:9px;width:60px">Data</th>
+        <th style="font-size:9px">Descrição</th>
+        <th style="font-size:9px;text-align:right;width:110px">Valor</th>
+        <th style="font-size:9px;width:140px">Categoria</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr style="background:var(--s2);border-top:2px solid var(--border2)">
+          <td colspan="4" style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:6px 13px;letter-spacing:1px">SUBTOTAIS POR CATEGORIA</td>
+        </tr>
+        ${subRows}
+        <tr style="background:var(--s1);border-top:1px solid var(--border)">
+          <td colspan="2" style="font-family:var(--mono);font-size:10px;font-weight:800;padding:10px 13px">TOTAL CADASTRADO</td>
+          <td style="font-family:var(--mono);font-size:12px;font-weight:800;color:var(--accent);text-align:right;padding:10px 13px">R$ ${fmt(totalCad)}</td>
+          <td></td>
+        </tr>
+        ${valorFatura > 0 ? `<tr style="background:var(--s1)">
+          <td colspan="2" style="font-family:var(--mono);font-size:10px;font-weight:800;padding:4px 13px 10px;color:var(--text3)">VALOR PAGO NA FATURA</td>
+          <td style="font-family:var(--mono);font-size:12px;font-weight:800;text-align:right;padding:4px 13px 10px;color:var(--text)">R$ ${fmt(valorFatura)}</td>
+          <td></td>
+        </tr>
+        <tr style="background:${Math.abs(diff)<1?'rgba(62,207,142,.1)':diff>0?'rgba(232,184,75,.1)':'rgba(224,85,85,.1)'};border-top:1px solid var(--border)">
+          <td colspan="2" style="font-family:var(--mono);font-size:10px;font-weight:800;padding:10px 13px;color:${Math.abs(diff)<1?'var(--green)':diff>0?'var(--yellow)':'var(--red)'}">DIFERENÇA</td>
+          <td style="font-family:var(--mono);font-size:12px;font-weight:800;text-align:right;padding:10px 13px;color:${Math.abs(diff)<1?'var(--green)':diff>0?'var(--yellow)':'var(--red)'}">${diff>=0?'+':''}R$ ${fmt(Math.abs(diff))}</td>
+          <td></td>
+        </tr>` : ''}
+      </tfoot>
+    </table>`;
+}
+
+
+// ── RENDER PRINCIPAL
+function renderFinanceiro() {
+  const todos = loadFinanceiro();
+  if (!todos.length) {
+    safeSet('finKpis', '<div class="empty"><div class="empty-ico">💳</div><div class="empty-t">Nenhuma fatura importada</div><div class="empty-s">Clique em "Importar Fatura PDF" para começar</div></div>');
+    safeSet('finGrafico', '');
+    safeSet('finComparativo', '');
+    safeSet('finTblCat', '');
+    safeSet('finTblLanc', '');
+    return;
+  }
+
+  // Popula seletor de conferência
+  populaConfSelect();
+  const mesSel = $('finMesFilter');
+  if (mesSel) {
+    const cur = mesSel.value;
+    mesSel.innerHTML = '<option value="all">Todos os meses</option>' +
+      meses.map(m => `<option value="${m}" ${cur===m?'selected':''}>${m}</option>`).join('');
+  }
+  const catSel = $('finCatFilter');
+  if (catSel && catSel.options.length <= 1) {
+    Object.keys(FIN_CATEGORIAS).forEach(c => {
+      const o = document.createElement('option'); o.value = c; o.textContent = c; catSel.appendChild(o);
+    });
+  }
+
+  const mesFiltro = mesSel?.value || 'all';
+  const filtrados = mesFiltro === 'all' ? todos : todos.filter(l => l.competencia === mesFiltro);
+  const debitos   = filtrados.filter(l => l.tipo !== 'credito');
+
+  // ── KPIs
+  const totalGasto   = debitos.reduce((s,l) => s+l.valor, 0);
+  const totalCredito = filtrados.filter(l => l.tipo === 'credito').reduce((s,l) => s+l.valor, 0);
+  const totalMeta    = debitos.filter(l => l.categoria === 'Tráfego Meta').reduce((s,l) => s+l.valor, 0);
+  const totalMentoria= debitos.filter(l => l.categoria === 'Mentoria/Cursos').reduce((s,l) => s+l.valor, 0);
+  const totalFerr    = debitos.filter(l => l.categoria === 'Ferramentas').reduce((s,l) => s+l.valor, 0);
+  // Comissão Shopee do mesmo período (do STATE)
+  const commShopee   = (() => {
+    if (!STATE.shopee?.orders?.length) return 0;
+    const [y,m] = mesFiltro !== 'all' ? mesFiltro.split('-') : [null,null];
+    return STATE.shopee.orders.filter(o => {
+      if (!y) return true;
+      const d = new Date(o.date); return d.getFullYear()==y && (d.getMonth()+1)==parseInt(m);
+    }).reduce((s,o) => s + (o.commLiq||0), 0);
+  })();
+  const lucroReal = commShopee - totalGasto;
+
+  safeSet('finKpis', `
+    <div class="kpi-custom" style="border-top-color:var(--red)">
+      <div style="font-size:11px;font-weight:700;margin-bottom:4px">💸 Total Gasto</div>
+      <div style="font-size:22px;font-weight:800;color:var(--red)">R$ ${fmt(totalGasto)}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${debitos.length} lançamentos</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:var(--red)">
+      <div style="font-size:11px;font-weight:700;margin-bottom:4px">🎯 Tráfego Meta</div>
+      <div style="font-size:22px;font-weight:800;color:var(--red)">R$ ${fmt(totalMeta)}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${fmt(totalGasto>0?totalMeta/totalGasto*100:0,1)}% do total</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:var(--accent)">
+      <div style="font-size:11px;font-weight:700;margin-bottom:4px">📚 Mentoria</div>
+      <div style="font-size:22px;font-weight:800;color:var(--accent)">R$ ${fmt(totalMentoria)}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${fmt(totalGasto>0?totalMentoria/totalGasto*100:0,1)}% do total</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:var(--blue)">
+      <div style="font-size:11px;font-weight:700;margin-bottom:4px">🛠️ Ferramentas/IA</div>
+      <div style="font-size:22px;font-weight:800;color:var(--blue)">R$ ${fmt(totalFerr)}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${fmt(totalGasto>0?totalFerr/totalGasto*100:0,1)}% do total</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:var(--green)">
+      <div style="font-size:11px;font-weight:700;margin-bottom:4px">💰 Comissão Shopee</div>
+      <div style="font-size:22px;font-weight:800;color:var(--green)">${commShopee>0?'R$ '+fmt(commShopee):'—'}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">líquida (-6%)</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:${lucroReal>=0?'var(--green)':'var(--red)'}">
+      <div style="font-size:11px;font-weight:700;margin-bottom:4px">⚖️ Lucro Real</div>
+      <div style="font-size:22px;font-weight:800;color:${lucroReal>=0?'var(--green)':'var(--red)'}">
+        ${commShopee>0?(lucroReal>=0?'+':'-')+'R$ '+fmt(Math.abs(lucroReal)):'—'}
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">Comissão − Gastos</div>
+    </div>`);
+
+  // ── GRÁFICO EVOLUÇÃO (barras SVG simples)
+  renderFinGrafico(todos, meses);
+
+  // ── COMPARATIVO
+  renderFinComparativo(debitos, commShopee, totalGasto);
+
+  // ── TABELA CATEGORIAS
+  const porCat = {};
+  debitos.forEach(l => { if (!porCat[l.categoria]) porCat[l.categoria]={total:0,n:0}; porCat[l.categoria].total+=l.valor; porCat[l.categoria].n++; });
+  const catRows = Object.entries(porCat).sort((a,b)=>b[1].total-a[1].total).map(([cat,v]) => {
+    const cfg = FIN_CATEGORIAS[cat]||{icon:'📦',cor:'var(--text3)'};
+    const pct = totalGasto>0?(v.total/totalGasto*100):0;
+    return `<tr>
+      <td style="font-size:12px">${cfg.icon} ${cat}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:${cfg.cor}">R$ ${fmt(v.total)}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">${v.n} lanç.</td>
+      <td style="min-width:120px">
+        <div style="height:6px;background:var(--s2);border-radius:3px">
+          <div style="width:${pct}%;height:100%;background:${cfg.cor};border-radius:3px"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">${fmt(pct,1)}%</div>
+      </td>
+    </tr>`;
+  }).join('');
+  safeSet('finTblCat', `<table><thead><tr><th>Categoria</th><th>Total</th><th>Qtd</th><th>%</th></tr></thead><tbody>${catRows}</tbody></table>`);
+
+  renderLancamentos();
+}
+
+function renderFinGrafico(todos, meses) {
+  if (meses.length < 2) { safeSet('finGrafico','<div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:20px">Importe mais faturas para ver a evolução</div>'); return; }
+  const dadosMes = meses.slice(0,12).reverse().map(m => {
+    const d = todos.filter(l=>l.competencia===m&&l.tipo!=='credito');
+    return {
+      mes: m,
+      meta:     d.filter(l=>l.categoria==='Tráfego Meta').reduce((s,l)=>s+l.valor,0),
+      mentoria: d.filter(l=>l.categoria==='Mentoria/Cursos').reduce((s,l)=>s+l.valor,0),
+      ferr:     d.filter(l=>l.categoria==='Ferramentas').reduce((s,l)=>s+l.valor,0),
+      outros:   d.filter(l=>!['Tráfego Meta','Mentoria/Cursos','Ferramentas'].includes(l.categoria)).reduce((s,l)=>s+l.valor,0),
+      total:    d.reduce((s,l)=>s+l.valor,0),
+    };
+  });
+  const maxVal = Math.max(...dadosMes.map(d=>d.total), 1);
+  const BAR_H = 120;
+  const bars = dadosMes.map((d,i) => {
+    const x = i * 70 + 10;
+    const escala = v => Math.round((v/maxVal)*BAR_H);
+    const hMeta = escala(d.meta), hMent = escala(d.mentoria), hFerr = escala(d.ferr), hOut = escala(d.outros);
+    const mes = d.mes.replace(/(\d{4})-(\d{2})/,'$2/$1');
+    return `
+      <rect x="${x}" y="${BAR_H-hOut}" width="50" height="${hOut}" fill="rgba(160,160,160,.4)" rx="2"/>
+      <rect x="${x}" y="${BAR_H-hOut-hFerr}" width="50" height="${hFerr}" fill="rgba(100,160,255,.7)" rx="2"/>
+      <rect x="${x}" y="${BAR_H-hOut-hFerr-hMent}" width="50" height="${hMent}" fill="rgba(232,184,75,.8)" rx="2"/>
+      <rect x="${x}" y="${BAR_H-hOut-hFerr-hMent-hMeta}" width="50" height="${hMeta}" fill="rgba(224,85,85,.85)" rx="2"/>
+      <text x="${x+25}" y="${BAR_H+14}" text-anchor="middle" font-family="monospace" font-size="9" fill="var(--text3)">${mes}</text>
+      <text x="${x+25}" y="${BAR_H-hOut-hFerr-hMent-hMeta-4}" text-anchor="middle" font-family="monospace" font-size="8" fill="var(--text2)">R$${fmt(d.total,0)}</text>`;
+  }).join('');
+  const w = dadosMes.length*70+20;
+  safeSet('finGrafico', `
+    <svg viewBox="0 0 ${w} ${BAR_H+30}" style="width:100%;min-width:${w}px;height:${BAR_H+30}px">${bars}</svg>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:9px">
+      <span><span style="color:rgba(224,85,85,.9)">■</span> Tráfego Meta</span>
+      <span><span style="color:rgba(232,184,75,.9)">■</span> Mentoria</span>
+      <span><span style="color:rgba(100,160,255,.9)">■</span> Ferramentas</span>
+      <span><span style="color:rgba(160,160,160,.7)">■</span> Outros</span>
+    </div>`);
+}
+
+function renderFinComparativo(debitos, commShopee, totalGasto) {
+  if (!commShopee) {
+    safeSet('finComparativo','<div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:12px">Sincronize o Facebook + Shopee para ver o comparativo de lucro real</div>');
+    return;
+  }
+  const lucro = commShopee - totalGasto;
+  const roasReal = totalGasto > 0 ? commShopee/totalGasto : 0;
+  const cor = lucro >= 0 ? 'var(--green)' : 'var(--red)';
+  safeSet('finComparativo', `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px">
+      <div style="text-align:center;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">TOTAL GASTO (CARTÃO)</div>
+        <div style="font-size:20px;font-weight:800;color:var(--red)">R$ ${fmt(totalGasto)}</div>
+      </div>
+      <div style="text-align:center;border-right:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">COMISSÃO SHOPEE LÍQ.</div>
+        <div style="font-size:20px;font-weight:800;color:var(--green)">R$ ${fmt(commShopee)}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">LUCRO REAL · ROAS</div>
+        <div style="font-size:20px;font-weight:800;color:${cor}">${lucro>=0?'+':''}R$ ${fmt(lucro)}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:${cor};margin-top:2px">${fmt(roasReal)}x</div>
+      </div>
+    </div>`);
+}
+
+function renderLancamentos() {
+  const todos    = loadFinanceiro();
+  const mesFiltro= $('finMesFilter')?.value||'all';
+  const catFiltro= $('finCatFilter')?.value||'all';
+  const busca    = ($('finSearch')?.value||'').toLowerCase();
+  let lista = mesFiltro==='all' ? todos : todos.filter(l=>l.competencia===mesFiltro);
+  if (catFiltro!=='all') lista=lista.filter(l=>l.categoria===catFiltro);
+  if (busca) lista=lista.filter(l=>l.descricao.toLowerCase().includes(busca)||l.categoria.toLowerCase().includes(busca));
+
+  if (!lista.length) { safeSet('finTblLanc','<div style="padding:20px;font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center">Nenhum lançamento encontrado</div>'); return; }
+
+  const rows = lista.map(l => {
+    const cfg = FIN_CATEGORIAS[l.categoria]||{icon:'📦',cor:'var(--text3)'};
+    const valCor = l.tipo==='credito'?'var(--green)':'var(--red)';
+    const cats = Object.keys(FIN_CATEGORIAS).map(c=>`<option value="${c}" ${c===l.categoria?'selected':''}>${c}</option>`).join('');
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:9px;white-space:nowrap">${l.competencia} · ${l.data}</td>
+      <td style="font-size:10px;max-width:220px">${l.descricao}</td>
+      <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${valCor};white-space:nowrap">${l.tipo==='credito'?'+':'-'} R$ ${fmt(l.valor)}</td>
+      <td>
+        <select onchange="atualizarCatLanc('${l.id}',this.value)"
+          style="background:var(--s2);border:1px solid var(--border);color:${cfg.cor};font-family:var(--mono);font-size:9px;padding:3px 6px;border-radius:4px;outline:none">
+          ${cats}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+  safeSet('finTblLanc',`<table><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Categoria</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
+
+function atualizarCatLanc(id, novaCat) {
+  const todos = loadFinanceiro();
+  const idx = todos.findIndex(l=>l.id===id);
+  if (idx>=0) { todos[idx].categoria=novaCat; saveFinanceiro(todos); renderFinanceiro(); }
+}
+
+function exportFinanceiro() {
+  const todos = loadFinanceiro();
+  if (!todos.length) return;
+  const csv = ['Competência,Data,Descrição,Valor,Tipo,Categoria,Arquivo',
+    ...todos.map(l=>`${l.competencia},${l.data},"${l.descricao}",${l.valor},${l.tipo},${l.categoria},${l.arquivo||''}`)].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`financeiro_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════
 // BANCO DE PRODUTOS
 // ══════════════════════════════════════════════════
 const BANCO_KEY = 'mgd_banco_produtos';
@@ -7448,7 +8289,7 @@ function toggleAuditDetail(row) {
 
 // Carrega auditoria ao abrir a aba Performance do Mês
 
-window.addEventListener('DOMContentLoaded', () => { loadCreds(); loadTheme(); loadSidebarState(); loadHistoricalData(); applyDefaultFilters(); });
+window.addEventListener('DOMContentLoaded', () => { loadCreds(); loadTheme(); loadSidebarState(); loadHistoricalData(); initHistoricoFaturas(); applyDefaultFilters(); });
 
 // ── DEFAULTS: seleções padrão ao abrir a dashboard
 function applyDefaultFilters() {
