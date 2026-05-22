@@ -172,7 +172,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .day-spend{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px}
 
 /* TABLE */
-.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow:hidden;overflow-x:auto;margin-bottom:24px;-webkit-overflow-scrolling:touch}
+.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:10px;overflow-x:auto;overflow-y:visible;margin-bottom:24px;-webkit-overflow-scrolling:touch}
 .table-top{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .table-title{font-size:13px;font-weight:700}
 .filter-row{display:flex;gap:6px;flex-wrap:wrap}
@@ -210,6 +210,19 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 .subid-tag{font-family:var(--mono);font-size:8px;color:var(--text3);background:var(--s3);padding:2px 6px;border-radius:3px}
 .cross-ok{font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:3px;background:rgba(62,207,142,.1);color:var(--green);border:1px solid rgba(62,207,142,.2)}
 .cross-pend{font-family:var(--mono);font-size:8px;padding:2px 7px;border-radius:3px;background:rgba(90,90,136,.12);color:var(--text3);border:1px solid var(--border)}
+
+/* Configurador de colunas */
+.col-cfg-btn{background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.col-cfg-panel{display:none;position:absolute;right:0;top:40px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;z-index:200;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.col-cfg-panel.open{display:block}
+.col-cfg-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:10px;cursor:pointer;user-select:none}
+.col-cfg-item:last-child{border-bottom:none}
+.col-cfg-item input{accent-color:var(--accent)}
+/* Trend */
+.trend-up{color:var(--green)}.trend-dn{color:var(--red)}.trend-st{color:var(--text3)}
+/* Saturação */
+.sat-hi{color:var(--red)}.sat-md{color:var(--yellow)}.sat-ok{color:var(--green)}
+
 .th-sort{cursor:pointer;user-select:none;white-space:nowrap}
 .th-sort:hover{color:var(--accent)}
 .th-sort.asc::after{content:' ↑';color:var(--accent)}
@@ -407,16 +420,19 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
   </div>
   <nav class="nav">
     <div class="nav-section">Visão</div>
+    <div class="nav-item" onclick="goTab('decisoes')" style="border-left:2px solid var(--accent)"><span class="ni">🎯</span> <b>Decisões do Dia</b></div>
     <div class="nav-item active" onclick="goTab('geral')"><span class="ni">📊</span> Geral Consolidado</div>
     <div class="nav-item" onclick="goTab('resumo')"><span class="ni">📅</span> Resumo Diário</div>
     <div class="nav-item" onclick="goTab('cruzamento')"><span class="ni">🔀</span> Análise de Campanhas</div>
+    <div class="nav-item" onclick="goTab('produtos')"><span class="ni">🛍️</span> Produtos por Campanha</div>
+    <div class="nav-item" onclick="goTab('pedidos')"><span class="ni">🛒</span> Pedidos Shopee</div>
     <div class="nav-item" onclick="goTab('organico')"><span class="ni">🌿</span> Vendas Orgânicas</div>
     <div class="nav-item" onclick="goTab('calc')"><span class="ni">📈</span> Performance do Mês</div>
     <div class="nav-item" onclick="goTab('plan')"><span class="ni">📋</span> Gestão de Campanhas</div>
-    <div class="nav-section">Ferramentas</div>
     <div class="nav-item" onclick="goTab('alertas')"><span class="ni">🚨</span> Alertas D0-D7</div>
     <div class="nav-item" onclick="goTab('financeiro')"><span class="ni">💳</span> Financeiro</div>
     <div class="nav-item" onclick="goTab('d0')"><span class="ni">🔍</span> Análise D0 — Cliques</div>
+    <div class="nav-section">Ferramentas</div>
     <div class="nav-item" onclick="goTab('chat')"><span class="ni">🤖</span> Consultor MGD</div>
     <div class="nav-item" onclick="goTab('glossario')"><span class="ni">📖</span> Glossário MGD</div>
     <div class="nav-item" onclick="goTab('banco')"><span class="ni">🗂️</span> Banco de Produtos</div>
@@ -463,19 +479,22 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 
     <!-- Visão -->
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">VISÃO</div>
+    <div class="drawer-item" onclick="goTab('decisoes');setBN('geral');closeDrawer()" style="color:var(--accent);font-weight:700">🎯&nbsp; Decisões do Dia</div>
     <div class="drawer-item" onclick="goTab('geral');setBN('geral');closeDrawer()">📊&nbsp; Geral Consolidado</div>
     <div class="drawer-item" onclick="goTab('resumo');setBN('resumo');closeDrawer()">📅&nbsp; Resumo Diário</div>
     <div class="drawer-item" onclick="goTab('cruzamento');setBN('cruzamento');closeDrawer()">🔀&nbsp; Análise de Campanhas</div>
+    <div class="drawer-item" onclick="goTab('produtos');setBN('cruzamento');closeDrawer()">🛍️&nbsp; Produtos por Campanha</div>
+    <div class="drawer-item" onclick="goTab('pedidos');setBN('cruzamento');closeDrawer()">🛒&nbsp; Pedidos Shopee</div>
     <div class="drawer-item" onclick="goTab('organico');setBN('cruzamento');closeDrawer()">🌿&nbsp; Vendas Orgânicas</div>
     <div class="drawer-item" onclick="goTab('calc');setBN('calc');closeDrawer()">📈&nbsp; Performance do Mês</div>
     <div class="drawer-item" onclick="goTab('plan');setBN('plan');closeDrawer()">📋&nbsp; Gestão de Campanhas</div>
+    <div class="drawer-item" onclick="goTab('alertas');setBN('alertas');closeDrawer()">🚨&nbsp; Alertas D0-D7</div>
+    <div class="drawer-item" onclick="goTab('financeiro');setBN('alertas');closeDrawer()">💳&nbsp; Financeiro</div>
+    <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise D0 — Cliques</div>
 
     <!-- Ferramentas -->
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">FERRAMENTAS</div>
-    <div class="drawer-item" onclick="goTab('alertas');setBN('alertas');closeDrawer()">🚨&nbsp; Alertas D0-D7</div>
-    <div class="drawer-item" onclick="goTab('financeiro');setBN('alertas');closeDrawer()">💳&nbsp; Financeiro</div>
-    <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise D0 — Cliques</div>
     <div class="drawer-item" onclick="goTab('chat');setBN('chat');closeDrawer()">🤖&nbsp; Consultor MGD</div>
     <div class="drawer-item" onclick="goTab('glossario');setBN('chat');closeDrawer()">📖&nbsp; Glossário MGD</div>
     <div class="drawer-item" onclick="goTab('banco');setBN('banco');closeDrawer()">🗂️&nbsp; Banco de Produtos</div>
@@ -519,6 +538,64 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
   <div class="content">
 
     <!-- ══ GERAL ══ -->
+    <!-- ══ DECISÕES DO DIA ══ -->
+    <div class="panel" id="panel-decisoes">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
+        <div>
+          <div style="font-size:22px;font-weight:800">🎯 Decisões do Dia</div>
+          <div id="decisoes-data" style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px"></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 12px">
+            <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">📅 Analisar dia:</span>
+            <input type="date" id="decisoesDataSel"
+              style="background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:10px;outline:none;cursor:pointer"
+              onchange="renderDecisoes()">
+          </div>
+          <button class="btn" onclick="decisoesHoje()" style="font-size:10px;padding:7px 14px">Hoje</button>
+          <button class="btn" onclick="renderDecisoes()" style="font-size:10px;padding:7px 14px">🔄 Atualizar</button>
+        </div>
+      </div>
+
+      <!-- ① RESUMO EXECUTIVO -->
+      <div id="decisoes-resumo" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px"></div>
+      <div id="decisoes-exec" style="margin-bottom:20px"></div>
+
+      <!-- ② PROTOCOLO -->
+      <div id="decisoes-protocolo" style="margin-bottom:24px"></div>
+
+      <!-- ③ SCORE DE SAÚDE -->
+      <div id="decisoes-score-titulo" style="margin-bottom:10px"></div>
+      <div id="decisoes-score" style="margin-bottom:28px"></div>
+
+      <!-- ④ AÇÕES POR PRIORIDADE -->
+      <div id="decisoes-agir"      style="margin-bottom:20px"></div>
+      <div id="decisoes-monitorar" style="margin-bottom:20px"></div>
+      <div id="decisoes-ok"        style="margin-bottom:20px"></div>
+      <div id="decisoes-aguardar"  style="margin-bottom:28px"></div>
+
+      <!-- ⑤ ANÁLISE NARRATIVA DIA A DIA -->
+      <div style="border-top:1px solid var(--border);padding-top:24px">
+        <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:14px">🔍 ANÁLISE NARRATIVA — HISTÓRICO DIA A DIA</div>
+
+        <!-- Filtros -->
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          <div class="filter-row" id="narr-filt-row">
+            <button class="filter-chip active" onclick="setNarrFilt('ativa',this)">● Ativas</button>
+            <button class="filter-chip" onclick="setNarrFilt('pausada',this)">○ Pausadas</button>
+            <button class="filter-chip" onclick="setNarrFilt('todas',this)">Todas</button>
+          </div>
+          <input type="text" id="narr-busca" placeholder="🔍 Filtrar campanha..."
+            oninput="renderNarrativaLista()"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:6px;outline:none;flex:1;min-width:160px">
+          <span id="narr-count" style="font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap"></span>
+        </div>
+
+        <!-- Lista de cards de campanhas -->
+        <div id="narrativa-lista"></div>
+      </div>
+    </div>
+
     <div class="panel active" id="panel-geral">
 
       <!-- TOPBAR DO PAINEL -->
@@ -691,22 +768,20 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
       </div>
 
-      <!-- ② ANÁLISE D0 — Cliques & CPC -->
-      <div class="sec" style="margin-top:24px">Análise D0 — Cliques & CPC (Dia da Subida)</div>
-      <div class="info-box" style="margin-bottom:20px">
-        <b style="color:var(--accent)">🎯 Metodologia de Testes — Orçamento R$ 6,44/dia</b><br><br>
-        <b style="color:var(--yellow)">D0 — Dia da Subida:</b> Volume de cliques ainda baixo com R$6,44. Só verifique se o CPC não está <b>exorbitante</b> (acima de R$0,50). Se estiver normal, deixe rodar sem mexer.<br><br>
-        <b style="color:var(--blue)">D1 a D4 — Aprendizado:</b> CPC começa a estabilizar. Meta: <b>CPC ≤ R$0,20</b>. Observe a tendência de queda.<br><br>
-        <b style="color:var(--purple)">D5 a D9 — Análise:</b> CPC + pedidos + ROI acumulado. Com R$6,44/dia o ROI pode ser baixo — avalie a tendência, não o número isolado.<br><br>
-        <b style="color:var(--green)">D10 — Decisão Final:</b> ROAS ≥ 1,3x? → Escala 10-20% do orçamento. Não empatou? → PAUSA sem remorso.<br><br>
-        <b style="color:var(--green)">✓ CPC &lt; R$0,15</b> — Ótimo.<br>
-        <b style="color:var(--yellow)">~ CPC R$0,15–R$0,20</b> — Aceitável. Meta atingida.<br>
-        <b style="color:var(--red)">✗ CPC &gt; R$0,20</b> — Acima da meta. Monitore a tendência.<br>
-        <b style="color:var(--red)">✗✗ CPC &gt; R$0,50</b> — Exorbitante no D0. Verifique criativo/público.<br><br>
-        <b style="color:var(--yellow)">⚠️</b> CPCs da manhã são sempre mais caros. Avalie após as 15h.
+      <!-- ③ CLIQUES POR HORA -->
+      <div class="sec" style="margin-top:28px">🕐 Cliques por Hora</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:16px">
+        Horários com mais cliques nos seus links Shopee — baseado no CSV de cliques importado
       </div>
-      <div class="kpi-grid" id="kpis-d0"></div>
-      <div id="tbl-d0"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+        <div class="filter-row" id="horaFiltroRow">
+          <button class="filter-chip active" onclick="setHoraFiltro('todos',this)">Todos os dias</button>
+          <button class="filter-chip" onclick="setHoraFiltro('hoje',this)">Hoje</button>
+          <button class="filter-chip" onclick="setHoraFiltro('7d',this)">7 dias</button>
+        </div>
+        <span id="horaTotal" style="font-family:var(--mono);font-size:9px;color:var(--text3)"></span>
+      </div>
+      <div id="cliques-por-hora"></div>
 
     </div>
 
@@ -951,6 +1026,72 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
       </div>
       <div id="tbl-ranking"></div>
+    </div>
+
+    <!-- ══ PRODUTOS POR CAMPANHA ══ -->
+    <div class="panel" id="panel-produtos">
+      <div style="font-size:20px;font-weight:800;margin-bottom:4px">🛍️ Produtos por Campanha</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:20px">Produtos vendidos em cada campanha via Sub_id</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+        <input type="text" id="prodBusca" placeholder="🔍 Buscar campanha ou produto..."
+          oninput="renderProdutos()"
+          style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:8px 12px;border-radius:6px;outline:none;flex:1;min-width:200px">
+        <select id="prodContaFilter" onchange="renderProdutos()"
+          style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:8px 10px;border-radius:6px;outline:none">
+          <option value="all">Todas as contas</option>
+        </select>
+        <div class="filter-row">
+          <button class="filter-chip active" id="prodFiltAtivo"   onclick="setProdFilt('ativo',this)">● Ativas</button>
+          <button class="filter-chip"        id="prodFiltPausado" onclick="setProdFilt('pausado',this)">■ Pausadas</button>
+          <button class="filter-chip"        id="prodFiltAll"     onclick="setProdFilt('all',this)">Todas</button>
+        </div>
+        <span id="prodCount" style="font-family:var(--mono);font-size:9px;color:var(--text3)"></span>
+      </div>
+      <div id="tbl-produtos"></div>
+    </div>
+
+    <!-- ══ PEDIDOS SHOPEE ══ -->
+    <div class="panel" id="panel-pedidos">
+      <div style="font-size:20px;font-weight:800;margin-bottom:4px">🛒 Pedidos Shopee</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:16px">Todos os pedidos do CSV importado</div>
+
+      <!-- KPIs de status -->
+      <div id="pedidosKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px"></div>
+
+      <!-- Filtros -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <div class="filter-row" id="pedidosStatusFiltro">
+          <button class="filter-chip active" onclick="setPedFilt('todos',this)">Todos</button>
+          <button class="filter-chip" onclick="setPedFilt('pago',this)">● Pagos</button>
+          <button class="filter-chip" onclick="setPedFilt('pendente',this)">⏳ Aguardando</button>
+          <button class="filter-chip" onclick="setPedFilt('nao_pago',this)">✗ Não Pagos</button>
+          <button class="filter-chip" onclick="setPedFilt('cancelado',this)">⊘ Cancelados</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+        <!-- Período -->
+        <div class="filter-row">
+          <button class="filter-chip active" onclick="setPedPeriodo(1,this)">Hoje</button>
+          <button class="filter-chip" onclick="setPedPeriodo(7,this)">7 dias</button>
+          <button class="filter-chip" onclick="setPedPeriodo(30,this)">30 dias</button>
+          <button class="filter-chip" onclick="setPedPeriodo(90,this)">3 meses</button>
+          <button class="filter-chip" onclick="setPedPeriodo(0,this)">Tudo</button>
+        </div>
+        <!-- Período customizado -->
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="date" id="pedDtIni" onchange="setPedPeriodo(-1,null)"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:5px 8px;border-radius:6px;outline:none">
+          <span style="font-family:var(--mono);font-size:9px;color:var(--text3)">até</span>
+          <input type="date" id="pedDtFim" onchange="setPedPeriodo(-1,null)"
+            style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:5px 8px;border-radius:6px;outline:none">
+        </div>
+        <input type="text" id="pedidosBusca" placeholder="🔍 Produto, loja, campanha ou ID..."
+          oninput="renderPedidos()"
+          style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:8px 12px;border-radius:6px;outline:none;flex:1;min-width:180px">
+        <span id="pedidosCount" style="font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap"></span>
+      </div>
+
+      <div id="tbl-pedidos" style="overflow-x:auto;-webkit-overflow-scrolling:touch"></div>
     </div>
 
     <!-- ══ GLOSSÁRIO MGD ══ -->
@@ -1543,6 +1684,61 @@ function dayAction(roas, day) {
   if (day === 4) return roas >= be   ? { lbl: '→ PRÉ-ESCALA', ac: 'act-sc' } : { lbl: 'PAUSAR', ac: 'act-pa' };
   return classify(roas);
 }
+// ── TREND: compara últimos 3 dias vs 3 anteriores
+function getTrend(dailyCross) {
+  const dias = [...(dailyCross||[])].filter(d => d.roas > 0 && !d.aguardando);
+  if (dias.length < 4) return { lbl:'—', cls:'', icon:'→', cor:'var(--text3)' };
+  const rec = dias.slice(-3).reduce((s,d)=>s+d.roas,0)/3;
+  const ant = dias.slice(-6,-3).reduce((s,d)=>s+d.roas,0)/Math.max(dias.slice(-6,-3).length,1);
+  if (rec > ant * 1.08) return { lbl:'Acelerando', cls:'trend-up',   icon:'▲▲', cor:'var(--green)' };
+  if (rec > ant * 1.02) return { lbl:'Subindo',    cls:'trend-up',   icon:'▲',  cor:'var(--green)' };
+  if (rec < ant * 0.92) return { lbl:'Caindo',     cls:'trend-dn',   icon:'▼▼', cor:'var(--red)'   };
+  if (rec < ant * 0.98) return { lbl:'Caindo',     cls:'trend-dn',   icon:'▼',  cor:'var(--red)'   };
+  return { lbl:'Estável', cls:'trend-st', icon:'→', cor:'var(--text3)' };
+}
+
+// ── SATURAÇÃO: detecta se CPC está subindo e ROAS caindo
+function getSaturacao(dailyCross) {
+  const dias = [...(dailyCross||[])].filter(d => d.hasSpend && !d.aguardando);
+  if (dias.length < 4) return { nivel: 0, lbl: '—', cor: 'var(--text3)' };
+  const rec = dias.slice(-3);
+  const ant = dias.slice(-6,-3);
+  if (!ant.length) return { nivel: 0, lbl: '—', cor: 'var(--text3)' };
+  const cpcRec = rec.reduce((s,d)=>s+(d.cpc||0),0)/rec.length;
+  const cpcAnt = ant.reduce((s,d)=>s+(d.cpc||0),0)/ant.length;
+  const roasRec = rec.reduce((s,d)=>s+d.roas,0)/rec.length;
+  const roasAnt = ant.reduce((s,d)=>s+d.roas,0)/ant.length;
+  const cpcSubiu  = cpcRec > cpcAnt * 1.15;
+  const raosCaiu  = roasRec < roasAnt * 0.90;
+  if (cpcSubiu && raosCaiu) return { nivel: 2, lbl: '🔴 Alta',   cor: 'var(--red)'    };
+  if (cpcSubiu || raosCaiu) return { nivel: 1, lbl: '🟡 Média',  cor: 'var(--yellow)' };
+  return                           { nivel: 0, lbl: '🟢 Normal', cor: 'var(--green)'  };
+}
+
+// ── AÇÃO DETALHADA por fase/ROAS
+function getAcaoDetalhada(roas, dayN, campStatus) {
+  const be = getBreakeven();
+  const ativa = (campStatus||'').toUpperCase() === 'ACTIVE';
+  if (!ativa) return { lbl: 'Pausada', sub: '', cor: 'var(--text3)' };
+  if (dayN <= 1)  return { lbl: 'Observar', sub: 'CPC é a única métrica', cor: 'var(--text3)' };
+  if (dayN <= 3)  return roas >= 1.0
+    ? { lbl: 'Aguardar', sub: 'Deixar rodar até D4', cor: 'var(--yellow)' }
+    : { lbl: 'Atenção', sub: 'ROAS baixo — monitorar', cor: 'var(--yellow)' };
+  if (dayN === 4) return roas >= be
+    ? { lbl: '→ Pré-Escala', sub: 'Não escalar ainda. Dar 2–3 dias', cor: 'var(--accent)' }
+    : { lbl: 'Pausar', sub: 'Não empatou no D4', cor: 'var(--red)' };
+  if (dayN <= 9)  {
+    if (roas >= 2.0) return { lbl: 'Escalar ++', sub: 'Escalar agressivamente 20–30%', cor: 'var(--green)' };
+    if (roas >= 1.5) return { lbl: 'Escalar',    sub: 'Escalar gradualmente 5–15%',    cor: 'var(--green)' };
+    if (roas >= be)  return { lbl: 'Manter',     sub: 'Não escalar ainda',              cor: 'var(--yellow)' };
+    return                  { lbl: 'Pausar',     sub: 'Regra dos 3 dias',               cor: 'var(--red)' };
+  }
+  if (roas >= 2.0) return { lbl: 'Escalar ++', sub: 'Escalar agressivamente 20–30%', cor: 'var(--green)' };
+  if (roas >= 1.5) return { lbl: 'Escalar',    sub: 'Escalar gradualmente 5–15%',    cor: 'var(--green)' };
+  if (roas >= be)  return { lbl: 'Manter',     sub: 'Monitorar diariamente',          cor: 'var(--yellow)' };
+  return                  { lbl: 'Pausar',     sub: 'Abaixo do ponto de empate',      cor: 'var(--red)' };
+}
+
 
 function setStatus(msg, type = 'loading') {
   const p = $('statusPill');
@@ -1596,8 +1792,11 @@ function goTab(tab) {
     if (n.getAttribute('onclick')?.includes(`'${tab}'`)) n.classList.add('active');
   });
   const titles = {
+    decisoes: 'Decisões do Dia',
     geral: 'Geral Consolidado', resumo: 'Resumo Diário',
     cruzamento: 'Análise de Campanhas — FB × Shopee',
+    produtos: 'Produtos por Campanha',
+    pedidos:  'Pedidos Shopee',
     organico: 'Vendas Orgânicas',
     calc: 'Performance do Mês', plan: 'Gestão de Campanhas',
     alertas: 'Alertas D0-D7', d0: 'Análise D0 — Cliques & CPC',
@@ -1608,9 +1807,13 @@ function goTab(tab) {
   safeText('topbarTitle', titles[tab] || tab);
   safeText('topbarSub', STATE.loaded ? '— ' + new Date().toLocaleDateString('pt-BR') : '');
   // Sync mobile bottom nav
-  const mobileMap = { geral:'geral', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'alertas', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas', financeiro:'alertas' };
+  const mobileMap = { decisoes:'geral', geral:'geral', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'alertas', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas', financeiro:'alertas', produtos:'cruzamento', pedidos:'cruzamento' };
   if (typeof setBN === 'function') setBN(mobileMap[tab] || '');
+  if (tab === 'decisoes')   setTimeout(renderDecisoes, 50);
   if (tab === 'financeiro') setTimeout(() => { initHistoricoFaturas(); renderFinanceiro(); }, 50);
+  if (tab === 'd0')         setTimeout(() => { renderClicksCompare(); renderClicksHora(); }, 50);
+  if (tab === 'produtos')   setTimeout(renderProdutos, 50);
+  if (tab === 'pedidos')    setTimeout(renderPedidos, 50);
   if (tab === 'chat') setTimeout(initChat, 50);
   if (tab === 'banco') { setTimeout(() => { if(STATE.loaded) autoBancoStatus(); renderBancoGrid(); }, 50); }
   if (tab === 'calc') { setTimeout(() => { loadAudit(); renderAuditoria(); initPlanMonth(); }, 50); }
@@ -1633,7 +1836,7 @@ async function fetchFB(token, accountId, days) {
   const campLimit  = 500;
   const dailyLimit = Math.max(totalDays * 10, 1000); // suficiente para todas campanhas × dias
 
-  const fields   = 'campaign_name,campaign_id,spend,clicks,cpc,actions';
+  const fields   = 'campaign_name,campaign_id,spend,clicks,impressions,cpc,actions';
   const adFields = 'id,name,campaign_id,status,creative{id,object_story_spec,link_url,object_url}';
   const fOpts    = { method: 'GET', mode: 'cors', credentials: 'omit' };
 
@@ -1739,10 +1942,12 @@ async function fetchFB(token, accountId, days) {
     const name = d.campaign_name;
     if (!dailyByCamp[name]) dailyByCamp[name] = [];
     dailyByCamp[name].push({
-      date:   d.date_start,
-      spend:  parseFloat(d.spend || 0),
-      clicks: parseInt(d.clicks || 0),
-      cpc:    parseFloat(d.cpc || 0),
+      date:        d.date_start,
+      spend:       parseFloat(d.spend || 0),
+      clicks:      parseInt(d.clicks || 0),
+      impressions: parseInt(d.impressions || 0),
+      cpc:         parseFloat(d.cpc || 0),
+      ctr:         d.impressions > 0 ? parseInt(d.clicks||0) / parseInt(d.impressions) * 100 : 0,
     });
   }
 
@@ -1760,12 +1965,16 @@ async function fetchFB(token, accountId, days) {
     campStatusById[camp.id] = camp.status || '';
   }
 
-  // Injeta dailyData, startDate e budget em cada campanha
+  // Injeta dailyData, startDate, budget, status e CTR do dia mais recente
   campaigns.forEach(c => {
     c.dailyData  = (dailyByCamp[c.name] || []).sort((a, b) => a.date > b.date ? 1 : -1);
     c.startDate  = campStartById[c.campaignId]  || '';
     c.budget     = campBudgetById[c.campaignId] || 0;
     c.campStatus = campStatusById[c.campaignId] || '';
+    // CTR do dia mais recente com gasto
+    const lastDayWithData = [...c.dailyData].reverse().find(d => d.spend > 0);
+    c.ctrHoje    = lastDayWithData?.ctr || 0;
+    c.ctrDate    = lastDayWithData?.date || '';
   });
 
   // Timeline geral da conta
@@ -2719,20 +2928,41 @@ function buildCross(accounts, shopeeOrders) {
       for (const o of campOrders) {
         const nome = o.item   || 'Produto sem nome';
         const iid  = o.itemId || '';
-        const key  = iid || nome; // agrupa por ID do item se disponível
-        if (!prodMap[key]) prodMap[key] = { nome, itemId: iid, qtd: 0, comm: 0, lastDate: '', direta: 0 };
+        const key  = iid || nome;
+        if (!prodMap[key]) prodMap[key] = {
+          nome, itemId: iid,
+          qtd: 0,
+          gmv: 0,           // Valor de Compra(R$)
+          commShopee: 0,    // Comissão Shopee(R$)
+          commVendedor: 0,  // Comissão do vendedor(R$)
+          commTotalPed: 0,  // Comissão total do pedido(R$)
+          direta: 0,
+          taxaComissao: 0,
+          taxaVendedor: 0,
+          lastDate: '',
+        };
         prodMap[key].qtd++;
-        prodMap[key].comm    += o.commission;
-        prodMap[key].direta  += o.direta ? 1 : 0;
+        prodMap[key].gmv          += o.amount || 0;
+        // Comissão Shopee(R$) direto do CSV, ou fallback para commission
+        prodMap[key].commShopee   += o.commShopeeVal > 0 ? o.commShopeeVal : o.commission || 0;
+        // Comissão vendedor(R$) direto do CSV
+        prodMap[key].commVendedor += o.commVendedorVal || 0;
+        // Comissão total do pedido(R$)
+        prodMap[key].commTotalPed += o.commTotalPedido > 0 ? o.commTotalPedido : (o.commTotal || 0);
+        // Diretas: baseado em tipoAtribuicao
+        const tipo = (o.tipoAtribuicao || '').toLowerCase();
+        if (tipo.includes('mesma loja') || tipo.includes('direct') || tipo.includes('direta')) prodMap[key].direta++;
+        // Taxa: usa último valor não-zero
+        if (o.taxaComissao > 0) prodMap[key].taxaComissao = o.taxaComissao;
+        if (o.taxaVendedor > 0) prodMap[key].taxaVendedor = o.taxaVendedor;
         if (!prodMap[key].lastDate || o.date > prodMap[key].lastDate) prodMap[key].lastDate = o.date;
       }
       const produtos = Object.values(prodMap)
-        .sort((a, b) => b.comm - a.comm)
+        .sort((a, b) => b.commShopee - a.commShopee)
         .map(p => {
           const diasSemVenda = p.lastDate
             ? Math.floor((new Date(todayDate2) - new Date(p.lastDate)) / 86400000)
             : null;
-          // Link direto com Shop ID real
           const shopeeLink = shopeeProductLink(p.itemId, p.nome);
           return { ...p, diasSemVenda, shopeeLink };
         });
@@ -3163,6 +3393,64 @@ function toggleCrossCard(uid) {
   days.style.display = days.style.display === 'block' ? 'none' : 'block';
 }
 
+
+// ── CONFIGURAÇÃO DE COLUNAS — Análise de Campanhas
+const COL_CONFIG_KEY = 'mgd_cross_cols_v1';
+const COL_DEFAULTS = {
+  campanha:   { lbl: 'Campanha',       vis: true,  fixed: true  },
+  pedidos:    { lbl: 'Ped · Dir',      vis: true,  fixed: false },
+  roas:       { lbl: 'ROAS',          vis: true,  fixed: false },
+  trend:      { lbl: 'Trend',         vis: true,  fixed: false },
+  gasto:      { lbl: 'Gasto FB',      vis: true,  fixed: false },
+  commBruta:  { lbl: 'Comissão Bruta',vis: false, fixed: false },
+  commLiq:    { lbl: 'Comissão Líq.', vis: true,  fixed: false },
+  lucro:      { lbl: 'Lucro',         vis: true,  fixed: false },
+  cpc:        { lbl: 'CPC',           vis: true,  fixed: false },
+  disc:       { lbl: 'Disc. Cliques', vis: true,  fixed: false },
+  vdiretas:   { lbl: 'V. Diretas',    vis: false, fixed: false },
+  saturacao:  { lbl: 'Saturação',     vis: true,  fixed: false },
+  acao:       { lbl: 'Ação',          vis: true,  fixed: false },
+};
+
+function loadColConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(COL_CONFIG_KEY)||'{}');
+    const cfg = {};
+    for (const [k,v] of Object.entries(COL_DEFAULTS)) {
+      cfg[k] = { ...v, vis: saved[k]?.vis ?? v.vis };
+    }
+    return cfg;
+  } catch(e) { return { ...COL_DEFAULTS }; }
+}
+function saveColConfig(cfg) {
+  const toSave = {};
+  for (const [k,v] of Object.entries(cfg)) toSave[k] = { vis: v.vis };
+  try { localStorage.setItem(COL_CONFIG_KEY, JSON.stringify(toSave)); } catch(e) {}
+}
+function toggleCol(key) {
+  const cfg = loadColConfig();
+  if (cfg[key]?.fixed) return;
+  cfg[key].vis = !cfg[key].vis;
+  saveColConfig(cfg);
+  renderCrossTable(STATE.crossData || []);
+  renderColCfgPanel();
+}
+function toggleColPanel() {
+  const p = $('colCfgPanel');
+  if (p) p.classList.toggle('open');
+}
+function renderColCfgPanel() {
+  const el = $('colCfgPanel');
+  if (!el) return;
+  const cfg = loadColConfig();
+  el.innerHTML = Object.entries(cfg).map(([k,v]) =>
+    `<label class="col-cfg-item">
+      <input type="checkbox" ${v.vis?'checked':''} ${v.fixed?'disabled':''} onchange="toggleCol('${k}')">
+      ${v.lbl}${v.fixed?' <small style="color:var(--text3)">(fixo)</small>':''}
+    </label>`
+  ).join('');
+}
+
 function renderCrossTable(crossData) {
   const el = $('tbl-cross');
   if (!el) return;
@@ -3173,146 +3461,153 @@ function renderCrossTable(crossData) {
 
   const sorted = getSortedCross(crossData);
   const isMobile = window.innerWidth < 768;
+  if (isMobile) { renderCrossCards(sorted, el); return; }
 
-  if (isMobile) {
-    renderCrossCards(sorted, el);
-    return;
-  }
+  const cfg = loadColConfig();
+  const vis = k => cfg[k]?.vis;
 
-  // Helper para th ordenável
-  const th = (label, col) => {
+  // Helper th ordenável
+  const th = (label, col, key) => {
+    if (key && !vis(key)) return '';
     const active = crossSortCol === col;
-    return `<th class="th-sort${active ? ' '+crossSortDir : ''}" onclick="sortCross('${col}')">${label}</th>`;
+    return `<th class="th-sort${active?' '+crossSortDir:''}" onclick="sortCross('${col}')">${label}</th>`;
   };
+  const tdV = (key, html, style='') => vis(key) ? `<td ${style}>${html}</td>` : '';
 
   const rows = sorted.map(c => {
-    const cl = classify(c.realRoas);
+    const cl      = classify(c.realRoas);
     const lucroColor = c.lucro >= 0 ? 'var(--green)' : 'var(--red)';
+    const trend   = getTrend(c.dailyCross);
+    const sat     = getSaturacao(c.dailyCross);
+    const maxDay  = c.dailyCross?.length > 0 ? Math.max(...c.dailyCross.map(d=>d.day||0)) : 0;
+    const acao    = getAcaoDetalhada(c.realRoas, maxDay, c.campStatus);
 
-    // Linhas diárias — mais recente primeiro (D7→D0)
-      const dailyRows = [...(c.dailyCross || [])].reverse().map((d) => {
-      const dRoasColor  = d.roas >= 1.5 ? 'var(--green)' : d.roas >= 1.0 ? 'var(--yellow)' : d.roas > 0 ? 'var(--red)' : 'var(--text3)';
-      const dLucroColor = d.lucro >= 0 ? 'var(--green)' : 'var(--red)';
-      const aguardando  = d.aguardando;
-      const dayN        = d.day ?? '?';
-      const phase       = getPhase(dayN);
-      const dAction     = d.hasSpend && !aguardando ? dayAction(d.roas, Math.min(dayN, 7)) : null;
-      return `
-        <tr style="background:rgba(255,255,255,.015)">
-          <td style="padding:7px 14px 7px 30px;font-family:var(--mono);font-size:9px;color:var(--text3)">
-            ↳ <b style="color:var(--accent)">D${dayN}</b> · ${phase} · ${d.date}
-            ${aguardando ? `<span style="color:var(--yellow);margin-left:6px">⚠ aguardando Shopee</span>` : ''}
-          </td>
-          <td style="font-family:var(--mono);font-size:9px;color:var(--text3)">
-            ${d.pedidos > 0
-              ? `${d.pedidos} ped · <span style="color:var(--green)">${d.diretas} dir</span>
-                 <div style="color:var(--accent);font-size:8px;margin-top:1px">💳 ${d.pagUnicosDia||d.pedidos} únicos</div>`
-              : '—'}
-          </td>
-          <td style="font-family:var(--mono);font-size:11px;font-weight:700;color:${aguardando ? 'var(--text3)' : dRoasColor}">
-            ${aguardando ? '⏳' : d.roas > 0 ? fmt(d.roas) + 'x' : '—'}
-          </td>
-          <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">
-            ${d.spend > 0 ? `R$ ${fmt(d.gastoReal)} <span style="font-size:8px">(+R$ ${fmt(d.impFB||0)})</span>` : '—'}
-          </td>
-          <td style="font-family:var(--mono);font-size:10px">
-            ${d.commission > 0 ? 'R$ ' + fmt(d.commission) : aguardando ? '⏳' : '—'}
-          </td>
-          <td style="font-family:var(--mono);font-size:9px;color:var(--text3)">
-            ${d.commission > 0 ? `R$ ${fmt(d.commLiq)} <span style="font-size:8px">(−R$ ${fmt(d.impComm||0)})</span>` : '—'}
-          </td>
-          <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${aguardando ? 'var(--text3)' : dLucroColor}">
-            ${aguardando ? '⏳' : d.commission > 0 ? (d.lucro >= 0 ? '+' : '') + 'R$ ' + fmt(d.lucro) : '—'}
-          </td>
-          <td style="font-family:var(--mono);font-size:9px;color:var(--text3)">R$ ${fmt(d.cpc||0)}</td>
-          <td>
-            ${dAction ? `<span class="act ${dAction.ac}" style="font-size:7px">${dAction.lbl}</span>` : '<span style="color:var(--text3);font-size:9px">—</span>'}
-          </td>
-        </tr>`;
+    // Discrepância de cliques
+    const discPct = c.metaClicks > 0 ? ((c.shopeeClicks||0) / c.metaClicks * 100) : null;
+    const discStr = discPct !== null
+      ? `<span style="color:${discPct>=60?'var(--green)':discPct>=40?'var(--yellow)':'var(--red)'};font-weight:700">${fmt(discPct,1)}%</span>`
+      : '—';
+
+    // Linhas diárias
+    const dailyRows = [...(c.dailyCross||[])].reverse().map(d => {
+      const dRoasColor  = d.roas>=1.5?'var(--green)':d.roas>=1.0?'var(--yellow)':d.roas>0?'var(--red)':'var(--text3)';
+      const dLucroColor = d.lucro>=0?'var(--green)':'var(--red)';
+      const ag = d.aguardando;
+      const dayN = d.day??'?';
+      const dAction = d.hasSpend && !ag ? dayAction(d.roas, Math.min(dayN,7)) : null;
+      const dDisc = d.metaClicks>0 ? fmt(d.shopeeClicks/d.metaClicks*100,1)+'%' : '—';
+      return `<tr style="background:rgba(255,255,255,.015)">
+        <td colspan="2" style="padding:7px 14px 7px 30px;font-family:var(--mono);font-size:9px;color:var(--text3)">
+          ↳ <b style="color:var(--accent)">D${dayN}</b> · ${getPhase(dayN)} · ${d.date}
+          ${ag?'<span style="color:var(--yellow);margin-left:6px">⚠ aguardando Shopee</span>':''}
+        </td>
+        <td style="font-family:var(--mono);font-size:11px;font-weight:700;color:${ag?'var(--text3)':dRoasColor}">
+          ${ag?'⏳':d.roas>0?fmt(d.roas)+'x':'—'}
+        </td>
+        ${vis('trend')?`<td style="font-size:9px;color:var(--text3)">—</td>`:''}
+        <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">
+          ${d.spend>0?`R$ ${fmt(d.gastoReal)} <span style="font-size:8px">(+${fmt(d.impFB||0)})</span>`:'—'}
+        </td>
+        ${vis('commBruta')?`<td style="font-family:var(--mono);font-size:10px">${d.commission>0?'R$ '+fmt(d.commission):ag?'⏳':'—'}</td>`:''}
+        <td style="font-family:var(--mono);font-size:10px">${d.commission>0?'R$ '+fmt(d.commLiq):ag?'⏳':'—'}</td>
+        <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${ag?'var(--text3)':dLucroColor}">
+          ${ag?'⏳':d.commission>0?(d.lucro>=0?'+':'')+'R$ '+fmt(d.lucro):'—'}
+        </td>
+        ${vis('cpc')?`<td style="font-family:var(--mono);font-size:9px">R$ ${fmt(d.cpc||0)}</td>`:''}
+        ${vis('disc')?`<td style="font-family:var(--mono);font-size:9px;color:var(--text3)">${dDisc}</td>`:''}
+        ${vis('vdiretas')?`<td style="font-family:var(--mono);font-size:9px">${d.diretas??'—'}</td>`:''}
+        ${vis('saturacao')?`<td>—</td>`:''}
+        ${vis('acao')?`<td>${dAction?`<span class="act ${dAction.ac}" style="font-size:7px">${dAction.lbl}</span>`:'<span style="color:var(--text3);font-size:9px">—</span>'}</td>`:''}
+      </tr>`;
     }).join('');
+
+    const colCount = Object.values(cfg).filter(v=>v.vis).length + 1; // +1 para campanha
 
     return `
       <tr data-class="${cl.lbl.toLowerCase()}" onclick="toggleDailyRows(this)" style="cursor:pointer">
         <td class="td-name">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${c.name}
-            <span style="font-family:var(--mono);font-size:8px;background:rgba(232,184,75,.15);color:var(--accent);padding:2px 7px;border-radius:3px;flex-shrink:0">
-              📅 D0–D${c.dailyCross?.length > 0 ? Math.max(...c.dailyCross.map(d=>d.day||0)) : 0}
-            </span>
+            <span style="font-family:var(--mono);font-size:8px;background:rgba(232,184,75,.15);color:var(--accent);padding:2px 7px;border-radius:3px;flex-shrink:0">📅 D0–D${maxDay}</span>
             ${statusBadge(c.campStatus)}
           </div>
-          <small>
-            <span class="acc-badge ab${c.accIdx}">${ACCOUNTS_CONFIG[c.accIdx]?.name}</span>
-          </small>
-          ${(c.produtos||[]).length > 0 ? `
+          <small><span class="acc-badge ab${c.accIdx}">${ACCOUNTS_CONFIG[c.accIdx]?.name}</span></small>
+          ${(c.produtos||[]).length>0?`
           <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
-            ${(c.produtos||[]).slice(0,3).map(p => {
-              const semVenda = p.diasSemVenda;
-              const alerta = semVenda >= 3 ? `<span style="color:var(--red);font-size:7px">⚠ ${semVenda}d sem venda</span>` :
-                             semVenda >= 1 ? `<span style="color:var(--yellow);font-size:7px">${semVenda}d sem venda</span>` : '';
+            ${(c.produtos||[]).slice(0,3).map(p=>{
+              const alerta=p.diasSemVenda>=3?`<span style="color:var(--red);font-size:7px">⚠ ${p.diasSemVenda}d sem venda</span>`:p.diasSemVenda>=1?`<span style="color:var(--yellow);font-size:7px">${p.diasSemVenda}d sem venda</span>`:'';
               return `<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-                <a href="${p.shopeeLink}" target="_blank" rel="noopener"
-                  style="font-family:var(--mono);font-size:8px;color:var(--blue);text-decoration:none;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block"
-                  title="${p.nome}" onclick="event.stopPropagation()">
-                  🔗 ${p.nome.length > 28 ? p.nome.slice(0,28)+'…' : p.nome}
+                <a href="${p.shopeeLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+                  style="font-family:var(--mono);font-size:8px;color:var(--blue);text-decoration:none;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block">
+                  🔗 ${p.nome.length>28?p.nome.slice(0,28)+'…':p.nome}
                 </a>
                 <span style="font-family:var(--mono);font-size:8px;color:var(--green)">R$ ${fmt(p.comm)}</span>
                 <span style="font-family:var(--mono);font-size:8px;color:var(--text3)">${p.qtd}x</span>
                 ${alerta}
               </div>`;
             }).join('')}
-            ${(c.produtos||[]).length > 3 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3)">+${(c.produtos||[]).length - 3} produtos</div>` : ''}
-          </div>` : ''}
+            ${(c.produtos||[]).length>3?`<div style="font-family:var(--mono);font-size:8px;color:var(--text3)">+${(c.produtos||[]).length-3} produtos</div>`:''}
+          </div>`:''}
         </td>
-        <td style="font-family:var(--mono);font-size:11px">
+        ${tdV('pedidos',`
           <div>${c.shopeeOrders} ped · <span style="color:var(--green);font-weight:700">${c.shopeeDiretas||0} dir</span></div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-top:2px">
-            💳 ${c.pagUnicos||c.shopeeOrders} pag. únicos
-            ${c.pagUnicos && c.pagUnicos < c.shopeeOrders ? `<span style="color:var(--yellow);font-size:8px"> (${c.shopeeOrders - c.pagUnicos} multi-item)</span>` : ''}
-          </div>
-          ${c.temHojeIncompleto ? `<div style="font-size:8px;color:var(--yellow)">⚠ hoje sem Shopee</div>` : ''}
-        </td>
-        <td><span class="roas-val ${cl.rc}">${fmt(c.realRoas)}x</span></td>
-        <td style="font-family:var(--mono)">
-          R$ ${fmt(c.gastoReal)}
-          <div style="font-size:8px;color:var(--text3)">+R$ ${fmt(c.impFB||0)} (14%)</div>
-        </td>
-        <td style="font-family:var(--mono)">R$ ${fmt(c.shopeeRevenue)}</td>
-        <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">
-          R$ ${fmt(c.shopeeCommLiq)}
-          <div style="font-size:8px">−R$ ${fmt(c.impComm||0)} (6%)</div>
-        </td>
-        <td style="font-family:var(--mono);font-weight:700;color:${lucroColor}">
-          ${c.lucro >= 0 ? '+' : ''}R$ ${fmt(c.lucro)}
-        </td>
-        <td><span class="${c.crossed ? 'cross-ok' : 'cross-pend'}">${c.crossed ? '✓ CRUZADO' : 'PENDENTE'}</span></td>
-        <td><span class="act ${cl.ac}">${cl.act}</span></td>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-top:2px">💳 ${c.pagUnicos||c.shopeeOrders} únicos${c.pagUnicos&&c.pagUnicos<c.shopeeOrders?` <span style="color:var(--yellow);font-size:8px">(${c.shopeeOrders-c.pagUnicos} multi)</span>`:''}</div>
+          ${c.temHojeIncompleto?'<div style="font-size:8px;color:var(--yellow)">⚠ hoje sem Shopee</div>':''}
+        `,'style="font-family:var(--mono);font-size:11px"')}
+        ${tdV('roas',`<span class="roas-val ${cl.rc}">${fmt(c.realRoas)}x</span>`)}
+        ${tdV('trend',`<span class="${trend.cls}" style="color:${trend.cor};font-family:var(--mono);font-size:10px;font-weight:700">${trend.icon}</span><br><span style="font-family:var(--mono);font-size:8px;color:${trend.cor}">${trend.lbl}</span>`)}
+        ${tdV('gasto',`R$ ${fmt(c.gastoReal)}<div style="font-size:8px;color:var(--text3)">+R$ ${fmt(c.impFB||0)} (14%)</div>`,'style="font-family:var(--mono)"')}
+        ${tdV('commBruta',`R$ ${fmt(c.shopeeRevenue)}`,'style="font-family:var(--mono)"')}
+        ${tdV('commLiq',`R$ ${fmt(c.shopeeCommLiq)}<div style="font-size:8px">−R$ ${fmt(c.impComm||0)} (6%)</div>`,'style="font-family:var(--mono);font-size:10px;color:var(--text3)"')}
+        ${tdV('lucro',`${c.lucro>=0?'+':''}R$ ${fmt(c.lucro)}`,'style="font-family:var(--mono);font-weight:700;color:'+lucroColor+'"')}
+        ${tdV('cpc',`R$ ${fmt(c.cpc||0)}`,'style="font-family:var(--mono);font-size:10px"')}
+        ${tdV('disc',discStr,'style="text-align:center"')}
+        ${tdV('vdiretas',`<b>${c.shopeeDiretas||0}</b>`,'style="font-family:var(--mono);text-align:center"')}
+        ${tdV('saturacao',`<span style="font-family:var(--mono);font-size:9px;color:${sat.cor}">${sat.lbl}</span>`)}
+        ${tdV('acao',`<span class="act ${cl.ac}" title="${acao.sub}" style="cursor:help">${acao.lbl}</span><div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-top:2px">${acao.sub}</div>`)}
       </tr>
       <tr class="daily-detail" style="display:none">
-        <td colspan="9" style="padding:0">
+        <td colspan="${colCount}" style="padding:0">
           <table style="width:100%">${dailyRows}</table>
         </td>
       </tr>`;
   }).join('');
 
+  // Botão configurar colunas
+  const colBtn = `
+    <div style="position:relative;display:inline-block">
+      <button class="col-cfg-btn" onclick="toggleColPanel();renderColCfgPanel()">⚙ Colunas</button>
+      <div id="colCfgPanel" class="col-cfg-panel"></div>
+    </div>`;
+
   el.innerHTML = `
-    <table>
+    <div style="display:flex;justify-content:flex-end;padding:8px 14px 0;gap:8px;align-items:center">
+      ${colBtn}
+    </div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    <table style="min-width:600px">
       <thead><tr>
-        ${th('Campanha','name')}
-        ${th('Ped · Dir<br><small style="color:var(--accent);font-weight:400">💳 Pag. Únicos</small>','pedidos')}
-        ${th('ROAS Real','realRoas')}
-        ${th('Gasto Real FB (+14%)','gastoReal')}
-        ${th('Comissão Bruta','shopeeRevenue')}
-        ${th('Comissão Líq. (−6%)','shopeeCommLiq')}
-        ${th('Lucro','lucro')}
-        ${th('CPC','cpc')}
-        <th>Ação</th>
+        ${th('Campanha','name','campanha')}
+        ${th('Ped · Dir<br><small style="color:var(--accent);font-weight:400">💳 Únicos</small>','pedidos','pedidos')}
+        ${th('ROAS','realRoas','roas')}
+        ${vis('trend')?'<th>Trend</th>':''}
+        ${th('Gasto FB (+14%)','gastoReal','gasto')}
+        ${vis('commBruta')?th('Comissão Bruta','shopeeRevenue','commBruta'):''}
+        ${th('Comissão Líq.','shopeeCommLiq','commLiq')}
+        ${th('Lucro','lucro','lucro')}
+        ${vis('cpc')?th('CPC','cpc','cpc'):''}
+        ${vis('disc')?'<th>Disc.%</th>':''}
+        ${vis('vdiretas')?'<th>V.Dir</th>':''}
+        ${vis('saturacao')?'<th>Saturação</th>':''}
+        ${vis('acao')?'<th>Ação</th>':''}
       </tr></thead>
       <tbody>${rows}</tbody>
-    </table>`;
+    </table>
+    </div>`;
 
   const upd = $('cross-update');
   if (upd) upd.textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+  renderColCfgPanel();
 }
 
 // ══════════════════════════════════════════════════
@@ -3498,7 +3793,7 @@ function renderAlerts(accounts, crossData) {
     }
 
     const aIcon = aType==='danger'?'🔴':aType==='ok'?'✅':aType==='warn'?'🟡':'📋';
-    const borderCor = aType==='danger'?'var(--red)':aType==='ok'?'var(--green)':aType==='warn'?'var(--yellow)':'var(--border2)';
+    const borderCor = aType==='danger'?'var(--red)':aType==='ok'?'var(--green)':aType==='warn'?'var(--yellow)':'var(--blue)';
 
     html += `<div class="alert-item" data-fase="${fase}" data-status="${status}" data-dias="${dReal}" style="border-left:3px solid ${borderCor};display:flex;gap:12px;align-items:flex-start;padding:12px 16px;background:var(--s2);border-radius:8px;margin-bottom:8px">
       <div style="font-size:18px;line-height:1;flex-shrink:0">${aIcon}</div>
@@ -3605,8 +3900,12 @@ function renderAll() {
   // ── RESUMO DIÁRIO
   renderResumo(accounts, shopee?.orders || []);
 
+  // ── DECISÕES DO DIA (atualiza se a aba estiver ativa)
+  if ($('panel-decisoes')?.classList.contains('active')) renderDecisoes();
+
   // ── D0
-  renderD0(accounts);
+  renderClicksCompare();
+  renderClicksHora();
 
   // ── CRUZAMENTO
   const shopeeTotal = (shopee?.orders || []).reduce((s, o) => s + o.commission, 0);
@@ -3624,6 +3923,9 @@ function renderAll() {
 
   // ── GESTÃO DE CAMPANHAS (cards)
   renderPlanCards();
+
+  // ── PRODUTOS POR CAMPANHA
+  if ($('panel-produtos')?.classList.contains('active')) renderProdutos();
 
   STATE.loaded = true;
   autoBancoStatus();
@@ -5171,15 +5473,17 @@ function importShopeeClicksCSV(input) {
       for (let i=1; i<lines.length; i++) {
         const cols = lines[i].split(sep).map(c=>c.trim().replace(/^"|"$/g,''));
         if (cols.length < 2) continue;
-        // Remove os "----" e qualquer coisa depois, normaliza para minúsculo
         const rawSubId = (cols[hIdx[COL_SUBID]]||'');
         const subId = rawSubId.replace(/[-]{2,}.*$/, '').trim().toLowerCase();
-        // Extrai só a data (sem hora)
         const rawDate = (cols[hIdx[COL_DATE]]||'');
+        // Extrai data
         const m1 = rawDate.match(/(\d{4})-(\d{2})-(\d{2})/);
         const m2 = rawDate.match(/(\d{2})\/(\d{2})\/(\d{4})/);
         const clickDate = m1 ? `${m1[1]}-${m1[2]}-${m1[3]}` : m2 ? `${m2[3]}-${m2[2]}-${m2[1]}` : '';
-        if (subId) clicks.push({ date: clickDate, subId });
+        // Extrai hora — formato HH:MM ou HH:MM:SS
+        const mHora = rawDate.match(/(\d{2}):(\d{2})/);
+        const hora = mHora ? parseInt(mHora[1]) : -1;
+        if (subId) clicks.push({ date: clickDate, subId, hora, rawDate });
       }
 
       STATE.shopeeClicks = clicks;
@@ -6151,7 +6455,6 @@ function makeSortableById(id) {
 }
 
 function processShopeeCSV(text, days) {
-  // Reprocessa CSV bruto com novo período — mesma lógica do importShopeeCSV
   try {
     const lines = text.split('\n').filter(l => l.trim());
     if (lines.length < 2) return { orders: [], total: 0, source: 'csv' };
@@ -6161,14 +6464,44 @@ function processShopeeCSV(text, days) {
     const hIdx = {};
     rawHeaders.forEach((h, i) => { hIdx[h] = i; });
 
-    const COL_ORDER = 'ID do pedido', COL_STATUS = 'Status do Pedido';
-    const COL_DATE  = 'Horário do pedido', COL_SUBID1 = 'Sub_id1', COL_SUBID2 = 'Sub_id2';
-    const COL_PRICE = 'Valor de Compra(R$)', COL_COMM = 'Comissão líquida do afiliado(R$)';
+    // Log dos headers para debug
+    console.log('[CSV HEADERS]', rawHeaders.slice(0,30).join(' | '));
+
+    const COL_ORDER   = 'ID do pedido';
+    const COL_STATUS  = 'Status do Pedido';
+    const COL_DATE    = 'Horário do pedido';
+    const COL_SUBID1  = 'Sub_id1';
+    const COL_SUBID2  = 'Sub_id2';
+    const COL_PRICE   = 'Valor de Compra(R$)';
+    const COL_COMM    = 'Comissão líquida do afiliado(R$)';
     const COL_COMMTOT = 'Comissão total do pedido(R$)';
-    const atribCol = 'Tipo de atribuição';
-    const commCol  = hIdx[COL_COMM] !== undefined ? COL_COMM : COL_COMMTOT;
-    const statusCol = hIdx[COL_STATUS] !== undefined ? COL_STATUS : null;
-    const parseNum = s => parseFloat((s||'').replace(/[^\d,.-]/g,'').replace(',','.')) || 0;
+    const atribCol    = 'Tipo de atribuição';
+
+    // Mapeamento robusto — tenta variações de nome
+    const findCol = (...names) => names.find(n => hIdx[n] !== undefined);
+
+    const commCol     = findCol(COL_COMM, COL_COMMTOT) || COL_COMM;
+    const statusCol   = hIdx[COL_STATUS] !== undefined ? COL_STATUS : null;
+
+    // Colunas de taxa e comissão detalhada
+    const COL_TAXA_SHOPEE  = findCol('Taxa de comissão Shopee do item', 'Taxa de comissão Shopee', 'Taxa Shopee');
+    const COL_TAXA_VEND    = findCol('Taxa de comissão do vendedor do item', 'Taxa de comissão do vendedor', 'Taxa Vendedor');
+    const COL_COMM_SHOPEE  = findCol('Comissão Shopee(R$)', 'Comissão da Shopee(R$)', 'Comissão shopee(R$)');
+    const COL_COMM_VEND    = findCol('Comissão do vendedor(R$)', 'Comissão Vendedor(R$)');
+    const COL_COMM_TOTAL   = findCol('Comissão total do pedido(R$)', 'Comissão total do item(R$)');
+    const COL_ITEM         = findCol('Nome do Item', 'Nome do item', 'Item');
+    const COL_ITEM_ID      = findCol('ID do Item', 'ID do item', 'Item ID');
+
+    const parseNum = s => {
+      if (!s || s.trim()==='' || s.trim()==='-') return 0;
+      const clean = s.trim().replace(/[^\d.,\-]/g,'');
+      if (clean.includes('.') && clean.includes(',')) {
+        return clean.lastIndexOf('.')>clean.lastIndexOf(',')
+          ? parseFloat(clean.replace(/,/g,'')) || 0
+          : parseFloat(clean.replace(/\./g,'').replace(',','.')) || 0;
+      }
+      return parseFloat(clean.replace(',','.')) || 0;
+    };
 
     function splitCSVLine(line, sep) {
       if (sep !== ',') return line.split(sep).map(c => c.trim().replace(/^"|"$/g, ''));
@@ -6193,23 +6526,35 @@ function processShopeeCSV(text, days) {
       const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
       const m1 = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
       let orderDate = m2 ? `${m2[3]}-${m2[2]}-${m2[1]}` : m1 ? `${m1[1]}-${m1[2]}-${m1[3]}` : '';
+
+      const tipoAtrib = hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]]||'').trim() : '';
+      const taxaComissaoRaw = COL_TAXA_SHOPEE ? (cols[hIdx[COL_TAXA_SHOPEE]]||'').replace('%','').replace(',','.').trim() : '';
+      const taxaVendedorRaw = COL_TAXA_VEND   ? (cols[hIdx[COL_TAXA_VEND]]  ||'').replace('%','').replace(',','.').trim() : '';
+
       orders.push({
-        orderId:    cols[hIdx[COL_ORDER]] || `row_${i}`,
-        paymentId:  hIdx['ID do pagamento'] !== undefined ? (cols[hIdx['ID do pagamento']]||'').trim() : '',
-        subId:      (cols[hIdx[COL_SUBID1]] || '').toLowerCase().trim(),
-        subId2:     hIdx[COL_SUBID2] !== undefined ? (cols[hIdx[COL_SUBID2]]||'').toLowerCase().trim() : '',
-        amount:     parseNum(cols[hIdx[COL_PRICE]]),
-        commission: parseNum(cols[hIdx[commCol]]),
-        status, date: orderDate,
-        direta:  hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]]||'').toLowerCase().includes('mesma loja') : false,
-        canal:   hIdx['Canal'] !== undefined ? (cols[hIdx['Canal']]||'').trim() : '',
-        item:    hIdx['Nome do Item'] !== undefined ? (cols[hIdx['Nome do Item']]||'').trim() : '',
-        itemId:  hIdx['ID do Item']   !== undefined ? (cols[hIdx['ID do Item']]  ||'').trim() : '',
-        itemStatus: hIdx['Status do item do afiliado'] !== undefined ? (cols[hIdx['Status do item do afiliado']]||'').trim() : '',
+        orderId:        cols[hIdx[COL_ORDER]] || `row_${i}`,
+        paymentId:      hIdx['ID do pagamento'] !== undefined ? (cols[hIdx['ID do pagamento']]||'').trim() : '',
+        subId:          (cols[hIdx[COL_SUBID1]] || '').toLowerCase().trim(),
+        subId2:         hIdx[COL_SUBID2] !== undefined ? (cols[hIdx[COL_SUBID2]]||'').toLowerCase().trim() : '',
+        amount:         parseNum(cols[hIdx[COL_PRICE]]),
+        commission:     parseNum(cols[hIdx[commCol]]),
+        status,
+        date:           orderDate,
+        direta:         tipoAtrib.toLowerCase().includes('mesma loja'),
+        tipoAtribuicao: tipoAtrib,
+        canal:          hIdx['Canal'] !== undefined ? (cols[hIdx['Canal']]||'').trim() : '',
+        item:           COL_ITEM   ? (cols[hIdx[COL_ITEM]]  ||'').trim() : '',
+        itemId:         COL_ITEM_ID? (cols[hIdx[COL_ITEM_ID]]||'').trim() : '',
+        itemStatus:     hIdx['Status do item do afiliado'] !== undefined ? (cols[hIdx['Status do item do afiliado']]||'').trim() : '',
+        taxaComissao:   taxaComissaoRaw ? parseFloat(taxaComissaoRaw) : 0,
+        taxaVendedor:   taxaVendedorRaw ? parseFloat(taxaVendedorRaw) : 0,
+        commShopeeVal:  COL_COMM_SHOPEE ? parseNum(cols[hIdx[COL_COMM_SHOPEE]]) : 0,
+        commVendedorVal:COL_COMM_VEND   ? parseNum(cols[hIdx[COL_COMM_VEND]])   : 0,
+        commTotalPedido:COL_COMM_TOTAL  ? parseNum(cols[hIdx[COL_COMM_TOTAL]])  : 0,
+        commTotal:      0,
       });
     }
 
-    // Filtra pelo período
     const safeDays = Math.min(days, 90);
     const sinceDate = new Date(Date.now() - (safeDays+1)*86400000).toISOString().split('T')[0];
     const untilDate = new Date().toISOString().split('T')[0];
@@ -6260,6 +6605,18 @@ function importShopeeCSV(input) {
       const COL_PRICE   = 'Valor de Compra(R$)';
       const COL_COMM    = 'Comissão líquida do afiliado(R$)';
       const COL_COMMTOT = 'Comissão total do pedido(R$)';
+
+      // Log para debug — mostra nomes das colunas encontradas
+      console.log('[importShopeeCSV HEADERS]', rawHeaders.slice(0,35).join(' | '));
+
+      // Mapeamento robusto — tenta variações de nome
+      const findCol = (...names) => names.find(n => hIdx[n] !== undefined);
+      const COL_TAXA_SHOPEE = findCol('Taxa de comissão Shopee do item','Taxa de comissão Shopee','Taxa Shopee');
+      const COL_TAXA_VEND   = findCol('Taxa de comissão do vendedor do item','Taxa de comissão do vendedor','Taxa Vendedor');
+      const COL_COMM_SHOPEE = findCol('Comissão Shopee(R$)','Comissão da Shopee(R$)','Comissão shopee(R$)','Comissão Shopee (R$)');
+      const COL_COMM_VEND   = findCol('Comissão do vendedor(R$)','Comissão Vendedor(R$)','Comissão do Vendedor(R$)');
+      const COL_COMM_TOTAL  = findCol('Comissão total do pedido(R$)','Comissão total do item(R$)');
+      console.log('[importShopeeCSV] Taxa Shopee:', COL_TAXA_SHOPEE, '| Taxa Vend:', COL_TAXA_VEND, '| Comm Shopee:', COL_COMM_SHOPEE, '| Comm Vend:', COL_COMM_VEND, '| Comm Total:', COL_COMM_TOTAL);
 
       if (hIdx[COL_SUBID1] === undefined) {
         throw new Error(`Coluna "${COL_SUBID1}" não encontrada. Colunas detectadas: ${rawHeaders.slice(0,8).join(', ')}...`);
@@ -6359,30 +6716,47 @@ function importShopeeCSV(input) {
           else if (raw) console.warn(`[CSV DATE] formato não reconhecido linha ${i}: "${raw}"`);
         }
 
-        // Taxa de comissão Shopee do item — campo chave para auditoria
-        const taxaComissaoRaw = hIdx['Taxa de comissão Shopee do item'] !== undefined
-          ? (cols[hIdx['Taxa de comissão Shopee do item']] || '').replace('%','').replace(',','.').trim()
+        // Taxa de comissão Shopee do item
+        const taxaComissaoRaw = COL_TAXA_SHOPEE !== undefined
+          ? (cols[hIdx[COL_TAXA_SHOPEE]] || '').replace('%','').replace(',','.').trim()
           : '';
         const taxaComissao = taxaComissaoRaw ? parseFloat(taxaComissaoRaw) : 0;
 
+        // Taxa de comissão do vendedor do item
+        const taxaVendedorRaw = COL_TAXA_VEND !== undefined
+          ? (cols[hIdx[COL_TAXA_VEND]] || '').replace('%','').replace(',','.').trim()
+          : '';
+        const taxaVendedor = taxaVendedorRaw ? parseFloat(taxaVendedorRaw) : 0;
+
         orders.push({
           orderId,
-          paymentId:     hIdx['ID do pagamento'] !== undefined ? (cols[hIdx['ID do pagamento']] || '').trim() : '',
-          subId:         subId1.toLowerCase().trim(),
-          subId2:        subId2.toLowerCase().trim(),
+          paymentId:      hIdx['ID do pagamento']              !== undefined ? (cols[hIdx['ID do pagamento']]              || '').trim() : '',
+          subId:          subId1.toLowerCase().trim(),
+          subId2:         subId2.toLowerCase().trim(),
           amount,
           commission,
           status,
-          date:          orderDate,
-          direta:        hIdx[atribCol] !== undefined
-                           ? (cols[hIdx[atribCol]] || '').toLowerCase().includes('mesma loja')
-                           : false,
+          date:           orderDate,
+          direta:         hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]] || '').toLowerCase().includes('mesma loja') : false,
           tipoAtribuicao: hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]] || '').trim() : '',
-          canal:         hIdx['Canal'] !== undefined ? (cols[hIdx['Canal']] || '').trim() : '',
-          item:          hIdx['Nome do Item'] !== undefined ? (cols[hIdx['Nome do Item']] || '').trim() : '',
-          itemId:        hIdx['ID do Item']   !== undefined ? (cols[hIdx['ID do Item']]   || '').trim() : '',
-          itemStatus:    hIdx['Status do item do afiliado'] !== undefined ? (cols[hIdx['Status do item do afiliado']] || '').trim() : '',
+          canal:          hIdx['Canal']                        !== undefined ? (cols[hIdx['Canal']]                        || '').trim() : '',
+          item:           hIdx['Nome do Item']                 !== undefined ? (cols[hIdx['Nome do Item']]                 || '').trim() : '',
+          itemId:         hIdx['ID do Item']                   !== undefined ? (cols[hIdx['ID do Item']]                   || '').trim() : '',
+          itemStatus:     hIdx['Status do item do afiliado']   !== undefined ? (cols[hIdx['Status do item do afiliado']]   || '').trim() : '',
+          loja:           hIdx['Nome da Loja']                 !== undefined ? (cols[hIdx['Nome da Loja']]                 || '').trim() : '',
+          lojaId:         hIdx['ID da Loja']                   !== undefined ? (cols[hIdx['ID da Loja']]                   || '').trim() : '',
+          conversionId:   hIdx['ID de conversão']              !== undefined ? (cols[hIdx['ID de conversão']]              || '').trim() : '',
+          dataClique:     hIdx['Data do clique']               !== undefined ? (cols[hIdx['Data do clique']]               || '').trim() : '',
+          dataCompra:     hIdx['Data da compra']               !== undefined ? (cols[hIdx['Data da compra']]               || '').trim() : '',
+          device:         hIdx['Dispositivo']                  !== undefined ? (cols[hIdx['Dispositivo']]                  || '').trim() : '',
+          tipoComprador:  hIdx['Tipo do comprador']            !== undefined ? (cols[hIdx['Tipo do comprador']]            || '').trim() : '',
+          commTotal:      hIdx['Comissão total do item(R$)']         !== undefined ? parseNum(cols[hIdx['Comissão total do item(R$)']])         : 0,
+          commVendedorVal:COL_COMM_VEND   !== undefined ? parseNum(cols[hIdx[COL_COMM_VEND]])   : 0,
+          commShopeeVal:  COL_COMM_SHOPEE !== undefined ? parseNum(cols[hIdx[COL_COMM_SHOPEE]]) : 0,
+          commTotalPedido:COL_COMM_TOTAL  !== undefined ? parseNum(cols[hIdx[COL_COMM_TOTAL]])  : 0,
+          precoUn:        hIdx['Preço Un. Total(R$)']                 !== undefined ? parseNum(cols[hIdx['Preço Un. Total(R$)']])                 : amount,
           taxaComissao,
+          taxaVendedor,
         });
       }
 
@@ -7309,6 +7683,7 @@ function renderFinanceiro() {
 
   // Popula seletor de conferência
   populaConfSelect();
+  const meses = [...new Set(todos.map(l => l.competencia))].sort().reverse();
   const mesSel = $('finMesFilter');
   if (mesSel) {
     const cur = mesSel.value;
@@ -7407,98 +7782,148 @@ function renderFinanceiro() {
 }
 
 function renderFinGrafico(todos, meses) {
-  if (meses.length < 2) { safeSet('finGrafico','<div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:20px">Importe mais faturas para ver a evolução</div>'); return; }
-  const dadosMes = meses.slice(0,12).reverse().map(m => {
-    const d = todos.filter(l=>l.competencia===m&&l.tipo!=='credito');
+  const el = $('finGrafico');
+  if (!el) return;
+  if (!meses.length) { el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:30px">Nenhum dado disponível</div>'; return; }
+  const nomes = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const dadosMes = [...meses].sort().map(m => {
+    const d = todos.filter(l => l.competencia===m && l.tipo!=='credito');
     return {
-      mes: m,
-      meta:     d.filter(l=>l.categoria==='Tráfego Meta').reduce((s,l)=>s+l.valor,0),
-      mentoria: d.filter(l=>l.categoria==='Mentoria/Cursos').reduce((s,l)=>s+l.valor,0),
-      ferr:     d.filter(l=>l.categoria==='Ferramentas').reduce((s,l)=>s+l.valor,0),
-      outros:   d.filter(l=>!['Tráfego Meta','Mentoria/Cursos','Ferramentas'].includes(l.categoria)).reduce((s,l)=>s+l.valor,0),
-      total:    d.reduce((s,l)=>s+l.valor,0),
+      mes:m, label:`${nomes[parseInt(m.split('-')[1])]}/${m.split('-')[0].slice(2)}`,
+      meta:d.filter(l=>l.categoria==='Tráfego Meta').reduce((s,l)=>s+l.valor,0),
+      mentoria:d.filter(l=>l.categoria==='Mentoria/Cursos').reduce((s,l)=>s+l.valor,0),
+      ferr:d.filter(l=>l.categoria==='Ferramentas').reduce((s,l)=>s+l.valor,0),
+      outros:d.filter(l=>!['Tráfego Meta','Mentoria/Cursos','Ferramentas'].includes(l.categoria)).reduce((s,l)=>s+l.valor,0),
+      total:d.reduce((s,l)=>s+l.valor,0),
     };
   });
   const maxVal = Math.max(...dadosMes.map(d=>d.total), 1);
-  const BAR_H = 120;
-  const bars = dadosMes.map((d,i) => {
-    const x = i * 70 + 10;
-    const escala = v => Math.round((v/maxVal)*BAR_H);
-    const hMeta = escala(d.meta), hMent = escala(d.mentoria), hFerr = escala(d.ferr), hOut = escala(d.outros);
-    const mes = d.mes.replace(/(\d{4})-(\d{2})/,'$2/$1');
-    return `
-      <rect x="${x}" y="${BAR_H-hOut}" width="50" height="${hOut}" fill="rgba(160,160,160,.4)" rx="2"/>
-      <rect x="${x}" y="${BAR_H-hOut-hFerr}" width="50" height="${hFerr}" fill="rgba(100,160,255,.7)" rx="2"/>
-      <rect x="${x}" y="${BAR_H-hOut-hFerr-hMent}" width="50" height="${hMent}" fill="rgba(232,184,75,.8)" rx="2"/>
-      <rect x="${x}" y="${BAR_H-hOut-hFerr-hMent-hMeta}" width="50" height="${hMeta}" fill="rgba(224,85,85,.85)" rx="2"/>
-      <text x="${x+25}" y="${BAR_H+14}" text-anchor="middle" font-family="monospace" font-size="9" fill="var(--text3)">${mes}</text>
-      <text x="${x+25}" y="${BAR_H-hOut-hFerr-hMent-hMeta-4}" text-anchor="middle" font-family="monospace" font-size="8" fill="var(--text2)">R$${fmt(d.total,0)}</text>`;
+  const cols = dadosMes.map(d => {
+    const pct = (d.total/maxVal*100).toFixed(1);
+    const fMeta=(d.meta/d.total*100||0).toFixed(1), fMent=(d.mentoria/d.total*100||0).toFixed(1), fFerr=(d.ferr/d.total*100||0).toFixed(1), fOut=(d.outros/d.total*100||0).toFixed(1);
+    return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:44px;gap:4px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text2);white-space:nowrap">R$${(d.total/1000).toFixed(1)}k</div>
+      <div style="width:100%;height:160px;display:flex;align-items:flex-end">
+        <div style="width:100%;height:${pct}%;border-radius:4px 4px 0 0;overflow:hidden;display:flex;flex-direction:column;min-height:${d.total>0?4:0}px">
+          <div style="flex:${fOut||0.01};background:rgba(160,160,160,.5)"></div>
+          <div style="flex:${fFerr||0.01};background:rgba(100,160,255,.8)"></div>
+          <div style="flex:${fMent||0.01};background:rgba(232,184,75,.85)"></div>
+          <div style="flex:${fMeta||0.01};background:rgba(224,85,85,.9)"></div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);text-align:center">${d.label}</div>
+    </div>`;
   }).join('');
-  const w = dadosMes.length*70+20;
-  safeSet('finGrafico', `
-    <svg viewBox="0 0 ${w} ${BAR_H+30}" style="width:100%;min-width:${w}px;height:${BAR_H+30}px">${bars}</svg>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-family:var(--mono);font-size:9px">
-      <span><span style="color:rgba(224,85,85,.9)">■</span> Tráfego Meta</span>
-      <span><span style="color:rgba(232,184,75,.9)">■</span> Mentoria</span>
-      <span><span style="color:rgba(100,160,255,.9)">■</span> Ferramentas</span>
-      <span><span style="color:rgba(160,160,160,.7)">■</span> Outros</span>
-    </div>`);
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-end;gap:8px;padding:8px 0 0;overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <div style="display:flex;flex-direction:column;justify-content:space-between;height:182px;padding-bottom:22px;min-width:36px">
+        ${[100,75,50,25,0].map(p=>`<div style="font-family:var(--mono);font-size:7px;color:var(--text3);text-align:right">R$${(maxVal*p/100/1000).toFixed(0)}k</div>`).join('')}
+      </div>
+      ${cols}
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text3);padding-left:44px">
+      <span><b style="color:rgba(224,85,85,.9)">■</b> Tráfego Meta</span>
+      <span><b style="color:rgba(232,184,75,.9)">■</b> Mentoria</span>
+      <span><b style="color:rgba(100,160,255,.9)">■</b> Ferramentas/IA</span>
+      <span><b style="color:rgba(160,160,160,.6)">■</b> Outros</span>
+    </div>`;
 }
 
-function renderFinComparativo(debitos, commShopee, totalGasto) {
-  if (!commShopee) {
-    safeSet('finComparativo','<div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:12px">Sincronize o Facebook + Shopee para ver o comparativo de lucro real</div>');
-    return;
-  }
-  const lucro = commShopee - totalGasto;
-  const roasReal = totalGasto > 0 ? commShopee/totalGasto : 0;
-  const cor = lucro >= 0 ? 'var(--green)' : 'var(--red)';
-  safeSet('finComparativo', `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px">
-      <div style="text-align:center;border-right:1px solid var(--border)">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">TOTAL GASTO (CARTÃO)</div>
-        <div style="font-size:20px;font-weight:800;color:var(--red)">R$ ${fmt(totalGasto)}</div>
+function renderFinComparativo(debitos, commShopeeArg, totalGasto) {
+  const el = $('finComparativo');
+  if (!el) return;
+  const metaFatura = debitos.filter(l=>l.categoria==='Tráfego Meta').reduce((s,l)=>s+l.valor,0);
+  const metaFB = (STATE.accounts||[]).flatMap(a=>a.campaigns||[]).reduce((s,c)=>s+(c.spend||0),0);
+  const temFB = metaFB > 0;
+  const commShopee = (() => {
+    if (!STATE.shopee?.orders?.length) return 0;
+    return STATE.shopee.orders.reduce((s,o)=>s+(o.commLiq||0),0);
+  })();
+  const card = (t,v,cor,sub) => `<div style="background:var(--s2);border-radius:8px;padding:12px;text-align:center;border-top:3px solid ${cor}">
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:5px">${t}</div>
+    <div style="font-size:16px;font-weight:800;color:${cor}">${v}</div>
+    ${sub?`<div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:3px">${sub}</div>`:''}
+  </div>`;
+  const lucroF = commShopee>0 ? commShopee-metaFatura : null;
+  const roasF  = metaFatura>0&&commShopee>0 ? commShopee/metaFatura : 0;
+  const lucroB = commShopee>0&&temFB ? commShopee-metaFB : null;
+  const roasB  = metaFB>0&&commShopee>0 ? commShopee/metaFB : 0;
+  const corL = v => v===null?'var(--text3)':v>=0?'var(--green)':'var(--red)';
+  const fmtL = v => v===null?'—':(v>=0?'+':'')+'R$ '+fmt(Math.abs(v));
+  const fmtR = v => v>0?fmt(v)+'x':'—';
+  const corR = v => v>=1.5?'var(--green)':v>=1.0?'var(--yellow)':'var(--red)';
+  el.innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">📄 FATURAS DO CARTÃO × SHOPEE CSV</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+        ${card('META — FATURAS', metaFatura>0?'R$ '+fmt(metaFatura):'—','var(--red)','cobrado no cartão')}
+        ${card('COMISSÃO SHOPEE', commShopee>0?'R$ '+fmt(commShopee):'—','var(--green)',commShopee>0?'CSV carregado':'sincronize CSV')}
+        ${card('LUCRO', fmtL(lucroF), corL(lucroF), lucroF!==null?'Comissão − Fatura':'sincronize Shopee')}
+        ${card('ROAS', fmtR(roasF), corR(roasF), 'Comissão ÷ Fatura')}
       </div>
-      <div style="text-align:center;border-right:1px solid var(--border)">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">COMISSÃO SHOPEE LÍQ.</div>
-        <div style="font-size:20px;font-weight:800;color:var(--green)">R$ ${fmt(commShopee)}</div>
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:8px;letter-spacing:1px">
+        🔑 TOKEN FACEBOOK (AO VIVO) × SHOPEE CSV
+        ${!temFB?'<span style="color:var(--yellow);margin-left:8px">⚠ Sincronize o Facebook</span>':''}
       </div>
-      <div style="text-align:center">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">LUCRO REAL · ROAS</div>
-        <div style="font-size:20px;font-weight:800;color:${cor}">${lucro>=0?'+':''}R$ ${fmt(lucro)}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:${cor};margin-top:2px">${fmt(roasReal)}x</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+        ${card('META — FB API', temFB?'R$ '+fmt(metaFB):'—','var(--red)',temFB?'via token de acesso':'token não sincronizado')}
+        ${card('COMISSÃO SHOPEE', commShopee>0?'R$ '+fmt(commShopee):'—','var(--green)',commShopee>0?'CSV carregado':'sincronize CSV')}
+        ${card('LUCRO', fmtL(lucroB), corL(lucroB), temFB&&commShopee>0?'Comissão − FB API':'aguardando dados')}
+        ${card('ROAS', fmtR(roasB), corR(roasB), 'Comissão ÷ FB API')}
       </div>
-    </div>`);
+    </div>
+    ${temFB&&metaFatura>0?`<div style="margin-top:12px;padding:10px 14px;background:var(--s2);border-radius:8px;font-family:var(--mono);font-size:9px">
+      <b style="color:var(--accent)">Diferença Fatura vs FB API:</b> R$ ${fmt(Math.abs(metaFatura-metaFB))}
+      — ${metaFatura>metaFB?'fatura maior (IOF/variação cambial)':'FB API maior (compras ainda não na fatura)'}
+    </div>`:''}`;
 }
 
 function renderLancamentos() {
-  const todos    = loadFinanceiro();
-  const mesFiltro= $('finMesFilter')?.value||'all';
-  const catFiltro= $('finCatFilter')?.value||'all';
-  const busca    = ($('finSearch')?.value||'').toLowerCase();
+  const todos = loadFinanceiro();
+  const mesFiltro = $('finMesFilter')?.value || 'all';
+  const catSel    = $('finCatFilter');
+  const catFiltro = catSel?.value || 'all';
+  const busca     = ($('finSearch')?.value || '').toLowerCase().trim();
+  if (catSel && catSel.options.length <= 1) {
+    Object.keys(FIN_CATEGORIAS).forEach(c => {
+      const o = document.createElement('option'); o.value=c; o.textContent=FIN_CATEGORIAS[c].icon+' '+c; catSel.appendChild(o);
+    });
+  }
   let lista = mesFiltro==='all' ? todos : todos.filter(l=>l.competencia===mesFiltro);
   if (catFiltro!=='all') lista=lista.filter(l=>l.categoria===catFiltro);
-  if (busca) lista=lista.filter(l=>l.descricao.toLowerCase().includes(busca)||l.categoria.toLowerCase().includes(busca));
-
-  if (!lista.length) { safeSet('finTblLanc','<div style="padding:20px;font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center">Nenhum lançamento encontrado</div>'); return; }
-
+  if (busca) lista=lista.filter(l=>l.descricao.toLowerCase().includes(busca)||l.categoria.toLowerCase().includes(busca)||l.competencia.includes(busca));
+  lista = [...lista].sort((a,b)=>b.competencia.localeCompare(a.competencia)||((b.data||'').localeCompare(a.data||'')));
+  const tbl = $('finTblLanc');
+  if (!tbl) return;
+  if (!lista.length) { tbl.innerHTML='<div style="padding:20px;font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center">Nenhum lançamento encontrado com esses filtros</div>'; return; }
   const rows = lista.map(l => {
     const cfg = FIN_CATEGORIAS[l.categoria]||{icon:'📦',cor:'var(--text3)'};
     const valCor = l.tipo==='credito'?'var(--green)':'var(--red)';
-    const cats = Object.keys(FIN_CATEGORIAS).map(c=>`<option value="${c}" ${c===l.categoria?'selected':''}>${c}</option>`).join('');
+    const cats = Object.keys(FIN_CATEGORIAS).map(c=>`<option value="${c}" ${c===l.categoria?'selected':''}>${FIN_CATEGORIAS[c].icon} ${c}</option>`).join('');
     return `<tr>
-      <td style="font-family:var(--mono);font-size:9px;white-space:nowrap">${l.competencia} · ${l.data}</td>
-      <td style="font-size:10px;max-width:220px">${l.descricao}</td>
-      <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${valCor};white-space:nowrap">${l.tipo==='credito'?'+':'-'} R$ ${fmt(l.valor)}</td>
-      <td>
-        <select onchange="atualizarCatLanc('${l.id}',this.value)"
-          style="background:var(--s2);border:1px solid var(--border);color:${cfg.cor};font-family:var(--mono);font-size:9px;padding:3px 6px;border-radius:4px;outline:none">
-          ${cats}
-        </select>
-      </td>
+      <td style="font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap">${l.competencia}<br>${l.data||''}</td>
+      <td style="font-size:10px" title="${l.descricao}">${l.descricao}</td>
+      <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${valCor};text-align:right;white-space:nowrap">${l.tipo==='credito'?'+':'-'}&nbsp;R$&nbsp;${fmt(l.valor)}</td>
+      <td><select onchange="atualizarCatLanc('${l.id}',this.value)"
+        style="background:var(--s2);border:1px solid var(--border);color:${cfg.cor};font-family:var(--mono);font-size:9px;padding:3px 6px;border-radius:4px;outline:none;max-width:150px">${cats}</select></td>
     </tr>`;
   }).join('');
-  safeSet('finTblLanc',`<table><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Categoria</th></tr></thead><tbody>${rows}</tbody></table>`);
+  const totD = lista.filter(l=>l.tipo!=='credito').reduce((s,l)=>s+l.valor,0);
+  const totC = lista.filter(l=>l.tipo==='credito').reduce((s,l)=>s+l.valor,0);
+  tbl.innerHTML = `<table>
+    <thead><tr><th style="width:70px">Período</th><th>Descrição</th><th style="text-align:right;width:110px">Valor</th><th style="width:155px">Categoria</th></tr></thead>
+    <tbody>${rows}</tbody>
+    <tfoot><tr style="background:var(--s2);border-top:2px solid var(--border2)">
+      <td colspan="2" style="font-family:var(--mono);font-size:10px;font-weight:700;padding:10px 13px">${lista.length} lançamentos</td>
+      <td style="font-family:var(--mono);font-size:10px;font-weight:700;text-align:right;padding:10px 13px">
+        <span style="color:var(--red)">-R$ ${fmt(totD)}</span><br>
+        <span style="color:var(--green);font-size:9px">+R$ ${fmt(totC)}</span>
+      </td>
+      <td></td>
+    </tr></tfoot>
+  </table>`;
 }
 
 function atualizarCatLanc(id, novaCat) {
@@ -7519,7 +7944,1066 @@ function exportFinanceiro() {
 }
 
 // ══════════════════════════════════════════════════
-// BANCO DE PRODUTOS
+// ══════════════════════════════════════════════════
+// PAINEL DE DECISÕES DO DIA
+// ══════════════════════════════════════════════════
+function decisoesHoje() {
+  const sel = $('decisoesDataSel');
+  if (sel) sel.value = '';
+  renderDecisoes();
+}
+
+function getDecisaoDate() {
+  // Retorna a data selecionada ou hoje
+  const sel = $('decisoesDataSel');
+  return sel?.value || new Date().toISOString().split('T')[0];
+}
+function renderDecisoes() {
+  const crossData = STATE.crossData || [];
+  const be = getBreakeven();
+  const dataAnalise = getDecisaoDate();
+  const hoje = new Date(dataAnalise + 'T12:00:00');
+  const diasSemana = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const mesesNome  = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const dataStr = `${diasSemana[hoje.getDay()]}, ${hoje.getDate()} de ${mesesNome[hoje.getMonth()]}`;
+  const isHoje  = dataAnalise === new Date().toISOString().split('T')[0];
+  safeText('decisoes-data', `📅 ${dataStr}${isHoje?' (hoje)':' — análise retroativa'} · Baseado nos dados disponíveis`);
+
+  if (!crossData.length) {
+    ['decisoes-resumo','decisoes-protocolo','decisoes-agir','decisoes-monitorar','decisoes-ok','decisoes-aguardar'].forEach(id => safeSet(id,''));
+    safeSet('decisoes-agir','<div class="empty"><div class="empty-ico">🎯</div><div class="empty-t">Sem dados</div><div class="empty-s">Sincronize o Facebook e importe o CSV da Shopee</div></div>');
+    return;
+  }
+
+  // ── Classifica cada campanha
+  const campanhas = crossData.map(c => {
+    const maxDay = c.dailyCross?.length > 0 ? Math.max(...c.dailyCross.map(d=>d.day||0)) : 0;
+    const roas   = c.realRoas || 0;
+    const trend  = getTrend(c.dailyCross);
+    const sat    = getSaturacao(c.dailyCross);
+    const ativa  = (c.campStatus||'').toUpperCase() === 'ACTIVE';
+    const budget = c.budget || 0;
+    const lucro  = c.lucro  || 0;
+    const gasto  = c.gastoReal || 0;
+    let prioridade, acao, justificativa, corAcao, emoji;
+
+    if (!ativa) {
+      prioridade='pausada'; acao='Pausada'; justificativa='Campanha já está pausada.'; corAcao='var(--text3)'; emoji='⏸';
+    } else if (maxDay <= 1 && roas === 0) {
+      prioridade='aguardar'; acao='Aguardar — D0/D1'; justificativa='Primeiro dia. Só verifique o CPC. Não tome decisões ainda.'; corAcao='var(--text3)'; emoji='⏳';
+    } else if (maxDay <= 3) {
+      if (c.cpc > 0.50) {
+        prioridade='agir'; acao='CPC exorbitante — considere pausar';
+        justificativa=`CPC R$ ${fmt(c.cpc)} muito acima da meta (R$0,20). Se não cair até as 15h, pause.`;
+        corAcao='var(--red)'; emoji='🔴';
+      } else {
+        prioridade='aguardar'; acao=`Aguardar — D${maxDay} em aprendizado`;
+        justificativa=`Fase de aprendizado (D1-D3). CPC R$ ${fmt(c.cpc)} ${c.cpc<=0.20?'✓ dentro da meta':'acima da meta, mas normal ainda'}. Não mexa.`;
+        corAcao='var(--text3)'; emoji='⏳';
+      }
+    } else if (maxDay === 4) {
+      if (roas >= be) {
+        prioridade='monitorar'; acao='D4 empatado → Aguardar D5-D7';
+        justificativa=`ROAS ${fmt(roas)}x empatou no D4. Não escale ainda — confirme a tendência nos próximos dias.`;
+        corAcao='var(--yellow)'; emoji='🟡';
+      } else {
+        prioridade='agir'; acao='D4 abaixo do empate → PAUSAR';
+        justificativa=`ROAS ${fmt(roas)}x não empatou no D4 (mínimo: ${fmt(be)}x). Regra MGD: pause agora.`;
+        corAcao='var(--red)'; emoji='🔴';
+      }
+    } else if (sat.nivel === 2) {
+      prioridade='agir'; acao='Saturação alta → Pausar ou trocar criativo';
+      justificativa='CPC subindo + ROAS caindo nos últimos 3 dias. Sinal claro de saturação de audiência.';
+      corAcao='var(--red)'; emoji='🔴';
+    } else if (roas >= 2.0) {
+      prioridade='ok'; acao='Escalar 20-30% — ROAS campeão';
+      justificativa=`ROAS ${fmt(roas)}x${trend.cls==='trend-up'?' com tendência '+trend.lbl:''}. Aumente o orçamento em 20-30% hoje.`;
+      corAcao='var(--green)'; emoji='🚀';
+    } else if (roas >= 1.5) {
+      prioridade='ok'; acao='Escalar 10-15%';
+      justificativa=`ROAS ${fmt(roas)}x. Bom resultado — escale gradualmente 10-15%.`;
+      corAcao='var(--green)'; emoji='✅';
+    } else if (roas >= be) {
+      prioridade='monitorar'; acao='Manter — não escalar';
+      justificativa=`ROAS ${fmt(roas)}x. Está pagando as contas mas não é hora de escalar. Monitore a tendência.`;
+      corAcao='var(--yellow)'; emoji='🟡';
+    } else if (roas > 0 && maxDay >= 7) {
+      prioridade='agir'; acao='7+ dias abaixo do empate → PAUSAR';
+      justificativa=`ROAS ${fmt(roas)}x por ${maxDay} dias sem empatir. Regra dos 3 dias já passou — pause.`;
+      corAcao='var(--red)'; emoji='🔴';
+    } else {
+      prioridade='monitorar'; acao=`Monitorar — D${maxDay}`;
+      justificativa=`ROAS ${fmt(roas)}x. Aguarde mais dados antes de decidir.`;
+      corAcao='var(--yellow)'; emoji='🟡';
+    }
+    return { c, maxDay, roas, trend, sat, ativa, budget, lucro, gasto, prioridade, acao, justificativa, corAcao, emoji };
+  });
+
+  // ── KPIs resumo
+  const ativas    = campanhas.filter(x => x.ativa);
+  const agir      = campanhas.filter(x => x.prioridade === 'agir');
+  const escalar   = campanhas.filter(x => x.prioridade === 'ok');
+  const lucroTotal= ativas.reduce((s,x)=>s+x.lucro,0);
+  const budgetTotal=ativas.reduce((s,x)=>s+(x.budget||0),0);
+  safeSet('decisoes-resumo', `
+    <div class="kpi-custom" style="border-top-color:var(--red)">
+      <div style="font-size:10px;font-weight:700;margin-bottom:4px">🔴 Agir Agora</div>
+      <div style="font-size:28px;font-weight:800;color:var(--red)">${agir.length}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">campanhas urgentes</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:var(--green)">
+      <div style="font-size:10px;font-weight:700;margin-bottom:4px">🚀 Escalar Hoje</div>
+      <div style="font-size:28px;font-weight:800;color:var(--green)">${escalar.length}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">campanhas para crescer</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:var(--accent)">
+      <div style="font-size:10px;font-weight:700;margin-bottom:4px">💸 Orçamento Total</div>
+      <div style="font-size:22px;font-weight:800;color:var(--accent)">R$ ${fmt(budgetTotal)}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${ativas.length} campanhas ativas</div>
+    </div>
+    <div class="kpi-custom" style="border-top-color:${lucroTotal>=0?'var(--green)':'var(--red)'}">
+      <div style="font-size:10px;font-weight:700;margin-bottom:4px">⚖️ Lucro no Período</div>
+      <div style="font-size:22px;font-weight:800;color:${lucroTotal>=0?'var(--green)':'var(--red)'}">
+        ${lucroTotal>=0?'+':''}R$ ${fmt(lucroTotal)}
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">comissão − gasto FB</div>
+    </div>`);
+
+  // ── RESUMO EXECUTIVO — o que aconteceu + o que fazer
+  const melhor = [...ativas].sort((a,b)=>(b.c.lucro||0)-(a.c.lucro||0))[0];
+  const pior   = [...ativas].sort((a,b)=>(a.c.lucro||0)-(b.c.lucro||0))[0];
+  const comissaoTotal = ativas.reduce((s,x)=>s+(x.c.shopeeRevenue||0),0);
+  const gastoTotal2   = ativas.reduce((s,x)=>s+(x.gasto||0),0);
+  const roasMedio     = gastoTotal2 > 0 ? comissaoTotal/gastoTotal2 : 0;
+
+  const linhasExec = [];
+  if (lucroTotal >= 0)
+    linhasExec.push(`✅ Você está <b style="color:var(--green)">lucrando R$ ${fmt(lucroTotal)}</b> no período com ${ativas.length} campanhas ativas.`);
+  else
+    linhasExec.push(`⚠️ Resultado atual: <b style="color:var(--red)">-R$ ${fmt(Math.abs(lucroTotal))}</b>. Atenção às campanhas 🔴 abaixo.`);
+
+  if (melhor && (melhor.c.lucro||0) > 0)
+    linhasExec.push(`🏆 Melhor campanha: <b style="color:var(--green)">${melhor.c.name}</b> — R$ ${fmt(melhor.c.lucro||0)} de lucro, ROAS ${fmt(melhor.roas)}x.`);
+
+  if (pior && (pior.c.lucro||0) < 0)
+    linhasExec.push(`💸 Maior prejuízo: <b style="color:var(--red)">${pior.c.name}</b> — R$ ${fmt(pior.c.lucro||0)} de lucro. ${pior.prioridade==='agir'?'<b>Pause hoje.</b>':'Monitore com atenção.'}`);
+
+  if (agir.length > 0)
+    linhasExec.push(`🔴 <b>${agir.length} campanha${agir.length>1?'s':''} precisam de ação agora</b> — veja a lista abaixo.`);
+  else
+    linhasExec.push(`🟢 Nenhuma campanha em situação crítica. Bom dia!`);
+
+  if (escalar.length > 0)
+    linhasExec.push(`🚀 <b>${escalar.length} campanha${escalar.length>1?'s':''} com ROAS bom</b> — considere escalar o orçamento hoje.`);
+
+  safeSet('decisoes-exec', `
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:16px 20px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;margin-bottom:10px">📋 RESUMO EXECUTIVO</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        ${linhasExec.map(l=>`<div style="font-size:11px;color:var(--text2);line-height:1.5;padding-left:4px;border-left:2px solid var(--border)">${l}</div>`).join('')}
+      </div>
+    </div>`);
+
+  // ── SCORE DE SAÚDE — boletim de cada campanha
+  const calcScore = x => {
+    let pts = 0;
+    // ROAS (0-4 pts)
+    if      (x.roas >= 2.0) pts += 4;
+    else if (x.roas >= 1.5) pts += 3;
+    else if (x.roas >= be)  pts += 2;
+    else if (x.roas > 0)    pts += 1;
+    // Trend (0-2 pts)
+    if      (x.trend.cls === 'trend-up')   pts += 2;
+    else if (x.trend.cls === 'trend-flat') pts += 1;
+    // Saturação (0-2 pts)
+    if      (x.sat.nivel === 0) pts += 2;
+    else if (x.sat.nivel === 1) pts += 1;
+    // Fase (0-2 pts)
+    if      (x.maxDay >= 7)  pts += 2;
+    else if (x.maxDay >= 4)  pts += 1;
+    return Math.min(10, pts);
+  };
+
+  const scoreCor = s => s >= 8?'var(--green)':s >= 6?'#4ade80':s >= 4?'var(--yellow)':s >= 2?'#f97316':'var(--red)';
+  const scoreLbl = s => s >= 8?'Excelente':s >= 6?'Bom':s >= 4?'Regular':s >= 2?'Fraco':'Crítico';
+  const scoreEmoji = s => s >= 8?'🏆':s >= 6?'✅':s >= 4?'🟡':s >= 2?'⚠️':'🔴';
+
+  const scoreCards = [...ativas]
+    .map(x => ({ ...x, score: calcScore(x) }))
+    .sort((a,b) => b.score - a.score)
+    .map(x => {
+      const s = x.score;
+      const cor = scoreCor(s);
+      const barW = s * 10;
+      return `
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:12px">
+          <!-- Nota -->
+          <div style="width:44px;height:44px;border-radius:50%;border:2.5px solid ${cor};display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(0,0,0,.2)">
+            <span style="font-family:var(--mono);font-size:14px;font-weight:800;color:${cor}">${s}</span>
+          </div>
+          <!-- Info -->
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">
+              <span style="font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${x.c.name}</span>
+              <span class="acc-badge ab${x.c.accIdx}" style="font-size:7px">${x.c.account||''}</span>
+              <span style="font-family:var(--mono);font-size:8px;color:var(--accent)">D${x.maxDay}</span>
+            </div>
+            <!-- Barra -->
+            <div style="background:var(--s3);border-radius:4px;height:5px;width:100%;margin-bottom:4px">
+              <div style="background:${cor};height:5px;border-radius:4px;width:${barW}%;transition:width .4s"></div>
+            </div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">
+              ${scoreEmoji(s)} ${scoreLbl(s)} &nbsp;·&nbsp; ROAS ${x.roas>0?fmt(x.roas)+'x':'—'} &nbsp;·&nbsp; ${x.trend.icon} ${x.trend.lbl}
+            </div>
+          </div>
+          <!-- Nota em texto -->
+          <div style="font-family:var(--mono);font-size:8px;font-weight:700;color:${cor};flex-shrink:0">${s}/10</div>
+        </div>`;
+    }).join('');
+
+  safeSet('decisoes-score-titulo', `
+    <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:8px">
+      📊 SCORE DE SAÚDE — Boletim das Campanhas
+    </div>`);
+  safeSet('decisoes-score', scoreCards || '<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Nenhuma campanha ativa</div>');
+
+  // ── Protocolo por hora do dia
+  const hora = new Date().getHours();
+  const prot = hora < 13
+    ? {ico:'🌅',titulo:'Protocolo Manhã',cor:'var(--blue)',msg:'<b>Bom dia!</b> Siga esta ordem: <b>1)</b> Resolva os itens 🔴 abaixo. <b>2)</b> Confirme que os 🟢 estão rodando. <b>3)</b> Feche a dash. <b>Não abra de novo antes das 15h</b> — deixe o algoritmo trabalhar.'}
+    : hora < 18
+    ? {ico:'☀️',titulo:'Protocolo Tarde',cor:'var(--accent)',msg:'CPCs da manhã já estabilizaram — agora os dados são mais confiáveis. Reavalie os 🔴 se necessário e feche até amanhã.'}
+    : {ico:'🌙',titulo:'Protocolo Noite',cor:'var(--purple)',msg:'<b>Fim de dia.</b> Analise resultados, mas <b>não altere orçamentos agora</b> — o algoritmo penaliza mudanças noturnas. Anote as decisões e execute amanhã cedo.'};
+  safeSet('decisoes-protocolo',`
+    <div style="background:rgba(100,160,255,.07);border:1px solid rgba(100,160,255,.2);border-left:3px solid ${prot.cor};border-radius:8px;padding:12px 16px;font-family:var(--mono);font-size:10px;line-height:1.7;margin-bottom:4px">
+      <span style="font-weight:700;color:${prot.cor}">${prot.ico} ${prot.titulo} — </span>${prot.msg}
+    </div>`);
+
+  // ── Renderiza grupo
+  const renderGrupo = (lista, titulo, cor, icone) => {
+    if (!lista.length) return '';
+    const cards = lista.map(x => {
+      const {c,maxDay,roas,trend,budget,acao,justificativa,corAcao,emoji} = x;
+      const orcSugerido = acao.includes('20-30')?budget*1.25:acao.includes('10-15')?budget*1.12:acao.includes('PAUSAR')?0:budget;
+      const orcLabel = acao.includes('PAUSAR')
+        ? '<span style="color:var(--red);font-weight:700">R$ 0 — PAUSAR</span>'
+        : orcSugerido!==budget&&budget>0
+          ? `<span style="color:var(--green);font-weight:700">R$ ${fmt(orcSugerido)}/dia</span> <span style="color:var(--text3);font-size:8px">(era R$ ${fmt(budget)})</span>`
+          : budget>0?`R$ ${fmt(budget)}/dia`:'—';
+      return `<div style="background:var(--s1);border:1px solid var(--border);border-left:3px solid ${corAcao};border-radius:8px;padding:12px 16px;margin-bottom:8px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+              <span style="font-size:15px">${emoji}</span>
+              <span style="font-family:var(--mono);font-size:11px;font-weight:700">${c.name}</span>
+              <span class="acc-badge ab${c.accIdx}" style="font-size:7px">${c.account||''}</span>
+              <span style="font-family:var(--mono);font-size:8px;color:var(--accent)">D${maxDay}</span>
+            </div>
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${corAcao};margin-bottom:4px">${acao}</div>
+            <div style="font-size:10px;color:var(--text2);line-height:1.5">${justificativa}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;min-width:110px">
+            <div style="text-align:right">
+              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">ROAS</div>
+              <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:${roas>=1.5?'var(--green)':roas>=be?'var(--yellow)':'var(--red)'}">${roas>0?fmt(roas)+'x':'—'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">TREND</div>
+              <div style="font-family:var(--mono);font-size:10px;color:${trend.cor}">${trend.icon} ${trend.lbl}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">ORC. SUGERIDO</div>
+              <div style="font-family:var(--mono);font-size:10px">${orcLabel}</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${cor};letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+      ${icone} ${titulo} <span style="background:${cor};color:var(--bg);border-radius:10px;padding:1px 8px;font-size:8px">${lista.length}</span>
+    </div>${cards}`;
+  };
+
+  const grupos = {
+    agir:      campanhas.filter(x=>x.prioridade==='agir'),
+    monitorar: campanhas.filter(x=>x.prioridade==='monitorar'),
+    ok:        campanhas.filter(x=>x.prioridade==='ok'),
+    aguardar:  campanhas.filter(x=>x.prioridade==='aguardar'),
+  };
+  safeSet('decisoes-agir',      renderGrupo(grupos.agir,     'AGIR AGORA', 'var(--red)',    '🔴'));
+  safeSet('decisoes-monitorar', renderGrupo(grupos.monitorar,'MONITORAR',  'var(--yellow)', '🟡'));
+  safeSet('decisoes-ok',        renderGrupo(grupos.ok,       'ESCALAR / OK','var(--green)', '🟢'));
+  safeSet('decisoes-aguardar',  renderGrupo(grupos.aguardar, 'AGUARDAR',   'var(--text3)', '⏳'));
+
+  // Popular lista de narrativa
+  renderNarrativaLista();
+}
+
+// ══════════════════════════════════════════════════
+// ANÁLISE NARRATIVA DIA A DIA
+// ══════════════════════════════════════════════════
+let narrFilt = 'ativa';
+
+function setNarrFilt(val, btn) {
+  narrFilt = val;
+  document.querySelectorAll('#narr-filt-row .filter-chip').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderNarrativaLista();
+}
+
+// Retorna o label sazonal para uma data YYYY-MM-DD
+function getDataSazonal(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T12:00:00');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dia = d.getDate();
+  const datas = DATAS_FIXAS[mm] || [];
+  const match = datas.find(x => x.dia === dia);
+  return match ? match.label : null;
+}
+
+// Dia da semana abreviado
+function getDiaSemana(dateStr) {
+  if (!dateStr) return '';
+  const dias = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  return dias[new Date(dateStr+'T12:00:00').getDay()];
+}
+
+function renderNarrativaLista() {
+  const el = $('narrativa-lista');
+  if (!el) return;
+  const crossData = STATE.crossData || [];
+  const busca = ($('narr-busca')?.value || '').toLowerCase().trim();
+  const be = getBreakeven();
+
+  let lista = crossData.filter(c => {
+    const ativa = (c.campStatus||'').toUpperCase() === 'ACTIVE';
+    if (narrFilt === 'ativa'   && !ativa) return false;
+    if (narrFilt === 'pausada' && ativa)  return false;
+    if (busca && !c.name.toLowerCase().includes(busca)) return false;
+    return true;
+  }).sort((a,b) => (b.realRoas||0) - (a.realRoas||0));
+
+  safeText('narr-count', `${lista.length} campanhas`);
+
+  if (!lista.length) {
+    el.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding:12px">Nenhuma campanha encontrada.</div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(c => {
+    const ativa   = (c.campStatus||'').toUpperCase() === 'ACTIVE';
+    const maxDay  = c.dailyCross?.length > 0 ? Math.max(...c.dailyCross.map(d=>d.day||0)) : 0;
+    const roas    = c.realRoas || 0;
+    const lucro   = c.lucro   || 0;
+    const roasCor = roas>=1.5?'var(--green)':roas>=be?'var(--yellow)':roas>0?'var(--red)':'var(--text3)';
+    const lucroCor= lucro>=0?'var(--green)':'var(--red)';
+    const id      = 'narr-' + c.name.replace(/\W/g,'_');
+
+    return `
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
+        <!-- Linha clicável -->
+        <div onclick="toggleNarr('${id}',${JSON.stringify(c.name).replace(/'/g,"\\'")})"
+          style="display:grid;grid-template-columns:auto 1fr repeat(4,auto);align-items:center;gap:0;padding:10px 14px;cursor:pointer">
+          <div style="width:7px;height:7px;border-radius:50%;background:${ativa?'var(--green)':'var(--text3)'};margin-right:10px;flex-shrink:0"></div>
+          <div style="min-width:0">
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.name}</div>
+            <div style="display:flex;gap:6px;margin-top:2px">
+              <span class="acc-badge ab${c.accIdx}" style="font-size:7px">${c.account||''}</span>
+              <span style="font-family:var(--mono);font-size:8px;color:var(--accent)">D${maxDay}</span>
+            </div>
+          </div>
+          <div style="text-align:right;padding:0 12px;border-left:1px solid var(--border)">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">ROAS</div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:800;color:${roasCor}">${roas>0?fmt(roas)+'x':'—'}</div>
+          </div>
+          <div style="text-align:right;padding:0 12px;border-left:1px solid var(--border)">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">LUCRO</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${lucroCor}">${lucro>=0?'+':''}R$ ${fmt(lucro)}</div>
+          </div>
+          <div style="text-align:right;padding:0 12px;border-left:1px solid var(--border)">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">GASTO</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--red)">R$ ${fmt(c.gastoReal||0)}</div>
+          </div>
+          <div style="padding-left:12px;color:var(--text3);font-size:11px" id="${id}-seta">▼</div>
+        </div>
+        <!-- Detalhes expandíveis -->
+        <div id="${id}" style="display:none;border-top:1px solid var(--border)"></div>
+      </div>`;
+  }).join('');
+}
+
+function toggleNarr(id, campName) {
+  const el = $(id);
+  const seta = $(id+'-seta');
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  if (isOpen) {
+    el.style.display = 'none';
+    if (seta) seta.textContent = '▼';
+    return;
+  }
+  // Renderiza conteúdo se ainda não renderizou
+  if (!el.dataset.rendered) {
+    el.innerHTML = buildNarrativaContent(campName);
+    el.dataset.rendered = '1';
+  }
+  el.style.display = 'block';
+  if (seta) seta.textContent = '▲';
+}
+
+function buildNarrativaContent(campName) {
+  const c = (STATE.crossData||[]).find(x => x.name === campName);
+  if (!c) return '<div style="padding:12px;font-family:var(--mono);font-size:10px;color:var(--red)">Campanha não encontrada.</div>';
+
+  const be    = getBreakeven();
+  const roas  = c.realRoas || 0;
+  const lucro = c.lucro    || 0;
+  const cpc   = c.cpc      || 0;
+  const ativa = (c.campStatus||'').toUpperCase() === 'ACTIVE';
+
+  // Dias do mais recente para o mais antigo
+  const daily = (c.dailyCross || [])
+    .sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const maxDay = daily.length > 0 ? Math.max(...daily.map(d=>d.day||0)) : 0;
+
+  // ── Análise geral (vem antes dos dias)
+  const trend = getTrend(c.dailyCross);
+  const sat   = getSaturacao(c.dailyCross);
+  const roasArr = daily.filter(d=>d.roas>0).map(d=>d.roas);
+  const irregular = roasArr.length >= 4 && (Math.max(...roasArr)-Math.min(...roasArr)) > 1.0;
+  const ultimos3  = (c.dailyCross||[]).slice(-3);
+  const ultNeg    = ultimos3.filter(d=>(d.roas||0)>0&&(d.roas||0)<1.0).length;
+  const cpcBom    = cpc>0&&cpc<=0.15;
+
+  const analises = [];
+  if (maxDay <= 3) {
+    analises.push(`📊 Campanha em fase inicial (D${maxDay}). Aguarde até D4 para decidir.`);
+    if (cpcBom) analises.push(`✅ CPC R$${fmt(cpc)} excelente. Boa estrutura de tráfego.`);
+  } else if (maxDay === 4) {
+    if (roas >= be) analises.push(`✅ Passou pelo D4 com ROAS ${fmt(roas)}x. Segue para D5-D7.`);
+    else            analises.push(`🔴 Não empatou no D4 (ROAS ${fmt(roas)}x). Regra MGD: pause.`);
+  } else {
+    if (lucro > 0) analises.push(`✅ Lucrando <b style="color:var(--green)">${lucro>=0?'+':''}R$ ${fmt(lucro)}</b> acumulado. ROAS geral ${fmt(roas)}x.`);
+    else           analises.push(`⚠️ Prejuízo de <b style="color:var(--red)">R$ ${fmt(lucro)}</b> acumulado.`);
+    if (irregular) analises.push(`⚡ Padrão <b>irregular</b>: picos e quedas intercalados. Difícil escalar com previsibilidade.`);
+    if (sat.nivel === 2) analises.push(`🔴 Sinais de <b>saturação</b>: CPC subindo + ROAS caindo. Considere trocar criativo.`);
+    if (cpcBom) analises.push(`✅ CPC R$${fmt(cpc)} excepcional — estrutura de tráfego muito boa.`);
+    if (ultNeg >= 3) analises.push(`📉 <b style="color:var(--red)">3 dias negativos consecutivos</b>. Regra dos 3 dias ativada.`);
+    else if (ultimos3.filter(d=>(d.roas||0)>=1.0).length >= 2) analises.push(`📈 Últimos dias com tendência positiva.`);
+  }
+
+  // O que fazer agora
+  let acaoFinal = '', acaoCor = 'var(--text3)';
+  if      (maxDay >= 4 && roas < be && maxDay < 7)          { acaoFinal='🔴 Pause. Não empatou no D4.'; acaoCor='var(--red)'; }
+  else if (ultNeg >= 3 && lucro < 0)                        { acaoFinal='🔴 3 dias negativos + prejuízo. Considere pausar.'; acaoCor='var(--red)'; }
+  else if (roas >= 2.0 && trend.cls==='trend-up')            { acaoFinal=`🚀 Escale 20-30% (sugerido R$ ${fmt((c.budget||0)*1.25)}/dia).`; acaoCor='var(--green)'; }
+  else if (roas >= 1.5)                                      { acaoFinal=`✅ Escale 10-15% (sugerido R$ ${fmt((c.budget||0)*1.12)}/dia).`; acaoCor='var(--green)'; }
+  else if (roas >= be)                                       { acaoFinal='🟡 Mantenha. Observe mais 2-3 dias antes de escalar.'; acaoCor='var(--yellow)'; }
+  else if (maxDay <= 3)                                      { acaoFinal='⏳ Aguarde D4. Só monitore o CPC.'; acaoCor='var(--text3)'; }
+  else                                                       { acaoFinal='⏳ Aguarda fechar. Se negativo → reduza 30% do orçamento.'; acaoCor='var(--yellow)'; }
+
+  // ── Histórico dia a dia (mais recente → mais antigo)
+  const diasHTML = daily.map(d => {
+    const r     = d.roas  || 0;
+    const icon  = r>=1.5?'✅':r>=1.0?'🟡':r>0?'🔴':'⏳';
+    const cor   = r>=1.5?'var(--green)':r>=1.0?'var(--yellow)':r>0?'var(--red)':'var(--text3)';
+    const ped   = d.orders  || 0;
+    const dir   = d.diretas || 0;
+    const cpcD  = d.cpc     || 0;
+    const dsem  = getDiaSemana(d.date);
+    const saz   = getDataSazonal(d.date);
+    const dataFmt = d.date ? new Date(d.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '';
+    const hoje2 = new Date().toISOString().split('T')[0];
+    const aberto= d.date === hoje2;
+
+    let nota = '';
+    if      (aberto)                    nota = 'aguardando fechamento ⏳';
+    else if (d.day===4 && r< be)        nota = 'Não empatou no D4 — regra MGD: pausar.';
+    else if (d.day===4 && r>=be)        nota = 'Empatou no D4! Segue para D5-D7.';
+    else if (r >= 2.0)                  nota = 'Dia excelente.';
+    else if (r >= 1.0)                  nota = 'Empatando.';
+    else if (dir > 0)                   nota = 'Vendas diretas presentes.';
+    else if (d.day===0&&cpcD<=0.10)     nota = 'CPC excepcional no D0.';
+
+    const sazBadge = saz ? `<span style="background:rgba(232,184,75,.2);color:var(--accent);font-size:7px;padding:1px 5px;border-radius:3px;margin-left:4px">${saz}</span>` : '';
+
+    return `<div style="display:grid;grid-template-columns:32px 80px 55px 1fr;gap:6px;align-items:start;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);padding-top:2px">D${d.day}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);padding-top:2px">
+        ${dsem} ${dataFmt}${sazBadge}
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${cor}">${aberto?'—':r>0?fmt(r)+'x':'—'} ${icon}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text2);line-height:1.6">
+        ${ped>0?`${ped} ped${dir>0?`, ${dir} dir.`:''}. `:''}${cpcD>0?`CPC R$${fmt(cpcD)}`:''}
+        ${nota?`<span style="color:${cor};opacity:.8"> · ${nota}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div style="padding:14px 18px">
+    <!-- Análise primeiro -->
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">⚠️ ANÁLISE</div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+        ${analises.map(a=>`<div style="font-size:10px;color:var(--text2);line-height:1.5;padding-left:8px;border-left:2px solid var(--border)">${a}</div>`).join('')}
+      </div>
+      <div style="background:rgba(0,0,0,.2);border-radius:8px;border-left:3px solid ${acaoCor};padding:8px 12px">
+        <div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-bottom:3px">O QUE FAZER AGORA</div>
+        <div style="font-size:11px;font-weight:700;color:${acaoCor}">${acaoFinal}</div>
+      </div>
+    </div>
+    <!-- Histórico -->
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">HISTÓRICO (mais recente primeiro)</div>
+    <div style="display:grid;grid-template-columns:32px 80px 55px 1fr;gap:6px;margin-bottom:4px">
+      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DIA</div>
+      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DATA</div>
+      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">ROAS</div>
+      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DETALHES</div>
+    </div>
+    ${diasHTML||'<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Sem dados diários — importe o CSV Shopee.</div>'}
+  </div>`;
+}
+
+
+
+// ══════════════════════════════════════════════════
+let prodFiltStatus = 'ativo';
+let prodSortCol    = 'commShopee';
+let prodSortDir    = 'desc';
+
+function sortProdutos(col) {
+  if (prodSortCol === col) prodSortDir = prodSortDir === 'asc' ? 'desc' : 'asc';
+  else { prodSortCol = col; prodSortDir = 'desc'; }
+  renderProdutos();
+}
+
+function setProdFilt(val, btn) {
+  prodFiltStatus = val;
+  ['prodFiltAtivo','prodFiltPausado','prodFiltAll'].forEach(id => $$(id)?.classList.remove('active'));
+  btn?.classList.add('active');
+  renderProdutos();
+}
+function $$(id) { return document.getElementById(id); }
+
+function renderProdutos() {
+  const el = $('tbl-produtos');
+  if (!el) return;
+
+  if (!STATE.crossData?.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🛍️</div><div class="empty-t">Sem dados carregados</div><div class="empty-s">Sincronize o Facebook e importe o CSV da Shopee</div></div>';
+    return;
+  }
+
+  // Popula filtro de contas
+  const contaSel = $('prodContaFilter');
+  if (contaSel && contaSel.options.length <= 1) {
+    const contas = [...new Set(STATE.crossData.map(c=>c.account).filter(Boolean))];
+    contas.forEach(a => { const o=document.createElement('option'); o.value=a; o.textContent=a; contaSel.appendChild(o); });
+  }
+
+  const busca     = ($('prodBusca')?.value||'').toLowerCase().trim();
+  const contaFilt = contaSel?.value || 'all';
+
+  let camps = STATE.crossData.filter(c => {
+    const st = (c.campStatus||'').toUpperCase()==='ACTIVE' ? 'ativo' : 'pausado';
+    if (prodFiltStatus !== 'all' && st !== prodFiltStatus) return false;
+    if (contaFilt !== 'all' && c.account !== contaFilt) return false;
+    if (busca) {
+      const matchCamp = c.name.toLowerCase().includes(busca);
+      const matchProd = (c.produtos||[]).some(p => p.nome.toLowerCase().includes(busca));
+      if (!matchCamp && !matchProd) return false;
+    }
+    return true;
+  });
+
+  safeText('prodCount', `${camps.length} campanhas`);
+
+  if (!camps.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-t">Nenhuma campanha encontrada</div></div>';
+    return;
+  }
+
+  // Ordena por comissão total desc
+  camps = camps.sort((a,b) => (b.shopeeRevenue||0) - (a.shopeeRevenue||0));
+
+  const rows = camps.map(c => {
+    const isAtiva = (c.campStatus||'').toUpperCase() === 'ACTIVE';
+    const cl = classify(c.realRoas);
+    const prods = (c.produtos||[]);
+    const maxDay = c.dailyCross?.length>0 ? Math.max(...c.dailyCross.map(d=>d.day||0)) : 0;
+
+    // Linha de produtos expandida
+    const prodRows = prods.length > 0 ? prods.map(p => {
+      const taxaShopee  = p.taxaComissao > 0 ? fmt(p.taxaComissao,1)+'%' : '—';
+      const taxaVend    = p.taxaVendedor > 0 ? fmt(p.taxaVendedor,1)+'%' : '—';
+      const gmvStr      = p.gmv > 0 ? 'R$ '+fmt(p.gmv) : '—';
+      const commShopStr = p.commShopee > 0 ? 'R$ '+fmt(p.commShopee) : '—';
+      const commVendStr = p.commVendedor > 0 ? 'R$ '+fmt(p.commVendedor) : '—';
+      const commTotStr  = p.commTotalPed > 0 ? 'R$ '+fmt(p.commTotalPed) : '—';
+      const ultimaVenda = p.lastDate
+        ? new Date(p.lastDate+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'})
+        : '—';
+      const alertaCor = p.diasSemVenda >= 3 ? 'var(--red)' : p.diasSemVenda >= 1 ? 'var(--yellow)' : 'var(--green)';
+      const alertaTxt = p.diasSemVenda === null ? '' :
+        p.diasSemVenda === 0 ? '<span style="color:var(--green);font-size:8px">✓ hoje</span>' :
+        `<span style="color:${alertaCor};font-size:8px">${p.diasSemVenda}d sem venda</span>`;
+
+      return `<tr style="background:rgba(255,255,255,.02)">
+        <td style="padding:6px 14px 6px 20px;font-size:10px;max-width:240px">
+          <a href="${p.shopeeLink||'#'}" target="_blank" rel="noopener"
+            style="color:var(--blue);text-decoration:none;font-family:var(--mono);font-size:9px"
+            title="${p.nome}" onclick="event.stopPropagation()">
+            🔗 ${p.nome.length>40?p.nome.slice(0,40)+'…':p.nome}
+          </a>
+          <div style="margin-top:2px">${alertaTxt}</div>
+        </td>
+        <td style="font-family:var(--mono);font-size:10px;text-align:center;font-weight:700">${p.qtd||0}</td>
+        <td style="font-family:var(--mono);font-size:10px;text-align:center;font-weight:700;color:${(p.direta||0)>0?'var(--green)':'var(--text3)'}">${p.direta||0}</td>
+        <td style="font-family:var(--mono);font-size:10px;text-align:right">${gmvStr}</td>
+        <td style="font-family:var(--mono);font-size:9px;text-align:center;color:var(--accent)">${taxaShopee}</td>
+        <td style="font-family:var(--mono);font-size:10px;color:var(--green);text-align:right;font-weight:700">${commShopStr}</td>
+        <td style="font-family:var(--mono);font-size:9px;text-align:center;color:var(--text3)">${taxaVend}</td>
+        <td style="font-family:var(--mono);font-size:9px;text-align:right;color:var(--yellow)">${commVendStr}</td>
+        <td style="font-family:var(--mono);font-size:9px;text-align:right;color:var(--blue)">${commTotStr}</td>
+        <td style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center">${ultimaVenda}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="10" style="padding:12px 20px;font-family:var(--mono);font-size:9px;color:var(--text3)">Nenhum produto identificado — verifique o Sub_id1</td></tr>`;
+
+    // Ordena produtos
+    const sortFnProd = {
+      qtd:          (a,b) => a.qtd - b.qtd,
+      direta:       (a,b) => (a.direta||0) - (b.direta||0),
+      gmv:          (a,b) => a.gmv - b.gmv,
+      taxaComissao: (a,b) => a.taxaComissao - b.taxaComissao,
+      commShopee:   (a,b) => a.commShopee - b.commShopee,
+      taxaVendedor: (a,b) => a.taxaVendedor - b.taxaVendedor,
+      commVendedor: (a,b) => a.commVendedor - b.commVendedor,
+      commTotalPed: (a,b) => a.commTotalPed - b.commTotalPed,
+      lastDate:     (a,b) => (a.lastDate||'').localeCompare(b.lastDate||''),
+      nome:         (a,b) => a.nome.localeCompare(b.nome),
+    };
+    const sfn = sortFnProd[prodSortCol] || sortFnProd.commShopee;
+    prods.sort((a,b) => prodSortDir === 'asc' ? sfn(a,b) : sfn(b,a));
+
+    const thP = (lbl, col) => {
+      const ativo = prodSortCol === col;
+      const seta  = ativo ? (prodSortDir==='asc'?' ▲':' ▼') : '';
+      return `<th onclick="prodSortCol='${col}';prodSortDir=prodSortCol==='${col}'&&prodSortDir==='asc'?'desc':'asc';prodSortCol='${col}';sortProdutos('${col}')"
+        style="cursor:pointer;user-select:none;font-size:8px;white-space:nowrap" title="Ordenar">${lbl}${seta}</th>`;
+    };
+
+    const prodHeader = `<tr style="background:var(--s3)">
+      ${thP('Produto','nome')}
+      ${thP('Vendas','qtd')}
+      ${thP('V. Diretas','direta')}
+      ${thP('GMV (Valor Compra)','gmv')}
+      ${thP('Taxa Shopee','taxaComissao')}
+      ${thP('Comissão Shopee','commShopee')}
+      ${thP('Taxa Vendedor','taxaVendedor')}
+      ${thP('Comissão Vendedor','commVendedor')}
+      ${thP('Comm Total Pedido','commTotalPed')}
+      ${thP('Última Venda','lastDate')}
+    </tr>`;
+
+    // Orçamento e lucro do cabeçalho
+    const orcamento  = (c.budget||0) > 0 ? 'R$ '+fmt(c.budget)+'/dia' : '—';
+    const lucroColor = (c.lucro||0) >= 0 ? 'var(--green)' : 'var(--red)';
+    // CTR do dia mais recente (via API Facebook)
+    const ctrVal   = c.ctrHoje || 0;
+    const ctrStr   = ctrVal > 0 ? fmt(ctrVal,2)+'%' : '—';
+    const ctrCor   = ctrVal >= 2 ? 'var(--green)' : ctrVal >= 1 ? 'var(--yellow)' : ctrVal > 0 ? 'var(--red)' : 'var(--text3)';
+    const ctrLabel = c.ctrDate ? `CTR ${c.ctrDate.slice(5).replace('-','/')}` : 'CTR';
+
+    const cardId = `prod-card-${c.name.replace(/\W/g,'_')}`;
+
+    return `
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden">
+        <!-- LINHA COMPACTA — clica para expandir -->
+        <div onclick="toggleProdCard('${cardId}')"
+          style="display:grid;grid-template-columns:auto 1fr repeat(8,auto);align-items:center;gap:0;padding:10px 14px;cursor:pointer;min-height:48px">
+
+          <!-- Status dot + nome -->
+          <div style="display:flex;align-items:center;gap:8px;min-width:0;padding-right:12px">
+            <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${isAtiva?'var(--green)':'var(--text3)'}"></div>
+            <div style="min-width:0">
+              <div style="font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px"
+                title="${c.name}">${c.name}</div>
+              <div style="display:flex;gap:5px;align-items:center;margin-top:2px;flex-wrap:wrap">
+                <span class="acc-badge ab${c.accIdx}" style="font-size:7px">${c.account||''}</span>
+                <span style="font-family:var(--mono);font-size:7px;color:var(--accent)">D${maxDay}</span>
+                <span style="font-family:var(--mono);font-size:7px;background:rgba(232,184,75,.15);color:${cl.rc==='c'||cl.rc==='b'?'var(--green)':cl.rc==='m'?'var(--yellow)':'var(--red)'};padding:1px 6px;border-radius:3px">${cl.lbl}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPIs compactos -->
+          ${[
+            ['ORC',   orcamento,                    'var(--text)'],
+            ['ROAS',  fmt(c.realRoas)+'x',          cl.rc==='c'||cl.rc==='b'?'var(--green)':cl.rc==='m'?'var(--yellow)':'var(--red)'],
+            [ctrLabel, ctrStr,                      ctrCor],
+            ['COMISSÃO', 'R$ '+fmt(c.shopeeRevenue),'var(--green)'],
+            ['CUSTO',  'R$ '+fmt(c.gastoReal),      'var(--red)'],
+            ['LUCRO',  ((c.lucro||0)>=0?'+':'')+' R$ '+fmt(c.lucro||0), lucroColor],
+            ['PEDIDOS', String(c.shopeeOrders),     'var(--text)'],
+            ['PRODUTOS', String(prods.length),       'var(--accent)'],
+          ].map(([lbl,val,cor]) => `
+            <div style="text-align:right;padding:0 10px;border-left:1px solid var(--border)">
+              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">${lbl}</div>
+              <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${cor};white-space:nowrap">${val}</div>
+            </div>`).join('')}
+
+          <span style="color:var(--text3);font-size:10px;padding-left:10px">▼</span>
+        </div>
+
+        <!-- DETALHE EXPANSÍVEL — oculto por padrão -->
+        <div id="${cardId}" style="display:none;border-top:1px solid var(--border)">
+          <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+            <table style="width:100%;min-width:700px">
+              <thead>${prodHeader}</thead>
+              <tbody>${prodRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = rows;
+}
+
+function toggleProdCard(cardId) {
+  const el = $(cardId);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  // Rotaciona a seta ▼/▲
+  const btn = el.previousElementSibling;
+  const seta = btn?.querySelector('span:last-child');
+  if (seta) seta.textContent = isOpen ? '▼' : '▲';
+}
+// ══════════════════════════════════════════════════
+let pedFiltStatus  = 'todos';
+let pedPeriodoDias = 1;       // 0 = tudo, -1 = customizado
+let pedSortCol     = 'date';
+let pedSortDir     = 'desc';
+
+function setPedFilt(val, btn) {
+  pedFiltStatus = val;
+  document.querySelectorAll('#pedidosStatusFiltro .filter-chip').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderPedidos();
+}
+
+function setPedPeriodo(dias, btn) {
+  pedPeriodoDias = dias;
+  // Remove active dos botões de período (segundo grupo de filter-row)
+  const rows = document.querySelectorAll('#panel-pedidos .filter-row');
+  if (rows[1]) rows[1].querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  // Se customizado, limpa datas
+  if (dias >= 0) {
+    const di = $('pedDtIni'), df = $('pedDtFim');
+    if (dias === 0) { if(di) di.value=''; if(df) df.value=''; }
+  }
+  renderPedidos();
+}
+
+function sortPedidos(col) {
+  if (pedSortCol === col) pedSortDir = pedSortDir === 'asc' ? 'desc' : 'asc';
+  else { pedSortCol = col; pedSortDir = col === 'date' ? 'desc' : 'desc'; }
+  renderPedidos();
+}
+
+function renderPedidos() {
+  const el = $('tbl-pedidos');
+  if (!el) return;
+
+  const orders = STATE.shopee?.orders || [];
+  if (!orders.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-t">Nenhum pedido carregado</div><div class="empty-s">Importe o CSV da Shopee na aba ⚙️</div></div>';
+    safeSet('pedidosKpis',''); return;
+  }
+
+  const busca = ($('pedidosBusca')?.value || '').toLowerCase().trim();
+  const today = new Date().toISOString().split('T')[0];
+
+  // Filtro de período
+  let dtIni = '', dtFim = today;
+  if (pedPeriodoDias === -1) {
+    // Customizado
+    dtIni = $('pedDtIni')?.value || '';
+    dtFim = $('pedDtFim')?.value || today;
+  } else if (pedPeriodoDias === 0) {
+    dtIni = ''; // tudo
+  } else if (pedPeriodoDias === 1) {
+    dtIni = today;
+  } else {
+    const d = new Date(); d.setDate(d.getDate() - pedPeriodoDias);
+    dtIni = d.toISOString().split('T')[0];
+  }
+
+  // Normaliza status
+  const normStatus = s => {
+    const v = (s||'').toLowerCase();
+    if (v.includes('conclu') || v.includes('pago') || v.includes('paid') || v.includes('completed')) return 'pago';
+    if (v.includes('pendente') || v.includes('aguard') || v.includes('pending')) return 'pendente';
+    if (v.includes('nao_pago') || v.includes('não pago') || v.includes('nao pago') || v.includes('unpaid')) return 'nao_pago';
+    if (v.includes('cancel')) return 'cancelado';
+    return 'outros';
+  };
+
+  // KPIs — sempre do período filtrado
+  const listaPeriodo = dtIni
+    ? orders.filter(o => o.date >= dtIni && o.date <= dtFim)
+    : orders;
+
+  const grupos = { pago:{n:0,val:0,comm:0}, pendente:{n:0,val:0,comm:0}, nao_pago:{n:0,val:0,comm:0}, cancelado:{n:0,val:0,comm:0} };
+  listaPeriodo.forEach(o => {
+    const g = normStatus(o.status);
+    if (grupos[g]) { grupos[g].n++; grupos[g].val+=o.amount||0; grupos[g].comm+=o.commission||0; }
+  });
+  const kpiCfg = [
+    { key:'pago',     lbl:'Pagos',      icon:'✅', cor:'var(--green)'  },
+    { key:'pendente', lbl:'Aguardando', icon:'⏳', cor:'var(--yellow)' },
+    { key:'nao_pago', lbl:'Não Pagos',  icon:'✗',  cor:'var(--red)'   },
+    { key:'cancelado',lbl:'Cancelados', icon:'⊘',  cor:'var(--text3)' },
+  ];
+  safeSet('pedidosKpis', kpiCfg.map(k => {
+    const g = grupos[k.key];
+    return `<div style="background:var(--s2);border:1px solid ${pedFiltStatus===k.key?k.cor:'var(--border)'};border-radius:8px;padding:12px;cursor:pointer;border-top:3px solid ${k.cor}"
+      onclick="setPedFilt('${k.key}',null)">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">${k.icon} ${k.lbl}</div>
+      <div style="font-size:18px;font-weight:800;color:${k.cor}">${g.n.toLocaleString('pt-BR')}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px">R$ ${fmt(g.comm)} comissão</div>
+    </div>`;
+  }).join(''));
+
+  // Lista filtrada
+  let lista = listaPeriodo.slice();
+  if (pedFiltStatus !== 'todos') lista = lista.filter(o => normStatus(o.status) === pedFiltStatus);
+  if (busca) lista = lista.filter(o =>
+    (o.item||'').toLowerCase().includes(busca) ||
+    (o.loja||'').toLowerCase().includes(busca) ||
+    (o.subId||'').toLowerCase().includes(busca) ||
+    (o.orderId||'').toLowerCase().includes(busca)
+  );
+
+  // Ordenação
+  const sortFns = {
+    date:       (a,b) => (a.date||'').localeCompare(b.date||''),
+    item:       (a,b) => (a.item||'').localeCompare(b.item||''),
+    loja:       (a,b) => (a.loja||'').localeCompare(b.loja||''),
+    amount:     (a,b) => (a.amount||0) - (b.amount||0),
+    commission: (a,b) => (a.commission||0) - (b.commission||0),
+    status:     (a,b) => normStatus(a.status).localeCompare(normStatus(b.status)),
+    subId:      (a,b) => (a.subId||'').localeCompare(b.subId||''),
+  };
+  const fn = sortFns[pedSortCol] || sortFns.date;
+  lista.sort((a,b) => pedSortDir === 'asc' ? fn(a,b) : fn(b,a));
+
+  safeText('pedidosCount', `${lista.length.toLocaleString('pt-BR')} pedidos`);
+
+  const visiveis = lista.slice(0, 300);
+  const temMais  = lista.length > 300;
+
+  const statusCor = s => {
+    const n = normStatus(s);
+    return n==='pago'?'var(--green)':n==='pendente'?'var(--yellow)':n==='nao_pago'?'var(--red)':'var(--text3)';
+  };
+  const statusIcon = s => {
+    const n = normStatus(s);
+    return n==='pago'?'✅ Pago':n==='pendente'?'⏳ Aguardando':n==='nao_pago'?'✗ Não Pago':n==='cancelado'?'⊘ Cancelado':s;
+  };
+
+  // Th ordenável
+  const thS = (label, col, align='left') => {
+    const ativo = pedSortCol === col;
+    const seta  = ativo ? (pedSortDir==='asc' ? ' ▲' : ' ▼') : '';
+    return `<th onclick="sortPedidos('${col}')" style="cursor:pointer;user-select:none;text-align:${align};white-space:nowrap;font-size:8px"
+      title="Clique para ordenar">${label}${seta}</th>`;
+  };
+
+  const rows = visiveis.map(o => {
+    const cor    = statusCor(o.status);
+    const stIcon = statusIcon(o.status);
+    const link   = shopeeProductLink(o.itemId, o.item);
+    const campLabel = o.subId ? o.subId.substring(0,22)+(o.subId.length>22?'…':'') : '—';
+    const diretaStr = (o.tipoAtribuicao||'').toLowerCase().includes('mesma loja')
+      ? '<span style="color:var(--green);font-size:8px">✓ Direta</span>'
+      : '<span style="color:var(--text3);font-size:8px">Indireta</span>';
+
+    const detalhe = `
+      <tr class="ped-detalhe-${o.orderId}" style="display:none;background:var(--s2)">
+        <td colspan="8" style="padding:0">
+          <div style="padding:14px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;font-family:var(--mono);font-size:9px">
+            <div><div style="color:var(--text3);margin-bottom:2px">Order ID</div><div style="font-weight:700">${o.orderId||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Item ID</div><div style="color:var(--blue)">${o.itemId||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Conversion ID</div><div>${o.conversionId||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Data Clique</div><div>${o.dataClique||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Data Compra</div><div>${o.dataCompra||o.date||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Comissão Total</div><div style="color:var(--green)">${o.commTotalPedido>0?'R$ '+fmt(o.commTotalPedido):o.commTotal>0?'R$ '+fmt(o.commTotal):'R$ '+fmt(o.commission)}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Comissão Vendedor</div><div style="color:var(--yellow)">${o.commVendedorVal>0?'R$ '+fmt(o.commVendedorVal):'R$ 0,00'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Comissão Shopee</div><div style="color:var(--accent)">${o.commShopeeVal>0?'R$ '+fmt(o.commShopeeVal):'R$ '+fmt(o.commission)}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Preço Un.</div><div>R$ ${fmt(o.precoUn||o.amount||0)}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Dispositivo</div><div>${o.device||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Tipo Comprador</div><div>${o.tipoComprador||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Atribuição</div><div>${o.tipoAtribuicao||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Campanha (Sub_id)</div><div style="color:var(--accent);word-break:break-all">${o.subId||'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Taxa Shopee</div><div>${o.taxaComissao>0?fmt(o.taxaComissao,1)+'%':'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Taxa Vendedor</div><div>${o.taxaVendedor>0?fmt(o.taxaVendedor,1)+'%':'—'}</div></div>
+            <div><div style="color:var(--text3);margin-bottom:2px">Canal</div><div>${o.canal||'—'}</div></div>
+          </div>
+          <div style="padding:0 20px 12px">
+            <a href="${link}" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:9px;color:var(--blue);text-decoration:none">🔗 Ver na Shopee</a>
+          </div>
+        </td>
+      </tr>`;
+
+    return `<tr onclick="togglePedDetalhe('${o.orderId}')" style="cursor:pointer">
+      <td style="font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap">${o.date||'—'}</td>
+      <td style="font-size:10px;max-width:220px">
+        <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.item}">${o.item||'—'}</div>
+        <div style="margin-top:1px">${diretaStr}</div>
+      </td>
+      <td style="font-family:var(--mono);font-size:10px;color:var(--text3);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.loja}">${o.loja||'—'}</td>
+      <td style="font-family:var(--mono);font-size:9px;text-align:center">1</td>
+      <td style="font-family:var(--mono);font-size:10px;text-align:right">R$ ${fmt(o.amount||0)}</td>
+      <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:var(--green);text-align:right">R$ ${fmt(o.commission||0)}</td>
+      <td style="font-family:var(--mono);font-size:9px;color:var(--accent);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${o.subId}">${campLabel}</td>
+      <td style="text-align:center"><span style="font-family:var(--mono);font-size:8px;font-weight:700;color:${cor}">${stIcon}</span></td>
+    </tr>${detalhe}`;
+  }).join('');
+
+  el.innerHTML = `
+    <table style="min-width:700px;width:100%">
+      <thead><tr style="background:var(--s2)">
+        ${thS('Data','date')}
+        ${thS('Produto','item')}
+        ${thS('Loja','loja')}
+        <th style="font-size:8px;text-align:center">Qtd</th>
+        ${thS('Valor','amount','right')}
+        ${thS('Comissão','commission','right')}
+        ${thS('Campanha','subId')}
+        ${thS('Status','status','center')}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${temMais?`<div style="padding:12px;font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center">Exibindo 300 de ${lista.length.toLocaleString('pt-BR')} pedidos — use filtros para refinar</div>`:''}`;
+}
+
+function togglePedDetalhe(orderId) {
+  const rows = document.querySelectorAll(`.ped-detalhe-${orderId}`);
+  rows.forEach(r => { r.style.display = r.style.display === 'none' ? 'table-row' : 'none'; });
+}
+
+
+
+// ══════════════════════════════════════════════════
+// CLIQUES POR HORA
+// ══════════════════════════════════════════════════
+let horaFiltro = 'todos';
+
+function setHoraFiltro(val, btn) {
+  horaFiltro = val;
+  document.querySelectorAll('#horaFiltroRow .filter-chip').forEach(b => b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderClicksHora();
+}
+
+function renderClicksHora() {
+  const el = $('cliques-por-hora');
+  if (!el) return;
+
+  const clicks = STATE.shopeeClicks || [];
+  if (!clicks.length) {
+    el.innerHTML = '<div class="empty" style="padding:20px"><div class="empty-ico">🕐</div><div class="empty-t">Sem dados de cliques</div><div class="empty-s">Importe o CSV de Cliques na aba ⚙️</div></div>';
+    return;
+  }
+
+  // Verifica se temos hora extraída
+  const temHora = clicks.some(c => c.hora >= 0);
+  if (!temHora) {
+    el.innerHTML = '<div style="padding:16px;font-family:var(--mono);font-size:10px;color:var(--yellow)">⚠ O CSV de cliques não contém informação de hora. Reimporte o CSV para ativar esta análise.</div>';
+    return;
+  }
+
+  // Filtra por período
+  const today = new Date().toISOString().split('T')[0];
+  const d7 = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+  let filtrados = clicks.filter(c => c.hora >= 0);
+  if (horaFiltro === 'hoje') filtrados = filtrados.filter(c => c.date === today);
+  else if (horaFiltro === '7d') filtrados = filtrados.filter(c => c.date >= d7);
+
+  // Agrupa por hora
+  const porHora = Array(24).fill(0);
+  filtrados.forEach(c => { if (c.hora >= 0 && c.hora <= 23) porHora[c.hora]++; });
+
+  const total = filtrados.length;
+  safeText('horaTotal', `${total.toLocaleString('pt-BR')} cliques no período`);
+
+  if (!total) {
+    el.innerHTML = '<div style="padding:16px;font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center">Nenhum clique no período selecionado</div>';
+    return;
+  }
+
+  // Ordena por quantidade (maior primeiro) para os cards
+  const horasOrdenadas = porHora
+    .map((n, h) => ({ hora: h, n }))
+    .filter(h => h.n > 0)
+    .sort((a, b) => b.n - a.n);
+
+  const maxN = horasOrdenadas[0]?.n || 1;
+
+  // Define cor e intensidade por ranking
+  const getCor = (idx, n) => {
+    const pct = n / maxN;
+    if (idx === 0) return { bg: 'rgba(100,160,255,.25)', border: 'var(--blue)', txt: 'var(--blue)' };      // 1º — azul destaque
+    if (idx === 1) return { bg: 'rgba(100,160,255,.18)', border: 'rgba(100,160,255,.6)', txt: 'var(--text)' };
+    if (idx === 2) return { bg: 'rgba(232,184,75,.15)', border: 'rgba(232,184,75,.5)', txt: 'var(--accent)' }; // 3º — dourado
+    if (pct >= 0.7) return { bg: 'rgba(100,160,255,.12)', border: 'rgba(100,160,255,.35)', txt: 'var(--text)' };
+    if (pct >= 0.5) return { bg: 'rgba(255,255,255,.05)', border: 'rgba(100,160,255,.2)', txt: 'var(--text)' };
+    return { bg: 'rgba(255,255,255,.02)', border: 'var(--border)', txt: 'var(--text3)' };
+  };
+
+  const cards = horasOrdenadas.map((h, idx) => {
+    const cor = getCor(idx, h.n);
+    const pct = (h.n / total * 100).toFixed(1);
+    const horaFim = h.hora === 23 ? 0 : h.hora + 1;
+    const label = `${String(h.hora).padStart(2,'0')}:00 — ${String(horaFim).padStart(2,'0')}:59`;
+    const barW  = Math.round(h.n / maxN * 100);
+    return `
+      <div style="background:${cor.bg};border:1.5px solid ${cor.border};border-radius:10px;padding:14px 18px;position:relative;overflow:hidden">
+        <!-- Barra de fundo -->
+        <div style="position:absolute;left:0;top:0;height:100%;width:${barW}%;background:${cor.border};opacity:.08;pointer-events:none"></div>
+        <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${cor.txt};margin-bottom:4px">${label}</div>
+        <div style="font-size:22px;font-weight:800;color:${cor.txt}">${h.n.toLocaleString('pt-BR')} <span style="font-size:13px;font-weight:400">cliques</span></div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:3px">${pct}% do total</div>
+        ${idx === 0 ? '<div style="font-family:var(--mono);font-size:8px;color:var(--blue);margin-top:4px">🏆 Melhor horário</div>' : ''}
+        ${idx === 2 ? '<div style="font-family:var(--mono);font-size:8px;color:var(--accent);margin-top:4px">🥉 Top 3</div>' : ''}
+      </div>`;
+  }).join('');
+
+  // Insights automáticos
+  const top3 = horasOrdenadas.slice(0,3);
+  const noturno = horasOrdenadas.filter(h => h.hora >= 20 || h.hora <= 5).reduce((s,h)=>s+h.n,0);
+  const diurno  = horasOrdenadas.filter(h => h.hora >= 6 && h.hora <= 19).reduce((s,h)=>s+h.n,0);
+  const melhorHora = horasOrdenadas[0];
+  const insights = [];
+  if (melhorHora) insights.push(`<b style="color:var(--blue)">🕐 Pico às ${String(melhorHora.hora).padStart(2,'0')}h</b> — ${melhorHora.n.toLocaleString('pt-BR')} cliques (${(melhorHora.n/total*100).toFixed(0)}% do total)`);
+  if (noturno > diurno * 0.4) insights.push(`<b style="color:var(--accent)">🌙 Público noturno forte</b> — ${(noturno/total*100).toFixed(0)}% dos cliques acontecem das 20h às 5h`);
+  const top3Pct = top3.reduce((s,h)=>s+h.n,0)/total*100;
+  insights.push(`<b>Top 3 horários</b> concentram <b style="color:var(--green)">${top3Pct.toFixed(0)}%</b> de todos os cliques`);
+
+  el.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-family:var(--mono);font-size:10px;line-height:1.8">
+      ${insights.map(i=>`<div>💡 ${i}</div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+      ${cards}
+    </div>`;
+}
+
+
 // ══════════════════════════════════════════════════
 const BANCO_KEY = 'mgd_banco_produtos';
 let bancoProdutos = [];
