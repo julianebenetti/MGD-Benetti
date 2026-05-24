@@ -114,6 +114,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:1
 .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
 .kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
 .kpi{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;overflow:hidden}
+/* ── TOOLTIP SYSTEM ── */
+.tt{position:relative;display:inline-flex;align-items:center;gap:4px;cursor:default}
+.tt-ico{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);font-size:8px;color:var(--text3);cursor:pointer;flex-shrink:0;line-height:1;font-family:var(--mono);font-weight:700;transition:all .15s}
+.tt-ico:hover,.tt-ico:focus{background:var(--accent);border-color:var(--accent);color:#000;outline:none}
+.tt-box{display:none;position:absolute;z-index:9999;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:220px;background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;box-shadow:0 8px 24px rgba(0,0,0,.4);pointer-events:none}
+.tt-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border)}
+.tt-ico:hover+.tt-box,.tt-ico:focus+.tt-box,.tt.active .tt-box{display:block;pointer-events:auto}
+.tt-title{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);margin-bottom:5px}
+.tt-desc{font-size:10px;color:var(--text2);line-height:1.5}
+.tt-ex{font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:5px;padding-top:5px;border-top:1px solid var(--border)}
 .kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border2)}
 .kpi.yk::after{background:var(--accent)}
 .kpi.gk::after{background:var(--green)}
@@ -421,21 +431,19 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
   <nav class="nav">
     <div class="nav-section">Visão</div>
     <div class="nav-item" onclick="goTab('decisoes')" style="border-left:2px solid var(--accent)"><span class="ni">🎯</span> <b>Decisões do Dia</b></div>
-    <div class="nav-item active" onclick="goTab('geral')"><span class="ni">📊</span> Geral Consolidado</div>
-    <div class="nav-item" onclick="goTab('resumo')"><span class="ni">📅</span> Resumo Diário</div>
+    <div class="nav-item active" onclick="goTab('resumo')"><span class="ni">📊</span> Resumo Diário</div>
     <div class="nav-item" onclick="goTab('cruzamento')"><span class="ni">🔀</span> Análise de Campanhas</div>
     <div class="nav-item" onclick="goTab('produtos')"><span class="ni">🛍️</span> Produtos por Campanha</div>
     <div class="nav-item" onclick="goTab('pedidos')"><span class="ni">🛒</span> Pedidos Shopee</div>
     <div class="nav-item" onclick="goTab('organico')"><span class="ni">🌿</span> Vendas Orgânicas</div>
     <div class="nav-item" onclick="goTab('calc')"><span class="ni">📈</span> Performance do Mês</div>
     <div class="nav-item" onclick="goTab('plan')"><span class="ni">📋</span> Gestão de Campanhas</div>
-    <div class="nav-item" onclick="goTab('alertas')"><span class="ni">🚨</span> Alertas D0-D7</div>
     <div class="nav-item" onclick="goTab('financeiro')"><span class="ni">💳</span> Financeiro</div>
-    <div class="nav-item" onclick="goTab('d0')"><span class="ni">🔍</span> Análise D0 — Cliques</div>
     <div class="nav-section">Ferramentas</div>
     <div class="nav-item" onclick="goTab('chat')"><span class="ni">🤖</span> Consultor MGD</div>
     <div class="nav-item" onclick="goTab('glossario')"><span class="ni">📖</span> Glossário MGD</div>
     <div class="nav-item" onclick="goTab('banco')"><span class="ni">🗂️</span> Banco de Produtos</div>
+    <div class="nav-item" onclick="goTab('avaliador')"><span class="ni">🔍</span> Avaliador de Produtos</div>
     <div class="nav-section">Config</div>
     <div class="nav-item" onclick="goTab('config')"><span class="ni">⚙️</span> APIs & Credenciais</div>
   </nav>
@@ -449,7 +457,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 <!-- MOBILE BOTTOM NAV -->
 <nav class="bottom-nav">
   <div class="bottom-nav-inner" style="grid-template-columns:repeat(5,1fr)">
-    <button class="bn-item active" id="bn-geral" onclick="goTab('geral');setBN('geral')">
+    <button class="bn-item active" id="bn-geral" onclick="goTab('resumo');setBN('resumo')">
       <span class="bn-icon">📊</span><span class="bn-label">Geral</span>
     </button>
     <button class="bn-item" id="bn-resumo" onclick="goTab('resumo');setBN('resumo')">
@@ -480,17 +488,14 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <!-- Visão -->
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);padding:4px 16px 6px;letter-spacing:1px">VISÃO</div>
     <div class="drawer-item" onclick="goTab('decisoes');setBN('geral');closeDrawer()" style="color:var(--accent);font-weight:700">🎯&nbsp; Decisões do Dia</div>
-    <div class="drawer-item" onclick="goTab('geral');setBN('geral');closeDrawer()">📊&nbsp; Geral Consolidado</div>
-    <div class="drawer-item" onclick="goTab('resumo');setBN('resumo');closeDrawer()">📅&nbsp; Resumo Diário</div>
+    <div class="drawer-item" onclick="goTab('resumo');setBN('resumo');closeDrawer()">📊&nbsp; Resumo Diário</div>
     <div class="drawer-item" onclick="goTab('cruzamento');setBN('cruzamento');closeDrawer()">🔀&nbsp; Análise de Campanhas</div>
     <div class="drawer-item" onclick="goTab('produtos');setBN('cruzamento');closeDrawer()">🛍️&nbsp; Produtos por Campanha</div>
     <div class="drawer-item" onclick="goTab('pedidos');setBN('cruzamento');closeDrawer()">🛒&nbsp; Pedidos Shopee</div>
     <div class="drawer-item" onclick="goTab('organico');setBN('cruzamento');closeDrawer()">🌿&nbsp; Vendas Orgânicas</div>
     <div class="drawer-item" onclick="goTab('calc');setBN('calc');closeDrawer()">📈&nbsp; Performance do Mês</div>
     <div class="drawer-item" onclick="goTab('plan');setBN('plan');closeDrawer()">📋&nbsp; Gestão de Campanhas</div>
-    <div class="drawer-item" onclick="goTab('alertas');setBN('alertas');closeDrawer()">🚨&nbsp; Alertas D0-D7</div>
     <div class="drawer-item" onclick="goTab('financeiro');setBN('alertas');closeDrawer()">💳&nbsp; Financeiro</div>
-    <div class="drawer-item" onclick="goTab('d0');setBN('cruzamento');closeDrawer()">🔍&nbsp; Análise D0 — Cliques</div>
 
     <!-- Ferramentas -->
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -498,6 +503,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="drawer-item" onclick="goTab('chat');setBN('chat');closeDrawer()">🤖&nbsp; Consultor MGD</div>
     <div class="drawer-item" onclick="goTab('glossario');setBN('chat');closeDrawer()">📖&nbsp; Glossário MGD</div>
     <div class="drawer-item" onclick="goTab('banco');setBN('banco');closeDrawer()">🗂️&nbsp; Banco de Produtos</div>
+    <div class="drawer-item" onclick="goTab('avaliador');setBN('banco');closeDrawer()">🔍&nbsp; Avaliador de Produtos</div>
 
     <!-- Contas -->
     <div style="height:1px;background:var(--border);margin:8px 0"></div>
@@ -552,7 +558,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
               style="background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:10px;outline:none;cursor:pointer"
               onchange="renderDecisoes()">
           </div>
-          <button class="btn" onclick="decisoesHoje()" style="font-size:10px;padding:7px 14px">Hoje</button>
+          <button class="btn" onclick="decisoesOntem()" style="font-size:10px;padding:7px 14px">◀ Ontem</button>
           <button class="btn" onclick="renderDecisoes()" style="font-size:10px;padding:7px 14px">🔄 Atualizar</button>
         </div>
       </div>
@@ -574,11 +580,21 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div id="decisoes-ok"        style="margin-bottom:20px"></div>
       <div id="decisoes-aguardar"  style="margin-bottom:28px"></div>
 
+      <!-- ⑥ ALERTAS D0-D7 -->
+      <div style="border-top:1px solid var(--border);padding-top:24px;margin-top:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer"
+          onclick="toggleAlertasSection()">
+          <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px">
+            🚨 ALERTAS D0-D7 DETALHADOS
+          </div>
+          <span id="alertas-toggle-seta" style="font-family:var(--mono);font-size:10px;color:var(--text3)">▼ expandir</span>
+        </div>
+        <div id="alertas-section" style="display:none"></div>
+      </div>
+
       <!-- ⑤ ANÁLISE NARRATIVA DIA A DIA -->
       <div style="border-top:1px solid var(--border);padding-top:24px">
         <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;margin-bottom:14px">🔍 ANÁLISE NARRATIVA — HISTÓRICO DIA A DIA</div>
-
-        <!-- Filtros -->
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
           <div class="filter-row" id="narr-filt-row">
             <button class="filter-chip active" onclick="setNarrFilt('ativa',this)">● Ativas</button>
@@ -590,95 +606,10 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
             style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:7px 12px;border-radius:6px;outline:none;flex:1;min-width:160px">
           <span id="narr-count" style="font-family:var(--mono);font-size:9px;color:var(--text3);white-space:nowrap"></span>
         </div>
-
-        <!-- Lista de cards de campanhas -->
         <div id="narrativa-lista"></div>
       </div>
     </div>
 
-    <div class="panel active" id="panel-geral">
-
-      <!-- TOPBAR DO PAINEL -->
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-        <div>
-          <div style="font-size:20px;font-weight:800">Dashboard Unificado</div>
-          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px" id="geral-period-label"></div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <!-- Seletor de período -->
-          <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 14px">
-            <span style="font-size:14px">📅</span>
-            <select id="geralPeriod" onchange="onGeralPeriodChange()"
-              style="background:var(--s2);border:none;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer">
-              <option value="0">Hoje</option>
-              <option value="1">Ontem</option>
-              <option value="7" selected>Últimos 7 dias</option>
-              <option value="14">Últimos 14 dias</option>
-              <option value="30">Últimos 30 dias</option>
-              <option value="custom">Personalizado</option>
-            </select>
-          </div>
-          <!-- Datas customizadas -->
-          <div id="customDateRange" style="display:none;gap:6px;align-items:center">
-            <input type="date" id="geralFrom" style="background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 10px;border-radius:6px;outline:none">
-            <span style="color:var(--text3);font-family:var(--mono);font-size:10px">até</span>
-            <input type="date" id="geralTo" style="background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 10px;border-radius:6px;outline:none">
-          </div>
-          <!-- Botão Atualizar -->
-          <button class="btn btn-primary" onclick="applyGeralPeriod()" style="gap:6px">
-            🔄 Atualizar
-          </button>
-          <!-- Personalizar KPIs -->
-          <button class="btn btn-ghost" onclick="openKpiModal()" style="gap:6px">
-            ⚙️ KPIs
-          </button>
-        </div>
-      </div>
-
-      <!-- KPIs PERSONALIZÁVEIS -->
-      <div id="kpis-geral-custom" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px"></div>
-
-      <!-- MODAL KPIs -->
-      <div id="kpiModal" style="display:none;position:fixed;inset:0;background:rgba(8,8,16,.88);z-index:500;align-items:center;justify-content:center">
-        <div style="background:var(--s1);border:1px solid var(--border2);border-radius:12px;padding:28px;width:480px;max-width:95vw;max-height:80vh;overflow-y:auto">
-          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Personalizar KPIs</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:16px">Selecione até 8 KPIs para exibir no dashboard</div>
-          <div id="kpiCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-primary" onclick="saveKpis()">Salvar</button>
-            <button class="btn btn-ghost" onclick="closeKpiModal()">Cancelar</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- DIAGNÓSTICO AUTOMÁTICO GERAL -->
-      <div id="geral-diagnostics" style="display:none;margin-bottom:20px"></div>
-
-      <!-- CRIATIVOS: LUCRO+ E ROAS>1 -->
-      <div class="sec">Criativos em Destaque</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
-        <div class="table-wrap" style="margin-bottom:0">
-          <div class="table-top"><div class="table-title" style="color:var(--green)">✓ Lucro Positivo</div></div>
-          <div id="tbl-lucro-pos"></div>
-        </div>
-        <div class="table-wrap" style="margin-bottom:0">
-          <div class="table-top"><div class="table-title" style="color:var(--yellow)">↑ ROAS acima de 1,0x</div></div>
-          <div id="tbl-roas-pos"></div>
-        </div>
-      </div>
-
-      <!-- TOP 10 PRODUTOS -->
-      <div class="sec">Top 10 Produtos Mais Vendidos (Shopee)</div>
-      <div class="table-wrap" style="margin-bottom:24px">
-        <div class="table-top"><div class="table-title">Ranking por Comissão Gerada</div></div>
-        <div id="tbl-top10"></div>
-      </div>
-
-      <!-- VENDAS POR CANAL -->
-      <div class="sec">Vendas por Canal (Shopee)</div>
-      <div id="canais-wrap" style="margin-bottom:24px"></div>
-
-    </div>
 
     <!-- ══ CONTA 0 — CA-Vem Economizar Agora ══ -->
     <div class="panel" id="panel-c0">
@@ -714,7 +645,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     </div>
 
     <!-- ══ D0 — ANÁLISE DE CLIQUES ══ -->
-    <div class="panel" id="panel-d0">
+    <div id="panel-d0-content" style="display:none">
 
       <!-- ① COMPARATIVO DE CLIQUES — Shopee vs Meta -->
       <div class="table-wrap">
@@ -787,12 +718,36 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 
     <!-- ══ RESUMO DIÁRIO ══ -->
     <div class="panel" id="panel-resumo">
+
+      <!-- ── KPIs UNIFICADOS (vindos do Geral Consolidado) ── -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
-        <div style="font-size:18px;font-weight:800">Resumo Diário</div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <!-- Seletor de mês -->
+        <div>
+          <div style="font-size:20px;font-weight:800">Resumo Diário</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px" id="geral-period-label"></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 14px">
+            <span style="font-size:14px">📅</span>
+            <select id="geralPeriod" onchange="onGeralPeriodChange()"
+              style="background:var(--s2);border:none;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer">
+              <option value="0">Hoje</option>
+              <option value="1">Ontem</option>
+              <option value="7" selected>Últimos 7 dias</option>
+              <option value="14">Últimos 14 dias</option>
+              <option value="30">Últimos 30 dias</option>
+              <option value="custom">Personalizado</option>
+            </select>
+          </div>
+          <div id="customDateRange" style="display:none;gap:6px;align-items:center">
+            <input type="date" id="geralFrom" style="background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 10px;border-radius:6px;outline:none">
+            <span style="color:var(--text3);font-family:var(--mono);font-size:10px">até</span>
+            <input type="date" id="geralTo" style="background:var(--s1);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 10px;border-radius:6px;outline:none">
+          </div>
+          <button class="btn btn-primary" onclick="applyGeralPeriod()" style="gap:6px">🔄 Atualizar</button>
+          <button class="btn btn-ghost" onclick="openKpiModal()" style="gap:6px">⚙️ KPIs</button>
+          <!-- Seletor de mês (Resumo) -->
           <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 14px">
-            <span style="font-size:13px">📅</span>
+            <span style="font-size:13px">🗓️</span>
             <input type="month" id="resumoMonth"
               style="background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;cursor:pointer"
               onchange="renderResumo(STATE.accounts, STATE.shopee?.orders||[])">
@@ -800,8 +755,43 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
           <button class="btn btn-ghost" style="font-size:9px;padding:7px 12px" onclick="setResumoMonthToday()">Mês Atual</button>
         </div>
       </div>
+
+      <!-- KPIs PERSONALIZÁVEIS -->
+      <div id="kpis-geral-custom" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px"></div>
+
+      <!-- MODAL KPIs -->
+      <div id="kpiModal" style="display:none;position:fixed;inset:0;background:rgba(8,8,16,.88);z-index:500;align-items:center;justify-content:center">
+        <div style="background:var(--s1);border:1px solid var(--border2);border-radius:12px;padding:28px;width:480px;max-width:95vw;max-height:80vh;overflow-y:auto">
+          <div style="font-size:15px;font-weight:700;margin-bottom:16px">Personalizar KPIs</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:16px">Selecione até 8 KPIs para exibir no dashboard</div>
+          <div id="kpiCheckboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px"></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="saveKpis()">Salvar</button>
+            <button class="btn btn-ghost" onclick="closeKpiModal()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DIAGNÓSTICO AUTOMÁTICO GERAL -->
+      <div id="geral-diagnostics" style="display:none;margin-bottom:20px"></div>
+
+      <!-- CRIATIVOS EM DESTAQUE -->
+      <div class="sec">Criativos em Destaque</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+        <div class="table-wrap" style="margin-bottom:0">
+          <div class="table-top"><div class="table-title" style="color:var(--green)">✓ Lucro Positivo</div></div>
+          <div id="tbl-lucro-pos"></div>
+        </div>
+        <div class="table-wrap" style="margin-bottom:0">
+          <div class="table-top"><div class="table-title" style="color:var(--yellow)">↑ ROAS acima de 1,0x</div></div>
+          <div id="tbl-roas-pos"></div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);padding-top:24px;margin-top:8px"></div>
+
+      <!-- ── TABELA RESUMO DIÁRIO ── -->
       <div class="chips" id="chips-resumo"></div>
-      <!-- DIAGNÓSTICO RESUMO -->
       <div id="resumo-diagnostics" style="display:none;margin-bottom:16px"></div>
       <div class="table-wrap">
         <div class="table-top">
@@ -831,7 +821,11 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div class="sec" style="margin-top:28px">🔍 Auditoria de Comissão Shopee</div>
       <div class="info-box" style="margin-bottom:16px">
         <b style="color:var(--accent)">Como funciona:</b> Cadastre as campanhas promocionais da Shopee com o % prometido e as datas. A dashboard cruza com seus pedidos do CSV e verifica se o % real recebido bate com o prometido.<br>
-        <b style="color:var(--yellow)">⚠️ Tolerância:</b> Diferenças abaixo de 0,5% são normais. Acima disso, investigue junto à Shopee.
+        <b style="color:var(--yellow)">⚠️ Tolerância:</b> Diferenças abaixo de 0,5% são normais. Acima disso, investigue junto à Shopee.<br><br>
+        <b style="color:var(--text2)">📋 Regras de elegibilidade:</b><br>
+        <span style="color:var(--text3)">• <b>Exige Rede Social:</b> pedido precisa vir via Instagram, Facebook, TikTok, YouTube, Pinterest, WhatsApp ou Lives</span><br>
+        <span style="color:var(--text3)">• <b>Exige Venda Direta:</b> pedido precisa ter atribuição "mesma loja" no CSV (campo Tipo de atribuição)</span><br>
+        <span style="color:var(--text3)">• Pedidos fora dessas regras aparecem como "não elegíveis" e não entram no cálculo</span>
       </div>
       <div style="background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:16px">
         <div style="font-family:var(--mono);font-size:10px;color:var(--text2);margin-bottom:14px;font-weight:700">+ Cadastrar Campanha Promocional</div>
@@ -859,6 +853,31 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         <div class="field" style="margin-top:10px">
           <label>Nome da Campanha (opcional)</label>
           <input type="text" id="audit-nome" placeholder="ex: Data Dupla 05/05, Aniversário Shopee..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px;border-radius:6px;outline:none;width:100%;box-sizing:border-box">
+        </div>
+        <!-- Regras de elegibilidade -->
+        <div style="margin-top:12px;padding:12px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:10px">REGRAS DE ELEGIBILIDADE DO PEDIDO</div>
+          <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:10px">
+              <input type="checkbox" id="audit-rede-social" checked
+                style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent)">
+              📱 Exige Rede Social
+              <span style="color:var(--text3);font-size:9px">(Instagram, Facebook, TikTok...)</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:10px">
+              <input type="checkbox" id="audit-direta"
+                style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent)">
+              🏪 Exige Venda Direta
+              <span style="color:var(--text3);font-size:9px">(atribuição "mesma loja")</span>
+            </label>
+          </div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:8px">
+            💡 Se nenhuma regra estiver marcada, todos os pedidos no período são elegíveis.
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label>Observações (opcional)</label>
+          <input type="text" id="audit-obs" placeholder="ex: Válido para produtos selecionados, exclui eletrônicos..." style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px;border-radius:6px;outline:none;width:100%;box-sizing:border-box">
         </div>
       </div>
       <div class="table-wrap" style="margin-bottom:24px">
@@ -1071,7 +1090,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
         <!-- Período -->
         <div class="filter-row">
-          <button class="filter-chip active" onclick="setPedPeriodo(1,this)">Hoje</button>
+          <button class="filter-chip active" onclick="setPedPeriodo(1,this)">Ontem</button>
           <button class="filter-chip" onclick="setPedPeriodo(7,this)">7 dias</button>
           <button class="filter-chip" onclick="setPedPeriodo(30,this)">30 dias</button>
           <button class="filter-chip" onclick="setPedPeriodo(90,this)">3 meses</button>
@@ -1116,8 +1135,8 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         </div>
         <!-- Filtro por status -->
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="filter-chip active" id="fAll"    onclick="setCrossStatusFilter('all',this)">Todos</button>
-          <button class="filter-chip"        id="fActive" onclick="setCrossStatusFilter('ACTIVE',this)">● Ativos</button>
+          <button class="filter-chip"        id="fAll"    onclick="setCrossStatusFilter('all',this)">Todos</button>
+          <button class="filter-chip active"  id="fActive" onclick="setCrossStatusFilter('ACTIVE',this)">● Ativos</button>
           <button class="filter-chip"        id="fPaused" onclick="setCrossStatusFilter('PAUSED',this)">⏸ Pausados</button>
         </div>
         <!-- Filtro por conta -->
@@ -1149,6 +1168,18 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
         Sub_id1 no link: <span style="color:var(--green)">08Abr26SutiaPuberdade</span><br><br>
         O dashboard cruza automaticamente os pedidos do CSV da Shopee com as campanhas do Facebook pelo Sub_id1.<br><br>
         <b style="color:var(--yellow)">⚠️</b> Shopee pode ter delay de até 24h. Pedidos cancelados são ignorados automaticamente.
+      </div>
+
+      <!-- Seção de cliques — integrada ao Análise de Campanhas -->
+      <div style="border-top:1px solid var(--border);margin-top:28px;padding-top:24px">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px"
+          onclick="toggleCliquesSection()">
+          <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px">
+            📊 COMPARATIVO DE CLIQUES & ANÁLISE DE HORÁRIOS
+          </div>
+          <span id="cliques-toggle-seta" style="font-family:var(--mono);font-size:10px;color:var(--text3)">▼ expandir</span>
+        </div>
+        <div id="cliques-section" style="display:none"></div>
       </div>
     </div>
 
@@ -1305,13 +1336,10 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div class="table-wrap"><div id="finTblLanc"></div></div>
     </div>
 
-    <!-- ══ ALERTAS ══ -->
-    <div class="panel" id="panel-alertas">
-      <div style="font-size:18px;font-weight:800;margin-bottom:16px">🚨 Alertas D0-D7</div>
-
+    <!-- ══ ALERTAS — embutido nas Decisões ══ -->
+    <div id="panel-alertas" style="display:none">
       <!-- Filtros -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding:12px 16px;background:var(--s2);border-radius:8px;border:1px solid var(--border)">
-        <!-- Filtro de fase/dia -->
         <div style="display:flex;flex-direction:column;gap:4px">
           <span style="font-family:var(--mono);font-size:8px;color:var(--text3)">FASE</span>
           <div class="filter-row">
@@ -1321,7 +1349,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
             <button class="filter-chip" onclick="filterAlertas(this,'fase','escala')">D8+ Escala</button>
           </div>
         </div>
-        <!-- Filtro de status -->
         <div style="display:flex;flex-direction:column;gap:4px">
           <span style="font-family:var(--mono);font-size:8px;color:var(--text3)">STATUS</span>
           <div class="filter-row">
@@ -1330,7 +1357,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
             <button class="filter-chip" onclick="filterAlertas(this,'status','pausado')">■ Pausados</button>
           </div>
         </div>
-        <!-- Filtro de dias máximos -->
         <div style="display:flex;flex-direction:column;gap:4px">
           <span style="font-family:var(--mono);font-size:8px;color:var(--text3)">TEMPO MÁX.</span>
           <div class="filter-row">
@@ -1341,7 +1367,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
           </div>
         </div>
       </div>
-
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:12px" id="alertas-count"></div>
       <div class="alerts-wrap" id="alerts-wrap">
         <div class="empty"><div class="empty-ico">🔔</div><div class="empty-t">Nenhum dado carregado</div><div class="empty-s">Sincronize as APIs para ver os alertas</div></div>
@@ -1349,6 +1374,125 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     </div>
 
     
+<!-- ══ AVALIADOR DE PRODUTOS ══ -->
+<div class="panel" id="panel-avaliador">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:800">🔍 Avaliador de Produtos</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Analise se um produto vale testar antes de subir o anúncio</div>
+    </div>
+  </div>
+
+  <!-- Formulário -->
+  <div class="card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:14px">📦 Produto</div>
+
+    <div style="margin-bottom:12px">
+      <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px">Nome do Produto</label>
+      <input type="text" id="av-nome" placeholder="Ex: Conjunto Tricot Mousse Inverno" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;padding:11px 13px;outline:none;font-family:inherit">
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px">Preço (R$)</label>
+        <input type="number" id="av-preco" placeholder="159.41" step="0.01" min="0" oninput="avCalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;padding:11px 13px;outline:none;font-family:var(--mono)">
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px">Comissão (%)</label>
+        <input type="number" id="av-pct" placeholder="20" step="0.1" min="0" max="100" oninput="avCalc()" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;padding:11px 13px;outline:none;font-family:var(--mono)">
+      </div>
+    </div>
+
+    <!-- Calc box -->
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3)">Comissão bruta</span><span id="av-bruta" style="font-family:var(--mono)">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text3)">− 6% imposto Shopee</span><span id="av-imposto" style="font-family:var(--mono)">—</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0"><span style="color:var(--text3)">Comissão líquida/venda</span><span id="av-liquida" style="font-family:var(--mono);font-weight:700">—</span></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div>
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px">Qtd Vendidos</label>
+        <input type="number" id="av-vendidos" placeholder="1000" min="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;padding:11px 13px;outline:none;font-family:var(--mono)">
+      </div>
+      <div>
+        <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px">Avaliação ⭐</label>
+        <input type="number" id="av-aval" placeholder="4.8" step="0.1" min="0" max="5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;padding:11px 13px;outline:none;font-family:var(--mono)">
+      </div>
+    </div>
+
+    <div>
+      <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px">CPC médio esperado (R$)</label>
+      <input type="number" id="av-cpc" placeholder="0.12" step="0.01" min="0" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:15px;padding:11px 13px;outline:none;font-family:var(--mono)">
+    </div>
+  </div>
+
+  <!-- Toggles -->
+  <div class="card" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:14px">🔗 Link e Criativo</div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Link vai direto para o produto?</label>
+      <div style="display:flex;gap:8px">
+        <button class="av-toggle" id="avt-link-sim" onclick="avToggle('link','sim')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">✅ Sim</button>
+        <button class="av-toggle" id="avt-link-nao" onclick="avToggle('link','nao')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">❌ Não (vitrine)</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Preço aparece no criativo?</label>
+      <div style="display:flex;gap:8px">
+        <button class="av-toggle" id="avt-preco-sim" onclick="avToggle('preco','sim')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">✅ Sim</button>
+        <button class="av-toggle" id="avt-preco-nao" onclick="avToggle('preco','nao')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">❌ Não</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Frete grátis ou cupom ativo?</label>
+      <div style="display:flex;gap:8px">
+        <button class="av-toggle" id="avt-frete-sim" onclick="avToggle('frete','sim')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">✅ Sim</button>
+        <button class="av-toggle" id="avt-frete-nao" onclick="avToggle('frete','nao')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">❌ Não</button>
+      </div>
+    </div>
+
+    <div>
+      <label style="display:block;font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Produto relevante para a época?</label>
+      <div style="display:flex;gap:8px">
+        <button class="av-toggle" id="avt-sazonal-sim" onclick="avToggle('sazonal','sim')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">✅ Sim</button>
+        <button class="av-toggle" id="avt-sazonal-nao" onclick="avToggle('sazonal','nao')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit">❌ Não</button>
+      </div>
+    </div>
+  </div>
+
+  <button onclick="avAvaliar()" style="width:100%;padding:16px;background:var(--accent);color:#000;font-size:15px;font-weight:800;border:none;border-radius:12px;cursor:pointer;margin-bottom:8px">🔍 AVALIAR PRODUTO</button>
+
+  <!-- Resultado -->
+  <div id="av-resultado" style="display:none;margin-top:4px">
+
+    <div id="av-resultado-header" style="border-radius:12px;padding:18px;text-align:center;margin-bottom:14px">
+      <div id="av-emoji" style="font-size:36px;margin-bottom:6px"></div>
+      <div id="av-titulo" style="font-size:20px;font-weight:800"></div>
+      <div id="av-sub" style="font-size:12px;margin-top:5px;opacity:0.8"></div>
+      <div style="height:6px;background:rgba(255,255,255,0.1);border-radius:100px;margin-top:12px;overflow:hidden">
+        <div id="av-score-fill" style="height:100%;border-radius:100px;transition:width 1s ease;width:0%"></div>
+      </div>
+    </div>
+
+    <div id="av-criterios" style="margin-bottom:14px"></div>
+
+    <!-- IA -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div id="av-ia-dot" style="width:8px;height:8px;background:var(--green);border-radius:50%"></div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green)">Consultora MGD — Análise IA</div>
+      </div>
+      <div id="av-ia-content" style="font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap"></div>
+    </div>
+
+    <button onclick="avNovo()" style="width:100%;padding:13px;background:transparent;color:var(--accent);font-size:13px;font-weight:700;border:1px solid var(--accent);border-radius:12px;cursor:pointer">+ Avaliar novo produto</button>
+  </div>
+</div>
+
 <!-- ══ CONFIG ══ -->
     <div class="panel" id="panel-config">
       <div class="sec">Token de Acesso — Facebook</div>
@@ -1626,6 +1770,55 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 
 <script>
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// SISTEMA DE TOOLTIPS — termos de análise
+// ══════════════════════════════════════════════════
+const GLOSSARIO_TT = {
+  roas:      { title:'ROAS — Return on Ad Spend', desc:'Quanto você recebe de comissão para cada R$1 investido em anúncio. ROAS = Comissão Shopee ÷ Gasto Facebook.', ex:'Ex: ROAS 1,5x = R$1,50 de comissão para cada R$1 gasto.' },
+  roasReal:  { title:'ROAS Real', desc:'ROAS calculado com os impostos aplicados: gasto FB +14% e comissão Shopee -6% (a partir de jan/2026). É o ROAS que realmente importa para o lucro.', ex:'Ex: Gasto R$100 → vira R$114. Comissão R$150 → vira R$141.' },
+  cpc:       { title:'CPC — Custo por Clique', desc:'Quanto você paga ao Facebook por cada clique no seu link. Meta da metodologia MGD: CPC ≤ R$0,20.', ex:'CPC R$0,08 = ótimo · R$0,20 = meta · R$0,50+ = exorbitante.' },
+  ctr:       { title:'CTR — Click-Through Rate', desc:'Percentual de pessoas que viram seu anúncio e clicaram. CTR alto = criativo relevante e público bem segmentado.', ex:'CTR 2%+ = ótimo · 1–2% = bom · abaixo de 1% = atenção.' },
+  gmv:       { title:'GMV — Gross Merchandise Value', desc:'Valor total de compra dos produtos vendidos. É o preço que o comprador pagou na Shopee, antes das comissões.', ex:'Ex: Vestido vendido por R$89,90 → GMV = R$89,90.' },
+  cpp:       { title:'CPP — Custo por Pedido', desc:'Quanto você gasta em anúncio para gerar um pedido. CPP = Gasto FB ÷ Número de Pedidos.', ex:'Ex: Gastou R$60, gerou 10 pedidos → CPP = R$6,00.' },
+  fpp:       { title:'FPP — Faturamento por Pedido', desc:'Comissão média que você recebe por pedido. FPP = Comissão Total ÷ Número de Pedidos.', ex:'Ex: Comissão R$90, 10 pedidos → FPP = R$9,00.' },
+  lucro:     { title:'Lucro Real', desc:'O que sobra no seu bolso. Lucro = Comissão Líquida Shopee − Gasto Real Facebook (com impostos).', ex:'Comissão R$150 − Gasto R$114 = Lucro R$36.' },
+  vDiretas:  { title:'Vendas Diretas', desc:'Pedidos onde o comprador clicou no seu link e comprou na mesma loja que você promoveu. Atribuição: "mesma loja" no CSV Shopee.', ex:'Venda indireta = comprador clicou no link mas comprou em outra loja.' },
+  trend:     { title:'Trend — Tendência', desc:'Direção do ROAS nos últimos dias comparada com os anteriores. Compara a média dos 3 dias mais recentes com os 3 anteriores.', ex:'▲▲ acelerando · ▲ subindo · → estável · ▼ caindo · ▼▼ despencando.' },
+  saturacao: { title:'Saturação de Audiência', desc:'Quando o Facebook já mostrou seu anúncio para quase todas as pessoas do público-alvo. Sinais: CPC sobe, ROAS cai, mesmo orçamento.', ex:'Nível 0 = saudável · 1 = atenção · 2 = saturado (troque o criativo).' },
+  subid:     { title:'Sub_id1 — Rastreamento Shopee', desc:'Campo que você preenche ao criar o link de afiliado na Shopee. Deve ser o nome exato da campanha no Facebook para que o cruzamento funcione.', ex:'Campanha FB: 08Abr26Vestido → Sub_id1: 08abr26vestido.' },
+  breakeven: { title:'Break-even — Ponto de Equilíbrio', desc:'O ROAS mínimo para você não ter prejuízo. Com impostos (FB +14%, Shopee -6%): break-even ≈ 1,21x.', ex:'ROAS 1,0x = prejuízo · 1,21x = empate · acima = lucro.' },
+  d0:        { title:'D0 — Dia da Subida', desc:'Primeiro dia da campanha. Orçamento baixo, algoritmo aprendendo. Só verifique o CPC. Não tome decisões ainda.', ex:'Se CPC > R$0,50 no D0 = verificar criativo/público.' },
+  d4:        { title:'D4 — Decisão de Teste', desc:'Dia crítico da metodologia MGD. A campanha precisa ter ROAS ≥ break-even. Se não empatou no D4, pause.', ex:'D4 com ROAS 0,8x → pause. D4 com ROAS 1,3x → segue para D5-D7.' },
+  d7:        { title:'D7 — Pré-Escala', desc:'Fase de estabilização antes de escalar. Entre D5 e D7, a campanha deve manter ROAS positivo consistentemente.', ex:'D5-D7 positivos = pode começar a escalar 10-15% do orçamento.' },
+  organico:  { title:'Vendas Orgânicas', desc:'Pedidos sem Sub_id1 — o comprador encontrou o produto por conta própria, não pelo seu link de afiliado.', ex:'Sub_id1 vazio no CSV = venda orgânica (não conta para o ROAS da campanha).' },
+  comissaoShopee: { title:'Comissão Shopee', desc:'Parte da comissão que vai para a Shopee pela intermediação. É descontada da sua comissão total antes de você receber.', ex:'Taxa Shopee 3% · GMV R$100 → Comissão Shopee R$3,00.' },
+  comissaoVendedor: { title:'Comissão do Vendedor', desc:'Parte da comissão paga pelo vendedor/loja ao afiliado. É a sua remuneração direta pela venda.', ex:'Taxa vendedor 10% · GMV R$100 → Comissão Vendedor R$10,00.' },
+  taxaComissao: { title:'Taxa de Comissão Shopee', desc:'Percentual que a Shopee retém sobre o valor de compra como taxa de plataforma.', ex:'Taxa 3% · GMV R$100 → Taxa em R$ = R$3,00.' },
+  ctrDate:   { title:'CTR do Dia', desc:'Click-Through Rate do dia mais recente com dados disponíveis via API do Facebook.', ex:'CTR 2%+ = criativo performando bem.' },
+};
+
+// Gera o HTML do tooltip
+function tt(termKey, labelText, extraClass='') {
+  const g = GLOSSARIO_TT[termKey];
+  if (!g) return labelText;
+  const ex = g.ex ? `<div class="tt-ex">${g.ex}</div>` : '';
+  return `<span class="tt ${extraClass}" onclick="this.classList.toggle('active')" onblur="this.classList.remove('active')" tabindex="0">
+    ${labelText}<span class="tt-ico" title="Saiba mais">?</span>
+    <span class="tt-box">
+      <div class="tt-title">${g.title}</div>
+      <div class="tt-desc">${g.desc}</div>${ex}
+    </span>
+  </span>`;
+}
+
+// Fecha tooltips ao clicar fora
+document.addEventListener('click', e => {
+  if (!e.target.closest('.tt')) {
+    document.querySelectorAll('.tt.active').forEach(el => el.classList.remove('active'));
+  }
+});
+
+// ══════════════════════════════════════════════════
 // CONTAS PRÉ-CONFIGURADAS
 // ══════════════════════════════════════════════════
 const SHOPEE_SHOP_ID = '18353490273'; // ID da loja Shopee (afiliado)
@@ -1793,7 +1986,7 @@ function goTab(tab) {
   });
   const titles = {
     decisoes: 'Decisões do Dia',
-    geral: 'Geral Consolidado', resumo: 'Resumo Diário',
+    geral: 'Resumo Diário', resumo: 'Resumo Diário',
     cruzamento: 'Análise de Campanhas — FB × Shopee',
     produtos: 'Produtos por Campanha',
     pedidos:  'Pedidos Shopee',
@@ -1807,11 +2000,12 @@ function goTab(tab) {
   safeText('topbarTitle', titles[tab] || tab);
   safeText('topbarSub', STATE.loaded ? '— ' + new Date().toLocaleDateString('pt-BR') : '');
   // Sync mobile bottom nav
-  const mobileMap = { decisoes:'geral', geral:'geral', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'alertas', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas', financeiro:'alertas', produtos:'cruzamento', pedidos:'cruzamento' };
+  const mobileMap = { decisoes:'geral', geral:'resumo', resumo:'resumo', cruzamento:'cruzamento', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'decisoes', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas', financeiro:'alertas', produtos:'cruzamento', pedidos:'cruzamento' };
   if (typeof setBN === 'function') setBN(mobileMap[tab] || '');
   if (tab === 'decisoes')   setTimeout(renderDecisoes, 50);
+  if (tab === 'alertas')    { setTimeout(()=>{ goTab('decisoes'); }, 10); return; }
+  if (tab === 'd0')         { setTimeout(()=>{ goTab('cruzamento'); }, 10); return; }
   if (tab === 'financeiro') setTimeout(() => { initHistoricoFaturas(); renderFinanceiro(); }, 50);
-  if (tab === 'd0')         setTimeout(() => { renderClicksCompare(); renderClicksHora(); }, 50);
   if (tab === 'produtos')   setTimeout(renderProdutos, 50);
   if (tab === 'pedidos')    setTimeout(renderPedidos, 50);
   if (tab === 'chat') setTimeout(initChat, 50);
@@ -1841,16 +2035,24 @@ async function fetchFB(token, accountId, days) {
   const fOpts    = { method: 'GET', mode: 'cors', credentials: 'omit' };
 
   // Função para buscar todas as páginas de uma URL (paginação automática)
-  async function fetchAllPages(url, maxPages = 10) {
+  async function fetchAllPages(url, maxPages = 10, silent = false) {
     let data = [];
     let nextUrl = url;
     let page = 0;
     while (nextUrl && page < maxPages) {
-      const r = await fetch(nextUrl, fOpts);
-      const j = await r.json();
-      if (j.error) throw new Error(j.error.message);
-      data = data.concat(j.data || []);
-      nextUrl = j.paging?.next || null;
+      try {
+        const r = await fetch(nextUrl, fOpts);
+        const j = await r.json();
+        if (j.error) {
+          if (!silent) console.warn('[FB API]', j.error.message);
+          return data; // retorna o que já tinha ao invés de lançar
+        }
+        data = data.concat(j.data || []);
+        nextUrl = j.paging?.next || null;
+      } catch(e) {
+        if (!silent) console.warn('[fetchAllPages]', e.message);
+        return data;
+      }
       page++;
     }
     return data;
@@ -1893,6 +2095,43 @@ async function fetchFB(token, accountId, days) {
   const tDataArr = await fetchAllPages(
     `https://graph.facebook.com/v19.0/${accountId}/insights?fields=spend,clicks,cpc&time_increment=1&time_range=${tr}&limit=400&access_token=${token}`
   );
+
+  // Busca audiência por campanha (age_gender + platform) — opcional, falha silenciosamente
+  let audienceByCamp = {};
+  try {
+    const audFields = 'campaign_name,campaign_id,impressions,clicks,reach';
+    // Ambas em paralelo — qualquer erro é capturado silenciosamente
+    const [audAgeArr, audPlatArr] = await Promise.all([
+      fetchAllPages(
+        `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${audFields}&time_range=${tr}&level=campaign&breakdowns=age%2Cgender&limit=500&access_token=${token}`, 10, true
+      ).catch(() => []),
+      fetchAllPages(
+        `https://graph.facebook.com/v19.0/${accountId}/insights?fields=${audFields}&time_range=${tr}&level=campaign&breakdowns=publisher_platform&limit=500&access_token=${token}`, 10, true
+      ).catch(() => []),
+    ]);
+    for (const r of audAgeArr) {
+      const id = r.campaign_id; if (!id) continue;
+      if (!audienceByCamp[id]) audienceByCamp[id] = { age: [], platform: [] };
+      audienceByCamp[id].age.push({
+        age: r.age||'?', gender: r.gender||'?',
+        impressions: parseInt(r.impressions||0),
+        clicks:      parseInt(r.clicks||0),
+        reach:       parseInt(r.reach||0),
+      });
+    }
+    for (const r of audPlatArr) {
+      const id = r.campaign_id; if (!id) continue;
+      if (!audienceByCamp[id]) audienceByCamp[id] = { age: [], platform: [] };
+      audienceByCamp[id].platform.push({
+        platform:    r.publisher_platform||'?',
+        impressions: parseInt(r.impressions||0),
+        clicks:      parseInt(r.clicks||0),
+      });
+    }
+  } catch(e) { console.warn('[audience ignored]', e.message); }
+
+  // budgetHistByCamp removido — change_history requer permissão especial e causava lentidão
+  const budgetHistByCamp = {};
 
   // Para cada ad, extrai URL do criativo sem chamadas extras
   const adsByCampaign = {};
@@ -1968,9 +2207,11 @@ async function fetchFB(token, accountId, days) {
   // Injeta dailyData, startDate, budget, status e CTR do dia mais recente
   campaigns.forEach(c => {
     c.dailyData  = (dailyByCamp[c.name] || []).sort((a, b) => a.date > b.date ? 1 : -1);
-    c.startDate  = campStartById[c.campaignId]  || '';
-    c.budget     = campBudgetById[c.campaignId] || 0;
-    c.campStatus = campStatusById[c.campaignId] || '';
+    c.startDate   = campStartById[c.campaignId]  || '';
+    c.budget      = campBudgetById[c.campaignId] || 0;
+    c.campStatus  = campStatusById[c.campaignId] || '';
+    c.audience    = audienceByCamp[c.campaignId] || null;
+    c.budgetHist  = budgetHistByCamp[c.campaignId] || [];
     // CTR do dia mais recente com gasto
     const lastDayWithData = [...c.dailyData].reverse().find(d => d.spend > 0);
     c.ctrHoje    = lastDayWithData?.ctr || 0;
@@ -2017,8 +2258,8 @@ function renderResumoCards(el, allDates, byDate, accounts, totals) {
         <div class="cross-card-kpi"><div class="cross-card-kpi-label">Valor de Compra</div><div class="cross-card-kpi-val">R$ ${fmt(totValor)}</div></div>
         <div class="cross-card-kpi"><div class="cross-card-kpi-label">Investimento FB</div><div class="cross-card-kpi-val">R$ ${fmt(totInvest)}</div></div>
         <div class="cross-card-kpi"><div class="cross-card-kpi-label">Comissão</div><div class="cross-card-kpi-val">R$ ${fmt(totComm)}</div></div>
-        <div class="cross-card-kpi"><div class="cross-card-kpi-label">Lucro</div><div class="cross-card-kpi-val" style="color:${totLucro>=0?'var(--green)':'var(--red)'}">${totLucro>=0?'+':''}R$ ${fmt(totLucro)}</div></div>
-        <div class="cross-card-kpi"><div class="cross-card-kpi-label">ROAS</div><div class="cross-card-kpi-val" style="color:${totRoas>=1.5?'var(--green)':totRoas>=1.0?'var(--yellow)':'var(--red)'}">${fmt(totRoas)}x</div></div>
+        <div class="cross-card-kpi"><div class="cross-card-kpi-label">${tt('lucro','Lucro')}</div><div class="cross-card-kpi-val" style="color:${totLucro>=0?'var(--green)':'var(--red)'}">${totLucro>=0?'+':''}R$ ${fmt(totLucro)}</div></div>
+        <div class="cross-card-kpi"><div class="cross-card-kpi-label">${tt('roas','ROAS')}</div><div class="cross-card-kpi-val" style="color:${totRoas>=1.5?'var(--green)':totRoas>=1.0?'var(--yellow)':'var(--red)'}">${fmt(totRoas)}x</div></div>
         <div class="cross-card-kpi"><div class="cross-card-kpi-label">ROI</div><div class="cross-card-kpi-val" style="color:${totRoi>=0?'var(--green)':'var(--red)'}">${totRoi>=0?'+':''}${fmt(totRoi,1)}%</div></div>
         <div class="cross-card-kpi"><div class="cross-card-kpi-label" style="color:var(--blue)">CPP</div><div class="cross-card-kpi-val">${totCPP?'R$ '+fmt(totCPP):'—'}</div></div>
         <div class="cross-card-kpi"><div class="cross-card-kpi-label" style="color:var(--purple)">FPP</div><div class="cross-card-kpi-val">${totFPP?'R$ '+fmt(totFPP):'—'}</div></div>
@@ -2075,7 +2316,7 @@ function renderResumoCards(el, allDates, byDate, accounts, totals) {
           <div class="cross-card-kpi"><div class="cross-card-kpi-label">Valor de Compra</div><div class="cross-card-kpi-val">R$ ${fmt(valor)}</div></div>
           <div class="cross-card-kpi"><div class="cross-card-kpi-label">Investimento FB</div><div class="cross-card-kpi-val">R$ ${fmt(investTotal)}</div><div class="cross-card-kpi-sub">gasto R$ ${fmt(fbSpend)} +14%</div></div>
           <div class="cross-card-kpi"><div class="cross-card-kpi-label">Comissão</div><div class="cross-card-kpi-val">${aguardando?'⏳':'R$ '+fmt(commBruta)}</div><div class="cross-card-kpi-sub">${aguardando?'':'líq R$ '+fmt(commLiq)}</div></div>
-          <div class="cross-card-kpi"><div class="cross-card-kpi-label">Lucro</div><div class="cross-card-kpi-val" style="color:${aguardando?'var(--text3)':lucroColor}">${aguardando?'⏳':(lucro>=0?'+':'')+'R$ '+fmt(lucro)}</div></div>
+          <div class="cross-card-kpi"><div class="cross-card-kpi-label">${tt('lucro','Lucro')}</div><div class="cross-card-kpi-val" style="color:${aguardando?'var(--text3)':lucroColor}">${aguardando?'⏳':(lucro>=0?'+':'')+'R$ '+fmt(lucro)}</div></div>
           <div class="cross-card-kpi"><div class="cross-card-kpi-label">ROI</div><div class="cross-card-kpi-val" style="color:${aguardando?'var(--text3)':roi>=0?'var(--green)':'var(--red)'}">${aguardando?'⏳':(roi>=0?'+':'')+fmt(roi,1)+'%'}</div></div>
           <div class="cross-card-kpi"><div class="cross-card-kpi-label" style="color:var(--blue)">CPP</div><div class="cross-card-kpi-val">${aguardando?'⏳':cpp?'R$ '+fmt(cpp):'—'}</div></div>
           <div class="cross-card-kpi"><div class="cross-card-kpi-label" style="color:var(--purple)">FPP</div><div class="cross-card-kpi-val">${aguardando?'⏳':fpp?'R$ '+fmt(fpp):'—'}</div></div>
@@ -2269,8 +2510,8 @@ function renderResumo(accounts, shopeeOrders) {
           <th>Valor<br>Compra</th>
           <th>Invest.<br>FB (+14%)</th>
           <th>Comissão<br>Recebida</th>
-          <th>Lucro<br>Diário</th>
-          <th>ROAS</th>
+          <th>${tt('lucro','Lucro<br>Diário')}</th>
+          <th>${tt('roas','ROAS')}</th>
           <th>ROI</th>
           <th style="color:var(--blue)">CPP</th>
           <th style="color:var(--purple)">FPP</th>
@@ -2324,14 +2565,14 @@ const KPI_DEFS = [
   { id:'totalVendas',  label:'Total em Vendas (Shopee)', icon:'💰', color:'#f59e0b', sub:'Valor de Compra (Shopee)',       calc:(t,s)=>s.totalValor },
   { id:'gastoMeta',    label:'Gasto Total (Meta)',        icon:'$',  color:'#ef4444', sub:'Total investido em anúncios',   calc:(t,s)=>t.spend },
   { id:'comissaoTotal',label:'Comissão Total',            icon:'$',  color:'#10b981', sub:'Comissões geradas (bruto)',      calc:(t,s)=>s.totalComm },
-  { id:'lucroLiq',     label:'Lucro Líquido',             icon:'💵', color:'#10b981', sub:'Comissão líq − Investimento',   calc:(t,s)=>s.totalLucro, signed:true },
-  { id:'roas',         label:'ROAS',                      icon:'📈', color:'#8b5cf6', sub:'Comissão ÷ Investimento bruto', calc:(t,s)=>s.totalRoas, isRoas:true },
+  { id:'lucroLiq',     label: tt('lucro','Lucro Líquido'),             icon:'💵', color:'#10b981', sub:'Comissão líq − Investimento',   calc:(t,s)=>s.totalLucro, signed:true },
+  { id:'roas',         label: tt('roasReal','ROAS Real'),              icon:'📈', color:'#8b5cf6', sub:'Comissão ÷ Investimento bruto', calc:(t,s)=>s.totalRoas, isRoas:true },
   { id:'roi',          label:'ROI',                       icon:'%',  color:'#06b6d4', sub:'(Comissão−Invest) ÷ Invest %',  calc:(t,s)=>s.totalRoi, isPct:true, signed:true },
   { id:'pedidos',      label:'Total de Pedidos',          icon:'✅', color:'#10b981', sub:'Pedidos Shopee no período',      calc:(t,s)=>s.totalPedidos, isInt:true },
   { id:'diretas',      label:'Vendas Diretas',            icon:'🎯', color:'#f59e0b', sub:'Pedido na mesma loja',           calc:(t,s)=>s.totalDiretas, isInt:true },
-  { id:'cpcMedio',     label:'CPC Médio',                 icon:'🖱️', color:'#f97316', sub:'Custo médio por clique',         calc:(t,s)=>t.cpc },
-  { id:'cpp',          label:'Custo por Pedido (CPP)',    icon:'🛒', color:'#f97316', sub:'Investimento ÷ Nº Pedidos',      calc:(t,s)=>s.totalCPP },
-  { id:'fpp',          label:'Faturamento por Pedido',    icon:'📦', color:'#8b5cf6', sub:'Comissão ÷ Nº Pedidos',          calc:(t,s)=>s.totalFPP },
+  { id:'cpcMedio',     label: tt('cpc','CPC Médio'),                  icon:'🖱️', color:'#f97316', sub:'Custo médio por clique',         calc:(t,s)=>t.cpc },
+  { id:'cpp',          label: tt('cpp','Custo por Pedido (CPP)'),      icon:'🛒', color:'#f97316', sub:'Investimento ÷ Nº Pedidos',      calc:(t,s)=>s.totalCPP },
+  { id:'fpp',          label: tt('fpp','Faturamento por Pedido'),      icon:'📦', color:'#8b5cf6', sub:'Comissão ÷ Nº Pedidos',          calc:(t,s)=>s.totalFPP },
   { id:'commMedia',    label:'Comissão Média/Pedido',     icon:'📊', color:'#06b6d4', sub:'Comissão média por pedido',      calc:(t,s)=>s.totalPedidos>0?s.totalComm/s.totalPedidos:0 },
   { id:'metaMensal',   label:'Meta Mensal',               icon:'🏆', color:'#f59e0b', sub:'Configure sua meta de comissão', isMeta:true, calc:(t,s)=>0 },
 ];
@@ -2832,9 +3073,10 @@ function buildCross(accounts, shopeeOrders) {
       // Cruza dailyData do FB com comissões Shopee por data
       const daysWithSpend = (camp.dailyData || []).filter(d => d.spend > 0);
 
-      // Agrupa pedidos e vendas diretas por data
-      const ordersByDate = {};
+      // Agrupa pedidos, vendas diretas e cliques Shopee por data
+      const ordersByDate  = {};
       const diretasByDate = {};
+      const shopeeClicksByDate = {};
       for (const o of campOrders) {
         const d = (o.date || '').trim();
         if (!d) continue;
@@ -2842,6 +3084,17 @@ function buildCross(accounts, shopeeOrders) {
         if (!diretasByDate[d]) diretasByDate[d] = 0;
         ordersByDate[d]++;
         if (o.direta) diretasByDate[d]++;
+      }
+      // Cliques Shopee por data para esta campanha
+      const campClicks = (STATE.shopeeClicks||[]).filter(cl => {
+        const s = (cl.subId||'').trim().toLowerCase();
+        return s === campNameLow || s.replace(/\s+/g,'').replace(/[^a-z0-9]/g,'') === campNameNorm;
+      });
+      for (const cl of campClicks) {
+        const d = (cl.date||'').trim();
+        if (!d) continue;
+        if (!shopeeClicksByDate[d]) shopeeClicksByDate[d] = 0;
+        shopeeClicksByDate[d]++;
       }
 
       // Data de início real da campanha — vem da API do Facebook
@@ -2879,6 +3132,14 @@ function buildCross(accounts, shopeeOrders) {
         const ordersDoDay = campOrders.filter(o => o.date === fbDay.date);
         const pagUnicosDia = new Set(ordersDoDay.map(o=>o.paymentId).filter(Boolean)).size || ordersDoDay.length;
 
+        // Orçamento vigente naquele dia (do histórico, ou o atual como fallback)
+        const budgetDia = (() => {
+          const hist = camp?.budgetHist || [];
+          if (!hist.length) return camp?.budget || 0;
+          const vigentes = hist.filter(h => h.date <= fbDay.date);
+          return vigentes.length ? vigentes[vigentes.length-1].budget : hist[0].budget;
+        })();
+
         return {
           date:     fbDay.date,
           day:      dayNum,
@@ -2886,7 +3147,11 @@ function buildCross(accounts, shopeeOrders) {
           hasSpend: fbDay.spend > 0,
           spend:    fbDay.spend,
           gastoReal,
+          budget:   budgetDia,
           clicks:   fbDay.clicks,
+          impressions: fbDay.impressions || 0,
+          metaClicks:   fbDay.clicks || 0,
+          shopeeClicks: shopeeClicksByDate[fbDay.date] || 0,
           cpc:      fbDay.cpc,
           commission: commShopee,
           impComm, impFB, commLiq, roas, lucro,
@@ -2896,12 +3161,17 @@ function buildCross(accounts, shopeeOrders) {
         };
       }).filter(d => d.day >= 0); // só mostra dias a partir do D0
 
-      // Totais — exclui SOMENTE o dia atual sem dados Shopee
-      // Dias passados sem vendas entram normalmente (simplesmente não converteram)
-      const todayNoData    = dailyCross.find(d => d.aguardando);
-      const todaySpend     = todayNoData ? todayNoData.spend : 0;
-      const todayImpFB     = todaySpend * getTaxFB();
+      // Totais — SEMPRE exclui o dia atual dos cálculos
+      // Shopee libera comissões somente no dia seguinte
+      const todayDateCross = new Date().toISOString().split('T')[0];
+      const todayData   = dailyCross.find(d => d.date === todayDateCross);
+      const todaySpend  = todayData?.spend || 0;
+      const todayImpFB  = todaySpend * getTaxFB();
       const todayGastoReal = todaySpend + todayImpFB;
+      // Comissões de hoje também são excluídas (ainda incompletas)
+      const todayComm   = todayData ? campOrders
+        .filter(o => o.date === todayDateCross)
+        .reduce((s,o) => s + o.commission, 0) : 0;
 
       const totalSpend     = camp.spend;
       const totalComm      = campOrders.reduce((s, o) => s + o.commission, 0);
@@ -2911,16 +3181,22 @@ function buildCross(accounts, shopeeOrders) {
       const totalCommLiq   = totalComm - totalImpComm;
       const totalImpFB     = totalSpend * TAX_FB;
       const totalGastoReal = totalSpend + totalImpFB;
-      // Gasto para ROAS = total real MENOS o gasto de hoje (ainda sem Shopee)
+
+      // Gasto para ROAS = total real MENOS o gasto de hoje (Shopee ainda não liberou)
       const gastoParaRoas  = totalGastoReal - todayGastoReal;
-      const totalLucro     = totalCommLiq - gastoParaRoas;
-      const realRoas       = gastoParaRoas > 0 && totalComm > 0 ? totalCommLiq / gastoParaRoas : 0;
+      // Comissão para ROAS = total MENOS comissões de hoje (incompletas)
+      const todayImpComm   = todayComm * TAX_COMM;
+      const todayCommLiq   = todayComm - todayImpComm;
+      const commLiqParaRoas= totalCommLiq - todayCommLiq;
+
+      const totalLucro     = commLiqParaRoas - gastoParaRoas;
+      const realRoas       = gastoParaRoas > 0 && commLiqParaRoas > 0 ? commLiqParaRoas / gastoParaRoas : 0;
       const shopeeOrd      = campOrders.length;
       const shopeeDiretas  = campOrders.filter(o => o.direta).length;
       // Pagamentos Únicos = IDs de pagamento únicos (mesmo cliente, vários produtos = 1 pagamento)
       const pagUnicosSet   = new Set(campOrders.map(o => o.paymentId).filter(Boolean));
       const pagUnicos      = pagUnicosSet.size || shopeeOrd; // fallback = total pedidos se sem paymentId
-      const temHojeIncompleto = !!todayNoData;
+      const temHojeIncompleto = !todayData;
 
       // Agrega produtos vendidos por esta campanha
       const prodMap = {};
@@ -2983,8 +3259,14 @@ function buildCross(accounts, shopeeOrders) {
         name:             camp.name,
         account:          acc.name,
         accIdx:           acc.idx,
+        campaignId:       camp.campaignId,
         subId:            camp.name,
         campStatus:       camp.campStatus || '',
+        budget:           camp.budget     || 0,
+        audience:         camp.audience   || null,
+        budgetHist:       camp.budgetHist || [],
+        ctrHoje:          camp.ctrHoje    || 0,
+        ctrDate:          camp.ctrDate    || '',
         fbSpend:          totalSpend,
         gastoReal:        gastoParaRoas,
         gastoRealTotal:   totalGastoReal,
@@ -3002,6 +3284,7 @@ function buildCross(accounts, shopeeOrders) {
         orders:           camp.orders || 0,
         clicks:           camp.clicks,
         cpc:              camp.cpc,
+        metaClicks:       camp.clicks || 0,
         dailyCross,
         produtos,
       };
@@ -3166,8 +3449,8 @@ function renderTable(containerId, campaigns, showAcc = false) {
   el.innerHTML = `
     <table>
       <thead><tr>
-        <th>Campanha</th><th>ROAS</th><th>Gasto FB</th><th>Comissão</th><th>Lucro</th>
-        <th>CPC</th><th>Pedidos</th><th>V. Diretas</th><th>Class.</th><th>Ação</th>
+        <th>Campanha</th><th>${tt('roas','ROAS')}</th><th>Gasto FB</th><th>Comissão</th><th>${tt('lucro','Lucro')}</th>
+        <th>${tt('cpc','CPC')}</th><th>Pedidos</th><th>${tt('vDiretas','V. Diretas')}</th><th>Class.</th><th>Ação</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -3177,7 +3460,7 @@ function renderTable(containerId, campaigns, showAcc = false) {
 // ══════════════════════════════════════════════════
 // CROSS TABLE FILTERS
 // ══════════════════════════════════════════════════
-let crossStatusFilter = 'all';
+let crossStatusFilter = 'ACTIVE';
 
 function setCrossStatusFilter(status, btn) {
   crossStatusFilter = status;
@@ -3356,7 +3639,7 @@ function renderCrossCards(sorted, el) {
             <div class="cross-card-kpi-sub">líq: R$ ${fmt(c.shopeeCommLiq)}</div>
           </div>
           <div class="cross-card-kpi">
-            <div class="cross-card-kpi-label">Lucro</div>
+            <div class="cross-card-kpi-label">${tt('lucro','Lucro')}</div>
             <div class="cross-card-kpi-val" style="color:${lucroColor}">${(c.lucro||0)>=0?'+':''}R$ ${fmt(c.lucro||0)}</div>
           </div>
           <div class="cross-card-kpi">
@@ -3365,7 +3648,7 @@ function renderCrossCards(sorted, el) {
             <div class="cross-card-kpi-sub" style="color:var(--accent)">💳 ${c.pagUnicos||c.shopeeOrders} pag. únicos</div>
           </div>
           <div class="cross-card-kpi">
-            <div class="cross-card-kpi-label">CPC</div>
+            <div class="cross-card-kpi-label">${tt('cpc','CPC')}</div>
             <div class="cross-card-kpi-val">R$ ${fmt(c.cpc||0)}</div>
           </div>
           <div class="cross-card-kpi">
@@ -3402,7 +3685,6 @@ const COL_DEFAULTS = {
   roas:       { lbl: 'ROAS',          vis: true,  fixed: false },
   trend:      { lbl: 'Trend',         vis: true,  fixed: false },
   gasto:      { lbl: 'Gasto FB',      vis: true,  fixed: false },
-  commBruta:  { lbl: 'Comissão Bruta',vis: false, fixed: false },
   commLiq:    { lbl: 'Comissão Líq.', vis: true,  fixed: false },
   lucro:      { lbl: 'Lucro',         vis: true,  fixed: false },
   cpc:        { lbl: 'CPC',           vis: true,  fixed: false },
@@ -3508,7 +3790,7 @@ function renderCrossTable(crossData) {
         <td style="font-family:var(--mono);font-size:10px;color:var(--text3)">
           ${d.spend>0?`R$ ${fmt(d.gastoReal)} <span style="font-size:8px">(+${fmt(d.impFB||0)})</span>`:'—'}
         </td>
-        ${vis('commBruta')?`<td style="font-family:var(--mono);font-size:10px">${d.commission>0?'R$ '+fmt(d.commission):ag?'⏳':'—'}</td>`:''}
+
         <td style="font-family:var(--mono);font-size:10px">${d.commission>0?'R$ '+fmt(d.commLiq):ag?'⏳':'—'}</td>
         <td style="font-family:var(--mono);font-size:10px;font-weight:700;color:${ag?'var(--text3)':dLucroColor}">
           ${ag?'⏳':d.commission>0?(d.lucro>=0?'+':'')+'R$ '+fmt(d.lucro):'—'}
@@ -3569,6 +3851,7 @@ function renderCrossTable(crossData) {
       <tr class="daily-detail" style="display:none">
         <td colspan="${colCount}" style="padding:0">
           <table style="width:100%">${dailyRows}</table>
+          ${renderAudiencePanel(c)}
         </td>
       </tr>`;
   }).join('');
@@ -3590,15 +3873,15 @@ function renderCrossTable(crossData) {
         ${th('Campanha','name','campanha')}
         ${th('Ped · Dir<br><small style="color:var(--accent);font-weight:400">💳 Únicos</small>','pedidos','pedidos')}
         ${th('ROAS','realRoas','roas')}
-        ${vis('trend')?'<th>Trend</th>':''}
+        ${vis('trend')?`<th>${tt('trend','Trend')}</th>`:''}
         ${th('Gasto FB (+14%)','gastoReal','gasto')}
-        ${vis('commBruta')?th('Comissão Bruta','shopeeRevenue','commBruta'):''}
+
         ${th('Comissão Líq.','shopeeCommLiq','commLiq')}
         ${th('Lucro','lucro','lucro')}
         ${vis('cpc')?th('CPC','cpc','cpc'):''}
         ${vis('disc')?'<th>Disc.%</th>':''}
         ${vis('vdiretas')?'<th>V.Dir</th>':''}
-        ${vis('saturacao')?'<th>Saturação</th>':''}
+        ${vis('saturacao')?`<th>${tt('saturacao','Saturação')}</th>`:''}
         ${vis('acao')?'<th>Ação</th>':''}
       </tr></thead>
       <tbody>${rows}</tbody>
@@ -3897,8 +4180,9 @@ function renderAll() {
   // ── ORGÂNICO
   renderOrganico();
 
-  // ── RESUMO DIÁRIO
+  // ── RESUMO DIÁRIO + KPIs GERAL (agora na mesma aba)
   renderResumo(accounts, shopee?.orders || []);
+  renderGeralPanel();
 
   // ── DECISÕES DO DIA (atualiza se a aba estiver ativa)
   if ($('panel-decisoes')?.classList.contains('active')) renderDecisoes();
@@ -4047,7 +4331,7 @@ async function runFullSync() {
     const crossData = buildCross(accounts, shopee.orders);
     STATE = { ...STATE, accounts, shopee, crossData, loaded: true };
     renderAll();
-    goTab('geral');
+    goTab('resumo');
 
   } catch (e) {
     setStatus('Erro: ' + e.message, 'err');
@@ -4105,7 +4389,7 @@ function loadDemo() {
   const crossData = buildCross(accounts, shopeeOrders);
   STATE = { accounts, shopee: { orders: shopeeOrders }, crossData, loaded: true };
   renderAll();
-  goTab('geral');
+  goTab('resumo');
   setStatus('DEMO — dados simulados', 'ok');
 }
 
@@ -4224,7 +4508,7 @@ function renderD0(accounts) {
     <table>
       <thead><tr>
         <th>Campanha</th>
-        <th>CPC <span style="color:var(--text3);font-weight:400">(meta: &lt; R$0,20)</span></th>
+        <th>${tt('cpc','CPC')} <span style="color:var(--text3);font-weight:400">(meta: &lt; R$0,20)</span></th>
         <th>Cliques</th>
         <th>Gasto</th>
         <th>Status CPC</th>
@@ -4634,7 +4918,7 @@ function renderCalcMensal(accounts, shopeeOrders) {
         <th>Inv. FB</th>
         <th>Imp. FB<br><span style="color:var(--text3);font-weight:400">+14% jan/26+</span></th>
         <th>Inv. Total</th>
-        <th>GMV<br>Shopee</th>
+        <th>${tt('gmv','GMV<br>Shopee')}</th>
         <th>Comissão<br>Bruta</th>
         <th>Imp. Shopee<br><span style="color:var(--text3);font-weight:400">−6% jan/26+</span></th>
         <th>Comissão<br>Líquida</th>
@@ -6091,26 +6375,42 @@ function initPlanMonth() {
 function loadPlanDatasEspeciais() {
   const m=$('planMonth')?.value||''; if(!m) return;
   const [year, mm] = m.split('-').map(Number);
-  planDatasEspeciais = (DATAS_FIXAS[String(mm).padStart(2,'0')]||[]).map(d=>({...d}));
+  const mmStr = String(mm).padStart(2,'0');
+  const lsKey = `mgd_datas_especiais_${mmStr}`;
 
-  // Adiciona 5º dia útil do mês (pagamento CLT/funcionalismo)
-  const quintoDia = calcQuintoDiaUtil(year, mm);
-  planDatasEspeciais.unshift({
-    dia: quintoDia,
-    label: `5º Dia Útil — Pagamento CLT 💳`,
-    tipo: 'pagto'
-  });
+  // Tenta restaurar do localStorage primeiro
+  let saved = null;
+  try { const raw = localStorage.getItem(lsKey); if(raw) saved = JSON.parse(raw); } catch(e){}
 
+  if (saved && saved.length > 0) {
+    planDatasEspeciais = saved;
+  } else {
+    // Primeira vez: usa DATAS_FIXAS como base
+    planDatasEspeciais = (DATAS_FIXAS[mmStr]||[]).map(d=>({...d}));
+    // Adiciona 5º dia útil
+    const quintoDia = calcQuintoDiaUtil(year, mm);
+    planDatasEspeciais.unshift({ dia: quintoDia, label: `5º Dia Útil — Pagamento CLT 💳`, tipo: 'pagto' });
+    savePlanDatasEspeciais();
+  }
   renderDatasEspeciais();
+}
+
+function savePlanDatasEspeciais() {
+  const m=$('planMonth')?.value||''; if(!m) return;
+  const mm = m.split('-')[1];
+  const lsKey = `mgd_datas_especiais_${mm}`;
+  try { localStorage.setItem(lsKey, JSON.stringify(planDatasEspeciais)); } catch(e){}
 }
 
 function addDataEspecial() {
   planDatasEspeciais.push({dia:1,label:'Nova data',tipo:'data'});
+  savePlanDatasEspeciais();
   renderDatasEspeciais();
 }
 
 function removeDataEspecial(i) {
   planDatasEspeciais.splice(i,1);
+  savePlanDatasEspeciais();
   renderDatasEspeciais();
   buildPlanCalendar();
 }
@@ -6122,9 +6422,9 @@ function renderDatasEspeciais() {
     <div style="display:grid;grid-template-columns:50px 1fr auto auto;gap:5px;align-items:center">
       <input type="number" min="1" max="31" value="${d.dia}" onchange="planDatasEspeciais[${i}].dia=parseInt(this.value);buildPlanCalendar()"
         style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:6px;border-radius:5px;outline:none;text-align:center;width:100%">
-      <input type="text" value="${d.label}" onchange="planDatasEspeciais[${i}].label=this.value"
+      <input type="text" value="${d.label}" onchange="planDatasEspeciais[${i}].label=this.value;savePlanDatasEspeciais()"
         style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 8px;border-radius:5px;outline:none;box-sizing:border-box;width:100%">
-      <select onchange="planDatasEspeciais[${i}].tipo=this.value;buildPlanCalendar()"
+      <select onchange="planDatasEspeciais[${i}].tipo=this.value;savePlanDatasEspeciais();buildPlanCalendar()"
         style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:9px;padding:5px;border-radius:5px;outline:none">
         ${Object.entries(TIPOS).map(([v,l])=>`<option value="${v}"${d.tipo===v?' selected':''}>${l}</option>`).join('')}
       </select>
@@ -7115,7 +7415,23 @@ function buildPlanCard(c) {
     <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0">
-          <span style="font-size:13px;font-weight:800;font-family:var(--mono)">${c.name}</span>
+          <div style="min-width:0">
+            <span style="font-size:13px;font-weight:800;font-family:var(--mono)">${c.name}</span>
+            ${(() => {
+              // Link Shopee: usa o produto mais vendido da campanha
+              const topProd = (c.produtos||[]).sort((a,b)=>(b.commShopee||b.comm||0)-(a.commShopee||a.comm||0))[0];
+              if (topProd?.itemId) {
+                const link = shopeeProductLink(topProd.itemId, topProd.nome);
+                return `<div style="margin-top:3px">
+                  <a href="${link}" target="_blank" rel="noopener"
+                    style="font-family:var(--mono);font-size:8px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:3px">
+                    🛍️ Ver na Shopee <span style="font-size:7px;color:var(--text3)">(produto top)</span>
+                  </a>
+                </div>`;
+              }
+              return '';
+            })()}
+          </div>
           ${accBadge}
           <span style="font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:3px;background:${isAtiva?'rgba(62,207,142,.15)':'rgba(255,255,255,.05)'};color:${isAtiva?'var(--green)':'var(--text3)'}">
             ${isAtiva?'● ATIVA':'■ PAUSADA'}
@@ -7155,7 +7471,7 @@ function buildPlanCard(c) {
     <!-- MÉTRICAS SECUNDÁRIAS -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid var(--border)">
       <div style="padding:10px 14px;border-right:1px solid var(--border)">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">CPC</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${tt('cpc','CPC')}</div>
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${cpc<0.15?'var(--green)':cpc<=0.20?'var(--yellow)':'var(--red)'};margin-top:2px">R$ ${fmt(cpc)}</div>
       </div>
       <div style="padding:10px 14px;border-right:1px solid var(--border)">
@@ -7171,7 +7487,7 @@ function buildPlanCard(c) {
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--yellow);margin-top:2px">${cpp>0?'R$ '+fmt(cpp):'—'}</div>
       </div>
       <div style="padding:10px 14px;border-right:1px solid var(--border)">
-        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">ROAS TOTAL</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${tt('roas','ROAS TOTAL')}</div>
         <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${roasBadgeCor};margin-top:2px">${roas>0?fmt(roas)+'x':'—'}</div>
       </div>
       <div style="padding:10px 14px">
@@ -7943,14 +8259,136 @@ function exportFinanceiro() {
   a.click();
 }
 
+
 // ══════════════════════════════════════════════════
+// PAINEL DE AUDIÊNCIA POR CAMPANHA
 // ══════════════════════════════════════════════════
-// PAINEL DE DECISÕES DO DIA
-// ══════════════════════════════════════════════════
+function renderAudiencePanel(c) {
+  const aud = c.audience;
+  if (!aud || (!aud.age?.length && !aud.platform?.length)) {
+    return `<div style="padding:10px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
+      🎯 Dados de audiência não disponíveis — sincronize para carregar.
+    </div>`;
+  }
+
+  const totImpressions = aud.platform.reduce((s,p)=>s+p.impressions,0) || 1;
+  const totAgeImpr     = aud.age.reduce((s,a)=>s+a.impressions,0) || 1;
+
+  const platIcons = { facebook:'📘', instagram:'📸', audience_network:'🌐', messenger:'💬' };
+  const platRows = [...aud.platform]
+    .sort((a,b)=>b.impressions-a.impressions)
+    .map(p => {
+      const pct  = (p.impressions/totImpressions*100).toFixed(1);
+      const barW = Math.round(p.impressions/totImpressions*100);
+      const icon = platIcons[p.platform] || '📱';
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="font-family:var(--mono);font-size:9px;width:120px;flex-shrink:0">${icon} ${p.platform||'?'}</div>
+        <div style="flex:1;background:var(--s3);border-radius:3px;height:6px">
+          <div style="background:var(--blue);height:6px;border-radius:3px;width:${barW}%"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--blue);width:40px;text-align:right">${pct}%</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);width:70px;text-align:right">${p.clicks.toLocaleString()} cliques</div>
+      </div>`;
+    }).join('');
+
+  const ageMap = {};
+  for (const a of aud.age) {
+    if (!ageMap[a.age]) ageMap[a.age] = { impressions:0, clicks:0, reach:0, M:0, F:0 };
+    ageMap[a.age].impressions += a.impressions;
+    ageMap[a.age].clicks      += a.clicks;
+    ageMap[a.age].reach       += a.reach;
+    if (a.gender==='male')   ageMap[a.age].M += a.impressions;
+    if (a.gender==='female') ageMap[a.age].F += a.impressions;
+  }
+  const ageRows = Object.entries(ageMap)
+    .sort((a,b)=>b[1].impressions-a[1].impressions)
+    .map(([age,d]) => {
+      const pct  = (d.impressions/totAgeImpr*100).toFixed(1);
+      const barW = Math.round(d.impressions/totAgeImpr*100);
+      const totG = (d.M+d.F)||1;
+      return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <div style="font-family:var(--mono);font-size:9px;width:60px;flex-shrink:0">${age}</div>
+        <div style="flex:1;background:var(--s3);border-radius:3px;height:6px">
+          <div style="background:var(--accent);height:6px;border-radius:3px;width:${barW}%"></div>
+        </div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--accent);width:40px;text-align:right">${pct}%</div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);width:90px;text-align:right">
+          👨 ${Math.round(d.M/totG*100)}% 👩 ${Math.round(d.F/totG*100)}%
+        </div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);width:70px;text-align:right">${d.clicks.toLocaleString()} cliques</div>
+      </div>`;
+    }).join('');
+
+  const totalM = aud.age.filter(a=>a.gender==='male')  .reduce((s,a)=>s+a.impressions,0);
+  const totalF = aud.age.filter(a=>a.gender==='female').reduce((s,a)=>s+a.impressions,0);
+  const totG   = (totalM+totalF)||1;
+
+  return `<div style="padding:14px 16px;border-top:1px solid var(--border);background:rgba(255,255,255,.02)">
+    <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:12px">🎯 AUDIÊNCIA ATINGIDA</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px">
+          📱 PLATAFORMAS &nbsp;·&nbsp; <span style="color:var(--blue)">${totImpressions.toLocaleString('pt-BR')} impressões</span>
+        </div>
+        ${platRows||'<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Sem dados de plataforma</div>'}
+      </div>
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px">
+          👥 FAIXA ETÁRIA &nbsp;·&nbsp;
+          <span style="color:var(--accent)">👨 ${Math.round(totalM/totG*100)}% homens &nbsp; 👩 ${Math.round(totalF/totG*100)}% mulheres</span>
+        </div>
+        ${ageRows||'<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Sem dados de idade</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
 function decisoesHoje() {
   const sel = $('decisoesDataSel');
   if (sel) sel.value = '';
   renderDecisoes();
+}
+
+function decisoesOntem() {
+  const sel = $('decisoesDataSel');
+  if (sel) {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    sel.value = d.toISOString().split('T')[0];
+  }
+  renderDecisoes();
+}
+
+function toggleAlertasSection() {
+  const sec  = $('alertas-section');
+  const seta = $('alertas-toggle-seta');
+  if (!sec) return;
+  const open = sec.style.display !== 'none';
+  if (!open && !sec.dataset.init) {
+    const src = $('panel-alertas');
+    if (src) sec.appendChild(src);
+    sec.dataset.init = '1';
+  }
+  // Sempre re-renderiza ao expandir para garantir dados atuais
+  if (!open) applyAlertasFilter();
+  sec.style.display = open ? 'none' : 'block';
+  if (seta) seta.textContent = open ? '▼ expandir' : '▲ recolher';
+}
+
+function toggleCliquesSection() {
+  const sec  = $('cliques-section');
+  const seta = $('cliques-toggle-seta');
+  if (!sec) return;
+  const open = sec.style.display !== 'none';
+  if (!open && !sec.dataset.init) {
+    const src = $('panel-d0-content');
+    if (src) sec.appendChild(src);
+    sec.dataset.init = '1';
+    renderClicksCompare();
+    renderClicksHora();
+  }
+  sec.style.display = open ? 'none' : 'block';
+  if (seta) seta.textContent = open ? '▼ expandir' : '▲ recolher';
 }
 
 function getDecisaoDate() {
@@ -8039,12 +8477,17 @@ function renderDecisoes() {
     return { c, maxDay, roas, trend, sat, ativa, budget, lucro, gasto, prioridade, acao, justificativa, corAcao, emoji };
   });
 
-  // ── KPIs resumo
+  // ── KPIs resumo — gasto filtrado pelo dia analisado
   const ativas    = campanhas.filter(x => x.ativa);
   const agir      = campanhas.filter(x => x.prioridade === 'agir');
   const escalar   = campanhas.filter(x => x.prioridade === 'ok');
   const lucroTotal= ativas.reduce((s,x)=>s+x.lucro,0);
   const budgetTotal=ativas.reduce((s,x)=>s+(x.budget||0),0);
+  // Gasto do dia filtrado (dailyCross do dia selecionado)
+  const gastoTotal= ativas.reduce((s,x) => {
+    const diaData = (x.c.dailyCross||[]).find(d => d.date === dataAnalise);
+    return s + (diaData ? diaData.gastoReal||diaData.spend||0 : 0);
+  }, 0) || ativas.reduce((s,x)=>s+(x.gasto||0),0);
   safeSet('decisoes-resumo', `
     <div class="kpi-custom" style="border-top-color:var(--red)">
       <div style="font-size:10px;font-weight:700;margin-bottom:4px">🔴 Agir Agora</div>
@@ -8057,12 +8500,12 @@ function renderDecisoes() {
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">campanhas para crescer</div>
     </div>
     <div class="kpi-custom" style="border-top-color:var(--accent)">
-      <div style="font-size:10px;font-weight:700;margin-bottom:4px">💸 Orçamento Total</div>
-      <div style="font-size:22px;font-weight:800;color:var(--accent)">R$ ${fmt(budgetTotal)}</div>
+      <div style="font-size:10px;font-weight:700;margin-bottom:4px">💸 Gasto Atual (FB)</div>
+      <div style="font-size:22px;font-weight:800;color:var(--accent)">R$ ${fmt(gastoTotal)}</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${ativas.length} campanhas ativas</div>
     </div>
     <div class="kpi-custom" style="border-top-color:${lucroTotal>=0?'var(--green)':'var(--red)'}">
-      <div style="font-size:10px;font-weight:700;margin-bottom:4px">⚖️ Lucro no Período</div>
+      <div style="font-size:10px;font-weight:700;margin-bottom:4px">${lucroTotal>=0?'✅ Lucro no Período':'🔴 Prejuízo no Período'}</div>
       <div style="font-size:22px;font-weight:800;color:${lucroTotal>=0?'var(--green)':'var(--red)'}">
         ${lucroTotal>=0?'+':''}R$ ${fmt(lucroTotal)}
       </div>
@@ -8080,7 +8523,7 @@ function renderDecisoes() {
   if (lucroTotal >= 0)
     linhasExec.push(`✅ Você está <b style="color:var(--green)">lucrando R$ ${fmt(lucroTotal)}</b> no período com ${ativas.length} campanhas ativas.`);
   else
-    linhasExec.push(`⚠️ Resultado atual: <b style="color:var(--red)">-R$ ${fmt(Math.abs(lucroTotal))}</b>. Atenção às campanhas 🔴 abaixo.`);
+    linhasExec.push(`⚠️ <b style="color:var(--red)">Prejuízo de R$ ${fmt(Math.abs(lucroTotal))}</b> no período. Atenção às campanhas 🔴 abaixo.`);
 
   if (melhor && (melhor.c.lucro||0) > 0)
     linhasExec.push(`🏆 Melhor campanha: <b style="color:var(--green)">${melhor.c.name}</b> — R$ ${fmt(melhor.c.lucro||0)} de lucro, ROAS ${fmt(melhor.roas)}x.`);
@@ -8204,11 +8647,11 @@ function renderDecisoes() {
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;min-width:110px">
             <div style="text-align:right">
-              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">ROAS</div>
+              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">${tt('roas','ROAS')}</div>
               <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:${roas>=1.5?'var(--green)':roas>=be?'var(--yellow)':'var(--red)'}">${roas>0?fmt(roas)+'x':'—'}</div>
             </div>
             <div style="text-align:right">
-              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">TREND</div>
+              <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">${tt('trend','TREND')}</div>
               <div style="font-family:var(--mono);font-size:10px;color:${trend.cor}">${trend.icon} ${trend.lbl}</div>
             </div>
             <div style="text-align:right">
@@ -8303,7 +8746,8 @@ function renderNarrativaLista() {
     return `
       <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">
         <!-- Linha clicável -->
-        <div onclick="toggleNarr('${id}',${JSON.stringify(c.name).replace(/'/g,"\\'")})"
+        <div onclick="toggleNarr('${id}',this.dataset.camp)"
+          data-camp="${c.name.replace(/"/g,'&quot;').replace(/'/g,'&#39;')}"
           style="display:grid;grid-template-columns:auto 1fr repeat(4,auto);align-items:center;gap:0;padding:10px 14px;cursor:pointer">
           <div style="width:7px;height:7px;border-radius:50%;background:${ativa?'var(--green)':'var(--text3)'};margin-right:10px;flex-shrink:0"></div>
           <div style="min-width:0">
@@ -8318,8 +8762,12 @@ function renderNarrativaLista() {
             <div style="font-family:var(--mono);font-size:12px;font-weight:800;color:${roasCor}">${roas>0?fmt(roas)+'x':'—'}</div>
           </div>
           <div style="text-align:right;padding:0 12px;border-left:1px solid var(--border)">
-            <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">LUCRO</div>
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">${lucro>=0?'LUCRO':'PREJUÍZO'}</div>
             <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${lucroCor}">${lucro>=0?'+':''}R$ ${fmt(lucro)}</div>
+          </div>
+          <div style="text-align:right;padding:0 12px;border-left:1px solid var(--border)">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">COMISSÃO</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green)">R$ ${fmt(c.shopeeRevenue||0)}</div>
           </div>
           <div style="text-align:right;padding:0 12px;border-left:1px solid var(--border)">
             <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">GASTO</div>
@@ -8405,40 +8853,45 @@ function buildNarrativaContent(campName) {
 
   // ── Histórico dia a dia (mais recente → mais antigo)
   const diasHTML = daily.map(d => {
-    const r     = d.roas  || 0;
-    const icon  = r>=1.5?'✅':r>=1.0?'🟡':r>0?'🔴':'⏳';
-    const cor   = r>=1.5?'var(--green)':r>=1.0?'var(--yellow)':r>0?'var(--red)':'var(--text3)';
-    const ped   = d.orders  || 0;
-    const dir   = d.diretas || 0;
-    const cpcD  = d.cpc     || 0;
-    const dsem  = getDiaSemana(d.date);
-    const saz   = getDataSazonal(d.date);
+    const r       = d.roas  || 0;
+    const cor     = r>=1.5?'var(--green)':r>=1.0?'var(--yellow)':r>0?'var(--red)':'var(--text3)';
+    const ped     = d.orders  || 0;
+    const dir     = d.diretas || 0;
+    const cpcD    = d.cpc     || 0;
+    const mClicks = d.metaClicks   || 0;
+    const sClicks = d.shopeeClicks || 0;
+    const discPct = mClicks > 0 ? (sClicks/mClicks*100) : null;
+    const discStr = discPct !== null ? fmt(discPct,0)+'%' : '—';
+    const discCor = discPct===null?'var(--text3)':discPct>=60?'var(--green)':discPct>=40?'var(--yellow)':'var(--red)';
+    const dsem    = getDiaSemana(d.date);
+    const saz     = getDataSazonal(d.date);
     const dataFmt = d.date ? new Date(d.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '';
-    const hoje2 = new Date().toISOString().split('T')[0];
-    const aberto= d.date === hoje2;
+    const hoje2   = new Date().toISOString().split('T')[0];
+    const aberto  = d.date === hoje2;
+    const sazBadge = saz ? `<span style="background:rgba(232,184,75,.2);color:var(--accent);font-size:7px;padding:1px 4px;border-radius:3px;margin-left:3px">${saz}</span>` : '';
 
     let nota = '';
-    if      (aberto)                    nota = 'aguardando fechamento ⏳';
-    else if (d.day===4 && r< be)        nota = 'Não empatou no D4 — regra MGD: pausar.';
-    else if (d.day===4 && r>=be)        nota = 'Empatou no D4! Segue para D5-D7.';
-    else if (r >= 2.0)                  nota = 'Dia excelente.';
-    else if (r >= 1.0)                  nota = 'Empatando.';
-    else if (dir > 0)                   nota = 'Vendas diretas presentes.';
-    else if (d.day===0&&cpcD<=0.10)     nota = 'CPC excepcional no D0.';
+    if      (aberto)               nota = 'aguardando fechamento';
+    else if (d.day===4 && r< be)   nota = 'Não empatou D4 — pause.';
+    else if (d.day===4 && r>=be)   nota = 'Empatou D4! Segue D5-D7.';
+    else if (r >= 2.0)             nota = 'Dia excelente.';
+    else if (r >= 1.0)             nota = 'Empatando.';
+    else if (dir > 0)              nota = 'Vendas diretas presentes.';
+    else if (d.day===0&&cpcD<=0.10) nota='CPC excepcional no D0.';
 
-    const sazBadge = saz ? `<span style="background:rgba(232,184,75,.2);color:var(--accent);font-size:7px;padding:1px 5px;border-radius:3px;margin-left:4px">${saz}</span>` : '';
-
-    return `<div style="display:grid;grid-template-columns:32px 80px 55px 1fr;gap:6px;align-items:start;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);padding-top:2px">D${d.day}</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);padding-top:2px">
-        ${dsem} ${dataFmt}${sazBadge}
-      </div>
-      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${cor}">${aberto?'—':r>0?fmt(r)+'x':'—'} ${icon}</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text2);line-height:1.6">
-        ${ped>0?`${ped} ped${dir>0?`, ${dir} dir.`:''}. `:''}${cpcD>0?`CPC R$${fmt(cpcD)}`:''}
-        ${nota?`<span style="color:${cor};opacity:.8"> · ${nota}</span>`:''}
-      </div>
-    </div>`;
+    return `<tr style="border-bottom:1px solid rgba(255,255,255,.04)">
+      <td style="padding:5px 6px;color:var(--text3)">D${d.day}</td>
+      <td style="padding:5px 6px;color:var(--text3);white-space:nowrap">${dsem} ${dataFmt}${sazBadge}</td>
+      <td style="padding:5px 6px;text-align:right;font-weight:700;color:${cor}">${aberto?'⏳':r>0?fmt(r)+'x':'—'}</td>
+      <td style="padding:5px 6px;text-align:right;color:${cpcD>0&&cpcD<=0.20?'var(--green)':cpcD>0.20?'var(--yellow)':'var(--text3)'}">${cpcD>0?'R$'+fmt(cpcD):'—'}</td>
+      <td style="padding:5px 6px;text-align:right">${mClicks>0?mClicks:'—'}</td>
+      <td style="padding:5px 6px;text-align:right">${sClicks>0?sClicks:'—'}</td>
+      <td style="padding:5px 6px;text-align:right;color:${discCor}">${discStr}</td>
+      <td style="padding:5px 6px;text-align:right;color:var(--text3)">${d.budget>0?'R$ '+fmt(d.budget):'—'}</td>
+      <td style="padding:5px 6px;text-align:right;color:var(--red)">${d.gastoReal>0?'R$ '+fmt(d.gastoReal):'—'}</td>
+      <td style="padding:5px 6px;text-align:right;color:${d.budget>0&&d.gastoReal>0?(d.gastoReal-d.budget>=0?'var(--red)':'var(--green)'):'var(--text3)'}">${d.budget>0&&d.gastoReal>0?(d.gastoReal-d.budget>=0?'+':'')+' R$ '+fmt(d.gastoReal-d.budget):'—'}</td>
+      <td style="padding:5px 6px;color:var(--text3)">${ped>0?`${ped} ped${dir>0?`, ${dir} dir`:''}`:''} ${nota?`· <span style="color:${cor}">${nota}</span>`:''}</td>
+    </tr>`;
   }).join('');
 
   return `<div style="padding:14px 18px">
@@ -8455,13 +8908,24 @@ function buildNarrativaContent(campName) {
     </div>
     <!-- Histórico -->
     <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:1px;margin-bottom:8px">HISTÓRICO (mais recente primeiro)</div>
-    <div style="display:grid;grid-template-columns:32px 80px 55px 1fr;gap:6px;margin-bottom:4px">
-      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DIA</div>
-      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DATA</div>
-      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">ROAS</div>
-      <div style="font-family:var(--mono);font-size:7px;color:var(--text3)">DETALHES</div>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    <table style="width:100%;min-width:680px;font-family:var(--mono);font-size:9px">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="text-align:left;padding:4px 6px;color:var(--text3);font-weight:400">DIA</th>
+        <th style="text-align:left;padding:4px 6px;color:var(--text3);font-weight:400">DATA</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">ROAS</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">CPC META</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">CLIQUES META</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">CLIQUES SHOPEE</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">%</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">ORÇADO</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">GASTO REAL</th>
+        <th style="text-align:right;padding:4px 6px;color:var(--text3);font-weight:400">DIF. ORC.</th>
+        <th style="text-align:left;padding:4px 6px;color:var(--text3);font-weight:400">DETALHES</th>
+      </tr></thead>
+      <tbody>${diasHTML||'<tr><td colspan="11" style="padding:12px;color:var(--text3)">Sem dados diários — importe o CSV Shopee.</td></tr>'}</tbody>
+    </table>
     </div>
-    ${diasHTML||'<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Sem dados diários — importe o CSV Shopee.</div>'}
   </div>`;
 }
 
@@ -8736,7 +9200,10 @@ function renderPedidos() {
   } else if (pedPeriodoDias === 0) {
     dtIni = ''; // tudo
   } else if (pedPeriodoDias === 1) {
-    dtIni = today;
+    // "Ontem" = dia anterior
+    const ontem = new Date(); ontem.setDate(ontem.getDate() - 1);
+    dtIni = ontem.toISOString().split('T')[0];
+    dtFim = dtIni;
   } else {
     const d = new Date(); d.setDate(d.getDate() - pedPeriodoDias);
     dtIni = d.toISOString().split('T')[0];
@@ -8773,7 +9240,7 @@ function renderPedidos() {
     return `<div style="background:var(--s2);border:1px solid ${pedFiltStatus===k.key?k.cor:'var(--border)'};border-radius:8px;padding:12px;cursor:pointer;border-top:3px solid ${k.cor}"
       onclick="setPedFilt('${k.key}',null)">
       <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">${k.icon} ${k.lbl}</div>
-      <div style="font-size:18px;font-weight:800;color:${k.cor}">${g.n.toLocaleString('pt-BR')}</div>
+      <div style="font-size:22px;font-weight:800;color:${k.cor}">${g.n.toLocaleString('pt-BR')}</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px">R$ ${fmt(g.comm)} comissão</div>
     </div>`;
   }).join(''));
@@ -9556,17 +10023,25 @@ function addAuditCampanha() {
   const end   = $('audit-end')?.value;
   const pct   = parseFloat($('audit-pct')?.value);
   const nome  = $('audit-nome')?.value.trim() || '';
-  const obs   = '';
+  const obs   = $('audit-obs')?.value.trim()  || '';
+  const exigeRedeSocial = $('audit-rede-social')?.checked ?? true;
+  const exigeDireta     = $('audit-direta')?.checked     ?? false;
 
   if (!start || !end || !pct) { setStatus('Preencha data início, fim e % prometido', 'err'); return; }
   if (start > end) { setStatus('Data início deve ser antes da data fim', 'err'); return; }
 
   loadAudit();
-  auditCampanhas.push({ id: 'aud_'+Date.now(), nome, start, end, pct, obs, criadoEm: new Date().toISOString() });
+  auditCampanhas.push({
+    id: 'aud_'+Date.now(), nome, start, end, pct,
+    exigeRedeSocial, exigeDireta, obs,
+    criadoEm: new Date().toISOString()
+  });
   saveAudit();
 
   // Limpa form
-  ['audit-start','audit-end','audit-pct','audit-nome'].forEach(id => { const e=$(id); if(e) e.value=''; });
+  ['audit-start','audit-end','audit-pct','audit-nome','audit-obs'].forEach(id => { const e=$(id); if(e) e.value=''; });
+  const rs = $('audit-rede-social'); if(rs) rs.checked = true;
+  const di = $('audit-direta');     if(di) di.checked = false;
   renderAuditoria();
   setStatus(`Campanha "${nome||start+' → '+end}" adicionada ✓`, 'ok');
 }
@@ -9730,7 +10205,12 @@ function renderAuditoria() {
           <div style="font-size:9px;color:var(--text3)">Esperado: R$ ${fmt(commEsperada)}</div>
           <div style="font-size:9px;font-weight:700;color:${diffComm>=-0.01?'var(--green)':'var(--red)'}">${diffComm>=0?'+':''}R$ ${fmt(diffComm)}</div>
         </td>
-        <td style="font-family:var(--mono);font-size:8px;color:var(--text3);max-width:160px;line-height:1.5">${camp.obs||'—'}</td>
+        <td style="font-family:var(--mono);font-size:8px;max-width:160px;line-height:1.6">
+          ${camp.exigeRedeSocial ? '<span style="color:var(--blue)">📱 Rede Social</span><br>' : ''}
+          ${camp.exigeDireta     ? '<span style="color:var(--green)">🏪 Venda Direta</span><br>' : ''}
+          ${!camp.exigeRedeSocial && !camp.exigeDireta ? '<span style="color:var(--text3)">Todos os pedidos</span>' : ''}
+          ${camp.obs ? `<span style="color:var(--text3)">${camp.obs}</span>` : ''}
+        </td>
         <td><span style="font-family:var(--mono);font-size:9px;color:${statusCor};font-weight:700">${statusIcon} ${statusTxt}</span></td>
         <td><button onclick="event.stopPropagation();removeAuditCampanha('${camp.id}')" style="background:none;border:1px solid rgba(224,85,85,.3);color:var(--red);border-radius:4px;padding:2px 7px;cursor:pointer;font-size:10px">✕</button></td>
       </tr>
@@ -9858,7 +10338,7 @@ function closeDrawer() {
 // goTab já chama setBN internamente — não precisa de patch
 // Corrige navegação mobile ao trocar aba
 document.addEventListener('DOMContentLoaded', () => {
-  const map = { geral:'geral', d0:'cruzamento', cruzamento:'cruzamento', alertas:'alertas', c0:'contas', c1:'contas', c2:'contas' };
+  const map = { geral:'resumo', d0:'cruzamento', cruzamento:'cruzamento', alertas:'alertas', c0:'contas', c1:'contas', c2:'contas' };
   // Intercepta cliques nos itens do nav para sincronizar bottom nav
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
@@ -9868,6 +10348,109 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// ══════════════════════════════════════════════════
+// AVALIADOR DE PRODUTOS MGD
+// ══════════════════════════════════════════════════
+const avToggles = {};
+
+function avToggle(key, val) {
+  avToggles[key] = val;
+  const simBtn = document.getElementById('avt-' + key + '-sim');
+  const naoBtn = document.getElementById('avt-' + key + '-nao');
+  if (!simBtn || !naoBtn) return;
+  [simBtn, naoBtn].forEach(b => { b.style.background = ''; b.style.color = ''; b.style.borderColor = ''; });
+  if (val === 'sim') { simBtn.style.background = 'var(--green)'; simBtn.style.color = '#000'; simBtn.style.borderColor = 'var(--green)'; }
+  else { naoBtn.style.background = 'var(--red)'; naoBtn.style.color = '#fff'; naoBtn.style.borderColor = 'var(--red)'; }
+}
+
+function avCalc() {
+  const preco = parseFloat(document.getElementById('av-preco').value) || 0;
+  const pct = parseFloat(document.getElementById('av-pct').value) || 0;
+  if (!preco || !pct) {
+    ['av-bruta','av-imposto','av-liquida'].forEach(id => { const e = document.getElementById(id); if(e){e.textContent='—';e.style.color='';} }); return;
+  }
+  const bruta = preco * (pct / 100), imp = bruta * 0.06, liq = bruta - imp;
+  document.getElementById('av-bruta').textContent = 'R$ ' + bruta.toFixed(2);
+  document.getElementById('av-imposto').textContent = '− R$ ' + imp.toFixed(2);
+  const el = document.getElementById('av-liquida');
+  el.textContent = 'R$ ' + liq.toFixed(2);
+  el.style.color = liq >= 20 ? 'var(--green)' : liq >= 12 ? 'var(--yellow)' : 'var(--red)';
+}
+
+function avCriterio(status, titulo, detalhe) {
+  const icons = { ok: '✅', fail: '❌', warn: '⚠️' };
+  const bgs = { ok: 'background:#0d2e1f;border:1px solid #1a5c3a', fail: 'background:#2d1212;border:1px solid #5c2020', warn: 'background:#2d2412;border:1px solid #5c4a20' };
+  return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:8px;margin-bottom:8px;font-size:13px;line-height:1.5;${bgs[status]}"><span style="font-size:15px;flex-shrink:0;margin-top:1px">${icons[status]}</span><div><strong style="display:block;font-weight:600;margin-bottom:2px">${titulo}</strong><span style="color:var(--text3);font-size:12px">${detalhe}</span></div></div>`;
+}
+
+async function avAvaliar() {
+  const nome = (document.getElementById('av-nome').value||'').trim();
+  const preco = parseFloat(document.getElementById('av-preco').value)||0;
+  const pct = parseFloat(document.getElementById('av-pct').value)||0;
+  const vendidos = parseInt(document.getElementById('av-vendidos').value)||0;
+  const aval = parseFloat(document.getElementById('av-aval').value)||0;
+  const cpc = parseFloat(document.getElementById('av-cpc').value)||0.12;
+  if (!nome||!preco||!pct) { alert('Preencha nome, preço e comissão %.'); return; }
+  const bruta = preco*(pct/100), liq = bruta*0.94;
+  let score = 0; const criterios = [];
+  if (preco>=120){criterios.push(avCriterio('ok',`Ticket R$ ${preco.toFixed(2)} — acima de R$120`,'Margem suficiente para tráfego pago.'));score++;}
+  else if(preco>=80){criterios.push(avCriterio('warn',`Ticket R$ ${preco.toFixed(2)} — abaixo do ideal`,'Recomendado R$120+.'));score+=0.5;}
+  else{criterios.push(avCriterio('fail',`Ticket R$ ${preco.toFixed(2)} — muito baixo`,'Abaixo de R$80 raramente viabiliza tráfego pago.'));}
+  if(pct>=17){criterios.push(avCriterio('ok',`Comissão ${pct}% — boa`,'Acima do mínimo de 17%.'));score++;}
+  else if(pct>=12){criterios.push(avCriterio('warn',`Comissão ${pct}% — abaixo do ideal`,'Mínimo recomendado é 17%.'));score+=0.5;}
+  else{criterios.push(avCriterio('fail',`Comissão ${pct}% — insuficiente`,'Abaixo de 12%. Não viabiliza tráfego pago.'));}
+  if(liq>=20){criterios.push(avCriterio('ok',`Comissão líquida R$ ${liq.toFixed(2)}/venda — OK`,'Acima do mínimo de R$20 por venda.'));score++;}
+  else if(liq>=12){criterios.push(avCriterio('warn',`Comissão líquida R$ ${liq.toFixed(2)}/venda — apertada`,'Precisa de CPC muito baixo para viabilizar.'));score+=0.5;}
+  else{criterios.push(avCriterio('fail',`Comissão líquida R$ ${liq.toFixed(2)}/venda — insuficiente`,'Não cobre custo do FB.'));}
+  if(vendidos>=1000){criterios.push(avCriterio('ok',`${vendidos.toLocaleString()} vendidos — boa prova social`,'Produto com demanda comprovada.'));score++;}
+  else if(vendidos>=200){criterios.push(avCriterio('warn',`${vendidos.toLocaleString()} vendidos — prova social baixa`,'Prefira 1.000+.'));score+=0.5;}
+  else if(vendidos>0){criterios.push(avCriterio('fail',`${vendidos.toLocaleString()} vendidos — poucos`,'Produto sem histórico suficiente.'));}
+  if(aval>=4.7){criterios.push(avCriterio('ok',`Avaliação ${aval}⭐ — excelente`,'Produto bem avaliado.'));score++;}
+  else if(aval>=4.3){criterios.push(avCriterio('warn',`Avaliação ${aval}⭐ — razoável`,'Abaixo de 4.7. Pode impactar conversão.'));score+=0.5;}
+  else if(aval>0){criterios.push(avCriterio('fail',`Avaliação ${aval}⭐ — baixa`,'Avaliação ruim afasta compradores.'));}
+  if(avToggles.link==='sim'){criterios.push(avCriterio('ok','Link direto para o produto','Sem risco de comissão diluída.'));score++;}
+  else if(avToggles.link==='nao'){criterios.push(avCriterio('fail','Link para vitrine','Público compra qualquer coisa. Use link direto.'));}
+  if(avToggles.preco==='sim'){criterios.push(avCriterio('ok','Preço visível no criativo','Filtra público sem intenção de compra.'));score++;}
+  else if(avToggles.preco==='nao'){criterios.push(avCriterio('warn','Preço não aparece no criativo','Risco de atrair cliques sem intenção.'));score+=0.3;}
+  if(avToggles.sazonal==='sim'){criterios.push(avCriterio('ok','Produto relevante para a época','Sazonalidade favorável.'));score++;}
+  else if(avToggles.sazonal==='nao'){criterios.push(avCriterio('fail','Produto fora de sazonalidade','Reduz conversão significativamente.'));}
+  const scorePct = Math.min(100,Math.round((score/8)*100));
+  let emoji,titulo,sub,cor,bg;
+  if(scorePct>=75){emoji='🟢';titulo='PRODUTO APROVADO';cor='var(--green)';sub=`Score ${scorePct}/100 — Vale testar`;bg='background:#0d2e1f;border:1px solid var(--green)';}
+  else if(scorePct>=50){emoji='🟡';titulo='TESTAR COM CAUTELA';cor='var(--yellow)';sub=`Score ${scorePct}/100 — Ajuste os pontos antes de subir`;bg='background:#2d2412;border:1px solid var(--yellow)';}
+  else{emoji='🔴';titulo='PRODUTO REPROVADO';cor='var(--red)';sub=`Score ${scorePct}/100 — Não vale o investimento agora`;bg='background:#2d1212;border:1px solid var(--red)';}
+  const res = document.getElementById('av-resultado');
+  res.style.display='block'; res.scrollIntoView({behavior:'smooth'});
+  const hdr = document.getElementById('av-resultado-header');
+  hdr.style.cssText=`border-radius:12px;padding:18px;text-align:center;margin-bottom:14px;${bg}`;
+  document.getElementById('av-emoji').textContent=emoji;
+  document.getElementById('av-titulo').textContent=titulo;
+  document.getElementById('av-titulo').style.color=cor;
+  document.getElementById('av-sub').textContent=sub;
+  const fill=document.getElementById('av-score-fill');
+  fill.style.width='0%';fill.style.background=cor;
+  setTimeout(()=>fill.style.width=scorePct+'%',100);
+  document.getElementById('av-criterios').innerHTML=criterios.join('');
+  document.getElementById('av-ia-content').innerHTML='<span style="color:var(--text3)">⏳ Consultora MGD analisando...</span>';
+  const prompt=`Você é consultora especialista na metodologia MGD de tráfego pago para afiliados Shopee no Brasil.\n\nAnalise este produto:\nPRODUTO: ${nome}\nPREÇO: R$ ${preco.toFixed(2)}\nCOMISSÃO: ${pct}% = R$ ${liq.toFixed(2)} líquido/venda\nVENDIDOS: ${vendidos.toLocaleString()}\nAVALIAÇÃO: ${aval} estrelas\nCPC ESPERADO: R$ ${cpc.toFixed(2)}\nLINK DIRETO: ${avToggles.link==='sim'?'Sim':avToggles.link==='nao'?'Não (vitrine)':'Não informado'}\nPREÇO NO CRIATIVO: ${avToggles.preco==='sim'?'Sim':avToggles.preco==='nao'?'Não':'Não informado'}\nSAZONALIDADE: ${avToggles.sazonal==='sim'?'Favorável':avToggles.sazonal==='nao'?'Desfavorável':'Não informado'}\nSCORE: ${scorePct}/100 — ${titulo}\n\nDê análise direta em 3 parágrafos curtos: 1) Veredito e justificativa 2) Principais riscos 3) O que fazer. Seja direta, use números concretos, sem enrolação.`;
+  try {
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const txt=d.content?.find(b=>b.type==='text')?.text||'Erro ao gerar análise.';
+    document.getElementById('av-ia-content').textContent=txt;
+  } catch(e){document.getElementById('av-ia-content').textContent='Erro de conexão com a IA.';}
+}
+
+function avNovo() {
+  ['av-nome','av-preco','av-pct','av-vendidos','av-aval','av-cpc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['av-bruta','av-imposto','av-liquida'].forEach(id=>{const e=document.getElementById(id);if(e){e.textContent='—';e.style.color='';}});
+  Object.keys(avToggles).forEach(k=>delete avToggles[k]);
+  document.querySelectorAll('[id^="avt-"]').forEach(b=>{b.style.background='';b.style.color='';b.style.borderColor='';});
+  document.getElementById('av-resultado').style.display='none';
+  document.getElementById('panel-avaliador').scrollIntoView({behavior:'smooth'});
+}
+
 </script>
 </body>
 </html>
