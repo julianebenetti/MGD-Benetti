@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Gerador de Links — Shopee Afiliado</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:#0f0f0f;--s1:#181818;--s2:#212121;--border:#2a2a2a;
+    --orange:#ff6120;--orange-dim:rgba(255,97,32,0.12);
+    --green:#22c55e;--green-dim:rgba(34,197,94,0.1);
+    --yellow:#f59e0b;--yellow-dim:rgba(245,158,11,0.1);
+    --red:#ef4444;--red-dim:rgba(239,68,68,0.1);
+    --blue:#3b82f6;--blue-dim:rgba(59,130,246,0.1);
+    --text:#f0f0f0;--text2:#888;--text3:#555;
+    --mono:'DM Mono',monospace;--sans:'Syne',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+
+  /* HEADER */
+  .header{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:20;}
+  .header-icon{width:38px;height:38px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .header-title{font-size:16px;font-weight:800;}
+  .header-sub{font-size:10px;color:var(--text2);font-family:var(--mono);margin-top:1px;}
+
+  /* NAV TABS */
+  .nav{display:flex;background:var(--s1);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:66px;z-index:19;}
+  .nav::-webkit-scrollbar{display:none;}
+  .nav-tab{flex-shrink:0;padding:12px 16px;font-size:12px;font-weight:700;color:var(--text2);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;}
+  .nav-tab.active{color:var(--orange);border-bottom-color:var(--orange);}
+
+  .main{padding:14px 14px 80px;max-width:640px;margin:0 auto;}
+  .page{display:none;} .page.active{display:block;}
+
+  /* CARDS */
+  .card{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
+  .card-title{font-size:11px;font-family:var(--mono);color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .card-title::before{content:'';display:inline-block;width:3px;height:13px;background:var(--orange);border-radius:2px;}
+
+  /* FIELDS */
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:11px;color:var(--text2);font-family:var(--mono);margin-bottom:5px;}
+  .field input,.field textarea,.field select{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:13px;padding:9px 11px;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--orange);}
+  .field textarea{resize:vertical;min-height:75px;line-height:1.5;}
+  .field select option{background:var(--s2);}
+  .pass-wrap{position:relative;}
+  .pass-wrap input{padding-right:42px;}
+  .pass-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:4px;}
+
+  /* SAVED BADGE */
+  .saved-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-dim);color:var(--green);border-radius:20px;font-size:10px;font-family:var(--mono);padding:3px 9px;margin-left:8px;opacity:0;transition:opacity .3s;}
+  .saved-badge.show{opacity:1;}
+
+  /* BUTTONS */
+  .btn{width:100%;background:var(--orange);color:#fff;border:none;border-radius:10px;font-family:var(--sans);font-weight:700;font-size:14px;padding:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s,transform .1s;}
+  .btn:active{transform:scale(.98);opacity:.85;}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn-sec{background:var(--s2);color:var(--text2);border:1px solid var(--border);font-size:12px;padding:9px;margin-top:8px;}
+  .btn-green{background:var(--green);color:#000;}
+  .btn-sm{font-size:11px;padding:7px 12px;border-radius:8px;width:auto;display:inline-flex;}
+
+  /* SPINNER */
+  .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* DIVIDER */
+  .divider{border:none;border-top:1px solid var(--border);margin:11px 0;}
+
+  /* ERROR / RESULT */
+  .error-box{background:var(--red-dim);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:11px;font-size:11px;font-family:var(--mono);color:var(--red);margin-top:10px;display:none;}
+  .error-box.show{display:block;}
+  .result-box{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:13px;margin-top:10px;display:none;}
+  .result-box.show{display:block;}
+  .result-label{font-size:10px;font-family:var(--mono);color:var(--text2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em;}
+  .result-link{font-family:var(--mono);font-size:12px;color:var(--orange);word-break:break-all;background:var(--orange-dim);border-radius:6px;padding:9px;margin-bottom:9px;line-height:1.6;}
+
+  /* COPY BTN */
+  .copy-btn{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(255,97,32,.25);border-radius:8px;font-family:var(--mono);font-size:12px;padding:8px 13px;cursor:pointer;display:flex;align-items:center;gap:6px;width:100%;justify-content:center;transition:background .2s;}
+  .copy-btn.copied{color:var(--green);border-color:rgba(34,197,94,.3);background:var(--green-dim);}
+
+  /* HINT */
+  .hint{font-size:11px;font-family:var(--mono);color:var(--text3);background:var(--s2);border-radius:8px;padding:9px 11px;margin-top:9px;line-height:1.6;border:1px solid var(--border);}
+  .hint a{color:var(--orange);text-decoration:none;}
+
+  /* VENDOR CARDS */
+  .vendor-list{display:flex;flex-direction:column;gap:9px;margin-top:10px;}
+  .vendor-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:13px;position:relative;}
+  .vendor-card.best{border-color:var(--green);}
+  .vendor-badge{position:absolute;top:10px;right:10px;font-size:9px;font-family:var(--mono);padding:3px 8px;border-radius:20px;font-weight:700;}
+  .badge-best{background:var(--green-dim);color:var(--green);}
+  .vendor-name{font-size:13px;font-weight:700;margin-bottom:3px;padding-right:80px;line-height:1.3;}
+  .vendor-shop{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:8px;}
+  .vendor-meta{display:flex;gap:10px;flex-wrap:wrap;}
+  .vendor-stat{font-size:11px;font-family:var(--mono);}
+  .vendor-stat span{color:var(--text2);}
+  .vendor-price{color:var(--text);font-weight:600;}
+  .vendor-comm{color:var(--green);font-weight:700;}
+  .vendor-comm-val{color:var(--yellow);font-weight:600;}
+  .sales-ok{color:var(--green);font-weight:700;}
+  .sales-mid{color:var(--yellow);font-weight:700;}
+  .sales-low{color:var(--red);font-weight:700;}
+  .sales-alert{display:flex;align-items:center;gap:6px;background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:6px 9px;margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--red);}
+  .sales-warn{display:flex;align-items:center;gap:6px;background:var(--yellow-dim);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:6px 9px;margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--yellow);}
+  .select-btn{margin-top:10px;background:var(--orange-dim);color:var(--orange);border:1px solid rgba(255,97,32,.25);border-radius:8px;font-family:var(--mono);font-size:11px;padding:7px 12px;cursor:pointer;width:100%;text-align:center;font-weight:600;}
+
+  /* INFO PILL */
+  .info-pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);padding:4px 10px;border-radius:20px;margin-bottom:10px;}
+  .pill-warn{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(245,158,11,.2);}
+
+  /* BATCH */
+  .batch-item{border-bottom:1px solid var(--border);padding:11px 0;}
+  .batch-item:last-child{border-bottom:none;padding-bottom:0;}
+  .batch-item-name{font-size:11px;color:var(--text2);font-family:var(--mono);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .batch-item-link{font-size:11px;font-family:var(--mono);color:var(--orange);word-break:break-all;background:var(--orange-dim);border-radius:5px;padding:6px 8px;line-height:1.5;margin-bottom:6px;}
+  .batch-item-err{font-size:11px;color:var(--red);font-family:var(--mono);}
+
+  /* ══ CONTROLE TABLE ══ */
+  .ctrl-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+  .ctrl-kpi{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:11px 13px;}
+  .ctrl-kpi-label{font-size:10px;font-family:var(--mono);color:var(--text2);margin-bottom:4px;}
+  .ctrl-kpi-val{font-size:20px;font-weight:800;}
+
+  .ctrl-filters{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .filter-btn{font-size:11px;font-family:var(--mono);padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:var(--s2);color:var(--text2);cursor:pointer;}
+  .filter-btn.active{background:var(--orange-dim);color:var(--orange);border-color:rgba(255,97,32,.3);}
+
+  .prod-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:9px;position:relative;}
+  .prod-card-name{font-size:14px;font-weight:700;margin-bottom:4px;padding-right:50px;}
+  .prod-card-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .prod-pill{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:20px;}
+  .pill-comm{background:var(--green-dim);color:var(--green);}
+  .pill-sales{background:var(--blue-dim);color:var(--blue);}
+  .pill-net{background:var(--yellow-dim);color:var(--yellow);}
+  .pill-net-red{background:var(--red-dim);color:var(--red);}
+  .prod-networks{font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:8px;}
+  .prod-link-row{display:flex;gap:6px;align-items:center;}
+  .prod-link-text{font-size:11px;font-family:var(--mono);color:var(--orange);word-break:break-all;flex:1;background:var(--orange-dim);border-radius:5px;padding:5px 7px;line-height:1.4;}
+  .prod-copy-btn{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(255,97,32,.2);border-radius:6px;font-size:10px;font-family:var(--mono);padding:5px 9px;cursor:pointer;flex-shrink:0;white-space:nowrap;}
+  .prod-copy-btn.copied{color:var(--green);border-color:rgba(34,197,94,.3);background:var(--green-dim);}
+  .prod-actions{display:flex;gap:6px;margin-top:9px;}
+  .prod-del-btn{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.2);border-radius:6px;font-size:10px;font-family:var(--mono);padding:5px 10px;cursor:pointer;}
+  .prod-edit-btn{background:var(--s2);color:var(--text2);border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:var(--mono);padding:5px 10px;cursor:pointer;}
+  .prod-date{position:absolute;top:11px;right:13px;font-size:10px;font-family:var(--mono);color:var(--text3);}
+
+  .network-check{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;}
+  .net-chip{display:flex;align-items:center;gap:5px;font-size:11px;font-family:var(--mono);background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;user-select:none;}
+  .net-chip.selected{background:var(--orange-dim);border-color:rgba(255,97,32,.3);color:var(--orange);}
+
+  .empty-state{text-align:center;padding:40px 20px;font-family:var(--mono);color:var(--text3);}
+  .empty-icon{font-size:36px;margin-bottom:10px;}
+  .empty-text{font-size:12px;line-height:1.6;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🛍️</div>
+  <div>
+    <div class="header-title">Shopee Afiliado</div>
+    <div class="header-sub">Gerador de Links · Controle de Produtos</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-tab active" onclick="goPage('compare')">🔍 Comparar</button>
+  <button class="nav-tab" onclick="goPage('single')">🔗 Um Link</button>
+  <button class="nav-tab" onclick="goPage('batch')">📋 Em Lote</button>
+  <button class="nav-tab" onclick="goPage('controle')">📦 Controle</button>
+  <button class="nav-tab" onclick="goPage('config')">⚙️ Config</button>
+</div>
+
+<div class="main">
+
+  <!-- ══ COMPARAR ══ -->
+  <div class="page active" id="page-compare">
+    <div class="card">
+      <div class="card-title">Comparar Vendedores</div>
+      <div class="info-pill pill-warn">Cole o link OU o ID do produto (ex: AHD-VAF-NMJ)</div>
+      <div class="field">
+        <label>Link ou ID do produto Shopee</label>
+        <input type="text" id="compareUrl" placeholder="AHD-VAF-NMJ  ou  https://s.shopee.com.br/..." autocomplete="off" autocorrect="off" autocapitalize="off"/>
+      </div>
+      <div class="field">
+        <label>Sub ID (opcional)</label>
+        <input type="text" id="compareSubId" placeholder="ex: achadinhos-fb" autocomplete="off"/>
+      </div>
+      <div class="divider"></div>
+      <button class="btn" id="btnCompare" onclick="compareVendors()">
+        <span id="btnCompareLabel">🔍 Buscar e Comparar</span>
+      </button>
+    </div>
+    <div class="error-box" id="compareError"></div>
+    <div class="result-box" id="compareOrigBox">
+      <div class="result-label">📦 Produto identificado</div>
+      <div id="compareOrigInfo"></div>
+    </div>
+    <div class="result-box" id="compareVendorsBox">
+      <div class="result-label" id="compareVendorsLabel">🏪 Vendedores encontrados</div>
+      <div class="vendor-list" id="vendorList"></div>
+    </div>
+    <div class="result-box" id="compareResultBox">
+      <div class="result-label">✅ Link de afiliado gerado</div>
+      <div class="result-link" id="compareResultLink"></div>
+      <button class="copy-btn" id="compareCopyBtn" onclick="copyEl('compareResultLink','compareCopyBtn')">📋 Copiar link</button>
+      <div class="divider"></div>
+      <button class="btn btn-green" onclick="saveCurrentToControl()">💾 Salvar no Controle</button>
+      <div id="saveConfirm" style="display:none;text-align:center;font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;">✓ Salvo no controle!</div>
+    </div>
+  </div>
+
+  <!-- ══ UM LINK ══ -->
+  <div class="page" id="page-single">
+    <div class="card">
+      <div class="card-title">Gerar Link de Afiliado</div>
+      <div class="field">
+        <label>Link do produto (curto ou completo)</label>
+        <input type="url" id="productUrl" placeholder="https://s.shopee.com.br/..." inputmode="url"/>
+      </div>
+      <div class="field">
+        <label>Nome do produto (para o controle)</label>
+        <input type="text" id="productName" placeholder="ex: Coberdrom dupla face" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label>Sub ID (opcional)</label>
+        <input type="text" id="subId1" placeholder="ex: achadinhos-fb" autocomplete="off"/>
+      </div>
+      <div class="divider"></div>
+      <button class="btn" id="btnSingle" onclick="generateSingle()">
+        <span id="btnSingleLabel">✨ Gerar Link</span>
+      </button>
+    </div>
+    <div class="error-box" id="singleError"></div>
+    <div class="result-box" id="singleResult">
+      <div class="result-label">✅ Link de afiliado gerado</div>
+      <div class="result-link" id="singleLink"></div>
+      <button class="copy-btn" id="copySingle" onclick="copyEl('singleLink','copySingle')">📋 Copiar link</button>
+      <div class="divider"></div>
+      <button class="btn btn-green" onclick="saveSingleToControl()">💾 Salvar no Controle</button>
+      <div id="singleSaveConfirm" style="display:none;text-align:center;font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;">✓ Salvo!</div>
+    </div>
+  </div>
+
+  <!-- ══ EM LOTE ══ -->
+  <div class="page" id="page-batch">
+    <div class="card">
+      <div class="card-title">Gerar Links em Lote</div>
+      <div class="field">
+        <label>Cole um link por linha</label>
+        <textarea id="batchUrls" placeholder="https://s.shopee.com.br/abc&#10;https://s.shopee.com.br/def&#10;https://shopee.com.br/produto..."></textarea>
+      </div>
+      <div class="field">
+        <label>Sub ID base (opcional)</label>
+        <input type="text" id="batchSubId" placeholder="ex: achadinhos-fb" autocomplete="off"/>
+      </div>
+      <div class="divider"></div>
+      <button class="btn" id="btnBatch" onclick="generateBatch()">
+        <span id="btnBatchLabel">✨ Gerar Todos</span>
+      </button>
+    </div>
+    <div class="error-box" id="batchError"></div>
+    <div class="result-box" id="batchResult">
+      <div class="result-label" id="batchResultLabel"></div>
+      <div id="batchItems"></div>
+      <div class="divider"></div>
+      <button class="copy-btn" id="copyAll" onclick="copyAll()">📋 Copiar todos os links</button>
+    </div>
+  </div>
+
+  <!-- ══ CONTROLE ══ -->
+  <div class="page" id="page-controle">
+    <div class="ctrl-summary" id="ctrlSummary"></div>
+    <div class="ctrl-filters" id="ctrlFilters"></div>
+    <div id="ctrlList"></div>
+  </div>
+
+  <!-- ══ CONFIG ══ -->
+  <div class="page" id="page-config">
+    <div class="card">
+      <div class="card-title">Credenciais Shopee <span class="saved-badge" id="savedBadge">✓ salvo</span></div>
+      <div class="field">
+        <label>App ID</label>
+        <input type="text" id="appId" placeholder="ex: 18353490273" autocomplete="off" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label>Secret Key</label>
+        <div class="pass-wrap">
+          <input type="password" id="secret" placeholder="ex: IFQISVTPCX..." autocomplete="off"/>
+          <button class="pass-toggle" onclick="toggleSecret()" id="eyeBtn">👁</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>URL do Proxy Vercel</label>
+        <input type="url" id="proxyUrl" placeholder="https://seu-projeto.vercel.app" autocomplete="off"/>
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text3);margin-top:5px">Cole aqui a URL gerada após o deploy no Vercel</div>
+      </div>
+      <button class="btn" onclick="saveCredentials()">💾 Salvar no dispositivo</button>
+      <div class="hint" style="margin-top:10px">
+        📍 <a href="https://affiliate.shopee.com.br" target="_blank">affiliate.shopee.com.br</a> → menu lateral → <b>Abrir API</b><br>
+        🔒 Salvo só no seu celular (localStorage).
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Dados</div>
+      <button class="btn btn-sec" onclick="exportControl()">📤 Exportar controle (.txt)</button>
+      <button class="btn btn-sec" style="margin-top:6px;color:var(--red);border-color:rgba(239,68,68,.3)" onclick="clearControl()">🗑️ Limpar todos os produtos</button>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let vendorResults = [];
+let lastGeneratedLink = '';
+let lastGeneratedProduct = {};
+let activeFilter = 'all';
+
+// ══════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════
+function loadControl() {
+  try { return JSON.parse(localStorage.getItem('shopee_control') || '[]'); }
+  catch { return []; }
+}
+function saveControl(data) {
+  localStorage.setItem('shopee_control', JSON.stringify(data));
+}
+function loadCredentials() {
+  const id    = localStorage.getItem('shopee_app_id');
+  const sc    = localStorage.getItem('shopee_secret');
+  const proxy = localStorage.getItem('shopee_proxy_url');
+  if (id)    document.getElementById('appId').value    = id;
+  if (sc)    document.getElementById('secret').value   = sc;
+  if (proxy) document.getElementById('proxyUrl').value = proxy;
+}
+function saveCredentials() {
+  const id    = document.getElementById('appId').value.trim();
+  const sc    = document.getElementById('secret').value.trim();
+  const proxy = document.getElementById('proxyUrl').value.trim();
+  if (!id || !sc) { alert('Preencha App ID e Secret Key.'); return; }
+  localStorage.setItem('shopee_app_id', id);
+  localStorage.setItem('shopee_secret', sc);
+  if (proxy) localStorage.setItem('shopee_proxy_url', proxy);
+  const badge = document.getElementById('savedBadge');
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 2500);
+}
+function getCreds() {
+  const appId  = document.getElementById('appId').value.trim();
+  const secret = document.getElementById('secret').value.trim();
+  if (!appId || !secret) throw new Error('Configure suas credenciais na aba ⚙️ Config.');
+  return { appId, secret };
+}
+function toggleSecret() {
+  const el = document.getElementById('secret');
+  el.type = el.type === 'password' ? 'text' : 'password';
+  document.getElementById('eyeBtn').textContent = el.type === 'password' ? '👁' : '🙈';
+}
+
+// ══════════════════════════════════════════
+// SHA256 + API
+// ══════════════════════════════════════════
+async function sha256(msg) {
+  const buf  = new TextEncoder().encode(msg);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+// URL do proxy — atualizada automaticamente após deploy no Vercel
+const PROXY_URL = localStorage.getItem('shopee_proxy_url') || '';
+
+async function shopeeApi(query) {
+  const { appId, secret } = getCreds();
+  const payload   = JSON.stringify({ query });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signature = await sha256(appId + timestamp + payload + secret);
+
+  // Usa proxy Vercel se configurado
+  const endpoint = PROXY_URL
+    ? `${PROXY_URL.replace(/\/$/,'')}/api/shopee`
+    : 'https://open-api.affiliate.shopee.com.br/graphql';
+
+  const fetchOptions = PROXY_URL
+    ? {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, appId, timestamp: String(timestamp), signature })
+      }
+    : {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `SHA256 Credential=${appId}, Timestamp=${timestamp}, Signature=${signature}`
+        },
+        body: payload
+      };
+
+  const resp = await fetch(endpoint, fetchOptions);
+  if (!resp.ok) throw new Error(`Erro HTTP ${resp.status} — verifique suas credenciais.`);
+  const data = await resp.json();
+  if (data.errors?.length) throw new Error(data.errors.map(e => e.message).join(' | '));
+  return data.data;
+}
+async function shopeeGenerateLink(url, subId) {
+  const query = `mutation {
+    generateShortLink(input: {
+      originUrl: "${url.replace(/"/g,'')}"
+      subIds: ${subId ? `["${subId}"]` : '[]'}
+    }) { shortLink shortLinkList }
+  }`;
+  const data = await shopeeApi(query);
+  const link = data?.generateShortLink?.shortLink || data?.generateShortLink?.shortLinkList?.[0];
+  if (!link) throw new Error('API não retornou link. Verifique se o URL é um produto Shopee válido.');
+  return link;
+}
+async function shopeeSearchProducts(keyword, limit = 8) {
+  const query = `{
+    affiliateToolQuery {
+      productOfferV2(listType:0, sortType:2, keyword:"${keyword.replace(/"/g,'')}", page:1, limit:${limit}) {
+        nodes { itemId shopId productName shopName originalPrice priceMin priceMax commissionRate sales ratingStar imageUrl productLink offerLink }
+        pageInfo { total }
+      }
+    }
+  }`;
+  const data = await shopeeApi(query);
+  return data?.affiliateToolQuery?.productOfferV2?.nodes || [];
+}
+
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+function extractKeyword(url) {
+  // URL longa: pega slug antes de -i. ou /i.
+  const m = url.match(/shopee\.com\.br\/([^/?#]+?)(?:-i\.\d|\?|$)/);
+  if (m && m[1]) return decodeURIComponent(m[1]).replace(/-/g,' ').substring(0,60);
+  return null;
+}
+async function expandUrl(url) {
+  if (!url.includes('s.shopee')) return url;
+  // Usa proxy CORS para contornar bloqueio do iOS/Safari
+  try {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const r = await fetch(proxy, { signal: AbortSignal.timeout(6000) });
+    if (r.ok) {
+      const data = await r.json();
+      const finalUrl = data?.status?.url || '';
+      if (finalUrl && finalUrl.includes('shopee.com.br')) return finalUrl;
+    }
+  } catch {}
+  try {
+    const proxy2 = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const r2 = await fetch(proxy2, { method:'HEAD', redirect:'follow', signal: AbortSignal.timeout(6000) });
+    if (r2.url && r2.url.includes('shopee.com.br')) return r2.url;
+  } catch {}
+  return url; // fallback: usa o link curto direto
+}
+function showError(el, msg) { el.textContent = '⚠️ ' + msg; el.classList.add('show'); }
+function hideError(el) { el.classList.remove('show'); }
+function fmtPrice(v) { return v ? `R$ ${(v/100000).toFixed(2).replace('.',',')}` : '—'; }
+function fmtComm(v)  { return v ? `${(v*100).toFixed(1)}%` : '—'; }
+function fmtGain(price, comm) {
+  return (price && comm) ? `R$ ${((price/100000)*comm).toFixed(2).replace('.',',')}` : '—';
+}
+function salesInfo(n) {
+  if (!n) return { cls:'sales-low', label:'Sem dados', alert:`<div class="sales-alert">⚠️ Sem histórico de vendas — risco alto</div>` };
+  if (n < 50)  return { cls:'sales-low', label:`${n} vendas`, alert:`<div class="sales-alert">🚨 Poucas vendas (${n}) — possível estoque baixo</div>` };
+  if (n < 200) return { cls:'sales-mid', label:`${n} vendas`, alert:`<div class="sales-warn">⚠️ Vendas moderadas (${n}) — avalie antes de escalar</div>` };
+  return { cls:'sales-ok', label:`${n} vendas`, alert:'' };
+}
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => setcopied(btn)).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+    setcopied(btn);
+  });
+}
+function setcopied(btn) {
+  const orig = btn.innerHTML; btn.innerHTML = '✅ Copiado!'; btn.classList.add('copied');
+  setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('copied'); }, 2000);
+}
+function copyEl(elId, btnId) {
+  copyText(document.getElementById(elId)?.textContent || '', document.getElementById(btnId));
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name)?.classList.add('active');
+  const tabs = ['compare','single','batch','controle','config'];
+  const idx  = tabs.indexOf(name);
+  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  if (name === 'controle') renderControl();
+}
+
+// ══════════════════════════════════════════
+// COMPARE
+// ══════════════════════════════════════════
+async function compareVendors() {
+  const rawUrl = document.getElementById('compareUrl').value.trim();
+  const subId  = document.getElementById('compareSubId').value.trim();
+  const btn    = document.getElementById('btnCompare');
+  const label  = document.getElementById('btnCompareLabel');
+  const errBox = document.getElementById('compareError');
+  const origBox    = document.getElementById('compareOrigBox');
+  const vendorsBox = document.getElementById('compareVendorsBox');
+  const resultBox  = document.getElementById('compareResultBox');
+
+  hideError(errBox); origBox.classList.remove('show'); vendorsBox.classList.remove('show'); resultBox.classList.remove('show');
+  vendorResults = []; lastGeneratedLink = ''; lastGeneratedProduct = {};
+
+  if (!rawUrl) { showError(errBox,'Cole o link ou ID do produto antes de buscar.'); return; }
+
+  // Normalizar: se for ID tipo AHD-VAF-NMJ (sem http), converter para link curto
+  let normalizedUrl = rawUrl;
+  if (!rawUrl.startsWith('http')) {
+    const cleanId = rawUrl.trim().replace(/\s+/g,'');
+    normalizedUrl = `https://s.shopee.com.br/${cleanId}`;
+  }
+
+  btn.disabled = true; label.innerHTML = '<div class="spinner"></div> Expandindo link...';
+
+  try {
+    const fullUrl = await expandUrl(normalizedUrl);
+    label.innerHTML = '<div class="spinner"></div> Identificando produto...';
+    let keyword = extractKeyword(fullUrl);
+
+    // Se não conseguiu keyword pela URL, tenta gerar o link e pegar o nome do produto pela API
+    if (!keyword) {
+      label.innerHTML = '<div class="spinner"></div> Obtendo nome do produto...';
+      try {
+        // Tenta buscar via generateShortLink para ver se retorna metadados
+        const link = await shopeeGenerateLink(normalizedUrl, subId);
+        lastGeneratedLink = link;
+        // Agora tenta extrair keyword do link gerado
+        keyword = extractKeyword(link);
+        if (!keyword) {
+          // Sem keyword — entrega o link direto sem comparação
+          lastGeneratedProduct = { name:'Produto', comm:'—', sales:'—', gain:'—', networks:[] };
+          document.getElementById('compareResultLink').textContent = link;
+          document.getElementById('saveConfirm').style.display = 'none';
+          resultBox.classList.add('show');
+          showError(errBox,'Não foi possível expandir o link para comparar vendedores. Link de afiliado gerado direto abaixo.');
+          btn.disabled = false; label.innerHTML = '🔍 Buscar e Comparar'; return;
+        }
+      } catch(e2) {
+        throw new Error('Não foi possível identificar o produto. Tente colar o link completo da Shopee.');
+      }
+    }
+
+    document.getElementById('compareOrigInfo').innerHTML =
+      `<div style="font-family:var(--mono);font-size:11px;color:var(--text2)">🔍 Buscando por: <b style="color:var(--text)">${keyword}</b></div>`;
+    origBox.classList.add('show');
+    label.innerHTML = '<div class="spinner"></div> Buscando vendedores...';
+
+    const products = await shopeeSearchProducts(keyword, 8);
+    if (!products.length) { showError(errBox,'Nenhum produto encontrado. Tente a aba "Um Link" para gerar direto.'); btn.disabled=false; label.innerHTML='🔍 Buscar e Comparar'; return; }
+
+    const sorted = [...products].sort((a,b) => (b.commissionRate||0)-(a.commissionRate||0));
+    vendorResults = sorted;
+    const bestComm = sorted[0]?.commissionRate || 0;
+
+    const list = document.getElementById('vendorList');
+    list.innerHTML = '';
+    sorted.forEach((p, i) => {
+      const isBest = i === 0 && p.commissionRate >= bestComm;
+      const si = salesInfo(p.sales);
+      const card = document.createElement('div');
+      card.className = 'vendor-card' + (isBest ? ' best' : '');
+      card.innerHTML = `
+        ${isBest ? '<span class="vendor-badge badge-best">🏆 Melhor comissão</span>' : ''}
+        <div class="vendor-name">${(p.productName||'Produto').substring(0,70)}${(p.productName?.length||0)>70?'...':''}</div>
+        <div class="vendor-shop">🏪 ${p.shopName||'Vendedor'}</div>
+        <div class="vendor-meta">
+          <div class="vendor-stat"><span>Preço </span><span class="vendor-price">${fmtPrice(p.priceMin)}</span></div>
+          <div class="vendor-stat"><span>Comissão </span><span class="vendor-comm">${fmtComm(p.commissionRate)}</span></div>
+          <div class="vendor-stat"><span>Ganho </span><span class="vendor-comm-val">${fmtGain(p.priceMin,p.commissionRate)}</span></div>
+          <div class="vendor-stat"><span>Vendas </span><span class="${si.cls}">${si.label}</span></div>
+        </div>
+        ${si.alert}
+        <button class="select-btn" onclick="selectVendor(${i},'${subId.replace(/'/g,"\\'")}')">✅ Selecionar e gerar link</button>`;
+      list.appendChild(card);
+    });
+
+    document.getElementById('compareVendorsLabel').textContent = `🏪 ${sorted.length} vendedores — escolha o melhor`;
+    vendorsBox.classList.add('show');
+  } catch(e) { showError(errBox, e.message); }
+
+  btn.disabled = false; label.innerHTML = '🔍 Buscar e Comparar';
+}
+
+async function selectVendor(i, subId) {
+  const p = vendorResults[i];
+  if (!p) return;
+  const resultBox = document.getElementById('compareResultBox');
+  const errBox    = document.getElementById('compareError');
+  resultBox.classList.remove('show'); hideError(errBox);
+  document.getElementById('saveConfirm').style.display = 'none';
+
+  const btns = document.querySelectorAll('.select-btn');
+  const btn  = btns[i];
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Gerando...'; btn.disabled = true;
+
+  try {
+    const src = p.offerLink || p.productLink;
+    if (!src) throw new Error('Link do produto não disponível.');
+    const link = await shopeeGenerateLink(src, subId);
+    lastGeneratedLink = link;
+    lastGeneratedProduct = {
+      name: p.productName || 'Produto',
+      comm: fmtComm(p.commissionRate),
+      sales: p.sales || 0,
+      gain: fmtGain(p.priceMin, p.commissionRate),
+      networks: []
+    };
+    document.getElementById('compareResultLink').textContent = link;
+    document.getElementById('compareCopyBtn').classList.remove('copied');
+    document.getElementById('compareCopyBtn').innerHTML = '📋 Copiar link';
+    resultBox.classList.add('show');
+    resultBox.scrollIntoView({ behavior:'smooth', block:'center' });
+  } catch(e) { showError(errBox, e.message); }
+
+  btn.textContent = orig; btn.disabled = false;
+}
+
+function saveCurrentToControl() {
+  if (!lastGeneratedLink) return;
+  const data = loadControl();
+  data.unshift({
+    id: Date.now(),
+    name: lastGeneratedProduct.name,
+    link: lastGeneratedLink,
+    comm: lastGeneratedProduct.comm,
+    sales: lastGeneratedProduct.sales,
+    gain: lastGeneratedProduct.gain,
+    networks: lastGeneratedProduct.networks || [],
+    date: new Date().toLocaleDateString('pt-BR')
+  });
+  saveControl(data);
+  const c = document.getElementById('saveConfirm');
+  c.style.display = 'block';
+  setTimeout(() => c.style.display = 'none', 2500);
+}
+
+// ══════════════════════════════════════════
+// SINGLE
+// ══════════════════════════════════════════
+async function generateSingle() {
+  const url   = document.getElementById('productUrl').value.trim();
+  const name  = document.getElementById('productName').value.trim();
+  const subId = document.getElementById('subId1').value.trim();
+  const btn   = document.getElementById('btnSingle');
+  const label = document.getElementById('btnSingleLabel');
+  const resBox  = document.getElementById('singleResult');
+  const errBox  = document.getElementById('singleError');
+
+  resBox.classList.remove('show'); hideError(errBox);
+  document.getElementById('singleSaveConfirm').style.display = 'none';
+
+  if (!url) { showError(errBox,'Cole o link do produto.'); return; }
+  if (!url.includes('shopee')) { showError(errBox,'O link não parece ser da Shopee.'); return; }
+
+  btn.disabled = true; label.innerHTML = '<div class="spinner"></div> Gerando...';
+
+  try {
+    const link = await shopeeGenerateLink(url, subId);
+    lastGeneratedLink = link;
+    lastGeneratedProduct = { name: name || 'Produto sem nome', comm:'—', sales:'—', gain:'—', networks:[] };
+    document.getElementById('singleLink').textContent = link;
+    document.getElementById('copySingle').classList.remove('copied');
+    document.getElementById('copySingle').innerHTML = '📋 Copiar link';
+    resBox.classList.add('show');
+  } catch(e) { showError(errBox, e.message); }
+
+  btn.disabled = false; label.innerHTML = '✨ Gerar Link';
+}
+
+function saveSingleToControl() {
+  if (!lastGeneratedLink) return;
+  const data = loadControl();
+  data.unshift({
+    id: Date.now(),
+    name: lastGeneratedProduct.name,
+    link: lastGeneratedLink,
+    comm: lastGeneratedProduct.comm,
+    sales: lastGeneratedProduct.sales,
+    gain: lastGeneratedProduct.gain,
+    networks: [],
+    date: new Date().toLocaleDateString('pt-BR')
+  });
+  saveControl(data);
+  const c = document.getElementById('singleSaveConfirm');
+  c.style.display = 'block';
+  setTimeout(() => c.style.display = 'none', 2500);
+}
+
+// ══════════════════════════════════════════
+// BATCH
+// ══════════════════════════════════════════
+async function generateBatch() {
+  const raw    = document.getElementById('batchUrls').value.trim();
+  const subId  = document.getElementById('batchSubId').value.trim();
+  const btn    = document.getElementById('btnBatch');
+  const label  = document.getElementById('btnBatchLabel');
+  const resBox = document.getElementById('batchResult');
+  const errBox = document.getElementById('batchError');
+  const items  = document.getElementById('batchItems');
+
+  resBox.classList.remove('show'); hideError(errBox);
+  const urls = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!urls.length) { showError(errBox,'Cole pelo menos um link.'); return; }
+
+  btn.disabled = true; label.innerHTML = `<div class="spinner"></div> Gerando 0/${urls.length}...`;
+  items.innerHTML = '';
+  const results = [];
+
+  for (let i = 0; i < urls.length; i++) {
+    label.innerHTML = `<div class="spinner"></div> Gerando ${i+1}/${urls.length}...`;
+    const u = urls[i]; let html = '';
+    try {
+      if (!u.includes('shopee')) throw new Error('URL inválida');
+      const link = await shopeeGenerateLink(u, subId);
+      results.push(link);
+      const cid = `bl_${i}`;
+      html = `<div class="batch-item">
+        <div class="batch-item-name">🛒 ${u.substring(0,55)}${u.length>55?'...':''}</div>
+        <div class="batch-item-link" id="${cid}">${link}</div>
+        <button class="copy-btn" onclick="copyEl('${cid}',this)" style="padding:6px 10px;font-size:11px">📋 Copiar</button>
+      </div>`;
+    } catch(e) {
+      results.push(null);
+      html = `<div class="batch-item">
+        <div class="batch-item-name">❌ ${u.substring(0,55)}${u.length>55?'...':''}</div>
+        <div class="batch-item-err">Erro: ${e.message}</div>
+      </div>`;
+    }
+    items.innerHTML += html;
+    if (i < urls.length-1) await new Promise(r=>setTimeout(r,600));
+  }
+
+  const ok = results.filter(Boolean).length;
+  document.getElementById('batchResultLabel').textContent = `✅ ${ok} de ${urls.length} links gerados`;
+  resBox.dataset.links = results.filter(Boolean).join('\n');
+  resBox.classList.add('show');
+  btn.disabled = false; label.innerHTML = '✨ Gerar Todos';
+}
+
+function copyAll() {
+  const links = document.getElementById('batchResult').dataset.links || '';
+  if (!links) return;
+  copyText(links, document.getElementById('copyAll'));
+}
+
+// ══════════════════════════════════════════
+// CONTROLE
+// ══════════════════════════════════════════
+const NETWORKS = ['Instagram 1','Instagram 2','Facebook','TikTok','Outro'];
+
+function renderControl() {
+  const data = loadControl();
+
+  // KPIs
+  const total   = data.length;
+  const allNets = [...new Set(data.flatMap(p=>p.networks||[]))];
+  document.getElementById('ctrlSummary').innerHTML = `
+    <div class="ctrl-kpi"><div class="ctrl-kpi-label">Total de produtos</div><div class="ctrl-kpi-val" style="color:var(--orange)">${total}</div></div>
+    <div class="ctrl-kpi"><div class="ctrl-kpi-label">Redes utilizadas</div><div class="ctrl-kpi-val" style="color:var(--blue)">${allNets.length||0}</div></div>`;
+
+  // Filtros por rede
+  const nets = ['all', ...new Set(data.flatMap(p=>p.networks||[]))];
+  const filterDiv = document.getElementById('ctrlFilters');
+  filterDiv.innerHTML = '';
+  nets.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (activeFilter===n?' active':'');
+    btn.textContent = n==='all' ? '📦 Todos' : n;
+    btn.onclick = () => { activeFilter = n; renderControl(); };
+    filterDiv.appendChild(btn);
+  });
+
+  // Lista
+  const filtered = activeFilter==='all' ? data : data.filter(p=>(p.networks||[]).includes(activeFilter));
+  const list = document.getElementById('ctrlList');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">${data.length?'Nenhum produto nessa rede ainda.':'Nenhum produto salvo ainda.\nGere um link e clique em\n"Salvar no Controle".'}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'prod-card';
+
+    const commPill  = `<span class="prod-pill pill-comm">📊 ${p.comm||'—'}</span>`;
+    const salesNum  = parseInt(p.sales)||0;
+    const si        = salesInfo(salesNum===0?null:salesNum);
+    const salesPill = `<span class="prod-pill ${salesNum>=200?'pill-sales':salesNum>=50?'pill-net':'pill-net-red'}">${si.label}</span>`;
+    const gainPill  = `<span class="prod-pill pill-net">💰 ${p.gain||'—'}</span>`;
+
+    const netTags = (p.networks||[]).map(n=>`<span class="prod-pill" style="background:var(--blue-dim);color:var(--blue)">${n}</span>`).join('');
+
+    card.innerHTML = `
+      <div class="prod-date">${p.date||''}</div>
+      <div class="prod-card-name">${p.name||'Produto'}</div>
+      <div class="prod-card-meta">${commPill}${salesPill}${gainPill}</div>
+      ${netTags ? `<div class="prod-card-meta" style="margin-bottom:8px">${netTags}</div>` : ''}
+      <div class="prod-link-row">
+        <div class="prod-link-text">${p.link||'—'}</div>
+        <button class="prod-copy-btn" onclick="copyText('${p.link}',this)">📋</button>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:10px;font-family:var(--mono);color:var(--text2);margin-bottom:6px">ONDE FOI POSTADO:</div>
+        <div class="network-check" id="nets_${p.id}"></div>
+      </div>
+      <div class="prod-actions">
+        <button class="prod-del-btn" onclick="deleteProduct(${p.id})">🗑️ Excluir</button>
+      </div>`;
+
+    list.appendChild(card);
+
+    // Render network chips
+    const netContainer = document.getElementById(`nets_${p.id}`);
+    NETWORKS.forEach(n => {
+      const chip = document.createElement('div');
+      chip.className = 'net-chip' + ((p.networks||[]).includes(n)?' selected':'');
+      chip.textContent = n;
+      chip.onclick = () => toggleNetwork(p.id, n, chip);
+      netContainer.appendChild(chip);
+    });
+  });
+}
+
+function toggleNetwork(id, network, chip) {
+  const data = loadControl();
+  const prod = data.find(p => p.id === id);
+  if (!prod) return;
+  prod.networks = prod.networks || [];
+  const idx = prod.networks.indexOf(network);
+  if (idx === -1) { prod.networks.push(network); chip.classList.add('selected'); }
+  else { prod.networks.splice(idx,1); chip.classList.remove('selected'); }
+  saveControl(data);
+  // re-render summary/filters only
+  const allNets = [...new Set(data.flatMap(p=>p.networks||[]))];
+  document.getElementById('ctrlSummary').querySelector('.ctrl-kpi-val:last-child') &&
+    (document.getElementById('ctrlSummary').querySelectorAll('.ctrl-kpi-val')[1].textContent = allNets.length||0);
+}
+
+function deleteProduct(id) {
+  if (!confirm('Excluir este produto do controle?')) return;
+  const data = loadControl().filter(p => p.id !== id);
+  saveControl(data);
+  renderControl();
+}
+
+function exportControl() {
+  const data = loadControl();
+  if (!data.length) { alert('Nenhum produto para exportar.'); return; }
+  let txt = 'CONTROLE DE PRODUTOS — SHOPEE AFILIADO\n';
+  txt += '='.repeat(45) + '\n\n';
+  data.forEach((p,i) => {
+    txt += `${i+1}. ${p.name}\n`;
+    txt += `   Comissão: ${p.comm} | Vendas: ${p.sales} | Ganho: ${p.gain}\n`;
+    txt += `   Redes: ${(p.networks||[]).join(', ')||'Nenhuma'}\n`;
+    txt += `   Link: ${p.link}\n`;
+    txt += `   Data: ${p.date}\n\n`;
+  });
+  const blob = new Blob([txt], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'controle-shopee.txt';
+  a.click();
+}
+
+function clearControl() {
+  if (!confirm('Excluir TODOS os produtos do controle? Esta ação não pode ser desfeita.')) return;
+  saveControl([]);
+  renderControl();
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+loadCredentials();
+</script>
+</body>
+</html>
