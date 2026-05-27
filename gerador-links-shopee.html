@@ -370,21 +370,19 @@ async function sha256(msg) {
   const hash = await crypto.subtle.digest('SHA-256', buf);
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
 }
-// URL do proxy — atualizada automaticamente após deploy no Vercel
-const PROXY_URL = localStorage.getItem('shopee_proxy_url') || '';
-
 async function shopeeApi(query) {
   const { appId, secret } = getCreds();
   const payload   = JSON.stringify({ query });
   const timestamp = Math.floor(Date.now() / 1000);
   const signature = await sha256(appId + timestamp + payload + secret);
 
-  // Usa proxy Vercel se configurado
-  const endpoint = PROXY_URL
-    ? `${PROXY_URL.replace(/\/$/,'')}/api/shopee`
+  // Lê proxy do localStorage a cada chamada
+  const proxyUrl = localStorage.getItem('shopee_proxy_url') || '';
+  const endpoint = proxyUrl
+    ? `${proxyUrl.replace(/\/$/,'')}/api/shopee`
     : 'https://open-api.affiliate.shopee.com.br/graphql';
 
-  const fetchOptions = PROXY_URL
+  const fetchOptions = proxyUrl
     ? {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
