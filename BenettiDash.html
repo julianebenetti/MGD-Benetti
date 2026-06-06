@@ -442,7 +442,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="nav-item" onclick="goTab('cliques')"><span class="ni">🕐</span> Cliques & Horários</div>
     <div class="nav-item" onclick="goTab('historico')"><span class="ni">📊</span> Histórico Mensal</div>
     <div class="nav-item" onclick="goTab('trajetoria')"><span class="ni">📈</span> Trajetória & Metas</div>
-    <div class="nav-item" onclick="goTab('analise-lote')"><span class="ni">📋</span> Análise do Lote MGD</div>
     <div class="nav-item" onclick="goTab('produtos')"><span class="ni">🛍️</span> Produtos por Campanha</div>
     <div class="nav-item" onclick="goTab('pedidos')"><span class="ni">🛒</span> Pedidos Shopee</div>
     <div class="nav-item" onclick="goTab('organico')"><span class="ni">🌿</span> Vendas Orgânicas</div>
@@ -506,7 +505,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="drawer-item" onclick="goTab('radar');setBN('cruzamento');closeDrawer()">🎯&nbsp; Radar de Campanhas</div>
     <div class="drawer-item" onclick="goTab('cliques');setBN('cruzamento');closeDrawer()">🕐&nbsp; Cliques &amp; Horários</div>
     <div class="drawer-item" onclick="goTab('historico');setBN('resumo');closeDrawer()">📊&nbsp; Histórico Mensal</div>
-    <div class="drawer-item" onclick="goTab('analise-lote');setBN('cruzamento');closeDrawer()">📋&nbsp; Análise do Lote MGD</div>
     <div class="drawer-item" onclick="goTab('produtos');setBN('cruzamento');closeDrawer()">🛍️&nbsp; Produtos por Campanha</div>
     <div class="drawer-item" onclick="goTab('pedidos');setBN('cruzamento');closeDrawer()">🛒&nbsp; Pedidos Shopee</div>
     <div class="drawer-item" onclick="goTab('organico');setBN('cruzamento');closeDrawer()">🌿&nbsp; Vendas Orgânicas</div>
@@ -1759,6 +1757,40 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
     </div>
   </div>
+  <!-- ══ TIMING — quando subir testes ══ -->
+  <div style="margin-top:28px">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px">📅 Timing — quando subir testes<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+    <div style="background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text3)">
+      <b style="color:var(--blue)">💡 Lógica:</b> D1–D3 são só observação. <b style="color:var(--text)">O D4 é o único dia de decisão.</b> A pergunta é <b style="color:var(--text)">"em qual dia quero que o D4 caia?"</b>
+    </div>
+    <div class="al-timing">
+      <div class="al-timing-row al-tg"><span style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600;width:120px;flex-shrink:0">✓ Subir na QUA</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 qua</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 qui</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 sex</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 sáb</span><span class="al-dtag" style="background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.25);color:var(--green);font-weight:700">D4 dom ★</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Melhor</span></div>
+      <div class="al-timing-row al-tg"><span style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600;width:120px;flex-shrink:0">✓ Subir na SEG</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 seg</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 ter</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 qua</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 qui</span><span class="al-dtag" style="background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.25);color:var(--green);font-weight:700">D4 sex ★</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Boa opção</span></div>
+      <div class="al-timing-row al-tm"><span style="font-family:var(--mono);font-size:11px;color:var(--yellow);font-weight:600;width:120px;flex-shrink:0">⚠ Subir no SÁB</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 sáb</span><span class="al-dtag" style="background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.2);color:var(--green)">D1 dom ✓</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D2 seg ⚠</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D3 ter ⚠</span><span class="al-dtag" style="background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.25);color:var(--yellow);font-weight:700">D4 qua</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--yellow)">D1 bom, D4 médio</span></div>
+      <div class="al-timing-row al-tm"><span style="font-family:var(--mono);font-size:11px;color:var(--yellow);font-weight:600;width:120px;flex-shrink:0">⚠ Subir no DOM</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 dom</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D1 seg ⚠</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D2 ter ⚠</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 qua</span><span class="al-dtag" style="background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.25);color:var(--yellow);font-weight:700">D4 qui</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--yellow)">D1+D2 fracos</span></div>
+      <div class="al-timing-row al-tr"><span style="font-family:var(--mono);font-size:11px;color:var(--red);font-weight:600;width:120px;flex-shrink:0">✗ Subir na SEX</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 sex</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 sáb</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 dom</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D3 seg ⚠</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red);font-weight:700">D4 ter ✗</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--red)">D4 no pior dia</span></div>
+      <div class="al-timing-row al-tr"><span style="font-family:var(--mono);font-size:11px;color:var(--red);font-weight:600;width:120px;flex-shrink:0">✗ Subir na QUI</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 qui</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 sex</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 sáb</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 dom</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red);font-weight:700">D4 seg ✗</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--red)">D4 no pior dia</span></div>
+    </div>
+    <!-- SUAS REGRAS -->
+    <div style="font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin:24px 0 14px;display:flex;align-items:center;gap:10px">📌 Suas regras<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+    <div class="al-rule-grid">
+      <div class="al-rule-card"><div class="al-rule-num">01</div><div class="al-rule-title">Dia de subida</div><div class="al-rule-body"><span style="color:var(--green)">✓ Quarta</span> — D4 cai no domingo ★<br><span style="color:var(--green)">✓ Segunda</span> — D4 cai na sexta ★<br><span style="color:var(--yellow)">⚠ Sábado</span> — D1 no dom, D4 na qua<br><span style="color:var(--yellow)">⚠ Domingo</span> — D1+D2 fracos, D4 na qui<br><span style="color:var(--red)">✗ Sexta</span> — D4 cai na terça (ruim)<br><span style="color:var(--red)">✗ Quinta</span> — D4 cai na segunda (péssimo)</div></div>
+      <div class="al-rule-card"><div class="al-rule-num">02</div><div class="al-rule-title">Produto antes de subir</div><div class="al-rule-body">→ Comissão <b style="color:var(--text)">≥ 8–10%</b> do produto<br>→ Histórico de <b style="color:var(--text)">vendas diretas</b><br>→ Preço <b style="color:var(--text)">competitivo</b> na Shopee<br>→ Ticket suficiente para cobrir <b style="color:var(--text)">custo/pedido</b></div></div>
+      <div class="al-rule-card"><div class="al-rule-num">03</div><div class="al-rule-title">Segunda e terça = só observar</div><div class="al-rule-body">Nunca pausar por ROAS baixo na segunda ou terça se o CPC está bom. É sazonalidade, não falha do criativo.<div style="margin-top:8px;padding:7px;background:rgba(224,85,85,.08);border-radius:4px;color:var(--red);font-family:var(--mono);font-size:10px">Espera o dia passar antes de qualquer decisão</div></div></div>
+      <div class="al-rule-card"><div class="al-rule-num">04</div><div class="al-rule-title">CPC bom = criativo bom</div><div class="al-rule-body">Se CPC &lt; R$0,15 mas ROAS ruim: o problema não é o criativo. Trocar o produto antes de descartar o anúncio.<div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap"><span style="font-family:var(--mono);font-size:10px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.2);padding:2px 7px;border-radius:4px;color:var(--green)">≤ R$0,15 ótimo</span><span style="font-family:var(--mono);font-size:10px;background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.2);padding:2px 7px;border-radius:4px;color:var(--yellow)">até R$0,20 ok</span><span style="font-family:var(--mono);font-size:10px;background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.2);padding:2px 7px;border-radius:4px;color:var(--red)">&gt; R$0,20 alerta</span></div></div></div>
+      <div class="al-rule-card"><div class="al-rule-num">05</div><div class="al-rule-title">Regra do D4 — sem exceção</div><div class="al-rule-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><div style="padding:8px;background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.2);border-radius:4px;text-align:center"><div style="font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700">≥ 1,3x</div><div style="font-size:11px;color:var(--text3);margin-top:2px">continua → D5</div></div><div style="padding:8px;background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);border-radius:4px;text-align:center"><div style="font-family:var(--mono);font-size:12px;color:var(--red);font-weight:700">&lt; 1,3x</div><div style="font-size:11px;color:var(--text3);margin-top:2px">pausa imediata</div></div></div></div></div>
+      <div class="al-rule-card"><div class="al-rule-num">06</div><div class="al-rule-title">Regra dos 3 dias</div><div class="al-rule-body">3 dias consecutivos abaixo de 1,0x na escala:<br>→ Reduz orçamento <span style="color:var(--yellow)">30%</span><br>→ 3 dias negativos após redução: <span style="color:var(--red)">pausa total</span><br>→ Picos isolados <span style="color:var(--text3)">não interrompem a contagem</span></div></div>
+    </div>
+    <!-- INSIGHTS -->
+    <div style="font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin:24px 0 14px;display:flex;align-items:center;gap:10px">💡 Insights do lote<span style="flex:1;height:1px;background:var(--border);display:block"></span></div>
+    <div class="al-insight-grid">
+      <div class="al-insight"><div class="al-insight-title"><span class="al-insight-dot" style="background:var(--green)"></span>CPC bom = criativo bom</div><div class="al-insight-body">Se o CPC ficou baixo mas o ROAS foi ruim, o problema está no produto — comissão baixa, ticket insuficiente ou oferta não competitiva. Antes de descartar o criativo, troca o produto.</div></div>
+      <div class="al-insight"><div class="al-insight-title"><span class="al-insight-dot" style="background:var(--red)"></span>Segunda destrói campanhas</div><div class="al-insight-body">Todas as campanhas com D1 ou D2 numa segunda colapsaram neste lote. O erro foi subir testes na quinta/sexta. Nunca deixar o D1 cair na segunda.</div></div>
+      <div class="al-insight"><div class="al-insight-title"><span class="al-insight-dot" style="background:var(--yellow)"></span>D4 é a única decisão real</div><div class="al-insight-body">D1, D2 e D3 são observação — você só monitora o CPC. O D4 decide tudo: empatou = segue, não empatou = pausa. Não existe "quase empatou" nem "esperar mais um dia".</div></div>
+    </div>
+  </div>
+
+
 </div>
 
 <!-- ══ CONFIG ══ -->
@@ -2044,127 +2076,6 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
     </div>
 
-
-
-    <!-- ══ ANÁLISE DO LOTE MGD ══ -->
-<div class="panel" id="panel-analise-lote">
-<style>
-.al-wrap{font-family:var(--sans);font-size:13px;line-height:1.5;color:var(--text)}
-.al-sec{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
-.al-sec::after{content:'';flex:1;height:1px;background:var(--border)}
-.al-kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
-.al-kpi{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;overflow:hidden}
-.al-kpi::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.al-kpi.ky::after{background:var(--accent)}
-.al-kpi.kg::after{background:var(--green)}
-.al-kpi.kr::after{background:var(--red)}
-.al-kpi.kb::after{background:var(--blue)}
-.al-kpi.ko::after{background:var(--orange)}
-.al-kpi-lbl{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.al-kpi-val{font-size:22px;font-weight:800;line-height:1;margin-bottom:2px}
-.al-kpi-sub{font-family:var(--mono);font-size:9px;color:var(--text3)}
-.al-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
-.al-camp-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;transition:border-color .15s}
-.al-camp-card:hover{border-color:var(--border2)}
-.al-camp-head{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer}
-.al-camp-name{font-size:13px;font-weight:700;color:var(--text);word-break:break-all;line-height:1.4;margin-bottom:4px;font-family:var(--mono)}
-.al-camp-meta{font-size:10px;color:var(--text3);font-family:var(--mono)}
-.al-camp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
-.al-camp-kpi{background:var(--s2);padding:10px 13px}
-.al-camp-kpi-lbl{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.al-camp-kpi-val{font-family:var(--mono);font-size:14px;font-weight:700}
-.al-days-row{padding:12px 14px;display:flex;gap:5px;flex-wrap:wrap;border-top:1px solid var(--border);background:var(--s2)}
-.al-dp{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);color:var(--text3)}
-.al-dp.g{color:var(--green);border-color:rgba(62,207,142,.3);background:rgba(62,207,142,.05)}
-.al-dp.r{color:var(--red);border-color:rgba(224,85,85,.3);background:rgba(224,85,85,.05)}
-.al-dp.y{color:var(--yellow);border-color:rgba(232,184,75,.3);background:rgba(232,184,75,.05)}
-.al-dp.w{color:var(--text3)}
-.al-verdict-row{padding:12px 16px;border-top:1px solid var(--border);background:var(--s2)}
-.al-verdict-txt{font-size:12px;color:var(--text3);line-height:1.7;white-space:pre-line}
-.al-verdict-txt b{color:var(--text);font-weight:600}
-.al-empty{text-align:center;padding:40px 20px;color:var(--text3);font-family:var(--mono);font-size:11px}
-.al-timing{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px}
-.al-timing-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 10px;border-radius:6px;font-size:12px}
-.al-timing-row:last-child{margin-bottom:0}
-.al-tg{background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.2)}
-.al-tm{background:rgba(232,184,75,.06);border:1px solid rgba(232,184,75,.2)}
-.al-tr{background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2)}
-.al-dtag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:3px;white-space:nowrap}
-.al-rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.al-rule-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px}
-.al-rule-num{font-family:var(--mono);font-size:13px;color:var(--accent);font-weight:700;margin-bottom:8px}
-.al-rule-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
-.al-rule-body{font-size:12px;color:var(--text3);line-height:1.7}
-.al-insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:0}
-.al-insight{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px}
-.al-insight-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.al-insight-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.al-insight-body{font-size:11px;color:var(--text3);line-height:1.6}
-@media(max-width:960px){
-  .al-kpi-row{grid-template-columns:repeat(2,1fr)}
-  .al-camp-kpis{grid-template-columns:1fr 1fr}
-  .al-rule-grid{grid-template-columns:1fr}
-  .al-insight-grid{grid-template-columns:1fr}
-}
-</style>
-
-<div class="al-wrap">
-  <!-- HEADER -->
-  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px">
-    <div>
-      <div style="font-size:20px;font-weight:800">📋 Análise do Lote MGD</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px" id="al-subtitle">Sincronize as APIs para carregar os dados</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <button class="filter-chip active" id="al-f-todas" onclick="alSetFilter('todas',this)">Todas</button>
-      <button class="filter-chip" id="al-f-ativas" onclick="alSetFilter('ativas',this)">● Ativas</button>
-      <button class="filter-chip" id="al-f-pausadas" onclick="alSetFilter('pausadas',this)">⏸ Pausadas</button>
-      <button class="filter-chip" id="al-f-pausar" onclick="alSetFilter('pausar',this)">🔴 Pausar</button>
-      <button class="filter-chip" id="al-f-ok" onclick="alSetFilter('ok',this)">✅ OK</button>
-    </div>
-  </div>
-
-  <!-- KPIs RESUMO -->
-  <div class="al-kpi-row" id="al-kpis"></div>
-
-  <!-- CAMPANHA CARDS -->
-  <div class="al-sec">Campanhas</div>
-  <div id="al-camps-list"></div>
-
-  <!-- TIMING MAP -->
-  <div class="al-sec" style="margin-top:28px">📅 Timing — quando subir testes</div>
-  <div style="background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--text3)">
-    <b style="color:var(--blue)">💡 Lógica:</b> D1–D3 são só observação. <b style="color:var(--text)">O D4 é o único dia de decisão.</b> A pergunta é <b style="color:var(--text)">"em qual dia quero que o D4 caia?"</b>
-  </div>
-  <div class="al-timing">
-    <div class="al-timing-row al-tg"><span style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600;width:120px;flex-shrink:0">✓ Subir na QUA</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 qua</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 qui</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 sex</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 sáb</span><span class="al-dtag" style="background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.25);color:var(--green);font-weight:700">D4 dom ★</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Melhor</span></div>
-    <div class="al-timing-row al-tg"><span style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:600;width:120px;flex-shrink:0">✓ Subir na SEG</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 seg</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 ter</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 qua</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 qui</span><span class="al-dtag" style="background:rgba(62,207,142,.1);border:1px solid rgba(62,207,142,.25);color:var(--green);font-weight:700">D4 sex ★</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--green)">Boa opção</span></div>
-    <div class="al-timing-row al-tm"><span style="font-family:var(--mono);font-size:11px;color:var(--yellow);font-weight:600;width:120px;flex-shrink:0">⚠ Subir no SÁB</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 sáb</span><span class="al-dtag" style="background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.2);color:var(--green)">D1 dom ✓</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D2 seg ⚠</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D3 ter ⚠</span><span class="al-dtag" style="background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.25);color:var(--yellow);font-weight:700">D4 qua</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--yellow)">D1 bom, D4 médio</span></div>
-    <div class="al-timing-row al-tm"><span style="font-family:var(--mono);font-size:11px;color:var(--yellow);font-weight:600;width:120px;flex-shrink:0">⚠ Subir no DOM</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 dom</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D1 seg ⚠</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D2 ter ⚠</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 qua</span><span class="al-dtag" style="background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.25);color:var(--yellow);font-weight:700">D4 qui</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--yellow)">D1+D2 fracos</span></div>
-    <div class="al-timing-row al-tr"><span style="font-family:var(--mono);font-size:11px;color:var(--red);font-weight:600;width:120px;flex-shrink:0">✗ Subir na SEX</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 sex</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 sáb</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 dom</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red)">D3 seg ⚠</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red);font-weight:700">D4 ter ✗</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--red)">D4 no pior dia</span></div>
-    <div class="al-timing-row al-tr"><span style="font-family:var(--mono);font-size:11px;color:var(--red);font-weight:600;width:120px;flex-shrink:0">✗ Subir na QUI</span><div style="display:flex;gap:5px;flex-wrap:wrap;flex:1"><span class="al-dtag" style="background:rgba(74,158,255,.1);border:1px solid rgba(74,158,255,.2);color:var(--blue)">D0 qui</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D1 sex</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D2 sáb</span><span class="al-dtag" style="background:var(--s2);color:var(--text3)">D3 dom</span><span class="al-dtag" style="background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);color:var(--red);font-weight:700">D4 seg ✗</span></div><span style="font-family:var(--mono);font-size:10px;color:var(--red)">D4 no pior dia</span></div>
-  </div>
-
-  <!-- SUAS REGRAS -->
-  <div class="al-sec" style="margin-top:28px">📌 Suas regras</div>
-  <div class="al-rule-grid">
-    <div class="al-rule-card"><div class="al-rule-num">01</div><div class="al-rule-title">Dia de subida</div><div class="al-rule-body"><span style="color:var(--green)">✓ Quarta</span> — D4 cai no domingo ★<br><span style="color:var(--green)">✓ Segunda</span> — D4 cai na sexta ★<br><span style="color:var(--yellow)">⚠ Sábado</span> — D1 no dom, D4 na qua<br><span style="color:var(--yellow)">⚠ Domingo</span> — D1+D2 fracos, D4 na qui<br><span style="color:var(--red)">✗ Sexta</span> — D4 cai na terça (ruim)<br><span style="color:var(--red)">✗ Quinta</span> — D4 cai na segunda (péssimo)</div></div>
-    <div class="al-rule-card"><div class="al-rule-num">02</div><div class="al-rule-title">Produto antes de subir</div><div class="al-rule-body">→ Comissão <b style="color:var(--text)">≥ 8–10%</b> do produto<br>→ Histórico de <b style="color:var(--text)">vendas diretas</b><br>→ Preço <b style="color:var(--text)">competitivo</b> na Shopee<br>→ Ticket suficiente para cobrir <b style="color:var(--text)">custo/pedido</b></div></div>
-    <div class="al-rule-card"><div class="al-rule-num">03</div><div class="al-rule-title">Segunda e terça = só observar</div><div class="al-rule-body">Nunca pausar por ROAS baixo na segunda ou terça se o CPC está bom. É sazonalidade, não falha do criativo.<div style="margin-top:8px;padding:7px;background:rgba(224,85,85,.08);border-radius:4px;color:var(--red);font-family:var(--mono);font-size:10px">Espera o dia passar antes de qualquer decisão</div></div></div>
-    <div class="al-rule-card"><div class="al-rule-num">04</div><div class="al-rule-title">CPC bom = criativo bom</div><div class="al-rule-body">Se CPC &lt; R$0,15 mas ROAS ruim: o problema não é o criativo. Trocar o produto antes de descartar o anúncio.<div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap"><span style="font-family:var(--mono);font-size:10px;background:rgba(62,207,142,.08);border:1px solid rgba(62,207,142,.2);padding:2px 7px;border-radius:4px;color:var(--green)">≤ R$0,15 ótimo</span><span style="font-family:var(--mono);font-size:10px;background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.2);padding:2px 7px;border-radius:4px;color:var(--yellow)">até R$0,20 ok</span><span style="font-family:var(--mono);font-size:10px;background:rgba(224,85,85,.08);border:1px solid rgba(224,85,85,.2);padding:2px 7px;border-radius:4px;color:var(--red)">&gt; R$0,20 alerta</span></div></div></div>
-    <div class="al-rule-card"><div class="al-rule-num">05</div><div class="al-rule-title">Regra do D4 — sem exceção</div><div class="al-rule-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px"><div style="padding:8px;background:rgba(62,207,142,.06);border:1px solid rgba(62,207,142,.2);border-radius:4px;text-align:center"><div style="font-family:var(--mono);font-size:12px;color:var(--green);font-weight:700">≥ 1,0x</div><div style="font-size:11px;color:var(--text3);margin-top:2px">continua → D5</div></div><div style="padding:8px;background:rgba(224,85,85,.06);border:1px solid rgba(224,85,85,.2);border-radius:4px;text-align:center"><div style="font-family:var(--mono);font-size:12px;color:var(--red);font-weight:700">&lt; 1,0x</div><div style="font-size:11px;color:var(--text3);margin-top:2px">pausa imediata</div></div></div></div></div>
-    <div class="al-rule-card"><div class="al-rule-num">06</div><div class="al-rule-title">Regra dos 3 dias</div><div class="al-rule-body">3 dias consecutivos abaixo de 1,0x na escala:<br>→ Reduz orçamento <span style="color:var(--yellow)">30%</span><br>→ 3 dias negativos após redução: <span style="color:var(--red)">pausa total</span><br>→ Picos isolados <span style="color:var(--text3)">não interrompem a contagem</span></div></div>
-  </div>
-
-  <!-- INSIGHTS -->
-  <div class="al-sec" style="margin-top:28px">💡 Insights do lote</div>
-  <div class="al-insight-grid">
-    <div class="al-insight"><div class="al-insight-title"><span class="al-insight-dot" style="background:var(--green)"></span>CPC bom = criativo bom</div><div class="al-insight-body">Se o CPC ficou baixo mas o ROAS foi ruim, o problema está no produto — comissão baixa, ticket insuficiente ou oferta não competitiva. Antes de descartar o criativo, troca o produto.</div></div>
-    <div class="al-insight"><div class="al-insight-title"><span class="al-insight-dot" style="background:var(--red)"></span>Segunda destrói campanhas</div><div class="al-insight-body">Todas as campanhas com D1 ou D2 numa segunda colapsaram neste lote. O erro foi subir testes na quinta/sexta. Nunca deixar o D1 cair na segunda.</div></div>
-    <div class="al-insight"><div class="al-insight-title"><span class="al-insight-dot" style="background:var(--yellow)"></span>D4 é a única decisão real</div><div class="al-insight-body">D1, D2 e D3 são observação — você só monitora o CPC. O D4 decide tudo: empatou = segue, não empatou = pausa. Não existe "quase empatou" nem "esperar mais um dia".</div></div>
-  </div>
-</div>
-</div>
 
 
     <!-- ══ GERADOR DE LINKS SHOPEE ══ -->
@@ -5150,7 +5061,7 @@ function renderAll() {
   loadAudit(); renderAuditoria();
   setStatus('Sincronizado — ' + new Date().toLocaleTimeString('pt-BR'), 'ok');
 
-  if ($("panel-analise-lote")?.classList.contains("active")) renderAnalyseLote();}
+}
 
 // ══════════════════════════════════════════════════
 // FULL SYNC
@@ -11022,25 +10933,32 @@ function renderVisaoGeral() {
   };
   const gruposHTML = Object.values(grupos).filter(g=>g.lista.length>0).map(g => {
     const itens = g.lista.map(x => `
-      <div style="background:var(--s1);border:1px solid var(--border);border-left:3px solid ${g.cor};border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div style="min-width:0;flex:1">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
-            <span style="font-size:13px">${x.emoji}</span>
-            <span style="font-family:var(--mono);font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px">${x.c.name}</span>
-            <span style="font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px;background:${ ['var(--c0)','var(--c1)','var(--c2)'][x.c.accIdx]||'var(--text3)'}22;color:${ ['var(--c0)','var(--c1)','var(--c2)'][x.c.accIdx]||'var(--text3)'};border:1px solid ${ ['var(--c0)','var(--c1)','var(--c2)'][x.c.accIdx]||'var(--text3)'}44">${ACCOUNTS_CONFIG[x.c.accIdx]?.name||''}</span>
-            <span style="font-family:var(--mono);font-size:9px;color:var(--accent)">D${x.maxDay}</span>
+      <div style="background:var(--s1);border:1px solid var(--border);border-left:3px solid ${g.cor};border-radius:8px;padding:12px 14px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+              <span style="font-size:13px">${x.emoji}</span>
+              <span style="font-family:var(--mono);font-size:10px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px">${x.c.name}</span>
+              <span style="font-family:var(--mono);font-size:9px;padding:1px 6px;border-radius:3px;background:${ ['var(--c0)','var(--c1)','var(--c2)'][x.c.accIdx]||'var(--text3)'}22;color:${ ['var(--c0)','var(--c1)','var(--c2)'][x.c.accIdx]||'var(--text3)'};border:1px solid ${ ['var(--c0)','var(--c1)','var(--c2)'][x.c.accIdx]||'var(--text3)'}44">${ACCOUNTS_CONFIG[x.c.accIdx]?.name||''}</span>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--accent)">D${x.maxDay}</span>
+            </div>
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${g.cor};margin-bottom:2px">${x.acao}</div>
+            <div style="font-size:9px;color:var(--text2);line-height:1.4">${x.justificativa}</div>
           </div>
-          <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${g.cor}">${x.acao}</div>
-          <div style="font-size:9px;color:var(--text2);margin-top:2px">${x.justificativa}</div>
-        </div>
-        <div style="display:flex;gap:16px;align-items:center;flex-shrink:0">
-          <div style="text-align:right">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">ROAS</div>
-            <div style="font-family:var(--mono);font-size:13px;font-weight:800;color:${x.roas>=1.5?'var(--green)':x.roas>=be?'var(--yellow)':x.roas>0?'var(--red)':'var(--text3)'}">${x.roas>0?fmt(x.roas)+'x':'—'}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">LUCRO</div>
-            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${x.lucro>=0?'var(--green)':'var(--red)'}">${x.lucro>=0?'+':''}R$ ${fmt(x.lucro)}</div>
+          <!-- KPIs principais -->
+          <div style="display:flex;gap:10px;align-items:flex-start;flex-shrink:0">
+            <div style="text-align:center;background:var(--s2);border-radius:7px;padding:7px 10px;min-width:54px">
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:2px">ROAS</div>
+              <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${x.roas>=1.5?'var(--green)':x.roas>=be?'var(--yellow)':x.roas>0?'var(--red)':'var(--text3)'}">${x.roas>0?fmt(x.roas)+'x':'—'}</div>
+            </div>
+            <div style="text-align:center;background:var(--s2);border-radius:7px;padding:7px 10px;min-width:54px">
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:2px">CPC</div>
+              <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${(x.c.cpc||0)<=0.20?'var(--green)':(x.c.cpc||0)<=0.40?'var(--yellow)':'var(--red)'}">${x.c.cpc>0?'R$'+fmt(x.c.cpc):'—'}</div>
+            </div>
+            <div style="text-align:center;background:var(--s2);border-radius:7px;padding:7px 10px;min-width:64px">
+              <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:2px">LUCRO</div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${x.lucro>=0?'var(--green)':'var(--red)'}">${x.lucro>=0?'+':''}R$${fmt(x.lucro)}</div>
+            </div>
           </div>
         </div>
       </div>`).join('');
@@ -11296,45 +11214,65 @@ function renderVisaoGeral() {
             const itens = [];
             const cpc = c.cpc || 0;
             const cpcStr = 'R$' + fmt(cpc);
-            const cpcLabel = cpc <= 0.10 ? 'excepcional — estrutura de tráfego muito boa.' : cpc <= 0.20 ? 'excelente. Boa estrutura de tráfego.' : cpc <= 0.40 ? 'acima da meta. Monitore.' : 'muito alto — considere pausar.';
-            const cpcIcon = cpc <= 0.20 ? '✅' : cpc <= 0.40 ? '⚠️' : '🔴';
+            const cpcQual = cpc <= 0.10 ? { label: 'excepcional', cor: 'var(--green)', ico: '✅' }
+                          : cpc <= 0.15 ? { label: 'excelente e consistente', cor: 'var(--green)', ico: '✅' }
+                          : cpc <= 0.20 ? { label: 'bom — dentro da meta', cor: 'var(--green)', ico: '✅' }
+                          : cpc <= 0.30 ? { label: 'acima da meta — monitore', cor: 'var(--yellow)', ico: '⚠️' }
+                          : cpc <= 0.50 ? { label: 'alto — criativo fraco ou audiência saturada', cor: 'var(--red)', ico: '🔴' }
+                          : { label: 'exorbitante — pause e revise o criativo', cor: 'var(--red)', ico: '🔴' };
+            const cpcCreat = cpc <= 0.20 ? 'Criativo: bom.' : cpc <= 0.40 ? 'Criativo: razoável.' : 'Criativo: fraco.';
 
-            // Fase inicial D0-D3
+            // 3 dias negativos consecutivos
+            const ultimos3 = (c.dailyCross||[]).slice(-3);
+            const tresNeg = ultimos3.length === 3 && ultimos3.every(d => (d.lucro||0) < 0);
+
+            // Saturação
+            const satMsg = sat.nivel === 2 ? '🔴 CPC subindo + ROAS caindo = saturação de audiência detectada. Troque o criativo ou pause.' 
+                         : sat.nivel === 1 ? '⚠️ Sinais iniciais de saturação — monitore o CPC nos próximos dias.' : null;
+
+            // Linha criativo + CPC
+            itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid ${cpcQual.cor};">${cpcCreat} CPC ${cpcStr} — <span style="color:${cpcQual.cor};font-weight:600">${cpcQual.label}</span>.</div>`);
+
+            // Fase e decisão principal
             if (maxDay <= 3) {
-              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">📊 Campanha em fase inicial (D${maxDay}). Aguarde até D4 para decidir.</div>`);
-              if (cpc <= 0.20) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">${cpcIcon} CPC ${cpcStr} ${cpcLabel}</div>`);
-              else             itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">${cpcIcon} CPC ${cpcStr} ${cpcLabel}</div>`);
-              // 3 dias negativos consecutivos
-              const ultimos3 = (c.dailyCross||[]).slice(-3);
-              if (ultimos3.length === 3 && ultimos3.every(d => (d.lucro||0) < 0)) {
-                itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">🔴 3 dias negativos consecutivos. Sinal de alerta.</div>`);
+              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--border2)">D${maxDay} em aprendizado — <b>não tome decisões ainda.</b> Aguarde o D4 para cortar ou escalar.</div>`);
+              if (tresNeg) itens.push(`<div style="font-size:10px;color:var(--red);padding-left:8px;border-left:2px solid var(--red)">🔴 3 dias negativos consecutivos — sinal de alerta mesmo antes do D4. Considere pausa antecipada.</div>`);
+            } else if (maxDay === 4) {
+              if (roas >= be) {
+                itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--green);">D4 em ${fmt(roas)}x — <span style="color:var(--green);font-weight:700">empatou ✓</span>. Segue para D5-D7. ${cpc<=0.20 ? 'CPC bom indica criativo funcional.' : ''}</div>`);
+                if (roas >= 2.0) itens.push(`<div style="font-size:10px;color:var(--green);padding-left:8px;border-left:2px solid var(--green);">Performance excelente no D4. Considere escalar 20% agora.</div>`);
+              } else {
+                itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--red);">D4 em ${fmt(roas)}x — <span style="color:var(--red);font-weight:700">não empatou</span>. Mínimo: ${fmt(be)}x. ${cpc<=0.20 ? 'CPC bom indica criativo funcional — o problema pode ser o produto (comissão baixa, preço ruim na Shopee, oferta não competitiva). → Reteste com produto diferente.' : 'CPC alto indica criativo fraco. Revise o criativo antes de subir novo teste.'}</div>`);
               }
+            } else if (maxDay <= 7) {
+              const lucroSinal = lucro >= 0
+                ? `<span style="color:var(--green);font-weight:700">Lucrando +R$ ${fmt(lucro)}</span>.`
+                : `<span style="color:var(--red);font-weight:700">Prejuízo de R$ ${fmt(lucro)}</span>.`;
+              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--border2);">D${maxDay} — ROAS ${fmt(roas)}x. ${lucroSinal} ${trend.cls==='trend-up'?'Tendência de alta. ✅':trend.cls==='trend-down'?'⚠️ Tendência de queda — monitore.':''}</div>`);
+              if (tresNeg) itens.push(`<div style="font-size:10px;color:var(--red);padding-left:8px;border-left:2px solid var(--red);">🔴 3 dias negativos consecutivos ativados. → Reduzir orçamento 30%. Se persistir → pausa total.</div>`);
+              if (satMsg) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--yellow);">${satMsg}</div>`);
+            } else {
+              const lucroSinal = lucro >= 0
+                ? `Lucrando <span style="color:var(--green);font-weight:700">+R$ ${fmt(lucro)}</span>`
+                : `Prejuízo de <span style="color:var(--red);font-weight:700">R$ ${fmt(lucro)}</span>`;
+              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--border2);">D${maxDay} — ROAS ${fmt(roas)}x. ${lucroSinal} no período.</div>`);
+              if (tresNeg) itens.push(`<div style="font-size:10px;color:var(--red);padding-left:8px;border-left:2px solid var(--red);">🔴 3 dias negativos consecutivos. → Reduzir orçamento 30%. Se negativos persistirem → pausa total.</div>`);
+              if (satMsg) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:8px;border-left:2px solid var(--yellow);">${satMsg}</div>`);
+              if (roas >= 2.0 && !tresNeg && sat.nivel === 0) itens.push(`<div style="font-size:10px;color:var(--green);padding-left:8px;border-left:2px solid var(--green);">Performance boa e estável. → Considere escalar 20-30%.</div>`);
             }
-            // D4 — decisão
-            else if (maxDay === 4) {
-              if (lucro < 0) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚠️ Prejuízo de <b style="color:var(--red)">R$ ${fmt(lucro)}</b> acumulado.</div>`);
-              else           itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">✅ Lucrando <b style="color:var(--green)">+R$ ${fmt(lucro)}</b> no D4.</div>`);
-              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">${cpcIcon} CPC ${cpcStr} ${cpcLabel}</div>`);
-            }
-            // D5-D7 — pré-escala
-            else if (maxDay <= 7) {
-              if (lucro < 0) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚠️ Prejuízo de <b style="color:var(--red)">R$ ${fmt(lucro)}</b> acumulado.</div>`);
-              else           itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">✅ Lucrando <b style="color:var(--green)">+R$ ${fmt(lucro)}</b> acumulado. ROAS ${fmt(roas)}x.</div>`);
-              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">${cpcIcon} CPC ${cpcStr} ${cpcLabel}</div>`);
-              if (trend.cls === 'trend-up')  itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚡ Tendência positiva nos últimos dias.</div>`);
-              if (trend.cls === 'trend-down') itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">📉 Tendência de queda — atenção.</div>`);
-              if (sat.nivel === 2) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">🔴 Saturação alta — CPC subindo, ROAS caindo.</div>`);
-              if (sat.nivel === 1) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚠️ Sinais iniciais de saturação.</div>`);
-            }
-            // D8+ — escala ou pausa
-            else {
-              if (lucro < 0) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚠️ Prejuízo de <b style="color:var(--red)">R$ ${fmt(lucro)}</b> acumulado.</div>`);
-              else           itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">✅ Lucrando <b style="color:var(--green)">+R$ ${fmt(lucro)}</b> — ROAS ${fmt(roas)}x.</div>`);
-              itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">${cpcIcon} CPC ${cpcStr} ${cpcLabel}</div>`);
-              if (sat.nivel >= 1) itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">${sat.nivel===2?'🔴 Saturação alta':'⚠️ Sinais de saturação'} — monitore.</div>`);
-              if (trend.cls === 'trend-up')  itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚡ Últimos dias com tendência positiva.</div>`);
-              if (trend.cls === 'trend-flat') itens.push(`<div style="font-size:10px;color:var(--text2);padding-left:6px;border-left:2px solid var(--border2)">⚡ Padrão irregular: picos e quedas intercalados.</div>`);
-            }
+
+            // Recomendação final
+            const rec = maxDay <= 3 && cpc <= 0.20 ? '→ Aguardar D4. Criativo funcionando.'
+                      : maxDay <= 3 && cpc > 0.20 ? '→ Aguardar D4. Monitore o CPC.'
+                      : maxDay === 4 && roas >= be && cpc <= 0.20 ? '→ Segue D5-D7. CPC bom indica criativo funcional.'
+                      : maxDay === 4 && roas >= be ? '→ Segue D5-D7. Monitore o CPC.'
+                      : maxDay === 4 && roas < be && cpc <= 0.20 ? '→ Pausa. Reteste com produto diferente — CPC bom indica criativo ok.'
+                      : maxDay === 4 && roas < be ? '→ Pausa. Revise criativo e produto.'
+                      : roas >= 2.0 && !tresNeg ? '→ Manter. Considere escalar 20%.'
+                      : roas >= be && tresNeg ? '→ Reduzir orçamento 30%.'
+                      : roas >= be ? '→ Manter. Não escalar agora.'
+                      : '→ Pausa. ROAS abaixo do empate por muitos dias.';
+            itens.push(`<div style="font-size:10px;color:var(--accent);padding-left:8px;border-left:2px solid var(--accent);font-weight:600;">${rec}</div>`);
             return itens.join('');
           })()}
         </div>
@@ -13718,7 +13656,6 @@ let alCurrentFilter = 'todas';
 
 function alSetFilter(f, btn) {
   alCurrentFilter = f;
-  document.querySelectorAll('#panel-analise-lote .filter-chip').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
   renderAnalyseLote();
 }
@@ -14052,9 +13989,9 @@ function renderAnalyseLote() {
   }
 
   async function glGenerateLink(url, subId) {
-    const query = `mutation { generateShortLink(input: { originUrl: "${url.replace(/"/g,'')}" subIds: ${subId ? `["${subId}"]` : '[]'} }) { shortLink shortLinkList } }`;
+    const query = `mutation { generateShortLink(input: { originUrl: "${url.replace(/"/g,'')}" subIds: ${subId ? `["${subId}"]` : '[]'} }) { shortLink } }`;
     const data = await glShopeeApi(query);
-    const link = data?.generateShortLink?.shortLink || data?.generateShortLink?.shortLinkList?.[0];
+    const link = data?.generateShortLink?.shortLink;
     if (!link) throw new Error('API não retornou link. Verifique se o URL é um produto Shopee válido.');
     return link;
   }
@@ -14067,9 +14004,22 @@ function renderAnalyseLote() {
 
   // ── Utils ──
   function glExtractKeyword(url) {
-    const m = url.match(/shopee\.com\.br\/([^/?#]+?)(?:-i\.\d|\?|$)/);
-    if (m && m[1]) return decodeURIComponent(m[1]).replace(/-/g,' ').substring(0,60);
+    // Tenta extrair keyword de URLs longas: shopee.com.br/nome-do-produto-i.123.456
+    const m1 = url.match(/shopee\.com\.br\/([^/?#]+?)(?:-i\.\d|\?|$)/);
+    if (m1 && m1[1]) return decodeURIComponent(m1[1]).replace(/-/g,' ').substring(0,60);
+    // URLs do tipo /product/shopid/itemid
+    const m2 = url.match(/shopee\.com\.br\/product\/\d+\/\d+/);
+    if (m2) return null; // sem keyword, vai gerar link direto
+    // s.shopee curto
+    const m3 = url.match(/s\.shopee\.com\.br\/([A-Za-z0-9\-]+)/);
+    if (m3) return null;
     return null;
+  }
+  function glExtractProductUrl(raw) {
+    // Se for link longo da Shopee, limpa parâmetros e retorna URL limpa
+    const m = raw.match(/(https?:\/\/(?:www\.)?shopee\.com\.br\/[^?#\s]+)/);
+    if (m) return m[1];
+    return raw;
   }
   async function glExpandUrl(url) {
     if (!url.includes('s.shopee')) return url;
@@ -14166,11 +14116,24 @@ function renderAnalyseLote() {
     if (!rawUrl) { glShowErr('gl-compareError','Cole o link ou ID do produto.'); return; }
     let normalizedUrl = rawUrl;
     if (!rawUrl.startsWith('http')) { normalizedUrl = `https://s.shopee.com.br/${rawUrl.trim().replace(/\s+/g,'')}`; }
-    btn.disabled = true; label.innerHTML = '<div class="gl-spinner"></div> Expandindo...';
+    // Se for link longo da shopee.com.br, limpa parâmetros
+    if (rawUrl.includes('shopee.com.br') && !rawUrl.includes('s.shopee')) {
+      normalizedUrl = glExtractProductUrl(rawUrl);
+    }
+    btn.disabled = true; label.innerHTML = '<div class="gl-spinner"></div> Identificando produto...';
     try {
-      const fullUrl = await glExpandUrl(normalizedUrl);
+      let fullUrl = normalizedUrl;
+      if (normalizedUrl.includes('s.shopee')) {
+        label.innerHTML = '<div class="gl-spinner"></div> Expandindo link...';
+        fullUrl = await glExpandUrl(normalizedUrl);
+      }
       label.innerHTML = '<div class="gl-spinner"></div> Identificando produto...';
       let keyword = glExtractKeyword(fullUrl);
+      if (!keyword && fullUrl.includes('shopee.com.br')) {
+        // Tenta extrair do slug do produto
+        const slug = fullUrl.split('shopee.com.br/').pop()?.split('?')[0]?.split('/')[0];
+        if (slug && slug.length > 3) keyword = decodeURIComponent(slug).replace(/-/g,' ').substring(0,60);
+      }
       if (!keyword) {
         label.innerHTML = '<div class="gl-spinner"></div> Obtendo nome...';
         try {
