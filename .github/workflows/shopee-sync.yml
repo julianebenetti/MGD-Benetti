@@ -2,7 +2,7 @@ name: Shopee Affiliate Sync
 
 on:
   schedule:
-    - cron: '0 3 * * *'→ Runs at 14:00
+    - cron: '0 3 * * *'
     - cron: '0 5 * * *'
     - cron: '0 7 * * *'
     - cron: '0 9 * * *'
