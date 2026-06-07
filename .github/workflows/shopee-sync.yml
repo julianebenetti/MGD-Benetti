@@ -2,11 +2,19 @@ name: Shopee Affiliate Sync
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 3 * * *'→ Runs at 14:00
+    - cron: '0 5 * * *'
+    - cron: '0 7 * * *'
+    - cron: '0 9 * * *'
     - cron: '0 11 * * *'
-    - cron: '0 12 * * *'
     - cron: '0 13 * * *'
-    - cron: '0 14 * * *'
+    - cron: '0 15 * * *'
+    - cron: '0 17 * * *'
+    - cron: '0 19 * * *'
+    - cron: '0 21 * * *'
+    - cron: '0 23 * * *'
+    - cron: '0 1 * * *'
+
   workflow_dispatch:
 
 permissions:
