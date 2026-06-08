@@ -7018,10 +7018,25 @@ function initChat() {
 // VENDAS ORGÂNICAS
 // ══════════════════════════════════════════════════
 function isOrganico(order) {
-  // Orgânico = sub_id vazio OU sub_id sem padrão de data de campanha (ex: 15Abr26)
   const subId = (order.subId || '').toLowerCase().trim();
-  const temData = /\d{2}(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\d{2}/.test(subId);
-  return !temData; // inclui sub_id vazio E sub_ids sem data
+
+  // Sem sub_id = orgânico
+  if (!subId) return true;
+
+  // Sub_ids orgânicos conhecidos (não são campanhas pagas)
+  const organicosConhecidos = ['instamagic', 'grupospromos', 'grupospromoapp', 'grupospromoapp'];
+  if (organicosConhecidos.some(k => subId.includes(k))) return true;
+
+  // Sub_ids de campanha paga: começam com DD + 2-4 letras + AA (ex: 02jin26..., 08mar26..., 15abr26...)
+  const temPadraoData = /^\d{2}[a-z]{2,4}\d{2}/.test(subId);
+  if (temPadraoData) return false;
+
+  // Padrão legado DDMês escrito por extenso (jan|fev|mar...)
+  const temDataLegado = /\d{2}(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)\d{2}/.test(subId);
+  if (temDataLegado) return false;
+
+  // Qualquer outro sub_id sem padrão de data = orgânico
+  return true;
 }
 
 
@@ -7446,7 +7461,7 @@ function renderGlossario() {
         { term: 'Vendas Diretas', def: 'Vendas onde o tipo de atribuição é "Pedido na mesma loja". Indica que o cliente comprou diretamente pelo seu link.' },
         { term: 'Pagamentos Únicos', def: 'IDs de pagamento únicos. Um cliente que compra 3 produtos = 3 pedidos mas 1 pagamento único. Mostra clientes reais, não itens.' },
         { term: 'Sub_id1', def: 'Nome da campanha do Facebook que originou a venda. Deve ser idêntico ao nome da campanha no Meta para que o cruzamento funcione.' },
-        { term: 'Orgânico', def: 'Vendas cujo sub_id não contém uma data no padrão DDMêsAA (ex: 15Abr26). São vendas que vieram sem anúncio ativo.' },
+      { term: 'Orgânico', def: 'Vendas cujo sub_id está vazio, é um canal orgânico conhecido (ex: Instamagic, GruposPromos) ou não contém padrão de data de campanha paga (DDMêsAA, ex: 02jun26). Sub_ids com esse padrão são atribuídos a campanhas de tráfego pago.' },
         { term: 'Status do item do afiliado', def: 'Pendente = ainda pode mudar. Quando todos os itens do mês estão sem pendência, os dados são fixados automaticamente na calculadora.' },
       ]
     },
