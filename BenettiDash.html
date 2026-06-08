@@ -2635,7 +2635,7 @@ function goTab(tab) {
   }, 50);
 
   if (tab === 'alertas')    { setTimeout(()=>{ goTab('visao'); }, 10); return; }
-  if (tab === 'd0')         { setTimeout(()=>{ goTab('cruzamento'); }, 10); return; }
+  if (tab === 'd0')         { setTimeout(()=>{ goTab('visao'); }, 10); return; }
   if (tab === 'financeiro') setTimeout(() => { initHistoricoFaturas(); renderFinanceiro(); }, 50);
   if (tab === 'produtos')   setTimeout(renderProdutos, 50);
   if (tab === 'pedidos')    setTimeout(renderPedidos, 50);
@@ -9234,7 +9234,7 @@ function importShopeeCSV(input) {
         STATE.accounts.forEach(acc => acc.campaigns.forEach(c => { c.shopeeSource = false; }));
         STATE.crossData = buildCross(STATE.accounts, orders);
         renderAll();
-        goTab('cruzamento');
+        goTab('visao');
       } else {
         renderAll();
       }
