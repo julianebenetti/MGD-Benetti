@@ -1,9 +1,9 @@
 {
-  "updated_at": 1780898956,
-  "updated_at_br": "08/06/2026 06:09",
+  "updated_at": 1780904508,
+  "updated_at_br": "08/06/2026 07:41",
   "period_days": 90,
-  "total_orders": 15549,
-  "total_conversions": 14531,
+  "total_orders": 15548,
+  "total_conversions": 14530,
   "orders": [
     {
       "ID do pedido": "260607EHVJSX9Q",
@@ -373154,30 +373154,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "226828874118669",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-10"
-    },
-    {
-      "ID do pedido": "260310QYXHQ7Y6",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-10 06:49:46",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "19.74",
-      "Comissao liquida do afiliado(R$)": "0.5922",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "0.5922",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.5922",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 2 ou 4 Pop Tubo Estica e Gruda Girafa Brinquedo Ventosa Infantil com Led Luz",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23292257574",
-      "Nome da loja": "LEVEL UP COMÉRCIO",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "226824585195366",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-10"
     }
