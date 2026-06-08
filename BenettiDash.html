@@ -2805,7 +2805,6 @@ async function fetchFB(token, accountId, days) {
 
   if (daily.length) {
     const dates = daily.map(d=>d.date).sort();
-    console.log(`[FB DAILY] ${accountId}: ${daily.length} dias | ${dates[0]} → ${dates[dates.length-1]} | Total gasto: R$ ${daily.reduce((s,d)=>s+d.spend,0).toFixed(2)}`);
   } else {
     console.warn(`[FB DAILY] ${accountId}: SEM dados diários`);
   }
@@ -3298,7 +3297,7 @@ function renderTop10(shopeeOrders) {
   // Agrupa por produto, mantendo lista de pedidos individuais
   const prodMap = {};
   for (const o of shopeeOrders) {
-    const name = o.item   || 'Produto sem nome';
+    const name = o.item || 'Produto sem nome';
     const iid  = o.itemId || '';
     const key  = iid || name; // agrupa por ID se disponível
     if (!prodMap[key]) prodMap[key] = { name, itemId: iid, qtd: 0, commission: 0, valor: 0, pedidos: [] };
@@ -3655,7 +3654,6 @@ function buildCross(accounts, shopeeOrders) {
       if (campOrders.length > 0) {
         const datas = [...new Set(campOrders.map(o => o.date || 'SEM-DATA'))];
         const fbDatas = (camp.dailyData||[]).map(d => d.date);
-        console.log(`[CROSS] "${camp.name}": ${campOrders.length} pedidos | datas Shopee: [${datas}] | datas FB: [${fbDatas}]`);
       }
 
       // Agrupa comissões por data (só pedidos com data válida)
@@ -3861,7 +3859,7 @@ function buildCross(accounts, shopeeOrders) {
       const prodMap = {};
       const todayDate2 = new Date().toISOString().split('T')[0];
       for (const o of campOrders) {
-        const nome = o.item   || 'Produto sem nome';
+        const nome = o.item || 'Produto sem nome';
         const iid  = o.itemId || '';
         const key  = iid || nome;
         if (!prodMap[key]) prodMap[key] = {
@@ -5525,7 +5523,6 @@ function processAndPersistMonthly(allOrders) {
   }
 
   saveMonthlyStore(store);
-  console.log(`[MONTHLY] ${updated} meses processados. Fixados: ${Object.values(store).filter(m=>m.fixed).length}`);
   return store;
 }
 
@@ -6714,7 +6711,6 @@ function loadHistoricalData() {
   }
   if (added > 0) {
     saveMonthlyStore(store);
-    console.log(`[HISTORICAL] ${added} meses históricos carregados`);
   }
 }
 
@@ -7065,7 +7061,7 @@ function renderRanking() {
   const prodMap = {};
   for (const o of filtered) {
     const key  = o.itemId||o.item||'sem-nome';
-    const nome = o.item||'Produto sem nome';
+    const nome = o.item || 'Produto sem nome';
     if (!prodMap[key]) prodMap[key]={nome,itemId:o.itemId||'',qtd:0,comm:0,gmv:0,canais:{},subIds:{},datas:[]};
     prodMap[key].qtd++;
     prodMap[key].comm+=o.commission;
@@ -7248,7 +7244,7 @@ function renderOrganico() {
     // Itens detalhados (colapsados por padrão — expandir clicando na data)
     const itemsHtml = orders.map(o => {
       const link = o.itemId ? shopeeProductLink(o.itemId, o.item) : null;
-      const prodName = (o.item||'Produto sem nome').slice(0,55);
+      const prodName = (o.item || 'Produto sem nome').slice(0,55);
       return `<tr style="background:rgba(62,207,142,.03)">
         <td style="padding:5px 14px 5px 28px;font-family:var(--mono);font-size:9px;color:var(--text3)">${o.date||'—'}</td>
         <td style="font-family:var(--mono);font-size:9px;color:var(--green)">${o.subId||'<span style="color:var(--text3);font-style:italic">(sem sub_id)</span>'}</td>
@@ -8877,7 +8873,10 @@ function parseShopeeJSON(json, days) {
       commVendedorVal: parseNum(o['Comissao do vendedor(R$)']   || o['Comissão do vendedor(R$)']),
       commTotal:       parseNum(o['Comissao total do pedido(R$)'] || o['Comissão total do pedido(R$)']),
       direta:          direta,
+      item:            o['Nome do Item']                        || '',
       itemName:        o['Nome do Item']                        || '',
+      itemId:          o['ID do item']                          || '',
+      loja:            o['Nome da loja']                        || '',
       itemStatus:      o['Status do item do afiliado']          || '',
       buyerType:       o['buyerType']                           || '',
       conversionId:    o['conversionId']                        || '',
@@ -9161,8 +9160,6 @@ function importShopeeCSV(input) {
         let orderDate = '';
         if (hIdx[COL_DATE] !== undefined) {
           const raw = (cols[hIdx[COL_DATE]] || '').trim();
-          // Debug nas primeiras 5 linhas
-          if (i <= 5) console.log(`[CSV DATE] linha ${i}: raw="${raw}" | col[${hIdx[COL_DATE]}] | total cols=${cols.length}`);
           // Formato DD/MM/YYYY HH:MM (padrão Shopee BR)
           const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
           // Formato YYYY-MM-DD HH:MM (alternativo)
@@ -9228,7 +9225,6 @@ function importShopeeCSV(input) {
       const withDate    = orders.filter(o => o.date).length;
       const totalComm   = orders.reduce((s,o) => s+o.commission, 0);
 
-      console.log(`[CSV] Total: ${orders.length} pedidos | Com subId: ${withSubId} | Com data: ${withDate} | Comissão: R$ ${totalComm.toFixed(2)}`);
 
       // Update state com TODOS os pedidos
       STATE.shopee = { orders, total: orders.length, source: 'csv' };
@@ -9856,7 +9852,6 @@ function initHistoricoFaturas() {
     if (novos.length > 0) {
       const merged = [...atual, ...novos];
       localStorage.setItem(FIN_KEY, JSON.stringify(merged));
-      console.log(`[FINANCEIRO] ${novos.length} lançamentos históricos mesclados`);
     }
   } catch(e) {}
 }
@@ -11282,7 +11277,6 @@ function renderVisaoGeral() {
           <div style="font-size:9px;color:var(--text2);margin-top:4px;line-height:1.5">${justificativa}</div>
         </div>
       </div>
-      </div>
 
       <!-- KPIs em grade -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--border)">
@@ -12577,6 +12571,16 @@ let bancoProdutos = [];
 let bancoEditId   = null;
 let bancoFilter   = 'vigente';
 
+// Retorna o nome do produto pelo sub_id — fallback quando o CSV não traz "Nome do Item"
+function getNomeBySubId(subId) {
+  if (!subId || !bancoProdutos?.length) return '';
+  const sid = (subId || '').toLowerCase().trim();
+  const prod = bancoProdutos.find(p =>
+    (p.subIds || []).some(s => (s || '').toLowerCase().trim() === sid)
+  );
+  return prod ? prod.nome : '';
+}
+
 
 
 // ══════════════════════════════════════════════════
@@ -12639,7 +12643,6 @@ function autoBancoStatus() {
 
   if (atualizados > 0) {
     saveBanco();
-    console.log(`[BANCO] ${atualizados} produtos com status atualizado automaticamente`);
   }
 
   // Re-renderiza o grid se a aba estiver visível
@@ -13997,22 +14000,22 @@ function renderAnalyseLote() {
   }
 
   async function glSearchProducts(keyword, limit = 8) {
-    const query = `{ affiliateToolQuery { productOfferV2(listType:0, sortType:2, keyword:"${keyword.replace(/"/g,'')}", page:1, limit:${limit}) { nodes { itemId shopId productName shopName originalPrice priceMin priceMax commissionRate sales ratingStar imageUrl productLink offerLink } pageInfo { total } } } }`;
+    const query = `{ productOfferV2(listType:0, sortType:2, keyword:"${keyword.replace(/"/g,'')}", page:1, limit:${limit}) { nodes { itemId shopId productName shopName priceMin priceMax commissionRate sellerCommissionRate shopeeCommissionRate sales ratingStar imageUrl productLink offerLink } pageInfo { page limit hasNextPage } } }`;
     const data = await glShopeeApi(query);
-    return data?.affiliateToolQuery?.productOfferV2?.nodes || [];
+    return data?.productOfferV2?.nodes || [];
   }
 
   // ── Utils ──
   function glExtractKeyword(url) {
-    // Tenta extrair keyword de URLs longas: shopee.com.br/nome-do-produto-i.123.456
+    // URLs do tipo: shopee.com.br/nome-do-produto-i.123.456
     const m1 = url.match(/shopee\.com\.br\/([^/?#]+?)(?:-i\.\d|\?|$)/);
-    if (m1 && m1[1]) return decodeURIComponent(m1[1]).replace(/-/g,' ').substring(0,60);
-    // URLs do tipo /product/shopid/itemid
-    const m2 = url.match(/shopee\.com\.br\/product\/\d+\/\d+/);
-    if (m2) return null; // sem keyword, vai gerar link direto
-    // s.shopee curto
-    const m3 = url.match(/s\.shopee\.com\.br\/([A-Za-z0-9\-]+)/);
-    if (m3) return null;
+    if (m1 && m1[1] && m1[1] !== 'product') {
+      return decodeURIComponent(m1[1]).replace(/-/g,' ').substring(0,60);
+    }
+    // URLs do tipo /product/shopid/itemid — sem keyword no slug
+    if (url.match(/shopee\.com\.br\/product\/\d+\/\d+/)) return null;
+    // links curtos s.shopee
+    if (url.match(/s\.shopee\.com\.br\//)) return null;
     return null;
   }
   function glExtractProductUrl(raw) {
@@ -14038,9 +14041,9 @@ function renderAnalyseLote() {
   function glHideErr(id) { document.getElementById(id)?.classList.remove('show'); }
   function glShowRes(id) { document.getElementById(id)?.classList.add('show'); }
   function glHideRes(id) { document.getElementById(id)?.classList.remove('show'); }
-  function glFmtPrice(v) { return v ? `R$ ${(v/100000).toFixed(2).replace('.',',')}` : '—'; }
+  function glFmtPrice(v) { return v ? `R$ ${parseFloat(v).toFixed(2).replace('.',',')}` : '—'; }
   function glFmtComm(v)  { return v ? `${(v*100).toFixed(1)}%` : '—'; }
-  function glFmtGain(price, comm) { return (price&&comm) ? `R$ ${((price/100000)*comm).toFixed(2).replace('.',',')}` : '—'; }
+  function glFmtGain(price, comm) { return (price&&comm) ? `R$ ${(parseFloat(price)*parseFloat(comm)).toFixed(2).replace('.',',')}` : '—'; }
   function glSalesInfo(n) {
     if (!n) return { cls:'gl-sales-low', label:'Sem dados', alert:`<div class="gl-sales-alert">⚠️ Sem histórico de vendas — risco alto</div>` };
     if (n < 50)  return { cls:'gl-sales-low', label:`${n} vendas`, alert:`<div class="gl-sales-alert">🚨 Poucas vendas (${n})</div>` };
@@ -14129,26 +14132,30 @@ function renderAnalyseLote() {
       }
       label.innerHTML = '<div class="gl-spinner"></div> Identificando produto...';
       let keyword = glExtractKeyword(fullUrl);
-      if (!keyword && fullUrl.includes('shopee.com.br')) {
-        // Tenta extrair do slug do produto
-        const slug = fullUrl.split('shopee.com.br/').pop()?.split('?')[0]?.split('/')[0];
-        if (slug && slug.length > 3) keyword = decodeURIComponent(slug).replace(/-/g,' ').substring(0,60);
-      }
+      // Se não teve keyword (URL /product/shopid/itemid), gera link e usa nome do produto afiliado
       if (!keyword) {
-        label.innerHTML = '<div class="gl-spinner"></div> Obtendo nome...';
+        label.innerHTML = '<div class="gl-spinner"></div> Gerando link para identificar produto...';
         try {
           const link = await glGenerateLink(normalizedUrl, subId);
           glLastLink = link;
           keyword = glExtractKeyword(link);
+          // Se o link afiliado também não tem nome no slug, tentar extrair de query params
+          if (!keyword) {
+            const afterDomain = link.split('shopee.com.br/').pop() || '';
+            const candidate = afterDomain.split('?')[0].split('/')[0];
+            if (candidate && candidate.length > 3 && candidate !== 'product') {
+              keyword = decodeURIComponent(candidate).replace(/-/g,' ').substring(0,60);
+            }
+          }
           if (!keyword) {
             glLastProduct = { name:'Produto', comm:'—', sales:0, gain:'—' };
             document.getElementById('gl-compareResultLink').textContent = link;
             document.getElementById('gl-saveConfirm').style.display = 'none';
             glShowRes('gl-compareResultBox');
-            glShowErr('gl-compareError','Não foi possível expandir o link para comparar. Link gerado direto abaixo.');
+            glShowErr('gl-compareError','Não foi possível identificar o nome do produto para comparar. Link gerado direto abaixo. Use a aba "Um Link" para links /product/.');
             btn.disabled = false; label.innerHTML = '🔍 Buscar e Comparar'; return;
           }
-        } catch(e2) { throw new Error('Não foi possível identificar o produto. Tente colar o link completo.'); }
+        } catch(e2) { throw new Error('Não foi possível identificar o produto. Para links /product/shopid/itemid use a aba "Um Link".'); }
       }
       document.getElementById('gl-compareOrigInfo').innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:var(--text2)">🔍 Buscando por: <b style="color:var(--text)">${keyword}</b></div>`;
       glShowRes('gl-compareOrigBox');
@@ -14386,15 +14393,6 @@ function renderAnalyseLote() {
 
 })(); // fim IIFE do gerador
 
-// Adiciona "gerador" ao mapa de títulos do goTab
-(function() {
-  const origGoTab = goTab;
-  window.goTab = function(tab) {
-    origGoTab(tab);
-    if (tab === 'gerador') {
-      safeText('topbarTitle', '🔗 Gerador de Links Shopee');
-    }
-  };
-})();
+
 
 </script>
