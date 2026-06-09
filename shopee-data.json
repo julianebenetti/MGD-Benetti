@@ -1,9 +1,9 @@
 {
-  "updated_at": 1780982655,
-  "updated_at_br": "09/06/2026 05:24",
+  "updated_at": 1780988373,
+  "updated_at_br": "09/06/2026 06:59",
   "period_days": 90,
-  "total_orders": 15211,
-  "total_conversions": 14217,
+  "total_orders": 15210,
+  "total_conversions": 14216,
   "orders": [
     {
       "ID do pedido": "260608H0H7S6G2",
@@ -365042,30 +365042,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "226914338144531",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-11"
-    },
-    {
-      "ID do pedido": "260311TC98NF8A",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-11 05:35:49",
-      "Sub_id1": "09Mar26Brasil",
-      "Valor de Compra(R$)": "26.44",
-      "Comissao liquida do afiliado(R$)": "0.7932",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.7932",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.7932",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Cropped Tomara Que Caia Top Tube Forrado Básico Tecido Premium Plus Size - Branco",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "52806140188",
-      "Nome da loja": "SHOP LOVERS",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "226906549184924",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-11"
     }
