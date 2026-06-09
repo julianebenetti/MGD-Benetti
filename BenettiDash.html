@@ -8895,6 +8895,7 @@ function parseShopeeJSON(json, days) {
       orderId:         o['ID do pedido']                        || '',
       status:          o['Status do Pedido']                    || '',
       date:            (o['Horario do pedido'] || o.data || '').substring(0, 10),
+      hora:            parseInt((o['Horario do pedido'] || o.data || '').substring(11, 13)) || -1,
       subId:           subId,
       amount:          parseNum(o['Valor de Compra(R$)']),
       commission:      parseNum(o['Comissao liquida do afiliado(R$)'] || o['Comissão líquida do afiliado(R$)']),
@@ -9011,9 +9012,12 @@ function processShopeeCSV(text, days) {
       const status = statusCol ? (cols[hIdx[statusCol]] || '').trim() : 'completed';
       if (status && ['cancelado','cancelled','cancel','invalid','inválido'].some(s => status.toLowerCase().includes(s))) continue;
       const raw = (cols[hIdx[COL_DATE]] || '').trim();
-      const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-      const m1 = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-      let orderDate = m2 ? `${m2[3]}-${m2[2]}-${m2[1]}` : m1 ? `${m1[1]}-${m1[2]}-${m1[3]}` : '';
+      const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2})/);
+      const m1 = raw.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2})/);
+      const m2d = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      const m1d = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      let orderDate = m2 ? `${m2[3]}-${m2[2]}-${m2[1]}` : m1 ? `${m1[1]}-${m1[2]}-${m1[3]}` : m2d ? `${m2d[3]}-${m2d[2]}-${m2d[1]}` : m1d ? `${m1d[1]}-${m1d[2]}-${m1d[3]}` : '';
+      const orderHora = m2 ? parseInt(m2[4]) : m1 ? parseInt(m1[4]) : -1;
 
       const tipoAtrib = hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]]||'').trim() : '';
       const taxaComissaoRaw = COL_TAXA_SHOPEE ? (cols[hIdx[COL_TAXA_SHOPEE]]||'').replace('%','').replace(',','.').trim() : '';
@@ -9028,6 +9032,7 @@ function processShopeeCSV(text, days) {
         commission:     parseNum(cols[hIdx[commCol]]),
         status,
         date:           orderDate,
+        hora:           orderHora,
         direta:         tipoAtrib.toLowerCase().includes('mesma loja'),
         tipoAtribuicao: tipoAtrib,
         canal:          hIdx['Canal'] !== undefined ? (cols[hIdx['Canal']]||'').trim() : '',
@@ -9189,14 +9194,19 @@ function importShopeeCSV(input) {
         // Extrai data do pedido
         // Formato Shopee BR: "22/04/2026 23:49" → converte para "2026-04-22"
         let orderDate = '';
+        let orderHora2 = -1;
         if (hIdx[COL_DATE] !== undefined) {
           const raw = (cols[hIdx[COL_DATE]] || '').trim();
           // Formato DD/MM/YYYY HH:MM (padrão Shopee BR)
-          const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+          const m2 = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2})/);
+          const m2d = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
           // Formato YYYY-MM-DD HH:MM (alternativo)
-          const m1 = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-          if (m2) orderDate = `${m2[3]}-${m2[2]}-${m2[1]}`;
-          else if (m1) orderDate = `${m1[1]}-${m1[2]}-${m1[3]}`;
+          const m1 = raw.match(/^(\d{4})-(\d{2})-(\d{2})[\sT](\d{2})/);
+          const m1d = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (m2)      { orderDate = `${m2[3]}-${m2[2]}-${m2[1]}`; orderHora2 = parseInt(m2[4]); }
+          else if (m1) { orderDate = `${m1[1]}-${m1[2]}-${m1[3]}`; orderHora2 = parseInt(m1[4]); }
+          else if (m2d) orderDate = `${m2d[3]}-${m2d[2]}-${m2d[1]}`;
+          else if (m1d) orderDate = `${m1d[1]}-${m1d[2]}-${m1d[3]}`;
           else if (raw) console.warn(`[CSV DATE] formato não reconhecido linha ${i}: "${raw}"`);
         }
 
@@ -9221,6 +9231,7 @@ function importShopeeCSV(input) {
           commission,
           status,
           date:           orderDate,
+          hora:           orderHora2,
           direta:         hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]] || '').toLowerCase().includes('mesma loja') : false,
           tipoAtribuicao: hIdx[atribCol] !== undefined ? (cols[hIdx[atribCol]] || '').trim() : '',
           canal:          hIdx['Canal']                        !== undefined ? (cols[hIdx['Canal']]                        || '').trim() : '',
@@ -12514,29 +12525,35 @@ function renderCliquesDia() {
     return;
   }
 
-  // Dias disponíveis, ordenados do mais recente ao mais antigo
+  // Dias disponíveis, mais recente primeiro
   const diasSet = [...new Set(clicks.filter(c => c.date).map(c => c.date))].sort().reverse();
-
-  // Ontem como padrão
   const ontem = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const diaPadrao = diasSet.includes(ontem) ? ontem : diasSet[0];
 
-  // Popula o select se ainda não foi populado ou está desatualizado
+  // Popula select apenas na primeira vez ou se mudou
   if (sel && sel.options.length !== diasSet.length) {
     sel.innerHTML = diasSet.map(d => {
       const [y,m,dia] = d.split('-');
-      const label = `${dia}/${m}/${y}`;
-      return `<option value="${d}" ${d === diaPadrao ? 'selected' : ''}>${label}</option>`;
+      return `<option value="${d}" ${d === diaPadrao ? 'selected' : ''}>${dia}/${m}/${y}</option>`;
     }).join('');
   }
 
   const diaSel = sel ? sel.value : diaPadrao;
-  const filtrados = clicks.filter(c => c.date === diaSel && c.hora >= 0 && c.hora <= 23);
 
-  // Totaliza por hora 00–23
+  // Cliques por hora do dia selecionado
+  const filtrados = clicks.filter(c => c.date === diaSel && c.hora >= 0 && c.hora <= 23);
   const porHora = Array(24).fill(0);
   filtrados.forEach(c => porHora[c.hora]++);
   const total = filtrados.length;
+
+  // Comissão por hora — pedidos Shopee do mesmo dia
+  const orders = (STATE.shopee?.orders || []).filter(o => o.date === diaSel);
+  const commPorHora = Array(24).fill(0);
+  orders.forEach(o => {
+    const h = typeof o.hora === 'number' ? o.hora : -1;
+    if (h >= 0 && h <= 23) commPorHora[h] += (o.commission || 0);
+  });
+  const temComm = commPorHora.some(v => v > 0);
 
   safeText('cliques-dia-total', `${total.toLocaleString('pt-BR')} cliques`);
 
@@ -12545,39 +12562,109 @@ function renderCliquesDia() {
     return;
   }
 
-  const maxN = Math.max(...porHora, 1);
-  const melhorH = porHora.indexOf(Math.max(...porHora));
+  // ── CHIPS DE VARIAÇÃO — últimos 4 dias ──
+  const idx = diasSet.indexOf(diaSel);
+  const ultimos4 = diasSet.slice(idx, idx + 4);
+  let chipsHTML = '';
+  if (ultimos4.length >= 2) {
+    chipsHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">';
+    for (let i = 0; i < ultimos4.length - 1; i++) {
+      const dA = ultimos4[i + 1]; // dia anterior
+      const dB = ultimos4[i];     // dia atual (mais recente)
+      const cA = clicks.filter(c => c.date === dA).length;
+      const cB = clicks.filter(c => c.date === dB).length;
+      if (!cA) continue;
+      const pct = ((cB - cA) / cA * 100);
+      const sinal = pct >= 0 ? '+' : '';
+      const cor = pct >= 5 ? 'var(--green)' : pct <= -5 ? 'var(--red)' : 'var(--accent)';
+      const bg  = pct >= 5 ? 'rgba(74,222,128,.1)' : pct <= -5 ? 'rgba(255,80,80,.1)' : 'rgba(232,184,75,.1)';
+      const [yA,mA,dAd] = dA.split('-'); const [yB,mB,dBd] = dB.split('-');
+      chipsHTML += `<div style="background:${bg};border:1px solid ${cor};border-radius:20px;padding:4px 10px;font-family:var(--mono);font-size:9px;color:${cor};white-space:nowrap">
+        ${dAd}/${mA} → ${dBd}/${mB}: <b>${sinal}${pct.toFixed(0)}%</b> (${cB.toLocaleString('pt-BR')} cliques)
+      </div>`;
+    }
+    chipsHTML += '</div>';
+  }
 
-  // Altura do gráfico
-  const H = 160; // px da área de barras
+  // ── GRÁFICO ──
+  const maxClk  = Math.max(...porHora, 1);
+  const maxComm = temComm ? Math.max(...commPorHora, 0.01) : 0;
+  const melhorH = porHora.indexOf(Math.max(...porHora));
+  const H = 160; // altura área barras em px
+
+  // Pontos da linha de comissão (SVG overlay)
+  const BAR_W = 100 / 24; // % por barra
+  const svgPoints = commPorHora.map((v, h) => {
+    const x = (h + 0.5) * BAR_W; // centro da barra em %
+    const y = maxComm > 0 ? (1 - v / maxComm) * H : H;
+    return `${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(' ');
 
   const barras = porHora.map((n, h) => {
-    const pct   = n / maxN;
-    const hPx   = Math.max(pct * H, n > 0 ? 4 : 0);
+    const pct    = n / maxClk;
+    const hPx    = Math.max(pct * H, n > 0 ? 3 : 0);
     const isMelhor = h === melhorH && n > 0;
-    const cor   = isMelhor ? 'var(--blue)' : pct >= 0.6 ? 'rgba(74,158,255,.7)' : pct >= 0.3 ? 'rgba(74,158,255,.45)' : 'rgba(74,158,255,.2)';
-    const label = String(h).padStart(2,'0');
+    const cor    = isMelhor ? 'var(--blue)' : pct >= 0.6 ? 'rgba(74,158,255,.75)' : pct >= 0.3 ? 'rgba(74,158,255,.45)' : 'rgba(74,158,255,.2)';
+    const label  = String(h).padStart(2,'0');
+    const comm   = commPorHora[h];
+    const commFmt = comm > 0 ? `R$${comm.toFixed(2).replace('.',',')}` : '—';
     return `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:0;gap:3px">
-        ${n > 0 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3);writing-mode:horizontal-tb">${n}</div>` : '<div style="height:13px"></div>'}
-        <div style="width:100%;max-width:28px;height:${hPx}px;background:${cor};border-radius:3px 3px 0 0;transition:height .3s;${isMelhor?'box-shadow:0 0 8px rgba(74,158,255,.5)':''}"></div>
+      <div class="clk-bar-col" data-h="${h}" data-n="${n}" data-comm="${comm.toFixed(2)}"
+        style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:0;gap:2px;cursor:pointer;position:relative">
+        <div class="clk-tip" style="display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);
+          background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;
+          font-family:var(--mono);font-size:10px;white-space:nowrap;z-index:10;pointer-events:none;min-width:120px">
+          <div style="color:var(--text2);font-weight:700">${label}h00 – ${label}h59</div>
+          <div style="color:var(--blue);margin-top:3px">🖱 ${n.toLocaleString('pt-BR')} cliques</div>
+          ${comm > 0 ? `<div style="color:var(--green);margin-top:2px">💰 ${commFmt} comissão</div>` : ''}
+        </div>
+        ${n > 0 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${n}</div>` : '<div style="height:13px"></div>'}
+        <div style="width:80%;max-width:24px;height:${hPx}px;background:${cor};border-radius:3px 3px 0 0;${isMelhor?'box-shadow:0 0 8px rgba(74,158,255,.5)':''}"></div>
         <div style="font-family:var(--mono);font-size:8px;color:${isMelhor?'var(--blue)':'var(--text3)'};font-weight:${isMelhor?'800':'400'}">${label}</div>
       </div>`;
   }).join('');
 
+  const linhaComm = temComm ? `
+    <svg style="position:absolute;top:0;left:0;width:100%;height:${H}px;pointer-events:none;overflow:visible">
+      <polyline points="${svgPoints}" fill="none" stroke="var(--green)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+      ${commPorHora.map((v,h) => v > 0 ? `<circle cx="${((h+0.5)*BAR_W).toFixed(2)}%" cy="${(maxComm>0?(1-v/maxComm)*H:H).toFixed(2)}" r="3" fill="var(--green)" opacity="0.9"/>` : '').join('')}
+    </svg>` : '';
+
   const [y,m,d] = diaSel.split('-');
   const dataFmt = `${d}/${m}/${y}`;
+  const totalComm = commPorHora.reduce((s,v)=>s+v,0);
 
   el.innerHTML = `
-    <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--text2)">
-      💡 <b style="color:var(--blue)">Pico às ${String(melhorH).padStart(2,'0')}h</b> — ${porHora[melhorH].toLocaleString('pt-BR')} cliques &nbsp;·&nbsp;
-      <b>${dataFmt}</b> &nbsp;·&nbsp; ${total.toLocaleString('pt-BR')} cliques no dia
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:var(--text2);display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+      <span>📅 <b>${dataFmt}</b></span>
+      <span>🖱 <b style="color:var(--blue)">${total.toLocaleString('pt-BR')}</b> cliques</span>
+      <span>🏆 Pico às <b style="color:var(--blue)">${String(melhorH).padStart(2,'0')}h</b> (${porHora[melhorH]} cliques)</span>
+      ${temComm ? `<span>💰 Comissão total: <b style="color:var(--green)">R$${totalComm.toFixed(2).replace('.',',')}</b></span>` : ''}
     </div>
-    <div style="background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px 12px 10px">
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;height:${H+30}px;gap:2px">
-        ${barras}
+    ${chipsHTML}
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:16px 8px 10px">
+      ${temComm ? `<div style="display:flex;justify-content:flex-end;gap:16px;margin-bottom:8px;font-family:var(--mono);font-size:9px">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:3px;background:rgba(74,158,255,.75);display:inline-block;border-radius:2px"></span>Cliques Shopee</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:var(--green);display:inline-block;border-radius:2px"></span>Comissão R$</span>
+      </div>` : ''}
+      <div style="position:relative">
+        <div id="clk-bars-row" style="display:flex;align-items:flex-end;justify-content:space-between;height:${H + 30}px;gap:1px">
+          ${barras}
+        </div>
+        ${linhaComm}
       </div>
     </div>`;
+
+  // Tooltip touch/hover
+  el.querySelectorAll('.clk-bar-col').forEach(col => {
+    const tip = col.querySelector('.clk-tip');
+    const show = () => { el.querySelectorAll('.clk-tip').forEach(t => t.style.display='none'); tip.style.display='block'; };
+    const hide = () => { tip.style.display = 'none'; };
+    col.addEventListener('mouseenter', show);
+    col.addEventListener('mouseleave', hide);
+    col.addEventListener('touchstart', e => { e.preventDefault(); show(); }, { passive: false });
+    col.addEventListener('touchend', () => setTimeout(hide, 1800));
+  });
 }
 
 let horaFiltro = 'todos';
