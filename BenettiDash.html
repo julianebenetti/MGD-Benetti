@@ -8895,7 +8895,7 @@ function parseShopeeJSON(json, days) {
       orderId:         o['ID do pedido']                        || '',
       status:          o['Status do Pedido']                    || '',
       date:            (o['Horario do pedido'] || o.data || '').substring(0, 10),
-      hora:            parseInt((o['Horario do pedido'] || o.data || '').substring(11, 13)) || -1,
+      hora:            (s => s.length >= 2 ? parseInt(s) : -1)((o['Horario do pedido'] || o.data || '').substring(11, 13)),
       subId:           subId,
       amount:          parseNum(o['Valor de Compra(R$)']),
       commission:      parseNum(o['Comissao liquida do afiliado(R$)'] || o['Comissão líquida do afiliado(R$)']),
@@ -12610,7 +12610,7 @@ function renderCliquesDia() {
     const commFmt = comm > 0 ? `R$${comm.toFixed(2).replace('.',',')}` : '—';
     return `
       <div class="clk-bar-col" data-h="${h}" data-n="${n}" data-comm="${comm.toFixed(2)}"
-        style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:0;gap:2px;cursor:pointer;position:relative">
+        style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;min-width:0;gap:2px;cursor:pointer;position:relative;height:100%">
         <div class="clk-tip" style="display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);
           background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;
           font-family:var(--mono);font-size:10px;white-space:nowrap;z-index:10;pointer-events:none;min-width:120px">
@@ -12620,14 +12620,20 @@ function renderCliquesDia() {
         </div>
         ${n > 0 ? `<div style="font-family:var(--mono);font-size:8px;color:var(--text3)">${n}</div>` : '<div style="height:13px"></div>'}
         <div style="width:80%;max-width:24px;height:${hPx}px;background:${cor};border-radius:3px 3px 0 0;${isMelhor?'box-shadow:0 0 8px rgba(74,158,255,.5)':''}"></div>
-        <div style="font-family:var(--mono);font-size:8px;color:${isMelhor?'var(--blue)':'var(--text3)'};font-weight:${isMelhor?'800':'400'}">${label}</div>
       </div>`;
   }).join('');
 
   const linhaComm = temComm ? `
-    <svg style="position:absolute;top:0;left:0;width:100%;height:${H}px;pointer-events:none;overflow:visible">
-      <polyline points="${svgPoints}" fill="none" stroke="var(--green)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
-      ${commPorHora.map((v,h) => v > 0 ? `<circle cx="${((h+0.5)*BAR_W).toFixed(2)}%" cy="${(maxComm>0?(1-v/maxComm)*H:H).toFixed(2)}" r="3" fill="var(--green)" opacity="0.9"/>` : '').join('')}
+    <svg viewBox="0 0 240 ${H}" preserveAspectRatio="none"
+      style="position:absolute;top:0;left:0;width:100%;height:${H}px;pointer-events:none;overflow:visible">
+      <polyline points="${commPorHora.map((v,h) => {
+        const x = (h + 0.5) / 24 * 240;
+        const y = maxComm > 0 ? (1 - v / maxComm) * H : H;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ')}"
+        fill="none" stroke="var(--green)" stroke-width="1.5"
+        stroke-linejoin="round" stroke-linecap="round" opacity="0.85"/>
+      ${commPorHora.map((v,h) => v > 0 ? `<circle cx="${((h+0.5)/24*240).toFixed(1)}" cy="${(maxComm>0?(1-v/maxComm)*H:H).toFixed(1)}" r="2.5" fill="var(--green)" opacity="0.9"/>` : '').join('')}
     </svg>` : '';
 
   const [y,m,d] = diaSel.split('-');
@@ -12647,11 +12653,14 @@ function renderCliquesDia() {
         <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:3px;background:rgba(74,158,255,.75);display:inline-block;border-radius:2px"></span>Cliques Shopee</span>
         <span style="display:flex;align-items:center;gap:4px"><span style="width:14px;height:2px;background:var(--green);display:inline-block;border-radius:2px"></span>Comissão R$</span>
       </div>` : ''}
-      <div style="position:relative">
-        <div id="clk-bars-row" style="display:flex;align-items:flex-end;justify-content:space-between;height:${H + 30}px;gap:1px">
+      <div style="position:relative;height:${H}px;margin-bottom:20px">
+        <div id="clk-bars-row" style="display:flex;align-items:flex-end;justify-content:space-between;height:${H}px;gap:1px;position:relative;z-index:1">
           ${barras}
         </div>
         ${linhaComm}
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0 4px">
+        ${Array(24).fill(0).map((_,h)=>`<div style="flex:1;text-align:center;font-family:var(--mono);font-size:8px;color:${h===melhorH?'var(--blue)':'var(--text3)'};font-weight:${h===melhorH?'800':'400'}">${String(h).padStart(2,'0')}</div>`).join('')}
       </div>
     </div>`;
 
