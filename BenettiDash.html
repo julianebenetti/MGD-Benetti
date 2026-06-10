@@ -735,7 +735,13 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       </div>
 
       <!-- DIAGNÓSTICO AUTOMÁTICO GERAL -->
-      <div id="geral-diagnostics" style="display:none;margin-bottom:20px"></div>
+      <div id="geral-diagnostics" style="display:none!important;margin-bottom:0"></div>
+
+      <!-- RANKING DE SUB_IDS -->
+      <div class="sec">🏆 Ranking de Sub_IDs (Canais)</div>
+      <div id="ranking-subids-wrap" style="margin-bottom:24px">
+        <div class="empty"><div class="empty-ico">📊</div><div class="empty-t">Sincronize para ver o ranking</div></div>
+      </div>
 
       <!-- CRIATIVOS EM DESTAQUE -->
       <div class="sec">Criativos em Destaque</div>
@@ -897,7 +903,74 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 
       <!-- Comparativo cliques (seção já existente) -->
       <div style="border-top:1px solid var(--border);padding-top:24px">
-        <div style="font-size:15px;font-weight:700;margin-bottom:16px">📊 Comparativo — Meta × Shopee</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div style="font-size:15px;font-weight:700">📊 Comparativo — Meta × Shopee</div>
+          <button class="btn btn-ghost" style="font-size:10px;padding:6px 12px" onclick="renderClicksCompare()">🔄 Atualizar</button>
+        </div>
+
+        <!-- Filtros -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px">
+
+          <!-- Período -->
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.05em">PERÍODO</span>
+            <div class="filter-row" id="cmp-period-row">
+              <button class="filter-chip active" onclick="setCmpFilter(this,'period','todos')">Todos</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'period','hoje')">Hoje</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'period','ontem')">Ontem</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'period','7d')">7 dias</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'period','30d')">30 dias</button>
+            </div>
+          </div>
+
+          <!-- Mês -->
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.05em">MÊS</span>
+            <select id="cmp-month-sel" onchange="cmpFilters.month=this.value;applyClicksFilters()"
+              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:5px;outline:none">
+              <option value="">Todos os meses</option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.05em">STATUS</span>
+            <div class="filter-row" id="cmp-status-row">
+              <button class="filter-chip active" onclick="setCmpFilter(this,'status','all')">Todos</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'status','ativo')">● Ativos</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'status','pausado')">■ Pausados</button>
+            </div>
+          </div>
+
+          <!-- Diagnóstico -->
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.05em">DIAGNÓSTICO</span>
+            <div class="filter-row" id="cmp-diag-row">
+              <button class="filter-chip active" onclick="setCmpFilter(this,'diag','all')">Todos</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'diag','critico')">🔴 Crítico</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'diag','atencao')">🟡 Atenção</button>
+              <button class="filter-chip" onclick="setCmpFilter(this,'diag','ok')">🟢 Ok+</button>
+            </div>
+          </div>
+
+          <!-- Ordenação -->
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.05em">ORDENAR</span>
+            <select id="cmpSortSel" onchange="applyClicksFilters()"
+              style="background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:5px;outline:none">
+              <option value="pct_asc">% Shopee/Meta (pior primeiro)</option>
+              <option value="pct_desc">% Shopee/Meta (melhor primeiro)</option>
+              <option value="date_desc">Data (mais recente)</option>
+              <option value="date_asc">Data (mais antigo)</option>
+              <option value="meta_desc">Cliques Meta (maior)</option>
+              <option value="shopee_desc">Cliques Shopee (maior)</option>
+            </select>
+          </div>
+
+          <!-- Contador -->
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding-bottom:6px;margin-left:auto" id="cmp-count"></div>
+        </div>
+
         <div id="cliques-section-standalone"></div>
       </div>
     </div>
@@ -1225,7 +1298,10 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:16px">Todos os pedidos do CSV importado</div>
 
       <!-- KPIs de status -->
-      <div id="pedidosKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:20px"></div>
+      <div id="pedidosKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:12px"></div>
+
+      <!-- KPIs extras: Tempo Médio + Taxa Cancelamento + Ticket -->
+      <div id="pedidosKpisExtra" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:20px"></div>
 
       <!-- Filtros -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
@@ -1818,6 +1894,31 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
       <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Compare dois criativos lado a lado — metodologia MGD e Stella</div>
     </div>
     <button class="btn btn-primary" onclick="renderABComparativo()" style="gap:6px">🔄 Comparar</button>
+  </div>
+
+  <!-- Filtros globais -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+    <!-- Filtro Mês -->
+    <div style="flex:1;min-width:140px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:5px;letter-spacing:.05em">📅 MÊS</div>
+      <select id="ab-filter-month" onchange="abApplyFilters()"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:7px;outline:none">
+        <option value="">Todos os meses</option>
+      </select>
+    </div>
+    <!-- Busca por palavra-chave -->
+    <div style="flex:2;min-width:200px">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:5px;letter-spacing:.05em">🔍 BUSCAR ANÚNCIO</div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px">
+        <span style="color:var(--text3);font-size:12px">🔍</span>
+        <input type="text" id="ab-filter-search" placeholder="ex: poltrona, cadeira, kit..." oninput="abApplyFilters()"
+          style="flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:11px;outline:none">
+        <button onclick="$('ab-filter-search').value='';abApplyFilters()"
+          style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;padding:0;line-height:1">✕</button>
+      </div>
+    </div>
+    <!-- Contador de resultados -->
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);padding-bottom:8px" id="ab-filter-count"></div>
   </div>
 
   <!-- Seleção dos criativos -->
@@ -2723,7 +2824,7 @@ function goTab(tab) {
   const mobileMap = { resumo:'resumo', visao:'cruzamento', radar:'cruzamento', cliques:'cruzamento', historico:'resumo', trajetoria:'resumo', organico:'cruzamento', calc:'calc', plan:'plan', alertas:'resumo', d0:'cruzamento', chat:'chat', glossario:'chat', c0:'contas', c1:'contas', c2:'contas', c3:'contas', financeiro:'alertas', produtos:'cruzamento', pedidos:'cruzamento', 'analise-lote':'cruzamento', banco:'banco', avaliador:'banco', gerador:'banco' };
   if (typeof setBN === 'function') setBN(mobileMap[tab] || '');
   if (tab === 'radar')      setTimeout(renderRadarCampanhas, 50);
-  if (tab === 'cliques')    { setTimeout(renderClicksHoraResumo, 50); setTimeout(renderCliquesDia, 60); }
+  if (tab === 'cliques')    { setTimeout(renderClicksHoraResumo, 50); setTimeout(renderCliquesDia, 60); setTimeout(renderCmpStandalone, 80); }
   if (tab === 'historico')  setTimeout(() => { loadAudit(); renderAuditoria(); }, 50);
   if (tab === 'trajetoria') setTimeout(() => { renderTrajetoria(); renderProdutoMae(); renderRankingHistorico(); const store=loadMonthlyStore(); renderMetaQ3(store, STATE.shopee?.orders||[], STATE.accounts||[]); }, 50);
   if (tab === 'visao')      setTimeout(() => {
@@ -3253,7 +3354,11 @@ const KPI_DEFS = [
   { id:'cpp',          label: tt('cpp','Custo por Pedido (CPP)'),      icon:'🛒', color:'#f97316', sub:'Investimento ÷ Nº Pedidos',      calc:(t,s)=>s.totalCPP },
   { id:'fpp',          label: tt('fpp','Faturamento por Pedido'),      icon:'📦', color:'#8b5cf6', sub:'Comissão ÷ Nº Pedidos',          calc:(t,s)=>s.totalFPP },
   { id:'commMedia',    label:'Comissão Média/Pedido',     icon:'📊', color:'#06b6d4', sub:'Comissão média por pedido',      calc:(t,s)=>s.totalPedidos>0?s.totalComm/s.totalPedidos:0 },
-  { id:'metaMensal',   label:'Meta Mensal',               icon:'🏆', color:'#f59e0b', sub:'Configure sua meta de comissão', isMeta:true, calc:(t,s)=>0 },
+  { id:'metaMensal',      label:'Meta Mensal',               icon:'🏆', color:'#f59e0b', sub:'Configure sua meta de comissão', isMeta:true, calc:(t,s)=>0 },
+  { id:'taxaCancelamento',label:'Taxa de Cancelamento',      icon:'❌', color:'#ef4444', sub:'Cancelados ÷ Total de pedidos %', calc:(t,s)=>s.taxaCancelamento, isPct:true },
+  { id:'valorPorClique',  label:'Valor por Clique',          icon:'🖱️', color:'#10b981', sub:'Comissão ÷ Cliques Shopee',      calc:(t,s)=>s.valorPorClique },
+  { id:'taxaConversao',   label:'Taxa de Conversão',         icon:'🔄', color:'#8b5cf6', sub:'Pedidos ÷ Cliques Meta %',       calc:(t,s)=>s.taxaConversao, isPct:true },
+  { id:'ontemComm',       label:'Comissão de Ontem',         icon:'📅', color:'#06b6d4', sub:'Comissão do dia anterior',       calc:(t,s)=>s.ontemComm },
 ];
 
 let selectedKpis = ['totalVendas','gastoMeta','comissaoTotal','lucroLiq','roas','roi','pedidos','cpp'];
@@ -3329,7 +3434,7 @@ function saveKpis() {
   if (STATE.loaded) renderGeralPanel();
 }
 
-function renderCustomKpis(totals, shopeeStats) {
+function renderCustomKpis(totals, shopeeStats, ontemStats) {
   const el = $('kpis-geral-custom');
   if (!el) return;
   const cols = Math.min(Math.max(selectedKpis.length, 1), 4);
@@ -3362,7 +3467,33 @@ function renderCustomKpis(totals, shopeeStats) {
     else if (def.isInt)     { display = Math.round(raw).toLocaleString('pt-BR'); }
     else                    { display = (def.signed&&raw>=0?'+':'')+'R$ '+fmt(raw); }
 
-    const valColor = def.signed ? (raw>=0?'var(--green)':'var(--red)') : 'var(--text)';
+    const valColor = def.signed ? (raw>=0?'var(--green)':'var(--red)') :
+                     id==='taxaCancelamento' ? (raw>10?'var(--red)':raw>5?'var(--yellow)':'var(--green)') :
+                     'var(--text)';
+
+    // Comparativo com ontem
+    let ontemHtml = '';
+    if (ontemStats && !def.isMeta) {
+      const ontemRaw = def.calc(totals, ontemStats) || 0;
+      if (ontemRaw > 0 || raw > 0) {
+        const diff = raw - ontemRaw;
+        const pctDiff = ontemRaw > 0 ? (diff/ontemRaw)*100 : 0;
+        const isGood = def.signed ? diff >= 0 :
+                       id==='taxaCancelamento' ? diff <= 0 :
+                       id==='cpp' ? diff <= 0 : diff >= 0;
+        const diffColor = isGood ? 'var(--green)' : 'var(--red)';
+        const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '→';
+        let ontemDisplay = '';
+        if (def.isRoas)      ontemDisplay = fmt(ontemRaw)+'x';
+        else if (def.isPct)  ontemDisplay = fmt(ontemRaw,1)+'%';
+        else if (def.isInt)  ontemDisplay = Math.round(ontemRaw).toLocaleString('pt-BR');
+        else                 ontemDisplay = 'R$ '+fmt(ontemRaw);
+        ontemHtml = `<div style="font-family:var(--mono);font-size:9px;margin-top:6px;display:flex;align-items:center;gap:4px">
+          <span style="color:${diffColor};font-weight:700">${arrow} ${pctDiff!==0?fmt(Math.abs(pctDiff),1)+'%':''}</span>
+          <span style="color:var(--text3)">vs ontem (${ontemDisplay})</span>
+        </div>`;
+      }
+    }
 
     return `
       <div class="kpi-custom" style="border-top-color:${color}">
@@ -3372,6 +3503,7 @@ function renderCustomKpis(totals, shopeeStats) {
         </div>
         <div style="font-size:24px;font-weight:800;line-height:1;color:${valColor}">${display}</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${def.sub}</div>
+        ${ontemHtml}
         ${sub2}
       </div>`;
   }).join('');
@@ -3541,6 +3673,247 @@ function renderCanais(shopeeOrders) {
   </div>`;
 }
 
+// Estado de ordenação da tabela de sub_ids
+let subIdSortCol = 'commLiq', subIdSortDir = 'desc';
+
+function sortSubIds(col) {
+  subIdSortDir = subIdSortCol === col ? (subIdSortDir === 'desc' ? 'asc' : 'desc') : 'desc';
+  subIdSortCol = col;
+  const accounts = STATE.accounts || [];
+  const orders   = geralFilteredDates
+    ? (STATE.shopee?.orders||[]).filter(o=>o.date>=geralFilteredDates.from&&o.date<=geralFilteredDates.to)
+    : (STATE.shopee?.orders||[]);
+  renderRankingSubIds(orders, accounts);
+}
+
+function parseDataShopee(str) {
+  // Suporta: "2025/04/01 14:30", "01/04/2025 14:30", "2025-04-01 14:30", "2025-04-01T14:30"
+  if (!str) return null;
+  const s = str.trim().replace('T',' ');
+  // yyyy/mm/dd hh:mm ou yyyy-mm-dd hh:mm
+  let m = s.match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})[\s](\d{2}):(\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5]);
+  // dd/mm/yyyy hh:mm
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})[\s](\d{2}):(\d{2})/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5]);
+  // yyyy/mm/dd ou yyyy-mm-dd
+  m = s.match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+  // dd/mm/yyyy
+  m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+  return null;
+}
+
+function renderRankingSubIds(shopeeOrders, accounts) {
+  const el = $('ranking-subids-wrap'); if (!el) return;
+  if (!shopeeOrders.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">📊</div><div class="empty-t">Importe o CSV da Shopee</div></div>';
+    return;
+  }
+
+  const TAX_S = getTaxComm();
+
+  // Agrupa pedidos por sub_id
+  const subMap = {};
+  for (const o of shopeeOrders) {
+    const sid = (o.subId || '').trim();
+    if (!sid) continue;
+    if (!subMap[sid]) subMap[sid] = { subId: sid, pedidos: 0, comm: 0, valor: 0, cancelados: 0, totalStatus: 0, tempos: [] };
+    subMap[sid].pedidos++;
+    subMap[sid].comm  += o.commission || 0;
+    subMap[sid].valor += o.amount     || 0;
+    subMap[sid].totalStatus++;
+    if ((o.status||'').toLowerCase().includes('cancel')) subMap[sid].cancelados++;
+
+    // Tempo médio de compra
+    const dc = parseDataShopee(o.dataClique);
+    const dp = parseDataShopee(o.dataCompra);
+    if (dc && dp && dp > dc) {
+      const h = (dp - dc) / 3600000;
+      if (h > 0 && h < 720) subMap[sid].tempos.push(h);
+    }
+  }
+
+  // Cliques Meta por sub_id
+  const clicksMap = {};
+  for (const acc of (accounts || [])) {
+    for (const camp of (acc.campaigns || [])) {
+      const sid = (camp.name || '').trim().toLowerCase();
+      const cliques = (camp.dailyData || []).reduce((s, d) => s + (d.clicks || 0), 0);
+      if (cliques > 0) clicksMap[sid] = (clicksMap[sid] || 0) + cliques;
+    }
+  }
+
+  const subs = Object.values(subMap).map(s => {
+    const commLiq    = s.comm * (1 - TAX_S);
+    const cliques    = clicksMap[s.subId.toLowerCase()] || 0;
+    const conversao  = cliques > 0 ? (s.pedidos / cliques) * 100 : 0;
+    const rPorClique = cliques > 0 ? commLiq / cliques : 0;
+    const taxaCanc   = s.totalStatus > 0 ? (s.cancelados / s.totalStatus) * 100 : 0;
+    const tempoMedio = s.tempos.length > 0 ? s.tempos.reduce((a,b)=>a+b,0)/s.tempos.length : 0;
+    return { ...s, commLiq, cliques, conversao, rPorClique, taxaCanc, tempoMedio };
+  });
+
+  // Top destaques
+  const topComm      = [...subs].sort((a,b) => b.commLiq  - a.commLiq)[0];
+  const topConversao = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.conversao - a.conversao)[0];
+  const topRPC       = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.rPorClique - a.rPorClique)[0];
+  const topPedidos   = [...subs].sort((a,b) => b.pedidos - a.pedidos)[0];
+  const topValor     = [...subs].sort((a,b) => b.valor - a.valor)[0];
+
+  const destCard = (icon, titulo, sub, valor, cor) => `
+    <div class="kpi-custom" style="border-top-color:${cor}">
+      <div style="font-size:16px;margin-bottom:4px">${icon}</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">${titulo}</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:800;color:${cor};line-height:1.3;word-break:break-all;margin-bottom:4px">${sub}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">${valor}</div>
+    </div>`;
+
+  const destaques = [
+    topComm      ? destCard('💰','Melhor Comissão',  topComm.subId,      'R$ '+fmt(topComm.commLiq),         'var(--green)')  : '',
+    topConversao ? destCard('🔄','Melhor Conversão', topConversao.subId,  fmt(topConversao.conversao,1)+'%',  'var(--blue)')   : '',
+    topRPC       ? destCard('🖱️','Melhor R$/Clique', topRPC.subId,        'R$ '+fmt(topRPC.rPorClique),       'var(--purple)') : '',
+    topPedidos   ? destCard('✅','Mais Pedidos',      topPedidos.subId,    topPedidos.pedidos+' pedidos',      'var(--accent)') : '',
+    topValor     ? destCard('🛍️','Maior GMV',        topValor.subId,      'R$ '+fmt(topValor.valor),          'var(--yellow)') : '',
+  ].filter(Boolean).join('');
+
+  // Ordenação
+  const sortFns = {
+    commLiq:    (a,b) => a.commLiq    - b.commLiq,
+    pedidos:    (a,b) => a.pedidos    - b.pedidos,
+    cliques:    (a,b) => a.cliques    - b.cliques,
+    conversao:  (a,b) => a.conversao  - b.conversao,
+    rPorClique: (a,b) => a.rPorClique - b.rPorClique,
+    taxaCanc:   (a,b) => a.taxaCanc   - b.taxaCanc,
+    tempoMedio: (a,b) => a.tempoMedio - b.tempoMedio,
+    subId:      (a,b) => a.subId.localeCompare(b.subId),
+  };
+  const fn = sortFns[subIdSortCol] || sortFns.commLiq;
+  const sorted = [...subs].sort((a,b) => subIdSortDir === 'desc' ? fn(b,a) : fn(a,b));
+
+  // Th clicável
+  const thS = (label, col, cor='') => {
+    const ativo = subIdSortCol === col;
+    const seta  = ativo ? (subIdSortDir === 'desc' ? ' ▼' : ' ▲') : '';
+    const style = `cursor:pointer;user-select:none;white-space:nowrap;font-size:9px${cor?';color:'+cor:''}`;
+    return `<th onclick="sortSubIds('${col}')" style="${style}" title="Ordenar por ${label}">${label}${seta}</th>`;
+  };
+
+  const rows = sorted.map((s,i) => {
+    const rColor = s.rPorClique > 0.20 ? 'var(--green)' : s.rPorClique > 0.10 ? 'var(--yellow)' : 'var(--text3)';
+    const cColor = s.conversao  > 5    ? 'var(--green)' : s.conversao  > 2     ? 'var(--yellow)' : 'var(--text3)';
+    const tcColor= s.taxaCanc   > 10   ? 'var(--red)'   : s.taxaCanc   > 5     ? 'var(--yellow)' : s.cancelados > 0 ? 'var(--text3)' : 'var(--green)';
+    const tempoStr = s.tempoMedio > 0
+      ? (s.tempoMedio >= 24 ? fmt(s.tempoMedio/24,1)+'d' : fmt(s.tempoMedio,1)+'h')
+      : '—';
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text3)">${i+1}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.subId}">${s.subId}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green)">R$ ${fmt(s.commLiq)}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px">${s.pedidos}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text3)">${s.cliques > 0 ? s.cliques.toLocaleString('pt-BR') : '—'}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${cColor}">${s.cliques > 0 ? fmt(s.conversao,1)+'%' : '—'}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${rColor}">${s.cliques > 0 ? 'R$ '+fmt(s.rPorClique) : '—'}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${tcColor}">${fmt(s.taxaCanc,1)}% ${s.cancelados>0?'('+s.cancelados+')':''}</td>
+      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--blue)">${tempoStr}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px">
+      ${destaques}
+    </div>
+    <div class="table-wrap" style="margin-bottom:0">
+      <table>
+        <thead>
+          <tr>
+            ${thS('#','subId')}
+            ${thS('Sub_ID (Campanha)','subId')}
+            ${thS('Comissão Líq.','commLiq','var(--green)')}
+            ${thS('Pedidos','pedidos')}
+            ${thS('Cliques Meta','cliques')}
+            ${thS('Conversão','conversao')}
+            ${thS('R$/Clique','rPorClique')}
+            ${thS('% Canc.','taxaCanc','var(--red)')}
+            ${thS('Tempo Médio','tempoMedio','var(--blue)')}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+  // Agrupa pedidos por sub_id
+  const subMap = {};
+  for (const o of shopeeOrders) {
+    const sid = (o.subId || '').trim();
+    if (!sid) continue;
+    if (!subMap[sid]) subMap[sid] = { subId: sid, pedidos: 0, comm: 0, valor: 0, cancelados: 0 };
+    subMap[sid].pedidos++;
+    subMap[sid].comm  += o.commission || 0;
+    subMap[sid].valor += o.amount     || 0;
+    if (o.status && o.status.toLowerCase().includes('cancel')) subMap[sid].cancelados++;
+  }
+
+  // Cliques Meta por sub_id
+  const clicksMap = {};
+  for (const acc of (accounts || [])) {
+    for (const camp of (acc.campaigns || [])) {
+      const sid = (camp.name || '').trim().toLowerCase();
+      const cliques = (camp.dailyData || []).reduce((s, d) => s + (d.clicks || 0), 0);
+      if (cliques > 0) clicksMap[sid] = (clicksMap[sid] || 0) + cliques;
+    }
+  }
+
+  const subs = Object.values(subMap).map(s => {
+    const commLiq  = s.comm * (1 - TAX_S);
+    const cliques  = clicksMap[s.subId.toLowerCase()] || 0;
+    const conversao = cliques > 0 ? (s.pedidos / cliques) * 100 : 0;
+    const rPorClique = cliques > 0 ? commLiq / cliques : 0;
+    return { ...s, commLiq, cliques, conversao, rPorClique };
+  });
+
+  // Top destaques
+  const topComm      = [...subs].sort((a,b) => b.commLiq  - a.commLiq)[0];
+  const topConversao = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.conversao - a.conversao)[0];
+  const topRPC       = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.rPorClique - a.rPorClique)[0];
+  const topPedidos   = [...subs].sort((a,b) => b.pedidos - a.pedidos)[0];
+  const topValor     = [...subs].sort((a,b) => b.valor - a.valor)[0];
+
+  const destCard = (icon, titulo, sub, valor, cor) => `
+    <div class="kpi-custom" style="border-top-color:${cor}">
+      <div style="font-size:16px;margin-bottom:4px">${icon}</div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">${titulo}</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:800;color:${cor};line-height:1.3;word-break:break-all;margin-bottom:4px">${sub}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">${valor}</div>
+    </div>`;
+
+  const destaques = [
+    topComm     ? destCard('💰','Melhor Comissão',   topComm.subId,     'R$ '+fmt(topComm.commLiq),        'var(--green)')  : '',
+    topConversao? destCard('🔄','Melhor Conversão',  topConversao.subId, fmt(topConversao.conversao,1)+'%', 'var(--blue)')   : '',
+    topRPC      ? destCard('🖱️','Melhor R$/Clique',  topRPC.subId,       'R$ '+fmt(topRPC.rPorClique),      'var(--purple)') : '',
+    topPedidos  ? destCard('✅','Mais Pedidos',       topPedidos.subId,   topPedidos.pedidos+' pedidos',     'var(--accent)') : '',
+    topValor    ? destCard('🛍️','Maior GMV',         topValor.subId,     'R$ '+fmt(topValor.valor),         'var(--yellow)') : '',
+  ].filter(Boolean).join('');
+
+  // Tabela completa
+  const top20 = [...subs].sort((a,b) => b.commLiq - a.commLiq).slice(0,20);
+  const rows = top20.map((s,i) => {
+    const rColor = s.rPorClique > 0.20 ? 'var(--green)' : s.rPorClique > 0.10 ? 'var(--yellow)' : 'var(--text3)';
+    const cColor = s.conversao  > 5    ? 'var(--green)' : s.conversao > 2      ? 'var(--yellow)' : 'var(--text3)';
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text3)">${i+1}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.subId}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green)">R$ ${fmt(s.commLiq)}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px">${s.pedidos}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text3)">${s.cliques > 0 ? s.cliques.toLocaleString('pt-BR') : '—'}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:${cColor}">${s.cliques > 0 ? fmt(s.conversao,1)+'%' : '—'}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:${rColor}">${s.cliques > 0 ? 'R$ '+fmt(s.rPorClique) : '—'}</td>
+      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text3)">${s.cancelados > 0 ? '<span style="color:var(--red)">'+s.cancelados+'</span>' : '—'}</td>
+    </tr>`;
+  }).join('');
+
 function renderCriativosDestaque(campaigns) {
   const lucroPos = campaigns.filter(c=>(c.lucro||(c.revenue-c.spend))>0).sort((a,b)=>(b.lucro||0)-(a.lucro||0));
   const roasPos  = campaigns.filter(c=>c.roas>=1.0).sort((a,b)=>b.roas-a.roas);
@@ -3601,7 +3974,17 @@ function renderGeralPanel() {
   const totCPP     = totPedidos>0?totInvest/totPedidos:0;
   const totFPP     = totPedidos>0?totComm/totPedidos:0;
 
-  const shopeeStats = {totalValor:totValor,totalComm:totComm,totalLucro:totLucro,totalRoas:totRoas,totalRoi:totRoi,totalPedidos:totPedidos,totalDiretas:totDiretas,totalCPP:totCPP,totalFPP:totFPP};
+  // Novas métricas
+  const totCancelados     = filteredOrders.filter(o=>o.status&&o.status.toLowerCase().includes('cancel')).length;
+  const totTodosComCancel = filteredOrders.length;
+  const taxaCancelamento  = totTodosComCancel>0?(totCancelados/totTodosComCancel)*100:0;
+  const shopeeCliques     = (shopee?.clicks||[]).filter(c=>!geralFilteredDates||(c.date>=geralFilteredDates.from&&c.date<=geralFilteredDates.to)).length;
+  const valorPorClique    = shopeeCliques>0?totComm/shopeeCliques:0;
+  const taxaConversao     = totClicks>0?(totPedidos/totClicks)*100:0;
+  const ontem             = new Date(Date.now()-86400000).toISOString().split('T')[0];
+  const ontemComm         = (shopee?.orders||[]).filter(o=>o.date===ontem).reduce((s,o)=>s+o.commission,0);
+
+  const shopeeStats = {totalValor:totValor,totalComm:totComm,totalLucro:totLucro,totalRoas:totRoas,totalRoi:totRoi,totalPedidos:totPedidos,totalDiretas:totDiretas,totalCPP:totCPP,totalFPP:totFPP,taxaCancelamento,valorPorClique,taxaConversao,ontemComm};
   const totals = {spend:totFbSpend,revenue:totComm,orders:totPedidos,cpc:totCpc,roas:totRoas};
 
   const label = geralFilteredDates
@@ -3609,11 +3992,34 @@ function renderGeralPanel() {
     : 'Período completo';
   safeText('geral-period-label', label);
 
-  renderCustomKpis(totals, shopeeStats);
+  // Calcula stats de ontem para comparativo
+  const ontemDate  = new Date(Date.now()-86400000).toISOString().split('T')[0];
+  const ontemOrders= (shopee?.orders||[]).filter(o=>o.date===ontemDate);
+  const ontemComm2 = ontemOrders.reduce((s,o)=>s+o.commission,0);
+  const ontemPed   = ontemOrders.length;
+  const ontemCanc  = ontemOrders.filter(o=>o.status&&o.status.toLowerCase().includes('cancel')).length;
+  const ontemStats = {
+    totalComm:  ontemComm2,
+    totalPedidos: ontemPed,
+    totalDiretas: ontemOrders.filter(o=>o.direta).length,
+    totalValor:   ontemOrders.reduce((s,o)=>s+o.amount,0),
+    totalLucro:   ontemComm2*(1-getTaxComm()) - 0,
+    totalRoas:    0,
+    totalRoi:     0,
+    totalCPP:     ontemPed>0?totInvest/ontemPed:0,
+    totalFPP:     ontemPed>0?ontemComm2/ontemPed:0,
+    taxaCancelamento: ontemOrders.length>0?(ontemCanc/ontemOrders.length)*100:0,
+    valorPorClique:   0,
+    taxaConversao:    0,
+    ontemComm:    0,
+  };
+
+  renderCustomKpis(totals, shopeeStats, ontemStats);
   // Resumo compacto — reaproveitamos renderResumo
   renderCriativosDestaque(accounts.flatMap(a=>a.campaigns));
   renderTop10(filteredOrders);
   renderCanais(filteredOrders);
+  renderRankingSubIds(filteredOrders, accounts);
 }
 
 // Adiciona campo de canal no CSV parser
@@ -7657,13 +8063,13 @@ function importShopeeClicksCSV(input) {
 
 let clicksFilters = { status: 'all', diag: 'all' };
 let clicksAllRows = []; // guarda todos os rows para re-renderizar com filtros
+let cmpFilters = { period: 'todos', month: '', status: 'all', diag: 'all' };
 
 function toggleClicksDetail(id) {
   const el = $(id);
   if (!el) return;
   const open = el.style.display !== 'none';
   el.style.display = open ? 'none' : 'table-row';
-  // Atualiza o ▼ ▲ na linha pai
   const prev = el.previousElementSibling;
   if (prev) {
     const arrow = prev.querySelector('span[style*="color:var(--text3)"]');
@@ -7671,39 +8077,137 @@ function toggleClicksDetail(id) {
   }
 }
 
-function setClicksFilter(btn, type, val) {
-  clicksFilters[type] = val;
-  btn.closest('.filter-row').querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+function setCmpFilter(btn, type, val) {
+  cmpFilters[type] = val;
+  const row = btn.closest('.filter-row');
+  if (row) row.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   applyClicksFilters();
 }
 
+// Mantém compatibilidade com código antigo
+function setClicksFilter(btn, type, val) { setCmpFilter(btn, type, val); }
+
 function applyClicksFilters() {
   const tbody = $('tbl-clicks-compare')?.querySelector('tbody');
   if (!tbody) return;
-  const sort = $('clicksSortSel')?.value || 'pct_asc';
+
+  const sort    = $('cmpSortSel')?.value || $('clicksSortSel')?.value || 'pct_asc';
+  const today   = new Date().toISOString().split('T')[0];
+  const ontem   = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const d7      = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+  const d30     = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
 
   let rows = [...clicksAllRows];
 
-  // Aplica filtros
   rows = rows.filter(r => {
-    const statusOk = clicksFilters.status === 'all' || r.statusKey === clicksFilters.status;
-    const diagOk   = clicksFilters.diag   === 'all' || r.diagKey   === clicksFilters.diag;
-    return statusOk && diagOk;
+    // Período
+    if (cmpFilters.period === 'hoje') {
+      if ((r.startDate || '') !== today) return false;
+    } else if (cmpFilters.period === '7d') {
+      if ((r.startDate || '') < d7) return false;
+    } else if (cmpFilters.period === '30d') {
+      if ((r.startDate || '') < d30) return false;
+    }
+    // Mês
+    if (cmpFilters.month && !(r.startDate || '').startsWith(cmpFilters.month)) return false;
+    // Status
+    if (cmpFilters.status !== 'all' && r.statusKey !== cmpFilters.status) return false;
+    // Diagnóstico
+    if (cmpFilters.diag !== 'all' && r.diagKey !== cmpFilters.diag) return false;
+    return true;
   });
 
-  // Aplica ordenação
-  rows.sort((a,b) => {
+  rows.sort((a, b) => {
     switch(sort) {
-      case 'pct_asc':    return (a.pct||0) - (b.pct||0);
-      case 'pct_desc':   return (b.pct||0) - (a.pct||0);
-      case 'date_asc':   return (a.startDate||'').localeCompare(b.startDate||'');
-      case 'date_desc':  return (b.startDate||'').localeCompare(a.startDate||'');
-      case 'meta_desc':  return b.metaClicks - a.metaClicks;
-      case 'shopee_desc':return b.shopeeClk - a.shopeeClk;
+      case 'pct_asc':     return (a.pct||0) - (b.pct||0);
+      case 'pct_desc':    return (b.pct||0) - (a.pct||0);
+      case 'date_asc':    return (a.startDate||'').localeCompare(b.startDate||'');
+      case 'date_desc':   return (b.startDate||'').localeCompare(a.startDate||'');
+      case 'meta_desc':   return b.metaClicks - a.metaClicks;
+      case 'shopee_desc': return b.shopeeClk  - a.shopeeClk;
       default: return 0;
     }
   });
+
+  // Atualiza contador
+  const cnt = $('cmp-count');
+  if (cnt) cnt.textContent = `${rows.length} anúncio${rows.length !== 1 ? 's' : ''}`;
+
+  tbody.innerHTML = rows.map(r => r.html).join('');
+
+  // Atualiza também a tabela standalone na aba Cliques
+  const tbody2 = $('tbl-clicks-compare-body');
+  if (tbody2) tbody2.innerHTML = rows.map(r => r.html).join('');
+}
+
+function renderCmpStandalone() {
+  const wrap = $('cliques-section-standalone');
+  if (!wrap) return;
+
+  // Monta a tabela dentro da aba Cliques
+  wrap.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Campanha</th>
+          <th>Conta</th>
+          <th>Data / D</th>
+          <th>Status</th>
+          <th>Cliques Meta</th>
+          <th>Cliques Shopee</th>
+          <th style="color:var(--accent)">Discrepância</th>
+          <th>% Shop/Meta</th>
+          <th>Diagnóstico</th>
+        </tr></thead>
+        <tbody id="tbl-clicks-compare-body"></tbody>
+      </table>
+    </div>`;
+
+  // Usa os dados já calculados por renderClicksCompare, ou calcula agora
+  if (!clicksAllRows.length) {
+    renderClicksCompare();
+  } else {
+    renderCmpBody();
+  }
+}
+
+function renderCmpBody() {
+  const tbody = $('tbl-clicks-compare-body');
+  if (!tbody) return;
+
+  const sort  = $('cmpSortSel')?.value || 'pct_asc';
+  const today = new Date().toISOString().split('T')[0];
+  const d7    = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
+  const d30   = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
+
+  let rows = [...clicksAllRows];
+
+  rows = rows.filter(r => {
+    if (cmpFilters.period === 'hoje'  && (r.startDate||'') !== today) return false;
+    if (cmpFilters.period === 'ontem' && (r.startDate||'') !== ontem) return false;
+    if (cmpFilters.period === '7d'    && (r.startDate||'') < d7)      return false;
+    if (cmpFilters.period === '30d'   && (r.startDate||'') < d30)     return false;
+    if (cmpFilters.month  && !(r.startDate||'').startsWith(cmpFilters.month)) return false;
+    if (cmpFilters.status !== 'all' && r.statusKey !== cmpFilters.status) return false;
+    if (cmpFilters.diag   !== 'all' && r.diagKey   !== cmpFilters.diag)   return false;
+    return true;
+  });
+
+  rows.sort((a, b) => {
+    switch(sort) {
+      case 'pct_asc':     return (a.pct||0) - (b.pct||0);
+      case 'pct_desc':    return (b.pct||0) - (a.pct||0);
+      case 'date_asc':    return (a.startDate||'').localeCompare(b.startDate||'');
+      case 'date_desc':   return (b.startDate||'').localeCompare(a.startDate||'');
+      case 'meta_desc':   return b.metaClicks - a.metaClicks;
+      case 'shopee_desc': return b.shopeeClk  - a.shopeeClk;
+      default: return 0;
+    }
+  });
+
+  const cnt = $('cmp-count');
+  if (cnt) cnt.textContent = `${rows.length} anúncio${rows.length !== 1 ? 's' : ''}`;
 
   tbody.innerHTML = rows.map(r => r.html).join('');
 }
@@ -7884,6 +8388,22 @@ function renderClicksCompare() {
   </table>`;
 
   applyClicksFilters();
+
+  // Popula select de mês com os meses disponíveis nos dados
+  const monthSel = $('cmp-month-sel');
+  if (monthSel) {
+    const months = [...new Set(
+      clicksAllRows.map(r => (r.startDate||'').slice(0,7)).filter(Boolean)
+    )].sort().reverse();
+    const nomes = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const current = monthSel.value;
+    monthSel.innerHTML = '<option value="">Todos os meses</option>' +
+      months.map(m => {
+        const [y, mo] = m.split('-');
+        return `<option value="${m}">${nomes[parseInt(mo)]}/${y}</option>`;
+      }).join('');
+    if (current) monthSel.value = current;
+  }
 }
 
 function filterD0(btn, type, val) {
@@ -12409,7 +12929,7 @@ function renderPedidos() {
   const orders = STATE.shopee?.orders || [];
   if (!orders.length) {
     el.innerHTML = '<div class="empty"><div class="empty-ico">🛒</div><div class="empty-t">Nenhum pedido carregado</div><div class="empty-s">Importe o CSV da Shopee na aba ⚙️</div></div>';
-    safeSet('pedidosKpis',''); return;
+    safeSet('pedidosKpis',''); safeSet('pedidosKpisExtra',''); return;
   }
 
   const busca = ($('pedidosBusca')?.value || '').toLowerCase().trim();
@@ -12468,6 +12988,52 @@ function renderPedidos() {
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px">R$ ${fmt(g.comm)} comissão</div>
     </div>`;
   }).join(''));
+
+  // ── KPIs extras: Tempo Médio de Compra + Taxa Cancelamento + Ticket Médio ──
+  const ordensComTempo = listaPeriodo.filter(o => o.dataClique && o.dataCompra && o.dataClique !== o.dataCompra);
+  let tempoMedioH = 0;
+  if (ordensComTempo.length > 0) {
+    const tempos = ordensComTempo.map(o => {
+      const c = new Date(o.dataClique);
+      const p = new Date(o.dataCompra);
+      return (p - c) / 3600000; // horas
+    }).filter(h => h > 0 && h < 720); // ignora outliers >30 dias
+    tempoMedioH = tempos.length > 0 ? tempos.reduce((a,b)=>a+b,0)/tempos.length : 0;
+  }
+  const tempoStr = tempoMedioH > 0
+    ? (tempoMedioH >= 24 ? fmt(tempoMedioH/24,1)+' dias' : fmt(tempoMedioH,1)+' h')
+    : '—';
+  const tempoSub = ordensComTempo.length > 0
+    ? `base: ${ordensComTempo.length} pedidos com clique registrado`
+    : 'sem dados de data de clique';
+
+  const totPed     = listaPeriodo.length;
+  const totCanc    = grupos.cancelado.n;
+  const taxaCanc   = totPed > 0 ? (totCanc/totPed)*100 : 0;
+  const totValorKpi= listaPeriodo.reduce((s,o)=>s+(o.amount||0),0);
+  const ticketMedio= totPed > 0 ? totValorKpi/totPed : 0;
+  const commTotal  = listaPeriodo.reduce((s,o)=>s+(o.commission||0),0);
+  const commMedia  = totPed > 0 ? commTotal/totPed : 0;
+
+  const taxaCancColor = taxaCanc > 10 ? 'var(--red)' : taxaCanc > 5 ? 'var(--yellow)' : 'var(--green)';
+
+  safeSet('pedidosKpisExtra', [
+    `<div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:14px;border-top:3px solid var(--blue)">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">⏱️ TEMPO MÉDIO DE COMPRA</div>
+      <div style="font-size:22px;font-weight:800;color:var(--blue)">${tempoStr}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${tempoSub}</div>
+    </div>`,
+    `<div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:14px;border-top:3px solid ${taxaCancColor}">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">❌ TAXA DE CANCELAMENTO</div>
+      <div style="font-size:22px;font-weight:800;color:${taxaCancColor}">${fmt(taxaCanc,1)}%</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">${totCanc} cancelados de ${totPed} pedidos</div>
+    </div>`,
+    `<div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:14px;border-top:3px solid var(--accent)">
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;margin-bottom:6px">🛍️ TICKET MÉDIO</div>
+      <div style="font-size:22px;font-weight:800;color:var(--accent)">${ticketMedio > 0 ? 'R$ '+fmt(ticketMedio) : '—'}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:4px">Comissão média: R$ ${fmt(commMedia)}/pedido</div>
+    </div>`,
+  ].join(''));
 
   // Lista filtrada
   let lista = listaPeriodo.slice();
@@ -12618,11 +13184,16 @@ function renderCliquesDia() {
   const ontem = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const diaPadrao = diasSet.includes(ontem) ? ontem : diasSet[0];
 
-  // Popula select apenas na primeira vez ou se mudou
-  if (sel && sel.options.length !== diasSet.length) {
+  // Popula select sempre com mais recente primeiro
+  if (sel) {
+    const currentVal = sel.value;
     sel.innerHTML = diasSet.map(d => {
       const [y,m,dia] = d.split('-');
-      return `<option value="${d}" ${d === diaPadrao ? 'selected' : ''}>${dia}/${m}/${y}</option>`;
+      const nomes = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const isOntem = d === ontem;
+      const isHoje  = d === new Date().toISOString().split('T')[0];
+      const label   = isHoje ? `Hoje — ${dia}/${m}` : isOntem ? `Ontem — ${dia}/${m}` : `${dia}/${m}/${y}`;
+      return `<option value="${d}" ${d === (currentVal||diaPadrao) ? 'selected' : ''}>${label}</option>`;
     }).join('');
   }
 
@@ -14703,26 +15274,26 @@ function initABComparativo() {
   const accounts = STATE.accounts || [];
   const allCamps = accounts.flatMap(a => (a.campaigns || []).map(c => ({ ...c, accIdx: a.idx })));
 
-  const populate = (selId) => {
-    const sel = $(selId);
-    if (!sel) return;
-    const current = sel.value;
-    sel.innerHTML = '<option value="">— Selecione o criativo —</option>';
-    allCamps
-      .sort((a, b) => (a.startDate || '').localeCompare(b.startDate || '') * -1)
-      .forEach((c, i) => {
-        const opt = document.createElement('option');
-        opt.value = i;
-        const accName = ACCOUNTS_CONFIG[c.accIdx]?.name || '';
-        const date = c.startDate ? ` · ${c.startDate}` : '';
-        opt.textContent = `${c.name} [${accName}${date}]`;
-        sel.appendChild(opt);
-      });
-    if (current) sel.value = current;
-  };
+  // Popula filtro de mês
+  const months = [...new Set(
+    allCamps.map(c => {
+      const d = c.startDate || (c.dailyData||[]).filter(x=>x.spend>0).sort((a,b)=>a.date.localeCompare(b.date))[0]?.date || '';
+      return d.slice(0,7);
+    }).filter(Boolean)
+  )].sort().reverse();
 
-  populate('ab-sel-v1');
-  populate('ab-sel-v2');
+  const monthSel = $('ab-filter-month');
+  if (monthSel) {
+    const nomes = ['','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    monthSel.innerHTML = '<option value="">Todos os meses</option>' +
+      months.map(m => {
+        const [y, mo] = m.split('-');
+        return `<option value="${m}">${nomes[parseInt(mo)]}/${y}</option>`;
+      }).join('');
+  }
+
+  // Popula selects filtrados
+  abApplyFilters();
 
   // Pré-preenche budget da API se disponível
   ['v1','v2'].forEach(v => {
@@ -14741,6 +15312,48 @@ function initABComparativo() {
   $('ab-result').style.display = 'none';
 }
 
+function abApplyFilters() {
+  const accounts  = STATE.accounts || [];
+  const allCamps  = accounts.flatMap(a => (a.campaigns || []).map(c => ({ ...c, accIdx: a.idx })));
+  const month     = $('ab-filter-month')?.value || '';
+  const search    = ($('ab-filter-search')?.value || '').toLowerCase().trim();
+
+  const filtered = allCamps
+    .map((c, i) => {
+      const sd = c.startDate || (c.dailyData||[]).filter(x=>x.spend>0).sort((a,b)=>a.date.localeCompare(b.date))[0]?.date || '';
+      return { ...c, _origIdx: i, _startDate: sd };
+    })
+    .filter(c => {
+      if (month && !c._startDate.startsWith(month)) return false;
+      if (search && !(c.name || '').toLowerCase().includes(search)) return false;
+      return true;
+    })
+    .sort((a, b) => (b._startDate || '').localeCompare(a._startDate || ''));
+
+  const counter = $('ab-filter-count');
+  if (counter) counter.textContent = `${filtered.length} criativo${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}`;
+
+  const populate = (selId) => {
+    const sel = $(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Selecione o criativo —</option>';
+    filtered.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c._origIdx;
+      const accName = ACCOUNTS_CONFIG[c.accIdx]?.name || '';
+      const date = c._startDate ? ` · ${c._startDate}` : '';
+      opt.textContent = `${c.name} [${accName}${date}]`;
+      sel.appendChild(opt);
+    });
+    // Mantém seleção anterior se ainda válida
+    if (current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  };
+
+  populate('ab-sel-v1');
+  populate('ab-sel-v2');
+}
+
 function abDiaDaSemana(dateStr) {
   if (!dateStr) return { nome: '—', badge: '', color: 'var(--text3)' };
   const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
@@ -14757,7 +15370,25 @@ function abBuildCampData(campRaw, orders, budgetOverride) {
   const dailyFB = (campRaw.dailyData || []).filter(d => d.spend > 0)
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const startDate = campRaw.startDate || (dailyFB[0]?.date) || null;
+  const isActive  = (campRaw.campStatus || '').toUpperCase() === 'ACTIVE';
+  const hoje      = new Date().toISOString().split('T')[0];
+
+  // Campanhas pausadas: janela = últimos 7 dias em que rodou
+  // Campanhas ativas: janela = D0 até hoje
+  let startDate;
+  if (isActive) {
+    startDate = campRaw.startDate || (dailyFB[0]?.date) || null;
+  } else {
+    // Pega o último dia com gasto e conta 7 dias para trás
+    const lastDay = dailyFB.slice(-1)[0]?.date || null;
+    if (lastDay) {
+      const [y, m, d] = lastDay.split('-').map(Number);
+      const dt = new Date(y, m - 1, d - 6); // 7 dias atrás do último dia
+      startDate = dt.toISOString().split('T')[0];
+    } else {
+      startDate = campRaw.startDate || null;
+    }
+  }
 
   // Reúne dados dia a dia D0→D7
   const days = [];
@@ -14775,7 +15406,7 @@ function abBuildCampData(campRaw, orders, budgetOverride) {
 
     const dayOrders = (orders || []).filter(o => {
       const oDate = (o.date || o.orderDate || '').slice(0, 10);
-      return oDate === dateStr && (o.subId1 || o.sub_id_1 || o.sub1 || '').toLowerCase() === subId.toLowerCase();
+      return oDate === dateStr && (o.subId || '').toLowerCase().trim() === subId.toLowerCase().trim();
     });
 
     const commBruta = dayOrders.reduce((s, o) => s + (parseFloat(o.commission || o.comissao || 0)), 0);
@@ -14910,90 +15541,332 @@ function abCardHTML(data, label, accentColor) {
 }
 
 function abTimelineHTML(data, label, accentColor) {
-  const rows = data.days.map(d => {
-    const cpcColor = d.cpc <= 0 ? 'var(--text3)' : d.cpc < 0.15 ? 'var(--green)' : d.cpc <= 0.20 ? 'var(--yellow)' : 'var(--red)';
+  const dias = data.days;
+  const hoje = new Date().toISOString().split('T')[0];
+
+  const rows = dias.map((d, i) => {
+    const prev = i > 0 ? dias[i-1] : null;
+    const cpcColor   = d.cpc <= 0 ? 'var(--text3)' : d.cpc < 0.15 ? 'var(--green)' : d.cpc <= 0.20 ? 'var(--yellow)' : 'var(--red)';
     const lucroColor = d.lucro >= 0 ? 'var(--green)' : 'var(--red)';
-    return `
-      <tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:${accentColor}">D${d.di}</td>
-        <td style="padding:8px 4px;font-family:var(--mono);font-size:9px;color:var(--text3)">${d.date}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:${cpcColor}">${d.cpc > 0 ? 'R$ '+fmt(d.cpc) : '—'}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px">${d.clicks > 0 ? d.clicks.toLocaleString('pt-BR') : '—'}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text3)">${d.spend > 0 ? 'R$ '+fmt(d.spend) : '—'}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--green)">${d.orders > 0 ? d.orders+' ped' : '—'}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--green)">${d.commLiq > 0 ? 'R$ '+fmt(d.commLiq) : '—'}</td>
-        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:${lucroColor}">${d.spend > 0 || d.commLiq > 0 ? (d.lucro>=0?'+':'')+'R$ '+fmt(d.lucro) : '—'}</td>
-      </tr>`;
+    const isHoje     = d.date === hoje;
+
+    let seta = '\u2014', setaCor = 'var(--text3)', setaTip = '';
+    if (prev && d.date < hoje) {
+      const boas = [
+        (d.orders  >= prev.orders  && d.orders  > 0),
+        (d.clicks  >= prev.clicks  * 0.85),
+        (d.cpc     > 0 && d.cpc   <= (prev.cpc || 99)),
+        (d.commLiq >= prev.commLiq),
+      ].filter(Boolean).length;
+      const ruins = 4 - boas;
+      if (boas > ruins)        { seta = '\u2191'; setaCor = 'var(--green)';  setaTip = boas + ' boas \u00d7 ' + ruins + ' ruins'; }
+      else if (boas === ruins)  { seta = '\u2192'; setaCor = 'var(--yellow)'; setaTip = 'Empate ' + boas + '\u00d7' + ruins; }
+      else                      { seta = '\u2193'; setaCor = 'var(--red)';    setaTip = ruins + ' ruins \u00d7 ' + boas + ' boas'; }
+    } else if (d.di === 0) {
+      seta = '\u2014'; setaCor = 'var(--text3)'; setaTip = 'D0 \u2014 sem comparativo';
+    } else if (isHoje) {
+      seta = '\u23f3'; setaCor = 'var(--text3)'; setaTip = 'Dados de hoje incompletos';
+    }
+
+    return '<tr style="border-bottom:1px solid var(--border);' + (isHoje ? 'opacity:.45' : '') + '">'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:' + accentColor + '">D' + d.di + '</td>'
+      + '<td style="padding:8px 4px;font-family:var(--mono);font-size:9px;color:var(--text3)">' + d.date + (isHoje ? ' <span style="font-size:8px">(hoje)</span>' : '') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:' + cpcColor + '">' + (d.cpc > 0 ? 'R$ ' + fmt(d.cpc) : '\u2014') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px">' + (d.clicks > 0 ? d.clicks.toLocaleString('pt-BR') : '\u2014') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text3)">' + (d.spend > 0 ? 'R$ ' + fmt(d.spend) : '\u2014') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--green)">' + (d.orders > 0 ? d.orders + ' ped' : '\u2014') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--green)">' + (d.commLiq > 0 ? 'R$ ' + fmt(d.commLiq) : '\u2014') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:' + lucroColor + '">' + (d.spend > 0 || d.commLiq > 0 ? (d.lucro >= 0 ? '+' : '') + 'R$ ' + fmt(d.lucro) : '\u2014') + '</td>'
+      + '<td style="padding:8px 10px;font-family:var(--mono);font-size:16px;font-weight:800;color:' + setaCor + ';text-align:center" title="' + setaTip + '">' + seta + '</td>'
+      + '</tr>';
   }).join('');
 
-  return `
-    <div style="background:var(--s2);border:1px solid ${accentColor}44;border-radius:10px;overflow:hidden">
-      <div style="background:${accentColor}18;padding:10px 14px;font-family:var(--mono);font-size:9px;color:${accentColor};font-weight:700;letter-spacing:.06em">${label}</div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr style="border-bottom:1px solid var(--border2)">
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Dia</th>
-              <th style="padding:8px 4px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Data</th>
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">CPC</th>
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Cliques</th>
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Gasto</th>
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Pedidos</th>
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Comissão</th>
-              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Lucro</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
-    </div>`;
+  return '<div style="background:var(--s2);border:1px solid ' + accentColor + '44;border-radius:10px;overflow:hidden">'
+    + '<div style="background:' + accentColor + '18;padding:10px 14px;font-family:var(--mono);font-size:9px;color:' + accentColor + ';font-weight:700;letter-spacing:.06em">' + label + '</div>'
+    + '<div style="overflow-x:auto">'
+    + '<table style="width:100%;border-collapse:collapse">'
+    + '<thead><tr style="border-bottom:1px solid var(--border2)">'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Dia</th>'
+    + '<th style="padding:8px 4px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Data</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">CPC</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Cliques</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Gasto</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Pedidos</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Comiss\u00e3o</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Lucro</th>'
+    + '<th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:center">Tend.</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div></div>';
 }
+
 
 function abVeredictoMGD(v1, v2) {
   const analise = (d, label) => {
     const dias = d.days;
-    const cpcD0Ok   = d.cpcD0 > 0 && d.cpcD0 < 0.20;
-    const cpcD0Otimo = d.cpcD0 > 0 && d.cpcD0 < 0.15;
-    const roasD4    = (() => {
-      const ate4 = dias.filter(x => x.di <= 4);
-      const s = ate4.reduce((a, b) => a + b.spendCom, 0);
-      const c = ate4.reduce((a, b) => a + b.commLiq, 0);
+
+    // ── Dia atual para análise = ontem (Shopee tem delay de 1 dia) ──
+    const hoje      = new Date().toISOString().split('T')[0];
+    const ontem     = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    // Exclui hoje dos dados analisáveis — vendas de hoje só saem amanhã
+    const diasAnalise = dias.filter(x => x.date < hoje && (x.spend > 0 || x.orders > 0));
+    const ultimoDia = diasAnalise.slice(-1)[0];
+    const dAtual    = ultimoDia ? ultimoDia.di : 0;
+
+    // ── Métricas acumuladas ──
+    const cpcD0     = dias[0]?.cpc || 0;
+    const cpcD0Ok   = cpcD0 > 0 && cpcD0 <= 0.20;
+    const cpcD0Otimo= cpcD0 > 0 && cpcD0 <= 0.15;
+
+    // ROAS acumulado até D4
+    const ate4      = dias.filter(x => x.di <= 4);
+    const spendD4   = ate4.reduce((a, b) => a + b.spendCom, 0);
+    const commD4    = ate4.reduce((a, b) => a + b.commLiq, 0);
+    const roasD4    = spendD4 > 0 ? commD4 / spendD4 : 0;
+    const empatouD4 = roasD4 >= 1.0;
+
+    // ROAS dos últimos 2 dias (D5-D6 estabilidade)
+    const ultimos2  = dias.filter(x => x.di >= 5 && x.di <= 6);
+    const roasUlt2  = (() => {
+      const s = ultimos2.reduce((a,b) => a + b.spendCom, 0);
+      const c = ultimos2.reduce((a,b) => a + b.commLiq, 0);
       return s > 0 ? c / s : 0;
     })();
-    const tresRuins = (() => {
-      let seq = 0, max = 0;
-      for (const d of dias) {
-        if (d.lucro < 0 || (d.spend === 0 && d.commLiq === 0)) { seq++; max = Math.max(max, seq); } else seq = 0;
+
+    // Clicks D1 vs D0 (referência)
+    const clicksD0  = dias[0]?.clicks || 0;
+    const clicksD1  = dias[1]?.clicks || 0;
+    const clicksOk  = clicksD1 >= clicksD0 * 0.7;
+
+    // Pedidos por dia
+    const pedD1 = dias[1]?.orders || 0;
+    const pedD2 = dias[2]?.orders || 0;
+    const pedD3 = dias[3]?.orders || 0;
+
+    // ── Fases por dia ──
+    const fases = ['Subida','Teste','Teste','Teste','DECISÃO','Pré-Escala','Pré-Escala','Pré-Escala'];
+    const focos = [
+      'CPC apenas',
+      'CPC + Clicks + Pedidos',
+      'ROI + Pedidos + Clicks + CPC',
+      'ROI + Pedidos + Clicks + CPC',
+      'ROI TEM QUE EMPATAR',
+      'Estabilização do ROAS',
+      'Confirmação de estabilidade',
+      'Decisão: entrar na ESCALA'
+    ];
+    const podeEscalar = ['NÃO','NÃO','NÃO','NÃO','NÃO','AVALIAR','AVALIAR','SIM (se validado)'];
+    const escalarCor  = ['var(--red)','var(--red)','var(--red)','var(--red)','var(--red)','var(--yellow)','var(--yellow)','var(--green)'];
+
+    // ── Ação recomendada por dia ──
+    let acao = '', acaoCor = 'var(--text3)', acaoDetalhe = '';
+
+    if (dAtual === 0) {
+      if (cpcD0 <= 0) {
+        acao = '⏳ AGUARDANDO DADOS'; acaoCor = 'var(--text3)';
+        acaoDetalhe = 'Sem dados de CPC ainda. Aguarde até às 15h.';
+      } else if (cpcD0 < 0.15) {
+        acao = '✅ MANTER'; acaoCor = 'var(--green)';
+        acaoDetalhe = `CPC R$${fmt(cpcD0)} — ideal. Não escale. Apenas observe.`;
+      } else if (cpcD0 <= 0.20) {
+        acao = '⚠️ MANTER COM ATENÇÃO'; acaoCor = 'var(--yellow)';
+        acaoDetalhe = `CPC R$${fmt(cpcD0)} — aceitável mas alto. Monitorar D1.`;
+      } else if (cpcD0 <= 0.30) {
+        acao = '🔴 AGUARDAR / DESATIVAR'; acaoCor = 'var(--red)';
+        acaoDetalhe = `CPC R$${fmt(cpcD0)} — caro. Pode baixar no D1, mas arriscado.`;
+      } else {
+        acao = '🛑 DESATIVAR IMEDIATAMENTE'; acaoCor = 'var(--red)';
+        acaoDetalhe = `CPC R$${fmt(cpcD0)} — muito caro. Não vale o risco.`;
       }
-      return max >= 3;
-    })();
-    const roasColor = d.roas >= 1.5 ? 'var(--green)' : d.roas >= 1.0 ? 'var(--yellow)' : 'var(--red)';
-    const d4Color   = roasD4 >= 1.3 ? 'var(--green)' : roasD4 >= 1.0 ? 'var(--yellow)' : 'var(--red)';
+    } else if (dAtual === 1) {
+      // D1: compara vs D0 — tendência
+      const d0 = dias[0]; const d1 = dias[1];
+      const t = [
+        { nome: 'Pedidos',  boa: (d1?.orders||0) > 0,                           icone: (d1?.orders||0)>0?'↑':'✗',  txt: `Pedidos D1: ${d1?.orders||0} (D0: ${d0?.orders||0})` },
+        { nome: 'Cliques',  boa: (d1?.clicks||0) >= (d0?.clicks||0) * 0.7,      icone: (d1?.clicks||0)>=(d0?.clicks||0)*0.7?'→':'↓', txt: `Cliques D1: ${d1?.clicks||0} vs D0: ${d0?.clicks||0}` },
+        { nome: 'CPC',      boa: d1?.cpc > 0 && d1.cpc <= (d0?.cpc||99),        icone: d1?.cpc>0&&d1.cpc<=(d0?.cpc||99)?'↓':'↑', txt: `CPC D1: R$${fmt(d1?.cpc||0)} vs D0: R$${fmt(d0?.cpc||0)}` },
+        { nome: 'ROI',      boa: d.roas >= 1.0,                                  icone: d.roas>=1.0?'✓':'✗',        txt: `ROAS acum: ${d.roas>0?fmt(d.roas)+'x':'sem dado'}` },
+      ];
+      const boas = t.filter(x=>x.boa).length;
+      const ruins = t.filter(x=>!x.boa).length;
+      const placarHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:4px">${t.map(x=>`<span style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:${x.boa?'rgba(62,207,142,.15)':'rgba(224,85,85,.15)'};color:${x.boa?'var(--green)':'var(--red)'}">${x.icone} ${x.nome}</span>`).join('')}</div><div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px">${t.map(x=>`${x.txt}`).join(' · ')}</div>`;
+      if (d.roas >= 1.0) {
+        acao = '✅ PERMANECE — ROI POSITIVO'; acaoCor = 'var(--green)';
+        acaoDetalhe = `${placarHtml}ROI positivo no D1! Excelente sinal. Seguir para D2.`;
+      } else if (boas > ruins) {
+        acao = '✅ PERMANECE'; acaoCor = 'var(--green)';
+        acaoDetalhe = `${placarHtml}📊 Placar D1: ${boas} boas × ${ruins} ruins — mais boas que ruins, permanece.`;
+      } else if (boas === ruins) {
+        acao = '⚠️ MANTER COM ATENÇÃO'; acaoCor = 'var(--yellow)';
+        acaoDetalhe = `${placarHtml}📊 Placar D1: ${boas} boas × ${ruins} ruins — empate, aguardar D2 com cautela.`;
+      } else {
+        acao = '🛑 PAUSAR'; acaoCor = 'var(--red)';
+        acaoDetalhe = `${placarHtml}📊 Placar D1: ${ruins} ruins × ${boas} boas — mais ruins que boas = PAUSA.`;
+      }
+    } else if (dAtual === 2) {
+      const roasD2 = (() => {
+        const s = dias.filter(x=>x.di<=2).reduce((a,b)=>a+b.spendCom,0);
+        const c = dias.filter(x=>x.di<=2).reduce((a,b)=>a+b.commLiq,0);
+        return s>0?c/s:0;
+      })();
+      // Tendência D1→D2
+      const d1 = dias[1]; const d2 = dias[2];
+      const t = [
+        { nome: 'Pedidos',  boa: (d2?.orders||0) >= (d1?.orders||0) && (d2?.orders||0) > 0, icone: (d2?.orders||0)>(d1?.orders||0)?'↑':(d2?.orders||0)===(d1?.orders||0)&&(d2?.orders||0)>0?'→':'↓', txt: `Pedidos D2: ${d2?.orders||0} vs D1: ${d1?.orders||0}` },
+        { nome: 'Cliques',  boa: (d2?.clicks||0) >= (d1?.clicks||0) * 0.85,                  icone: (d2?.clicks||0)>=(d1?.clicks||0)?'↑':(d2?.clicks||0)>=(d1?.clicks||0)*0.85?'→':'↓', txt: `Cliques D2: ${d2?.clicks||0} vs D1: ${d1?.clicks||0}` },
+        { nome: 'CPC',      boa: d2?.cpc > 0 && d2.cpc <= (d1?.cpc||99),                     icone: d2?.cpc>0&&d2.cpc<(d1?.cpc||99)?'↓':d2?.cpc===(d1?.cpc||0)?'→':'↑',                  txt: `CPC D2: R$${fmt(d2?.cpc||0)} vs D1: R$${fmt(d1?.cpc||0)}` },
+        { nome: 'ROAS',     boa: roasD2 >= 1.0,                                               icone: roasD2>=1.0?'✓':'✗',                                                                  txt: `ROAS acum D2: ${roasD2>0?fmt(roasD2)+'x':'sem dado'}` },
+      ];
+      const boas = t.filter(x=>x.boa).length;
+      const ruins = t.filter(x=>!x.boa).length;
+      const placarHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:4px">${t.map(x=>`<span style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:${x.boa?'rgba(62,207,142,.15)':'rgba(224,85,85,.15)'};color:${x.boa?'var(--green)':'var(--red)'}">${x.icone} ${x.nome}</span>`).join('')}</div><div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px">${t.map(x=>x.txt).join(' · ')}</div>`;
+      if (roasD2 >= 1.0) {
+        acao = '✅ PERMANECE — ROI EMPATOU'; acaoCor = 'var(--green)';
+        acaoDetalhe = `${placarHtml}ROAS ${fmt(roasD2)}x — empatou no D2! Não precisa analisar mais. Seguir pro D3.`;
+      } else if (boas > ruins) {
+        acao = '✅ PERMANECE — TENDÊNCIA POSITIVA'; acaoCor = 'var(--green)';
+        acaoDetalhe = `${placarHtml}📊 Placar D1→D2: ${boas} boas × ${ruins} ruins — crescendo, permanece.`;
+      } else if (boas === ruins) {
+        acao = '⚠️ MANTER COM ATENÇÃO'; acaoCor = 'var(--yellow)';
+        acaoDetalhe = `${placarHtml}📊 Placar D1→D2: ${boas} boas × ${ruins} ruins — empate, aguardar D3.`;
+      } else {
+        acao = '🛑 PAUSAR'; acaoCor = 'var(--red)';
+        acaoDetalhe = `${placarHtml}📊 Placar D1→D2: ${ruins} ruins × ${boas} boas — tendência negativa = PAUSA.`;
+      }
+    } else if (dAtual === 3) {
+      const roasD3 = (() => {
+        const s = dias.filter(x=>x.di<=3).reduce((a,b)=>a+b.spendCom,0);
+        const c = dias.filter(x=>x.di<=3).reduce((a,b)=>a+b.commLiq,0);
+        return s>0?c/s:0;
+      })();
+      // Tendência D2→D3
+      const d2 = dias[2]; const d3 = dias[3];
+      const t = [
+        { nome: 'Pedidos',  boa: (d3?.orders||0) >= (d2?.orders||0) && (d3?.orders||0) > 0, icone: (d3?.orders||0)>(d2?.orders||0)?'↑':(d3?.orders||0)===(d2?.orders||0)&&(d3?.orders||0)>0?'→':'↓', txt: `Pedidos D3: ${d3?.orders||0} vs D2: ${d2?.orders||0}` },
+        { nome: 'Cliques',  boa: (d3?.clicks||0) >= (d2?.clicks||0) * 0.85,                  icone: (d3?.clicks||0)>=(d2?.clicks||0)?'↑':(d3?.clicks||0)>=(d2?.clicks||0)*0.85?'→':'↓',              txt: `Cliques D3: ${d3?.clicks||0} vs D2: ${d2?.clicks||0}` },
+        { nome: 'CPC',      boa: d3?.cpc > 0 && d3.cpc <= (d2?.cpc||99),                     icone: d3?.cpc>0&&d3.cpc<(d2?.cpc||99)?'↓':d3?.cpc===(d2?.cpc||0)?'→':'↑',                              txt: `CPC D3: R$${fmt(d3?.cpc||0)} vs D2: R$${fmt(d2?.cpc||0)}` },
+        { nome: 'ROAS',     boa: roasD3 >= 1.0,                                               icone: roasD3>=1.0?'✓':'✗',                                                                              txt: `ROAS acum D3: ${roasD3>0?fmt(roasD3)+'x':'sem dado'}` },
+      ];
+      const boas = t.filter(x=>x.boa).length;
+      const ruins = t.filter(x=>!x.boa).length;
+      const placarHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;margin-bottom:4px">${t.map(x=>`<span style="font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:4px;background:${x.boa?'rgba(62,207,142,.15)':'rgba(224,85,85,.15)'};color:${x.boa?'var(--green)':'var(--red)'}">${x.icone} ${x.nome}</span>`).join('')}</div><div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px">${t.map(x=>x.txt).join(' · ')}</div>`;
+      if (roasD3 >= 1.0) {
+        acao = '✅ PERMANECE — IR PARA D4'; acaoCor = 'var(--green)';
+        acaoDetalhe = `${placarHtml}ROAS ${fmt(roasD3)}x — empatou no D3. Seguir para D4 (decisão final).`;
+      } else if (boas > ruins) {
+        acao = '⚠️ PERMANECE — ÚLTIMO DIA DE TOLERÂNCIA'; acaoCor = 'var(--yellow)';
+        acaoDetalhe = `${placarHtml}📊 Placar D2→D3: ${boas} boas × ${ruins} ruins — ainda crescendo. D4 é a decisão final.`;
+      } else if (boas === ruins) {
+        acao = '⚠️ MANTER COM ATENÇÃO — D4 DECIDE'; acaoCor = 'var(--yellow)';
+        acaoDetalhe = `${placarHtml}📊 Placar D2→D3: ${boas} boas × ${ruins} ruins — empate no D3. Chances baixas no D4.`;
+      } else {
+        acao = '🛑 PAUSAR'; acaoCor = 'var(--red)';
+        acaoDetalhe = `${placarHtml}📊 Placar D2→D3: ${ruins} ruins × ${boas} boas — tendência negativa. Não vai virar no D4 = PAUSA.`;
+      }
+    } else if (dAtual === 4) {
+      if (empatouD4) {
+        acao = '🏆 VALIDADO — IR PARA PRÉ-ESCALA'; acaoCor = 'var(--green)';
+        acaoDetalhe = `ROAS D4 ${fmt(roasD4)}x — empatou! Criativo validado. Seguir para D5.`;
+      } else {
+        acao = '🛑 DESATIVAR — SEM REMORSO'; acaoCor = 'var(--red)';
+        acaoDetalhe = `ROAS D4 ${fmt(roasD4)}x — não empatou no D4. Regra absoluta: DESATIVA. Vai pro próximo criativo.`;
+      }
+    } else if (dAtual === 5 || dAtual === 6) {
+      if (!empatouD4) {
+        acao = '🛑 DEVERIA TER DESATIVADO NO D4'; acaoCor = 'var(--red)';
+        acaoDetalhe = `ROAS D4 foi ${fmt(roasD4)}x — não empatou. Regra MGD: desativar no D4.`;
+      } else if (d.roas >= 1.3) {
+        acao = dAtual===5 ? '✅ ESTABILIZANDO — MANTER ORÇAMENTO' : '✅ CONFIRMADO — PREPARAR ESCALA'; acaoCor = 'var(--green)';
+        acaoDetalhe = dAtual===5
+          ? `ROAS ${fmt(d.roas)}x estável. Não aumentar orçamento ainda. Deixar o Meta otimizar.`
+          : `ROAS ${fmt(d.roas)}x confirmado em 2 dias. Classificar e definir estratégia de escala.`;
+      } else {
+        acao = '⚠️ MONITORAR — ROAS INSTÁVEL'; acaoCor = 'var(--yellow)';
+        acaoDetalhe = `ROAS ${fmt(d.roas)}x abaixo de 1,3x. Aguardar estabilização antes de escalar.`;
+      }
+    } else if (dAtual >= 7) {
+      const classif = d.roas >= 2.0 ? '🏆 CAMPEÃO (2x+)' : d.roas >= 1.5 ? '⭐ BOM (1.5x–2x)' : d.roas >= 1.3 ? '📊 MEDIANO (1.3x–1.5x)' : '⚠️ ABAIXO DO ESPERADO';
+      const classifCor = d.roas >= 2.0 ? 'var(--green)' : d.roas >= 1.5 ? 'var(--green)' : d.roas >= 1.3 ? 'var(--yellow)' : 'var(--red)';
+      const escalaStr = d.roas >= 2.0 ? 'Escalar agressivamente — duplicar várias vezes' : d.roas >= 1.5 ? 'Escalar com confiança — duplicar 2–3x' : d.roas >= 1.3 ? 'Escalar conservador — duplicar 1x, monitorar' : 'Não escalar ainda — aguardar mais dados';
+      acao = `${classif} — ${d.roas>=1.3?'ESCALAR':'AGUARDAR'}`; acaoCor = classifCor;
+      acaoDetalhe = escalaStr;
+    }
+
+    // ── Tabela de dias (exclui hoje — dados incompletos) ──
+    const linhasDias = dias.filter(x => x.date < hoje && (x.spend > 0 || x.orders > 0)).map(x => {
+      const faseIdx  = Math.min(x.di, 7);
+      const cpcCor   = x.cpc <= 0 ? 'var(--text3)' : x.cpc < 0.15 ? 'var(--green)' : x.cpc <= 0.20 ? 'var(--yellow)' : 'var(--red)';
+      const roasStr  = x.spendCom > 0 ? fmt(x.commLiq / x.spendCom) + 'x' : '—';
+      const roasCor  = x.spendCom <= 0 ? 'var(--text3)' : x.commLiq/x.spendCom >= 1.0 ? 'var(--green)' : 'var(--yellow)';
+      const lucCor   = x.lucro >= 0 ? 'var(--green)' : 'var(--red)';
+      const isCurr   = x.di === dAtual;
+      return `<tr style="background:${isCurr?'rgba(74,158,255,.08)':'transparent'};border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:${isCurr?'var(--blue)':'var(--text3)'}">D${x.di}${isCurr?' ◀':''}</td>
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:9px;color:var(--text3)">${fases[faseIdx]||'—'}</td>
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:${cpcCor}">${x.cpc>0?'R$'+fmt(x.cpc):'—'}</td>
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:10px">${x.clicks>0?x.clicks.toLocaleString('pt-BR'):'—'}</td>
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;color:var(--green)">${x.orders>0?x.orders:'—'}</td>
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:${roasCor}">${roasStr}</td>
+        <td style="padding:6px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:${lucCor}">${x.spend>0||x.commLiq>0?(x.lucro>=0?'+':'')+'R$'+fmt(x.lucro):'—'}</td>
+      </tr>`;
+    }).join('');
+
+    // ── Classificação final (D7+) ──
+    const classifHtml = dAtual >= 7 && d.roas > 0 ? (() => {
+      const cl = d.roas >= 2.0 ? {label:'🏆 CAMPEÃO',cor:'var(--green)',roas:'2x+'} :
+                 d.roas >= 1.5 ? {label:'⭐ BOM',cor:'var(--green)',roas:'1.5x–2x'} :
+                 d.roas >= 1.3 ? {label:'📊 MEDIANO',cor:'var(--yellow)',roas:'1.3x–1.5x'} :
+                                 {label:'⚠️ ABAIXO',cor:'var(--red)',roas:'< 1.3x'};
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${cl.cor}18;border:1px solid ${cl.cor}44;border-radius:8px;margin-bottom:10px">
+        <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:${cl.cor}">${cl.label}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">ROAS ${cl.roas} · ROAS atual ${fmt(d.roas)}x</div>
+      </div>`;
+    })() : '';
 
     return `
       <div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px;font-weight:700">${label}</div>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
-            <span style="color:${cpcD0Otimo?'var(--green)':cpcD0Ok?'var(--yellow)':'var(--red)'}">${cpcD0Otimo?'✓ Ótimo':cpcD0Ok?'~ Aceitável':'✗ Caro'}</span>
-            <span style="color:var(--text3)">CPC D0 ${d.cpcD0>0?'R$ '+fmt(d.cpcD0):'sem dado'} (meta &lt; R$0,20)</span>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:10px;font-weight:700;letter-spacing:.05em">${label}</div>
+
+        <!-- Fase atual -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-bottom:2px">FASE ATUAL</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue)">D${dAtual} — ${fases[Math.min(dAtual,7)]||'—'}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
-            <span style="color:${d.vendeuD0?'var(--green)':'var(--yellow)'}">${d.vendeuD0?'✓':'~'}</span>
-            <span style="color:var(--text3)">${d.vendeuD0?'Vendeu no D0 — sinal positivo forte':'Não vendeu no D0 — aguardar D4'}</span>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-bottom:2px">FOCO</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text)">${focos[Math.min(dAtual,7)]||'—'}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
-            <span style="color:${d4Color}">${roasD4>=1.3?'✓':roasD4>=1.0?'~':'✗'}</span>
-            <span style="color:var(--text3)">ROAS até D4: <b style="color:${d4Color}">${roasD4>0?fmt(roasD4)+'x':'sem dado'}</b> (meta ≥ 1,3x)</span>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px">
+            <div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-bottom:2px">PODE ESCALAR?</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${escalarCor[Math.min(dAtual,7)]}">${podeEscalar[Math.min(dAtual,7)]||'—'}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
-            <span style="color:${tresRuins?'var(--red)':'var(--green)'}">${tresRuins?'✗':'✓'}</span>
-            <span style="color:var(--text3)">${tresRuins?'3 dias ruins consecutivos — pausar imediatamente':'Sem sequência crítica de 3 dias ruins'}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
-            <span style="color:${roasColor}">${d.roas>=1.3?'✓':d.roas>=1.0?'~':'✗'}</span>
-            <span style="color:var(--text3)">ROAS final: <b style="color:${roasColor}">${d.roas>0?fmt(d.roas)+'x':'—'}</b></span>
-          </div>
+        </div>
+
+        <!-- Tabela de evolução -->
+        ${linhasDias ? `<div style="overflow-x:auto;margin-bottom:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr style="background:var(--s2);border-bottom:1px solid var(--border2)">
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Dia</th>
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Fase</th>
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">CPC</th>
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Cliques</th>
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Pedidos</th>
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">ROAS</th>
+              <th style="padding:6px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Lucro</th>
+            </tr></thead>
+            <tbody>${linhasDias}</tbody>
+          </table>
+        </div>` : ''}
+
+        <!-- Classificação (D7+) -->
+        ${classifHtml}
+
+        <!-- Ação recomendada -->
+        <div style="padding:12px 14px;border-radius:8px;background:${acaoCor}18;border:2px solid ${acaoCor}55">
+          <div style="font-family:var(--mono);font-size:8px;color:${acaoCor};letter-spacing:.06em;margin-bottom:4px">AÇÃO RECOMENDADA — MGD</div>
+          <div style="font-family:var(--mono);font-size:13px;font-weight:800;color:${acaoCor};margin-bottom:6px">${acao}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text2);line-height:1.5">${acaoDetalhe}</div>
         </div>
       </div>`;
   };
