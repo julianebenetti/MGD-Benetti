@@ -503,6 +503,7 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
     <div class="drawer-item" onclick="goTab('resumo');setBN('resumo');closeDrawer()">📊&nbsp; Resumo Diário</div>
     <div class="drawer-item" onclick="goTab('visao');setBN('cruzamento');closeDrawer()">⚡&nbsp; Visão Geral</div>
     <div class="drawer-item" onclick="goTab('radar');setBN('cruzamento');closeDrawer()">🎯&nbsp; Radar de Campanhas</div>
+    <div class="drawer-item" onclick="goTab('ab');setBN('cruzamento');closeDrawer()">⚔️&nbsp; Comparativo A/B</div>
     <div class="drawer-item" onclick="goTab('cliques');setBN('cruzamento');closeDrawer()">🕐&nbsp; Cliques &amp; Horários</div>
     <div class="drawer-item" onclick="goTab('historico');setBN('resumo');closeDrawer()">📊&nbsp; Histórico Mensal</div>
     <div class="drawer-item" onclick="goTab('produtos');setBN('cruzamento');closeDrawer()">🛍️&nbsp; Produtos por Campanha</div>
@@ -1808,6 +1809,90 @@ tbody td{padding:12px 13px;font-family:var(--mono);font-size:11px;vertical-align
 
 </div>
 
+<!-- ══ A/B COMPARATIVO ══ -->
+<div class="panel" id="panel-ab">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="font-size:20px;font-weight:800">⚔️ Comparativo A/B de Criativos</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px">Compare dois criativos lado a lado — metodologia MGD e Stella</div>
+    </div>
+    <button class="btn btn-primary" onclick="renderABComparativo()" style="gap:6px">🔄 Comparar</button>
+  </div>
+
+  <!-- Seleção dos criativos -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+    <!-- V1 -->
+    <div style="background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:14px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px;letter-spacing:.06em">VERSÃO 1</div>
+      <select id="ab-sel-v1" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:7px;outline:none;margin-bottom:10px">
+        <option value="">— Selecione o criativo V1 —</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">ORÇAMENTO DIÁRIO</div>
+          <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px">
+            <span style="color:var(--text3);font-family:var(--mono);font-size:11px">R$</span>
+            <input type="number" id="ab-budget-v1" placeholder="ex: 11.00" step="0.01" min="0"
+              style="flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:100%">
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- V2 -->
+    <div style="background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:14px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px;letter-spacing:.06em">VERSÃO 2</div>
+      <select id="ab-sel-v2" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 10px;border-radius:7px;outline:none;margin-bottom:10px">
+        <option value="">— Selecione o criativo V2 —</option>
+      </select>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1">
+          <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:4px">ORÇAMENTO DIÁRIO</div>
+          <div style="display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:7px 10px">
+            <span style="color:var(--text3);font-family:var(--mono);font-size:11px">R$</span>
+            <input type="number" id="ab-budget-v2" placeholder="ex: 11.00" step="0.01" min="0"
+              style="flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:100%">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resultado comparativo -->
+  <div id="ab-result" style="display:none">
+
+    <!-- Veredicto geral -->
+    <div id="ab-veredicto" style="margin-bottom:20px"></div>
+
+    <!-- Cards lado a lado -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px" id="ab-cards"></div>
+
+    <!-- Timeline D0→D7 lado a lado -->
+    <div class="sec">📅 Evolução Dia a Dia (D0 → D7)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px" id="ab-timeline"></div>
+
+    <!-- Diagnóstico dia de subida -->
+    <div class="sec">📆 Contexto do Dia de Subida</div>
+    <div id="ab-contexto-dia" style="margin-bottom:20px"></div>
+
+    <!-- Veredicto MGD -->
+    <div class="sec">📋 Análise MGD (Shermam Souza)</div>
+    <div id="ab-mgd" style="margin-bottom:20px"></div>
+
+    <!-- Veredicto Stella -->
+    <div class="sec">💡 Análise Stella</div>
+    <div id="ab-stella" style="margin-bottom:20px"></div>
+
+  </div>
+
+  <!-- Estado vazio -->
+  <div id="ab-empty" style="text-align:center;padding:60px 20px;color:var(--text3)">
+    <div style="font-size:40px;margin-bottom:12px">⚔️</div>
+    <div style="font-family:var(--mono);font-size:12px">Selecione dois criativos acima e clique em <b style="color:var(--accent)">Comparar</b></div>
+    <div style="font-family:var(--mono);font-size:10px;margin-top:8px;color:var(--text3)">Os dados são puxados automaticamente do Facebook e Shopee carregados</div>
+  </div>
+
+</div>
+
 <!-- ══ CONFIG ══ -->
     <div class="panel" id="panel-config">
       <div class="sec">🔑 Tokens de Acesso — Facebook Ads</div>
@@ -2628,7 +2713,8 @@ function goTab(tab) {
     financeiro: 'Análise Financeira',
     chat: 'Consultor MGD', glossario: 'Glossário MGD',
     config: 'Configuração', c0: 'CA02 - Benetti UP - Agora', c1: 'CA01 - Benetti UP - Achadinhos', c2: 'CA03 - Benetti UP - Vip', c3: 'CA04 - BM Juliane Benetti', 'analise-lote': 'Análise do Lote MGD',
-    gerador: '🔗 Gerador de Links Shopee'
+    gerador: '🔗 Gerador de Links Shopee',
+    ab: '⚔️ Comparativo A/B de Criativos'
   };
   safeText('topbarTitle', titles[tab] || tab);
   safeText('topbarSub', STATE.loaded ? '— ' + new Date().toLocaleDateString('pt-BR') : '');
@@ -2656,6 +2742,7 @@ function goTab(tab) {
   if (tab === 'pedidos')    setTimeout(renderPedidos, 50);
   if (tab === 'chat') setTimeout(initChat, 50);
   if (tab === 'banco') { setTimeout(() => { if(STATE.loaded) autoBancoStatus(); renderBancoGrid(); }, 50); }
+  if (tab === 'ab') { setTimeout(initABComparativo, 50); }
   if (tab === 'calc') { setTimeout(() => { initPlanMonth(); }, 50); }
   if (tab === 'organico') setTimeout(renderOrganico, 50);
   if (tab === 'glossario') renderGlossario();
@@ -14607,6 +14694,458 @@ function renderAnalyseLote() {
 
 })(); // fim IIFE do gerador
 
+// ══════════════════════════════════════════════════
+// ⚔️ COMPARATIVO A/B DE CRIATIVOS
+// ══════════════════════════════════════════════════
 
+function initABComparativo() {
+  const accounts = STATE.accounts || [];
+  const allCamps = accounts.flatMap(a => (a.campaigns || []).map(c => ({ ...c, accIdx: a.idx })));
+
+  const populate = (selId) => {
+    const sel = $(selId);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Selecione o criativo —</option>';
+    allCamps
+      .sort((a, b) => (a.startDate || '').localeCompare(b.startDate || '') * -1)
+      .forEach((c, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        const accName = ACCOUNTS_CONFIG[c.accIdx]?.name || '';
+        const date = c.startDate ? ` · ${c.startDate}` : '';
+        opt.textContent = `${c.name} [${accName}${date}]`;
+        sel.appendChild(opt);
+      });
+    if (current) sel.value = current;
+  };
+
+  populate('ab-sel-v1');
+  populate('ab-sel-v2');
+
+  // Pré-preenche budget da API se disponível
+  ['v1','v2'].forEach(v => {
+    const sel = $(`ab-sel-${v}`);
+    const budInput = $(`ab-budget-${v}`);
+    if (!sel || !budInput) return;
+    sel.addEventListener('change', () => {
+      const idx = parseInt(sel.value);
+      if (isNaN(idx)) return;
+      const c = allCamps[idx];
+      if (c?.budget > 0) budInput.value = c.budget.toFixed(2);
+    });
+  });
+
+  $('ab-empty').style.display = 'block';
+  $('ab-result').style.display = 'none';
+}
+
+function abDiaDaSemana(dateStr) {
+  if (!dateStr) return { nome: '—', badge: '', color: 'var(--text3)' };
+  const dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  const nome = dias[dow];
+  if (dow === 0 || dow === 6) return { nome, badge: '🔴 Fim de semana', color: 'var(--red)' };
+  if (dow === 1)              return { nome, badge: '🟡 Segunda', color: 'var(--yellow)' };
+  if (dow === 5)              return { nome, badge: '🟡 Sexta', color: 'var(--yellow)' };
+  return { nome, badge: '🟢 Dia estável', color: 'var(--green)' };
+}
+
+function abBuildCampData(campRaw, orders, budgetOverride) {
+  const dailyFB = (campRaw.dailyData || []).filter(d => d.spend > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const startDate = campRaw.startDate || (dailyFB[0]?.date) || null;
+
+  // Reúne dados dia a dia D0→D7
+  const days = [];
+  for (let i = 0; i <= 7; i++) {
+    if (!startDate) break;
+    const [y, m, d] = startDate.split('-').map(Number);
+    const dt = new Date(y, m - 1, d + i);
+    const dateStr = dt.toISOString().split('T')[0];
+    const fb = dailyFB.find(x => x.date === dateStr);
+
+    // Shopee: pedidos desse sub_id nesse dia
+    const subId = campRaw.name || '';
+    const TAX_S = parseFloat(localStorage.getItem('mgd_taxShopee') || '0.06');
+    const TAX_F = parseFloat(localStorage.getItem('mgd_taxFB') || '0.14');
+
+    const dayOrders = (orders || []).filter(o => {
+      const oDate = (o.date || o.orderDate || '').slice(0, 10);
+      return oDate === dateStr && (o.subId1 || o.sub_id_1 || o.sub1 || '').toLowerCase() === subId.toLowerCase();
+    });
+
+    const commBruta = dayOrders.reduce((s, o) => s + (parseFloat(o.commission || o.comissao || 0)), 0);
+    const commLiq   = commBruta * (1 - TAX_S);
+    const spend     = fb?.spend || 0;
+    const spendCom  = spend * (1 + TAX_F);
+    const lucro     = commLiq - spendCom;
+
+    days.push({
+      di: i,
+      date: dateStr,
+      spend,
+      spendCom,
+      clicks: fb?.clicks || 0,
+      cpc: fb?.cpc || (spend > 0 && fb?.clicks > 0 ? spend / fb.clicks : 0),
+      orders: dayOrders.length,
+      commBruta,
+      commLiq,
+      lucro,
+      hasData: fb != null || dayOrders.length > 0
+    });
+  }
+
+  const totSpend     = days.reduce((s, d) => s + d.spendCom, 0);
+  const totComm      = days.reduce((s, d) => s + d.commLiq, 0);
+  const totLucro     = totComm - totSpend;
+  const roas         = totSpend > 0 ? totComm / totSpend : 0;
+  const budget       = budgetOverride > 0 ? budgetOverride : (campRaw.budget || 0);
+  const d0           = days[0];
+  const vendeuD0     = d0?.orders > 0;
+  const vendeuD1     = days[1]?.orders > 0;
+  const commD1       = days[1]?.commLiq || 0;
+  const cpcD0        = d0?.cpc || 0;
+  const dowInfo      = abDiaDaSemana(startDate);
+
+  return {
+    name: campRaw.name,
+    accIdx: campRaw.accIdx,
+    campStatus: campRaw.campStatus,
+    startDate,
+    dowInfo,
+    budget,
+    days,
+    totSpend,
+    totComm,
+    totLucro,
+    roas,
+    vendeuD0,
+    vendeuD1,
+    commD1,
+    cpcD0
+  };
+}
+
+function abCardHTML(data, label, accentColor) {
+  const statusColor = (data.campStatus || '').toUpperCase() === 'ACTIVE' ? 'var(--green)' : 'var(--red)';
+  const statusLbl   = (data.campStatus || '').toUpperCase() === 'ACTIVE' ? '● Ativo' : '■ Pausado';
+  const accName     = ACCOUNTS_CONFIG[data.accIdx]?.name || '—';
+  const cpcColor    = data.cpcD0 < 0.15 ? 'var(--green)' : data.cpcD0 <= 0.20 ? 'var(--yellow)' : 'var(--red)';
+  const roasColor   = data.roas >= 1.5 ? 'var(--green)' : data.roas >= 1.0 ? 'var(--yellow)' : 'var(--red)';
+  const lucroColor  = data.totLucro >= 0 ? 'var(--green)' : 'var(--red)';
+  const budgetStella = data.budget <= 15 ? '🟢 Valor Stella (≤R$15)' : data.budget <= 34 ? '🟡 Valor MGD (~R$34)' : '🔴 Escalado (>R$34)';
+  const budgetSColor = data.budget <= 15 ? 'var(--green)' : data.budget <= 34 ? 'var(--yellow)' : 'var(--red)';
+
+  return `
+    <div style="background:var(--s2);border:1px solid ${accentColor}55;border-radius:12px;overflow:hidden">
+      <!-- Header -->
+      <div style="background:${accentColor}18;border-bottom:1px solid ${accentColor}33;padding:14px 16px">
+        <div style="font-family:var(--mono);font-size:9px;color:${accentColor};font-weight:700;letter-spacing:.08em;margin-bottom:6px">${label}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:8px">${data.name || '—'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="acc-badge ab${data.accIdx}">${accName}</span>
+          <span style="font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;background:${statusColor}22;color:${statusColor}">${statusLbl}</span>
+        </div>
+      </div>
+
+      <!-- Configuração de subida -->
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:10px;letter-spacing:.05em">CONFIGURAÇÃO DE SUBIDA</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">DATA DE SUBIDA</div>
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text);margin-top:2px">${data.startDate || '—'}</div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:1px">${data.dowInfo.nome}</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">DIA DA SEMANA</div>
+            <div style="font-family:var(--mono);font-size:10px;font-weight:700;color:${data.dowInfo.color};margin-top:2px">${data.dowInfo.badge}</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">ORÇAMENTO DIÁRIO</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);margin-top:2px">${data.budget > 0 ? 'R$ ' + fmt(data.budget) : '—'}</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">CLASSIFICAÇÃO</div>
+            <div style="font-family:var(--mono);font-size:9px;font-weight:700;color:${budgetSColor};margin-top:4px">${budgetStella}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPIs de resultado -->
+      <div style="padding:14px 16px">
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:10px;letter-spacing:.05em">RESULTADO ACUMULADO</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">CPC no D0</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${cpcColor};margin-top:2px">${data.cpcD0 > 0 ? 'R$ '+fmt(data.cpcD0) : '—'}</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Vendeu D0?</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${data.vendeuD0?'var(--green)':'var(--red)'};margin-top:2px">${data.vendeuD0 ? '✓ Sim' : '✗ Não'}</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Investimento Total</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text);margin-top:2px">R$ ${fmt(data.totSpend)}</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Comissão Líq.</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);margin-top:2px">R$ ${fmt(data.totComm)}</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">Lucro / Prejuízo</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${lucroColor};margin-top:2px">${data.totLucro >= 0 ? '+' : ''}R$ ${fmt(data.totLucro)}</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">ROAS</div>
+            <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:${roasColor};margin-top:2px">${data.roas > 0 ? fmt(data.roas)+'x' : '—'}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function abTimelineHTML(data, label, accentColor) {
+  const rows = data.days.map(d => {
+    const cpcColor = d.cpc <= 0 ? 'var(--text3)' : d.cpc < 0.15 ? 'var(--green)' : d.cpc <= 0.20 ? 'var(--yellow)' : 'var(--red)';
+    const lucroColor = d.lucro >= 0 ? 'var(--green)' : 'var(--red)';
+    return `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:10px;font-weight:700;color:${accentColor}">D${d.di}</td>
+        <td style="padding:8px 4px;font-family:var(--mono);font-size:9px;color:var(--text3)">${d.date}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:${cpcColor}">${d.cpc > 0 ? 'R$ '+fmt(d.cpc) : '—'}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px">${d.clicks > 0 ? d.clicks.toLocaleString('pt-BR') : '—'}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--text3)">${d.spend > 0 ? 'R$ '+fmt(d.spend) : '—'}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--green)">${d.orders > 0 ? d.orders+' ped' : '—'}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;color:var(--green)">${d.commLiq > 0 ? 'R$ '+fmt(d.commLiq) : '—'}</td>
+        <td style="padding:8px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:${lucroColor}">${d.spend > 0 || d.commLiq > 0 ? (d.lucro>=0?'+':'')+'R$ '+fmt(d.lucro) : '—'}</td>
+      </tr>`;
+  }).join('');
+
+  return `
+    <div style="background:var(--s2);border:1px solid ${accentColor}44;border-radius:10px;overflow:hidden">
+      <div style="background:${accentColor}18;padding:10px 14px;font-family:var(--mono);font-size:9px;color:${accentColor};font-weight:700;letter-spacing:.06em">${label}</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border2)">
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Dia</th>
+              <th style="padding:8px 4px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Data</th>
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">CPC</th>
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Cliques</th>
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Gasto</th>
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Pedidos</th>
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Comissão</th>
+              <th style="padding:8px 10px;font-family:var(--mono);font-size:8px;color:var(--text3);text-align:left">Lucro</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function abVeredictoMGD(v1, v2) {
+  const analise = (d, label) => {
+    const dias = d.days;
+    const cpcD0Ok   = d.cpcD0 > 0 && d.cpcD0 < 0.20;
+    const cpcD0Otimo = d.cpcD0 > 0 && d.cpcD0 < 0.15;
+    const roasD4    = (() => {
+      const ate4 = dias.filter(x => x.di <= 4);
+      const s = ate4.reduce((a, b) => a + b.spendCom, 0);
+      const c = ate4.reduce((a, b) => a + b.commLiq, 0);
+      return s > 0 ? c / s : 0;
+    })();
+    const tresRuins = (() => {
+      let seq = 0, max = 0;
+      for (const d of dias) {
+        if (d.lucro < 0 || (d.spend === 0 && d.commLiq === 0)) { seq++; max = Math.max(max, seq); } else seq = 0;
+      }
+      return max >= 3;
+    })();
+    const roasColor = d.roas >= 1.5 ? 'var(--green)' : d.roas >= 1.0 ? 'var(--yellow)' : 'var(--red)';
+    const d4Color   = roasD4 >= 1.3 ? 'var(--green)' : roasD4 >= 1.0 ? 'var(--yellow)' : 'var(--red)';
+
+    return `
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px;font-weight:700">${label}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${cpcD0Otimo?'var(--green)':cpcD0Ok?'var(--yellow)':'var(--red)'}">${cpcD0Otimo?'✓ Ótimo':cpcD0Ok?'~ Aceitável':'✗ Caro'}</span>
+            <span style="color:var(--text3)">CPC D0 ${d.cpcD0>0?'R$ '+fmt(d.cpcD0):'sem dado'} (meta &lt; R$0,20)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${d.vendeuD0?'var(--green)':'var(--yellow)'}">${d.vendeuD0?'✓':'~'}</span>
+            <span style="color:var(--text3)">${d.vendeuD0?'Vendeu no D0 — sinal positivo forte':'Não vendeu no D0 — aguardar D4'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${d4Color}">${roasD4>=1.3?'✓':roasD4>=1.0?'~':'✗'}</span>
+            <span style="color:var(--text3)">ROAS até D4: <b style="color:${d4Color}">${roasD4>0?fmt(roasD4)+'x':'sem dado'}</b> (meta ≥ 1,3x)</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${tresRuins?'var(--red)':'var(--green)'}">${tresRuins?'✗':'✓'}</span>
+            <span style="color:var(--text3)">${tresRuins?'3 dias ruins consecutivos — pausar imediatamente':'Sem sequência crítica de 3 dias ruins'}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${roasColor}">${d.roas>=1.3?'✓':d.roas>=1.0?'~':'✗'}</span>
+            <span style="color:var(--text3)">ROAS final: <b style="color:${roasColor}">${d.roas>0?fmt(d.roas)+'x':'—'}</b></span>
+          </div>
+        </div>
+      </div>`;
+  };
+
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:16px">
+      ${analise(v1,'VERSÃO 1')}
+      ${analise(v2,'VERSÃO 2')}
+    </div>`;
+}
+
+function abVeredictoStella(v1, v2) {
+  const analise = (d, label) => {
+    const commD1 = d.days[1]?.commLiq || 0;
+    const cpcD0Ok = d.cpcD0 > 0 && d.cpcD0 < 0.20;
+    const capengaD1 = !d.vendeuD0 && commD1 > 0 && commD1 < 3;
+    const prejAcum = Math.abs(Math.min(d.totLucro, 0));
+    const passouLimite = d.totSpend > 0 && d.totLucro < -30;
+    const budgetOk = d.budget > 0 && d.budget <= 15;
+
+    let acao = '';
+    let acaoColor = 'var(--text3)';
+    if (!d.vendeuD0 && !d.vendeuD1) {
+      acao = '🛑 Pausar imediatamente — nenhuma venda em D0 e D1';
+      acaoColor = 'var(--red)';
+    } else if (capengaD1) {
+      acao = '✂️ Cortar — criativo capenga (comissão D1 muito baixa)';
+      acaoColor = 'var(--red)';
+    } else if (passouLimite) {
+      acao = '⛔ Passou -R$30 sem retorno — pausar';
+      acaoColor = 'var(--red)';
+    } else if (d.vendeuD0) {
+      acao = '✅ Sinal positivo — vendeu no primeiro dia';
+      acaoColor = 'var(--green)';
+    } else {
+      acao = '⏳ Aguardar — monitorar até -R$30';
+      acaoColor = 'var(--yellow)';
+    }
+
+    return `
+      <div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px;font-weight:700">${label}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${d.vendeuD0?'var(--green)':'var(--red)'}">${d.vendeuD0?'✓':'✗'}</span>
+            <span style="color:var(--text3)">Vendeu no D0? <b style="color:${d.vendeuD0?'var(--green)':'var(--red)'}">${d.vendeuD0?'Sim — ótimo sinal':'Não — alerta ligado'}</b></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${capengaD1?'var(--red)':d.vendeuD1?'var(--green)':'var(--yellow)'}">${capengaD1?'✗':d.vendeuD1?'✓':'~'}</span>
+            <span style="color:var(--text3)">D1: ${commD1>0?'R$ '+fmt(commD1)+' de comissão':(d.vendeuD1?'vendeu':'sem venda')} ${capengaD1?'— capenga':''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${cpcD0Ok?'var(--green)':'var(--red)'}">${cpcD0Ok?'✓':'✗'}</span>
+            <span style="color:var(--text3)">CPC D0: <b style="color:${cpcD0Ok?'var(--green)':'var(--red)'}">${d.cpcD0>0?'R$ '+fmt(d.cpcD0):'—'}</b> ${!cpcD0Ok&&d.cpcD0>0?'— público ruim':''}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${passouLimite?'var(--red)':'var(--green)'}">${passouLimite?'✗':'✓'}</span>
+            <span style="color:var(--text3)">Limite -R$30: prejuízo acum. <b>${d.totLucro<0?'R$ '+fmt(Math.abs(d.totLucro)):'em lucro'}</b></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px">
+            <span style="color:${budgetOk?'var(--green)':'var(--yellow)'}">${budgetOk?'✓':'~'}</span>
+            <span style="color:var(--text3)">Orçamento: ${d.budget>0?'R$ '+fmt(d.budget):' —'} ${budgetOk?'(ideal Stella)':d.budget>15&&d.budget<=34?'(zona MGD — pode escalar duplicando)':'(alto — risco de não escalar depois)'}</span>
+          </div>
+          <div style="margin-top:8px;padding:10px 12px;border-radius:8px;background:${acaoColor}18;border:1px solid ${acaoColor}44">
+            <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${acaoColor}">${acao}</div>
+          </div>
+        </div>
+      </div>`;
+  };
+
+  return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:16px">
+      ${analise(v1,'VERSÃO 1')}
+      ${analise(v2,'VERSÃO 2')}
+    </div>`;
+}
+
+function renderABComparativo() {
+  const accounts = STATE.accounts || [];
+  const allCamps = accounts.flatMap(a => (a.campaigns || []).map(c => ({ ...c, accIdx: a.idx })));
+  const orders   = STATE.shopee?.orders || [];
+
+  const idx1 = parseInt($('ab-sel-v1')?.value);
+  const idx2 = parseInt($('ab-sel-v2')?.value);
+
+  if (isNaN(idx1) || isNaN(idx2)) {
+    alert('Selecione os dois criativos antes de comparar.');
+    return;
+  }
+  if (idx1 === idx2) {
+    alert('Selecione criativos diferentes para comparar.');
+    return;
+  }
+
+  const bud1 = parseFloat($('ab-budget-v1')?.value || 0);
+  const bud2 = parseFloat($('ab-budget-v2')?.value || 0);
+
+  const v1 = abBuildCampData(allCamps[idx1], orders, bud1);
+  const v2 = abBuildCampData(allCamps[idx2], orders, bud2);
+
+  // Veredicto geral
+  const v1Score = (v1.roas * 2) + (v1.vendeuD0 ? 1 : 0) + (v1.cpcD0 < 0.20 ? 1 : 0);
+  const v2Score = (v2.roas * 2) + (v2.vendeuD0 ? 1 : 0) + (v2.cpcD0 < 0.20 ? 1 : 0);
+  let veredito, verColor;
+  if (Math.abs(v1Score - v2Score) < 0.3) {
+    veredito = '🤝 EMPATE — desempenho equivalente';
+    verColor = 'var(--yellow)';
+  } else if (v1Score > v2Score) {
+    veredito = '🏆 VERSÃO 1 performou melhor';
+    verColor = 'var(--green)';
+  } else {
+    veredito = '🏆 VERSÃO 2 performou melhor';
+    verColor = 'var(--green)';
+  }
+
+  // Análise do dia de subida
+  const sameDayContext = v1.startDate === v2.startDate
+    ? `<div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px">
+        <div style="color:var(--green);font-weight:700;margin-bottom:6px">✓ Subidos no mesmo dia — comparação justa</div>
+        <div style="color:var(--text3)">Ambos os criativos foram ao ar em <b style="color:var(--text)">${v1.startDate}</b> · <b style="color:${v1.dowInfo.color}">${v1.dowInfo.nome}</b> <span style="color:${v1.dowInfo.color}">${v1.dowInfo.badge}</span></div>
+        <div style="margin-top:8px;color:var(--text3)">Por terem subido juntos, qualquer diferença de resultado é atribuída ao <b style="color:var(--accent)">criativo</b>, não ao público ou ao dia.</div>
+       </div>`
+    : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px">
+          <div style="color:var(--text3);font-size:8px;margin-bottom:4px">V1 SUBIU EM</div>
+          <div style="font-weight:700">${v1.startDate || '—'} · ${v1.dowInfo.nome}</div>
+          <div style="color:${v1.dowInfo.color};margin-top:4px">${v1.dowInfo.badge}</div>
+        </div>
+        <div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px">
+          <div style="color:var(--text3);font-size:8px;margin-bottom:4px">V2 SUBIU EM</div>
+          <div style="font-weight:700">${v2.startDate || '—'} · ${v2.dowInfo.nome}</div>
+          <div style="color:${v2.dowInfo.color};margin-top:4px">${v2.dowInfo.badge}</div>
+        </div>
+        <div style="grid-column:1/-1;background:rgba(232,184,75,.1);border:1px solid rgba(232,184,75,.3);border-radius:8px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--yellow)">
+          ⚠️ Criativos subidos em dias diferentes — diferenças de resultado podem ser do dia, não apenas do criativo. Stella recomenda subir os dois no mesmo dia para isolar a variável.
+        </div>
+       </div>`;
+
+  $('ab-veredicto').innerHTML = `
+    <div style="background:${verColor}18;border:2px solid ${verColor}55;border-radius:12px;padding:18px 20px;text-align:center">
+      <div style="font-size:18px;font-weight:800;color:${verColor}">${veredito}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px">Baseado em ROAS · CPC D0 · Venda no primeiro dia</div>
+    </div>`;
+
+  $('ab-cards').innerHTML = abCardHTML(v1, '⚔️ VERSÃO 1', 'var(--blue)') + abCardHTML(v2, '⚔️ VERSÃO 2', 'var(--purple)');
+  $('ab-timeline').innerHTML = abTimelineHTML(v1, 'VERSÃO 1 — D0 → D7', 'var(--blue)') + abTimelineHTML(v2, 'VERSÃO 2 — D0 → D7', 'var(--purple)');
+  $('ab-contexto-dia').innerHTML = sameDayContext;
+  $('ab-mgd').innerHTML = abVeredictoMGD(v1, v2);
+  $('ab-stella').innerHTML = abVeredictoStella(v1, v2);
+
+  $('ab-empty').style.display  = 'none';
+  $('ab-result').style.display = 'block';
+  $('ab-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 </script>
