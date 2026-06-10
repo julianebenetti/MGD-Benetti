@@ -1,6 +1,6 @@
 {
-  "updated_at": 1781075982,
-  "updated_at_br": "10/06/2026 07:19",
+  "updated_at": 1781081872,
+  "updated_at_br": "10/06/2026 08:57",
   "period_days": 90,
   "total_orders": 14958,
   "total_conversions": 13975,
@@ -16663,7 +16663,7 @@
     },
     {
       "ID do pedido": "26060236V8J1G8",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-02 14:41:10",
       "Sub_id1": "07Abr26VestidoFloralC3",
       "Valor de Compra(R$)": "18.57",
@@ -16675,14 +16675,14 @@
       "Comissao total do pedido(R$)": "0.5571",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Cinto Feminino de Corrente Argola Dourada Moda Tendencia Elegante Estilo Fashion - Ester",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "40876828388",
       "Nome da loja": "Cintos Femininos Bibi",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234110470170655",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-02"
     },
     {
@@ -17527,7 +17527,7 @@
     },
     {
       "ID do pedido": "2606022RN7TQXM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-02 10:26:42",
       "Sub_id1": "31Mai26BoxVidroVs2",
       "Valor de Compra(R$)": "149",
@@ -17539,14 +17539,14 @@
       "Comissao total do pedido(R$)": "4.47",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Aparelho Medidor de Pressão Arterial Digital de Braço Omron HEM-7122",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21999661659",
       "Nome da loja": "Drogaria Moderna",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234095202140411",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-02"
     },
     {
