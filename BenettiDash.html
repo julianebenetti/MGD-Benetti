@@ -15372,21 +15372,14 @@ function abBuildCampData(campRaw, orders, budgetOverride) {
   const isActive  = (campRaw.campStatus || '').toUpperCase() === 'ACTIVE';
   const hoje      = new Date().toISOString().split('T')[0];
 
-  // Campanhas pausadas: janela = últimos 7 dias em que rodou
+  // Campanhas pausadas: janela = primeiro dia com gasto (D0 real)
   // Campanhas ativas: janela = D0 até hoje
   let startDate;
   if (isActive) {
     startDate = campRaw.startDate || (dailyFB[0]?.date) || null;
   } else {
-    // Pega o último dia com gasto e conta 7 dias para trás
-    const lastDay = dailyFB.slice(-1)[0]?.date || null;
-    if (lastDay) {
-      const [y, m, d] = lastDay.split('-').map(Number);
-      const dt = new Date(y, m - 1, d - 6); // 7 dias atrás do último dia
-      startDate = dt.toISOString().split('T')[0];
-    } else {
-      startDate = campRaw.startDate || null;
-    }
+    // Usa o primeiro dia com gasto como D0
+    startDate = campRaw.startDate || (dailyFB[0]?.date) || null;
   }
 
   // Reúne dados dia a dia D0→D7
