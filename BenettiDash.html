@@ -3862,9 +3862,7 @@ async function fetchShopee(appId, secret, days) {
 // Sub_id1 = nome da campanha FB
 // ROAS = Comissão líquida ÷ Gasto FB (por dia)
 // Lucro = Comissão - (Comissão × 6% imposto) - Gasto FB
-// ══════════════════════════════════════════════════
-const getTaxComm = () => (parseFloat($('taxComm')?.value || 6)) / 100;
-const getTaxFB   = () => (parseFloat($('taxFB')?.value   || 14)) / 100;
+// ══════════════════════════════════════════════════;
 
 function toggleDailyRows(row) {
   const next = row.nextElementSibling;
