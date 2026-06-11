@@ -3862,7 +3862,9 @@ async function fetchShopee(appId, secret, days) {
 // Sub_id1 = nome da campanha FB
 // ROAS = Comissão líquida ÷ Gasto FB (por dia)
 // Lucro = Comissão - (Comissão × 6% imposto) - Gasto FB
-// ══════════════════════════════════════════════════;
+// ══════════════════════════════════════════════════
+function getTaxComm() { return (parseFloat(document.getElementById('taxComm')?.value || 6)) / 100; }
+function getTaxFB()   { return (parseFloat(document.getElementById('taxFB')?.value   || 14)) / 100; };
 
 function toggleDailyRows(row) {
   const next = row.nextElementSibling;
@@ -15076,8 +15078,6 @@ function renderRankingSubIds(shopeeOrders, accounts) {
     subMap[sid].valor += o.amount     || 0;
     subMap[sid].totalStatus++;
     if ((o.status||'').toLowerCase().includes('cancel')) subMap[sid].cancelados++;
-
-    // Tempo médio de compra
     const dc = parseDataShopee(o.dataClique);
     const dp = parseDataShopee(o.dataCompra);
     if (dc && dp && dp > dc) {
@@ -15106,20 +15106,19 @@ function renderRankingSubIds(shopeeOrders, accounts) {
     return { ...s, commLiq, cliques, conversao, rPorClique, taxaCanc, tempoMedio };
   });
 
-  // Top destaques
   const topComm      = [...subs].sort((a,b) => b.commLiq  - a.commLiq)[0];
   const topConversao = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.conversao - a.conversao)[0];
   const topRPC       = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.rPorClique - a.rPorClique)[0];
   const topPedidos   = [...subs].sort((a,b) => b.pedidos - a.pedidos)[0];
   const topValor     = [...subs].sort((a,b) => b.valor - a.valor)[0];
 
-  const destCard = (icon, titulo, sub, valor, cor) => `
-    <div class="kpi-custom" style="border-top-color:${cor}">
-      <div style="font-size:16px;margin-bottom:4px">${icon}</div>
-      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">${titulo}</div>
-      <div style="font-family:var(--mono);font-size:11px;font-weight:800;color:${cor};line-height:1.3;word-break:break-all;margin-bottom:4px">${sub}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">${valor}</div>
-    </div>`;
+  const destCard = (icon, titulo, sub, valor, cor) =>
+    '<div class="kpi-custom" style="border-top-color:'+cor+'">'
+    + '<div style="font-size:16px;margin-bottom:4px">'+icon+'</div>'
+    + '<div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">'+titulo+'</div>'
+    + '<div style="font-family:var(--mono);font-size:11px;font-weight:800;color:'+cor+';line-height:1.3;word-break:break-all;margin-bottom:4px">'+sub+'</div>'
+    + '<div style="font-family:var(--mono);font-size:10px;color:var(--text2)">'+valor+'</div>'
+    + '</div>';
 
   const destaques = [
     topComm      ? destCard('💰','Melhor Comissão',  topComm.subId,      'R$ '+fmt(topComm.commLiq),         'var(--green)')  : '',
@@ -15129,7 +15128,6 @@ function renderRankingSubIds(shopeeOrders, accounts) {
     topValor     ? destCard('🛍️','Maior GMV',        topValor.subId,      'R$ '+fmt(topValor.valor),          'var(--yellow)') : '',
   ].filter(Boolean).join('');
 
-  // Ordenação
   const sortFns = {
     commLiq:    (a,b) => a.commLiq    - b.commLiq,
     pedidos:    (a,b) => a.pedidos    - b.pedidos,
@@ -15143,131 +15141,45 @@ function renderRankingSubIds(shopeeOrders, accounts) {
   const fn = sortFns[subIdSortCol] || sortFns.commLiq;
   const sorted = [...subs].sort((a,b) => subIdSortDir === 'desc' ? fn(b,a) : fn(a,b));
 
-  // Th clicável
-  const thS = (label, col, cor='') => {
+  const thS = (label, col, cor) => {
     const ativo = subIdSortCol === col;
-    const seta  = ativo ? (subIdSortDir === 'desc' ? ' ▼' : ' ▲') : '';
-    const style = `cursor:pointer;user-select:none;white-space:nowrap;font-size:9px${cor?';color:'+cor:''}`;
-    return `<th onclick="sortSubIds('${col}')" style="${style}" title="Ordenar por ${label}">${label}${seta}</th>`;
+    const seta  = ativo ? (subIdSortDir === 'desc' ? ' \u25bc' : ' \u25b2') : '';
+    const style = 'cursor:pointer;user-select:none;white-space:nowrap;font-size:9px' + (cor ? ';color:'+cor : '');
+    return '<th onclick="sortSubIds(\''+col+'\')" style="'+style+'" title="Ordenar por '+label+'">'+label+seta+'</th>';
   };
 
   const rows = sorted.map((s,i) => {
-    const rColor = s.rPorClique > 0.20 ? 'var(--green)' : s.rPorClique > 0.10 ? 'var(--yellow)' : 'var(--text3)';
-    const cColor = s.conversao  > 5    ? 'var(--green)' : s.conversao  > 2     ? 'var(--yellow)' : 'var(--text3)';
-    const tcColor= s.taxaCanc   > 10   ? 'var(--red)'   : s.taxaCanc   > 5     ? 'var(--yellow)' : s.cancelados > 0 ? 'var(--text3)' : 'var(--green)';
-    const tempoStr = s.tempoMedio > 0
-      ? (s.tempoMedio >= 24 ? fmt(s.tempoMedio/24,1)+'d' : fmt(s.tempoMedio,1)+'h')
-      : '—';
-    return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text3)">${i+1}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:10px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.subId}">${s.subId}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green)">R$ ${fmt(s.commLiq)}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px">${s.pedidos}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text3)">${s.cliques > 0 ? s.cliques.toLocaleString('pt-BR') : '—'}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${cColor}">${s.cliques > 0 ? fmt(s.conversao,1)+'%' : '—'}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${rColor}">${s.cliques > 0 ? 'R$ '+fmt(s.rPorClique) : '—'}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:${tcColor}">${fmt(s.taxaCanc,1)}% ${s.cancelados>0?'('+s.cancelados+')':''}</td>
-      <td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--blue)">${tempoStr}</td>
-    </tr>`;
+    const rColor  = s.rPorClique > 0.20 ? 'var(--green)' : s.rPorClique > 0.10 ? 'var(--yellow)' : 'var(--text3)';
+    const cColor  = s.conversao  > 5    ? 'var(--green)' : s.conversao  > 2     ? 'var(--yellow)' : 'var(--text3)';
+    const tcColor = s.taxaCanc   > 10   ? 'var(--red)'   : s.taxaCanc   > 5     ? 'var(--yellow)' : s.cancelados > 0 ? 'var(--text3)' : 'var(--green)';
+    const tempoStr = s.tempoMedio > 0 ? (s.tempoMedio >= 24 ? fmt(s.tempoMedio/24,1)+'d' : fmt(s.tempoMedio,1)+'h') : '\u2014';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:10px;color:var(--text3)">'+(i+1)+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:10px;font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+s.subId+'">'+s.subId+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green)">R$ '+fmt(s.commLiq)+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px">'+s.pedidos+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--text3)">'+(s.cliques > 0 ? s.cliques.toLocaleString('pt-BR') : '\u2014')+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:'+cColor+'">'+(s.cliques > 0 ? fmt(s.conversao,1)+'%' : '\u2014')+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:'+rColor+'">'+(s.cliques > 0 ? 'R$ '+fmt(s.rPorClique) : '\u2014')+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:'+tcColor+'">'+fmt(s.taxaCanc,1)+'% '+(s.cancelados>0?'('+s.cancelados+')':'')+'</td>'
+      + '<td style="padding:7px 8px;font-family:var(--mono);font-size:11px;color:var(--blue)">'+tempoStr+'</td>'
+      + '</tr>';
   }).join('');
 
-  el.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px">
-      ${destaques}
-    </div>
-    <div class="table-wrap" style="margin-bottom:0">
-      <table>
-        <thead>
-          <tr>
-            ${thS('#','subId')}
-            ${thS('Sub_ID (Campanha)','subId')}
-            ${thS('Comissão Líq.','commLiq','var(--green)')}
-            ${thS('Pedidos','pedidos')}
-            ${thS('Cliques Meta','cliques')}
-            ${thS('Conversão','conversao')}
-            ${thS('R$/Clique','rPorClique')}
-            ${thS('% Canc.','taxaCanc','var(--red)')}
-            ${thS('Tempo Médio','tempoMedio','var(--blue)')}
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px">'+destaques+'</div>'
+    + '<div class="table-wrap" style="margin-bottom:0"><table>'
+    + '<thead><tr>'
+    + thS('#','subId','')
+    + thS('Sub_ID (Campanha)','subId','')
+    + thS('Comissão Líq.','commLiq','var(--green)')
+    + thS('Pedidos','pedidos','')
+    + thS('Cliques Meta','cliques','')
+    + thS('Conversão','conversao','')
+    + thS('R$/Clique','rPorClique','')
+    + thS('% Canc.','taxaCanc','var(--red)')
+    + thS('Tempo Médio','tempoMedio','var(--blue)')
+    + '</tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
-
-  // Agrupa pedidos por sub_id
-  const subMap = {};
-  for (const o of shopeeOrders) {
-    const sid = (o.subId || '').trim();
-    if (!sid) continue;
-    if (!subMap[sid]) subMap[sid] = { subId: sid, pedidos: 0, comm: 0, valor: 0, cancelados: 0 };
-    subMap[sid].pedidos++;
-    subMap[sid].comm  += o.commission || 0;
-    subMap[sid].valor += o.amount     || 0;
-    if (o.status && o.status.toLowerCase().includes('cancel')) subMap[sid].cancelados++;
-  }
-
-  // Cliques Meta por sub_id
-  const clicksMap = {};
-  for (const acc of (accounts || [])) {
-    for (const camp of (acc.campaigns || [])) {
-      const sid = (camp.name || '').trim().toLowerCase();
-      const cliques = (camp.dailyData || []).reduce((s, d) => s + (d.clicks || 0), 0);
-      if (cliques > 0) clicksMap[sid] = (clicksMap[sid] || 0) + cliques;
-    }
-  }
-
-  const subs = Object.values(subMap).map(s => {
-    const commLiq  = s.comm * (1 - TAX_S);
-    const cliques  = clicksMap[s.subId.toLowerCase()] || 0;
-    const conversao = cliques > 0 ? (s.pedidos / cliques) * 100 : 0;
-    const rPorClique = cliques > 0 ? commLiq / cliques : 0;
-    return { ...s, commLiq, cliques, conversao, rPorClique };
-  });
-
-  // Top destaques
-  const topComm      = [...subs].sort((a,b) => b.commLiq  - a.commLiq)[0];
-  const topConversao = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.conversao - a.conversao)[0];
-  const topRPC       = [...subs].filter(s => s.cliques > 0).sort((a,b) => b.rPorClique - a.rPorClique)[0];
-  const topPedidos   = [...subs].sort((a,b) => b.pedidos - a.pedidos)[0];
-  const topValor     = [...subs].sort((a,b) => b.valor - a.valor)[0];
-
-  const destCard = (icon, titulo, sub, valor, cor) => `
-    <div class="kpi-custom" style="border-top-color:${cor}">
-      <div style="font-size:16px;margin-bottom:4px">${icon}</div>
-      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px">${titulo}</div>
-      <div style="font-family:var(--mono);font-size:11px;font-weight:800;color:${cor};line-height:1.3;word-break:break-all;margin-bottom:4px">${sub}</div>
-      <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">${valor}</div>
-    </div>`;
-
-  const destaques = [
-    topComm     ? destCard('💰','Melhor Comissão',   topComm.subId,     'R$ '+fmt(topComm.commLiq),        'var(--green)')  : '',
-    topConversao? destCard('🔄','Melhor Conversão',  topConversao.subId, fmt(topConversao.conversao,1)+'%', 'var(--blue)')   : '',
-    topRPC      ? destCard('🖱️','Melhor R$/Clique',  topRPC.subId,       'R$ '+fmt(topRPC.rPorClique),      'var(--purple)') : '',
-    topPedidos  ? destCard('✅','Mais Pedidos',       topPedidos.subId,   topPedidos.pedidos+' pedidos',     'var(--accent)') : '',
-    topValor    ? destCard('🛍️','Maior GMV',         topValor.subId,     'R$ '+fmt(topValor.valor),         'var(--yellow)') : '',
-  ].filter(Boolean).join('');
-
-  // Tabela completa
-  const top20 = [...subs].sort((a,b) => b.commLiq - a.commLiq).slice(0,20);
-  const rows = top20.map((s,i) => {
-    const rColor = s.rPorClique > 0.20 ? 'var(--green)' : s.rPorClique > 0.10 ? 'var(--yellow)' : 'var(--text3)';
-    const cColor = s.conversao  > 5    ? 'var(--green)' : s.conversao > 2      ? 'var(--yellow)' : 'var(--text3)';
-    return `<tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text3)">${i+1}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.subId}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--green)">R$ ${fmt(s.commLiq)}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px">${s.pedidos}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:var(--text3)">${s.cliques > 0 ? s.cliques.toLocaleString('pt-BR') : '—'}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:${cColor}">${s.cliques > 0 ? fmt(s.conversao,1)+'%' : '—'}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:11px;color:${rColor}">${s.cliques > 0 ? 'R$ '+fmt(s.rPorClique) : '—'}</td>
-      <td style="padding:7px 10px;font-family:var(--mono);font-size:10px;color:var(--text3)">${s.cancelados > 0 ? '<span style="color:var(--red)">'+s.cancelados+'</span>' : '—'}</td>
-    </tr>`;
-  }).join('');
-
-// ══════════════════════════════════════════════════
-// ⚔️ COMPARATIVO A/B DE CRIATIVOS
-// ══════════════════════════════════════════════════
 
 function initABComparativo() {
   const accounts = STATE.accounts || [];
