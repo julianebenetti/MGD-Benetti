@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781249573,
-  "updated_at_br": "12/06/2026 07:32",
+  "updated_at": 1781255244,
+  "updated_at_br": "12/06/2026 09:07",
   "period_days": 90,
-  "total_orders": 14530,
-  "total_conversions": 13601,
+  "total_orders": 14529,
+  "total_conversions": 13600,
   "orders": [
     {
       "ID do pedido": "260611RHVVW45S",
@@ -348698,30 +348698,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227177919185914",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-14"
-    },
-    {
-      "ID do pedido": "2603145437EJXG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-14 08:30:02",
-      "Sub_id1": "18fev26vesutiainfantilpublaberto",
-      "Valor de Compra(R$)": "25.9",
-      "Comissao liquida do afiliado(R$)": "5.18",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "17.00%",
-      "Comissao Shopee(R$)": "0.777",
-      "Comissao do vendedor(R$)": "4.403",
-      "Comissao total do pedido(R$)": "5.18",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "KIT COM 03 TOP SUTIÃ INFANTIL/ JUVENIL EM ALGODÃO COM ALÇA DE REGULAGEM IDEAL PARA O DIA DIA",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22793582358",
-      "Nome da loja": "Kalel vendas textil",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "227176202146910",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-14"
     }
