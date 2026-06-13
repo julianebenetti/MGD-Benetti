@@ -2663,6 +2663,19 @@ const phases = ['SUBIDA','TESTE','TESTE','TESTE','DECISÃO','PRÉ-ESC','PRÉ-ESC
 const getPhase = d => d <= 7 ? (phases[d] || 'PRÉ-ESC') : 'ESCALA';
 
 // ── TOGGLE STATUS CAMPANHA (habilitar/pausar via API Facebook)
+// Listener global para btn-toggle-camp (cards detalhados)
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('.btn-toggle-camp');
+  if (!btn) return;
+  e.stopPropagation();
+  toggleCampStatus(
+    btn.getAttribute('data-campid'),
+    btn.getAttribute('data-status'),
+    parseInt(btn.getAttribute('data-accidx')),
+    btn
+  );
+});
+
 async function toggleCampStatus(campId, currentStatus, accIdx, btnEl) {
   const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
   const cfg = ACCOUNTS_CONFIG[accIdx];
@@ -4638,7 +4651,7 @@ function renderCrossCards(sorted, el) {
           <div class="cross-card-badges">
             <span style="font-size:9px;padding:2px 8px;border-radius:3px;background:${accColor}22;color:${accColor};border:1px solid ${accColor}55">${ACCOUNTS_CONFIG[c.accIdx]?.name}</span>
             <span class="status-badge-camp">${statusBadge(c.campStatus)}</span>
-            <button onclick="event.stopPropagation(); toggleCampStatus('${c.campaignId||c.id||''}', '${c.campStatus||'ACTIVE'}', ${c.accIdx}, this)" title="${(c.campStatus||'ACTIVE')==='ACTIVE'?'Pausar campanha':'Ativar campanha'}" style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid ${(c.campStatus||'ACTIVE')==='ACTIVE'?'rgba(255,80,80,.3)':'rgba(62,207,142,.3)'};background:${(c.campStatus||'ACTIVE')==='ACTIVE'?'rgba(255,80,80,.15)':'rgba(62,207,142,.15)'};color:${(c.campStatus||'ACTIVE')==='ACTIVE'?'var(--red)':'var(--green)'};cursor:pointer;font-family:var(--mono);line-height:1">${(c.campStatus||'ACTIVE')==='ACTIVE'?'⏸️':'▶️'}</button>
+            <button class="btn-toggle-camp" data-campid="${c.campaignId||''}" data-accidx="${c.accIdx}" data-status="${c.campStatus||'ACTIVE'}" title="${(c.campStatus||'ACTIVE')==='ACTIVE'?'Pausar':'Ativar'}" style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid ${(c.campStatus||'ACTIVE')==='ACTIVE'?'rgba(255,80,80,.3)':'rgba(62,207,142,.3)'};background:${(c.campStatus||'ACTIVE')==='ACTIVE'?'rgba(255,80,80,.15)':'rgba(62,207,142,.15)'};color:${(c.campStatus||'ACTIVE')==='ACTIVE'?'var(--red)':'var(--green)'};cursor:pointer;font-family:var(--mono);line-height:1">${(c.campStatus||'ACTIVE')==='ACTIVE'?'⏸️':'▶️'}</button>
             <span style="font-family:var(--mono);font-size:9px;background:rgba(232,184,75,.15);color:var(--accent);padding:2px 7px;border-radius:3px">D0–D${maxD}</span>
             <span class="pill ${cl.pill}" style="font-size:9px">${cl.lbl}</span>
           </div>
@@ -11359,17 +11372,19 @@ function renderVisaoGeral() {
         pctM = totalAud > 0 ? (totalM / totalAud) * 100 : 0;
       }
       const homensAlerta = pctM > 15;
-      const homensStr = pctM > 0
-        ? `<div style="margin-top:6px;padding:4px 6px;border-radius:4px;background:${homensAlerta?'rgba(255,68,68,.12)':'var(--s2)'};border:1px solid ${homensAlerta?'var(--red)':'var(--border)'}">
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:1px">👨 HOMENS</div>
-            <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${homensAlerta?'var(--red)':'var(--text2)'}">${pctM.toFixed(0)}%${homensAlerta?' ⚠️':''}</div>
-          </div>`
-        : '';
+      // % por canal (Facebook)
+      let pctFB = 0;
+      if (aud && aud.platform && aud.platform.length) {
+        const totPlat = aud.platform.reduce((s,p)=>s+p.impressions,0) || 1;
+        const fbImp   = aud.platform.filter(p=>p.platform==='facebook').reduce((s,p)=>s+p.impressions,0);
+        pctFB = totPlat > 0 ? (fbImp / totPlat) * 100 : 0;
+      }
       const roasCor = x.roas>=1.5?'var(--green)':x.roas>=be?'var(--yellow)':x.roas>0?'var(--red)':'var(--text3)';
       const cpcCor  = (x.c.cpc||0)<=0.20?'var(--green)':(x.c.cpc||0)<=0.40?'var(--yellow)':'var(--red)';
-      const nome    = x.c.name.length > 22 ? x.c.name.slice(0,21)+'…' : x.c.name;
+      const nome    = x.c.name.length > 22 ? x.c.name.slice(0,21)+'...' : x.c.name;
+      const campUid = 'card_' + x.c.name.replace(/[^a-z0-9]/gi,'_');
       return `
-      <div onclick="(function(){ var uid='card_'+('${x.c.name}'.replace(/[^a-z0-9]/gi,'_')); var doScroll=function(){ var el=document.getElementById('anchor_'+uid); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(function(){ var days=document.getElementById(uid); if(days&&days.style.display!=='block') toggleCrossCard(uid); },500); } else { var tbl=document.getElementById('tbl-cross'); if(tbl) tbl.scrollIntoView({behavior:'smooth',block:'start'}); } }; doScroll(); })()" style="background:var(--s1);border:1px solid var(--border);border-top:3px solid ${g.cor};border-radius:8px;padding:10px 12px;min-width:140px;cursor:pointer" onmouseenter="this.style.opacity='0.85'" onmouseleave="this.style.opacity='1'">
+      <div class="proto-mini-card" data-campuid="${campUid}" style="background:var(--s1);border:1px solid var(--border);border-top:3px solid ${g.cor};border-radius:8px;padding:10px 12px;min-width:140px;cursor:pointer;transition:opacity .15s,border-color .15s" onmouseenter="this.style.opacity='0.8';this.style.borderColor='var(--accent)'" onmouseleave="this.style.opacity='1';this.style.borderColor='var(--border)'">
         <div style="font-family:var(--mono);font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${x.c.name}">${nome}</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-bottom:8px">D${x.maxDay}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
@@ -11386,7 +11401,16 @@ function renderVisaoGeral() {
             <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:${x.lucro>=0?'var(--green)':'var(--red)'}">${x.lucro>=0?'+':''}R$${fmt(x.lucro)}</div>
           </div>
         </div>
-        ${homensStr}
+        ${(pctM > 0 || pctFB > 0) ? `<div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+          ${pctM > 0 ? `<div style="padding:4px 6px;border-radius:4px;background:${homensAlerta?'rgba(255,68,68,.12)':'var(--s2)'};border:1px solid ${homensAlerta?'var(--red)':'var(--border)'}">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:1px">👨 HOMENS</div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${homensAlerta?'var(--red)':'var(--text2)'}">${pctM.toFixed(0)}%${homensAlerta?' ⚠️':''}</div>
+          </div>` : '<div></div>'}
+          ${pctFB > 0 ? `<div style="padding:4px 6px;border-radius:4px;background:rgba(24,119,242,.08);border:1px solid rgba(24,119,242,.25)">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:1px">📘 FACEBOOK</div>
+            <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:#1877F2">${pctFB.toFixed(0)}%</div>
+          </div>` : '<div></div>'}
+        </div>` : ''}
       </div>`; }).join('');
     return `
       <div style="margin-bottom:16px">
@@ -11397,7 +11421,27 @@ function renderVisaoGeral() {
       </div>`;
   }).join('');
   const gruposEl = $('vg-grupos');
-  if (gruposEl) gruposEl.innerHTML = gruposHTML || '';
+  if (gruposEl) {
+    gruposEl.innerHTML = gruposHTML || '';
+    // Event delegation para clique nos mini-cards
+    gruposEl.querySelectorAll('.proto-mini-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var uid = this.getAttribute('data-campuid');
+        if (!uid) return;
+        var el = document.getElementById('anchor_' + uid);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(function() {
+            var days = document.getElementById(uid);
+            if (days && days.style.display !== 'block') toggleCrossCard(uid);
+          }, 500);
+        } else {
+          var tbl = document.getElementById('tbl-cross');
+          if (tbl) tbl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  }
 
   // ── Toggle histórico
 
