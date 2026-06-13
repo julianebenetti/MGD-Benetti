@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781328951,
-  "updated_at_br": "13/06/2026 05:35",
+  "updated_at": 1781334539,
+  "updated_at_br": "13/06/2026 07:08",
   "period_days": 90,
-  "total_orders": 14274,
-  "total_conversions": 13377,
+  "total_orders": 14273,
+  "total_conversions": 13376,
   "orders": [
     {
       "ID do pedido": "260612U0K1M58F",
@@ -342554,30 +342554,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227264072136600",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-15"
-    },
-    {
-      "ID do pedido": "2603157CPXBQBK",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-15 06:09:33",
-      "Sub_id1": "08Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "11.84",
-      "Comissao liquida do afiliado(R$)": "1.4208",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "6.00%",
-      "Comissao Shopee(R$)": "0.7104",
-      "Comissao do vendedor(R$)": "0.7104",
-      "Comissao total do pedido(R$)": "1.4208",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": " Pó de Unha Pérola 1 Caixa, Design de Unha de Noiva Casamento, Efeito Espelhado, Pó de Fada DIY (Espelho Luar Prateado),",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "47200253949",
-      "Nome da loja": "Choice Oficial",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "227254173108647",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-15"
     }
