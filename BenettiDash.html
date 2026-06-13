@@ -2662,6 +2662,69 @@ const fmt = (v, d=2) => Number(v).toLocaleString('pt-BR', { minimumFractionDigit
 const phases = ['SUBIDA','TESTE','TESTE','TESTE','DECISÃO','PRÉ-ESC','PRÉ-ESC','PRÉ-ESC'];
 const getPhase = d => d <= 7 ? (phases[d] || 'PRÉ-ESC') : 'ESCALA';
 
+// ── TOGGLE STATUS CAMPANHA (habilitar/pausar via API Facebook)
+async function toggleCampStatus(campId, currentStatus, accIdx, btnEl) {
+  const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+  const cfg = ACCOUNTS_CONFIG[accIdx];
+  if (!cfg) return;
+  const tokenKey = cfg.useToken2 ? 'mgd_fbToken2' : 'mgd_fbToken';
+  const token = localStorage.getItem(tokenKey) || ($('fbToken' + (cfg.useToken2 ? '2' : ''))?.value || '').trim();
+  if (!token) { alert('Token do Facebook não encontrado. Configure na aba Configuração.'); return; }
+
+  // Visual: loading
+  const originalHTML = btnEl.innerHTML;
+  btnEl.innerHTML = '⏳';
+  btnEl.disabled = true;
+  btnEl.style.opacity = '0.6';
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v19.0/${campId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus, access_token: token }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    // Atualiza o STATE localmente
+    for (const acc of (STATE.accounts || [])) {
+      for (const camp of (acc.campaigns || [])) {
+        if (camp.id === campId || camp.campaignId === campId) {
+          camp.campStatus = newStatus;
+        }
+      }
+    }
+
+    // Atualiza o botão e o badge de status sem re-renderizar tudo
+    btnEl.innerHTML = newStatus === 'ACTIVE' ? '⏸️' : '▶️';
+    btnEl.title     = newStatus === 'ACTIVE' ? 'Pausar campanha' : 'Ativar campanha';
+    btnEl.style.background   = newStatus === 'ACTIVE' ? 'rgba(255,80,80,.15)' : 'rgba(62,207,142,.15)';
+    btnEl.style.color        = newStatus === 'ACTIVE' ? 'var(--red)' : 'var(--green)';
+    btnEl.style.borderColor  = newStatus === 'ACTIVE' ? 'rgba(255,80,80,.3)' : 'rgba(62,207,142,.3)';
+    btnEl.disabled = false;
+    btnEl.style.opacity = '1';
+    btnEl.setAttribute('data-status', newStatus);
+    btnEl.onclick = function() { toggleCampStatus(campId, newStatus, accIdx, this); };
+
+    // Atualiza badge de status ao lado
+    const badgeEl = btnEl.parentElement?.querySelector('.status-badge-camp');
+    if (badgeEl) badgeEl.outerHTML = statusBadge(newStatus);
+
+    // Toast de confirmação
+    const toast = document.createElement('div');
+    toast.textContent = newStatus === 'ACTIVE' ? '✅ Campanha ativada!' : '⏸️ Campanha pausada!';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px 18px;border-radius:8px;z-index:9999;pointer-events:none';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+
+  } catch(e) {
+    btnEl.innerHTML = originalHTML;
+    btnEl.disabled = false;
+    btnEl.style.opacity = '1';
+    alert('Erro ao alterar campanha: ' + e.message);
+  }
+}
+
 // ── STATUS BADGE
 function statusBadge(status) {
   const s = (status || '').toUpperCase();
@@ -2891,8 +2954,8 @@ async function fetchFB(token, accountId, days) {
     return out;
   }
 
-  // ── 5 CHAMADAS em paralelo
-  const [insightsRaw, dailyRaw, adsRaw, campsRaw, ageRaw] = await Promise.all([
+  // ── 6 CHAMADAS em paralelo
+  const [insightsRaw, dailyRaw, adsRaw, campsRaw, ageRaw, platRaw] = await Promise.all([
     // 1. Insights por campanha com breakdown diário — últimos 30 dias (evita paginação excessiva)
     pages(`${base}/${accountId}/insights?fields=campaign_name,campaign_id,spend,clicks,impressions,cpc,actions&time_increment=1&time_range=${trRecent}&level=campaign&limit=500&access_token=${token}`),
     // 2. Dados diários da conta — últimos 30 dias
@@ -2903,6 +2966,8 @@ async function fetchFB(token, accountId, days) {
     pages(`${base}/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget&limit=300&access_token=${token}`),
     // 5. Audiência por campanha — período completo (não precisa de breakdown diário)
     pages(`${base}/${accountId}/insights?fields=campaign_id,impressions&time_range=${trFull}&level=campaign&breakdowns=age,gender&limit=500&access_token=${token}`).catch(()=>[]),
+    // 6. Canal (publisher_platform) por campanha — Instagram vs Facebook
+    pages(`${base}/${accountId}/insights?fields=campaign_id,impressions&time_range=${trFull}&level=campaign&breakdowns=publisher_platform&limit=500&access_token=${token}`).catch(()=>[]),
   ]);
 
   // Se insights principais falharam, lança erro
@@ -2918,6 +2983,16 @@ async function fetchFB(token, accountId, days) {
     audienceByCamp[cid].age.push({
       age:         row.age || '?',
       gender:      row.gender === 'male' ? 'male' : 'female',
+      impressions: parseInt(row.impressions || 0),
+    });
+  }
+
+  // ── Adiciona dados de canal (publisher_platform) ao mapa de audiência
+  for (const row of platRaw) {
+    const cid = row.campaign_id; if (!cid) continue;
+    if (!audienceByCamp[cid]) audienceByCamp[cid] = { age:[], platform:[] };
+    audienceByCamp[cid].platform.push({
+      platform:    row.publisher_platform || 'outros',
       impressions: parseInt(row.impressions || 0),
     });
   }
@@ -4553,7 +4628,7 @@ function renderCrossCards(sorted, el) {
 
     const uid = 'card_' + c.name.replace(/[^a-z0-9]/gi,'_');
     return `
-      <div class="cross-card">
+      <div class="cross-card" id="anchor_${uid}">
         <!-- HEADER — clica pra expandir dias -->
         <div class="cross-card-header" onclick="toggleCrossCard('${uid}')">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
@@ -4562,7 +4637,8 @@ function renderCrossCards(sorted, el) {
           </div>
           <div class="cross-card-badges">
             <span style="font-size:9px;padding:2px 8px;border-radius:3px;background:${accColor}22;color:${accColor};border:1px solid ${accColor}55">${ACCOUNTS_CONFIG[c.accIdx]?.name}</span>
-            ${statusBadge(c.campStatus)}
+            <span class="status-badge-camp">${statusBadge(c.campStatus)}</span>
+            <button onclick="event.stopPropagation(); toggleCampStatus('${c.campaignId||c.id||''}', '${c.campStatus||'ACTIVE'}', ${c.accIdx}, this)" title="${(c.campStatus||'ACTIVE')==='ACTIVE'?'Pausar campanha':'Ativar campanha'}" style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid ${(c.campStatus||'ACTIVE')==='ACTIVE'?'rgba(255,80,80,.3)':'rgba(62,207,142,.3)'};background:${(c.campStatus||'ACTIVE')==='ACTIVE'?'rgba(255,80,80,.15)':'rgba(62,207,142,.15)'};color:${(c.campStatus||'ACTIVE')==='ACTIVE'?'var(--red)':'var(--green)'};cursor:pointer;font-family:var(--mono);line-height:1">${(c.campStatus||'ACTIVE')==='ACTIVE'?'⏸️':'▶️'}</button>
             <span style="font-family:var(--mono);font-size:9px;background:rgba(232,184,75,.15);color:var(--accent);padding:2px 7px;border-radius:3px">D0–D${maxD}</span>
             <span class="pill ${cl.pill}" style="font-size:9px">${cl.lbl}</span>
           </div>
@@ -11293,7 +11369,7 @@ function renderVisaoGeral() {
       const cpcCor  = (x.c.cpc||0)<=0.20?'var(--green)':(x.c.cpc||0)<=0.40?'var(--yellow)':'var(--red)';
       const nome    = x.c.name.length > 22 ? x.c.name.slice(0,21)+'…' : x.c.name;
       return `
-      <div style="background:var(--s1);border:1px solid var(--border);border-top:3px solid ${g.cor};border-radius:8px;padding:10px 12px;min-width:140px">
+      <div onclick="(function(){ var uid='card_'+('${x.c.name}'.replace(/[^a-z0-9]/gi,'_')); var el=document.getElementById('anchor_'+uid); if(el){el.scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(function(){ var days=document.getElementById(uid); if(days&&days.style.display==='none') toggleCrossCard(uid); },400);} })()" style="background:var(--s1);border:1px solid var(--border);border-top:3px solid ${g.cor};border-radius:8px;padding:10px 12px;min-width:140px;cursor:pointer" onmouseenter="this.style.opacity='0.85'" onmouseleave="this.style.opacity='1'">
         <div style="font-family:var(--mono);font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${x.c.name}">${nome}</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-bottom:8px">D${x.maxDay}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
