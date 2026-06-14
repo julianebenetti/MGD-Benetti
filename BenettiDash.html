@@ -11381,11 +11381,11 @@ function renderVisaoGeral() {
       }
       const roasCor = x.roas>=1.5?'var(--green)':x.roas>=be?'var(--yellow)':x.roas>0?'var(--red)':'var(--text3)';
       const cpcCor  = (x.c.cpc||0)<=0.20?'var(--green)':(x.c.cpc||0)<=0.40?'var(--yellow)':'var(--red)';
-      const nome    = x.c.name.length > 22 ? x.c.name.slice(0,21)+'...' : x.c.name;
+      const nome    = x.c.name;
       const campUid = 'card_' + x.c.name.replace(/[^a-z0-9]/gi,'_');
       return `
       <div class="proto-mini-card" data-campuid="${campUid}" style="background:var(--s1);border:1px solid var(--border);border-top:3px solid ${g.cor};border-radius:8px;padding:10px 12px;min-width:140px;cursor:pointer;transition:opacity .15s,border-color .15s" onmouseenter="this.style.opacity='0.8';this.style.borderColor='var(--accent)'" onmouseleave="this.style.opacity='1';this.style.borderColor='var(--border)'">
-        <div style="font-family:var(--mono);font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px" title="${x.c.name}">${nome}</div>
+        <div style="font-family:var(--mono);font-size:9px;font-weight:700;word-break:break-word;line-height:1.3;margin-bottom:2px">${nome}</div>
         <div style="font-family:var(--mono);font-size:9px;color:var(--accent);margin-bottom:8px">D${x.maxDay}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
           <div style="padding:4px 6px;border-radius:4px;background:var(--s2)">
@@ -13136,7 +13136,7 @@ function renderCliquesDia() {
       const bg  = pct >= 5 ? 'rgba(74,222,128,.1)' : pct <= -5 ? 'rgba(255,80,80,.1)' : 'rgba(232,184,75,.1)';
       const [yA,mA,dAd] = dA.split('-'); const [yB,mB,dBd] = dB.split('-');
       chipsHTML += `<div style="background:${bg};border:1px solid ${cor};border-radius:20px;padding:4px 10px;font-family:var(--mono);font-size:9px;color:${cor};white-space:nowrap">
-        ${dAd}/${mA} → ${dBd}/${mB}: <b>${sinal}${pct.toFixed(0)}%</b> (${cB.toLocaleString('pt-BR')} cliques)
+        ${dBd}/${mB} → ${dAd}/${mA}: <b>${sinal}${pct.toFixed(0)}%</b> (${cB.toLocaleString('pt-BR')} cliques)
       </div>`;
     }
     chipsHTML += '</div>';
