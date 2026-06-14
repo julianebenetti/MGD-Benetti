@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781422360,
-  "updated_at_br": "14/06/2026 07:32",
+  "updated_at": 1781427017,
+  "updated_at_br": "14/06/2026 08:50",
   "period_days": 90,
-  "total_orders": 13805,
-  "total_conversions": 12941,
+  "total_orders": 13804,
+  "total_conversions": 12940,
   "orders": [
     {
       "ID do pedido": "2606130DPHDHMS",
@@ -331298,30 +331298,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227351296159516",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-16"
-    },
-    {
-      "ID do pedido": "260316A2Y6QK2N",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-16 07:53:12",
-      "Sub_id1": "12Mar26JgLencol",
-      "Valor de Compra(R$)": "19",
-      "Comissao liquida do afiliado(R$)": "0.57",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.57",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.57",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 1/2/3 Pincel Culinário Silicone Cozinha 24cm Untar Forma Pincelar",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "12511147884",
-      "Nome da loja": "Carnival Nails",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "227346792111035",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-16"
     }
