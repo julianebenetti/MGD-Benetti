@@ -6017,6 +6017,35 @@ function renderTrajetoria() {
   // Meta Q3
   const metaJul = 250000, metaAgo = 350000, metaSet = 400000;
   const metaQ3  = metaJul + metaAgo + metaSet;
+  const metaRegime = 400000; // meta de regime permanente após Q3
+
+  // ── PROJEÇÃO DE 6 MESES — baseada na taxa de crescimento real dos últimos 6 meses ──
+  // Usa os últimos 6 meses com dados (excluindo o mês vigente se ainda muito parcial)
+  const ultimosSeis = gmvData.slice(-6); // jan-jun/26 (6 últimos meses do array)
+  const mesesComDado = ultimosSeis.filter(v => v > 0);
+  // Taxa de crescimento mês a mês (média geométrica entre meses consecutivos com dado)
+  let taxas = [];
+  for (let i = 1; i < ultimosSeis.length; i++) {
+    if (ultimosSeis[i-1] > 0 && ultimosSeis[i] > 0) {
+      taxas.push(ultimosSeis[i] / ultimosSeis[i-1]);
+    }
+  }
+  const taxaMedia = taxas.length > 0 ? taxas.reduce((s,v)=>s+v,0) / taxas.length : 1;
+  const pctCrescMedio = (taxaMedia - 1) * 100;
+
+  // Mês vigente (último com dado real, mesmo que parcial) é a base da projeção
+  const baseGMV = gmvData[gmvData.length - 1] || gmvData[gmvData.length - 2] || 0;
+  const PROJ_LABELS = ['jul/26','ago/26','set/26','out/26','nov/26','dez/26'];
+  const PROJ_METAS  = [metaJul, metaAgo, metaSet, metaRegime, metaRegime, metaRegime];
+  let projData = [];
+  let atual = baseGMV;
+  let mesMetaAtingida = null;
+  for (let i = 0; i < 6; i++) {
+    atual = atual * taxaMedia;
+    projData.push(atual);
+    if (mesMetaAtingida === null && atual >= PROJ_METAS[i]) mesMetaAtingida = PROJ_LABELS[i];
+  }
+  const maxProj = Math.max(...projData, ...PROJ_METAS, 1);
   // Progresso Q3 (jul/ago/set)
   const q3months = ['2026-07','2026-08','2026-09'];
   const q3gmv    = q3months.map(m => getGMV(m));
@@ -6108,6 +6137,58 @@ function renderTrajetoria() {
           <span><span style="display:inline-block;width:10px;height:10px;background:#E05555;border-radius:2px;margin-right:4px"></span>Piso (&lt;R$200k)</span>
         </div>
       </div>
+    </div>
+
+    <!-- PROJEÇÃO DE 6 MESES -->
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;margin-bottom:8px">📈 PROJEÇÃO DE 6 MESES — JUL/26 A DEZ/26</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:20px">Baseada na taxa média de crescimento real dos últimos 6 meses (jan–jun/26): <b style="color:${pctCrescMedio>=0?'var(--green)':'var(--red)'}">${pctCrescMedio>=0?'+':''}${pctCrescMedio.toFixed(1)}%/mês</b></div>
+
+      <div style="background:${mesMetaAtingida?'rgba(74,222,128,.1)':'rgba(255,80,80,.1)'};border:1px solid ${mesMetaAtingida?'var(--green)':'var(--red)'};border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px">${mesMetaAtingida?'🎯':'⚠️'}</div>
+        <div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:${mesMetaAtingida?'var(--green)':'var(--red)'}">${mesMetaAtingida?`Na taxa atual, você atinge a meta em ${mesMetaAtingida}`:'Na taxa atual, a meta não é atingida nos próximos 6 meses'}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-top:2px">${mesMetaAtingida?'Mantendo o ritmo de crescimento dos últimos 6 meses':'Será necessário acelerar o crescimento mensal ou revisar a estratégia'}</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:20px">
+        ${PROJ_LABELS.map((lbl,i) => {
+          const gmv = projData[i];
+          const meta = PROJ_METAS[i];
+          const bateu = gmv >= meta;
+          return `
+          <div style="background:var(--s2);border-radius:8px;padding:12px 10px;border:1px solid ${bateu?'var(--green)':'var(--border)'}">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">${lbl}</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:700;color:${bateu?'var(--green)':'var(--text)'}">${fmtK(gmv)}</div>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">meta: ${fmtK(meta)}</div>
+            <div style="font-family:var(--mono);font-size:9px;margin-top:3px;color:${bateu?'var(--green)':'var(--red)'}">${bateu?'✅ bate':'❌ '+Math.round((gmv/meta-1)*100)+'%'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Gráfico de barras da projeção -->
+      <div style="overflow-x:auto">
+        <svg viewBox="0 0 620 180" style="width:100%;max-width:700px;height:auto">
+          ${PROJ_LABELS.map((lbl,i) => {
+            const x = 20 + i * 100;
+            const barH = (projData[i] / maxProj) * 120;
+            const metaH = (PROJ_METAS[i] / maxProj) * 120;
+            const bateu = projData[i] >= PROJ_METAS[i];
+            return `
+            <line x1="${x+35}" y1="${150-metaH}" x2="${x+75}" y2="${150-metaH}" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <rect x="${x+35}" y="${150-barH}" width="40" height="${barH}" fill="${bateu?'#4ade80':'#E05555'}" rx="3"/>
+            <text x="${x+55}" y="168" text-anchor="middle" font-family="var(--mono)" font-size="9" fill="var(--text3)">${lbl}</text>
+            <text x="${x+55}" y="${150-barH-6}" text-anchor="middle" font-family="var(--mono)" font-size="8" fill="${bateu?'#4ade80':'#E05555'}">${fmtK(projData[i])}</text>`;
+          }).join('')}
+        </svg>
+        <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-family:var(--mono);font-size:9px">
+          <span><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;margin-right:4px"></span>Bate a meta</span>
+          <span><span style="display:inline-block;width:10px;height:10px;background:#E05555;border-radius:2px;margin-right:4px"></span>Abaixo da meta</span>
+          <span>┄┄ linha = meta do mês</span>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:14px">💡 Projeção estatística simples (taxa de crescimento composta). Não considera sazonalidade, novos produtos ou mudanças de estratégia — use como referência, não como garantia.</div>
     </div>
 
     <!-- ANÁLISE TRIMESTRAL -->
