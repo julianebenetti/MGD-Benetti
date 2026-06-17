@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781685437,
-  "updated_at_br": "17/06/2026 08:37",
+  "updated_at": 1781689104,
+  "updated_at_br": "17/06/2026 09:38",
   "period_days": 90,
-  "total_orders": 12935,
-  "total_conversions": 12117,
+  "total_orders": 12934,
+  "total_conversions": 12116,
   "orders": [
     {
       "ID do pedido": "2606167YBNTEHY",
@@ -2911,7 +2911,7 @@
     },
     {
       "ID do pedido": "2606142V0C8MEU",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-14 01:13:17",
       "Sub_id1": "02Jun26TShirtMasculinsVs2",
       "Valor de Compra(R$)": "68",
@@ -2923,14 +2923,14 @@
       "Comissao total do pedido(R$)": "2.04",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Varas Telescópicas Lisa / 3,60M - 40% Carbono - C.W 8-18lbs",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "41661864285",
       "Nome da loja": "YJ Fishing Tackle Shop",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235098797111333",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-14"
     },
     {
@@ -5887,7 +5887,7 @@
     },
     {
       "ID do pedido": "260613VTN1DW8Y",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-12 19:11:37",
       "Sub_id1": "11Jun26LeggingLupoVs2",
       "Valor de Compra(R$)": "15.99",
@@ -5899,14 +5899,14 @@
       "Comissao total do pedido(R$)": "0.4797",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vaporizador dobrável de aço inoxidável vegetal,Cesto de Cozimento a Vapor Multifuncional,Para cozinhar alimentos no vapo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "47551409691",
       "Nome da loja": "Swan111.br",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234990696101497",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-12"
     },
     {
@@ -310418,30 +310418,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "227611633174640",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-19"
-    },
-    {
-      "ID do pedido": "260319HSCFMBU1",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-19 09:22:58",
-      "Sub_id1": "10Mar26CalcaMom",
-      "Valor de Compra(R$)": "12.9",
-      "Comissao liquida do afiliado(R$)": "0.387",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.387",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.387",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 6/36/72 Adesivos Repelente Citronela Para Bebes Crianças Adultos Seguro Contra Mosquito",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22994164010",
-      "Nome da loja": "KATHER",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "227611378146920",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-19"
     }
