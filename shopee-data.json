@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781763001,
-  "updated_at_br": "18/06/2026 06:10",
+  "updated_at": 1781770557,
+  "updated_at_br": "18/06/2026 08:15",
   "period_days": 90,
-  "total_orders": 12697,
-  "total_conversions": 11894,
+  "total_orders": 12696,
+  "total_conversions": 11893,
   "orders": [
     {
       "ID do pedido": "260617AJU552W5",
@@ -29671,7 +29671,7 @@
     },
     {
       "ID do pedido": "2606033RPD839A",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-02 20:00:01",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "39.99",
@@ -29683,14 +29683,14 @@
       "Comissao total do pedido(R$)": "1.1997",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Baby Look Brasil Feminina Camiseta Copa do Mundo Blusa T-Shirt Torcedora Número 10 Casual Trend",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58261183549",
       "Nome da loja": "All_Closet",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234129601118484",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-02"
     },
     {
@@ -304706,30 +304706,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227696624193211",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-20"
-    },
-    {
-      "ID do pedido": "260320M4UBVMDX",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-20 07:53:28",
-      "Sub_id1": "10Mar26CalcaMom",
-      "Valor de Compra(R$)": "66.26",
-      "Comissao liquida do afiliado(R$)": "7.2886",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "8.00%",
-      "Comissao Shopee(R$)": "1.9878",
-      "Comissao do vendedor(R$)": "5.3008",
-      "Comissao total do pedido(R$)": "7.2886",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Mom Jeans Feminina Barrinha Dobrada Cintura Alta Sem Lycra",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "15707879324",
-      "Nome da loja": "Curiosos Jeans",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "227692408171038",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-20"
     }
