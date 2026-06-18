@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781770557,
-  "updated_at_br": "18/06/2026 08:15",
+  "updated_at": 1781774512,
+  "updated_at_br": "18/06/2026 09:21",
   "period_days": 90,
-  "total_orders": 12696,
-  "total_conversions": 11893,
+  "total_orders": 12695,
+  "total_conversions": 11892,
   "orders": [
     {
       "ID do pedido": "260617AJU552W5",
@@ -12199,7 +12199,7 @@
     },
     {
       "ID do pedido": "260610N8J7CU7E",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-09 18:59:16",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "77.25",
@@ -12211,14 +12211,14 @@
       "Comissao total do pedido(R$)": "2.3175",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Principia Kit Limpeza Profunda Todos os tipos de pele Gel de limpeza GL-02 + Oleo de Limpeza OL-01",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22698227674",
       "Nome da loja": "Principia Skincare",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234730756181845",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-09"
     },
     {
@@ -304682,30 +304682,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "227698004137904",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-20"
-    },
-    {
-      "ID do pedido": "260320M8S0KA7P",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-20 09:03:45",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "21.49",
-      "Comissao liquida do afiliado(R$)": "0.6447",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "0.6447",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.6447",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Regata Dry Fit Feminina Blusa Academia Fitness Tapa Bumbum Amarração na Lateral Básica Estilosa",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "28491960483",
-      "Nome da loja": "TRENDFASHIONLTDA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "227696624193211",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-20"
     }
