@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781858417,
-  "updated_at_br": "19/06/2026 08:40",
+  "updated_at": 1781861815,
+  "updated_at_br": "19/06/2026 09:36",
   "period_days": 90,
-  "total_orders": 12496,
-  "total_conversions": 11703,
+  "total_orders": 12495,
+  "total_conversions": 11702,
   "orders": [
     {
       "ID do pedido": "260618D0BXYV2H",
@@ -299882,30 +299882,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227785064187737",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-21"
-    },
-    {
-      "ID do pedido": "260321PR8C1A94",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-21 08:46:05",
-      "Sub_id1": "15Mar26VestLonguete",
-      "Valor de Compra(R$)": "59.71",
-      "Comissao liquida do afiliado(R$)": "1.7913",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.7913",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.7913",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Macacão Marrant Alça Larga em Sensoriale",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58206600221",
-      "Nome da loja": "LANIH MODAS",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "227781965106702",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-21"
     }
