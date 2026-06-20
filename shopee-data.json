@@ -1,9 +1,9 @@
 {
-  "updated_at": 1781933431,
-  "updated_at_br": "20/06/2026 05:30",
+  "updated_at": 1781939392,
+  "updated_at_br": "20/06/2026 07:09",
   "period_days": 90,
-  "total_orders": 12300,
-  "total_conversions": 11527,
+  "total_orders": 12299,
+  "total_conversions": 11526,
   "orders": [
     {
       "ID do pedido": "260619FKPJVQSQ",
@@ -295178,30 +295178,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "227872351183939",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-22"
-    },
-    {
-      "ID do pedido": "260322S1PC4SWE",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-22 06:40:18",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "42.9",
-      "Comissao liquida do afiliado(R$)": "3.003",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "1.287",
-      "Comissao do vendedor(R$)": "1.716",
-      "Comissao total do pedido(R$)": "3.003",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Bicolor Fitness Zero Transparencia",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22398939892",
-      "Nome da loja": "Fattal ",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "227860818136724",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-22"
     }
