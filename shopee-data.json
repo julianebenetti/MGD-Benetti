@@ -1,6 +1,6 @@
 {
-  "updated_at": 1781939392,
-  "updated_at_br": "20/06/2026 07:09",
+  "updated_at": 1781944167,
+  "updated_at_br": "20/06/2026 08:29",
   "period_days": 90,
   "total_orders": 12299,
   "total_conversions": 11526,
@@ -21367,7 +21367,7 @@
     },
     {
       "ID do pedido": "260607FVUWVK9J",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-07 15:46:38",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "29.99",
@@ -21379,14 +21379,14 @@
       "Comissao total do pedido(R$)": "0.8997",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Toalha De Mesa Térmica Impermeável 6 ou 4 Lugares Cozinha",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23097360957",
       "Nome da loja": "Neca Toys",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234546398162513",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-07"
     },
     {
