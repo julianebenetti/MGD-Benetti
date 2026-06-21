@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782029268,
-  "updated_at_br": "21/06/2026 08:07",
+  "updated_at": 1782032727,
+  "updated_at_br": "21/06/2026 09:05",
   "period_days": 90,
-  "total_orders": 12084,
-  "total_conversions": 11322,
+  "total_orders": 12083,
+  "total_conversions": 11321,
   "orders": [
     {
       "ID do pedido": "260620J41S3UX9",
@@ -289994,30 +289994,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227955952197047",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-23"
-    },
-    {
-      "ID do pedido": "260323USG9ATDS",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-23 08:51:42",
-      "Sub_id1": "14Mar26VestidoFloral03Nov25",
-      "Valor de Compra(R$)": "29.05",
-      "Comissao liquida do afiliado(R$)": "0.8715",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.8715",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8715",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Salto Bloco Confortável Para Dia A Dia Sandália Arisa Versátil Lançamento",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23222518092",
-      "Nome da loja": "CALCADOS ARISA LTDA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "227955103144341",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-23"
     }
