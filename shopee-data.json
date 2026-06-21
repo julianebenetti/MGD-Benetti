@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782022667,
-  "updated_at_br": "21/06/2026 06:17",
+  "updated_at": 1782029268,
+  "updated_at_br": "21/06/2026 08:07",
   "period_days": 90,
-  "total_orders": 12085,
-  "total_conversions": 11323,
+  "total_orders": 12084,
+  "total_conversions": 11322,
   "orders": [
     {
       "ID do pedido": "260620J41S3UX9",
@@ -7327,7 +7327,7 @@
     },
     {
       "ID do pedido": "2606156HYVFUEP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-15 12:24:42",
       "Sub_id1": "GruposPromosApp",
       "Valor de Compra(R$)": "15.46",
@@ -7339,14 +7339,14 @@
       "Comissao total do pedido(R$)": "2.1644",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Adesivo Gratidão ter você como cliente Etiqueta Colorida Redonda 4cm",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22697613233",
       "Nome da loja": "Talyta Acessórios & Jóias",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "235225482104703",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-15"
     },
     {
@@ -290019,30 +290019,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "227955103144341",
       "conversionStatus": "COMPLETED",
-      "data": "2026-03-23"
-    },
-    {
-      "ID do pedido": "260323UJ7CCV91",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-03-23 06:41:28",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "8.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Batedor Misturador Mixer Elétrico para Bebidas Leite Café Clara de Ovo 2 em 1",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22392992790",
-      "Nome da loja": "Isabela Top",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "227947288173871",
-      "conversionStatus": "CANCELLED",
       "data": "2026-03-23"
     }
   ]
