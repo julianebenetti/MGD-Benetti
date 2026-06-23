@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782191797,
-  "updated_at_br": "23/06/2026 05:16",
+  "updated_at": 1782197850,
+  "updated_at_br": "23/06/2026 06:57",
   "period_days": 90,
-  "total_orders": 11708,
-  "total_conversions": 10982,
+  "total_orders": 11707,
+  "total_conversions": 10981,
   "orders": [
     {
       "ID do pedido": "260622Q348BD7K",
@@ -280970,30 +280970,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "228121677100216",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-03-25"
-    },
-    {
-      "ID do pedido": "2603253C67AB6P",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-03-25 05:36:13",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "18.72",
-      "Comissao liquida do afiliado(R$)": "1.1232",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.1232",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.1232",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Tampa Copo Termico 1200ml com canudo Flip para Drinks",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58201874378",
-      "Nome da loja": "KONBANWA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "228116173120898",
       "conversionStatus": "COMPLETED",
       "data": "2026-03-25"
     }
