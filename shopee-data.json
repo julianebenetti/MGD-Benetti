@@ -1,6 +1,6 @@
 {
-  "updated_at": 1782536754,
-  "updated_at_br": "27/06/2026 05:05",
+  "updated_at": 1782542188,
+  "updated_at_br": "27/06/2026 06:36",
   "period_days": 90,
   "total_orders": 10743,
   "total_conversions": 10098,
@@ -3775,7 +3775,7 @@
     },
     {
       "ID do pedido": "2606240EK33Y13",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-24 15:54:34",
       "Sub_id1": "21Jun26SuporteEscovaObjVendasVs1",
       "Valor de Compra(R$)": "35.9",
@@ -3787,14 +3787,14 @@
       "Comissao total do pedido(R$)": "1.077",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Caixa Organizadora de Ferramentas com Bandeja Multiuso Armazenamento para Parafusos e Acessórios 16''",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "43168591836",
       "Nome da loja": "Notuz",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236015673199640",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-24"
     },
     {
@@ -8767,7 +8767,7 @@
     },
     {
       "ID do pedido": "260622Q6XRURC3",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-22 03:22:30",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "44.9",
@@ -8779,14 +8779,14 @@
       "Comissao total do pedido(R$)": "1.347",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camiseta Gola Alta Masculina Peluciada Segunda Pele Manga Longa para Inverno Flanelada",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22693679068",
       "Nome da loja": "Vulc  ",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235797749144930",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-22"
     },
     {
