@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782713001,
-  "updated_at_br": "29/06/2026 06:03",
+  "updated_at": 1782718580,
+  "updated_at_br": "29/06/2026 07:36",
   "period_days": 90,
-  "total_orders": 10386,
-  "total_conversions": 9769,
+  "total_orders": 10385,
+  "total_conversions": 9768,
   "orders": [
     {
       "ID do pedido": "260628916DSN5Q",
@@ -249243,30 +249243,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "228643708153014",
       "conversionStatus": "COMPLETED",
-      "data": "2026-03-31"
-    },
-    {
-      "ID do pedido": "260331JKHHFKMV",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-03-31 06:57:45",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "26.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Fitness Roupa de Academia Feminina Top e Calça Suplex Premium Zero Transparência",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "23694205612",
-      "Nome da loja": "AB FIT MODA",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "228639465140470",
-      "conversionStatus": "CANCELLED",
       "data": "2026-03-31"
     }
   ]
