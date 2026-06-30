@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782796665,
-  "updated_at_br": "30/06/2026 05:17",
+  "updated_at": 1782802948,
+  "updated_at_br": "30/06/2026 07:02",
   "period_days": 90,
-  "total_orders": 10278,
-  "total_conversions": 9668,
+  "total_orders": 10277,
+  "total_conversions": 9667,
   "orders": [
     {
       "ID do pedido": "260629BNCHXMVB",
@@ -246650,30 +246650,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "228730247128020",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-01"
-    },
-    {
-      "ID do pedido": "260401N34BK2C1",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-01 06:42:02",
-      "Sub_id1": "03mar26academiavs20nov25",
-      "Valor de Compra(R$)": "11",
-      "Comissao liquida do afiliado(R$)": "0.33",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.33",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.33",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Alça transversal 1,5cm x 1,30m de couro ecológico (montana)",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18798687720",
-      "Nome da loja": "maniacaspormalha",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "228724922104554",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-01"
     }
