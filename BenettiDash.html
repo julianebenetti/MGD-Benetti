@@ -3273,10 +3273,10 @@ async function fetchFB(token, accountId, days) {
   }
 
   // ── 8 CHAMADAS em paralelo
-  const [insightsRaw, dailyRaw, adsRaw, campsRaw, adsetsRaw, ageRaw, platRaw, creativesRaw] = await Promise.all([
+  const [insightsRaw, dailyRaw, adsRaw, campsRaw, adsetsRaw, ageRaw, platRaw, freqRaw, creativesRaw] = await Promise.all([
     // 1. Insights por ANÚNCIO com breakdown diário — últimos 30 dias.
     //    O nome do anúncio é o sub_id quando a campanha tem múltiplos conjuntos/anúncios.
-    pages(`${base}/${accountId}/insights?fields=ad_name,ad_id,adset_id,campaign_id,spend,clicks,impressions,cpc,actions&time_increment=1&time_range=${trRecent}&level=ad&limit=500&access_token=${token}`),
+    pages(`${base}/${accountId}/insights?fields=ad_name,ad_id,adset_id,campaign_id,spend,clicks,impressions,reach,frequency,cpc,actions&time_increment=1&time_range=${trRecent}&level=ad&limit=500&access_token=${token}`),
     // 2. Dados diários da conta — últimos 30 dias
     pages(`${base}/${accountId}/insights?fields=spend,clicks,cpc&time_increment=1&time_range=${trRecent}&limit=400&access_token=${token}`),
     // 3. Anúncios (nome, status, conjunto/campanha pai)
@@ -3289,7 +3289,11 @@ async function fetchFB(token, accountId, days) {
     pages(`${base}/${accountId}/insights?fields=ad_id,impressions&time_range=${trFull}&level=ad&breakdowns=age,gender&limit=500&access_token=${token}`).catch(()=>[]),
     // 7. Canal (publisher_platform) por ANÚNCIO — Instagram vs Facebook
     pages(`${base}/${accountId}/insights?fields=ad_id,impressions&time_range=${trFull}&level=ad&breakdowns=publisher_platform&limit=500&access_token=${token}`).catch(()=>[]),
-    // 8. Criativos (URL de destino do "Compre agora") — chamada separada, leve e em lotes
+    // 9. Frequência e alcance REAIS por anúncio — chamada SEM time_increment.
+    //    Com time_increment=1, reach é "únicos por dia" (não acumulativo), então
+    //    calcular impressões/reach somados dá valor errado. Esta chamada traz o
+    //    agregado correto do período inteiro.
+    pages(`${base}/${accountId}/insights?fields=ad_id,frequency,reach,impressions&time_range=${trRecent}&level=ad&limit=500&access_token=${token}`).catch(()=>[]),
     //    menores (limit=50). asset_feed_spec{link_urls} cobre anúncios de Criativo Dinâmico/Advantage+.
     pages(`${base}/${accountId}/ads?fields=id,creative{link_url,object_story_spec{link_data{link,call_to_action}},asset_feed_spec{link_urls}}&limit=50&access_token=${token}`, 8).catch(e=>{console.warn('[FB creative] falhou:', e.message); return [];}),
   ]);
@@ -3297,6 +3301,16 @@ async function fetchFB(token, accountId, days) {
   // Se insights principais falharam, lança erro
   if (!insightsRaw.length && !dailyRaw.length) {
     throw new Error(`[${accountId}] Sem dados — verifique o token`);
+  }
+
+  // ── Mapa adId → { frequency, reach, impressions } da chamada agregada (sem time_increment)
+  const freqByAd = {};
+  for (const row of freqRaw) {
+    if (row.ad_id) freqByAd[row.ad_id] = {
+      frequency:   parseFloat(row.frequency   || 0),
+      reach:       parseInt(row.reach         || 0),
+      impressions: parseInt(row.impressions   || 0),
+    };
   }
 
   // ── Mapa adId → creative (da chamada 8, isolada)
@@ -3386,25 +3400,32 @@ async function fetchFB(token, accountId, days) {
   for (const row of insightsRaw) {
     const aid = row.ad_id;
     if (!aid) continue;
-    const spend  = parseFloat(row.spend  || 0);
-    const clicks = parseInt(row.clicks  || 0);
-    const orders = parseInt((row.actions||[]).find(a=>a.action_type==='purchase')?.value || 0);
-    const date   = row.date_start;
+    const spend   = parseFloat(row.spend  || 0);
+    const clicks  = parseInt(row.clicks  || 0);
+    const impr    = parseInt(row.impressions || 0);
+    const reach   = parseInt(row.reach || 0);
+    const orders  = parseInt((row.actions||[]).find(a=>a.action_type==='purchase')?.value || 0);
+    const date    = row.date_start;
     if (!adTotals[aid]) {
       adTotals[aid] = {
         adName: row.ad_name, campaignId: row.campaign_id, adsetId: row.adset_id,
-        spend:0, clicks:0, cpc:0, orders:0, dailyData:[],
+        spend:0, clicks:0, cpc:0, orders:0, impressions:0, reach:0, dailyData:[],
       };
     }
-    adTotals[aid].spend  += spend;
-    adTotals[aid].clicks += clicks;
-    adTotals[aid].orders += orders;
+    adTotals[aid].spend       += spend;
+    adTotals[aid].clicks      += clicks;
+    adTotals[aid].impressions += impr;
+    adTotals[aid].reach       += reach;   // reach acumulado — frequency = impressions/reach
+    adTotals[aid].orders      += orders;
     if (spend > 0 && date) {
       adTotals[aid].dailyData.push({ date, spend, clicks, cpc: row.cpc ? parseFloat(row.cpc) : 0 });
     }
   }
   for (const t of Object.values(adTotals)) {
-    t.cpc = t.clicks > 0 ? t.spend / t.clicks : 0;
+    t.cpc       = t.clicks > 0 ? t.spend / t.clicks : 0;
+    t.ctr       = t.impressions > 0 ? (t.clicks / t.impressions) * 100 : 0;
+    t.cpm       = t.impressions > 0 ? (t.spend / t.impressions) * 1000 : 0;
+    t.frequency = t.reach  > 0 ? t.impressions / t.reach : 0;
   }
 
   // ── Monta uma linha por ANÚNCIO (= sub_id). Quando a campanha tem só 1 anúncio,
@@ -3446,6 +3467,11 @@ async function fetchFB(token, accountId, days) {
       roas:         0, revenue: 0,
       clicks:       t.clicks,
       cpc:          t.cpc,
+      ctr:          t.ctr       || 0,
+      cpm:          t.cpm       || 0,
+      impressions:  freqByAd[aid]?.impressions || t.impressions || 0,
+      frequency:    freqByAd[aid]?.frequency   || 0,
+      reach:        freqByAd[aid]?.reach        || 0,
       orders:       t.orders,
       dailyData:    t.dailyData,
       audience:     audienceByAd[aid] || null,
@@ -4662,6 +4688,11 @@ function buildCross(accounts, shopeeOrders) {
         orders:           camp.orders || 0,
         clicks:           camp.clicks,
         cpc:              camp.cpc,
+        ctr:              camp.ctr        || 0,
+        cpm:              camp.cpm        || 0,
+        impressions:      camp.impressions|| 0,
+        frequency:        camp.frequency  || 0,
+        reach:            camp.reach      || 0,
         metaClicks:       camp.clicks || 0,
         dailyCross,
         produtos,
@@ -11548,6 +11579,13 @@ function renderAudienceMobile(c) {
         <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px;letter-spacing:.5px">👥 PÚBLICO — 👨 ${pctM}% homens · 👩 ${pctF}% mulheres</div>
         ${ageRows}
       </div>`;
+  } else if (aud.platform?.length) {
+    // Tem dado de canal mas não de idade/gênero — provável supressão de privacidade do Meta
+    // (alcance ainda pequeno demais pra detalhar por idade/gênero sem identificar pessoas)
+    ageHTML = `
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);padding:4px 0">
+        👥 PÚBLICO — ainda sem detalhe de idade/gênero (alcance baixo demais; o Meta libera esse dado conforme o anúncio ganha volume)
+      </div>`;
   }
 
   return `
@@ -11684,7 +11722,7 @@ function renderAudiencePanel(c) {
           👥 FAIXA ETÁRIA &nbsp;·&nbsp;
           <span style="color:var(--accent)">👨 ${Math.round(totalM/totG*100)}% homens &nbsp; 👩 ${Math.round(totalF/totG*100)}% mulheres</span>
         </div>
-        ${ageRows||'<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Sem dados de idade</div>'}
+        ${ageRows||'<div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Ainda sem detalhe de idade/gênero — alcance baixo demais; o Meta libera esse dado conforme o anúncio ganha volume</div>'}
       </div>
     </div>
   </div>`;
@@ -12375,34 +12413,73 @@ function renderVisaoGeral() {
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">LUCRO</div>
           <div style="font-family:var(--mono);font-size:14px;font-weight:800;color:${lucroColor}">${lucro>=0?'+':''}R$ ${fmt(lucro)}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">período</div>
+          <div style="font-family:var(--mono);font-size:9px;color:${lucroColor}">${lucro>0?'✅ No lucro':lucro===0?'—':'🔴 No prejuízo'}</div>
         </div>
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">GASTO FB</div>
           <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--text)">R$ ${fmt(c.fbSpend||0)}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">+14% = R$ ${fmt(gasto)}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">+14% impostos = R$ ${fmt(gasto)}</div>
         </div>
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">COMISSÃO LÍQ.</div>
           <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--green)">R$ ${fmt(c.shopeeCommLiq||0)}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">−6% Shopee</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">−6% taxa Shopee</div>
         </div>
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">CPC</div>
           <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${(c.cpc||0)<=0.20?'var(--green)':(c.cpc||0)<=0.40?'var(--yellow)':'var(--red)'}">R$ ${fmt(c.cpc||0)}</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">meta: R$0,20</div>
         </div>
+        ${(() => {
+          const freq = c.frequency || 0;
+          const freqColor = freq === 0 ? 'var(--text3)' : freq < 2 ? 'var(--green)' : freq < 3 ? 'var(--yellow)' : 'var(--red)';
+          const freqLabel = freq === 0 ? '—' : freq < 2 ? '✅ Saudável — público ainda fresco' : freq < 3 ? '⚠️ Atenção — começa a saturar' : '🔴 Saturando — público cansado';
+          return `<div style="background:var(--s2);padding:10px 13px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">FREQUÊNCIA</div>
+            <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${freqColor}">${freq > 0 ? freq.toFixed(1) + 'x' : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${freqColor}">${freqLabel}</div>
+          </div>`;
+        })()}
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">PEDIDOS</div>
           <div style="font-family:var(--mono);font-size:14px;font-weight:800">${c.shopeeOrders||0} <span style="color:var(--green);font-size:11px">· ${c.shopeeDiretas||0} dir</span></div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--accent)">💳 ${c.pagUnicos||c.shopeeOrders||0} únicos</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--accent)">💳 ${c.pagUnicos||c.shopeeOrders||0} únicos · ${(c.shopeeDiretas||0)>0?'✅ vendas diretas':''}</div>
         </div>
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">ORÇAMENTO/DIA</div>
           <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:var(--blue)">${budget>0?'R$ '+fmt(budget):'—'}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${budget>0 && (c.fbSpend||0)>0?'usado: R$ '+fmt(c.fbSpend||0):'configurado no FB'}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${budget>0 && (c.fbSpend||0)>0?'usado: R$ '+fmt(c.fbSpend||0):'${budget>34?"💎 Escalado":"configurado no FB"}'}</div>
         </div>
       </div>
+
+      <!-- MÉTRICAS DE CRIATIVO -->
+      ${(() => {
+        const ctr  = c.ctr  || 0;
+        const cpm  = c.cpm  || 0;
+        const impr = c.impressions || 0;
+        if (!impr) return '';
+        const ctrColor = ctr === 0 ? 'var(--text3)' : ctr >= 2 ? 'var(--green)' : ctr >= 1 ? 'var(--yellow)' : 'var(--red)';
+        const ctrLabel = ctr === 0 ? '—' : ctr >= 2 ? '✅ Criativo forte' : ctr >= 1 ? '⚠️ Mediano — pode melhorar' : '🔴 Criativo fraco — revisar';
+        const cpmColor = cpm === 0 ? 'var(--text3)' : cpm <= 15 ? 'var(--green)' : cpm <= 30 ? 'var(--yellow)' : 'var(--red)';
+        const cpmLabel = cpm === 0 ? '—' : cpm <= 15 ? '🟢 Leilão barato' : cpm <= 30 ? '⚠️ Atenção' : '🔴 Leilão caro — saturação ou nicho disputado';
+        return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border-top:1px solid var(--border)">
+          <div style="background:var(--s2);padding:8px 13px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">CTR</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${ctrColor}">${ctr > 0 ? ctr.toFixed(2) + '%' : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${ctrColor}">${ctrLabel}</div>
+          </div>
+          <div style="background:var(--s2);padding:8px 13px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">CPM</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${cpmColor}">${cpm > 0 ? 'R$ ' + fmt(cpm) : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${cpmColor}">${cpmLabel}</div>
+          </div>
+          <div style="background:var(--s2);padding:8px 13px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">IMPRESSÕES</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800">${impr.toLocaleString('pt-BR')}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${c.reach > 0 ? 'alcance: ' + (c.reach||0).toLocaleString('pt-BR') : ''}</div>
+          </div>
+        </div>`;
+      })()}
 
       <!-- NARRATIVA DE ANÁLISE -->
       <div onclick="vgToggle('${uid}_analise')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;border-top:1px solid var(--border);background:var(--s2)">
