@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782969047,
-  "updated_at_br": "02/07/2026 05:10",
+  "updated_at": 1782974797,
+  "updated_at_br": "02/07/2026 06:46",
   "period_days": 90,
-  "total_orders": 10095,
-  "total_conversions": 9518,
+  "total_orders": 10094,
+  "total_conversions": 9517,
   "orders": [
     {
       "ID do pedido": "260701GJTJP6N8",
@@ -242258,30 +242258,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "228907669185693",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-03"
-    },
-    {
-      "ID do pedido": "260403T348355X",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-03 06:25:18",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "29.99",
-      "Comissao liquida do afiliado(R$)": "0.8997",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "8.00%",
-      "Comissao Shopee(R$)": "0.8997",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8997",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Balança Corporal Bioimpedância Profissional Bluetooth",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22797412872",
-      "Nome da loja": "ZSZ_SHOP",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "228896717135462",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-03"
     }
