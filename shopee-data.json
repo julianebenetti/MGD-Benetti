@@ -1,9 +1,9 @@
 {
-  "updated_at": 1782980277,
-  "updated_at_br": "02/07/2026 08:17",
+  "updated_at": 1782987534,
+  "updated_at_br": "02/07/2026 10:18",
   "period_days": 90,
-  "total_orders": 10094,
-  "total_conversions": 9517,
+  "total_orders": 10093,
+  "total_conversions": 9516,
   "orders": [
     {
       "ID do pedido": "260701GJTJP6N8",
@@ -22927,7 +22927,7 @@
     },
     {
       "ID do pedido": "260621KKG3XPE3",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-20 16:56:18",
       "Sub_id1": "07Abr26VestidoFloralC3",
       "Valor de Compra(R$)": "22.66",
@@ -22939,14 +22939,14 @@
       "Comissao total do pedido(R$)": "0.6798",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT Trio Sombra Para Sobrancelhas Ruby Rose HB9354 + GEL INCOLOR PARA SOBRANCELHAS BROW RISE HBE2503",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58250796082",
       "Nome da loja": "CO KAKA",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235673777147118",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-20"
     },
     {
@@ -242234,30 +242234,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "228911334106873",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-03"
-    },
-    {
-      "ID do pedido": "260403TDAMSAFB",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-03 09:27:49",
-      "Sub_id1": "05Dez25AcademiaVs20Nov25",
-      "Valor de Compra(R$)": "89.9",
-      "Comissao liquida do afiliado(R$)": "26.071",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "26.00%",
-      "Comissao Shopee(R$)": "2.697",
-      "Comissao do vendedor(R$)": "23.374",
-      "Comissao total do pedido(R$)": "26.071",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Fitness Roupa de Academia Feminina Top e Calça Suplex Premium Zero Transparência",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23694205612",
-      "Nome da loja": "AB FIT MODA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "228907669185693",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-03"
     }
