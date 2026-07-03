@@ -1,9 +1,9 @@
 {
-  "updated_at": 1783054486,
-  "updated_at_br": "03/07/2026 04:54",
+  "updated_at": 1783060586,
+  "updated_at_br": "03/07/2026 06:36",
   "period_days": 90,
-  "total_orders": 10055,
-  "total_conversions": 9472,
+  "total_orders": 10054,
+  "total_conversions": 9471,
   "orders": [
     {
       "ID do pedido": "260702K64U39GE",
@@ -241298,30 +241298,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "228994320130978",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-04"
-    },
-    {
-      "ID do pedido": "260404VHXN5FXV",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-04 05:55:55",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "129.13",
-      "Comissao liquida do afiliado(R$)": "7.7478",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "7.00%",
-      "Comissao Shopee(R$)": "7.7478",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "7.7478",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Ração Golden Mini Bits Senior Cães Adultos Pequenos Frango e Arroz 10Kg",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "11969651651",
-      "Nome da loja": "Popular Pet",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "228981355116211",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-04"
     }
