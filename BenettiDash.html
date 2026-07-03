@@ -6302,6 +6302,18 @@ function getTaxCommForMonth(month) {
   return month >= '2026-01' ? (parseFloat($('taxComm')?.value || 6) / 100) : 0;
 }
 
+// Últimos 3 meses (mês atual + 2 anteriores) — Shopee ainda altera esses dados depois do fechamento,
+// então eles NUNCA devem usar o HISTORICAL_DATA travado como fonte principal, sempre o CSV ao vivo.
+// Janela desliza sozinha com a data real do dispositivo.
+function isRecentMonth(month) {
+  const now = new Date();
+  const cur = now.getFullYear() * 12 + now.getMonth(); // mês atual, indexado
+  const [y, m] = month.split('-').map(Number);
+  const target = y * 12 + (m - 1);
+  const diff = cur - target;
+  return diff >= 0 && diff <= 2; // mês atual, -1 e -2
+}
+
 function getMonthData(month, store, shopeeOrders, fbAccounts) {
   const TAX_FB   = getTaxFBForMonth(month);
   const TAX_COMM = getTaxCommForMonth(month);
@@ -6328,8 +6340,9 @@ function getMonthData(month, store, shopeeOrders, fbAccounts) {
     return calcFields(fbSpend, s.gmv||0, s.comm||0, s.qtd||0, s.diretas||0, s.pending||0, true);
   }
 
-  // HISTORICAL_DATA embutido (CSVs definitivos desta conversa) — fonte mais confiável para meses encerrados
+  // HISTORICAL_DATA embutido (CSVs definitivos desta conversa) — fonte confiável só para meses já "esfriados"
   const hist = HISTORICAL_DATA[month];
+  const recent = isRecentMonth(month); // últimos 3 meses (atual + 2 anteriores) — nunca trava no histórico
 
   // Dados Shopee ao vivo (CSV carregado nesta sessão)
   const orders  = shopeeOrders.filter(o=>(o.date||'').startsWith(month));
@@ -6337,34 +6350,41 @@ function getMonthData(month, store, shopeeOrders, fbAccounts) {
   // FB ao vivo
   const fbLive  = fbAccounts.flatMap(a=>a.daily||[]).filter(d=>d.date?.startsWith(month)).reduce((sum,d)=>sum+d.spend,0);
 
-  // Se temos HISTORICAL_DATA para este mês (dados definitivos dos CSVs) — usa sempre como base
-  if (hist?.gmv > 0 || hist?.comm > 0) {
-    // Spend: prefere FB ao vivo se disponível, senão usa o do histórico
-    const fbSpend = fbLive > 0 ? fbLive : (hist.fbSpend || hist.spend || 0);
-    // Pendentes: usa 0 para meses encerrados (já processados), exceto abr/mai que ainda têm pendentes reais
-    const pending = hist.pendente || hist.pending || 0;
-    return calcFields(fbSpend, hist.gmv, hist.comm, hist.qtd, hist.diretas||0, pending, false);
-  }
+  // Melhor fbSpend disponível: ao vivo (sessão atual) > store salvo > histórico travado.
+  // O investimento no Meta NÃO sofre a regra dos "últimos 3 meses" — só a Shopee muda depois do fechamento;
+  // o gasto do Meta já fecha no mês e não deve "sumir" só porque o cache ao vivo não tem mais aquele período.
+  const fbSpendFallback = fbLive > 0 ? fbLive
+    : (store[month]?.fbSpend || store[month]?.spend || hist?.fbSpend || hist?.spend || 0);
 
-  // Dados ao vivo do CSV atual (meses recentes sem HISTORICAL_DATA)
-  if (orders.length > 0) {
+  function fromOrders() {
+    if (orders.length === 0) return null;
     const qtd     = orders.length;
     const gmv     = orders.reduce((s,o)=>s+o.amount,0);
     const comm    = orders.reduce((s,o)=>s+o.commission,0);
     const diretas = orders.filter(o=>o.direta).length;
     const pending = orders.filter(o=>{const st=(o.itemStatus||'').toLowerCase();return['pendente','pending','em análise'].some(k=>st.includes(k));}).length;
-    return calcFields(fbLive, gmv, comm, qtd, diretas, pending, false);
+    return calcFields(fbSpendFallback, gmv, comm, qtd, diretas, pending, false);
   }
 
-  // Store persistido (sem fixed) como último fallback
-  const stored = store[month];
-  if (stored?.gmv > 0 || stored?.comm > 0) {
-    const fbSpend = fbLive > 0 ? fbLive : (stored.fbSpend || stored.spend || 0);
-    return calcFields(fbSpend, stored.gmv||0, stored.comm||0, stored.qtd||0, stored.diretas||0, stored.pending||0, false);
+  function fromStore() {
+    const stored = store[month];
+    if (!(stored?.gmv > 0 || stored?.comm > 0)) return null;
+    return calcFields(fbSpendFallback, stored.gmv||0, stored.comm||0, stored.qtd||0, stored.diretas||0, stored.pending||0, false);
   }
 
-  // Sem dados — retorna zerado
-  return calcFields(fbLive, 0, 0, 0, 0, 0, false);
+  function fromHistorical() {
+    if (!(hist?.gmv > 0 || hist?.comm > 0)) return null;
+    const pending = hist.pendente || hist.pending || 0;
+    return calcFields(fbSpendFallback, hist.gmv, hist.comm, hist.qtd, hist.diretas||0, pending, false);
+  }
+
+  if (recent) {
+    // Mês recente: CSV ao vivo > store salvo > histórico só como último recurso (nunca fonte principal)
+    return fromOrders() || fromStore() || fromHistorical() || calcFields(fbLive, 0, 0, 0, 0, 0, false);
+  }
+
+  // Mês já fechado (fora da janela dos últimos 3): histórico travado é a fonte mais confiável
+  return fromHistorical() || fromOrders() || fromStore() || calcFields(fbLive, 0, 0, 0, 0, 0, false);
 }
 
 // ══════════════════════════════════════════════════
@@ -7540,9 +7560,9 @@ const HISTORICAL_DATA = {
   '2025-12': { qtd:16239, spend:24797.03, fbSpend:24797.03, gmv:834035.83, comm:33975.78, cancelado:2704,pendente:0,   shopeeQtd:16239, shopeeGmv:834035.83, shopeeComm:33975.78,fixed:false, source:'csv_real',      updatedAt:'2025-12-30' },
   '2026-01': { qtd:13228, spend:23944.24, fbSpend:23944.24, gmv:703585.55, comm:30122.20, cancelado:2159,pendente:0,   shopeeQtd:13228, shopeeGmv:703585.55, shopeeComm:30122.20,fixed:false, source:'csv_real',      updatedAt:'2026-01-30' },
   '2026-02': { qtd:6088,  spend:12440.77, fbSpend:12440.77, gmv:294249.68, comm:15355.12, cancelado:899, pendente:0,   shopeeQtd:6088,  shopeeGmv:294249.68, shopeeComm:15355.12,fixed:false, source:'csv_real',      updatedAt:'2026-02-28' },
-  '2026-03': { qtd:9420,  spend:8006.65,  fbSpend:8006.65,  gmv:470932.18, comm:24512.91, cancelado:1568,pendente:0,   shopeeQtd:9420,  shopeeGmv:470932.18, shopeeComm:24512.91,fixed:false, source:'csv_real',      updatedAt:'2026-03-30' },
-  '2026-04': { qtd:3959,  spend:8006.65,  fbSpend:8006.65,  gmv:181434.77, comm:8904.03,  cancelado:527, pendente:2,   shopeeQtd:3959,  shopeeGmv:181434.77, shopeeComm:8904.03, fixed:false, source:'csv_real',      updatedAt:'2026-04-30' },
-  '2026-05': { qtd:2300,  spend:7497.63,  fbSpend:7497.63,  gmv:108200.95, comm:5700.00,  cancelado:318, pendente:633, shopeeQtd:2300,  shopeeGmv:108200.95, shopeeComm:5700.00, fixed:false, source:'csv_real',      updatedAt:'2026-05-31' },
+  '2026-03': { qtd:9420,  spend:23203.39, fbSpend:23203.39, gmv:470932.18, comm:24512.91, cancelado:1568,pendente:0,   shopeeQtd:9420,  shopeeGmv:470932.18, shopeeComm:24512.91,fixed:false, source:'csv_real',      updatedAt:'2026-07-02' },
+  '2026-04': { qtd:3714,  spend:8006.65,  fbSpend:8006.65,  gmv:181664.15, comm:8911.98,  cancelado:527, pendente:0,   shopeeQtd:3714,  shopeeGmv:181664.15, shopeeComm:8911.98, fixed:false, source:'csv_real',      updatedAt:'2026-06-05' },
+  '2026-05': { qtd:3134,  spend:7497.63,  fbSpend:7497.63,  gmv:142130.90, comm:7615.63,  cancelado:318, pendente:0,   shopeeQtd:3134,  shopeeGmv:142130.90, shopeeComm:7615.63, fixed:false, source:'csv_real',      updatedAt:'2026-07-02' },
 };
 
 const CSV_HISTORICAL_DETAIL = {"2025-10":{"campanhas":[{"sub":"03Out25VestidoVerde","gmv":908.53,"comm":27.26,"pedidos":15},{"sub":"05Out25VestidoFloral","gmv":676.89,"comm":21.93,"pedidos":13},{"sub":"linkconvertidosv","gmv":491.42,"comm":14.74,"pedidos":10},{"sub":"06Out25VestidoPaola","gmv":480.35,"comm":18.31,"pedidos":9},{"sub":"06Out25Macaquinho","gmv":309.84,"comm":13.6,"pedidos":6},{"sub":"03Out25Macacao","gmv":294.73,"comm":8.84,"pedidos":8},{"sub":"08Out25VestidoPoa","gmv":104.51,"comm":3.14,"pedidos":2},{"sub":"07Out25Stitch","gmv":80.68,"comm":3.28,"pedidos":3},{"sub":"04Out25Gokoco","gmv":56.99,"comm":1.71,"pedidos":1},{"sub":"linkGiuseppi","gmv":48.67,"comm":1.46,"pedidos":1}],"produtos":[{"id":"22194190524","nome":"Mini Cozinha Infantil com Acessórios - Rosa","gmv":159.54,"comm":4.79,"qtd":1},{"id":"19076086112","nome":"Kit 3x Bacia De Plástico Grande 80l","gmv":156.71,"comm":4.7,"qtd":1},{"id":"23098323421","nome":"Kit 3 Calças Jeans Feminina Skinny","gmv":142.98,"comm":4.29,"qtd":1},{"id":"23596835996","nome":"Videogame Stick 2-Console 4K GD10","gmv":129.87,"comm":7.79,"qtd":1},{"id":"21071915954","nome":"1 galho de 3 de pessegueiro","gmv":124.5,"comm":9.62,"qtd":12}]},"2025-11":{"campanhas":[{"sub":"22Nov25VestidoBlogueira","gmv":74331.92,"comm":2461.05,"pedidos":1443},{"sub":"03Nov25VestidoFloral","gmv":68753.53,"comm":2952.03,"pedidos":1343},{"sub":"08Nov25VestidoFloral","gmv":65095.65,"comm":2821.33,"pedidos":1266},{"sub":"10Nov25VestidoFloral3DtIgual","gmv":52952.76,"comm":2244.5,"pedidos":1040},{"sub":"24Nov25Academia","gmv":47162.05,"comm":1805.5,"pedidos":850},{"sub":"10Nov25VestidoFloral4DtIgual","gmv":46993.77,"comm":2163.2,"pedidos":924},{"sub":"06Nov25Macaquinho","gmv":43960.87,"comm":2160.25,"pedidos":858},{"sub":"10Nov25VestidoFloral1DtIgual","gmv":41622.32,"comm":1693.83,"pedidos":780},{"sub":"29Nov25Academia","gmv":38023.96,"comm":1948.04,"pedidos":715},{"sub":"20Nov25Academia","gmv":34783.84,"comm":1597.81,"pedidos":646}],"produtos":[{"id":"22892814698","nome":"Vestido Feminino Midi com Manga Princesa","gmv":9803.44,"comm":411.74,"qtd":163},{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":4066.68,"comm":610.0,"qtd":171},{"id":"22194985990","nome":"Vestido Macaquinho Feminino Estampa Tropical","gmv":3118.08,"comm":124.72,"qtd":43},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor Academia","gmv":2744.61,"comm":164.68,"qtd":32},{"id":"23099093430","nome":"Vestido Midi Floral Fenda Frontal","gmv":2283.54,"comm":91.34,"qtd":38}]},"2025-12":{"campanhas":[{"sub":"05Dez25AcademiaVs20Nov25","gmv":145046.37,"comm":7497.63,"pedidos":2712},{"sub":"08Nov25VestidoFloral","gmv":18165.06,"comm":815.88,"pedidos":382},{"sub":"22Nov25VestidoBlogueira","gmv":17996.18,"comm":595.37,"pedidos":363},{"sub":"03Nov25VestidoFloral","gmv":16786.58,"comm":721.58,"pedidos":350},{"sub":"05Dez25VestidoFloralVs08Nov25","gmv":15888.86,"comm":554.71,"pedidos":324},{"sub":"10Nov25VestidoFloral3DtIgual","gmv":12437.04,"comm":524.8,"pedidos":247},{"sub":"10Dez25BatinhaFACE","gmv":11975.49,"comm":413.81,"pedidos":270},{"sub":"05Dez25MacaquinhoVs16Out25","gmv":11866.05,"comm":408.74,"pedidos":229},{"sub":"05Dez25VestidoBlogueira","gmv":11684.46,"comm":433.42,"pedidos":231},{"sub":"10Nov25VestidoFloral4DtIgual","gmv":11384.6,"comm":523.27,"pedidos":223}],"produtos":[{"id":"22892814698","nome":"Vestido Feminino Midi com Manga Princesa","gmv":6659.32,"comm":279.69,"qtd":111},{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":3888.27,"comm":583.24,"qtd":164},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor Academia","gmv":3148.79,"comm":188.93,"qtd":36},{"id":"23099093430","nome":"Vestido Midi Floral Fenda Frontal","gmv":1153.8,"comm":46.15,"qtd":19},{"id":"22194985990","nome":"Vestido Macaquinho Feminino Estampa Tropical","gmv":1019.5,"comm":40.78,"qtd":14}]},"2026-01":{"campanhas":[{"sub":"05Dez25AcademiaVs20Nov25","gmv":82862.82,"comm":4787.55,"pedidos":1551},{"sub":"13Mar26PoUnhaPerola","gmv":0,"comm":0,"pedidos":0},{"sub":"12Jan26MacaquinhoVs3","gmv":43917.1,"comm":1757.68,"pedidos":902},{"sub":"12Jan26AcademiaVs4","gmv":30455.19,"comm":1583.59,"pedidos":621},{"sub":"07Jan26AcademiaVs1","gmv":28041.9,"comm":1444.84,"pedidos":566},{"sub":"27Jan26VestSuplex","gmv":24541.16,"comm":881.24,"pedidos":505},{"sub":"13Jan26PuketVs2","gmv":23037.4,"comm":1014.77,"pedidos":458},{"sub":"12Jan26AcademiaVs2","gmv":22668.52,"comm":1136.5,"pedidos":464},{"sub":"18Jan26MacaquinhoVs4","gmv":21913.02,"comm":876.52,"pedidos":448},{"sub":"19Jan26PuketVs3","gmv":17882.85,"comm":786.65,"pedidos":369}],"produtos":[{"id":"22892814698","nome":"Vestido Feminino Midi com Manga Princesa","gmv":6659.32,"comm":279.69,"qtd":111},{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":5829.6,"comm":874.44,"qtd":246},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor Academia","gmv":3962.32,"comm":237.74,"qtd":46},{"id":"22194985990","nome":"Vestido Macaquinho Feminino","gmv":2688.97,"comm":107.56,"qtd":37},{"id":"21071915954","nome":"1 galho de 3 de pessegueiro","gmv":2454.75,"comm":189.84,"qtd":179}]},"2026-02":{"campanhas":[{"sub":"05Dez25AcademiaVs20Nov25","gmv":91878.35,"comm":5276.77,"pedidos":1726},{"sub":"18fev26vesutiainfantilpublaberto","gmv":67715.97,"comm":3431.85,"pedidos":1453},{"sub":"04Fev26VESutiaInfantilPublAberto","gmv":33939.37,"comm":1741.41,"pedidos":730},{"sub":"04Fev26VESutiaInfantil","gmv":33266.04,"comm":1762.91,"pedidos":771},{"sub":"22fev26CopoTermico","gmv":16568.08,"comm":720.82,"pedidos":339},{"sub":"22fev26PoUnhaPerola","gmv":13523.88,"comm":676.19,"pedidos":276},{"sub":"12Jan26MacaquinhoVs3","gmv":5040.84,"comm":201.63,"pedidos":103},{"sub":"07Jan26AcademiaVs1","gmv":4882.26,"comm":251.43,"pedidos":100},{"sub":"12Jan26AcademiaVs4","gmv":4498.14,"comm":233.9,"pedidos":92},{"sub":"27Jan26VestSuplex","gmv":3745.62,"comm":134.37,"pedidos":77}],"produtos":[{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":9189.72,"comm":1378.46,"qtd":388},{"id":"22892814698","nome":"Vestido Feminino Midi com Manga Princesa","gmv":6659.32,"comm":279.69,"qtd":111},{"id":"21071915954","nome":"1 galho de 3 de pessegueiro","gmv":2763.0,"comm":213.85,"qtd":201},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor Academia","gmv":814.92,"comm":48.9,"qtd":9},{"id":"23099093430","nome":"Vestido Midi Floral Fenda Frontal","gmv":599.82,"comm":23.99,"qtd":10}]},"2026-03":{"campanhas":[{"sub":"05Dez25AcademiaVs20Nov25","gmv":146086.74,"comm":8359.8,"pedidos":2683},{"sub":"13Mar26PoUnhaPerola","gmv":106889.72,"comm":4075.08,"pedidos":2324},{"sub":"18fev26vesutiainfantilpublaberto","gmv":13149.66,"comm":663.76,"pedidos":288},{"sub":"04Fev26VESutiaInfantilPublAberto","gmv":13346.49,"comm":684.16,"pedidos":290},{"sub":"04Fev26VESutiaInfantil","gmv":13083.66,"comm":697.76,"pedidos":304},{"sub":"03mar26academiavs20nov25","gmv":11463.07,"comm":623.79,"pedidos":235},{"sub":"22fev26CopoTermico","gmv":9697.79,"comm":421.63,"pedidos":198},{"sub":"22fev26PoUnhaPerola","gmv":8046.8,"comm":402.34,"pedidos":164},{"sub":"05Abr26VESutiaInfantilPublAber","gmv":7020.61,"comm":361.36,"pedidos":153},{"sub":"04Abr26VESutiaInfantil","gmv":6477.79,"comm":343.82,"pedidos":141}],"produtos":[{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":9009.0,"comm":1351.35,"qtd":381},{"id":"21071915954","nome":"1 galho de 3 de pessegueiro","gmv":7523.25,"comm":582.05,"qtd":548},{"id":"22892814698","nome":"Vestido Feminino Midi com Manga Princesa","gmv":3143.88,"comm":132.04,"qtd":52},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor Academia","gmv":814.92,"comm":48.9,"qtd":9},{"id":"23099093430","nome":"Vestido Midi Floral Fenda Frontal","gmv":599.82,"comm":23.99,"qtd":10}]},"2026-04":{"campanhas":[{"sub":"13Mar26PoUnhaPerola","gmv":57774.86,"comm":2204.57,"pedidos":1256},{"sub":"03Abr26ConjFitness","gmv":29148.96,"comm":1360.27,"pedidos":335},{"sub":"19Abr26ConjuntoSegundaPeleTermica","gmv":15476.32,"comm":599.94,"pedidos":317},{"sub":"05Abr26VESutiaInfantilPublAber","gmv":14309.58,"comm":736.18,"pedidos":311},{"sub":"04Abr26VESutiaInfantil","gmv":12900.25,"comm":683.81,"pedidos":298},{"sub":"03Abr26ConjFitnessOrg","gmv":11623.49,"comm":542.43,"pedidos":268},{"sub":"05Dez25AcademiaVs20Nov25","gmv":9040.32,"comm":521.53,"pedidos":208},{"sub":"22fev26CopoTermico","gmv":4258.85,"comm":185.23,"pedidos":87},{"sub":"22fev26PoUnhaPerola","gmv":2819.62,"comm":140.98,"pedidos":61},{"sub":"03mar26academiavs20nov25","gmv":2756.22,"comm":150.0,"pedidos":56}],"produtos":[{"id":"23094951530","nome":"Conjunto Fitness Roupa de Academia Feminina","gmv":20714.94,"comm":965.37,"qtd":238},{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":5779.08,"comm":866.86,"qtd":244},{"id":"21071915954","nome":"1 galho de 3 de pessegueiro","gmv":2201.25,"comm":170.35,"qtd":161},{"id":"23098323421","nome":"Kit 3 Calças Jeans Feminina Skinny","gmv":1439.76,"comm":43.19,"qtd":12},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor Academia","gmv":1217.88,"comm":73.07,"qtd":14}]},"2026-05":{"campanhas":[{"sub":"13Mar26PoUnhaPerola","gmv":38565.82,"comm":1471.31,"pedidos":837},{"sub":"03Abr26ConjFitness","gmv":14126.04,"comm":659.35,"pedidos":162},{"sub":"19Mai26ConjSegundaPeleTermicaVEA","gmv":7731.82,"comm":299.71,"pedidos":158},{"sub":"19Abr26ConjuntoSegundaPeleTermica","gmv":6817.87,"comm":264.27,"pedidos":139},{"sub":"24Mai26SaiaCamaBoxVEA","gmv":6355.75,"comm":262.71,"pedidos":130},{"sub":"05Dez25AcademiaVs20Nov25","gmv":4736.67,"comm":273.22,"pedidos":109},{"sub":"03Abr26ConjFitnessOrg","gmv":3895.97,"comm":181.9,"pedidos":89},{"sub":"22fev26PoUnhaPerola","gmv":2397.54,"comm":119.88,"pedidos":52},{"sub":"22fev26CopoTermico","gmv":1956.21,"comm":85.07,"pedidos":40},{"sub":"19Mai26ConjSegundaPeleTermicaVEA2","gmv":1879.71,"comm":72.83,"pedidos":38}],"produtos":[{"id":"23094951530","nome":"Conjunto Fitness Roupa de Academia Feminina","gmv":14125.86,"comm":659.35,"qtd":162},{"id":"22793582358","nome":"KIT COM 03 TOP SUTIÃ INFANTIL JUVENIL","gmv":4989.78,"comm":748.47,"qtd":211},{"id":"21071915954","nome":"1 galho de 3 de pessegueiro","gmv":1777.5,"comm":137.61,"qtd":130},{"id":"23094983170","nome":"Conjunto Segunda Pele Térmica Flanelado","gmv":1692.48,"comm":65.6,"qtd":35},{"id":"22793839626","nome":"Conjunto Fitness Corrida Bicolor","gmv":814.92,"comm":48.9,"qtd":9}]}};
@@ -7587,7 +7607,7 @@ function preloadHistoricalData() {
     { month:'2025-12', gmv: 834035.83,  comm: 33975.78, spend: 24797.03, qtd: 16239, cancelado: 2704,pendente: 0 },
     { month:'2026-01', gmv: 703585.55,  comm: 30122.20, spend: 23944.24, qtd: 13228, cancelado: 2159,pendente: 0 },
     { month:'2026-02', gmv: 294249.68,  comm: 15355.12, spend: 12440.77, qtd: 6088,  cancelado: 899, pendente: 0 },
-    { month:'2026-03', gmv: 470932.18,  comm: 24512.91, spend: 8006.65,  qtd: 9420,  cancelado: 1568,pendente: 0 },
+    { month:'2026-03', gmv: 470932.18,  comm: 24512.91, spend: 23203.39, qtd: 9420,  cancelado: 1568,pendente: 0 },
   ];
   const store = loadMonthlyStore();
   for (const h of historico) {
