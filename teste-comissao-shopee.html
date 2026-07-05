@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Teste — Monitor de Comissão Shopee</title>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --bg:#0b0c10; --s2:#14161d; --s3:#1b1e28;
@@ -75,6 +76,25 @@
   </div>
 
   <div class="card">
+    <div class="card-head">📧 Alerta por E-mail (EmailJS)</div>
+    <div class="row">
+      <div class="field">
+        <label>PUBLIC KEY</label>
+        <input type="text" id="ejsPublic" placeholder="Public Key">
+      </div>
+      <div class="field">
+        <label>SERVICE ID</label>
+        <input type="text" id="ejsService" placeholder="service_xxxxxxx">
+      </div>
+    </div>
+    <div class="field">
+      <label>TEMPLATE ID</label>
+      <input type="text" id="ejsTemplate" placeholder="template_xxxxxxx">
+    </div>
+    <button class="btn btn-ghost" onclick="saveEmailCreds()">💾 Salvar</button>
+  </div>
+
+  <div class="card">
     <div class="card-head">🔗 Link do anúncio</div>
     <div class="field">
       <label>LINK CURTO (do relatório do Meta)</label>
@@ -113,6 +133,37 @@ function loadCreds(){
   if (id) $('appId').value = id;
   if (sc) $('secret').value = sc;
   if (px) $('proxyUrl').value = px;
+  const ep = localStorage.getItem('emailjs_public');
+  const es = localStorage.getItem('emailjs_service');
+  const et = localStorage.getItem('emailjs_template');
+  if (ep) $('ejsPublic').value = ep;
+  if (es) $('ejsService').value = es;
+  if (et) $('ejsTemplate').value = et;
+}
+function saveEmailCreds(){
+  localStorage.setItem('emailjs_public', $('ejsPublic').value.trim());
+  localStorage.setItem('emailjs_service', $('ejsService').value.trim());
+  localStorage.setItem('emailjs_template', $('ejsTemplate').value.trim());
+  alert('Salvo neste navegador ✓');
+}
+
+async function sendEmailAlert(params, btn){
+  const pub = $('ejsPublic').value.trim();
+  const svc = $('ejsService').value.trim();
+  const tpl = $('ejsTemplate').value.trim();
+  if (!pub || !svc || !tpl) { alert('Preencha e salve Public Key, Service ID e Template ID primeiro.'); return; }
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = '📤 Enviando...';
+  try {
+    await emailjs.send(svc, tpl, params, { publicKey: pub });
+    btn.textContent = '✅ Enviado! Confere seu e-mail';
+  } catch(e) {
+    btn.textContent = '❌ Falhou — veja o console';
+    console.error('EmailJS error:', e);
+    alert('Erro ao enviar: ' + (e.text || e.message || JSON.stringify(e)));
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.textContent = original; }, 4000);
+  }
 }
 function saveCreds(){
   localStorage.setItem('shopee_app_id', $('appId').value.trim());
@@ -296,6 +347,8 @@ async function runTest(){
 function showResult(nodes, baseline){
   const p = nodes[0];
   const atual = parseFloat(p.commissionRate || 0) * 100;
+  const preco = parseFloat(p.priceMin || 0);
+  const valorComissao = preco * (atual/100);
   $('resultCard').style.display = 'block';
   let deltaHtml = '';
   if (baseline !== null) {
@@ -308,13 +361,28 @@ function showResult(nodes, baseline){
     <div style="font-size:13px;font-weight:700;margin-bottom:4px">${p.productName || '—'}</div>
     <span class="badge">${p.shopName || 'loja não identificada'}</span>
     <div class="kpi-row">
+      <div class="kpi"><div class="kpi-lbl">PREÇO DO PRODUTO</div><div class="kpi-val">R$ ${preco.toFixed(2)}</div></div>
       <div class="kpi"><div class="kpi-lbl">COMISSÃO ATUAL</div><div class="kpi-val">${atual.toFixed(1)}%</div></div>
+      <div class="kpi"><div class="kpi-lbl">VALOR DA COMISSÃO</div><div class="kpi-val" style="color:var(--green)">R$ ${valorComissao.toFixed(2)}</div></div>
       ${deltaHtml}
       ${p.sellerCommissionRate ? `<div class="kpi"><div class="kpi-lbl">↳ SELLER</div><div class="kpi-val" style="font-size:13px">${(parseFloat(p.sellerCommissionRate)*100).toFixed(1)}%</div></div>` : ''}
       ${p.shopeeCommissionRate ? `<div class="kpi"><div class="kpi-lbl">↳ SHOPEE</div><div class="kpi-val" style="font-size:13px">${(parseFloat(p.shopeeCommissionRate)*100).toFixed(1)}%</div></div>` : ''}
     </div>
+    <div class="info-box">💡 Compare o "Valor da comissão" acima com o que aparece na página do produto na Shopee — assim você confirma se o cálculo está batendo com a realidade.</div>
     ${nodes.length > 1 ? `<div class="info-box">A busca por palavra-chave achou ${nodes.length} produtos — confirme se "${p.productName}" é mesmo o produto do seu anúncio. Se não for, o teste por itemId direto é mais confiável.</div>` : ''}
+    <button class="btn" style="margin-top:12px;background:var(--blue);color:#fff" id="sendEmailBtn">📧 Enviar alerta de teste por e-mail</button>
   `;
+  $('sendEmailBtn').onclick = function(){
+    const delta = baseline !== null ? (atual - baseline) : 0;
+    sendEmailAlert({
+      product_name: p.productName || '—',
+      shop_name: p.shopName || '—',
+      old_commission: baseline !== null ? baseline.toFixed(1) : atual.toFixed(1),
+      new_commission: atual.toFixed(1),
+      delta: (delta > 0 ? '+' : '') + delta.toFixed(1),
+      product_link: $('shortLink').value.trim() || '(link manual)'
+    }, this);
+  };
 }
 
 loadCreds();
