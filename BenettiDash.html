@@ -3202,7 +3202,7 @@ function goTab(tab) {
   if (tab === 'radar')      setTimeout(renderRadarCampanhas, 50);
   if (tab === 'cliques')    { setTimeout(renderClicksHoraResumo, 50); setTimeout(renderCliquesDia, 60); setTimeout(renderCmpStandalone, 80); }
   if (tab === 'historico')  setTimeout(() => { loadAudit(); renderAuditoria(); }, 50);
-  if (tab === 'trajetoria') setTimeout(() => { renderTrajetoria(); renderProdutoMae(); renderRankingHistorico(); const store=loadMonthlyStore(); renderMetaQ3(store, STATE.shopee?.orders||[], STATE.accounts||[]); renderBonusShopeeJulho(); }, 50);
+  if (tab === 'trajetoria') setTimeout(() => { renderTrajetoria(); renderProdutoMae(); renderRankingHistorico(); const store=loadMonthlyStore(); renderMetaQ3(store, STATE.shopee?.orders||[], STATE.accounts||[]); }, 50);
   if (tab === 'visao')      setTimeout(() => {
     // Inicializa com ontem se campo vazio
     const sel = $('vgDataSel');
@@ -6719,162 +6719,6 @@ function renderTrajetoria() {
         O termômetro atualiza automaticamente conforme os meses de jul/ago/set forem carregados no dashboard via CSV Shopee.
       </div>
     </div>`;
-}
-
-function renderBonusShopeeJulho() {
-  const el = $('trajetoria-content'); if (!el) return;
-  const store = loadMonthlyStore();
-  const shopeeOrders = STATE.shopee?.orders || [];
-  const accounts = STATE.accounts || [];
-  function getGMV(m) { const d = getMonthData(m, store, shopeeOrders, accounts); return d.gmv || 0; }
-  function fmtK(v) { if (v >= 1000000) return 'R$' + (v/1000000).toFixed(1) + 'M'; if (v >= 1000) return 'R$' + Math.round(v/1000) + 'k'; return 'R$' + Math.round(v); }
-  const existing = el.querySelector('#secao-bonus-shopee');
-  if (existing) existing.remove();
-  const div = document.createElement('div');
-  div.id = 'secao-bonus-shopee';
-  div.innerHTML = `<!-- BÔNUS SHOPEE JULHO 2026 -->
-    ${(() => {
-      // ── Dados do e-mail da Shopee
-      const BONUS = [
-        { faixa: 'Meta 1', meta: 154554, bonus: 300,  cor: '#CD7F32', emoji: '🥉' },
-        { faixa: 'Meta 2', meta: 193192, bonus: 900,  cor: '#C0C0C0', emoji: '🥈' },
-        { faixa: 'Meta 3', meta: 231831, bonus: 1700, cor: '#FFD700', emoji: '🥇' },
-      ];
-      // GMV acumulado julho até agora (via CSV se disponível)
-      const gmvJul = getGMV('2026-07');
-      const diasJul = 31;
-      const hoje = new Date();
-      const diaAtual = hoje.getMonth() === 6 ? hoje.getDate() : (hoje.getMonth() > 6 ? 31 : 0);
-      const diasRestantes = Math.max(diasJul - diaAtual, 0);
-      const diasPassados  = Math.min(diaAtual, diasJul);
-
-      // Média histórica para estimar GMV/dia (últimos 3 meses com dado)
-      const mesesRef = ['2026-04','2026-05','2026-06'];
-      const gmvsRef  = mesesRef.map(m => getGMV(m)).filter(v => v > 0);
-      const gmvMedioMes = gmvsRef.length > 0 ? gmvsRef.reduce((s,v)=>s+v,0)/gmvsRef.length : 0;
-
-      // Taxa de comissão média histórica
-      function getCommRate(m) {
-        const d = getMonthData(m, store, shopeeOrders, accounts);
-        return d.gmv > 0 ? (d.comm || 0) / d.gmv : 0;
-      }
-      const commRates = mesesRef.map(getCommRate).filter(v=>v>0);
-      const commRateMedio = commRates.length > 0 ? commRates.reduce((s,v)=>s+v,0)/commRates.length : 0.04;
-
-      // ROAS médio histórico (comissão / gasto FB)
-      const roasMedio = (() => {
-        const dados = mesesRef.map(m => getMonthData(m, store, shopeeOrders, accounts)).filter(d => d.spend > 0 && d.comm > 0);
-        if (!dados.length) return 1.5;
-        const r = dados.map(d => d.comm / (d.spend * 1.14));
-        return r.reduce((s,v)=>s+v,0)/r.length;
-      })();
-
-      // Para cada meta, calcula quanto falta e o que precisa fazer
-      const analises = BONUS.map(b => {
-        const falta      = Math.max(b.meta - gmvJul, 0);
-        const projecao   = gmvMedioMes > 0 ? gmvJul + (gmvMedioMes / diasJul) * diasRestantes : 0;
-        const atinge     = projecao >= b.meta;
-        const gmvDiaNecessario = diasRestantes > 0 ? falta / diasRestantes : 0;
-        // Gasto FB necessário pra gerar o GMV faltante
-        // GMV faltante → comissão necessária = GMV × commRate → gasto FB = comm / ROAS / 1.14
-        const commFaltante = falta * commRateMedio;
-        const gastoFBNecessario = roasMedio > 0 ? commFaltante / roasMedio / 1.14 : 0;
-        const gastoFBDia = diasRestantes > 0 ? gastoFBNecessario / diasRestantes : 0;
-        // Estimativa de anúncios: orçamento mínimo de R$12/dia por anúncio
-        const numAnuncios = gastoFBDia > 0 ? Math.ceil(gastoFBDia / 12) : 0;
-        const roi = b.bonus - gastoFBNecessario * 1.14;
-        return { ...b, falta, projecao, atinge, gmvDiaNecessario, gastoFBNecessario, gastoFBDia, numAnuncios, roi, commFaltante };
-      });
-
-      const metaViavel = analises.find(a => a.roi > 0);
-
-      return `
-      <div style="background:var(--s1);border:2px solid #FFD700;border-radius:12px;padding:24px;margin-top:24px">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-          <div style="font-size:24px">🎯</div>
-          <div>
-            <div style="font-family:var(--mono);font-size:13px;font-weight:700;color:#FFD700">BÔNUS SHOPEE — JULHO 2026</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">Campanha personalizada recebida por e-mail · 01 a 31/jul/26 · Baseado em GMV de canais externos (redes sociais)</div>
-          </div>
-        </div>
-
-        <!-- GMV atual julho -->
-        <div style="background:var(--bg);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-          <div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">GMV JULHO ATUAL</div>
-            <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:${gmvJul>0?'var(--green)':'var(--text3)'}">${gmvJul>0?'R$ '+fmt(gmvJul):'Carregue o CSV'}</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${diasPassados>0?`dia ${diasPassados} de 31`:''}</div>
-          </div>
-          <div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">DIAS RESTANTES</div>
-            <div style="font-family:var(--mono);font-size:22px;font-weight:700">${diasRestantes}</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">dias em julho</div>
-          </div>
-          <div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">ROAS MÉDIO BASE</div>
-            <div style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--accent)">${roasMedio.toFixed(2)}x</div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">média abr–jun/26</div>
-          </div>
-        </div>
-
-        <!-- Cards das 3 metas -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:20px">
-          ${analises.map(a => `
-          <div style="background:var(--s2);border-radius:10px;padding:18px;border:1px solid ${a.roi>0?a.cor:'var(--border)'}">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-              <span style="font-size:20px">${a.emoji}</span>
-              <div>
-                <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${a.cor}">${a.faixa}</div>
-                <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">bônus: <b style="color:var(--green)">R$ ${a.bonus.toLocaleString('pt-BR')}</b></div>
-              </div>
-            </div>
-
-            <!-- Barra de progresso -->
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">meta: R$ ${fmt(a.meta)}</div>
-            <div style="background:var(--bg);border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px">
-              <div style="width:${Math.min(gmvJul/a.meta*100,100).toFixed(1)}%;height:100%;background:${a.cor};border-radius:4px"></div>
-            </div>
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:14px">
-              falta: <b style="color:var(--text)">R$ ${fmt(a.falta)}</b> · necessário R$ ${fmt(a.gmvDiaNecessario)}/dia
-            </div>
-
-            <!-- O que precisa fazer -->
-            <div style="background:var(--bg);border-radius:8px;padding:12px;font-family:var(--mono);font-size:10px;line-height:1.8">
-              <div style="color:var(--text3);font-size:9px;margin-bottom:6px;letter-spacing:.5px">PARA BATER ESSA META</div>
-              <div>💰 Investir <b style="color:var(--yellow)">R$ ${fmt(a.gastoFBDia)}/dia</b> no FB</div>
-              <div>📦 Total FB: <b style="color:var(--yellow)">R$ ${fmt(a.gastoFBNecessario)}</b> nos ${diasRestantes} dias restantes</div>
-              <div>📢 Estimativa: <b style="color:var(--accent)">${a.numAnuncios} anúncio${a.numAnuncios!==1?'s':''}</b> ativos (R$12/dia cada)</div>
-              <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
-                ROI do bônus: <b style="color:${a.roi>0?'var(--green)':'var(--red)'}">${a.roi>0?'+':''}R$ ${fmt(a.roi)}</b>
-                <span style="font-size:8px;color:var(--text3)"> (bônus − gasto FB adicional)</span>
-              </div>
-            </div>
-
-            ${!a.atinge && a.projecao > 0 ? `
-            <div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text3)">
-              📊 Projeção sem mudança: <b style="color:var(--red)">R$ ${fmt(a.projecao)}</b> — ${Math.round(a.projecao/a.meta*100)}% da meta
-            </div>` : ''}
-            ${a.atinge ? `<div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--green)">✅ No ritmo atual você bate essa meta!</div>` : ''}
-          </div>`).join('')}
-        </div>
-
-        <!-- Recomendação -->
-        <div style="background:${metaViavel?'rgba(74,222,128,.08)':'rgba(255,200,0,.08)'};border:1px solid ${metaViavel?'var(--green)':'#FFD700'};border-radius:10px;padding:16px 20px">
-          <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${metaViavel?'var(--green)':'#FFD700'};margin-bottom:10px">
-            ${metaViavel ? `🏆 Meta mais rentável: ${metaViavel.faixa} (ROI positivo de R$ ${fmt(metaViavel.roi)})` : '⚠️ Com investimento zero todas as metas têm ROI negativo — avalie se já tem anúncios suficientes rodando'}
-          </div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.8">
-            • Bônus <b style="color:var(--text)">não cumulativo</b> — você recebe apenas o valor da maior faixa atingida<br>
-            • Pagamento via "Comissão Bônus" em até <b style="color:var(--text)">60 dias</b> após o término de julho<br>
-            • Se entrar para um <b style="color:var(--red)">Hub de Afiliados</b>, perde essa campanha automaticamente<br>
-            • Projeção baseada no ROAS médio de abr–jun/26 (${roasMedio.toFixed(2)}x) — ajuste conforme seus anúncios atuais<br>
-            • Estimativa de anúncios assume orçamento mínimo de R$12/dia por anúncio (ajuste para seu orçamento real)
-          </div>
-        </div>
-      </div>`;
-    })()}
-  `;
-  el.appendChild(div);
 }
 
 function renderCalcMensal(accounts, shopeeOrders) {
@@ -12514,6 +12358,34 @@ function renderVisaoGeral() {
     // Audiência
     const audHTML = renderAudienceMobile(c);
 
+    // Monitor de Comissão — por produto
+    const commHTML = (() => {
+      const prods = (c.produtos||[]).filter(p => p.comissaoMonitorAtual != null);
+      if (!prods.length) return `<div style="padding:14px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
+        ⏳ Monitor ainda não fez a primeira checagem para os produtos desta campanha. Assim que rodar, o histórico de comissão aparece aqui.
+      </div>`;
+      return prods.map(p => {
+        const atual    = p.comissaoMonitorAtual;
+        const baseline = p.comissaoMonitorBaseline;
+        const delta    = atual - baseline;
+        const caiu     = delta < -0.01;
+        const cor      = caiu ? 'var(--red)' : 'var(--green)';
+        const dataStr  = p.comissaoMonitorData ? new Date(p.comissaoMonitorData+'T12:00').toLocaleDateString('pt-BR') : '—';
+        return `<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+          <div style="min-width:0;flex:1">
+            <a href="${p.shopeeLink}" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:10px;color:var(--blue);text-decoration:none">
+              🔗 ${(p.nome||'').length>50?(p.nome||'').slice(0,50)+'…':(p.nome||'')}
+            </a>
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">📅 comissão travada em ${dataStr}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-family:var(--mono);font-size:12px;font-weight:800;color:${cor}">${baseline.toFixed(1)}% → ${atual.toFixed(1)}%</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${cor}">${caiu?'🔴 caiu '+Math.abs(delta).toFixed(1)+'pp':'✅ estável ou subiu'}</div>
+          </div>
+        </div>`;
+      }).join('');
+    })();
+
     // Botão link para Decisões do Dia
     const btnDecisoes = `<button onclick="goTab('radar')" title="Ver no Radar de Campanhas"
       style="font-family:var(--mono);font-size:9px;background:transparent;border:1px solid var(--border2);color:var(--text3);padding:4px 10px;border-radius:4px;cursor:pointer">
@@ -12606,16 +12478,6 @@ function renderVisaoGeral() {
           <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${(c.cpc||0)<=0.20?'var(--green)':(c.cpc||0)<=0.40?'var(--yellow)':'var(--red)'}">R$ ${fmt(c.cpc||0)}</div>
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">meta: R$0,20</div>
         </div>
-        ${(() => {
-          const freq = c.frequency || 0;
-          const freqColor = freq === 0 ? 'var(--text3)' : freq < 2 ? 'var(--green)' : freq < 3 ? 'var(--yellow)' : 'var(--red)';
-          const freqLabel = freq === 0 ? '—' : freq < 2 ? '✅ Saudável — público ainda fresco' : freq < 3 ? '⚠️ Atenção — começa a saturar' : '🔴 Saturando — público cansado';
-          return `<div style="background:var(--s2);padding:10px 13px">
-            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">FREQUÊNCIA</div>
-            <div style="font-family:var(--mono);font-size:16px;font-weight:800;color:${freqColor}">${freq > 0 ? freq.toFixed(1) + 'x' : '—'}</div>
-            <div style="font-family:var(--mono);font-size:9px;color:${freqColor}">${freqLabel}</div>
-          </div>`;
-        })()}
         <div style="background:var(--s2);padding:10px 13px">
           <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">PEDIDOS</div>
           <div style="font-family:var(--mono);font-size:14px;font-weight:800">${c.shopeeOrders||0} <span style="color:var(--green);font-size:11px">· ${c.shopeeDiretas||0} dir</span></div>
@@ -12628,31 +12490,47 @@ function renderVisaoGeral() {
         </div>
       </div>
 
-      <!-- MÉTRICAS DE CRIATIVO -->
+      <!-- MÉTRICAS DE CRIATIVO + FREQUÊNCIA + COMISSÃO -->
       ${(() => {
         const ctr  = c.ctr  || 0;
         const cpm  = c.cpm  || 0;
         const impr = c.impressions || 0;
-        if (!impr) return '';
-        const ctrColor = ctr === 0 ? 'var(--text3)' : ctr >= 2 ? 'var(--green)' : ctr >= 1 ? 'var(--yellow)' : 'var(--red)';
-        const ctrLabel = ctr === 0 ? '—' : ctr >= 2 ? '✅ Criativo forte' : ctr >= 1 ? '⚠️ Mediano — pode melhorar' : '🔴 Criativo fraco — revisar';
-        const cpmColor = cpm === 0 ? 'var(--text3)' : cpm <= 15 ? 'var(--green)' : cpm <= 30 ? 'var(--yellow)' : 'var(--red)';
-        const cpmLabel = cpm === 0 ? '—' : cpm <= 15 ? '🟢 Leilão barato' : cpm <= 30 ? '⚠️ Atenção' : '🔴 Leilão caro — saturação ou nicho disputado';
-        return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border-top:1px solid var(--border)">
+        const freq = c.frequency || 0;
+        const freqColor = freq === 0 ? 'var(--text3)' : freq < 2 ? 'var(--green)' : freq < 3 ? 'var(--yellow)' : 'var(--red)';
+        const freqLabel = freq === 0 ? '—' : freq < 2 ? '✅ Saudável — público ainda fresco' : freq < 3 ? '⚠️ Atenção — começa a saturar' : '🔴 Saturando — público cansado';
+        const topP = (c.produtos||[]).sort((a,b)=>(b.commShopee||b.comm||0)-(a.commShopee||a.comm||0))[0];
+        const commAtual    = topP?.comissaoMonitorAtual;
+        const commBaseline = topP?.comissaoMonitorBaseline;
+        const temMonitor   = commAtual != null && commBaseline != null;
+        const commDelta    = temMonitor ? (commAtual - commBaseline) : 0;
+        const commColor    = !temMonitor ? 'var(--text3)' : commDelta < -0.01 ? 'var(--red)' : 'var(--green)';
+        const commLabel    = !temMonitor ? 'aguardando 1ª checagem' : commDelta < -0.01 ? `🔴 caiu ${Math.abs(commDelta).toFixed(1)}pp` : '✅ estável';
+        if (!impr && !temMonitor) return '';
+        return `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border-top:1px solid var(--border)">
           <div style="background:var(--s2);padding:8px 13px">
             <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">CTR</div>
-            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${ctrColor}">${ctr > 0 ? ctr.toFixed(2) + '%' : '—'}</div>
-            <div style="font-family:var(--mono);font-size:9px;color:${ctrColor}">${ctrLabel}</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${ctr === 0 ? 'var(--text3)' : ctr >= 2 ? 'var(--green)' : ctr >= 1 ? 'var(--yellow)' : 'var(--red)'}">${ctr > 0 ? ctr.toFixed(2) + '%' : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${ctr === 0 ? 'var(--text3)' : ctr >= 2 ? 'var(--green)' : ctr >= 1 ? 'var(--yellow)' : 'var(--red)'}">${ctr === 0 ? '—' : ctr >= 2 ? '✅ Criativo forte' : ctr >= 1 ? '⚠️ Mediano — pode melhorar' : '🔴 Criativo fraco — revisar'}</div>
           </div>
           <div style="background:var(--s2);padding:8px 13px">
             <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">CPM</div>
-            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${cpmColor}">${cpm > 0 ? 'R$ ' + fmt(cpm) : '—'}</div>
-            <div style="font-family:var(--mono);font-size:9px;color:${cpmColor}">${cpmLabel}</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${cpm === 0 ? 'var(--text3)' : cpm <= 15 ? 'var(--green)' : cpm <= 30 ? 'var(--yellow)' : 'var(--red)'}">${cpm > 0 ? 'R$ ' + fmt(cpm) : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${cpm === 0 ? 'var(--text3)' : cpm <= 15 ? 'var(--green)' : cpm <= 30 ? 'var(--yellow)' : 'var(--red)'}">${cpm === 0 ? '—' : cpm <= 15 ? '🟢 Leilão barato' : cpm <= 30 ? '⚠️ Atenção' : '🔴 Leilão caro — saturação ou nicho disputado'}</div>
           </div>
           <div style="background:var(--s2);padding:8px 13px">
             <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">IMPRESSÕES</div>
             <div style="font-family:var(--mono);font-size:15px;font-weight:800">${impr.toLocaleString('pt-BR')}</div>
             <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${c.reach > 0 ? 'alcance: ' + (c.reach||0).toLocaleString('pt-BR') : ''}</div>
+          </div>
+          <div style="background:var(--s2);padding:8px 13px">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">FREQUÊNCIA</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${freqColor}">${freq > 0 ? freq.toFixed(1) + 'x' : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${freqColor}">${freqLabel}</div>
+          </div>
+          <div style="background:var(--s2);padding:8px 13px${temMonitor && commDelta < -0.01 ? ';border:1px solid var(--red)' : ''}">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:3px">📉 COMISSÃO</div>
+            <div style="font-family:var(--mono);font-size:15px;font-weight:800;color:${commColor}">${temMonitor ? commAtual.toFixed(1)+'%' : '—'}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:${commColor}">${commLabel}</div>
           </div>
         </div>`;
       })()}
@@ -12867,6 +12745,13 @@ function renderVisaoGeral() {
           <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:4px">💡 Cadastre preço e % no Banco de Produtos para ver comparativo esperado vs recebido</div>`}
         </div>`;
       })()}
+
+      <!-- Monitor de Comissão -->
+      <div onclick="vgToggle('${uid}_comm')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;border-top:1px solid var(--border);background:var(--s2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.5px">📉 MONITOR DE COMISSÃO</span>
+        <span id="${uid}_comm_seta" style="font-family:var(--mono);font-size:9px;color:var(--text3)">▼</span>
+      </div>
+      <div id="${uid}_comm" style="display:none">${commHTML}</div>
 
       <!-- Histórico — sempre visível, expansível -->
       ${historicoHTML ? `
