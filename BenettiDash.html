@@ -3280,7 +3280,7 @@ async function fetchFB(token, accountId, days) {
     // 2. Dados diários da conta — últimos 30 dias
     pages(`${base}/${accountId}/insights?fields=spend,clicks,cpc&time_increment=1&time_range=${trRecent}&limit=400&access_token=${token}`),
     // 3. Anúncios (nome, status, conjunto/campanha pai)
-    pages(`${base}/${accountId}/ads?fields=id,name,campaign_id,adset_id,status,tracking_specs&limit=300&access_token=${token}`),
+    pages(`${base}/${accountId}/ads?fields=id,name,campaign_id,adset_id,status,tracking_specs,created_time&limit=300&access_token=${token}`),
     // 4. Campanhas (nome + status + orçamento CBO, se houver)
     pages(`${base}/${accountId}/campaigns?fields=id,name,status,daily_budget,lifetime_budget&limit=300&access_token=${token}`),
     // 5. Conjuntos de anúncio (orçamento ABO, se houver)
@@ -3384,6 +3384,7 @@ async function fetchFB(token, accountId, days) {
     adById[ad.id] = {
       name: ad.name || '', campaignId: ad.campaign_id || '', adsetId: ad.adset_id || '',
       status: ad.status || '', url, destUrl, debugCreative: JSON.stringify(creative),
+      createdTime: ad.created_time || '',
     };
   }
 
@@ -3463,6 +3464,7 @@ async function fetchFB(token, accountId, days) {
       status,
       campStatus:   status,
       budget,
+      startDate:    adMeta.createdTime ? adMeta.createdTime.split('T')[0] : '',
       spend:        t.spend,
       roas:         0, revenue: 0,
       clicks:       t.clicks,
@@ -12020,6 +12022,8 @@ function renderVisaoGeral() {
   const roasMedio  = gastoTotal>0 ? ativas.reduce((s,x)=>s+(x.c.shopeeRevenue||0),0)/gastoTotal : 0;
   const nAgir      = lista.filter(x=>x.prioridade==='agir').length;
   const nOk        = lista.filter(x=>x.prioridade==='ok').length;
+  const pedidosAtivos = ativas.reduce((s,x)=>s+(x.c.shopeeOrders||0),0);
+  const diretasAtivas = ativas.reduce((s,x)=>s+(x.c.shopeeDiretas||0),0);
   if (kpisEl) kpisEl.innerHTML = `
     <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-top:2px solid var(--red)">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">🔴 AGIR AGORA</div>
@@ -12035,6 +12039,11 @@ function renderVisaoGeral() {
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">ROAS MÉDIO</div>
       <div style="font-family:var(--mono);font-size:24px;font-weight:800;color:var(--accent)">${fmt(roasMedio)}x</div>
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${ativas.length} ativas</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-top:2px solid var(--blue)">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">📦 PEDIDOS ATIVOS</div>
+      <div style="font-family:var(--mono);font-size:24px;font-weight:800;color:var(--blue)">${pedidosAtivos.toLocaleString('pt-BR')}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${diretasAtivas.toLocaleString('pt-BR')} diretos · campanhas ativas</div>
     </div>
     <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-top:2px solid ${lucroTotal>=0?'var(--green)':'var(--red)'}">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">${lucroTotal>=0?'✅ LUCRO':'🔴 PREJUÍZO'}</div>
@@ -12783,7 +12792,7 @@ function renderVisaoGeral() {
           const m = d.metaClicks||d.clicks||0;
           const s = d.shopeeClicks||0;
           const p = m>0 ? Math.round(s/m*100) : null;
-          const pc = p===null?'var(--text3)':p>=60?'var(--green)':p>=30?'var(--yellow)':'var(--red)';
+          const pc = p===null?'var(--text3)':p>=100?'var(--green)':p>=75?'var(--yellow)':p>=50?'var(--red)':'var(--red)';
           const dataBR2 = d.date?new Date(d.date+'T12:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}):'—';
           return '<tr style="border-bottom:1px solid var(--border)">'
             + '<td style="padding:5px 8px;font-family:var(--mono);font-size:9px;color:var(--accent);font-weight:700">D'+(d.day??'?')+'</td>'
@@ -12791,7 +12800,7 @@ function renderVisaoGeral() {
             + '<td style="padding:5px 8px;font-family:var(--mono);font-size:9px;text-align:right">'+m.toLocaleString('pt-BR')+'</td>'
             + '<td style="padding:5px 8px;font-family:var(--mono);font-size:9px;text-align:right;color:var(--blue)">'+(s>0?s.toLocaleString('pt-BR'):'—')+'</td>'
             + '<td style="padding:5px 8px;font-family:var(--mono);font-size:9px;text-align:right;color:'+pc+';font-weight:700">'+(p!==null?p+'%':'—')+'</td>'
-            + '<td style="padding:5px 8px;font-family:var(--mono);font-size:9px;color:'+pc+'">'+(p===null?'—':p>=60?'✅ Saudável':p>=30?'⚠️ Atenção':'🔴 Crítico')+'</td>'
+            + '<td style="padding:5px 8px;font-family:var(--mono);font-size:9px;color:'+pc+'">'+(p===null?'—':p>=100?'✅ Saudável':p>=75?'⚠️ Atenção':p>=50?'🔴 Alerta':'🚨 Crítico')+'</td>'
             + '</tr>';
         }).join('');
         return '<div onclick="vgToggle(\''+uid+'_cliques\')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;border-top:1px solid var(--border);background:var(--s2)">'
@@ -12815,7 +12824,7 @@ function renderVisaoGeral() {
           + '<th style="padding:4px 8px;font-family:var(--mono);font-size:9px;color:var(--text3);text-align:right">%</th>'
           + '<th style="padding:4px 8px;font-family:var(--mono);font-size:9px;color:var(--text3);text-align:left">STATUS</th>'
           + '</tr></thead><tbody>'+linhasDia+'</tbody></table></div>'
-          + '<div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.6">✅ Saudável: 60-90% · ⚠️ Atenção: abaixo de 50% · 🔴 Crítico: abaixo de 30%</div>'
+          + '<div style="margin-top:10px;font-family:var(--mono);font-size:9px;color:var(--text3);line-height:1.6">✅ Saudável: Shopee ≥ Meta (100%+) · ⚠️ Atenção: 75-99% · 🔴 Alerta: 50-74% · 🚨 Crítico: abaixo de 50%</div>'
           + '</div>';
       })()}
 
