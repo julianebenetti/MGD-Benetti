@@ -12041,9 +12041,9 @@ function renderVisaoGeral() {
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${ativas.length} ativas</div>
     </div>
     <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-top:2px solid var(--blue)">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">📦 PEDIDOS ATIVOS</div>
-      <div style="font-family:var(--mono);font-size:24px;font-weight:800;color:var(--blue)">${pedidosAtivos.toLocaleString('pt-BR')}</div>
-      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${diretasAtivas.toLocaleString('pt-BR')} diretos · campanhas ativas</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">📢 ANÚNCIOS ATIVOS</div>
+      <div style="font-family:var(--mono);font-size:24px;font-weight:800;color:var(--blue)">${ativas.length}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${pedidosAtivos.toLocaleString('pt-BR')} pedidos · ${diretasAtivas.toLocaleString('pt-BR')} diretos</div>
     </div>
     <div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;border-top:2px solid ${lucroTotal>=0?'var(--green)':'var(--red)'}">
       <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:4px">${lucroTotal>=0?'✅ LUCRO':'🔴 PREJUÍZO'}</div>
