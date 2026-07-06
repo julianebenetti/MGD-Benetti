@@ -1,6 +1,6 @@
 {
-  "updated_at": 1783315474,
-  "updated_at_br": "06/07/2026 05:24",
+  "updated_at": 1783322184,
+  "updated_at_br": "06/07/2026 07:16",
   "period_days": 90,
   "total_orders": 9718,
   "total_conversions": 9165,
@@ -12103,7 +12103,7 @@
     },
     {
       "ID do pedido": "260629B8USUT1N",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-28 23:11:20",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "96.95",
@@ -12115,14 +12115,14 @@
       "Comissao total do pedido(R$)": "2.9085",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Relação Tração Transmissão Honda Nxr Bros 160 XRE 190 2015 a 2025 Original Nakata",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22892784344",
       "Nome da loja": "AUTOMOTOWEB4",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236387480157883",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-28"
     },
     {
