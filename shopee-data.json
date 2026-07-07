@@ -1,6 +1,6 @@
 {
-  "updated_at": 1783407048,
-  "updated_at_br": "07/07/2026 06:50",
+  "updated_at": 1783412774,
+  "updated_at_br": "07/07/2026 08:26",
   "period_days": 90,
   "total_orders": 9549,
   "total_conversions": 9006,
@@ -4999,7 +4999,7 @@
     },
     {
       "ID do pedido": "260703PVVRDFNJ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-03 14:09:04",
       "Sub_id1": "01Jul26LeggingSacoVerdeVs3Copia24mai26",
       "Valor de Compra(R$)": "22",
@@ -5011,14 +5011,14 @@
       "Comissao total do pedido(R$)": "0.99",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapetes de Porta Decorativo Entrada Antiderrapante 55x35",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21541108534",
       "Nome da loja": "ChamegoLar",
       "Quantidade": "1",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236786944141497",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-03"
     },
     {
