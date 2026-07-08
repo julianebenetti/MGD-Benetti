@@ -11,6 +11,16 @@ APP_ID = os.environ["SHOPEE_APP_ID"]
 SECRET = os.environ["SHOPEE_SECRET"]
 DAYS   = 90
 
+# ── Monitor de Comissão ──────────────────────────────────────────
+MONITOR_FILE       = "comissoes-monitor.json"
+DIAS_ATIVIDADE     = 7      # produto com pedido nos últimos N dias = considerado "rodando"
+QUEDA_MINIMA_ALERTA = 2.0   # pontos percentuais de queda pra disparar alerta
+
+EMAILJS_PUBLIC_KEY  = "GLe9wQzP7zB0viJIo"
+EMAILJS_SERVICE_ID  = "service_ptgsjyg"
+EMAILJS_TEMPLATE_ID = "template_j9q926c"
+EMAILJS_PRIVATE_KEY = os.environ.get("EMAILJS_PRIVATE_KEY", "")
+
 def call(query):
     payload = json.dumps({"query": query}, separators=(',', ':'))
     ts  = str(int(time.time()))
@@ -104,6 +114,7 @@ def transform(nodes):
                     "Nome do Item":                         item.get("itemName", ""),
                     "Status do item do afiliado":           item.get("displayItemStatus", ""),
                     "ID do item":                           str(item.get("itemId", "")),
+                    "ID da loja":                           str(item.get("shopId", "")),
                     "Nome da loja":                         item.get("shopName", ""),
                     "Quantidade":                           str(item.get("qty", 1)),
                     "buyerType":                            buyer_type,
@@ -113,6 +124,127 @@ def transform(nodes):
                     "data":                                 date_str,
                 })
     return orders
+
+def get_commission(item_id):
+    """Consulta a comissão atual de um produto via productOfferV2."""
+    query = """{
+      productOfferV2(itemId: %s, limit: 1) {
+        nodes { itemId productName commissionRate sellerCommissionRate shopeeCommissionRate shopName priceMin }
+      }
+    }""" % item_id
+    result = call(query)
+    if "errors" in result:
+        return None
+    nodes = result.get("data", {}).get("productOfferV2", {}).get("nodes", [])
+    return nodes[0] if nodes else None
+
+def send_email_alert(info):
+    """Dispara alerta por e-mail via EmailJS (API REST, fora do navegador)."""
+    delta = info["atual_pct"] - info["baseline_pct"]
+    params = {
+        "product_name":     info["nome"],
+        "shop_name":        info["shop_name"],
+        "old_commission":   f"{info['baseline_pct']:.1f}",
+        "new_commission":   f"{info['atual_pct']:.1f}",
+        "delta":            f"{delta:+.1f}",
+        "price":            f"{info['preco']:.2f}",
+        "commission_value": f"{info['preco'] * info['atual_pct'] / 100:.2f}",
+        "seller_pct":       "—",
+        "shopee_pct":       "—",
+        "baseline_date":    info["baseline_data"],
+        "product_link":     info["link"],
+    }
+    payload_dict = {
+        "service_id":  EMAILJS_SERVICE_ID,
+        "template_id": EMAILJS_TEMPLATE_ID,
+        "user_id":     EMAILJS_PUBLIC_KEY,
+        "template_params": params,
+    }
+    if EMAILJS_PRIVATE_KEY:
+        payload_dict["accessToken"] = EMAILJS_PRIVATE_KEY
+    payload = json.dumps(payload_dict).encode()
+    req = urllib.request.Request(
+        "https://api.emailjs.com/api/v1.0/email/send",
+        data=payload, headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            print(f"  Alerta enviado por e-mail: {info['nome'][:40]} (HTTP {r.status})")
+    except urllib.error.HTTPError as e:
+        print(f"  ERRO ao enviar e-mail: {e.code} {e.read().decode()}")
+    except Exception as e:
+        print(f"  ERRO ao enviar e-mail: {e}")
+
+def check_commissions(orders):
+    """Verifica comissão dos produtos ativos (com pedido recente) e atualiza o baseline."""
+    print("Verificando comissoes dos produtos ativos...")
+    hoje = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    corte = (datetime.now(timezone.utc).timestamp() - DIAS_ATIVIDADE * 86400)
+    corte_str = datetime.fromtimestamp(corte, tz=timezone.utc).strftime("%Y-%m-%d")
+
+    # Produtos com pedido nos últimos DIAS_ATIVIDADE dias
+    ativos = {}
+    for o in orders:
+        iid = o.get("ID do item", "")
+        if not iid or o.get("data", "") < corte_str:
+            continue
+        ativos[iid] = {
+            "nome":    o.get("Nome do Item", ""),
+            "shopId":  o.get("ID da loja", ""),
+        }
+    print(f"  {len(ativos)} produtos com pedido nos ultimos {DIAS_ATIVIDADE} dias")
+
+    # Carrega monitor existente
+    monitor = {}
+    if os.path.exists(MONITOR_FILE):
+        try:
+            with open(MONITOR_FILE, "r", encoding="utf-8") as f:
+                monitor = json.load(f).get("produtos", {})
+        except Exception:
+            monitor = {}
+
+    for item_id, meta in ativos.items():
+        node = get_commission(item_id)
+        time.sleep(1)  # não martelar a API
+        if not node:
+            continue
+        atual_pct = round(float(node.get("commissionRate", 0)) * 100, 2)
+        preco     = float(node.get("priceMin", 0) or 0)
+        shop_name = node.get("shopName", "") or ""
+        link      = f"https://shopee.com.br/product/{meta['shopId']}/{item_id}"
+
+        existente = monitor.get(item_id)
+        if not existente:
+            # Primeira vez visto — trava o baseline
+            monitor[item_id] = {
+                "nome": meta["nome"], "shop_name": shop_name, "preco": preco,
+                "baseline_pct": atual_pct, "baseline_data": hoje,
+                "atual_pct": atual_pct, "atual_data": hoje,
+                "alertado_para": None,
+            }
+            print(f"  [NOVO] {meta['nome'][:40]} — baseline travado em {atual_pct}%")
+        else:
+            existente["nome"]       = meta["nome"] or existente.get("nome", "")
+            existente["shop_name"]  = shop_name or existente.get("shop_name", "")
+            existente["preco"]      = preco or existente.get("preco", 0)
+            existente["atual_pct"]  = atual_pct
+            existente["atual_data"] = hoje
+            delta = atual_pct - existente["baseline_pct"]
+            print(f"  {meta['nome'][:40]} — baseline {existente['baseline_pct']}% -> atual {atual_pct}% ({delta:+.1f}pp)")
+            if delta <= -QUEDA_MINIMA_ALERTA and existente.get("alertado_para") != atual_pct:
+                send_email_alert({
+                    "nome": existente["nome"], "shop_name": existente["shop_name"],
+                    "preco": existente["preco"], "baseline_pct": existente["baseline_pct"],
+                    "baseline_data": existente["baseline_data"], "atual_pct": atual_pct,
+                    "link": link,
+                })
+                existente["alertado_para"] = atual_pct
+
+    with open(MONITOR_FILE, "w", encoding="utf-8") as f:
+        json.dump({
+            "updated_at_br": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "produtos": monitor,
+        }, f, ensure_ascii=False, indent=2)
+    print(f"Monitor de comissao salvo: {len(monitor)} produtos rastreados")
 
 def main():
     print(f"Shopee Affiliate Sync - {datetime.now().strftime('%d/%m/%Y %H:%M')}")
@@ -130,6 +262,11 @@ def main():
     with open("shopee-data.json", "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"Concluido! Conversoes: {len(nodes)} | Itens: {len(orders)}")
+
+    try:
+        check_commissions(orders)
+    except Exception as e:
+        print(f"ERRO no monitor de comissao (nao interrompe o sync principal): {e}")
 
 if __name__ == "__main__":
     main()

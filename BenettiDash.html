@@ -4644,7 +4644,13 @@ function buildCross(accounts, shopeeOrders) {
             ? Math.floor((new Date(todayDate2) - new Date(p.lastDate)) / 86400000)
             : null;
           const shopeeLink = shopeeProductLink(p.itemId, p.nome);
-          return { ...p, diasSemVenda, shopeeLink };
+          const mon = (STATE.comissaoMonitor || {})[p.itemId];
+          const monData = mon ? {
+            comissaoMonitorAtual:    mon.atual_pct,
+            comissaoMonitorBaseline: mon.baseline_pct,
+            comissaoMonitorData:     mon.baseline_data,
+          } : {};
+          return { ...p, diasSemVenda, shopeeLink, ...monData };
         });
 
       // Atualiza campanha com ROAS e lucro reais (via Shopee - não usa pixel FB)
@@ -5943,6 +5949,18 @@ async function runFullSync() {
         }
       } catch(e) {
         console.warn('JSON Shopee não disponível:', e.message);
+      }
+
+      // Monitor de Comissão — arquivo separado, gerado pelo mesmo sync (comissoes-monitor.json)
+      try {
+        const commUrl = 'https://julianebenetti.github.io/MGD-Benetti/comissoes-monitor.json';
+        const commResp = await fetch(commUrl + '?t=' + Date.now(), { cache: 'no-store' });
+        if (commResp.ok) {
+          const commJson = await commResp.json();
+          STATE.comissaoMonitor = commJson.produtos || {};
+        }
+      } catch(e) {
+        console.warn('Monitor de comissão não disponível ainda:', e.message);
       }
 
       if (!jsonLoaded && STATE.shopeeRawCSV) {
