@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Benetti's Dashboard</title>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -5977,6 +5978,32 @@ async function runFullSync() {
 // ══════════════════════════════════════════════════
 // MONITOR DE COMISSÃO — POR ANÚNCIO (usa o link real do criativo do Facebook)
 // ══════════════════════════════════════════════════
+const COMM_EMAILJS_PUBLIC   = 'GLe9wQzP7zB0viJIo';
+const COMM_EMAILJS_SERVICE  = 'service_ptgsjyg';
+const COMM_EMAILJS_TEMPLATE = 'template_j9q926c';
+const COMM_QUEDA_MINIMA     = 2.0; // pontos percentuais
+
+async function sendCommissionAlertEmail(res, c) {
+  try {
+    await emailjs.send(COMM_EMAILJS_SERVICE, COMM_EMAILJS_TEMPLATE, {
+      product_name:     res.nome || c.name || '',
+      shop_name:        res.shopName || '',
+      old_commission:   res.baseline.toFixed(1),
+      new_commission:   res.atual.toFixed(1),
+      delta:            (res.atual - res.baseline).toFixed(1),
+      price:            (res.preco || 0).toFixed(2),
+      commission_value: ((res.preco || 0) * res.atual / 100).toFixed(2),
+      seller_pct:       res.sellerPct != null ? res.sellerPct.toFixed(1) : '—',
+      shopee_pct:       res.shopeePct != null ? res.shopeePct.toFixed(1) : '—',
+      baseline_date:    res.baselineData ? new Date(res.baselineData+'T12:00').toLocaleDateString('pt-BR') : '—',
+      product_link:     res.link || '',
+    }, { publicKey: COMM_EMAILJS_PUBLIC });
+    console.log(`Alerta de comissão enviado por e-mail: ${res.nome?.slice(0,40)}`);
+  } catch (e) {
+    console.warn('Falha ao enviar alerta de comissão por e-mail:', e);
+  }
+}
+
 function commCacheKey(adId) { return `commCache_${adId}`; }
 
 async function checkAdCommissionByDestUrl(c) {
@@ -6013,7 +6040,15 @@ async function checkAdCommissionByDestUrl(c) {
       atual: atualPct, baseline, baselineData,
       link: `https://shopee.com.br/product/${node.itemId}`,
       checkedDate: today,
+      alertadoPara: (cached && cached.itemId === itemId) ? cached.alertadoPara : null,
     };
+
+    const delta = result.atual - result.baseline;
+    if (delta <= -COMM_QUEDA_MINIMA && result.alertadoPara !== result.atual) {
+      sendCommissionAlertEmail(result, c);
+      result.alertadoPara = result.atual;
+    }
+
     localStorage.setItem(cacheKey, JSON.stringify(result));
     return result;
   } catch (e) {
@@ -12476,7 +12511,16 @@ function renderVisaoGeral() {
             <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">VALOR DA COMISSÃO</div>
             <div style="font-family:var(--mono);font-size:13px;font-weight:800;color:var(--green)">R$ ${valorComissao.toFixed(2)}</div>
           </div>
+          <div style="background:var(--bg);border-radius:6px;padding:8px 10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">↳ SELLER</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:800">${m.sellerPct!=null?m.sellerPct.toFixed(1)+'%':'—'}</div>
+          </div>
+          <div style="background:var(--bg);border-radius:6px;padding:8px 10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">↳ SHOPEE</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:800">${m.shopeePct!=null?m.shopeePct.toFixed(1)+'%':'—'}</div>
+          </div>
         </div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:8px;color:var(--text3)">💡 Compare o "Valor da comissão" com o que aparece na página do produto na Shopee, pra confirmar se bate com a realidade.</div>
       </div>`;
     })();
 
