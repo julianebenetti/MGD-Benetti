@@ -1,9 +1,9 @@
 {
-  "updated_at": 1783495983,
-  "updated_at_br": "08/07/2026 04:24",
+  "updated_at": 1783503234,
+  "updated_at_br": "08/07/2026 06:25",
   "period_days": 90,
-  "total_orders": 9364,
-  "total_conversions": 8830,
+  "total_orders": 9363,
+  "total_conversions": 8829,
   "orders": [
     {
       "ID do pedido": "2607072K6UUAB7",
@@ -18807,7 +18807,7 @@
     },
     {
       "ID do pedido": "260628A2XRF82K",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-28 11:52:57",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "60",
@@ -18819,7 +18819,7 @@
       "Comissao total do pedido(R$)": "1.8",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "TECIDO FLANELA XADREZ FIO TINTO - 3 METROS",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23093963515",
       "ID da loja": "1299383381",
       "Nome da loja": "TEXTIAN",
@@ -18827,7 +18827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236346777166526",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-28"
     },
     {
@@ -234077,31 +234077,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "229426142106638",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-09"
-    },
-    {
-      "ID do pedido": "260409CBJ047WG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-09 09:05:32",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "46.55",
-      "Comissao liquida do afiliado(R$)": "9.31",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "17.00%",
-      "Comissao Shopee(R$)": "1.3965",
-      "Comissao do vendedor(R$)": "7.9135",
-      "Comissao total do pedido(R$)": "9.31",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Macaquinho Feminino Zíper Frontal Com Bolso Confortável Malha Canelada do M ao GG",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22198798867",
-      "ID da loja": "1387100748",
-      "Nome da loja": "Moda Bela Rosa",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "229424732130302",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-09"
     }
