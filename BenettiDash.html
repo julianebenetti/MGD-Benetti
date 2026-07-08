@@ -6006,8 +6006,27 @@ async function sendCommissionAlertEmail(res, c) {
 
 function commCacheKey(adId) { return `commCache_${adId}`; }
 
+function manualLinkKey(c) { return `prodLinkManual_${c.subId || c.adId}`; }
+
+function saveManualProductLink(key, inputId, adId) {
+  const val = (document.getElementById(inputId)?.value || '').trim();
+  if (!val) { alert('Cola o link do produto antes de salvar.'); return; }
+  localStorage.setItem(key, val);
+  localStorage.removeItem(commCacheKey(adId)); // força nova checagem com o link novo
+  const c = (STATE.crossData || []).find(x => x.adId === adId);
+  if (c) checkAdCommissionByDestUrl(c).then(res => { if (res) c.adComm = res; renderVisaoGeral(); });
+}
+
+function clearManualProductLink(key) {
+  if (!confirm('Remover o link cadastrado? A próxima checagem tentará achar automaticamente de novo.')) return;
+  localStorage.removeItem(key);
+  renderVisaoGeral();
+}
+
 async function checkAdCommissionByDestUrl(c) {
-  if (!c.destUrl) return null;
+  const manualLink = (localStorage.getItem(manualLinkKey(c)) || '').trim();
+  const sourceUrl = manualLink || c.destUrl;
+  if (!sourceUrl) return null;
   const today = new Date().toISOString().split('T')[0];
   const cacheKey = commCacheKey(c.adId);
   let cached = null;
@@ -6017,7 +6036,7 @@ async function checkAdCommissionByDestUrl(c) {
   if (cached && cached.checkedDate === today) return cached;
 
   try {
-    const expanded = await glExpandUrl(c.destUrl);
+    const expanded = await glExpandUrl(sourceUrl);
     const m = expanded.match(/-i\.(\d+)\.(\d+)/) || expanded.match(/shopee\.com\.br\/[a-zA-Z0-9_-]+\/(\d+)\/(\d+)(?:[/?]|$)/);
     if (!m) return cached || null;
     const itemId = m[2];
@@ -6062,7 +6081,7 @@ async function runAdCommissionMonitor() {
   if (commMonitorRunning) return;
   commMonitorRunning = true;
   try {
-    const ativos = (STATE.crossData || []).filter(c => (c.campStatus || c.status || '').toUpperCase() === 'ACTIVE' && c.destUrl);
+    const ativos = (STATE.crossData || []).filter(c => (c.campStatus || c.status || '').toUpperCase() === 'ACTIVE' && (c.destUrl || (localStorage.getItem(manualLinkKey(c))||'').trim()));
     let updated = 0;
     for (const c of ativos) {
       const res = await checkAdCommissionByDestUrl(c);
@@ -12475,15 +12494,26 @@ function renderVisaoGeral() {
 
     // Monitor de Comissão — produto real do criativo do anúncio (não os produtos vendidos)
     const commHTML = (() => {
-      if (!c.destUrl) {
-        return `<div style="padding:14px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
-          ⚠️ Não achei o link do criativo deste anúncio — não dá pra checar a comissão automaticamente.
+      const manualKey  = manualLinkKey(c);
+      const manualLink = (localStorage.getItem(manualKey) || '').trim();
+      if (!c.destUrl && !manualLink) {
+        return `<div style="padding:14px 16px">
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3);margin-bottom:8px">
+            ⚠️ Não achei o link do produto automaticamente no criativo deste anúncio. Cola o link do produto (Shopee) que você está anunciando aqui — fica salvo e a checagem passa a rodar sozinha:
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <input type="text" id="manualLink_${c.adId}" placeholder="https://s.shopee.com.br/... ou link completo do produto"
+              style="flex:1;min-width:220px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:8px 10px;border-radius:6px">
+            <button onclick="saveManualProductLink('${manualKey}','manualLink_${c.adId}','${c.adId}')"
+              style="background:var(--accent);color:#000;border:none;border-radius:6px;padding:8px 14px;font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer">💾 Salvar</button>
+          </div>
         </div>`;
       }
       const m = c.adComm;
       if (!m) {
         return `<div style="padding:14px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
           ⏳ Ainda checando este anúncio (roda em segundo plano após sincronizar) — atualiza sozinho em instantes.
+          ${manualLink ? `<div style="margin-top:6px"><span onclick="clearManualProductLink('${manualKey}')" style="color:var(--blue);cursor:pointer">✏️ trocar link cadastrado</span></div>` : ''}
         </div>`;
       }
       const delta = m.atual - m.baseline;
@@ -12520,7 +12550,8 @@ function renderVisaoGeral() {
             <div style="font-family:var(--mono);font-size:13px;font-weight:800">${m.shopeePct!=null?m.shopeePct.toFixed(1)+'%':'—'}</div>
           </div>
         </div>
-        <div style="margin-top:8px;font-family:var(--mono);font-size:8px;color:var(--text3)">💡 Compare o "Valor da comissão" com o que aparece na página do produto na Shopee, pra confirmar se bate com a realidade.</div>
+        <div style="margin-top:8px;font-family:var(--mono);font-size:8px;color:var(--text3)">💡 Compare o "Valor da comissão" com o que aparece na página do produto na Shopee, pra confirmar se bate com a realidade.
+        ${manualLink ? ` · <span onclick="clearManualProductLink('${manualKey}')" style="color:var(--blue);cursor:pointer">✏️ trocar link cadastrado</span>` : ''}</div>
       </div>`;
     })();
 
