@@ -265,10 +265,14 @@ def main():
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"Concluido! Conversoes: {len(nodes)} | Itens: {len(orders)}")
 
-    try:
-        check_commissions(orders)
-    except Exception as e:
-        print(f"ERRO no monitor de comissao (nao interrompe o sync principal): {e}")
+    # Monitor de comissao por produto vendido foi DESLIGADO — trazia produtos
+    # errados (qualquer coisa que vendeu, nao o produto do anuncio). Substituido
+    # pelo monitor client-side dentro do BenettiDash.html, que usa o link real
+    # do criativo do Facebook (destUrl) para identificar o produto certo.
+    # try:
+    #     check_commissions(orders)
+    # except Exception as e:
+    #     print(f"ERRO no monitor de comissao (nao interrompe o sync principal): {e}")
 
 if __name__ == "__main__":
     main()
