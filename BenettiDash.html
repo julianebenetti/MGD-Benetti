@@ -4644,13 +4644,7 @@ function buildCross(accounts, shopeeOrders) {
             ? Math.floor((new Date(todayDate2) - new Date(p.lastDate)) / 86400000)
             : null;
           const shopeeLink = shopeeProductLink(p.itemId, p.nome);
-          const mon = (STATE.comissaoMonitor || {})[p.itemId];
-          const monData = mon ? {
-            comissaoMonitorAtual:    mon.atual_pct,
-            comissaoMonitorBaseline: mon.baseline_pct,
-            comissaoMonitorData:     mon.baseline_data,
-          } : {};
-          return { ...p, diasSemVenda, shopeeLink, ...monData };
+          return { ...p, diasSemVenda, shopeeLink };
         });
 
       // Atualiza campanha com ROAS e lucro reais (via Shopee - não usa pixel FB)
@@ -5951,18 +5945,6 @@ async function runFullSync() {
         console.warn('JSON Shopee não disponível:', e.message);
       }
 
-      // Monitor de Comissão — arquivo separado, gerado pelo mesmo sync (comissoes-monitor.json)
-      try {
-        const commUrl = 'https://julianebenetti.github.io/MGD-Benetti/comissoes-monitor.json';
-        const commResp = await fetch(commUrl + '?t=' + Date.now(), { cache: 'no-store' });
-        if (commResp.ok) {
-          const commJson = await commResp.json();
-          STATE.comissaoMonitor = commJson.produtos || {};
-        }
-      } catch(e) {
-        console.warn('Monitor de comissão não disponível ainda:', e.message);
-      }
-
       if (!jsonLoaded && STATE.shopeeRawCSV) {
         // ── PRIORIDADE 2: CSV importado manualmente
         loading(true, 'REPROCESSANDO SHOPEE CSV...');
@@ -5981,6 +5963,7 @@ async function runFullSync() {
     STATE = { ...STATE, accounts, shopee, crossData, loaded: true };
     renderAll();
     goTab('resumo');
+    runAdCommissionMonitor(); // roda em segundo plano, não trava a tela
 
   } catch (e) {
     setStatus('Erro: ' + e.message, 'err');
@@ -5988,6 +5971,76 @@ async function runFullSync() {
   } finally {
     loading(false);
     if (syncIcon) { syncIcon.className = ''; syncIcon.textContent = '↻'; }
+  }
+}
+
+// ══════════════════════════════════════════════════
+// MONITOR DE COMISSÃO — POR ANÚNCIO (usa o link real do criativo do Facebook)
+// ══════════════════════════════════════════════════
+function commCacheKey(adId) { return `commCache_${adId}`; }
+
+async function checkAdCommissionByDestUrl(c) {
+  if (!c.destUrl) return null;
+  const today = new Date().toISOString().split('T')[0];
+  const cacheKey = commCacheKey(c.adId);
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch {}
+
+  // Já checou hoje — reaproveita, não bate na API de novo
+  if (cached && cached.checkedDate === today) return cached;
+
+  try {
+    const expanded = await glExpandUrl(c.destUrl);
+    const m = expanded.match(/-i\.(\d+)\.(\d+)/) || expanded.match(/shopee\.com\.br\/[a-zA-Z0-9_-]+\/(\d+)\/(\d+)(?:[/?]|$)/);
+    if (!m) return cached || null;
+    const itemId = m[2];
+
+    const query = `{ productOfferV2(itemId:${itemId}, limit:1) { nodes { itemId productName commissionRate sellerCommissionRate shopeeCommissionRate shopName priceMin } } }`;
+    const data = await glShopeeApi(query);
+    const node = data?.productOfferV2?.nodes?.[0];
+    if (!node) return cached || null;
+
+    const atualPct = parseFloat(node.commissionRate || 0) * 100;
+    // Baseline: mantém se já existir e for o mesmo produto; trava novo se mudou o criativo ou é a 1ª vez
+    let baseline = (cached && cached.itemId === itemId) ? cached.baseline : atualPct;
+    let baselineData = (cached && cached.itemId === itemId) ? cached.baselineData : today;
+
+    const result = {
+      itemId, nome: node.productName || '', shopName: node.shopName || '',
+      preco: parseFloat(node.priceMin || 0),
+      sellerPct: node.sellerCommissionRate != null ? parseFloat(node.sellerCommissionRate) * 100 : null,
+      shopeePct: node.shopeeCommissionRate != null ? parseFloat(node.shopeeCommissionRate) * 100 : null,
+      atual: atualPct, baseline, baselineData,
+      link: `https://shopee.com.br/product/${node.itemId}`,
+      checkedDate: today,
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(result));
+    return result;
+  } catch (e) {
+    console.warn('Erro ao checar comissão do anúncio', c.adId, e.message);
+    return cached || null;
+  }
+}
+
+let commMonitorRunning = false;
+async function runAdCommissionMonitor() {
+  if (commMonitorRunning) return;
+  commMonitorRunning = true;
+  try {
+    const ativos = (STATE.crossData || []).filter(c => (c.campStatus || c.status || '').toUpperCase() === 'ACTIVE' && c.destUrl);
+    let updated = 0;
+    for (const c of ativos) {
+      const res = await checkAdCommissionByDestUrl(c);
+      if (res) { c.adComm = res; updated++; }
+      await new Promise(r => setTimeout(r, 900)); // não martelar a API da Shopee
+      if (updated % 5 === 0 && document.getElementById('tab-visao')?.classList.contains('active')) {
+        renderVisaoGeral();
+      }
+    }
+    if (document.getElementById('tab-visao')?.classList.contains('active')) renderVisaoGeral();
+    console.log(`Monitor de comissão: ${updated}/${ativos.length} anúncios checados`);
+  } finally {
+    commMonitorRunning = false;
   }
 }
 
@@ -12385,32 +12438,46 @@ function renderVisaoGeral() {
     // Audiência
     const audHTML = renderAudienceMobile(c);
 
-    // Monitor de Comissão — por produto
+    // Monitor de Comissão — produto real do criativo do anúncio (não os produtos vendidos)
     const commHTML = (() => {
-      const prods = (c.produtos||[]).filter(p => p.comissaoMonitorAtual != null);
-      if (!prods.length) return `<div style="padding:14px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
-        ⏳ Monitor ainda não fez a primeira checagem para os produtos desta campanha. Assim que rodar, o histórico de comissão aparece aqui.
-      </div>`;
-      return prods.map(p => {
-        const atual    = p.comissaoMonitorAtual;
-        const baseline = p.comissaoMonitorBaseline;
-        const delta    = atual - baseline;
-        const caiu     = delta < -0.01;
-        const cor      = caiu ? 'var(--red)' : 'var(--green)';
-        const dataStr  = p.comissaoMonitorData ? new Date(p.comissaoMonitorData+'T12:00').toLocaleDateString('pt-BR') : '—';
-        return `<div style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-          <div style="min-width:0;flex:1">
-            <a href="${p.shopeeLink}" target="_blank" rel="noopener" style="font-family:var(--mono);font-size:10px;color:var(--blue);text-decoration:none">
-              🔗 ${(p.nome||'').length>50?(p.nome||'').slice(0,50)+'…':(p.nome||'')}
-            </a>
-            <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px">📅 comissão travada em ${dataStr}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-family:var(--mono);font-size:12px;font-weight:800;color:${cor}">${baseline.toFixed(1)}% → ${atual.toFixed(1)}%</div>
-            <div style="font-family:var(--mono);font-size:9px;color:${cor}">${caiu?'🔴 caiu '+Math.abs(delta).toFixed(1)+'pp':'✅ estável ou subiu'}</div>
-          </div>
+      if (!c.destUrl) {
+        return `<div style="padding:14px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
+          ⚠️ Não achei o link do criativo deste anúncio — não dá pra checar a comissão automaticamente.
         </div>`;
-      }).join('');
+      }
+      const m = c.adComm;
+      if (!m) {
+        return `<div style="padding:14px 16px;font-family:var(--mono);font-size:9px;color:var(--text3)">
+          ⏳ Ainda checando este anúncio (roda em segundo plano após sincronizar) — atualiza sozinho em instantes.
+        </div>`;
+      }
+      const delta = m.atual - m.baseline;
+      const caiu  = delta < -0.01;
+      const cor   = caiu ? 'var(--red)' : 'var(--green)';
+      const dataStr = m.baselineData ? new Date(m.baselineData+'T12:00').toLocaleDateString('pt-BR') : '—';
+      const preco = m.preco || 0;
+      const valorComissao = preco * (m.atual/100);
+      return `<div style="padding:12px 16px">
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700;margin-bottom:2px">
+          <a href="${m.link}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">🔗 ${(m.nome||'').length>60?(m.nome||'').slice(0,60)+'…':(m.nome||'')}</a>
+        </div>
+        <div style="font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:10px">${m.shopName||''} · 📅 comissão travada em ${dataStr}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div style="background:var(--bg);border-radius:6px;padding:8px 10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">COMISSÃO</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:800;color:${cor}">${m.baseline.toFixed(1)}% → ${m.atual.toFixed(1)}%</div>
+            <div style="font-family:var(--mono);font-size:8px;color:${cor}">${caiu?'🔴 caiu '+Math.abs(delta).toFixed(1)+'pp':'✅ estável ou subiu'}</div>
+          </div>
+          <div style="background:var(--bg);border-radius:6px;padding:8px 10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">PREÇO</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:800">R$ ${preco.toFixed(2)}</div>
+          </div>
+          <div style="background:var(--bg);border-radius:6px;padding:8px 10px">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--text3)">VALOR DA COMISSÃO</div>
+            <div style="font-family:var(--mono);font-size:13px;font-weight:800;color:var(--green)">R$ ${valorComissao.toFixed(2)}</div>
+          </div>
+        </div>
+      </div>`;
     })();
 
     // Botão link para Decisões do Dia
@@ -12525,9 +12592,8 @@ function renderVisaoGeral() {
         const freq = c.frequency || 0;
         const freqColor = freq === 0 ? 'var(--text3)' : freq < 2 ? 'var(--green)' : freq < 3 ? 'var(--yellow)' : 'var(--red)';
         const freqLabel = freq === 0 ? '—' : freq < 2 ? '✅ Saudável — público ainda fresco' : freq < 3 ? '⚠️ Atenção — começa a saturar' : '🔴 Saturando — público cansado';
-        const topP = (c.produtos||[]).sort((a,b)=>(b.commShopee||b.comm||0)-(a.commShopee||a.comm||0))[0];
-        const commAtual    = topP?.comissaoMonitorAtual;
-        const commBaseline = topP?.comissaoMonitorBaseline;
+        const commAtual    = c.adComm?.atual;
+        const commBaseline = c.adComm?.baseline;
         const temMonitor   = commAtual != null && commBaseline != null;
         const commDelta    = temMonitor ? (commAtual - commBaseline) : 0;
         const commColor    = !temMonitor ? 'var(--text3)' : commDelta < -0.01 ? 'var(--red)' : 'var(--green)';
