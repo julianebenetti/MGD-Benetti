@@ -4,7 +4,7 @@ Roda via GitHub Actions todo dia
 Salva shopee-data.json no repositorio
 """
 import hashlib, time, json, os, urllib.request, urllib.error
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 URL    = "https://open-api.affiliate.shopee.com.br/graphql"
 APP_ID = os.environ["SHOPEE_APP_ID"]
@@ -177,7 +177,8 @@ def send_email_alert(info):
 def check_commissions(orders):
     """Verifica comissão dos produtos ativos (com pedido recente) e atualiza o baseline."""
     print("Verificando comissoes dos produtos ativos...")
-    hoje = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    agora_br = datetime.now(timezone.utc) - timedelta(hours=3)  # Brasília = UTC-3 (sem horário de verão)
+    hoje = agora_br.strftime("%Y-%m-%d")
     corte = (datetime.now(timezone.utc).timestamp() - DIAS_ATIVIDADE * 86400)
     corte_str = datetime.fromtimestamp(corte, tz=timezone.utc).strftime("%Y-%m-%d")
 
@@ -241,19 +242,20 @@ def check_commissions(orders):
 
     with open(MONITOR_FILE, "w", encoding="utf-8") as f:
         json.dump({
-            "updated_at_br": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "updated_at_br": agora_br.strftime("%d/%m/%Y %H:%M"),
             "produtos": monitor,
         }, f, ensure_ascii=False, indent=2)
     print(f"Monitor de comissao salvo: {len(monitor)} produtos rastreados")
 
 def main():
-    print(f"Shopee Affiliate Sync - {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    agora_br_main = datetime.now(timezone.utc) - timedelta(hours=3)
+    print(f"Shopee Affiliate Sync - {agora_br_main.strftime('%d/%m/%Y %H:%M')}")
     print(f"Buscando {DAYS} dias de dados...")
     nodes  = fetch_all()
     orders = transform(nodes)
     output = {
         "updated_at":        int(time.time()),
-        "updated_at_br":     datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "updated_at_br":     agora_br_main.strftime("%d/%m/%Y %H:%M"),
         "period_days":       DAYS,
         "total_orders":      len(orders),
         "total_conversions": len(nodes),
