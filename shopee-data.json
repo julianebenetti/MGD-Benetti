@@ -1,9 +1,9 @@
 {
-  "updated_at": 1783671904,
-  "updated_at_br": "10/07/2026 05:17",
+  "updated_at": 1783679517,
+  "updated_at_br": "10/07/2026 07:24",
   "period_days": 90,
-  "total_orders": 9208,
-  "total_conversions": 8670,
+  "total_orders": 9207,
+  "total_conversions": 8669,
   "orders": [
     {
       "ID do pedido": "2607097NG93WC1",
@@ -9807,7 +9807,7 @@
     },
     {
       "ID do pedido": "260705SS4YDXV0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-04 17:40:05",
       "Sub_id1": "01Jul26SegundaPeleVs3Copia19Mai26",
       "Valor de Compra(R$)": "61.98",
@@ -9819,7 +9819,7 @@
       "Comissao total do pedido(R$)": "2.97504",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Calça Wide Leg Jeans Feminina Marmorizada Cintura Alta 100% Algodão Premium",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22198034315",
       "ID da loja": "312887832",
       "Nome da loja": "Safira Closet",
@@ -9827,7 +9827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236886004184781",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-04"
     },
     {
@@ -29382,7 +29382,7 @@
     },
     {
       "ID do pedido": "2606263JX0WEM9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-06-25 21:50:14",
       "Sub_id1": "22Jun26ObjVendasConjSegundaPeleCasalVs2",
       "Valor de Compra(R$)": "15",
@@ -29394,7 +29394,7 @@
       "Comissao total do pedido(R$)": "0.45",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Placas decorativas quadros Regras Casa Cozinha",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "15218876898",
       "ID da loja": "363296983",
       "Nome da loja": "Paty Art Personalizados",
@@ -29402,7 +29402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236123414169598",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-06-25"
     },
     {
@@ -230177,31 +230177,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "229602269152679",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-11"
-    },
-    {
-      "ID do pedido": "260411HDGFASU1",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-11 09:23:47",
-      "Sub_id1": "05Abr26VESutiaInfantilPublAberto04Fev26c2",
-      "Valor de Compra(R$)": "38.2",
-      "Comissao liquida do afiliado(R$)": "1.146",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.146",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.146",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Ralo Click Inteligente 15cm Preto Banheiro Veda Cheiro Redondo",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22292984362",
-      "ID da loja": "408128510",
-      "Nome da loja": "Comercial Vipasa",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "229598627147918",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-11"
     }
