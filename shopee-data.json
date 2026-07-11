@@ -1,9 +1,9 @@
 {
-  "updated_at": 1783760125,
-  "updated_at_br": "11/07/2026 05:47",
+  "updated_at": 1783764913,
+  "updated_at_br": "11/07/2026 07:07",
   "period_days": 90,
-  "total_orders": 9107,
-  "total_conversions": 8572,
+  "total_orders": 9106,
+  "total_conversions": 8571,
   "orders": [
     {
       "ID do pedido": "260710A6GXWYX0",
@@ -227652,31 +227652,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "229690524141494",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-12"
-    },
-    {
-      "ID do pedido": "260412KX63BPP9",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-12 09:27:33",
-      "Sub_id1": "PromosApp",
-      "Valor de Compra(R$)": "37.99",
-      "Comissao liquida do afiliado(R$)": "3.0392",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "1.1397",
-      "Comissao do vendedor(R$)": "1.8995",
-      "Comissao total do pedido(R$)": "3.0392",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 3 Sutiã Plus Size e Normal Alta Sustentação Sem Bojo  - Sutia N/P",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "15189911309",
-      "ID da loja": "570502401",
-      "Nome da loja": "Vest Bela Lingerie",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "229685252138058",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-12"
     }
