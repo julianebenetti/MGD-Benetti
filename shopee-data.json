@@ -1,9 +1,9 @@
 {
-  "updated_at": 1783754151,
-  "updated_at_br": "11/07/2026 04:08",
+  "updated_at": 1783760125,
+  "updated_at_br": "11/07/2026 05:47",
   "period_days": 90,
-  "total_orders": 9108,
-  "total_conversions": 8573,
+  "total_orders": 9107,
+  "total_conversions": 8572,
   "orders": [
     {
       "ID do pedido": "260710A6GXWYX0",
@@ -227677,31 +227677,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "229685252138058",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-12"
-    },
-    {
-      "ID do pedido": "260412KUV957C1",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-12 08:46:15",
-      "Sub_id1": "08Abr26SutiaPuberdade",
-      "Valor de Compra(R$)": "23.99",
-      "Comissao liquida do afiliado(R$)": "2.8788",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "0.7197",
-      "Comissao do vendedor(R$)": "2.1591",
-      "Comissao total do pedido(R$)": "2.8788",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Sutiã Menina Moça Kit 3 Sem Bojo Infantil Colegial",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22897297508",
-      "ID da loja": "741824194",
-      "Nome da loja": "Modatodateen",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "229682775191045",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-12"
     }
