@@ -1,9 +1,9 @@
 {
-  "updated_at": 1783917633,
-  "updated_at_br": "13/07/2026 01:32",
+  "updated_at": 1783923559,
+  "updated_at_br": "13/07/2026 03:11",
   "period_days": 90,
-  "total_orders": 8870,
-  "total_conversions": 8351,
+  "total_orders": 8869,
+  "total_conversions": 8350,
   "orders": [
     {
       "ID do pedido": "260712F40J7JNK",
@@ -221727,31 +221727,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "229853634140690",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-14"
-    },
-    {
-      "ID do pedido": "260414RFS8XW3U",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-14 04:53:08",
-      "Sub_id1": "08Abr26BotaMontariaBranca",
-      "Valor de Compra(R$)": "144.42",
-      "Comissao liquida do afiliado(R$)": "4.3326",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "14.00%",
-      "Comissao Shopee(R$)": "4.3326",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "4.3326",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bota Coturno tratorado blogueira Preto Feminina promoção",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19825844234",
-      "ID da loja": "706890312",
-      "Nome da loja": "MR Fashion ",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "229841588118811",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-14"
     }
