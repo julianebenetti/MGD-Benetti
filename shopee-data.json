@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784180601,
-  "updated_at_br": "16/07/2026 02:36",
+  "updated_at": 1784186859,
+  "updated_at_br": "16/07/2026 04:19",
   "period_days": 90,
-  "total_orders": 8596,
-  "total_conversions": 8099,
+  "total_orders": 8595,
+  "total_conversions": 8098,
   "orders": [
     {
       "ID do pedido": "260715PSECY2SQ",
@@ -214877,31 +214877,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230115536128352",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-17"
-    },
-    {
-      "ID do pedido": "260417318QJXSW",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-17 05:54:07",
-      "Sub_id1": "PromosApp",
-      "Valor de Compra(R$)": "15.98",
-      "Comissao liquida do afiliado(R$)": "0.4794",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.4794",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.4794",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "GUI ANA Depilador 2em1 Recarregavel Usb Sobrancelha Buço Batom",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23198062865",
-      "ID da loja": "1299283009",
-      "Nome da loja": "GUI ANA SHOP",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "230104446137110",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-17"
     }
