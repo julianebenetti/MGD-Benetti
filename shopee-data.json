@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784261889,
-  "updated_at_br": "17/07/2026 01:10",
+  "updated_at": 1784267120,
+  "updated_at_br": "17/07/2026 02:37",
   "period_days": 90,
-  "total_orders": 8519,
-  "total_conversions": 8026,
+  "total_orders": 8518,
+  "total_conversions": 8025,
   "orders": [
     {
       "ID do pedido": "260716S5Y5HUB2",
@@ -212953,31 +212953,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230205008130680",
       "conversionStatus": "COMPLETED",
-      "data": "2026-04-18"
-    },
-    {
-      "ID do pedido": "2604185GT13Q6V",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-04-18 05:37:32",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Brinquedos De Sapo Saltador 30 Peças Para Crianças Alívio Do Estresse Engraçado Festa Favor Presente Aniversário",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "28504755155",
-      "ID da loja": "1006215031",
-      "Nome da loja": "Choice Oficial",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "230189852148738",
-      "conversionStatus": "CANCELLED",
       "data": "2026-04-18"
     }
   ]
