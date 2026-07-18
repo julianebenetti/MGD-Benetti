@@ -1,6 +1,6 @@
 {
-  "updated_at": 1784358277,
-  "updated_at_br": "18/07/2026 03:57",
+  "updated_at": 1784364953,
+  "updated_at_br": "18/07/2026 05:48",
   "period_days": 90,
   "total_orders": 8437,
   "total_conversions": 7949,
@@ -10532,7 +10532,7 @@
     },
     {
       "ID do pedido": "260710ARNM9C44",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-10 08:08:13",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "18.98",
@@ -10544,7 +10544,7 @@
       "Comissao total do pedido(R$)": "0.8541",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Lixadeira de Unhas Elétrica com Broca e Motor Bivolt para Manicure e Pedicure  USB",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23994175021",
       "ID da loja": "1543579690",
       "Nome da loja": "ERIYA BAZAR",
@@ -10552,7 +10552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237370093100460",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-10"
     },
     {
