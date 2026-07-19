@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784446261,
-  "updated_at_br": "19/07/2026 04:23",
+  "updated_at": 1784452315,
+  "updated_at_br": "19/07/2026 06:04",
   "period_days": 90,
-  "total_orders": 8314,
-  "total_conversions": 7826,
+  "total_orders": 8313,
+  "total_conversions": 7825,
   "orders": [
     {
       "ID do pedido": "26071816EN6CQ8",
@@ -207828,31 +207828,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230380715169367",
       "conversionStatus": "CANCELLED",
-      "data": "2026-04-20"
-    },
-    {
-      "ID do pedido": "260420AR9UJPS5",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-20 07:34:58",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "99.9",
-      "Comissao liquida do afiliado(R$)": "2.997",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "2.997",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.997",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bolsa Bucket Média Fellipe Krein Ss23 Butterfly Fk613 Liso - Nude",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19597521124",
-      "ID da loja": "867958784",
-      "Nome da loja": "Sestini",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "230369698100578",
-      "conversionStatus": "COMPLETED",
       "data": "2026-04-20"
     }
   ]
