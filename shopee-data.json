@@ -1,6 +1,6 @@
 {
-  "updated_at": 1784522760,
-  "updated_at_br": "20/07/2026 01:38",
+  "updated_at": 1784528413,
+  "updated_at_br": "20/07/2026 03:13",
   "period_days": 90,
   "total_orders": 8238,
   "total_conversions": 7757,
@@ -16807,7 +16807,7 @@
     },
     {
       "ID do pedido": "26070852WH2EGP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-08 01:55:37",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "22.31",
@@ -16819,7 +16819,7 @@
       "Comissao total do pedido(R$)": "2.34255",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 peças decorativas de gesso bandeja vaso e porta joias",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "29244261486",
       "ID da loja": "498432060",
       "Nome da loja": "HJL Company",
@@ -16827,7 +16827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237174937160107",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-08"
     },
     {
