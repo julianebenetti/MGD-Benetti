@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784528413,
-  "updated_at_br": "20/07/2026 03:13",
+  "updated_at": 1784534485,
+  "updated_at_br": "20/07/2026 04:54",
   "period_days": 90,
-  "total_orders": 8238,
-  "total_conversions": 7757,
+  "total_orders": 8237,
+  "total_conversions": 7756,
   "orders": [
     {
       "ID do pedido": "2607193HVA9EYG",
@@ -5732,7 +5732,7 @@
     },
     {
       "ID do pedido": "260714NEU5XPN1",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-14 14:11:40",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "49.9",
@@ -5744,7 +5744,7 @@
       "Comissao total do pedido(R$)": "3.493",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sapateira Porta Sapato Premium Desmontavel Organizador Multiuso 16Pares / 4 Andares",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58250595132",
       "ID da loja": "1675658938",
       "Nome da loja": "AJQ LAR",
@@ -5752,7 +5752,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237737499113986",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-14"
     },
     {
@@ -205927,31 +205927,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230458827175075",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-21"
-    },
-    {
-      "ID do pedido": "260421D4NTMVJ3",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-21 06:21:45",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "17.99",
-      "Comissao liquida do afiliado(R$)": "1.4392",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.5397",
-      "Comissao do vendedor(R$)": "0.8995",
-      "Comissao total do pedido(R$)": "1.4392",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 6 Pó Cromo Metalizado Unhas Cromado Decoração",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22294905200",
-      "ID da loja": "960540947",
-      "Nome da loja": "YUNY SHOP",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "230451704153239",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-21"
     }
