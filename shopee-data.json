@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784613181,
-  "updated_at_br": "21/07/2026 02:45",
+  "updated_at": 1784619383,
+  "updated_at_br": "21/07/2026 04:29",
   "period_days": 90,
-  "total_orders": 8177,
-  "total_conversions": 7700,
+  "total_orders": 8176,
+  "total_conversions": 7699,
   "orders": [
     {
       "ID do pedido": "260720689NQGSY",
@@ -204402,31 +204402,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230547053195239",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-22"
-    },
-    {
-      "ID do pedido": "260422FREGQ9KM",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-22 07:20:54",
-      "Sub_id1": "22Abr26MeiaPeluciadalnverno",
-      "Valor de Compra(R$)": "26.99",
-      "Comissao liquida do afiliado(R$)": "3.7786",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "8.00%",
-      "Comissao Shopee(R$)": "1.6194",
-      "Comissao do vendedor(R$)": "2.1592",
-      "Comissao total do pedido(R$)": "3.7786",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "2/4/6 pares meia feminina cano alto de grossa peluciada de lnverno termica tamanho 35-40",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23998330018",
-      "ID da loja": "1420454053",
-      "Nome da loja": "HZ SHOPPING",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "230541653182525",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-22"
     }
