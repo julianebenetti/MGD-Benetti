@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784607865,
-  "updated_at_br": "21/07/2026 01:17",
+  "updated_at": 1784613181,
+  "updated_at_br": "21/07/2026 02:45",
   "period_days": 90,
-  "total_orders": 8178,
-  "total_conversions": 7701,
+  "total_orders": 8177,
+  "total_conversions": 7700,
   "orders": [
     {
       "ID do pedido": "260720689NQGSY",
@@ -27857,7 +27857,7 @@
     },
     {
       "ID do pedido": "260704QWHWQQTR",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-03 23:53:35",
       "Sub_id1": "21Jun26SuporteEscovaObjVendasVs3",
       "Valor de Compra(R$)": "41",
@@ -27869,7 +27869,7 @@
       "Comissao total do pedido(R$)": "2.46",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Extensão Elétrica 30 Metros 20A Cabo PP 2x2,5 Reforçada",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58207874311",
       "ID da loja": "1640309221",
       "Nome da loja": "eduardoramalho756",
@@ -27877,7 +27877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236822014106171",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-03"
     },
     {
@@ -204427,31 +204427,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "230541653182525",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-22"
-    },
-    {
-      "ID do pedido": "260422FGW6REBH",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-22 05:05:56",
-      "Sub_id1": "",
-      "Valor de Compra(R$)": "67.88",
-      "Comissao liquida do afiliado(R$)": "4.0728",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "4.0728",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "4.0728",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Picador De Alimentos Moedor De Carne Mixer Elétrica Processador Cozinha Casa Alho - 110v-220v",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58253145740",
-      "ID da loja": "1362240140",
-      "Nome da loja": "TOP SHOP ELETRONICO",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "230533556117335",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-22"
     }
