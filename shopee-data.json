@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784705885,
-  "updated_at_br": "22/07/2026 04:30",
+  "updated_at": 1784712813,
+  "updated_at_br": "22/07/2026 06:26",
   "period_days": 90,
-  "total_orders": 8113,
-  "total_conversions": 7636,
+  "total_orders": 8112,
+  "total_conversions": 7635,
   "orders": [
     {
       "ID do pedido": "2607218QJ4Y1EN",
@@ -202803,31 +202803,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "230636526140729",
       "conversionStatus": "CANCELLED",
-      "data": "2026-04-23"
-    },
-    {
-      "ID do pedido": "260423JFT352BT",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-23 09:24:17",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "59.97",
-      "Comissao liquida do afiliado(R$)": "1.7991",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.7991",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.7991",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Escada para Cachorro Gato com 3 Degraus - Escada Escadinha Pet - Escada para Gato Idoso",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23699325739",
-      "ID da loja": "1708016335",
-      "Nome da loja": "Vand Decor",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "230635457141419",
-      "conversionStatus": "COMPLETED",
       "data": "2026-04-23"
     }
   ]
