@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784780734,
-  "updated_at_br": "23/07/2026 01:18",
+  "updated_at": 1784786205,
+  "updated_at_br": "23/07/2026 02:49",
   "period_days": 90,
-  "total_orders": 8149,
-  "total_conversions": 7673,
+  "total_orders": 8148,
+  "total_conversions": 7672,
   "orders": [
     {
       "ID do pedido": "260722B9BYR9UA",
@@ -203702,31 +203702,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "230713013129891",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-24"
-    },
-    {
-      "ID do pedido": "260424MHMB44NT",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-24 05:02:12",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "119.87",
-      "Comissao liquida do afiliado(R$)": "3.5961",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "3.5961",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "3.5961",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit Até 120 Placas PVC 3D Com Dupla Face Decoração Sala Quarto Cozinha Penteadeira 25x25CM",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19498266628",
-      "ID da loja": "1447360097",
-      "Nome da loja": "elevedecorhome",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "230706131137770",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-24"
     }
