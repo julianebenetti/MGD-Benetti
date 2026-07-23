@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784786205,
-  "updated_at_br": "23/07/2026 02:49",
+  "updated_at": 1784792106,
+  "updated_at_br": "23/07/2026 04:28",
   "period_days": 90,
-  "total_orders": 8148,
-  "total_conversions": 7672,
+  "total_orders": 8147,
+  "total_conversions": 7671,
   "orders": [
     {
       "ID do pedido": "260722B9BYR9UA",
@@ -203677,31 +203677,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230724003175211",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-24"
-    },
-    {
-      "ID do pedido": "260424MR1E9MNX",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-24 06:56:53",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "17.99",
-      "Comissao liquida do afiliado(R$)": "1.4392",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.5397",
-      "Comissao do vendedor(R$)": "0.8995",
-      "Comissao total do pedido(R$)": "1.4392",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 6 Pó Cromo Metalizado Unhas Cromado Decoração",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22394895206",
-      "ID da loja": "1387498475",
-      "Nome da loja": "YUNY Comercial da Moda",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "230713013129891",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-24"
     }
