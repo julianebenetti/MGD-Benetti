@@ -1,6 +1,6 @@
 {
-  "updated_at": 1784792106,
-  "updated_at_br": "23/07/2026 04:28",
+  "updated_at": 1784799093,
+  "updated_at_br": "23/07/2026 06:24",
   "period_days": 90,
   "total_orders": 8147,
   "total_conversions": 7671,
@@ -19457,7 +19457,7 @@
     },
     {
       "ID do pedido": "260711DDXWSWQ1",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-11 09:34:33",
       "Sub_id1": "11Jul26CheiroRicoVs3",
       "Valor de Compra(R$)": "34.99",
@@ -19469,7 +19469,7 @@
       "Comissao total do pedido(R$)": "1.0497",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sabão Líquido Lava Roupas 5 Litros Apyce Lançamento",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23893713629",
       "ID da loja": "477807036",
       "Nome da loja": "Lia Mia Variedades ",
@@ -19477,7 +19477,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237461673139244",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-11"
     },
     {
