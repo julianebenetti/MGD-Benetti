@@ -1,6 +1,6 @@
 {
-  "updated_at": 1784867144,
-  "updated_at_br": "24/07/2026 01:18",
+  "updated_at": 1784872403,
+  "updated_at_br": "24/07/2026 02:46",
   "period_days": 90,
   "total_orders": 8123,
   "total_conversions": 7654,
@@ -13082,7 +13082,7 @@
     },
     {
       "ID do pedido": "260716S27CQ35B",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-16 00:36:29",
       "Sub_id1": "18Jun26SegundaPeleVs1",
       "Valor de Compra(R$)": "18.3",
@@ -13094,7 +13094,7 @@
       "Comissao total do pedido(R$)": "1.3359",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Saco Organza - Saquinho Para Lembrancinha 7x9 Diversas Cores - 20/50/100 Unidades - Nybc",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23538103474",
       "ID da loja": "420243547",
       "Nome da loja": "Loja Nybc Oficial",
@@ -13102,7 +13102,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237861389166166",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-16"
     },
     {
@@ -17132,7 +17132,7 @@
     },
     {
       "ID do pedido": "260714K5D6VN1W",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-13 16:17:28",
       "Sub_id1": "11Jul26TesteDiaRoyalAmber",
       "Valor de Compra(R$)": "59.99",
@@ -17144,7 +17144,7 @@
       "Comissao total do pedido(R$)": "1.7997",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tênis Feminino Casual Branco Ideal Academia sapato confortável estiloso",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23593503978",
       "ID da loja": "747707244",
       "Nome da loja": "Canezzo Store",
@@ -17152,7 +17152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237658647170217",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-13"
     },
     {
