@@ -1,9 +1,9 @@
 {
-  "updated_at": 1784872403,
-  "updated_at_br": "24/07/2026 02:46",
+  "updated_at": 1784878467,
+  "updated_at_br": "24/07/2026 04:27",
   "period_days": 90,
-  "total_orders": 8123,
-  "total_conversions": 7654,
+  "total_orders": 8122,
+  "total_conversions": 7653,
   "orders": [
     {
       "ID do pedido": "260723DSKXWN7Q",
@@ -203052,31 +203052,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "230808852157940",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-25"
-    },
-    {
-      "ID do pedido": "260425Q84H5U7U",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-25 06:50:17",
-      "Sub_id1": "19Abr26ConjuntoSegundaPeleTermica",
-      "Valor de Compra(R$)": "49.7",
-      "Comissao liquida do afiliado(R$)": "1.491",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "1.491",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.491",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "CALÇA FLARE CINTURA ALTA , CALÇA SOCIAL FLARE BOCA DE SINO MALHA RUGÃO PLUS SIZE",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "20598143228",
-      "ID da loja": "701283118",
-      "Nome da loja": "FERNANDEZ OFICIAL",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "230799016159219",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-25"
     }
