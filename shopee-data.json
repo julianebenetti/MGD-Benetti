@@ -1,6 +1,6 @@
 {
-  "updated_at": 1784878467,
-  "updated_at_br": "24/07/2026 04:27",
+  "updated_at": 1784885338,
+  "updated_at_br": "24/07/2026 06:21",
   "period_days": 90,
   "total_orders": 8122,
   "total_conversions": 7653,
@@ -7582,7 +7582,7 @@
     },
     {
       "ID do pedido": "2607205VEKYP6J",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-19 23:19:14",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "38.12",
@@ -7594,7 +7594,7 @@
       "Comissao total do pedido(R$)": "3.58328",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Babuche Profissional Hospitalar EPI Antiderrapante Super Leve para Cozinheira Enfermeira Confortável Trabalho",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58206667250",
       "ID da loja": "385195483",
       "Nome da loja": "Lúxea Shoes",
@@ -7602,7 +7602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238202354180923",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-19"
     },
     {
