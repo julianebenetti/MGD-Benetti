@@ -1,6 +1,6 @@
 {
-  "updated_at": 1784963899,
-  "updated_at_br": "25/07/2026 04:11",
+  "updated_at": 1784970568,
+  "updated_at_br": "25/07/2026 06:02",
   "period_days": 90,
   "total_orders": 8081,
   "total_conversions": 7620,
@@ -5282,7 +5282,7 @@
     },
     {
       "ID do pedido": "2607219RCJ41WM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-21 12:17:09",
       "Sub_id1": "17Jul26CadeiraEscritorio",
       "Valor de Compra(R$)": "12.8",
@@ -5294,7 +5294,7 @@
       "Comissao total do pedido(R$)": "0.8576",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Válvula de segurança para cafeteira italiana 3,6,912 cafés (1) UN",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23098085543",
       "ID da loja": "543159967",
       "Nome da loja": "dm.variedades",
@@ -5302,7 +5302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238335429102581",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-21"
     },
     {
@@ -10982,7 +10982,7 @@
     },
     {
       "ID do pedido": "26071932BYT7EF",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-18 20:27:10",
       "Sub_id1": "",
       "Valor de Compra(R$)": "183.02",
@@ -10994,7 +10994,7 @@
       "Comissao total do pedido(R$)": "4.5755",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Giratória Mondial Ceramic Íon 127V",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22829016308",
       "ID da loja": "295737745",
       "Nome da loja": "Karzen Eletro",
@@ -11002,7 +11002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238105629165069",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-18"
     },
     {
