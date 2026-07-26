@@ -1,6 +1,6 @@
 {
-  "updated_at": 1785051553,
-  "updated_at_br": "26/07/2026 04:32",
+  "updated_at": 1785057579,
+  "updated_at_br": "26/07/2026 06:12",
   "period_days": 90,
   "total_orders": 8067,
   "total_conversions": 7607,
@@ -7907,7 +7907,7 @@
     },
     {
       "ID do pedido": "2607218P75QY8G",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-21 02:05:41",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "29.9",
@@ -7919,7 +7919,7 @@
       "Comissao total do pedido(R$)": "1.6445",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Gravata Semi Slim Xadrez Cinza Chumbo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23014195612",
       "ID da loja": "337457271",
       "Nome da loja": "dfgravatas",
@@ -7927,7 +7927,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238298741139980",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-21"
     },
     {
