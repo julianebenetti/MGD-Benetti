@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785127610,
-  "updated_at_br": "27/07/2026 01:39",
+  "updated_at": 1785133921,
+  "updated_at_br": "27/07/2026 03:25",
   "period_days": 90,
-  "total_orders": 8022,
-  "total_conversions": 7567,
+  "total_orders": 8021,
+  "total_conversions": 7566,
   "orders": [
     {
       "ID do pedido": "260726NA3KKE5J",
@@ -200528,31 +200528,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231066625159880",
       "conversionStatus": "COMPLETED",
-      "data": "2026-04-28"
-    },
-    {
-      "ID do pedido": "2604281F9T0RCF",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-04-28 04:46:35",
-      "Sub_id1": "14Mar26AcademiaVs05Dez25",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Feminino de Academia Calça Legging + Top com Alta Compressão e Zero Transparência",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22894279136",
-      "ID da loja": "1101082974",
-      "Nome da loja": "Zayan Moda Fitness",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "231050795149156",
-      "conversionStatus": "CANCELLED",
       "data": "2026-04-28"
     }
   ]
