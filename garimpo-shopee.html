@@ -290,17 +290,25 @@ function garimpoRenderTop(){
                          .sort((a,b)=>(parseFloat(b.cpa_maximo)||0)-(parseFloat(a.cpa_maximo)||0))
                          .slice(0,cotas[tipo]);
     html += `<div style="grid-column:1/-1;font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:${html?'10px':'0'} 0 -2px;">${rotulo[tipo]} (${itens.length}/${cotas[tipo]})</div>`;
-    html += itens.map((t,i)=>`
+    html += itens.map((t,i)=>{
+      const prod = garimpoProdutos.find(p=>p.produto===t.produto);
+      return `
       <div style="border:1px solid var(--border);border-radius:var(--r);padding:12px;background:var(--bg);">
         <span class="badge b-camp">#${i+1}</span>
         <div style="font-weight:700;font-size:13px;margin:8px 0 4px;">${t.produto}</div>
         <div style="font-size:11.5px;color:var(--muted);margin-bottom:8px;">${t.justificativa||''}</div>
-        <div style="display:flex;gap:14px;font-family:var(--mono);font-size:12px;">
+        <div style="display:flex;gap:14px;font-family:var(--mono);font-size:12px;margin-bottom:8px;">
           <span>CPA <b style="color:#2563eb;">R$${parseFloat(t.cpa_maximo).toFixed(2)}</b></span>
           <span>Vendas <b>${garimpoFmtNum(t.vendas)}</b></span>
         </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          ${prod
+            ? `${prod.link ? `<a href="${prod.link}" target="_blank" style="color:#2563eb;font-size:12px;">abrir ↗</a>` : '<span style="color:var(--red);font-size:11px;">sem link</span>'}
+               <button class="act-btn" style="font-size:11px;padding:4px 10px;" onclick="garimpoAbrirChecklist('${t.produto.replace(/'/g,"\\'")}')">📋 Avaliar</button>`
+            : '<span style="color:var(--red);font-size:11px;">produto não encontrado no banco</span>'}
+        </div>
       </div>
-    `).join('');
+    `;}).join('');
     if(!itens.length) html += `<div style="color:var(--muted);font-size:11.5px;padding:8px 0;">Nenhum produto ${rotulo[tipo].split(' ').slice(1).join(' ').toLowerCase()} nesta rodada.</div>`;
   });
   document.getElementById('garimpo-top-grid').innerHTML = html;
