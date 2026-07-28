@@ -482,14 +482,13 @@ document.getElementById('garimpo-filter-text')?.addEventListener('input', e=>{ g
 <script>
 // ── Checklist de avaliação de produto (baseado nas aulas MGD) — namespace garimpoChk ──
 const GARIMPO_CHK_DATA = [
-  { id:'s1', step:'', title:'Checklist de Escolha (Turma 3 · Aula 2)', sub:'Critério-mestre: preço × comissão × chance de venda — nunca um eixo só.', items:[
-    { text:'Nota 4,7 ou mais', note:'Piso, não mais "ideal". Abaixo disso, não sobe.', critical:true, auto:'nota' },
+  { id:'s1', step:'', title:'Checklist de Escolha (Turma 3 · Aula 2)', sub:'Critério-mestre: nota × comissão × chance de venda — nunca um eixo só.', items:[
+    { text:'Nota 4,8 ou mais', note:'Piso, não mais "ideal". Abaixo disso, não sobe.', critical:true, auto:'nota' },
     { text:'Estoque suficiente (infinito para produto viral)', note:'Confira digitando "2" no seletor de quantidade (ou variação + carrinho).', critical:true },
     { text:'Prova de venda — foge de produto com 1-2 vendas só', note:'Referência: viral com 100-200 vendidos já é pouco. Venda moderada de 100-400 já roda.', auto:'vendas' },
     { text:'ÚLTIMAS avaliações boas, com foto', note:'Olha as últimas, não só a média geral. 4,9 com últimas ruins = não sobe.' },
-    { text:'Preço de impulso (até ~R$200)', note:'Régua de hoje: produto de impulso até ~R$200.', critical:true, auto:'preco' },
     { text:'Cupom / frete grátis / leve-mais', note:'Qualquer um desses três já é sinal positivo forte.' },
-    { text:'Comissão saudável (20-30%+)', note:'Recusa comissão abaixo de 3%. Lembre: R$15 a 20% dá R$3, R$80 a 10% dá R$8 — olha o valor E a chance de venda, não só o %.', critical:true, auto:'comissao' },
+    { text:'Comissão mínima de R$28,61 por venda', note:'Ponto de equilíbrio: anúncio de R$12,44/dia + 15% de imposto rodando o mínimo de 2 dias (R$12,44 × 1,15 × 2 = R$28,61). Abaixo disso, 1 venda só não paga o teste.', critical:true, auto:'comissao' },
     { text:'SubID igual à campanha', note:'Ex: campanha "blusa01x24fev" → SubID também "blusa01x24fev". Rastreamento correto desde o início.' },
   ], alerta:'⚠️ Criativo de avaliação: nunca mostrar criança nem rosto de terceiro sem autorização. Regra dos 18-24: nunca rodar essa faixa etária pra nicho feminino geral.' },
 ];
@@ -518,16 +517,11 @@ function garimpoAbrirChecklist(produtoNome) {
       // cobre o piso de R$37,32 calculado a partir do seu gasto diário real ·
       // preço até ~R$200 · prova de venda a partir de 100 vendidos
       if (item.auto === 'comissao') {
-        const pct = parseFloat(p.comissao_percentual) || 0;
         const val = parseFloat(p.cpa_maximo) || 0;
-        if (pct >= 20 || val >= 37.32) garimpoChkRespostas[sec.id][i] = true;
+        if (val >= 28.61) garimpoChkRespostas[sec.id][i] = true;
       }
-      if (item.auto === 'nota' && parseFloat(p.nota) >= 4.7) garimpoChkRespostas[sec.id][i] = true;
+      if (item.auto === 'nota' && parseFloat(p.nota) >= 4.8) garimpoChkRespostas[sec.id][i] = true;
       if (item.auto === 'vendas' && (p.vendas || 0) >= 100) garimpoChkRespostas[sec.id][i] = true;
-      if (item.auto === 'preco') {
-        const precoNum = parseFloat(String(p.preco||'').replace(/[^\d,.-]/g,'').split(/[-–]/)[0].replace(',','.')) || 0;
-        if (precoNum > 0 && precoNum <= 200) garimpoChkRespostas[sec.id][i] = true;
-      }
       if (item.auto === 'tipo' && p.tipo) garimpoChkRespostas[sec.id][i] = true;
     });
   });
