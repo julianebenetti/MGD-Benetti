@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785224487,
-  "updated_at_br": "28/07/2026 04:34",
+  "updated_at": 1785231800,
+  "updated_at_br": "28/07/2026 06:36",
   "period_days": 90,
-  "total_orders": 7999,
-  "total_conversions": 7547,
+  "total_orders": 7998,
+  "total_conversions": 7546,
   "orders": [
     {
       "ID do pedido": "260727QSHCKT48",
@@ -11057,7 +11057,7 @@
     },
     {
       "ID do pedido": "2607218PB0S6J5",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-21 02:07:50",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "45.98",
@@ -11069,7 +11069,7 @@
       "Comissao total do pedido(R$)": "1.8392",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Babuche Feminino Sandália Rasteira Branco Confortável Antiderrapante Mule Sapatilha Verão Trabalho Aplique Decorativo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58261125211",
       "ID da loja": "1802553005",
       "Nome da loja": "peftvh1hzv",
@@ -11077,7 +11077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238298870156259",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-21"
     },
     {
@@ -199952,31 +199952,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231155506140144",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-29"
-    },
-    {
-      "ID do pedido": "2604294D5UEMCG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-29 08:46:34",
-      "Sub_id1": "19Abr26ConjuntoSegundaPeleTermica",
-      "Valor de Compra(R$)": "26.99",
-      "Comissao liquida do afiliado(R$)": "0.8097",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.8097",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8097",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Percarbonato de Sódio 100% Puro Tira Manchas Roupas Brancas e Coloridas Limpeza em Geral",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23299372913",
-      "ID da loja": "967211054",
-      "Nome da loja": "Marca Texto e Papel Fotográfico",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231151594167140",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-29"
     }
