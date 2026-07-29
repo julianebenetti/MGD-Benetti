@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785304439,
-  "updated_at_br": "29/07/2026 02:47",
+  "updated_at": 1785311144,
+  "updated_at_br": "29/07/2026 04:38",
   "period_days": 90,
-  "total_orders": 7949,
-  "total_conversions": 7499,
+  "total_orders": 7948,
+  "total_conversions": 7498,
   "orders": [
     {
       "ID do pedido": "260728TCABW0GA",
@@ -17857,7 +17857,7 @@
     },
     {
       "ID do pedido": "260718259F8VTV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-18 11:46:47",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "69.9",
@@ -17869,7 +17869,7 @@
       "Comissao total do pedido(R$)": "11.184",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Mochila Mala Viagem De Bordo Executiva MALETA Expansível Até 45l Boa Presentes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23494919037",
       "ID da loja": "1643020166",
       "Nome da loja": "DASÁRABIA",
@@ -17877,7 +17877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238074406199846",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-18"
     },
     {
@@ -198702,31 +198702,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231242149182121",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-04-30"
-    },
-    {
-      "ID do pedido": "2604306PFQVVBS",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-04-30 06:38:29",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "35.89",
-      "Comissao liquida do afiliado(R$)": "1.0767",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "1.0767",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.0767",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Refil Vela Universal Para Filtros de Torneira de cozinha carvão ativado pró-saúde",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58250262283",
-      "ID da loja": "1574102200",
-      "Nome da loja": "Black Metais",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231230309135159",
       "conversionStatus": "COMPLETED",
       "data": "2026-04-30"
     }
