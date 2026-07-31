@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785484415,
-  "updated_at_br": "31/07/2026 04:46",
+  "updated_at": 1785491504,
+  "updated_at_br": "31/07/2026 06:44",
   "period_days": 90,
-  "total_orders": 7869,
-  "total_conversions": 7422,
+  "total_orders": 7868,
+  "total_conversions": 7421,
   "orders": [
     {
       "ID do pedido": "26073028TGFEWM",
@@ -196703,31 +196703,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "231415197175491",
       "conversionStatus": "CANCELLED",
-      "data": "2026-05-02"
-    },
-    {
-      "ID do pedido": "260502C1N3QJ4T",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-02 09:41:39",
-      "Sub_id1": "19Abr26ConjuntoSegundaPeleTermica",
-      "Valor de Compra(R$)": "349",
-      "Comissao liquida do afiliado(R$)": "10.47",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "8.00%",
-      "Comissao Shopee(R$)": "10.47",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "10.47",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Cama de Casal Estrado de Metal Fácil De Instalar Dobrável Capacidade 1350KG Ripas de Aço Série Forte",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58256570104",
-      "ID da loja": "1512084630",
-      "Nome da loja": "LIFE STYLE 1",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231414099163281",
-      "conversionStatus": "COMPLETED",
       "data": "2026-05-02"
     }
   ]
