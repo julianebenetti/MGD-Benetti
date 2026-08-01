@@ -20,3 +20,6 @@
 - Existe uma rotina diária automática (Routine `Garimpo de Produtos — Curadoria diária`)
   que roda essa curadoria sozinha todo dia às 7h (Brasília). Se precisar ajustar critérios
   de busca no futuro, atualizar o prompt dessa rotina também, não só fazer buscas manuais.
+- Essa rotina busca em duas frentes todo dia: categorias gerais (evergreen) e, sempre que
+  houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
+  a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
