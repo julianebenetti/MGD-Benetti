@@ -97,7 +97,8 @@ th { padding:7px 8px; text-align:right; font-size:10px; font-weight:700; color:#
 th:first-child { text-align:left; }
 th:hover { color:#fff; }
 td { padding:6px 8px; text-align:right; border-bottom:1px solid var(--border); color:var(--text); white-space:nowrap; font-size:12px; }
-td:first-child { text-align:left; }
+td:first-child { text-align:left; white-space:normal; word-break:break-word; max-width:220px; }
+td.wrap-cell { white-space:normal; word-break:break-word; max-width:150px; }
 tr:last-child td { border-bottom:none; }
 tr.data-row:hover td { background:var(--bg3); }
 
@@ -222,6 +223,7 @@ const GARIMPO_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 let garimpoProdutos = [], garimpoTop = [], garimpoCronograma = [], garimpoChecklists = [];
 let garimpoActiveFilter = "Todos", garimpoActiveTipo = "Todos", garimpoSortKey = null, garimpoSortDir = 1;
 let garimpoFreeField = "produto", garimpoFreeText = "";
+const GARIMPO_CPA_MINIMO = 9.00; // piso: só anuncia produto com comissão (CPA máx.) a partir disso
 
 function garimpoFmtNum(n){ return new Intl.NumberFormat('pt-BR').format(n||0); }
 function garimpoFmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
@@ -348,6 +350,7 @@ function garimpoRenderFilters(){
     { v:'evergreen', l:'🌱 Evergreen' },
     { v:'big_sazonal', l:'🌊 Big Sazonal' },
     { v:'microsazonal', l:'🎯 Microsazonal' },
+    { v:'produtos_full', l:'📦 Produtos Full' },
   ];
   document.getElementById('garimpo-filters-tipo').innerHTML = tipos.map(t=>
     `<button class="filter-btn ${t.v===garimpoActiveTipo?'on':''}" onclick="garimpoActiveTipo='${t.v}';garimpoRenderFilters();garimpoRenderTable();">${t.l}</button>`
@@ -357,25 +360,17 @@ function garimpoRenderFilters(){
   ).join('');
 }
 
-function garimpoMontarPool20(){
+function garimpoMontarPool(){
   const tested = garimpoTestedMap();
-  const disponiveis = garimpoProdutos.filter(p=>!tested[p.produto]);
-  const cotas = { evergreen: 10, big_sazonal: 6, microsazonal: 4 };
-  let pool = [];
-  Object.keys(cotas).forEach(tipo=>{
-    const grupo = disponiveis.filter(p=>(p.tipo||'evergreen')===tipo)
-                              .sort((a,b)=>(parseFloat(b.cpa_maximo)||0)-(parseFloat(a.cpa_maximo)||0))
-                              .slice(0,cotas[tipo]);
-    pool = pool.concat(grupo);
-  });
-  return pool;
+  return garimpoProdutos.filter(p=>!tested[p.produto] && (parseFloat(p.cpa_maximo)||0) >= GARIMPO_CPA_MINIMO);
 }
 
-const GARIMPO_TIPO_ROTULO = { evergreen:'🌱 Evergreen', big_sazonal:'🌊 Big Sazonal', microsazonal:'🎯 Microsazonal' };
+const GARIMPO_TIPO_ROTULO = { evergreen:'🌱 Evergreen', big_sazonal:'🌊 Big Sazonal', microsazonal:'🎯 Microsazonal', produtos_full:'📦 Produtos Full' };
 
 function garimpoRenderTable(){
-  let list = garimpoMontarPool20(); // pool fixo: 10 evergreen + 6 big-sazonal + 4 microsazonal (50/30/20)
+  let list = garimpoMontarPool(); // todos os produtos disponíveis com comissão >= R$9,00 (sem cota fixa)
   const poolTotal = list.length;
+  const rodadaMaisRecente = list.reduce((max,p)=> (p.data_indicacao||'')>max ? p.data_indicacao : max, '');
 
   if(garimpoActiveTipo!=="Todos") list = list.filter(p=>(p.tipo||'evergreen')===garimpoActiveTipo);
   if(garimpoActiveFilter!=="Todos") list = list.filter(p=>p.nicho===garimpoActiveFilter);
@@ -394,12 +389,12 @@ function garimpoRenderTable(){
     list = [...list].sort((a,b)=>(parseFloat(b.cpa_maximo)||0)-(parseFloat(a.cpa_maximo)||0));
   }
 
-  document.getElementById('garimpo-count-label').textContent = `mostrando ${list.length} de ${poolTotal} (cota: 10 evergreen + 6 big-sazonal + 4 microsazonal)`;
+  document.getElementById('garimpo-count-label').textContent = `mostrando ${list.length} de ${poolTotal} · comissão mínima R$${GARIMPO_CPA_MINIMO.toFixed(2)} · rodada mais recente: ${garimpoFmtDate(rodadaMaisRecente)}`;
 
   document.getElementById('garimpo-tbody').innerHTML = list.map(p=>`
     <tr class="data-row">
       <td style="text-align:left;"><div style="font-weight:600;">${p.produto}</div><div style="color:var(--muted);font-size:11px;">${p.loja||''}</div></td>
-      <td style="font-size:11px;white-space:nowrap;">${GARIMPO_TIPO_ROTULO[p.tipo||'evergreen']}${p.janela_ideal?`<div style="color:var(--muted);font-size:10px;">${p.janela_ideal}</div>`:''}</td>
+      <td class="wrap-cell" style="font-size:11px;">${GARIMPO_TIPO_ROTULO[p.tipo||'evergreen']}${p.janela_ideal?`<div style="color:var(--muted);font-size:10px;">${p.janela_ideal}</div>`:''}</td>
       <td>${p.nicho||'—'}</td>
       <td>${p.preco||'—'}</td>
       <td>${p.comissao_percentual||'—'}%</td>
