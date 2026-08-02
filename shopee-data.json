@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785645156,
-  "updated_at_br": "02/08/2026 01:25",
+  "updated_at": 1785650443,
+  "updated_at_br": "02/08/2026 02:53",
   "period_days": 90,
-  "total_orders": 7812,
-  "total_conversions": 7376,
+  "total_orders": 7811,
+  "total_conversions": 7375,
   "orders": [
     {
       "ID do pedido": "2608017AVH5PTQ",
@@ -195277,31 +195277,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231589456194739",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-04"
-    },
-    {
-      "ID do pedido": "260504GMA6MKWH",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-04 05:26:13",
-      "Sub_id1": "19Abr26ConjuntoSegundaPeleTermica",
-      "Valor de Compra(R$)": "23.9",
-      "Comissao liquida do afiliado(R$)": "0.717",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "15.00%",
-      "Comissao Shopee(R$)": "0.717",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.717",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 2, 3 ou 6 Pares Meia Sapatilha Antiderrapante Infantil para Menino ou Menina 0 até 10 anos",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "13203904080",
-      "ID da loja": "406172872",
-      "Nome da loja": "Mari Maria  Modas ",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231571573169236",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-04"
     }
