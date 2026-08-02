@@ -1,6 +1,6 @@
 {
-  "updated_at": 1785650443,
-  "updated_at_br": "02/08/2026 02:53",
+  "updated_at": 1785656141,
+  "updated_at_br": "02/08/2026 04:28",
   "period_days": 90,
   "total_orders": 7811,
   "total_conversions": 7375,
@@ -15057,7 +15057,7 @@
     },
     {
       "ID do pedido": "260723EJ53FW2G",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-23 10:08:55",
       "Sub_id1": "21Jul26SutiaInfantil",
       "Valor de Compra(R$)": "32.9",
@@ -15069,7 +15069,7 @@
       "Comissao total do pedido(R$)": "5.593",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Kit 5 Top Infantil Juvenil Teen Menina Algodão Sutia Sem Bojo Alça Ajustavel Básico Usar Uniforme",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22695017676",
       "ID da loja": "1616182506",
       "Nome da loja": "DBL LINGERIE",
@@ -15077,7 +15077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238500535123456",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-23"
     },
     {
