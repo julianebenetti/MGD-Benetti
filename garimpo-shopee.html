@@ -205,11 +205,11 @@ tr.data-row:hover td { background:var(--bg3); }
       <table>
         <thead>
           <tr>
-            <th style="text-align:left;">Produto</th><th>Nicho</th><th>Início</th><th>Status</th>
+            <th style="text-align:left;">Produto</th><th>Nicho</th><th>Link</th><th>Início</th><th>Status</th>
             <th>Verba (R$)</th><th>CPA real (R$)</th><th>Vendas geradas</th><th>Ações</th>
           </tr>
         </thead>
-        <tbody id="garimpo-tbody-tested"><tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">Nenhum produto testado ainda.</td></tr></tbody>
+        <tbody id="garimpo-tbody-tested"><tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted);">Nenhum produto testado ainda.</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -437,10 +437,13 @@ function garimpoFmtNumBR(n){
 function garimpoRenderTested(){
   const rows = garimpoCronograma.filter(c=>c.data_inicio).sort((a,b)=>(b.data_inicio||'').localeCompare(a.data_inicio||''));
   document.getElementById('garimpo-tested-count').textContent = `${rows.length} produto(s)`;
-  document.getElementById('garimpo-tbody-tested').innerHTML = rows.map(c=>`
+  document.getElementById('garimpo-tbody-tested').innerHTML = rows.map(c=>{
+    const prod = garimpoAcharProduto(c.produto);
+    return `
     <tr>
       <td style="text-align:left;font-weight:600;">${c.produto}</td>
       <td>${c.nicho||'—'}</td>
+      <td>${prod && prod.link ? `<a href="${prod.link}" target="_blank" style="color:#2563eb;">abrir ↗</a>` : '<span style="color:var(--red);font-size:11px;">sem link</span>'}</td>
       <td><input type="date" class="date-input" value="${c.data_inicio||''}" data-produto="${c.produto.replace(/"/g,'&quot;')}" data-field="data_inicio" onchange="garimpoSaveField(this)" style="font-family:var(--mono);font-size:11px;"></td>
       <td>
         <select class="op-sel" data-produto="${c.produto.replace(/"/g,'&quot;')}" data-field="status" onchange="garimpoSaveField(this)">
@@ -455,7 +458,7 @@ function garimpoRenderTested(){
         <button class="act-btn" style="font-size:10.5px;padding:4px 8px;margin-top:3px;color:var(--red);" title="Remove a data de início e volta o produto pra lista principal" onclick="garimpoRemoverDoTeste('${c.produto.replace(/'/g,"\\'")}')">↩ Remover do teste</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted);">Nenhum produto testado ainda.</td></tr>';
+  `;}).join('') || '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--muted);">Nenhum produto testado ainda.</td></tr>';
 }
 
 async function garimpoSaveField(el){
