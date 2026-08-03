@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785738225,
-  "updated_at_br": "03/08/2026 03:17",
+  "updated_at": 1785745828,
+  "updated_at_br": "03/08/2026 05:23",
   "period_days": 90,
-  "total_orders": 7826,
-  "total_conversions": 7396,
+  "total_orders": 7825,
+  "total_conversions": 7395,
   "orders": [
     {
       "ID do pedido": "2608029TEERE1F",
@@ -4032,7 +4032,7 @@
     },
     {
       "ID do pedido": "2608016E3U9K2F",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-31 18:22:00",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "18.99",
@@ -4044,7 +4044,7 @@
       "Comissao total do pedido(R$)": "0.7596",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "kit com 5 Detergente 500ml Lava-louça Cozinha Fuzetto",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23198978962",
       "ID da loja": "477807036",
       "Nome da loja": "Lia Mia Variedades ",
@@ -4052,7 +4052,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239221320103103",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-31"
     },
     {
@@ -195627,31 +195627,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231671839134547",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-05"
-    },
-    {
-      "ID do pedido": "260505KE300Y4B",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-05 08:12:48",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "109.8",
-      "Comissao liquida do afiliado(R$)": "6.588",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "6.588",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "6.588",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "kit 5 Conjuntos Sutiã e Calcinha Juvenil Lingerie Menina Moça Infantil Roupa de Menina Intima",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23793870666",
-      "ID da loja": "510631489",
-      "Nome da loja": "Lollô Lingerie",
-      "Quantidade": "2",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231667968102333",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-05"
     }
