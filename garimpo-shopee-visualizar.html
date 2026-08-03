@@ -143,14 +143,21 @@ tr.data-row:hover td { background:var(--bg3); }
   </div>
 
   <div class="section">
-    <div class="section-head">
+    <div class="section-head" style="flex-direction:column; align-items:flex-start; gap:2px;">
       <span class="section-title">Todos os produtos</span>
       <span class="section-sub" id="garimpo-count-label"></span>
-      <div class="controls" id="garimpo-filters" style="margin-left:auto;"></div>
     </div>
-    <div style="padding:10px 16px; display:flex; gap:16px; align-items:flex-start;">
-      <div id="garimpo-filters-tipo" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;"></div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <div style="padding:12px 16px; display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="border:1px solid var(--border); border-radius:var(--r); padding:10px; display:flex; flex-direction:column; gap:6px; flex-shrink:0;">
+        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px;">Tipo</div>
+        <div id="garimpo-filters-tipo" style="display:flex; flex-wrap:wrap; gap:6px; max-width:220px;"></div>
+      </div>
+      <div style="border:1px solid var(--border); border-radius:var(--r); padding:10px; display:flex; flex-direction:column; gap:6px; flex:1; min-width:240px;">
+        <div style="font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px;">Nicho</div>
+        <div class="controls" id="garimpo-filters"></div>
+      </div>
+    </div>
+    <div style="padding:0 16px 12px; display:flex; gap:8px; flex-wrap:wrap;">
         <select class="op-sel" id="garimpo-filter-field">
           <option value="produto">Produto</option>
           <option value="loja">Loja</option>
@@ -163,7 +170,6 @@ tr.data-row:hover td { background:var(--bg3); }
         </select>
         <input class="search-box" id="garimpo-filter-text" placeholder="Digite pra filtrar…" style="width:220px;">
         <button class="act-btn" onclick="document.getElementById('garimpo-filter-text').value='';garimpoFreeText='';garimpoRenderTable();">✕ Limpar</button>
-      </div>
     </div>
     <div class="tbl-wrap">
       <table>
