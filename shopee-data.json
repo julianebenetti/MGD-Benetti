@@ -1,6 +1,6 @@
 {
-  "updated_at": 1785754166,
-  "updated_at_br": "03/08/2026 07:42",
+  "updated_at": 1785759297,
+  "updated_at_br": "03/08/2026 09:08",
   "period_days": 90,
   "total_orders": 7811,
   "total_conversions": 7383,
@@ -6882,7 +6882,7 @@
     },
     {
       "ID do pedido": "2607303JPFMKCT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 15:06:02",
       "Sub_id1": "29Jul26VEACalcaJogger",
       "Valor de Compra(R$)": "24.26",
@@ -6894,7 +6894,7 @@
       "Comissao total do pedido(R$)": "1.3343",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "BOBINA COM 50 METROS + 10 Clips VARAL CABO DE AÇO REFORÇADO REVESTIDO",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "40762016403",
       "ID da loja": "1035378009",
       "Nome da loja": "MAXX SUPPLY CASA & CONSTRUÇÃO",
@@ -6902,7 +6902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239123161166162",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
@@ -7132,7 +7132,7 @@
     },
     {
       "ID do pedido": "2607303CTNJ45E",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 13:20:59",
       "Sub_id1": "25Jul26TapeteHigienicoVs4",
       "Valor de Compra(R$)": "43.98",
@@ -7144,7 +7144,7 @@
       "Comissao total do pedido(R$)": "1.7592",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sabão Cápsulas Lava Roupas 5em1 50un Caixa Tira Manchas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58261624971",
       "ID da loja": "1645178658",
       "Nome da loja": "MAX_SHOPPING.",
@@ -7152,7 +7152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239116859148075",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
