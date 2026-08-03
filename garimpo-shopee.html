@@ -158,20 +158,22 @@ tr.data-row:hover td { background:var(--bg3); }
       <span class="section-sub" id="garimpo-count-label"></span>
       <div class="controls" id="garimpo-filters" style="margin-left:auto;"></div>
     </div>
-    <div class="controls" id="garimpo-filters-tipo" style="padding:0 16px 10px;"></div>
-    <div style="padding:10px 16px; display:flex; gap:8px;">
-      <select class="op-sel" id="garimpo-filter-field">
-        <option value="produto">Produto</option>
-        <option value="loja">Loja</option>
-        <option value="preco">Preço</option>
-        <option value="comissao_percentual">Comissão %</option>
-        <option value="cpa_maximo">CPA máximo</option>
-        <option value="vendas">Vendas</option>
-        <option value="nota">Avaliação</option>
-        <option value="data_indicacao">Data da sugestão</option>
-      </select>
-      <input class="search-box" id="garimpo-filter-text" placeholder="Digite pra filtrar…" style="width:220px;">
-      <button class="act-btn" onclick="document.getElementById('garimpo-filter-text').value='';garimpoFreeText='';garimpoRenderTable();">✕ Limpar</button>
+    <div style="padding:10px 16px; display:flex; gap:16px; align-items:flex-start;">
+      <div id="garimpo-filters-tipo" style="display:flex; flex-direction:column; gap:6px; flex-shrink:0;"></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <select class="op-sel" id="garimpo-filter-field">
+          <option value="produto">Produto</option>
+          <option value="loja">Loja</option>
+          <option value="preco">Preço</option>
+          <option value="comissao_percentual">Comissão %</option>
+          <option value="cpa_maximo">CPA máximo</option>
+          <option value="vendas">Vendas</option>
+          <option value="nota">Avaliação</option>
+          <option value="data_indicacao">Data da sugestão</option>
+        </select>
+        <input class="search-box" id="garimpo-filter-text" placeholder="Digite pra filtrar…" style="width:220px;">
+        <button class="act-btn" onclick="document.getElementById('garimpo-filter-text').value='';garimpoFreeText='';garimpoRenderTable();">✕ Limpar</button>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -344,7 +346,8 @@ function garimpoRenderTop(){
 function garimpoRenderFilters(){
   const tested = garimpoTestedMap();
   const pool = garimpoProdutos.filter(p=>!tested[p.produto]);
-  const nichos = ["Todos", ...new Set(pool.map(p=>p.nicho).filter(Boolean))];
+  const nichosOrdenados = [...new Set(pool.map(p=>p.nicho).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  const nichos = ["Todos", ...nichosOrdenados];
   const tipos = [
     { v:'Todos', l:'Todos os tipos' },
     { v:'evergreen', l:'🌱 Evergreen' },
