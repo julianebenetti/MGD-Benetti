@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785863042,
-  "updated_at_br": "04/08/2026 13:57",
+  "updated_at": 1785868376,
+  "updated_at_br": "04/08/2026 15:26",
   "period_days": 90,
-  "total_orders": 7857,
-  "total_conversions": 7433,
+  "total_orders": 7856,
+  "total_conversions": 7432,
   "orders": [
     {
       "ID do pedido": "260804EU9MRTX2",
@@ -1307,27 +1307,27 @@
     },
     {
       "ID do pedido": "260804DWE26E4Q",
-      "Status do Pedido": "UNPAID",
+      "Status do Pedido": "CANCELLED",
       "Horario do pedido": "2026-08-03 17:44:47",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "38.99",
-      "Comissao liquida do afiliado(R$)": "1.48162",
+      "Valor de Compra(R$)": "0",
+      "Comissao liquida do afiliado(R$)": "0",
       "Taxa de comissao Shopee do item": "4.00%",
       "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.5596",
+      "Comissao Shopee(R$)": "0",
       "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.5596",
+      "Comissao total do pedido(R$)": "0",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mochila Bolsa Lona Reforçada Masculina Feminina Moda Style Qualidad Resistênte Unissex RC-51055",
-      "Status do item do afiliado": "UNPAID",
+      "Status do item do afiliado": "CANCELLED",
       "ID do item": "23192687509",
       "ID da loja": "491125955",
       "Nome da loja": "CONTINENTALSHOP",
-      "Quantidade": "1",
+      "Quantidade": "0",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239478287186035",
-      "conversionStatus": "UNPAID",
+      "conversionStatus": "CANCELLED",
       "data": "2026-08-03"
     },
     {
@@ -4682,7 +4682,7 @@
     },
     {
       "ID do pedido": "260802B2TWNE1E",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-02 14:43:28",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "39.99",
@@ -4694,7 +4694,7 @@
       "Comissao total do pedido(R$)": "2.19945",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 32/16 Protetores de Pé de Cadeira de Silicone com Feltro, Antirrisco Antirruído para Móveis",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58213544211",
       "ID da loja": "422642605",
       "Nome da loja": "Ulife.Loja.Oficial",
@@ -4702,7 +4702,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239381008133512",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-02"
     },
     {
@@ -6282,7 +6282,7 @@
     },
     {
       "ID do pedido": "2608029E3JHWHP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-01 22:59:50",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "44.89",
@@ -6294,7 +6294,7 @@
       "Comissao total do pedido(R$)": "3.1423",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Maquina De Barbear e Aparador Pelos Elétrico 3 Em 1",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "20103606180",
       "ID da loja": "415175805",
       "Nome da loja": "Isabela Top",
@@ -6302,7 +6302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239324390151517",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-01"
     },
     {
@@ -9857,7 +9857,7 @@
     },
     {
       "ID do pedido": "260801674P6JER",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-31 16:17:12",
       "Sub_id1": "30Jul26VEAcalcajogger",
       "Valor de Compra(R$)": "14.52",
@@ -9869,7 +9869,7 @@
       "Comissao total do pedido(R$)": "0.5808",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sabonete Líquido Chá Branco 500ml",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18399214251",
       "ID da loja": "1177903362",
       "Nome da loja": "Coala Essências Oficial",
@@ -9877,7 +9877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239213832123002",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-31"
     },
     {
@@ -12057,7 +12057,7 @@
     },
     {
       "ID do pedido": "2607313YM2QTKX",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 18:57:19",
       "Sub_id1": "29Jul26VEACalcaJoggerRapaz",
       "Valor de Compra(R$)": "49.99",
@@ -12069,7 +12069,7 @@
       "Comissao total do pedido(R$)": "3.4993",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Luminárias de Emergência 30 LEDs Recarregável 2W  Bivolt Elgin Luz Emergencial 110/220V",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23492881016",
       "ID da loja": "333514656",
       "Nome da loja": "MF Eletro e variedades",
@@ -12077,7 +12077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239137039172795",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
@@ -19057,7 +19057,7 @@
     },
     {
       "ID do pedido": "260726NA3KKE5J",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-26 02:33:33",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "13.9",
@@ -19069,7 +19069,7 @@
       "Comissao total do pedido(R$)": "0.556",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Cola A Legítima 20ml - Cola Strass sem manchar Artesanato",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22693575518",
       "ID da loja": "372735519",
       "Nome da loja": "CiadasFitas",
@@ -19077,7 +19077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238732413149292",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-26"
     },
     {
@@ -20357,7 +20357,7 @@
     },
     {
       "ID do pedido": "260725KFYSKD72",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-25 09:13:28",
       "Sub_id1": "24Jul26CalcaJoggerVs2",
       "Valor de Compra(R$)": "10.46",
@@ -20369,7 +20369,7 @@
       "Comissao total do pedido(R$)": "0.54392",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Spray Higienizador de Patinhas 120 ml - Pet Clean",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22998436546",
       "ID da loja": "450664666",
       "Nome da loja": "MANADA ANIMAL",
@@ -20377,7 +20377,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238670008195925",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-25"
     },
     {
@@ -20507,7 +20507,7 @@
     },
     {
       "ID do pedido": "260725JV8TBFA5",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-25 03:20:37",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "16.44",
@@ -20519,7 +20519,7 @@
       "Comissao total do pedido(R$)": "0.6576",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Brinquedo infantil encaixe de blocos de madeira pedagógico para crianças",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21699581051",
       "ID da loja": "1112182243",
       "Nome da loja": "O VENTO SOBE",
@@ -20527,7 +20527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238648836131418",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-25"
     },
     {
@@ -20582,7 +20582,7 @@
     },
     {
       "ID do pedido": "260725JQJ2MEU4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-25 01:56:18",
       "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
       "Valor de Compra(R$)": "118.9",
@@ -20594,7 +20594,7 @@
       "Comissao total do pedido(R$)": "4.756",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Poncho Feminino Tricô Mousse Gola Alta Trançado Quentinho Inverno",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21299665913",
       "ID da loja": "1479750565",
       "Nome da loja": "GirassolTricot",
@@ -20602,7 +20602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238643778101429",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-25"
     },
     {
@@ -25507,7 +25507,7 @@
     },
     {
       "ID do pedido": "260722B7ACN2NA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-22 02:17:03",
       "Sub_id1": "17Jul26PotesHermeticoRuiva",
       "Valor de Compra(R$)": "64.49",
@@ -25519,7 +25519,7 @@
       "Comissao total do pedido(R$)": "3.35348",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Scarpin Bico Fino Slingback Salto Bloco Quadrado Confort Bicolor Moda Novo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23192867905",
       "ID da loja": "854520806",
       "Nome da loja": "CMCALÇADOS",
@@ -25527,7 +25527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238385822131755",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-22"
     },
     {
@@ -196402,31 +196402,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231792566148684",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-06"
-    },
-    {
-      "ID do pedido": "260507PX8XRKCN",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-06 17:40:28",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "23.99",
-      "Comissao liquida do afiliado(R$)": "0.7197",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "0.7197",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.7197",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Vinagre Orgânico de Maçã  500ml - São Roque",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "11131104142",
-      "ID da loja": "479114603",
-      "Nome da loja": "Mercearia da Natureza",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231788427198012",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-06"
     }
