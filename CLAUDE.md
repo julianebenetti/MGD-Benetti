@@ -23,3 +23,5 @@
 - Essa rotina busca em duas frentes todo dia: categorias gerais (evergreen) e, sempre que
   houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
   a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
+- A rotina diária deve sempre incluir busca por **moda plus size** (nicho "Moda Plus Size",
+  tipo evergreen) como uma das categorias gerais, todo dia — não é opcional nem pontual.
