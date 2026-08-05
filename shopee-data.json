@@ -1,9 +1,9 @@
 {
-  "updated_at": 1785928574,
-  "updated_at_br": "05/08/2026 08:09",
+  "updated_at": 1785933414,
+  "updated_at_br": "05/08/2026 09:30",
   "period_days": 90,
-  "total_orders": 7915,
-  "total_conversions": 7488,
+  "total_orders": 7913,
+  "total_conversions": 7486,
   "orders": [
     {
       "ID do pedido": "260805HCRQ7M98",
@@ -1857,7 +1857,7 @@
     },
     {
       "ID do pedido": "260804G7FTJ32E",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-04 15:50:04",
       "Sub_id1": "31Jul26VEAtapetehigienico",
       "Valor de Compra(R$)": "23.69",
@@ -1869,7 +1869,7 @@
       "Comissao total do pedido(R$)": "1.6583",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vários Modelos Kit de 12 Meias Soquete Cano Curto Algodão Masculino Feminina Direto da Fabrica",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58208138195",
       "ID da loja": "1194156900",
       "Nome da loja": "IMPERIO AG",
@@ -1877,7 +1877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239557803176711",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-04"
     },
     {
@@ -15657,7 +15657,7 @@
     },
     {
       "ID do pedido": "2607303CW2T8F5",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 13:22:20",
       "Sub_id1": "29Jul26VEAtapetehigienicovs1",
       "Valor de Compra(R$)": "49.99",
@@ -15669,7 +15669,7 @@
       "Comissao total do pedido(R$)": "14.4971",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "50 unid - Tapete Higiênico PetCharm Slim -Tamanho 50cm x 60cm Para Cachorros",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18899838992",
       "ID da loja": "908280603",
       "Nome da loja": "Pet Charm",
@@ -15677,7 +15677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "239116940155986",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
@@ -17482,7 +17482,7 @@
     },
     {
       "ID do pedido": "2607290DHM4PVB",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-29 08:55:51",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "69.9",
@@ -17494,7 +17494,7 @@
       "Comissao total do pedido(R$)": "11.184",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Mochila Mala Viagem De Bordo Executiva MALETA Expansível Até 45l Boa Presentes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23494919037",
       "ID da loja": "1643020166",
       "Nome da loja": "DASÁRABIA",
@@ -17502,7 +17502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "239014550194512",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-29"
     },
     {
@@ -22257,7 +22257,7 @@
     },
     {
       "ID do pedido": "260726MV5F2MJM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-25 22:24:03",
       "Sub_id1": "18Jun26SegundaPeleVs1",
       "Valor de Compra(R$)": "49.9",
@@ -22269,7 +22269,7 @@
       "Comissao total do pedido(R$)": "1.996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "JAQUETA FEMININA DE FRIO COM CAPUZ E ZÍPER CASACO PELINHOS BLUSÃO INVERNO BLUSA",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58211251488",
       "ID da loja": "1201171491",
       "Nome da loja": "Ateliê do Brás",
@@ -22277,7 +22277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238717443124828",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-25"
     },
     {
@@ -197827,56 +197827,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "231857399158071",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-07"
-    },
-    {
-      "ID do pedido": "260507RUVSKYAH",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-07 12:03:11",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "24.9",
-      "Comissao liquida do afiliado(R$)": "0.747",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.747",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.747",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "comedouro ração e agua para pet cachorro gato resistente ELEVADO DUPLO E UNITARIO",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23493060540",
-      "ID da loja": "1037210785",
-      "Nome da loja": "NOVA DECOR E FESTA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231854591141955",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-07"
-    },
-    {
-      "ID do pedido": "260507RUC1N367",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-07 11:53:49",
-      "Sub_id1": "GruposPromosApp",
-      "Valor de Compra(R$)": "25.36",
-      "Comissao liquida do afiliado(R$)": "0.7608",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "0.7608",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.7608",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bebedouro Fonte Automático para Pets - Prático e Bivolt 1,2 litros",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "48204749683",
-      "ID da loja": "768290124",
-      "Nome da loja": "jfmultimarcas19",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "231854029142379",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-07"
     }
