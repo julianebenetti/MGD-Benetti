@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786083179,
-  "updated_at_br": "07/08/2026 03:06",
+  "updated_at": 1786090847,
+  "updated_at_br": "07/08/2026 05:14",
   "period_days": 90,
-  "total_orders": 7893,
-  "total_conversions": 7471,
+  "total_orders": 7892,
+  "total_conversions": 7470,
   "orders": [
     {
       "ID do pedido": "260806KUM4S1XD",
@@ -1257,7 +1257,7 @@
     },
     {
       "ID do pedido": "260806KANECKWD",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-05 21:24:53",
       "Sub_id1": "30Jul26VIPcalcajogger",
       "Valor de Compra(R$)": "77.5",
@@ -1269,7 +1269,7 @@
       "Comissao total do pedido(R$)": "5.425",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Lavabo Luxo Preto Com Bandeja De Vidro Vaso Quadrado E Passarinho Decorativo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "44119065252",
       "ID da loja": "456687450",
       "Nome da loja": "Seven Glass",
@@ -1277,7 +1277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239664292180007",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-05"
     },
     {
@@ -197303,31 +197303,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "232016564124489",
       "conversionStatus": "COMPLETED",
-      "data": "2026-05-09"
-    },
-    {
-      "ID do pedido": "2605090941626K",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-05-09 07:09:59",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "6.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": " Nova Chegada Óculos de Sol Aviador Retrô Ocidental Feminino Óculos Esportivos Oversizados",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "53950571008",
-      "ID da loja": "1006215031",
-      "Nome da loja": "Choice Oficial",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232009799149539",
-      "conversionStatus": "CANCELLED",
       "data": "2026-05-09"
     }
   ]
