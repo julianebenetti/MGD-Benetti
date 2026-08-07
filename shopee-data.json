@@ -1,6 +1,6 @@
 {
-  "updated_at": 1786063470,
-  "updated_at_br": "06/08/2026 21:37",
+  "updated_at": 1786064846,
+  "updated_at_br": "06/08/2026 22:00",
   "period_days": 90,
   "total_orders": 7911,
   "total_conversions": 7489,
@@ -16857,7 +16857,7 @@
     },
     {
       "ID do pedido": "2607315QCE2T9R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-31 11:35:12",
       "Sub_id1": "29Jul26VEACanfora",
       "Valor de Compra(R$)": "36.9",
@@ -16869,7 +16869,7 @@
       "Comissao total do pedido(R$)": "1.476",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Saco de Dormir para Bebe Antialergico 64cm Saida de Maternidade Frio Inverno Enxoval Bebe",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18555983175",
       "ID da loja": "297961046",
       "Nome da loja": "Ninar ★ Baby",
@@ -16877,7 +16877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239196912172647",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-31"
     },
     {
