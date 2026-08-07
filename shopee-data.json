@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786078676,
-  "updated_at_br": "07/08/2026 01:51",
+  "updated_at": 1786083179,
+  "updated_at_br": "07/08/2026 03:06",
   "period_days": 90,
-  "total_orders": 7894,
-  "total_conversions": 7472,
+  "total_orders": 7893,
+  "total_conversions": 7471,
   "orders": [
     {
       "ID do pedido": "260806KUM4S1XD",
@@ -197328,31 +197328,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "232009799149539",
       "conversionStatus": "CANCELLED",
-      "data": "2026-05-09"
-    },
-    {
-      "ID do pedido": "26050902F61QGB",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-09 05:10:57",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "22.99",
-      "Comissao liquida do afiliado(R$)": "0.6897",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "14.00%",
-      "Comissao Shopee(R$)": "0.6897",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.6897",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Vestido Feminino Canelado Regata com fenda",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "28736883203",
-      "ID da loja": "1161163834",
-      "Nome da loja": "PERSEVERANÇAMODAS",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "232002657146071",
-      "conversionStatus": "COMPLETED",
       "data": "2026-05-09"
     }
   ]
