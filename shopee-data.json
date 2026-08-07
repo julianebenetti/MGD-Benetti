@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786090847,
-  "updated_at_br": "07/08/2026 05:14",
+  "updated_at": 1786096347,
+  "updated_at_br": "07/08/2026 06:45",
   "period_days": 90,
-  "total_orders": 7892,
-  "total_conversions": 7470,
+  "total_orders": 7891,
+  "total_conversions": 7469,
   "orders": [
     {
       "ID do pedido": "260806KUM4S1XD",
@@ -7007,7 +7007,7 @@
     },
     {
       "ID do pedido": "260804EAB094V5",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-03 21:35:43",
       "Sub_id1": "01Ago26VEAarmazenamentomala",
       "Valor de Compra(R$)": "44.25",
@@ -7019,7 +7019,7 @@
       "Comissao total do pedido(R$)": "2.832",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Shorts Feminino Tactel Verão Moda Feminina Praia Piscina Academia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22493497109",
       "ID da loja": "545729512",
       "Nome da loja": "Vox Store",
@@ -7027,7 +7027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239492143157005",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-03"
     },
     {
@@ -17907,7 +17907,7 @@
     },
     {
       "ID do pedido": "26073148HQPR2R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 21:37:04",
       "Sub_id1": "30Jul26VIPsecadorphilco",
       "Valor de Compra(R$)": "23.88",
@@ -17919,7 +17919,7 @@
       "Comissao total do pedido(R$)": "2.48352",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bolsa De Armazenamento De Cabo De Dados Digital Multifuncional Viagem Necessário Jorge",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21850451377",
       "ID da loja": "410705973",
       "Nome da loja": "Jorge.store",
@@ -17927,12 +17927,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239146624178984",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
       "ID do pedido": "26073148HQPR2R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 21:37:04",
       "Sub_id1": "30Jul26VIPsecadorphilco",
       "Valor de Compra(R$)": "23.88",
@@ -17944,7 +17944,7 @@
       "Comissao total do pedido(R$)": "2.48352",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bolsa De Armazenamento De Cabo De Dados Digital Multifuncional Viagem Necessário Jorge",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21850451377",
       "ID da loja": "410705973",
       "Nome da loja": "Jorge.store",
@@ -17952,7 +17952,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239146624178984",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
@@ -197277,31 +197277,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "232019308155658",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-09"
-    },
-    {
-      "ID do pedido": "2605090FDMRWU5",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-09 09:02:44",
-      "Sub_id1": "09Mai26VestidoChambray",
-      "Valor de Compra(R$)": "65.73",
-      "Comissao liquida do afiliado(R$)": "8.5449",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "1.9719",
-      "Comissao do vendedor(R$)": "6.573",
-      "Comissao total do pedido(R$)": "8.5449",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Jeans Feminina Wide Leg Escura Cintura Alta Sem Lycra 100% algodão",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "20199865832",
-      "ID da loja": "1204184347",
-      "Nome da loja": "skandallo jeans",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232016564124489",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-09"
     }
