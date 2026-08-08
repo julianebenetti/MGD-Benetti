@@ -1,6 +1,6 @@
 {
-  "updated_at": 1786167897,
-  "updated_at_br": "08/08/2026 02:38",
+  "updated_at": 1786175798,
+  "updated_at_br": "08/08/2026 04:49",
   "period_days": 90,
   "total_orders": 7949,
   "total_conversions": 7531,
@@ -4132,7 +4132,7 @@
     },
     {
       "ID do pedido": "260806KQ4H15HC",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-06 01:08:04",
       "Sub_id1": "29Jul26VIPtapetehigienicovs1",
       "Valor de Compra(R$)": "37.75",
@@ -4144,7 +4144,7 @@
       "Comissao total do pedido(R$)": "1.51",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapete Higiênico Cães 60x60 50 Unidades Premium Higienepet",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58203668491",
       "ID da loja": "1730739646",
       "Nome da loja": "AHCOM",
@@ -4152,7 +4152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239677683172903",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-06"
     },
     {
