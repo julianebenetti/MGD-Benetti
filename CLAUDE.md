@@ -25,3 +25,14 @@
   a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
 - A rotina diária deve sempre incluir busca por **moda plus size** (nicho "Moda Plus Size",
   tipo evergreen) como uma das categorias gerais, todo dia — não é opcional nem pontual.
+- Classificação fixa de `tipo` sazonal (usar sempre esta tabela, não inferir na hora):
+  - **big_sazonal** (temporada ampla, afeta vários nichos ao mesmo tempo, período mais longo):
+    Verão (out-fev), Inverno (jun-ago), Black Friday (última sexta de novembro), Natal (25/dez).
+  - **microsazonal** (data específica, afeta um nicho por vez, janela mais curta):
+    Carnaval (fev-mar, móvel), Páscoa (mar-abr, móvel), Dia da Mulher (8/mar),
+    Dia das Mães (2º domingo de maio), Dia dos Namorados (12/jun), Festa Junina (jun),
+    Volta às Aulas (jan-fev e jul), Dia dos Pais (2º domingo de agosto),
+    Dia do Cliente (15/set), Dia das Crianças (12/out), Halloween (31/out), Ano Novo (31/dez).
+  - Não é raro passar dias/semanas sem nenhum produto big_sazonal novo — só existe
+    big_sazonal na janela de ~90 dias quando uma dessas 4 datas amplas está próxima.
+    Isso é esperado, não é erro nem falha da rotina.
