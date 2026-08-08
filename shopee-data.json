@@ -1,6 +1,6 @@
 {
-  "updated_at": 1786175798,
-  "updated_at_br": "08/08/2026 04:49",
+  "updated_at": 1786181469,
+  "updated_at_br": "08/08/2026 06:24",
   "period_days": 90,
   "total_orders": 7949,
   "total_conversions": 7531,
@@ -6232,7 +6232,7 @@
     },
     {
       "ID do pedido": "260805JQHJFWPH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-05 15:42:41",
       "Sub_id1": "03Ago26VIPcadence2",
       "Valor de Compra(R$)": "39.51",
@@ -6244,7 +6244,7 @@
       "Comissao total do pedido(R$)": "1.5804",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT 2 Shorts PLUS SIZE Para Academia Bermuda 2 em 1 Duplo Com Bolso Interno Treino",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21199648515",
       "ID da loja": "1494157770",
       "Nome da loja": "Mavie Têxtil",
@@ -6252,7 +6252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239643761174417",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-05"
     },
     {
