@@ -21,8 +21,11 @@
   que roda essa curadoria sozinha todo dia às 7h (Brasília). Se precisar ajustar critérios
   de busca no futuro, atualizar o prompt dessa rotina também, não só fazer buscas manuais.
 - Essa rotina busca em duas frentes todo dia: categorias gerais (evergreen) e, sempre que
-  houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
-  a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
+  houver data/temporada comemorativa próxima, também busca produtos ligados a ela
+  (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
+  Janela de antecedência: big_sazonal entra na busca com até ~90 dias de antecedência;
+  microsazonal só entra com até ~60 dias de antecedência (mais perto da data, pra não
+  buscar coisa de nicho específico cedo demais).
 - A rotina diária deve sempre incluir busca por **moda plus size** (nicho "Moda Plus Size",
   tipo evergreen) como uma das categorias gerais, todo dia — não é opcional nem pontual.
 - Classificação fixa de `tipo` sazonal (usar sempre esta tabela, não inferir na hora):
