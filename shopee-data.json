@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786249296,
-  "updated_at_br": "09/08/2026 01:14",
+  "updated_at": 1786254566,
+  "updated_at_br": "09/08/2026 02:42",
   "period_days": 90,
-  "total_orders": 8020,
-  "total_conversions": 7596,
+  "total_orders": 8019,
+  "total_conversions": 7595,
   "orders": [
     {
       "ID do pedido": "260808RUEREJ51",
@@ -200477,31 +200477,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "232189471164151",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-11"
-    },
-    {
-      "ID do pedido": "260511539CJRVR",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-11 05:08:55",
-      "Sub_id1": "08Mai26PoCromoSereia",
-      "Valor de Compra(R$)": "164.39",
-      "Comissao liquida do afiliado(R$)": "4.9317",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "4.9317",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "4.9317",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Cobertor Casal Jolitex Kyor Plus Coberta Microfibra Caixa 180m X 220m",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21299549125",
-      "ID da loja": "1383497403",
-      "Nome da loja": "site_super25",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "232175335100572",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-11"
     }
