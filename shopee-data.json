@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786262441,
-  "updated_at_br": "09/08/2026 04:53",
+  "updated_at": 1786267939,
+  "updated_at_br": "09/08/2026 06:25",
   "period_days": 90,
-  "total_orders": 8019,
-  "total_conversions": 7595,
+  "total_orders": 8018,
+  "total_conversions": 7594,
   "orders": [
     {
       "ID do pedido": "260808RUEREJ51",
@@ -20182,7 +20182,7 @@
     },
     {
       "ID do pedido": "260802AJ9VYXSG",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-02 09:47:38",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "26.9",
@@ -20194,7 +20194,7 @@
       "Comissao total do pedido(R$)": "1.3988",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sandália Babuche Infantil Papete Menina ADULTO",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23997980121",
       "ID da loja": "1192800832",
       "Nome da loja": "Orksfild Calçados Infantil",
@@ -20202,7 +20202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239363257134289",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-02"
     },
     {
@@ -200452,31 +200452,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "232193684151108",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-11"
-    },
-    {
-      "ID do pedido": "2605115GENS65X",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-11 09:04:31",
-      "Sub_id1": "GruposPromosApp",
-      "Valor de Compra(R$)": "48.35",
-      "Comissao liquida do afiliado(R$)": "1.4505",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.4505",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.4505",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Caixa com 10 Lenços/Toalhas Umedecidas Baby Free c/ 100 Unidades Cada - Tampa FlipTop",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22924629976",
-      "ID da loja": "287778538",
-      "Nome da loja": "PLUMA_BABy",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "232189471164151",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-11"
     }
