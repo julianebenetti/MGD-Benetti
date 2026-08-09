@@ -1,6 +1,6 @@
 {
-  "updated_at": 1786245023,
-  "updated_at_br": "09/08/2026 00:03",
+  "updated_at": 1786249296,
+  "updated_at_br": "09/08/2026 01:14",
   "period_days": 90,
   "total_orders": 8020,
   "total_conversions": 7596,
@@ -13532,7 +13532,7 @@
     },
     {
       "ID do pedido": "260805GGMS6BVD",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-04 18:33:53",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "20.64",
@@ -13544,7 +13544,7 @@
       "Comissao total do pedido(R$)": "1.07328",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bolsa tote feminina em veludo cotelê estilo coreano – grande capacidade, criativa e casual para compras e uso diário",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58260926788",
       "ID da loja": "1820598106",
       "Nome da loja": "JOYBELLA ",
@@ -13552,7 +13552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239567633191726",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-04"
     },
     {
