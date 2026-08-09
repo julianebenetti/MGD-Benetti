@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Financeiro — Juliane 2026 (Dinâmico)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0a0a0a;
+      font-family: -apple-system, 'Segoe UI', sans-serif;
+      padding: 16px;
+      color: #e0e0e0;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #333;
+    }
+    .header h1 { font-size: 24px; color: #fff; }
+    .status {
+      font-size: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .status.online { color: #6dbf6d; }
+    .status.loading { color: #ffb347; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.green { background: #6dbf6d; }
+    .dot.amber { background: #ffb347; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #222;
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      padding: 10px 16px;
+      background: #1a1a1a;
+      border: none;
+      border-radius: 8px;
+      color: #888;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #e0e0e0;
+      color: #0a0a0a;
+    }
+    .tab-btn:hover { background: #2a2a2a; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #2a2a2a;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .card-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-value.red { color: #ff7070; }
+    .card-value.green { color: #6dbf6d; }
+    .card-value.amber { color: #ffb347; }
+    .card-subtitle {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .edit-btn {
+      background: #2a2a2a;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .edit-btn:hover {
+      background: #3a3a3a;
+      color: #e0e0e0;
+    }
+
+    /* Modal de edição */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid #333;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      font-size: 12px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #7ab8f5;
+      background: #252525;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .btn-save {
+      background: #6dbf6d;
+      color: #0a0a0a;
+    }
+    .btn-save:hover { background: #5aaa5a; }
+    .btn-cancel {
+      background: #333;
+      color: #e0e0e0;
+    }
+    .btn-cancel:hover { background: #444; }
+
+    /* Tabela */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .table th {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #2a2a2a;
+      color: #888;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    .table td {
+      padding: 12px;
+      border-bottom: 1px solid #222;
+    }
+    .table tr:hover { background: #1a1a1a; }
+
+    /* Alert */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .alert.info {
+      background: #1a2a4a;
+      border-left: 3px solid #7ab8f5;
+      color: #7ab8f5;
+    }
+    .alert.success {
+      background: #1a3a1a;
+      border-left: 3px solid #6dbf6d;
+      color: #6dbf6d;
+    }
+    .alert.warning {
+      background: #2a1e00;
+      border-left: 3px solid #ffb347;
+      color: #ffb347;
+    }
+    .alert.error {
+      background: #2a0f0f;
+      border-left: 3px solid #ff7070;
+      color: #ff7070;
+    }
+
+    .loading { text-align: center; padding: 40px; color: #888; }
+    .spinner {
+      border: 2px solid #333;
+      border-top-color: #7ab8f5;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 0.6s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #222;
+      font-size: 11px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>💰 Dashboard Financeiro</h1>
+      <p style="font-size: 12px; color: #666; margin-top: 4px;">Juliane & Hugo · 2026</p>
+    </div>
+    <div class="status online">
+      <div class="dot green" id="statusDot"></div>
+      <span id="statusText">Online</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('resumo')">📊 Resumo</button>
+    <button class="tab-btn" onclick="showTab('dividas')">🏦 Dívidas</button>
+    <button class="tab-btn" onclick="showTab('despesas')">💸 Despesas</button>
+    <button class="tab-btn" onclick="showTab('fluxo')">📈 Fluxo</button>
+    <button class="tab-btn" onclick="showTab('editor')">⚙️ Editor</button>
+  </div>
+
+  <!-- RESUMO -->
+  <div id="resumo" class="section active">
+    <div class="grid" id="resumoCards"></div>
+    <div class="grid" id="fluxoRapido"></div>
+  </div>
+
+  <!-- DÍVIDAS -->
+  <div id="dividas" class="section">
+    <div class="grid" id="dividasCards"></div>
+  </div>
+
+  <!-- DESPESAS -->
+  <div id="despesas" class="section">
+    <table class="table" id="despesasTable">
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Valor</th>
+          <th>Dia do Mês</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="despesasBody"></tbody>
+    </table>
+    <div id="totalDespesas" class="card">
+      <div class="card-title">Total de Despesas Fixas</div>
+      <div class="card-value green">R$ <span id="totalDespesasVal">0</span></div>
+    </div>
+  </div>
+
+  <!-- FLUXO -->
+  <div id="fluxo" class="section">
+    <div class="alert info">
+      <strong>📊 Análise de Fluxo de Caixa</strong><br>
+      Visualize entradas, saídas e saldos por período
+    </div>
+    <div class="grid" id="fluxoCards"></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div id="editor" class="section">
+    <div class="alert info">
+      ⚙️ <strong>Painel de Controle</strong> — Edite os dados e salve no servidor
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+      <button class="btn btn-save" onclick="openEditModal('pessoal')">✏️ Editar Pessoa</button>
+      <button class="btn btn-save" onclick="openEditModal('contas')">✏️ Editar Contas</button>
+      <button class="btn btn-save" onclick="openEditModal('dividas')">✏️ Editar Dívidas</button>
+      <button class="btn btn-save" onclick="openEditModal('despesas')">✏️ Editar Despesas</button>
+    </div>
+    <div style="margin-top: 20px;">
+      <div class="alert warning">
+        <strong>⚡ Ações avançadas</strong>
+      </div>
+      <button class="btn btn-cancel" onclick="exportarDados()" style="margin-right: 10px;">💾 Exportar Dados (JSON)</button>
+      <button class="btn btn-cancel" onclick="sincronizar()">🔄 Sincronizar com Servidor</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL DE EDIÇÃO -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-title" id="modalTitle">Editar Dados</div>
+    <div id="modalBody"></div>
+    <div class="modal-buttons">
+      <button class="btn btn-save" onclick="salvarEdicao()">Salvar</button>
+      <button class="btn btn-cancel" onclick="fecharModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Última atualização: <span id="lastUpdate">--</span> |
+  Status: <span id="lastStatus">--</span>
+</div>
+
+<script>
+const API_URL = '/api';
+let dados = null;
+let modoEdicao = null;
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', () => {
+  carregarDados();
+});
+
+async function carregarDados() {
+  try {
+    setStatus('loading', 'Carregando...');
+    const response = await fetch(`${API_URL}/dados`);
+    if (!response.ok) throw new Error('Erro ao carregar dados');
+
+    dados = await response.json();
+    renderizar();
+    setStatus('online', 'Online');
+    atualizarTimestamp();
+  } catch (error) {
+    console.error('Erro:', error);
+    setStatus('error', 'Erro ao carregar');
+    mostrarAlerta('Erro ao carregar dados do servidor', 'error');
+  }
+}
+
+async function salvarDados() {
+  try {
+    setStatus('loading', 'Salvando...');
+    const response = await fetch(`${API_URL}/dados`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+
+    if (!response.ok) throw new Error('Erro ao salvar');
+    dados = await response.json();
+    setStatus('online', 'Online');
+    atualizarTimestamp();
+    mostrarAlerta('Dados salvos com sucesso!', 'success');
+    renderizar();
+  } catch (error) {
+    console.error('Erro:', error);
+    setStatus('error', 'Erro ao salvar');
+    mostrarAlerta('Erro ao salvar dados', 'error');
+  }
+}
+
+function renderizar() {
+  if (!dados) return;
+
+  renderResumo();
+  renderDividas();
+  renderDespesas();
+  renderFluxo();
+}
+
+function renderResumo() {
+  const html = `
+    <div class="card">
+      <div class="card-title">Salário Juliane</div>
+      <div class="card-value green">R$ ${formatar(dados.pessoa.juliane.salarioLiquido)}</div>
+      <button class="edit-btn" onclick="openEditModal('salario')">Editar</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Hugo (líquido)</div>
+      <div class="card-value green">R$ ${formatar(dados.pessoa.hugo.rendaLiquida)}</div>
+      <button class="edit-btn" onclick="openEditModal('hugo')">Editar</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Saldo Atual</div>
+      <div class="card-value" id="cardSaldo"></div>
+      <button class="edit-btn" onclick="openEditModal('saldo')">Atualizar</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Dívida Total</div>
+      <div class="card-value red">R$ ${formatar(calcularDividaTotal())}</div>
+    </div>
+  `;
+  document.getElementById('resumoCards').innerHTML = html;
+
+  // Saldo com cor
+  const saldo = dados.contas.saldoAtual;
+  const cardSaldo = document.getElementById('cardSaldo');
+  const classe = saldo < 0 ? 'red' : saldo < 3000 ? 'amber' : 'green';
+  cardSaldo.className = `card-value ${classe}`;
+  cardSaldo.textContent = `R$ ${formatar(saldo)}`;
+
+  // Fluxo rápido
+  const juliane = dados.pessoa.juliane.salarioLiquido;
+  const hugo = dados.pessoa.hugo.rendaLiquida;
+  const totalEntradas = juliane + hugo;
+  const totalDespesas = calcularTotalDespesas();
+  const deficit = totalEntradas - totalDespesas;
+
+  const fluxoHtml = `
+    <div class="card">
+      <div class="card-title">Total Entradas</div>
+      <div class="card-value green">R$ ${formatar(totalEntradas)}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Total Despesas</div>
+      <div class="card-value red">R$ ${formatar(totalDespesas)}</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Resultado</div>
+      <div class="card-value ${deficit < 0 ? 'red' : 'green'}">R$ ${formatar(deficit)}</div>
+    </div>
+  `;
+  document.getElementById('fluxoRapido').innerHTML = fluxoHtml;
+}
+
+function renderDividas() {
+  const dividas = dados.dividas;
+  let html = '';
+
+  // Consignados folha
+  html += `
+    <div class="card">
+      <div class="card-title">Consignados (Folha)</div>
+      <div class="card-value red">R$ ${formatar(dividas.consignadosFolha.total)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 8px;">3 contratos ativos</p>
+  `;
+  dividas.consignadosFolha.parcelas.forEach(p => {
+    html += `<div style="font-size: 12px; margin-top: 8px; padding: 8px; background: #222; border-radius: 4px;">
+      <strong>${p.nome}</strong><br>
+      <span style="color: #888;">R$ ${formatar(p.saldo)} | ${formatar(p.parcelaMensal)}/mês</span>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Consignado C/C
+  html += `
+    <div class="card">
+      <div class="card-title">Consignado (C/C)</div>
+      <div class="card-value red">R$ ${formatar(dividas.consignadoContaCorrente.saldo)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 8px;">
+        Parcela ${dividas.consignadoContaCorrente.parcelaAtual}/${dividas.consignadoContaCorrente.totalParcelas} |
+        R$ ${formatar(dividas.consignadoContaCorrente.parcelaMensal)}/mês
+      </p>
+    </div>
+  `;
+
+  // Empréstimo Cenira
+  html += `
+    <div class="card">
+      <div class="card-title">Empréstimo Familiar</div>
+      <div class="card-value red">R$ ${formatar(dividas.emprestimoFamiliar.saldo)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 8px;">
+        ${dividas.emprestimoFamiliar.nome} | R$ ${formatar(dividas.emprestimoFamiliar.parcelaMensal)}/mês
+      </p>
+    </div>
+  `;
+
+  // Mercado Pago
+  html += `
+    <div class="card">
+      <div class="card-title">Mercado Pago</div>
+      <div class="card-value amber">R$ ${formatar(dividas.mercadoPago.saldo)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 8px;">
+        Parcela ${dividas.mercadoPago.parcelaAtual}/${dividas.mercadoPago.totalParcelas} |
+        R$ ${formatar(dividas.mercadoPago.parcelaMensal)}/mês
+      </p>
+    </div>
+  `;
+
+  // Cartões
+  html += `
+    <div class="card">
+      <div class="card-title">Cartão Black</div>
+      <div class="card-value green">R$ ${formatar(dividas.cartoes.black.saldo)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 8px;">Limite: R$ ${formatar(dividas.cartoes.black.limite)}</p>
+    </div>
+  `;
+
+  document.getElementById('dividasCards').innerHTML = html;
+}
+
+function renderDespesas() {
+  const despesas = dados.despesas.fixas;
+  let html = '';
+
+  despesas.forEach((d, i) => {
+    html += `
+      <tr>
+        <td>${d.categoria}</td>
+        <td>R$ ${formatar(d.valor)}</td>
+        <td>${d.dia}º</td>
+        <td><button class="edit-btn" onclick="editarDespesa(${i})">Editar</button></td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('despesasBody').innerHTML = html;
+
+  const total = calcularTotalDespesas();
+  document.getElementById('totalDespesasVal').textContent = formatar(total);
+}
+
+function renderFluxo() {
+  const juliane = dados.pessoa.juliane.salarioLiquido;
+  const hugo = dados.pessoa.hugo.rendaLiquida;
+  const totalEntradas = juliane + hugo;
+  const totalDespesas = calcularTotalDespesas();
+  const deficit = totalEntradas - totalDespesas;
+
+  const html = `
+    <div class="card">
+      <div class="card-title">📈 Entradas Mensais</div>
+      <div class="card-value green">R$ ${formatar(totalEntradas)}</div>
+      <table class="table" style="margin-top: 12px;">
+        <tr>
+          <td style="border: none;">Juliane</td>
+          <td style="border: none; text-align: right;">R$ ${formatar(juliane)}</td>
+        </tr>
+        <tr>
+          <td style="border: none;">Hugo</td>
+          <td style="border: none; text-align: right;">R$ ${formatar(hugo)}</td>
+        </tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">📉 Saídas Fixas</div>
+      <div class="card-value red">R$ ${formatar(totalDespesas)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 12px;">${dados.despesas.fixas.length} itens</p>
+    </div>
+    <div class="card">
+      <div class="card-title">⚖️ Resultado Mensal</div>
+      <div class="card-value ${deficit < 0 ? 'red' : 'green'}">R$ ${formatar(deficit)}</div>
+      <p style="font-size: 11px; color: #666; margin-top: 12px;">
+        ${deficit < 0 ? '❌ Déficit' : '✅ Superávit'}
+      </p>
+    </div>
+  `;
+
+  document.getElementById('fluxoCards').innerHTML = html;
+}
+
+// Funções utilitárias
+function formatar(valor) {
+  return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function calcularTotalDespesas() {
+  return dados.despesas.fixas.reduce((sum, d) => sum + d.valor, 0);
+}
+
+function calcularDividaTotal() {
+  const d = dados.dividas;
+  return d.consignadosFolha.total + d.consignadoContaCorrente.saldo + d.emprestimoFamiliar.saldo +
+         d.cartoes.black.saldo + d.cartoes.azul.saldo + d.cartoes.infinite.saldo + d.mercadoPago.saldo;
+}
+
+// Navegação de abas
+function showTab(tabName) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Modal
+function openEditModal(tipo) {
+  modoEdicao = tipo;
+  const modal = document.getElementById('editModal');
+  const body = document.getElementById('modalBody');
+
+  let html = '';
+
+  switch(tipo) {
+    case 'salario':
+      html = `
+        <div class="form-group">
+          <label class="form-label">Salário Líquido Juliane</label>
+          <input type="number" id="editSalario" value="${dados.pessoa.juliane.salarioLiquido}">
+        </div>
+      `;
+      break;
+    case 'hugo':
+      html = `
+        <div class="form-group">
+          <label class="form-label">Renda Bruta Hugo</label>
+          <input type="number" id="editHugoBruta" value="${dados.pessoa.hugo.rendaBruta}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Combustível (dedução)</label>
+          <input type="number" id="editCombustivel" value="${dados.pessoa.hugo.combustivel}">
+        </div>
+      `;
+      break;
+    case 'saldo':
+      html = `
+        <div class="form-group">
+          <label class="form-label">Saldo Atual</label>
+          <input type="number" id="editSaldo" value="${dados.contas.saldoAtual}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Data Atualização</label>
+          <input type="date" id="editDataSaldo" value="${dados.contas.dataAtualizacao}">
+        </div>
+      `;
+      break;
+  }
+
+  body.innerHTML = html;
+  modal.classList.add('active');
+}
+
+function salvarEdicao() {
+  switch(modoEdicao) {
+    case 'salario':
+      dados.pessoa.juliane.salarioLiquido = parseFloat(document.getElementById('editSalario').value);
+      break;
+    case 'hugo':
+      dados.pessoa.hugo.rendaBruta = parseFloat(document.getElementById('editHugoBruta').value);
+      dados.pessoa.hugo.combustivel = parseFloat(document.getElementById('editCombustivel').value);
+      dados.pessoa.hugo.rendaLiquida = dados.pessoa.hugo.rendaBruta - dados.pessoa.hugo.combustivel;
+      break;
+    case 'saldo':
+      dados.contas.saldoAtual = parseFloat(document.getElementById('editSaldo').value);
+      dados.contas.dataAtualizacao = document.getElementById('editDataSaldo').value;
+      break;
+  }
+
+  fecharModal();
+  salvarDados();
+}
+
+function fecharModal() {
+  document.getElementById('editModal').classList.remove('active');
+  modoEdicao = null;
+}
+
+function editarDespesa(index) {
+  const d = dados.despesas.fixas[index];
+  const modal = document.getElementById('editModal');
+  const body = document.getElementById('modalBody');
+
+  const html = `
+    <div class="form-group">
+      <label class="form-label">Categoria</label>
+      <input type="text" id="editDespesaCat" value="${d.categoria}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Valor</label>
+      <input type="number" id="editDespesaVal" value="${d.valor}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dia do Mês</label>
+      <input type="number" id="editDespesaDia" value="${d.dia}" min="1" max="31">
+    </div>
+  `;
+
+  body.innerHTML = html;
+  modal.classList.add('active');
+
+  modoEdicao = `despesa_${index}`;
+}
+
+// Status
+function setStatus(status, text) {
+  const dot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+
+  dot.className = 'dot';
+  if (status === 'online') dot.classList.add('green');
+  if (status === 'loading') dot.classList.add('amber');
+  if (status === 'error') dot.classList.add('red');
+
+  statusText.textContent = text;
+}
+
+function atualizarTimestamp() {
+  const now = new Date();
+  document.getElementById('lastUpdate').textContent = now.toLocaleString('pt-BR');
+  document.getElementById('lastStatus').textContent = '✅ Sincronizado';
+}
+
+function mostrarAlerta(msg, tipo) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert ${tipo}`;
+  alertDiv.textContent = msg;
+  document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.tabs'));
+
+  setTimeout(() => alertDiv.remove(), 4000);
+}
+
+function exportarDados() {
+  const json = JSON.stringify(dados, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `financeiro_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function sincronizar() {
+  carregarDados();
+}
+
+// Fechar modal ao clicar fora
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('editModal');
+  if (e.target === modal) {
+    fecharModal();
+  }
+});
+</script>
+
+</body>
+</html>
