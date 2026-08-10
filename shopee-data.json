@@ -1,6 +1,6 @@
 {
-  "updated_at": 1786331994,
-  "updated_at_br": "10/08/2026 00:12",
+  "updated_at": 1786336387,
+  "updated_at_br": "10/08/2026 01:26",
   "period_days": 90,
   "total_orders": 8086,
   "total_conversions": 7665,
@@ -26007,7 +26007,7 @@
     },
     {
       "ID do pedido": "2608029ACXXMX9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-01 21:53:31",
       "Sub_id1": "31Jul26VEAcalcajogger",
       "Valor de Compra(R$)": "20.15",
@@ -26019,7 +26019,7 @@
       "Comissao total do pedido(R$)": "1.5314",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 6 Pares De Meias De Algodão Para Homens E Mulheres – Corte Curto Confortável Preto \\ Branco Cinza Meia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "47455167701",
       "ID da loja": "1006215031",
       "Nome da loja": "Choice Oficial",
@@ -26027,7 +26027,7 @@
       "buyerType": "NEW",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239320410177560",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-01"
     },
     {
@@ -32857,7 +32857,7 @@
     },
     {
       "ID do pedido": "2607302CGMVNQE",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-30 03:42:44",
       "Sub_id1": "29Jul26VIPCanfora",
       "Valor de Compra(R$)": "49.9",
@@ -32869,7 +32869,7 @@
       "Comissao total do pedido(R$)": "1.996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Pastilhas de Cânfora Bendita Cânfora 30 Unidades Antimofo Elimina Odores Armários Gavetas Sapateiras",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23899539715",
       "ID da loja": "1664795145",
       "Nome da loja": "WSRC Machines ",
@@ -32877,7 +32877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239082163165289",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     },
     {
@@ -35007,7 +35007,7 @@
     },
     {
       "ID do pedido": "260729V23GH1EG",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-28 18:58:58",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "66.4",
@@ -35019,7 +35019,7 @@
       "Comissao total do pedido(R$)": "9.96",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Mochila Mala Viagem De Bordo Executiva MALETA Expansível Até 45l Boa Presentes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23494919037",
       "ID da loja": "1643020166",
       "Nome da loja": "DASÁRABIA",
@@ -35027,7 +35027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238964338155103",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-28"
     },
     {
