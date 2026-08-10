@@ -4,7 +4,7 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const PORT = 3000;
+const PORT = 3001;
 const DATA_FILE = path.join(__dirname, 'data', 'financeiro.json');
 
 // Middleware
@@ -23,15 +23,16 @@ const DEFAULT_DATA = {
   pessoa: {
     juliane: {
       nome: 'Juliane Benetti',
-      salarioLiquido: 3105,
-      empresa: 'Elektro Redes S.A.'
+      empresa: 'Elektro Redes S.A.',
+      cargo: 'Analista',
+      salarioLiquido: 3500,
+      cidade: 'Campinas'
     },
     hugo: {
       nome: 'Hugo',
       profissao: 'Taxista',
-      rendaBruta: 3200,
-      combustivel: 850,
-      rendaLiquida: 2350
+      rendaLiquida: 2350,
+      observacao: 'Renda descontado combustivel'
     }
   },
   contas: {
@@ -95,7 +96,17 @@ app.get('/api/dados', (req, res) => {
   try {
     if (fs.existsSync(DATA_FILE)) {
       const dados = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-      res.json(dados);
+      const merged = {
+        ...DEFAULT_DATA,
+        pessoa: { ...DEFAULT_DATA.pessoa, ...dados.pessoa },
+        despesas: { ...DEFAULT_DATA.despesas, ...dados.despesas },
+        receitas: dados.receitas || DEFAULT_DATA.receitas,
+        investimentos: dados.investimentos || DEFAULT_DATA.investimentos,
+        contas: { ...DEFAULT_DATA.contas, ...dados.contas },
+        dividas: { ...DEFAULT_DATA.dividas, ...dados.dividas },
+        lastUpdated: dados.lastUpdated || new Date().toISOString()
+      };
+      res.json(merged);
     } else {
       // Se não existir, retorna padrão
       res.json(DEFAULT_DATA);

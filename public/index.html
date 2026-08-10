@@ -400,7 +400,7 @@ async function salvarDados() {
     });
 
     if (!response.ok) throw new Error('Erro ao salvar');
-    dados = await response.json();
+    dados = (await response.json()).data;
     setStatus('online', 'Online');
     atualizarTimestamp();
     mostrarAlerta('Dados salvos com sucesso!', 'success');
