@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786436193,
-  "updated_at_br": "11/08/2026 05:09",
+  "updated_at": 1786441965,
+  "updated_at_br": "11/08/2026 06:45",
   "period_days": 90,
-  "total_orders": 8109,
-  "total_conversions": 7697,
+  "total_orders": 8108,
+  "total_conversions": 7696,
   "orders": [
     {
       "ID do pedido": "2608100UUQYT2V",
@@ -9857,7 +9857,7 @@
     },
     {
       "ID do pedido": "260808R4KBD4KA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-07 19:19:39",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "19.29",
@@ -9869,7 +9869,7 @@
       "Comissao total do pedido(R$)": "1.17669",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Caixa De Som Para PC E Notebook Aitek USB 2.0 Estéreo 6W Som Nítido  ACS-4511",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58208037714",
       "ID da loja": "944725778",
       "Nome da loja": "Inovar Top",
@@ -9877,7 +9877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239829578180909",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-07"
     },
     {
@@ -11232,7 +11232,7 @@
     },
     {
       "ID do pedido": "260807QPBGWS3P",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-07 15:04:43",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "32.79",
@@ -11244,7 +11244,7 @@
       "Comissao total do pedido(R$)": "1.80345",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "50 Mini Sabonetes Patinha Pet - Escolha cor e Aroma - Lembrancinhas Perfumadas  - Patrulha Canina - Aniversário Pet",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21997639229",
       "ID da loja": "387855808",
       "Nome da loja": "Sodelli",
@@ -11252,7 +11252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239814283156522",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-07"
     },
     {
@@ -202702,31 +202702,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "232364839105555",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-13"
-    },
-    {
-      "ID do pedido": "260513AF5AAY8N",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-13 08:24:42",
-      "Sub_id1": "09Mai26LinkLojaTapete",
-      "Valor de Compra(R$)": "53.73",
-      "Comissao liquida do afiliado(R$)": "6.9849",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "1.6119",
-      "Comissao do vendedor(R$)": "5.373",
-      "Comissao total do pedido(R$)": "6.9849",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Tapete Passarela P/ Beira Da Cama 2,00x0,60 antialergico",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "7779939169",
-      "ID da loja": "315994656",
-      "Nome da loja": "Montilla Tapetes - Tudo para casa",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232359882127366",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-13"
     }
