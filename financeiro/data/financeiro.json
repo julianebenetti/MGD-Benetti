@@ -1,0 +1,159 @@
+{
+  "pessoas": [
+    {
+      "id": "juliane",
+      "nome": "Juliane",
+      "salario": 4500,
+      "combustivel": 250
+    },
+    {
+      "id": "hugo",
+      "nome": "Hugo",
+      "renda": 2050
+    }
+  ],
+  "receitas": {
+    "salario_juliane": 4500,
+    "renda_hugo": 2050,
+    "combustivel_desconto": -250,
+    "total_mensal": 6300
+  },
+  "dividas": [
+    {
+      "id": "consignados_folha",
+      "nome": "Consignados (folha)",
+      "montante": 52084,
+      "parcela_mensal": 1564,
+      "meses_restantes": 33,
+      "status": "ativa",
+      "observacao": "Desconto direto em folha"
+    },
+    {
+      "id": "consignado_cc",
+      "nome": "Consignado C/C",
+      "montante": 28743,
+      "parcela_mensal": 1403,
+      "parcelas_pagas": 28,
+      "parcelas_totais": 60,
+      "status": "ativa",
+      "observacao": "32 parcelas restantes"
+    },
+    {
+      "id": "emprestimo_cenira",
+      "nome": "Empréstimo Cenira",
+      "montante": 23252,
+      "parcela_mensal": 646,
+      "meses_restantes": 36,
+      "status": "ativa",
+      "observacao": "36 parcelas"
+    },
+    {
+      "id": "mastercard_black",
+      "montante": 5692,
+      "parcela_mensal": 950,
+      "meses_restantes": 6,
+      "status": "quitada",
+      "observacao": "Caindo há 3 meses, zera em 3 meses"
+    },
+    {
+      "id": "bradesco_amazon",
+      "nome": "Bradesco Amazon",
+      "montante": 67,
+      "status": "quitada",
+      "observacao": "Praticamente zerado"
+    },
+    {
+      "id": "mercado_pago",
+      "nome": "Mercado Pago",
+      "montante": 11658,
+      "parcelas": 6,
+      "valor_parcela": 1943,
+      "parcelas_pagas": 0,
+      "vencimento": "2026-11-30",
+      "status": "ativa",
+      "observacao": "Vence em nov/2026"
+    }
+  ],
+  "despesas": {
+    "necessidades": {
+      "categoria": "Manter (Necessidades)",
+      "items": [
+        {"nome": "Escola Infantil", "valor": 1500},
+        {"nome": "Dívidas Mínimas", "valor": 1564},
+        {"nome": "Aluguel/Casa", "valor": 1254},
+        {"nome": "Outros Essenciais", "valor": 1200}
+      ],
+      "total": 5518
+    },
+    "avaliar": {
+      "categoria": "Avaliar (Reduzir)",
+      "items": [
+        {"nome": "Alimentação", "valor": 700},
+        {"nome": "Transporte", "valor": 350},
+        {"nome": "Saúde/Farmácia", "valor": 158}
+      ],
+      "total": 1208
+    },
+    "parar": {
+      "categoria": "Parar (Eliminar)",
+      "items": [
+        {"nome": "Assinaturas", "valor": 80},
+        {"nome": "Premium/Serviços", "valor": 86}
+      ],
+      "total": 166
+    },
+    "black_card": {
+      "categoria": "Black Card (Acompanhamento)",
+      "valor": 3334
+    }
+  },
+  "fluxo_mensal": {
+    "entradas": 6300,
+    "saidas": 10974,
+    "deficit": -4674,
+    "observacao": "Combustível já descontado das entradas"
+  },
+  "cenarios_futuros": [
+    {
+      "mes": "2026-11",
+      "evento": "Mercado Pago termina (última parcela)",
+      "impacto": "Libera R$ 1.943/mês"
+    },
+    {
+      "mes": "2026-12",
+      "evento": "13º + PLR (estimado)",
+      "impacto": "Libera R$ 8.725 (elimina Consignado C/C)"
+    },
+    {
+      "mes": "2027-01",
+      "evento": "Consignado C/C zera",
+      "impacto": "Libera R$ 1.403/mês para déficit"
+    },
+    {
+      "mes": "2027-02",
+      "evento": "Cenira zera",
+      "impacto": "Libera R$ 646/mês, déficit melhora para -R$ 2.625"
+    }
+  ],
+  "historico_black_card": [
+    {"mes": "2026-01", "saldo": 10000},
+    {"mes": "2026-02", "saldo": 9500},
+    {"mes": "2026-03", "saldo": 8800},
+    {"mes": "2026-04", "saldo": 7800},
+    {"mes": "2026-05", "saldo": 6800},
+    {"mes": "2026-06", "saldo": 5692},
+    {"mes": "2026-07", "saldo": 4742},
+    {"mes": "2026-08", "saldo": 3792},
+    {"mes": "2026-09", "saldo": 2842},
+    {"mes": "2026-10", "saldo": 1892},
+    {"mes": "2026-11", "saldo": 942},
+    {"mes": "2026-12", "saldo": 0}
+  ],
+  "regras_ouro": [
+    "Não criar novos parcelamentos",
+    "Prioridade: eliminar Consignado C/C com 13º/PLR",
+    "Manter despesas necessárias (escola, casa, dívidas mínimas)",
+    "Reduzir despesas discricionárias (alimentação, transporte, saúde)",
+    "Eliminar assinaturas e serviços premium"
+  ]
+}
