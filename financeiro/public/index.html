@@ -450,12 +450,113 @@
       grid-column: 1 / -1;
     }
 
+    input, select, textarea {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 10px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .form-section {
+      background-color: var(--bg-secondary);
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .form-section-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .item-list {
+      background-color: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .item-card {
+      background-color: var(--bg-secondary);
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid var(--accent-blue);
+    }
+
+    .item-card-content {
+      flex: 1;
+    }
+
+    .item-card-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .item-card-value {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .item-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 10px;
       }
 
       .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
         grid-template-columns: 1fr;
       }
 
@@ -494,6 +595,7 @@
       <button class="tab-button" data-tab="dividas">🏦 Dívidas</button>
       <button class="tab-button" data-tab="despesas">💸 Despesas</button>
       <button class="tab-button" data-tab="fluxo">📈 Fluxo</button>
+      <button class="tab-button" data-tab="formulario">📝 Adicionar Dados</button>
       <button class="tab-button" data-tab="editor">⚙️ Editor</button>
     </div>
 
@@ -582,6 +684,157 @@
 
       <div class="section-title">🔮 Cenários Futuros</div>
       <div class="grid" id="cenarioContainer"></div>
+    </div>
+
+    <!-- TAB: FORMULÁRIO -->
+    <div id="formulario" class="tab-content">
+      <div class="section-title">📝 Adicionar/Atualizar Dados</div>
+
+      <!-- PESSOAS -->
+      <div class="form-section">
+        <div class="form-section-title">👥 Salários e Rendas</div>
+
+        <div class="form-group">
+          <label class="form-label">📌 Juliane - Salário</label>
+          <div class="form-row">
+            <input type="number" id="form_juliane_salario" placeholder="Ex: 4500" step="0.01">
+            <button class="btn-primary btn-small" onclick="atualizarPessoa('juliane', 'salario')">Atualizar</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">🚗 Juliane - Combustível (desconto)</label>
+          <div class="form-row">
+            <input type="number" id="form_juliane_combustivel" placeholder="Ex: 250" step="0.01">
+            <button class="btn-primary btn-small" onclick="atualizarPessoa('juliane', 'combustivel')">Atualizar</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">💰 Hugo - Renda</label>
+          <div class="form-row">
+            <input type="number" id="form_hugo_renda" placeholder="Ex: 2050" step="0.01">
+            <button class="btn-primary btn-small" onclick="atualizarPessoa('hugo', 'renda')">Atualizar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DÍVIDAS -->
+      <div class="form-section">
+        <div class="form-section-title">🏦 Dívidas</div>
+
+        <div class="form-group">
+          <label class="form-label">Selecione uma dívida para atualizar:</label>
+          <select id="form_divida_select" onchange="preencherFormularioDivida()">
+            <option value="">-- Selecione --</option>
+            <option value="consignados_folha">Consignados (folha)</option>
+            <option value="consignado_cc">Consignado C/C</option>
+            <option value="emprestimo_cenira">Empréstimo Cenira</option>
+            <option value="mastercard_black">Mastercard Black</option>
+            <option value="bradesco_amazon">Bradesco Amazon</option>
+            <option value="mercado_pago">Mercado Pago</option>
+          </select>
+        </div>
+
+        <div id="formulario_divida_campos" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Montante (R$)</label>
+            <input type="number" id="form_divida_montante" step="0.01">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Parcela Mensal (R$)</label>
+            <input type="number" id="form_divida_parcela" step="0.01">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Meses Restantes</label>
+            <input type="number" id="form_divida_meses" min="0">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="form_divida_status">
+              <option value="ativa">Ativa</option>
+              <option value="quitada">Quitada</option>
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-success" onclick="salvarDivida()">💾 Salvar Dívida</button>
+            <button class="btn-secondary" onclick="cancelarFormularioDivida()">❌ Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESPESAS -->
+      <div class="form-section">
+        <div class="form-section-title">💸 Despesas</div>
+
+        <div class="form-group">
+          <label class="form-label">Necessidades (Manter) - Total Mensal</label>
+          <input type="number" id="form_despesas_necessidades" step="0.01">
+          <button class="btn-primary btn-small" onclick="atualizarDespesas('necessidades')" style="margin-top: 8px;">Atualizar</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Avaliar (Reduzir) - Total Mensal</label>
+          <input type="number" id="form_despesas_avaliar" step="0.01">
+          <button class="btn-primary btn-small" onclick="atualizarDespesas('avaliar')" style="margin-top: 8px;">Atualizar</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Parar (Eliminar) - Total Mensal</label>
+          <input type="number" id="form_despesas_parar" step="0.01">
+          <button class="btn-primary btn-small" onclick="atualizarDespesas('parar')" style="margin-top: 8px;">Atualizar</button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Black Card - Total Mensal</label>
+          <input type="number" id="form_despesas_blackcard" step="0.01">
+          <button class="btn-primary btn-small" onclick="atualizarDespesas('black_card')" style="margin-top: 8px;">Atualizar</button>
+        </div>
+      </div>
+
+      <!-- BLACK CARD HISTÓRICO -->
+      <div class="form-section">
+        <div class="form-section-title">📉 Histórico Black Card</div>
+
+        <div class="form-group">
+          <label class="form-label">Mês (YYYY-MM)</label>
+          <input type="month" id="form_bc_mes">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Saldo (R$)</label>
+          <input type="number" id="form_bc_saldo" step="0.01">
+        </div>
+
+        <button class="btn-success" onclick="adicionarBlackCardMes()">➕ Adicionar Mês</button>
+
+        <div class="item-list" id="historico_bc_list"></div>
+      </div>
+
+      <!-- FLUXO MENSAL -->
+      <div class="form-section">
+        <div class="form-section-title">📊 Fluxo Mensal</div>
+
+        <div class="form-group">
+          <label class="form-label">Total de Entradas (R$)</label>
+          <input type="number" id="form_fluxo_entradas" step="0.01">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Total de Saídas (R$)</label>
+          <input type="number" id="form_fluxo_saidas" step="0.01">
+        </div>
+
+        <button class="btn-success" onclick="salvarFluxo()">💾 Salvar Fluxo</button>
+      </div>
+
+      <div class="alert alert-info" style="margin-top: 30px;">
+        ℹ️ Todos os campos atualizam automaticamente no dashboard. Você pode salvar parcialmente — não precisa preencher tudo de uma vez!
+      </div>
     </div>
 
     <!-- TAB: EDITOR -->
@@ -942,6 +1195,224 @@
         document.getElementById(tabId).classList.add('active');
       });
     });
+
+    // Funções do Formulário
+    function atualizarPessoa(pessoa, campo) {
+      const fieldId = `form_${pessoa}_${campo}`;
+      const valor = parseFloat(document.getElementById(fieldId).value);
+
+      if (!valor || isNaN(valor)) {
+        alert('Por favor, insira um valor válido');
+        return;
+      }
+
+      if (pessoa === 'juliane') {
+        dadosGlobais.pessoas[0][campo] = valor;
+      } else if (pessoa === 'hugo') {
+        dadosGlobais.pessoas[1][campo] = valor;
+      }
+
+      salvarDadosAPI();
+    }
+
+    function preencherFormularioDivida() {
+      const select = document.getElementById('form_divida_select');
+      const divId = select.value;
+
+      if (!divId) {
+        document.getElementById('formulario_divida_campos').style.display = 'none';
+        return;
+      }
+
+      const divida = dadosGlobais.dividas.find(d => d.id === divId);
+      if (!divida) return;
+
+      document.getElementById('form_divida_montante').value = divida.montante || '';
+      document.getElementById('form_divida_parcela').value = divida.parcela_mensal || '';
+      document.getElementById('form_divida_meses').value = divida.meses_restantes || '';
+      document.getElementById('form_divida_status').value = divida.status || 'ativa';
+      document.getElementById('formulario_divida_campos').style.display = 'block';
+    }
+
+    function salvarDivida() {
+      const select = document.getElementById('form_divida_select');
+      const divId = select.value;
+
+      if (!divId) {
+        alert('Selecione uma dívida');
+        return;
+      }
+
+      const montante = parseFloat(document.getElementById('form_divida_montante').value) || 0;
+      const parcela = parseFloat(document.getElementById('form_divida_parcela').value) || 0;
+      const meses = parseInt(document.getElementById('form_divida_meses').value) || 0;
+      const status = document.getElementById('form_divida_status').value;
+
+      const divida = dadosGlobais.dividas.find(d => d.id === divId);
+      if (divida) {
+        if (montante > 0) divida.montante = montante;
+        if (parcela > 0) divida.parcela_mensal = parcela;
+        if (meses > 0) divida.meses_restantes = meses;
+        divida.status = status;
+      }
+
+      salvarDadosAPI();
+      cancelarFormularioDivida();
+    }
+
+    function cancelarFormularioDivida() {
+      document.getElementById('form_divida_select').value = '';
+      document.getElementById('formulario_divida_campos').style.display = 'none';
+    }
+
+    function atualizarDespesas(categoria) {
+      const fieldId = `form_despesas_${categoria}`;
+      const valor = parseFloat(document.getElementById(fieldId).value);
+
+      if (!valor || isNaN(valor)) {
+        alert('Por favor, insira um valor válido');
+        return;
+      }
+
+      if (categoria === 'black_card') {
+        dadosGlobais.despesas.black_card.valor = valor;
+      } else {
+        dadosGlobais.despesas[categoria].total = valor;
+      }
+
+      salvarDadosAPI();
+    }
+
+    function adicionarBlackCardMes() {
+      const mesInput = document.getElementById('form_bc_mes').value;
+      const saldoInput = parseFloat(document.getElementById('form_bc_saldo').value);
+
+      if (!mesInput || isNaN(saldoInput)) {
+        alert('Por favor, preencha mês e saldo');
+        return;
+      }
+
+      const novoItem = {
+        mes: mesInput,
+        saldo: saldoInput
+      };
+
+      dadosGlobais.historico_black_card.push(novoItem);
+      dadosGlobais.historico_black_card.sort((a, b) => a.mes.localeCompare(b.mes));
+
+      salvarDadosAPI();
+      document.getElementById('form_bc_mes').value = '';
+      document.getElementById('form_bc_saldo').value = '';
+      atualizarListaBlackCard();
+    }
+
+    function atualizarListaBlackCard() {
+      const list = document.getElementById('historico_bc_list');
+      const historico = dadosGlobais.historico_black_card || [];
+
+      let html = '';
+      historico.forEach((item, idx) => {
+        html += `
+          <div class="item-card">
+            <div class="item-card-content">
+              <div class="item-card-title">${item.mes}</div>
+              <div class="item-card-value">R$ ${item.saldo.toLocaleString('pt-BR')}</div>
+            </div>
+            <div class="item-card-actions">
+              <button class="btn-danger btn-small" onclick="removerBlackCardMes(${idx})">🗑️ Remover</button>
+            </div>
+          </div>
+        `;
+      });
+
+      list.innerHTML = html || '<p style="color: var(--text-secondary); text-align: center;">Nenhum mês registrado</p>';
+    }
+
+    function removerBlackCardMes(idx) {
+      if (confirm('Remover este mês do histórico?')) {
+        dadosGlobais.historico_black_card.splice(idx, 1);
+        salvarDadosAPI();
+        atualizarListaBlackCard();
+      }
+    }
+
+    function salvarFluxo() {
+      const entradas = parseFloat(document.getElementById('form_fluxo_entradas').value) || 0;
+      const saidas = parseFloat(document.getElementById('form_fluxo_saidas').value) || 0;
+
+      if (entradas <= 0 || saidas <= 0) {
+        alert('Por favor, insira valores válidos');
+        return;
+      }
+
+      dadosGlobais.fluxo_mensal.entradas = entradas;
+      dadosGlobais.fluxo_mensal.saidas = saidas;
+      dadosGlobais.fluxo_mensal.deficit = entradas - saidas;
+
+      salvarDadosAPI();
+    }
+
+    async function salvarDadosAPI() {
+      try {
+        const response = await fetch('/api/dados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dadosGlobais)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar');
+
+        renderizarTodas();
+
+        const status = document.querySelector('#formulario .alert');
+        if (status) {
+          const mensagem = document.createElement('div');
+          mensagem.className = 'alert alert-success';
+          mensagem.innerHTML = '✅ Dados atualizados com sucesso! Dashboard sincronizado.';
+          status.parentNode.insertBefore(mensagem, status);
+          setTimeout(() => mensagem.remove(), 3000);
+        }
+      } catch (err) {
+        alert('❌ Erro ao salvar: ' + err.message);
+      }
+    }
+
+    function preencherFormularios() {
+      if (!dadosGlobais.pessoas) return;
+
+      const juliane = dadosGlobais.pessoas.find(p => p.id === 'juliane');
+      const hugo = dadosGlobais.pessoas.find(p => p.id === 'hugo');
+
+      if (juliane) {
+        document.getElementById('form_juliane_salario').value = juliane.salario || '';
+        document.getElementById('form_juliane_combustivel').value = juliane.combustivel || '';
+      }
+
+      if (hugo) {
+        document.getElementById('form_hugo_renda').value = hugo.renda || '';
+      }
+
+      const despesas = dadosGlobais.despesas || {};
+      document.getElementById('form_despesas_necessidades').value = despesas.necessidades?.total || '';
+      document.getElementById('form_despesas_avaliar').value = despesas.avaliar?.total || '';
+      document.getElementById('form_despesas_parar').value = despesas.parar?.total || '';
+      document.getElementById('form_despesas_blackcard').value = despesas.black_card?.valor || '';
+
+      const fluxo = dadosGlobais.fluxo_mensal || {};
+      document.getElementById('form_fluxo_entradas').value = fluxo.entradas || '';
+      document.getElementById('form_fluxo_saidas').value = fluxo.saidas || '';
+
+      atualizarListaBlackCard();
+    }
+
+    function renderizarTodas() {
+      renderizarResumo();
+      renderizarDividas();
+      renderizarDespesas();
+      renderizarFluxo();
+      atualizarEditor();
+      preencherFormularios();
+    }
 
     // Load data on page load
     document.addEventListener('DOMContentLoaded', carregarDados);
