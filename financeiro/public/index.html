@@ -1682,6 +1682,7 @@
       renderizarConfiguracoes();
       inicializarDashboardContabil();
       atualizarEditor();
+      preencherFormularios();
     }
 
     function renderizarResumo() {
@@ -3792,15 +3793,6 @@
           step.classList.remove('active', 'completed');
         }
       }
-    }
-
-    function renderizarTodas() {
-      renderizarResumo();
-      renderizarDividas();
-      renderizarDespesas();
-      renderizarFluxo();
-      atualizarEditor();
-      preencherFormularios();
     }
 
     // Load data on page load
