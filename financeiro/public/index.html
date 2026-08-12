@@ -1169,7 +1169,7 @@
               <option value="">Todos</option>
               <option value="Juliane">Juliane</option>
               <option value="Hugo">Hugo</option>
-              <option value="Ambos">Ambos</option>
+              <option value="Familia">Familia</option>
             </select>
           </div>
           <div class="filter-group">
@@ -2361,8 +2361,7 @@
               <th>Mês Ref</th>
               <th>Tipo</th>
               <th>Parcela</th>
-              <th>Entrada</th>
-              <th>Saída</th>
+              <th>Valor</th>
             </tr>
           </thead>
           <tbody>
@@ -2378,13 +2377,13 @@
         // Origem (Cartão ou Conta)
         let origemFormatada = txn.conta_origem || 'N/A';
         if (origemFormatada.toLowerCase().includes('mastercard') || origemFormatada.toLowerCase().includes('cartão')) {
-          origemFormatada = `💳 Mastercard •••• ${origemFormatada.slice(-4)}`;
+          origemFormatada = `Mastercard •••• ${origemFormatada.slice(-4)}`;
         } else if (origemFormatada.toLowerCase().includes('visa')) {
-          origemFormatada = `💳 Visa •••• ${origemFormatada.slice(-4)}`;
+          origemFormatada = `Visa •••• ${origemFormatada.slice(-4)}`;
         } else if (origemFormatada.toLowerCase().includes('elo')) {
-          origemFormatada = `💳 Elo •••• ${origemFormatada.slice(-4)}`;
+          origemFormatada = `Elo •••• ${origemFormatada.slice(-4)}`;
         } else if (origemFormatada.toLowerCase().includes('itau') || origemFormatada.toLowerCase().includes('bradesco')) {
-          origemFormatada = `🏦 ${origemFormatada}`;
+          origemFormatada = `${origemFormatada}`;
         }
 
         // Mês de referência
@@ -2407,8 +2406,7 @@
             <td style="font-size: 12px;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'mes_referencia')" title="Clique para editar">${mesRef}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'parcela')" title="Clique para editar">${parcela}</td>
-            <td class="transaction-value positive transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${entrada ? 'R$ ' + entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
-            <td class="transaction-value negative transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${saida ? 'R$ ' + saida.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
+            <td class="transaction-value ${txn.tipo === 'entrada' ? 'positive' : 'negative'} transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${txn.valor ? (txn.tipo === 'entrada' ? '+' : '-') + ' R$ ' + txn.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>
         `;
       });
@@ -2580,7 +2578,7 @@
                     <option value="">Não definido</option>
                     <option value="Juliane" ${pessoa === 'Juliane' ? 'selected' : ''}>Juliane</option>
                     <option value="Hugo" ${pessoa === 'Hugo' ? 'selected' : ''}>Hugo</option>
-                    <option value="Ambos" ${pessoa === 'Ambos' ? 'selected' : ''}>Ambos</option>
+                    <option value="Familia" ${pessoa === 'Familia' ? 'selected' : ''}>Familia</option>
                   </select>
                 </div>
               </div>
@@ -3645,7 +3643,7 @@
             id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             data: data,
             descricao: descricao,
-            pessoa: classificacao?.pessoa || 'Ambos',
+            pessoa: classificacao?.pessoa || 'Familia',
             tipo: tipo,
             valor: valor,
             categoria: classificacao?.categoria || 'despesa',
@@ -3948,7 +3946,7 @@
             id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             data: formatarDataExcel(dataStr),
             descricao: descricao,
-            pessoa: colMap.pessoa !== undefined ? (row[colMap.pessoa] || classificacao?.pessoa || 'Ambos') : (classificacao?.pessoa || 'Ambos'),
+            pessoa: colMap.pessoa !== undefined ? (row[colMap.pessoa] || classificacao?.pessoa || 'Familia') : (classificacao?.pessoa || 'Familia'),
             tipo: tipo,
             valor: valor,
             categoria: classificacao?.categoria || 'despesa',
