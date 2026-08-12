@@ -1425,8 +1425,22 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script>
+    // Aguardar XLSX carregar
+    let XLSX = window.XLSX || null;
+    let tentativas = 0;
+    const esperarXLSX = setInterval(() => {
+      if (window.XLSX) {
+        XLSX = window.XLSX;
+        clearInterval(esperarXLSX);
+        console.log('✅ XLSX carregado com sucesso');
+      } else if (tentativas++ > 50) {
+        clearInterval(esperarXLSX);
+        console.warn('⚠️ XLSX não carregou do CDN');
+      }
+    }, 50);
+
     let dadosGlobais = {};
     let classificacoesGlobais = {};
 
