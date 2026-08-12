@@ -3244,25 +3244,51 @@
       let headerRowIdx = 0;
       let headerRow = null;
 
-      for (let i = 0; i < Math.min(allRows.length, 30); i++) {
+      for (let i = 0; i < Math.min(allRows.length, 50); i++) {
         const row = allRows[i];
         const keys = Object.keys(row).map(k => k.toLowerCase().trim());
-        const hasDataCol = keys.some(k => k.match(/^data$|date|data_txn|lançamento|lancamento|histórico|história/));
-        const hasValorCol = keys.some(k => k.match(/^valor$|^value$|amount|montante/));
 
-        if (hasDataCol || hasValorCol) {
-          headerRowIdx = i;
-          headerRow = row;
-          break;
+        console.log(`Linha ${i}: colunas = ${keys.join(', ')}`);
+
+        // Critérios mais flexíveis - procura por QUALQUER coluna conhecida
+        const temDataLancamento = keys.some(k => k.match(/data|date|lançamento|lancamento|histórico|história|competência|transacao|transaction/));
+        const temValor = keys.some(k => k.match(/valor|value|amount|montante|débito|debit|crédito|credit/));
+        const temNomeOuPessoa = keys.some(k => k.match(/nome|pessoa|person|responsável|responsavel|titularidade/));
+
+        // Se encontrou Data/Lançamento + Valor, ou Data + Pessoa, ou combos válidos
+        if ((temDataLancamento && temValor) || (temDataLancamento && temNomeOuPessoa) || keys.length >= 5) {
+          // Validação adicional: não deve ter muitas colunas vazias
+          const colNaoVazias = keys.filter(k => k && k.trim().length > 0).length;
+          if (colNaoVazias >= 3) {
+            headerRowIdx = i;
+            headerRow = row;
+            console.log('✓ Headers encontrados na linha ' + i);
+            break;
+          }
         }
       }
 
       if (!headerRow) {
-        console.log('Nenhuma linha de headers encontrada');
+        console.log('Nenhuma linha de headers encontrada após 50 linhas. Usando primeira linha com dados.');
+        // Fallback: usar primeira linha não vazia
+        for (let i = 0; i < allRows.length; i++) {
+          const row = allRows[i];
+          const colNaoVazias = Object.keys(row).filter(k => row[k] && String(row[k]).trim().length > 0).length;
+          if (colNaoVazias >= 2) {
+            headerRowIdx = i;
+            headerRow = row;
+            break;
+          }
+        }
+      }
+
+      if (!headerRow) {
+        console.log('Impossível encontrar headers no arquivo');
         return dados;
       }
 
       console.log('Linha de headers encontrada em:', headerRowIdx);
+      console.log('Colunas disponíveis:', Object.keys(headerRow));
 
       // Auto-detect column names (case-insensitive)
       const colMap = {};
