@@ -2417,12 +2417,12 @@
         // Mês de referência
         const mesRef = txn.mes_referencia || '—';
 
-        // Tipo de gasto
-        const tipoGasto = txn.tipo_gasto || 'Comum';
-        const icone = tipoGasto === 'Fixa' ? '🔒' : tipoGasto === 'Parcelada' ? '📊' : '📌';
+        // Tipo de gasto (baseado em parcelamento)
+        const tipoGasto = txn.eh_parcelada ? 'Parcelada' : 'Comum';
+        const icone = txn.eh_parcelada ? '📊' : '📌';
 
         // Parcela
-        const parcela = txn.parcela ? txn.parcela : (tipoGasto === 'Parcelada' ? 'Editar' : '—');
+        const parcela = txn.descricao_parcela ? txn.descricao_parcela : (txn.eh_parcelada ? 'Editar' : '—');
 
         const cargaIdExibicao = txn.carga_id ? `<span style="font-size: 11px; color: var(--text-secondary);">${txn.carga_id.substring(0, 12)}...</span>` : '<span style="color: var(--text-secondary);">—</span>';
 
@@ -3810,21 +3810,24 @@ function renderizarTiposDespesaConfig() {
       return null;
     }
 
-    function extrairMesReferencia(dataISO) {
-      if (!dataISO) return '—';
+    function extrairInfoParcelamento(parcelamentoStr) {
+      if (!parcelamentoStr) return { eh_parcelada: false, parcela_numero: null, parcela_total: null, descricao_parcela: null };
 
-      // dataISO deve estar em formato YYYY-MM-DD
-      const partes = dataISO.split('-');
-      if (partes.length !== 3) return '—';
+      const str = String(parcelamentoStr).trim().toLowerCase();
+      // Procurar por "Parcela X de Y" ou "Parcel X of Y"
+      const match = str.match(/parcela?\s+(\d+)\s+de\s+(\d+)/i);
+      if (match) {
+        const numero = parseInt(match[1]);
+        const total = parseInt(match[2]);
+        return {
+          eh_parcelada: total > 1,
+          parcela_numero: numero,
+          parcela_total: total,
+          descricao_parcela: `Parcela ${numero} de ${total}`
+        };
+      }
 
-      const ano = partes[0];
-      const mes = parseInt(partes[1]);
-      const anoAbrev = ano.slice(-2);
-
-      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-      const nomeMes = meses[mes - 1] || '—';
-
-      return `${nomeMes}/${anoAbrev}`;
+      return { eh_parcelada: false, parcela_numero: null, parcela_total: null, descricao_parcela: null };
     }
 
     function parseExcel(workbook) {
@@ -3836,6 +3839,30 @@ function renderizarTiposDespesaConfig() {
       // Converter sheet para array de arrays (para ter mais controle)
       const range = XLSX.utils.decode_range(sheet['!ref']);
       console.log('Range do sheet:', sheet['!ref']);
+
+      // Extrair mês de referência da fatura (procurar por "Fatura Aberta - Mês/Ano")
+      let mesReferenciaFatura = '—';
+      for (let rowIdx = 0; rowIdx < Math.min(20, range.e.r + 1); rowIdx++) {
+        const row = [];
+        for (let colIdx = 0; colIdx <= range.e.c; colIdx++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
+          const cell = sheet[cellAddress];
+          const valor = cell ? String(cell.v || '').trim() : '';
+          row.push(valor);
+        }
+        const rowStr = row.join(' ');
+        // Procurar por "Fatura Aberta - Agosto/2026" ou similar
+        const matchFatura = rowStr.match(/Fatura\s+Aberta\s*-\s*(Janeiro|Fevereiro|Fev|Março|Mar|Abril|Abr|Maio|Mai|Junho|Jun|Julho|Jul|Agosto|Ago|Setembro|Set|Outubro|Out|Novembro|Nov|Dezembro|Dez)\/(\d{2,4})/i);
+        if (matchFatura) {
+          const mesNome = matchFatura[1];
+          const ano = matchFatura[2];
+          const mesMap = { 'janeiro': 'Jan', 'jan': 'Jan', 'fevereiro': 'Fev', 'fev': 'Fev', 'março': 'Mar', 'mar': 'Mar', 'abril': 'Abr', 'abr': 'Abr', 'maio': 'Mai', 'mai': 'Mai', 'junho': 'Jun', 'jun': 'Jun', 'julho': 'Jul', 'jul': 'Jul', 'agosto': 'Ago', 'ago': 'Ago', 'setembro': 'Set', 'set': 'Set', 'outubro': 'Out', 'out': 'Out', 'novembro': 'Nov', 'nov': 'Nov', 'dezembro': 'Dez', 'dez': 'Dez' };
+          const mesCurto = mesMap[mesNome.toLowerCase()] || mesNome.substring(0, 3).toUpperCase();
+          mesReferenciaFatura = `${mesCurto}/${ano.slice(-2)}`;
+          console.log('✓ Mês de referência da fatura:', mesReferenciaFatura);
+          break;
+        }
+      }
 
       // Procurar pela linha de headers
       let headerRowIdx = -1;
@@ -3878,13 +3905,14 @@ function renderizarTiposDespesaConfig() {
       const colMap = {};
       headerRow.forEach((col, idx) => {
         if (col.includes('data') || col.includes('competência') || col.includes('competencia')) colMap.data = idx;
-        if (col.includes('lançamento') || col.includes('lancamento') || col.includes('histórico') || col.includes('historia') || col.includes('descricao') || col.includes('descricão') || col.includes('descricão')) colMap.descricao = idx;
+        if (col.includes('lançamento') || col.includes('lancamento') || col.includes('histórico') || col.includes('historia') || col.includes('descricao') || col.includes('descricão') || col.includes('descricção')) colMap.descricao = idx;
         if (col.includes('valor') && !col.includes('parcela')) colMap.valor = idx;
         if (col.includes('débito') || col.includes('debito') || col.includes('saída') || col.includes('saida')) colMap.debito = idx;
         if (col.includes('crédito') || col.includes('credito') || col.includes('entrada')) colMap.credito = idx;
         if (col.includes('tipo')) colMap.tipo = idx;
         if (col.includes('nome') || col.includes('pessoa') || col.includes('titularidade')) colMap.pessoa = idx;
         if (col.includes('cartão') || col.includes('cartao') || col.includes('numero') || col.includes('número')) colMap.conta = idx;
+        if (col.includes('parcelamento') || col.includes('parcela')) colMap.parcelamento = idx;
       });
 
       console.log('Mapa de colunas:', colMap);
@@ -3996,10 +4024,12 @@ function renderizarTiposDespesaConfig() {
 
         if (valor > 0) {
           const dataFormatada = formatarDataExcel(dataStr);
+          const infoParcelamento = colMap.parcelamento !== undefined ? extrairInfoParcelamento(row[colMap.parcelamento]) : { eh_parcelada: false, parcela_numero: null, parcela_total: null, descricao_parcela: null };
+
           const txn = {
             id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             data: dataFormatada,
-            mes_referencia: extrairMesReferencia(dataFormatada),
+            mes_referencia: mesReferenciaFatura,
             descricao: descricao,
             pessoa: colMap.pessoa !== undefined ? (row[colMap.pessoa] || classificacao?.pessoa || 'Familia') : (classificacao?.pessoa || 'Familia'),
             tipo: tipo,
@@ -4007,6 +4037,10 @@ function renderizarTiposDespesaConfig() {
             categoria: classificacao?.categoria || 'despesa',
             conta_origem: colMap.conta !== undefined ? (row[colMap.conta] || classificacao?.cartao || 'Itaú Mastercard Black') : (classificacao?.cartao || 'Itaú Mastercard Black'),
             cartao_origem: colMap.conta !== undefined ? String(row[colMap.conta] || '') : (classificacao?.cartao || ''),
+            eh_parcelada: infoParcelamento.eh_parcelada,
+            parcela_numero: infoParcelamento.parcela_numero,
+            parcela_total: infoParcelamento.parcela_total,
+            descricao_parcela: infoParcelamento.descricao_parcela,
             status: 'confirmado',
             origem: 'importacao'
           };
