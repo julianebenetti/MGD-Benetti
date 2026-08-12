@@ -3466,14 +3466,49 @@
         }
 
         if (dadosImportacao.fluxo_mensal && dadosImportacao.fluxo_mensal.transacoes && dadosImportacao.fluxo_mensal.transacoes.length > 0) {
-          html += `<div class="change-item"><strong>💳 Transações Importadas:</strong> ${dadosImportacao.fluxo_mensal.transacoes.length} transações<br>`;
-          html += '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 10px; max-height: 200px; overflow-y: auto;">';
-          dadosImportacao.fluxo_mensal.transacoes.slice(0, 10).forEach(t => {
+          const txns = dadosImportacao.fluxo_mensal.transacoes;
+          const entradas = txns.filter(t => t.tipo === 'entrada');
+          const saidas = txns.filter(t => t.tipo === 'saida');
+          const totalEntradas = entradas.reduce((sum, t) => sum + t.valor, 0);
+          const totalSaidas = saidas.reduce((sum, t) => sum + t.valor, 0);
+
+          // Calcular range de datas
+          const datas = txns.map(t => t.data).sort();
+          const dataInicio = datas[0];
+          const dataFim = datas[datas.length - 1];
+
+          html += `
+            <div class="change-item" style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+              <strong style="color: #10b981;">✅ ${txns.length} Transações Detectadas</strong>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <div>📥 Entradas: ${entradas.length}</div>
+                  <div style="color: #10b981; font-weight: 600;">R$ ${totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                </div>
+                <div>
+                  <div>📤 Saídas: ${saidas.length}</div>
+                  <div style="color: #ef4444; font-weight: 600;">R$ ${totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                </div>
+              </div>
+              <div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
+                📅 Período: ${dataInicio.split('-').reverse().join('/')} até ${dataFim.split('-').reverse().join('/')}
+              </div>
+            </div>
+          `;
+
+          html += '<div class="change-item"><strong>📋 Primeiras 10 Transações:</strong><br>';
+          html += '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 10px; max-height: 250px; overflow-y: auto;">';
+          txns.slice(0, 10).forEach(t => {
             const dataFormatada = t.data ? t.data.split('-').reverse().join('/') : 'N/A';
-            html += `• ${dataFormatada} - ${t.descricao} (${t.tipo}) - R$ ${t.valor.toLocaleString('pt-BR')}<br>`;
+            const icone = t.tipo === 'entrada' ? '📥' : '📤';
+            const cor = t.tipo === 'entrada' ? '#10b981' : '#ef4444';
+            html += `<div style="padding: 8px; border-left: 3px solid ${cor}; margin-bottom: 5px;">
+              ${icone} ${dataFormatada} - ${t.descricao} - <strong style="color: ${cor};">R$ ${t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong><br>
+              <span style="font-size: 11px; color: #999;">👤 ${t.pessoa} | 💳 ${t.conta_origem}</span>
+            </div>`;
           });
-          if (dadosImportacao.fluxo_mensal.transacoes.length > 10) {
-            html += `<br>... e mais ${dadosImportacao.fluxo_mensal.transacoes.length - 10} transações<br>`;
+          if (txns.length > 10) {
+            html += `<div style="padding: 10px; text-align: center; background-color: var(--bg-secondary); border-radius: 4px;">... e mais ${txns.length - 10} transações</div>`;
           }
           html += '</div></div>';
         }
