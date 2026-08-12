@@ -3352,11 +3352,27 @@
           return isNegative ? -parsed : parsed;
         }
 
+        // Verificar se é cartão de crédito (precisa inverter sinais)
+        const ehCartaoCredito = colMap.tipo !== undefined &&
+          String(row[colMap.tipo] || '').toLowerCase().includes('crédito') ||
+          String(row[colMap.tipo] || '').toLowerCase().includes('credito') ||
+          (colMap.conta !== undefined &&
+            (String(row[colMap.conta] || '').toLowerCase().includes('cartão') ||
+             String(row[colMap.conta] || '').toLowerCase().includes('cartao') ||
+             String(row[colMap.conta] || '').toLowerCase().includes('crédito') ||
+             String(row[colMap.conta] || '').toLowerCase().includes('credito')));
+
         // Obter valor
         if (colMap.valor !== undefined) {
           const valorRaw = row[colMap.valor];
           if (valorRaw) {
-            const valParsed = parseValor(valorRaw);
+            let valParsed = parseValor(valorRaw);
+
+            // Inverter sinais se for cartão de crédito
+            if (ehCartaoCredito) {
+              valParsed = -valParsed;
+            }
+
             if (!isNaN(valParsed)) {
               valor = Math.abs(valParsed);
               tipo = valParsed < 0 ? 'saida' : 'entrada';
