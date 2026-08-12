@@ -2213,16 +2213,17 @@
     function processarArquivo(file) {
       arquivoImportacao = file;
       const reader = new FileReader();
+      const nomeArquivoMinusculo = file.name.toLowerCase();
 
       reader.onload = (e) => {
         try {
           const conteudo = e.target.result;
 
-          if (file.name.endsWith('.json')) {
+          if (nomeArquivoMinusculo.endsWith('.json')) {
             dadosImportacao = JSON.parse(conteudo);
-          } else if (file.name.endsWith('.csv')) {
+          } else if (nomeArquivoMinusculo.endsWith('.csv')) {
             dadosImportacao = parseCSV(conteudo);
-          } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+          } else if (nomeArquivoMinusculo.endsWith('.xlsx') || nomeArquivoMinusculo.endsWith('.xls')) {
             const workbook = XLSX.read(new Uint8Array(conteudo), { type: 'array' });
             dadosImportacao = parseExcel(workbook);
           }
@@ -2234,9 +2235,9 @@
         }
       };
 
-      if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
+      if (nomeArquivoMinusculo.endsWith('.json') || nomeArquivoMinusculo.endsWith('.csv')) {
         reader.readAsText(file);
-      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+      } else if (nomeArquivoMinusculo.endsWith('.xlsx') || nomeArquivoMinusculo.endsWith('.xls')) {
         reader.readAsArrayBuffer(file);
       } else {
         alert('❌ Tipo de arquivo não suportado. Use JSON, CSV, XLS ou XLSX.');
