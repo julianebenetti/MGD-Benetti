@@ -1,3 +1,769 @@
 {
-  "transacoes": []
+  "pessoas": [
+    {
+      "id": "juliane",
+      "nome": "Juliane",
+      "salario": 4500,
+      "combustivel": 250
+    },
+    {
+      "id": "hugo",
+      "nome": "Hugo",
+      "renda": 2050
+    }
+  ],
+  "receitas": {
+    "salario_juliane": 4500,
+    "renda_hugo": 2050,
+    "combustivel_desconto": -250,
+    "total_mensal": 6300
+  },
+  "dividas": [
+    {
+      "id": "consignados_folha",
+      "nome": "Consignados (folha)",
+      "montante": 52084,
+      "parcela_mensal": 1564,
+      "meses_restantes": 33,
+      "status": "ativa",
+      "observacao": "Desconto direto em folha"
+    },
+    {
+      "id": "consignado_cc",
+      "nome": "Consignado C/C",
+      "montante": 28743,
+      "parcela_mensal": 1403,
+      "parcelas_pagas": 28,
+      "parcelas_totais": 60,
+      "status": "ativa",
+      "observacao": "32 parcelas restantes"
+    },
+    {
+      "id": "emprestimo_cenira",
+      "nome": "Empréstimo Cenira",
+      "montante": 23252,
+      "parcela_mensal": 646,
+      "meses_restantes": 36,
+      "status": "ativa",
+      "observacao": "36 parcelas"
+    },
+    {
+      "id": "mastercard_black",
+      "montante": 5692,
+      "parcela_mensal": 950,
+      "meses_restantes": 6,
+      "status": "quitada",
+      "observacao": "Caindo há 3 meses, zera em 3 meses"
+    },
+    {
+      "id": "bradesco_amazon",
+      "nome": "Bradesco Amazon",
+      "montante": 67,
+      "status": "quitada",
+      "observacao": "Praticamente zerado"
+    },
+    {
+      "id": "mercado_pago",
+      "nome": "Mercado Pago",
+      "montante": 11658,
+      "parcelas": 6,
+      "valor_parcela": 1943,
+      "parcelas_pagas": 0,
+      "vencimento": "2026-11-30",
+      "status": "ativa",
+      "observacao": "Vence em nov/2026"
+    }
+  ],
+  "despesas": {
+    "necessidades": {
+      "categoria": "Manter (Necessidades)",
+      "items": [
+        {
+          "nome": "Escola Infantil",
+          "valor": 1500
+        },
+        {
+          "nome": "Dívidas Mínimas",
+          "valor": 1564
+        },
+        {
+          "nome": "Aluguel/Casa",
+          "valor": 1254
+        },
+        {
+          "nome": "Outros Essenciais",
+          "valor": 1200
+        }
+      ],
+      "total": 5518
+    },
+    "avaliar": {
+      "categoria": "Avaliar (Reduzir)",
+      "items": [
+        {
+          "nome": "Alimentação",
+          "valor": 700
+        },
+        {
+          "nome": "Transporte",
+          "valor": 350
+        },
+        {
+          "nome": "Saúde/Farmácia",
+          "valor": 158
+        }
+      ],
+      "total": 1208
+    },
+    "parar": {
+      "categoria": "Parar (Eliminar)",
+      "items": [
+        {
+          "nome": "Assinaturas",
+          "valor": 80
+        },
+        {
+          "nome": "Premium/Serviços",
+          "valor": 86
+        }
+      ],
+      "total": 166
+    },
+    "black_card": {
+      "categoria": "Black Card (Acompanhamento)",
+      "valor": 3334
+    }
+  },
+  "fluxo_mensal": {
+    "mes": "2026-08",
+    "entradas": 6550,
+    "saidas": 10974,
+    "total_entradas": 6550,
+    "total_saidas": 10974,
+    "deficit": -4424,
+    "saldo_anterior": 8898,
+    "saldo_final": 4474,
+    "observacao": "Combustível já descontado das entradas",
+    "transacoes": [
+      {
+        "id": "txn_20260801_001",
+        "data": "2026-08-01",
+        "tipo": "entrada",
+        "descricao": "Salário Juliane",
+        "pessoa": "Juliane",
+        "categoria": "salário",
+        "subcategoria": "salário_fixo",
+        "valor": 4500,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "Banco Itaú",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "salario_juliane_ago2026"
+      },
+      {
+        "id": "txn_20260801_002",
+        "data": "2026-08-01",
+        "tipo": "saida",
+        "descricao": "Aluguel/Casa",
+        "pessoa": "Hugo",
+        "categoria": "necessidade",
+        "subcategoria": "aluguel",
+        "valor": 1254,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "Landlord",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "aluguel_ago2026"
+      },
+      {
+        "id": "txn_20260805_003",
+        "data": "2026-08-05",
+        "tipo": "saida",
+        "descricao": "Consignado (folha)",
+        "pessoa": "Juliane",
+        "categoria": "divida",
+        "subcategoria": "consignado",
+        "valor": 1564,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "Consignado",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "consignado_ago2026"
+      },
+      {
+        "id": "txn_20260810_004",
+        "data": "2026-08-10",
+        "tipo": "entrada",
+        "descricao": "Renda Hugo",
+        "pessoa": "Hugo",
+        "categoria": "renda",
+        "subcategoria": "renda_variavel",
+        "valor": 2050,
+        "conta_origem": "PIX",
+        "conta_destino": "Banco Itaú",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "renda_hugo_ago2026"
+      },
+      {
+        "id": "txn_20260815_005",
+        "data": "2026-08-15",
+        "tipo": "saida",
+        "descricao": "Black Card",
+        "pessoa": "Juliane",
+        "categoria": "despesa",
+        "subcategoria": "cartao_credito",
+        "valor": 3334,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "Mastercard Black",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "blackcard_ago2026"
+      },
+      {
+        "id": "txn_20260820_006",
+        "data": "2026-08-20",
+        "tipo": "saida",
+        "descricao": "PIX Benetti (Pessoal)",
+        "pessoa": "Juliane",
+        "categoria": "pessoal",
+        "subcategoria": "transferencia",
+        "valor": 200,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "PIX",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "pix_benetti_ago2026"
+      },
+      {
+        "id": "txn_20260825_007",
+        "data": "2026-08-25",
+        "tipo": "saida",
+        "descricao": "Mercado Pago",
+        "pessoa": "Hugo",
+        "categoria": "divida",
+        "subcategoria": "parcelamento",
+        "valor": 1943,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "Mercado Pago",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "mercadopago_ago2026"
+      },
+      {
+        "id": "txn_20260827_008",
+        "data": "2026-08-27",
+        "tipo": "saida",
+        "descricao": "Farmácia",
+        "pessoa": "Ambos",
+        "categoria": "despesa",
+        "subcategoria": "saude",
+        "valor": 120,
+        "conta_origem": "Banco Itaú",
+        "conta_destino": "Farmácia",
+        "status": "confirmado",
+        "origem": "manual",
+        "hash": "farmacia_ago2026"
+      },
+      {
+        "id": "txn_1786513640440_dgsrmabkp",
+        "data": "2026-08-01",
+        "tipo": "entrada",
+        "descricao": "REMUNERACAO/SALARIO",
+        "valor": 4500,
+        "pessoa": "Ambos",
+        "categoria": "entrada",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640441_0",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640441_34ugziiyd",
+        "data": "2026-08-03",
+        "tipo": "saida",
+        "descricao": "DONA TEREZINHA",
+        "valor": -45.5,
+        "pessoa": "Juliane",
+        "categoria": "alimentacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640441_1",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640441_wpuk7ykbw",
+        "data": "2026-08-05",
+        "tipo": "saida",
+        "descricao": "SAVEGNAGO",
+        "valor": -120.75,
+        "pessoa": "Hugo",
+        "categoria": "alimentacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640441_2",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640441_yw0zz61vm",
+        "data": "2026-08-06",
+        "tipo": "saida",
+        "descricao": "COMBUSTIVEL/POSTO",
+        "valor": -80,
+        "pessoa": "Hugo",
+        "categoria": "transporte",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640441_3",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640441_k90eptf75",
+        "data": "2026-08-07",
+        "tipo": "saida",
+        "descricao": "APPLE.COM/BILL",
+        "valor": -60,
+        "pessoa": "Juliane",
+        "categoria": "assinatura",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640442_4",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640442_9b37fx1f8",
+        "data": "2026-08-08",
+        "tipo": "saida",
+        "descricao": "ELEKTRO ENERGIA",
+        "valor": -125.3,
+        "pessoa": "Juliane",
+        "categoria": "utilidades",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640442_5",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640443_vq4ab3gw3",
+        "data": "2026-08-10",
+        "tipo": "saida",
+        "descricao": "99APP UBER",
+        "valor": -35.4,
+        "pessoa": "Juliane",
+        "categoria": "transporte",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640443_6",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640443_50fkn5ypo",
+        "data": "2026-08-11",
+        "tipo": "saida",
+        "descricao": "PADARIA KI JOIA",
+        "valor": -25.5,
+        "pessoa": "Ambos",
+        "categoria": "alimentacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640443_7",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640443_0d52yjamf",
+        "data": "2026-08-12",
+        "tipo": "saida",
+        "descricao": "ESCOLA INFANTIL VALENTINA",
+        "valor": -1500,
+        "pessoa": "Ambos",
+        "categoria": "educacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640443_8",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640443_38y16nb4j",
+        "data": "2026-08-13",
+        "tipo": "saida",
+        "descricao": "SPOTIFY MUSIC",
+        "valor": -24.9,
+        "pessoa": "Juliane",
+        "categoria": "lazer",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640443_9",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640443_o8ccvgtrp",
+        "data": "2026-08-14",
+        "tipo": "saida",
+        "descricao": "GOOGLE ONE",
+        "valor": -13,
+        "pessoa": "Juliane",
+        "categoria": "assinatura",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640443_10",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_z4ueb6zjn",
+        "data": "2026-08-15",
+        "tipo": "saida",
+        "descricao": "MERCADO SUPER JL",
+        "valor": -180,
+        "pessoa": "Ambos",
+        "categoria": "alimentacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_11",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_09iy6vg10",
+        "data": "2026-08-16",
+        "tipo": "saida",
+        "descricao": "RESTAURANTE MARCIA",
+        "valor": -95,
+        "pessoa": "Ambos",
+        "categoria": "alimentacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_12",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_ptj1zc5qe",
+        "data": "2026-08-17",
+        "tipo": "saida",
+        "descricao": "FARMACIA DROGAL",
+        "valor": -58.75,
+        "pessoa": "Ambos",
+        "categoria": "saude",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_13",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_qizocgdas",
+        "data": "2026-08-18",
+        "tipo": "saida",
+        "descricao": "KIWIFY MGD MENTORI",
+        "valor": -615,
+        "pessoa": "Juliane",
+        "categoria": "educacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_14",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_cg5sjz7y3",
+        "data": "2026-08-19",
+        "tipo": "saida",
+        "descricao": "MAGALU LOJA",
+        "valor": -250,
+        "pessoa": "Juliane",
+        "categoria": "pessoal",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_15",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_t4wunpxzh",
+        "data": "2026-08-20",
+        "tipo": "saida",
+        "descricao": "UBER RIDE",
+        "valor": -45,
+        "pessoa": "Ambos",
+        "categoria": "transporte",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_16",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_ez7f65ax8",
+        "data": "2026-08-21",
+        "tipo": "saida",
+        "descricao": "TOKIO MARINE SEGURO",
+        "valor": -286,
+        "pessoa": "Hugo",
+        "categoria": "transporte",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_17",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_nwayjh868",
+        "data": "2026-08-22",
+        "tipo": "saida",
+        "descricao": "PIX TRANSF GUILHERME",
+        "valor": -200,
+        "pessoa": "Ambos",
+        "categoria": "educacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_18",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_bawxppa8s",
+        "data": "2026-08-23",
+        "tipo": "saida",
+        "descricao": "CONDOMINIO PREDIO",
+        "valor": -623,
+        "pessoa": "Ambos",
+        "categoria": "moradia",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_19",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_x64c3e160",
+        "data": "2026-08-24",
+        "tipo": "saida",
+        "descricao": "SANASA AGUA",
+        "valor": -95.5,
+        "pessoa": "Ambos",
+        "categoria": "utilidades",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640444_20",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640444_4kkhoctpo",
+        "data": "2026-08-25",
+        "tipo": "saida",
+        "descricao": "CLARO INTERNET",
+        "valor": -99.9,
+        "pessoa": "Ambos",
+        "categoria": "utilidades",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_21",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640445_f1yuxotee",
+        "data": "2026-08-26",
+        "tipo": "saida",
+        "descricao": "PIX TRANSF IGREJA",
+        "valor": -50,
+        "pessoa": "Ambos",
+        "categoria": "doacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_22",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640445_rkwj9n5ks",
+        "data": "2026-08-27",
+        "tipo": "saida",
+        "descricao": "ORTODONTIA LUCA MP",
+        "valor": -250,
+        "pessoa": "Ambos",
+        "categoria": "saude",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_23",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640445_5zfa72qtk",
+        "data": "2026-08-28",
+        "tipo": "saida",
+        "descricao": "UNIAO SOCORRO ROUPAS",
+        "valor": -166,
+        "pessoa": "Juliane",
+        "categoria": "pessoal",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_24",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640445_dmk3ko4z4",
+        "data": "2026-08-29",
+        "tipo": "saida",
+        "descricao": "DECATHLON ESPORTES",
+        "valor": -185,
+        "pessoa": "Ambos",
+        "categoria": "lazer",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_25",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640445_uwnnbdg9t",
+        "data": "2026-08-30",
+        "tipo": "saida",
+        "descricao": "SUPERMERCADOS JL",
+        "valor": -155,
+        "pessoa": "Hugo",
+        "categoria": "alimentacao",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_26",
+        "mes_referencia": "Ago/26"
+      },
+      {
+        "id": "txn_1786513640445_0dye56w3i",
+        "data": "2026-08-31",
+        "tipo": "saida",
+        "descricao": "COMBUSTIVEL ANDRADE",
+        "valor": -85,
+        "pessoa": "Hugo",
+        "categoria": "transporte",
+        "conta_origem": "Cartão de Crédito",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "importacao",
+        "hash": "cc_1786513640445_27",
+        "mes_referencia": "Ago/26"
+      }
+    ]
+  },
+  "cenarios_futuros": [
+    {
+      "mes": "2026-11",
+      "evento": "Mercado Pago termina (última parcela)",
+      "impacto": "Libera R$ 1.943/mês"
+    },
+    {
+      "mes": "2026-12",
+      "evento": "13º + PLR (estimado)",
+      "impacto": "Libera R$ 8.725 (elimina Consignado C/C)"
+    },
+    {
+      "mes": "2027-01",
+      "evento": "Consignado C/C zera",
+      "impacto": "Libera R$ 1.403/mês para déficit"
+    },
+    {
+      "mes": "2027-02",
+      "evento": "Cenira zera",
+      "impacto": "Libera R$ 646/mês, déficit melhora para -R$ 2.625"
+    }
+  ],
+  "historico_black_card": [
+    {
+      "mes": "2026-01",
+      "saldo": 10000
+    },
+    {
+      "mes": "2026-02",
+      "saldo": 9500
+    },
+    {
+      "mes": "2026-03",
+      "saldo": 8800
+    },
+    {
+      "mes": "2026-04",
+      "saldo": 7800
+    },
+    {
+      "mes": "2026-05",
+      "saldo": 6800
+    },
+    {
+      "mes": "2026-06",
+      "saldo": 5692
+    },
+    {
+      "mes": "2026-07",
+      "saldo": 4742
+    },
+    {
+      "mes": "2026-08",
+      "saldo": 3792
+    },
+    {
+      "mes": "2026-09",
+      "saldo": 2842
+    },
+    {
+      "mes": "2026-10",
+      "saldo": 1892
+    },
+    {
+      "mes": "2026-11",
+      "saldo": 942
+    },
+    {
+      "mes": "2026-12",
+      "saldo": 0
+    }
+  ],
+  "regras_ouro": [
+    "Não criar novos parcelamentos",
+    "Prioridade: eliminar Consignado C/C com 13º/PLR",
+    "Manter despesas necessárias (escola, casa, dívidas mínimas)",
+    "Reduzir despesas discricionárias (alimentação, transporte, saúde)",
+    "Eliminar assinaturas e serviços premium"
+  ]
 }
