@@ -3244,28 +3244,37 @@
 
       Object.keys(firstRow).forEach(key => {
         const keyLower = key.toLowerCase().trim();
-        if (keyLower.match(/data|date|data_txn|data_transacao|competência|período/)) {
+
+        // Detecção de Data
+        if (keyLower.match(/^data$|date|data_txn|data_transacao|competência|período/)) {
           colMap.data = key;
         }
-        if (keyLower.match(/descric|description|desc|transacao|transaction|histórico|história/)) {
+        // Detecção de Descrição (Lançamento é do Itaú)
+        if (keyLower.match(/descric|description|desc|transacao|transaction|histórico|história|lançamento|lancamento/)) {
           colMap.descricao = key;
         }
-        if (keyLower.match(/valor|value|amount|montante|crédito|débito|debit|credit/)) {
+        // Detecção de Valor (genérico)
+        if (keyLower.match(/^valor$|^value$|amount|montante/) && !keyLower.match(/parcela/)) {
           colMap.valor = key;
         }
-        if (keyLower.match(/^debito|debit|saída|withdrawal|out/)) {
+        // Detecção de Débito específico
+        if (keyLower.match(/^debito$|^debit$|^saída$|withdrawal|^out$/)) {
           colMap.debito = key;
         }
-        if (keyLower.match(/^credito|credit|entrada|depósito|deposit|in/)) {
+        // Detecção de Crédito específico
+        if (keyLower.match(/^credito$|^credit$|^entrada$|depósito|deposit|^in$/)) {
           colMap.credito = key;
         }
-        if (keyLower.match(/tipo|type|natureza|categoria|category/)) {
+        // Detecção de Tipo
+        if (keyLower.match(/^tipo|^type|natureza|categoria|category|tipo do cartão|tipo do cartao/)) {
           colMap.tipo = key;
         }
-        if (keyLower.match(/pessoa|person|responsavel|responsible/)) {
+        // Detecção de Pessoa (Nome é do Itaú)
+        if (keyLower.match(/pessoa|person|responsavel|responsible|^nome$|name/)) {
           colMap.pessoa = key;
         }
-        if (keyLower.match(/conta|account|banco|bank/)) {
+        // Detecção de Conta/Cartão
+        if (keyLower.match(/conta|account|banco|bank|cartão|cartao|numero|number/)) {
           colMap.conta = key;
         }
       });
@@ -3286,33 +3295,44 @@
 
         let valor = 0;
         let tipo = 'saida';
+        let valorOriginal = '';
 
-        // Tentar obter valor
+        // Tentar obter valor (com tratamento para formato Itaú)
         if (colMap.valor) {
-          const valStr = String(row[colMap.valor] || '0').replace(/[^\d.,\-]/g, '').replace(',', '.');
-          valor = Math.abs(parseFloat(valStr)) || 0;
-        }
+          valorOriginal = String(row[colMap.valor] || '0').trim();
+          // Remover R$ e espaços
+          let valStr = valorOriginal.replace(/R\$|\.| /g, '').replace(',', '.');
+          const valParsed = parseFloat(valStr);
 
-        // Tentar debito/credito
-        if (colMap.debito && row[colMap.debito]) {
-          const debStr = String(row[colMap.debito] || '0').replace(/[^\d.,\-]/g, '').replace(',', '.');
-          const debValor = parseFloat(debStr) || 0;
-          if (debValor !== 0) {
-            valor = Math.abs(debValor);
-            tipo = 'saida';
+          if (!isNaN(valParsed)) {
+            valor = Math.abs(valParsed);
+            // Se o valor original é negativo, é saída; se positivo, é entrada
+            tipo = valParsed < 0 ? 'saida' : 'entrada';
           }
         }
 
-        if (colMap.credito && row[colMap.credito]) {
-          const credStr = String(row[colMap.credito] || '0').replace(/[^\d.,\-]/g, '').replace(',', '.');
-          const credValor = parseFloat(credStr) || 0;
-          if (credValor !== 0) {
-            valor = Math.abs(credValor);
-            tipo = 'entrada';
+        // Tentar debito/credito como fallback
+        if (valor === 0) {
+          if (colMap.debito && row[colMap.debito]) {
+            const debStr = String(row[colMap.debito] || '0').replace(/R\$|\.| /g, '').replace(',', '.');
+            const debValor = parseFloat(debStr) || 0;
+            if (debValor !== 0) {
+              valor = Math.abs(debValor);
+              tipo = 'saida';
+            }
+          }
+
+          if (colMap.credito && row[colMap.credito]) {
+            const credStr = String(row[colMap.credito] || '0').replace(/R\$|\.| /g, '').replace(',', '.');
+            const credValor = parseFloat(credStr) || 0;
+            if (credValor !== 0) {
+              valor = Math.abs(credValor);
+              tipo = 'entrada';
+            }
           }
         }
 
-        // Aplicar lógica de tipo
+        // Aplicar lógica de tipo se houver coluna específica
         if (colMap.tipo && row[colMap.tipo]) {
           const tipoStr = String(row[colMap.tipo]).toLowerCase();
           tipo = tipoStr.match(/entrada|credito|depósito|deposit/) ? 'entrada' : 'saida';
@@ -3326,9 +3346,9 @@
             pessoa: colMap.pessoa ? (row[colMap.pessoa] || classificacao?.pessoa || 'Ambos') : (classificacao?.pessoa || 'Ambos'),
             tipo: tipo,
             valor: valor,
-            categoria: colMap.tipo ? (row[colMap.tipo] || classificacao?.categoria || 'despesa') : (classificacao?.categoria || 'despesa'),
-            conta_origem: colMap.conta ? (row[colMap.conta] || classificacao?.cartao || 'Banco Itaú') : (classificacao?.cartao || 'Banco Itaú'),
-            cartao_origem: classificacao?.cartao || '',
+            categoria: classificacao?.categoria || 'despesa',
+            conta_origem: colMap.conta ? (row[colMap.conta] || classificacao?.cartao || 'Itaú Mastercard Black') : (classificacao?.cartao || 'Itaú Mastercard Black'),
+            cartao_origem: colMap.conta ? row[colMap.conta] : (classificacao?.cartao || ''),
             status: 'confirmado',
             origem: 'importacao'
           };
