@@ -3283,8 +3283,6 @@
       console.log('Primeira linha:', firstRow);
 
       rows.forEach((row, idx) => {
-        if (idx === 0) return;
-
         const dataStr = colMap.data ? row[colMap.data] : '';
         if (!dataStr) return;
 
