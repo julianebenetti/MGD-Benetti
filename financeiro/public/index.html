@@ -1202,6 +1202,47 @@
           </div>
         </div>
 
+        <div class="filters-row">
+          <div class="filter-group">
+            <label class="filter-label">Origem</label>
+            <select id="filter_origem" class="filter-input">
+              <option value="">Todas</option>
+              <option value="mastercard">💳 Mastercard</option>
+              <option value="visa">💳 Visa</option>
+              <option value="elo">💳 Elo</option>
+              <option value="itau">🏦 Itaú</option>
+              <option value="bradesco">🏦 Bradesco</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Mês Ref</label>
+            <select id="filter_mes_ref" class="filter-input">
+              <option value="">Todos</option>
+              <option value="Jan/26">Jan/26</option>
+              <option value="Fev/26">Fev/26</option>
+              <option value="Mar/26">Mar/26</option>
+              <option value="Abr/26">Abr/26</option>
+              <option value="Mai/26">Mai/26</option>
+              <option value="Jun/26">Jun/26</option>
+              <option value="Jul/26">Jul/26</option>
+              <option value="Ago/26">Ago/26</option>
+              <option value="Set/26">Set/26</option>
+              <option value="Out/26">Out/26</option>
+              <option value="Nov/26">Nov/26</option>
+              <option value="Dez/26">Dez/26</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Tipo Gasto</label>
+            <select id="filter_tipo_gasto" class="filter-input">
+              <option value="">Todos</option>
+              <option value="Fixa">🔒 Fixa</option>
+              <option value="Parcelada">📊 Parcelada</option>
+              <option value="Comum">📌 Comum</option>
+            </select>
+          </div>
+        </div>
+
         <div class="filter-actions">
           <button class="btn-primary btn-small" onclick="aplicarFiltros()">🔍 Filtrar</button>
           <button class="btn-secondary btn-small" onclick="limparFiltros()">❌ Limpar</button>
@@ -2216,6 +2257,9 @@
       const categoria = document.getElementById('filter_categoria').value;
       const status = document.getElementById('filter_status').value;
       const busca = document.getElementById('filter_busca').value.toLowerCase();
+      const origem = document.getElementById('filter_origem').value.toLowerCase();
+      const mesRef = document.getElementById('filter_mes_ref').value;
+      const tipoGasto = document.getElementById('filter_tipo_gasto').value;
 
       transacoesFiltradas = transacoes.filter(txn => {
         if (dataInicio && txn.data < dataInicio) return false;
@@ -2226,6 +2270,26 @@
         if (categoria && txn.categoria !== categoria) return false;
         if (status && txn.status !== status) return false;
         if (busca && !txn.descricao.toLowerCase().includes(busca)) return false;
+
+        // Filtro de origem
+        if (origem) {
+          const contaOrigemLower = (txn.conta_origem || '').toLowerCase();
+          if (!contaOrigemLower.includes(origem)) return false;
+        }
+
+        // Filtro de mês de referência
+        if (mesRef) {
+          const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+          const [ano, mes, dia] = txn.data.split('-');
+          const mesNum = parseInt(mes) - 1;
+          const ano2digitos = ano.slice(-2);
+          const txnMesRef = `${meses[mesNum].charAt(0).toUpperCase() + meses[mesNum].slice(1)}/${ano2digitos}`;
+          if (txnMesRef !== mesRef) return false;
+        }
+
+        // Filtro de tipo de gasto
+        if (tipoGasto && (txn.tipo_gasto || 'Comum') !== tipoGasto) return false;
+
         return true;
       });
 
@@ -2242,6 +2306,9 @@
       document.getElementById('filter_categoria').value = '';
       document.getElementById('filter_status').value = '';
       document.getElementById('filter_busca').value = '';
+      document.getElementById('filter_origem').value = '';
+      document.getElementById('filter_mes_ref').value = '';
+      document.getElementById('filter_tipo_gasto').value = '';
 
       renderizarExtratoFluxo();
     }
@@ -2271,8 +2338,10 @@
               <th>Data</th>
               <th>Descrição</th>
               <th>Pessoa</th>
-              <th>Conta</th>
+              <th>Origem</th>
               <th>Categoria</th>
+              <th>Mês Ref</th>
+              <th>Tipo</th>
               <th>Entrada</th>
               <th>Saída</th>
             </tr>
@@ -2286,13 +2355,37 @@
         const entrada = txn.tipo === 'entrada' ? txn.valor : '';
         const saida = txn.tipo === 'saida' ? txn.valor : '';
 
+        // Origem (Cartão ou Conta)
+        let origem = txn.conta_origem || 'N/A';
+        if (origem.toLowerCase().includes('mastercard') || origem.toLowerCase().includes('cartão')) {
+          origem = `💳 Mastercard •••• ${origem.slice(-4)}`;
+        } else if (origem.toLowerCase().includes('visa')) {
+          origem = `💳 Visa •••• ${origem.slice(-4)}`;
+        } else if (origem.toLowerCase().includes('elo')) {
+          origem = `💳 Elo •••• ${origem.slice(-4)}`;
+        } else if (origem.toLowerCase().includes('itau') || origem.toLowerCase().includes('bradesco')) {
+          origem = `🏦 ${origem}`;
+        }
+
+        // Mês de referência (Ago/26)
+        const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const mesNum = parseInt(mes) - 1;
+        const ano2digitos = ano.slice(-2);
+        const mesRef = `${meses[mesNum]}/${ano2digitos}`;
+
+        // Tipo de gasto
+        const tipoGasto = txn.tipo_gasto || 'Comum';
+        const icone = tipoGasto === 'Fixa' ? '🔒' : tipoGasto === 'Parcelada' ? '📊' : '📌';
+
         html += `
           <tr>
             <td class="transaction-date">${dataFormatada}</td>
             <td class="transaction-description">${txn.descricao}</td>
             <td><span class="transaction-person">${txn.pessoa}</span></td>
-            <td class="transaction-account">${txn.conta_origem}</td>
+            <td class="transaction-account">${origem}</td>
             <td><span class="transaction-category">${txn.categoria}</span></td>
+            <td style="font-size: 12px; color: var(--text-secondary);">${mesRef}</td>
+            <td style="font-size: 12px; text-align: center;">${icone} ${tipoGasto}</td>
             <td class="transaction-value positive">${entrada ? 'R$ ' + entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
             <td class="transaction-value negative">${saida ? 'R$ ' + saida.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>
