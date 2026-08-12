@@ -1,0 +1,85 @@
+╔════════════════════════════════════════════════════════════╗
+║                                                            ║
+║     CONVERSOR XLS/XLSX PARA CSV - GUIA DE INSTALAÇÃO      ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+PASSO 1 - É SÓ UM CLIQUE!
+═══════════════════════════════════════════════════════════
+
+👉 Clique com botão DIREITO no arquivo: install.bat
+
+👉 Selecione: "Executar como administrador"
+
+👉 Clique em: SIM (quando pedir permissão)
+
+
+PASSO 2 - DEIXE TERMINAR
+═══════════════════════════════════════════════════════════
+
+Uma janela preta vai aparecer fazendo:
+  ✓ Verificando Python
+  ✓ Instalando Python (se precisar)
+  ✓ Instalando programas necessários
+  ✓ Testando tudo
+
+Pode levar 2-3 minutos. SÓ AGUARDE!
+
+
+PASSO 3 - PRONTO!
+═══════════════════════════════════════════════════════════
+
+Quando terminar, você vai ver:
+
+    ✓ INSTALAÇÃO COMPLETA!
+
+Agora tudo está pronto para usar.
+
+
+PRÓXIMA VEZ - É MUITO MAIS RÁPIDO!
+═══════════════════════════════════════════════════════════
+
+Não precisa mais instalar nada. Toda vez que quiser converter:
+
+👉 Clique DUPLO em: converter.bat
+
+Pronto! Os arquivos CSV aparecem sozinhos.
+
+
+ONDE OS ARQUIVOS APARECEM?
+═══════════════════════════════════════════════════════════
+
+Os CSVs aparecem AQUI:
+
+  C:\Users\Juliane\OneDrive\Documentos\Itaú\
+
+Junto com os arquivos Excel originais.
+
+
+❓ DÚVIDAS?
+═══════════════════════════════════════════════════════════
+
+P: Deu erro na instalação?
+R: Clique com botão direito em install.bat e execute como administrador
+
+P: Quanto tempo leva?
+R: Primeira vez: 2-3 minutos (instala Python)
+   Próximas vezes: 30 segundos (só converte)
+
+P: Os arquivos Excel são deletados?
+R: NÃO! Os CSVs são criados como novos arquivos.
+   Os Excel continuam lá.
+
+P: Posso usar em outro computador?
+R: Sim! Copie os arquivos e execute install.bat novamente.
+
+
+═══════════════════════════════════════════════════════════
+
+👍 VAMOS LÁ?
+
+Clique com botão direito em: install.bat
+Selecione: "Executar como administrador"
+Aguarde terminar!
+
+═══════════════════════════════════════════════════════════
