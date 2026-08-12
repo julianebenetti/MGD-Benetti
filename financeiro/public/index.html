@@ -1975,6 +1975,7 @@
 
       dividas.forEach(divida => {
         const classificacao = divida.classificacao || 'sem_classificacao';
+        const pessoa = divida.pessoa || '';
         const opcoes = ['fixa', 'parcelada', 'sem_classificacao'];
         const ativecores = {
           'fixa': '#10b981',
@@ -1990,11 +1991,24 @@
         html += `
           <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-              <div>
+              <div style="flex: 1;">
                 <div style="font-weight: 600; margin-bottom: 5px;">${divida.nome}</div>
-                <div style="font-size: 13px; color: var(--text-secondary);">
+                <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
                   Montante: R$ ${divida.montante ? divida.montante.toLocaleString('pt-BR') : '-'}
                   ${divida.parcela_mensal ? `| Parcela: R$ ${divida.parcela_mensal.toLocaleString('pt-BR')}` : ''}
+                </div>
+                <div style="font-size: 12px; margin-bottom: 10px;">
+                  <label style="color: var(--text-secondary); margin-right: 8px;">👤 Pessoa:</label>
+                  <select
+                    id="pessoa_divida_${divida.id}"
+                    class="filter-input"
+                    style="padding: 6px; font-size: 12px; width: 150px;"
+                    onchange="atualizarPessoaDivida('${divida.id}', this.value)">
+                    <option value="">Não definido</option>
+                    <option value="Juliane" ${pessoa === 'Juliane' ? 'selected' : ''}>Juliane</option>
+                    <option value="Hugo" ${pessoa === 'Hugo' ? 'selected' : ''}>Hugo</option>
+                    <option value="Ambos" ${pessoa === 'Ambos' ? 'selected' : ''}>Ambos</option>
+                  </select>
                 </div>
               </div>
               <span style="padding: 4px 10px; background-color: rgba(${classificacao === 'fixa' ? '16, 185, 129' : classificacao === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.2); border-radius: 4px; color: ${ativecores[classificacao]}; font-size: 12px; font-weight: 600;">
@@ -2047,15 +2061,29 @@
         dados.items.forEach((item, idx) => {
           const chaveUnica = `${categoria}_${idx}`;
           const classificacao = item.classificacao || 'sem_classificacao';
+          const pessoa = item.pessoa || '';
           const opcoes = ['fixa', 'parcelada', 'sem_classificacao'];
 
           html += `
             <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                <div>
+                <div style="flex: 1;">
                   <div style="font-weight: 600; margin-bottom: 5px;">${item.nome}</div>
-                  <div style="font-size: 13px; color: var(--text-secondary);">
+                  <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
                     Categoria: ${dados.categoria} | Valor: R$ ${item.valor.toLocaleString('pt-BR')}
+                  </div>
+                  <div style="font-size: 12px; margin-bottom: 10px;">
+                    <label style="color: var(--text-secondary); margin-right: 8px;">👤 Pessoa:</label>
+                    <select
+                      id="pessoa_despesa_${categoria}_${idx}"
+                      class="filter-input"
+                      style="padding: 6px; font-size: 12px; width: 150px;"
+                      onchange="atualizarPessoaDespesa('${categoria}', ${idx}, this.value)">
+                      <option value="">Não definido</option>
+                      <option value="Juliane" ${pessoa === 'Juliane' ? 'selected' : ''}>Juliane</option>
+                      <option value="Hugo" ${pessoa === 'Hugo' ? 'selected' : ''}>Hugo</option>
+                      <option value="Ambos" ${pessoa === 'Ambos' ? 'selected' : ''}>Ambos</option>
+                    </select>
                   </div>
                 </div>
                 <span style="padding: 4px 10px; background-color: rgba(${classificacao === 'fixa' ? '16, 185, 129' : classificacao === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.2); border-radius: 4px; color: ${ativecores[classificacao]}; font-size: 12px; font-weight: 600;">
@@ -2168,6 +2196,24 @@
       const despesa = dadosGlobais.despesas[categoria];
       if (despesa && despesa.items && despesa.items[indice]) {
         despesa.items[indice].classificacao = classificacao;
+        salvarDadosAutomatico();
+        renderizarClassificacao();
+      }
+    }
+
+    function atualizarPessoaDivida(divId, pessoa) {
+      const divida = dadosGlobais.dividas.find(d => d.id === divId);
+      if (divida) {
+        divida.pessoa = pessoa;
+        salvarDadosAutomatico();
+        renderizarClassificacao();
+      }
+    }
+
+    function atualizarPessoaDespesa(categoria, indice, pessoa) {
+      const despesa = dadosGlobais.despesas[categoria];
+      if (despesa && despesa.items && despesa.items[indice]) {
+        despesa.items[indice].pessoa = pessoa;
         salvarDadosAutomatico();
         renderizarClassificacao();
       }
