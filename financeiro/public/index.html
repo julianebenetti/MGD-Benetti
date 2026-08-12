@@ -3288,49 +3288,6 @@
 
       console.log('Mapa de colunas:', colMap);
 
-      // Auto-detect column names (case-insensitive)
-      const colMap = {};
-
-      Object.keys(headerRow).forEach(key => {
-        const keyLower = key.toLowerCase().trim();
-
-        // Detecção de Data
-        if (keyLower.match(/^data$|date|data_txn|data_transacao|competência|período/)) {
-          colMap.data = key;
-        }
-        // Detecção de Descrição (Lançamento é do Itaú)
-        if (keyLower.match(/descric|description|desc|transacao|transaction|histórico|história|lançamento|lancamento/)) {
-          colMap.descricao = key;
-        }
-        // Detecção de Valor (genérico)
-        if (keyLower.match(/^valor$|^value$|amount|montante/) && !keyLower.match(/parcela/)) {
-          colMap.valor = key;
-        }
-        // Detecção de Débito específico
-        if (keyLower.match(/^debito$|^debit$|^saída$|withdrawal|^out$/)) {
-          colMap.debito = key;
-        }
-        // Detecção de Crédito específico
-        if (keyLower.match(/^credito$|^credit$|^entrada$|depósito|deposit|^in$/)) {
-          colMap.credito = key;
-        }
-        // Detecção de Tipo
-        if (keyLower.match(/^tipo|^type|natureza|categoria|category|tipo do cartão|tipo do cartao/)) {
-          colMap.tipo = key;
-        }
-        // Detecção de Pessoa (Nome é do Itaú)
-        if (keyLower.match(/pessoa|person|responsavel|responsible|^nome$|name/)) {
-          colMap.pessoa = key;
-        }
-        // Detecção de Conta/Cartão
-        if (keyLower.match(/conta|account|banco|bank|cartão|cartao|numero|number/)) {
-          colMap.conta = key;
-        }
-      });
-
-      console.log('Colunas detectadas:', colMap);
-      console.log('Linha de headers:', headerRow);
-
       // Processar linhas de dados
       for (let rowIdx = headerRowIdx + 1; rowIdx <= range.e.r; rowIdx++) {
         const row = [];
