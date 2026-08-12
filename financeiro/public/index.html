@@ -3239,15 +3239,119 @@
       return dados;
     }
 
+    let classificacaoParsed = {
+      inicializado: false,
+      descricaoPorCategoria: {},
+      descricaoPorPessoa: {},
+      todosMerchants: []
+    };
+
+    function inicializarClassificacao() {
+      if (classificacaoParsed.inicializado) return;
+      if (!classificacoesGlobais || !classificacoesGlobais.descricoes_conhecidas) return;
+
+      classificacaoParsed = {
+        inicializado: true,
+        descricaoPorCategoria: {},
+        descricaoPorPessoa: {},
+        todosMerchants: []
+      };
+
+      for (const [descricaoChave, classif] of Object.entries(classificacoesGlobais.descricoes_conhecidas)) {
+        const upper = descricaoChave.toUpperCase();
+        if (!classificacaoParsed.descricaoPorCategoria[classif.categoria]) {
+          classificacaoParsed.descricaoPorCategoria[classif.categoria] = [];
+        }
+        classificacaoParsed.descricaoPorCategoria[classif.categoria].push({ key: upper, data: classif });
+        if (!classificacaoParsed.descricaoPorPessoa[classif.pessoa]) {
+          classificacaoParsed.descricaoPorPessoa[classif.pessoa] = [];
+        }
+        classificacaoParsed.descricaoPorPessoa[classif.pessoa].push({ key: upper, data: classif });
+        classificacaoParsed.todosMerchants.push({ key: upper, categoria: classif.categoria, pessoa: classif.pessoa, data: classif });
+      }
+    }
+
+    function mapCategoriaToTipoDespesa(categoria) {
+      const mapa = {
+        'alimentacao': 'alimentacao', 'transporte': 'transporte', 'casa': 'moradia', 'moradia': 'moradia',
+        'utilidades': 'utilidades', 'escola': 'educacao', 'educacao': 'educacao', 'saude': 'saude',
+        'negocio': 'outros', 'assinatura': 'lazer', 'lazer': 'lazer', 'pessoal': 'pessoal',
+        'vestuario': 'pessoal', 'divida': 'outros', 'transferencia': 'outros', 'pessoas': 'outros',
+        'renda': 'outros', 'entrada': 'outros', 'salário': 'outros', 'alerta': 'outros'
+      };
+      return mapa[categoria] || 'outros';
+    }
+
     function classificarTransacao(descricao) {
-      if (!classificacoesGlobais.descricoes_conhecidas) return null;
+      if (!descricao || typeof descricao !== 'string') return null;
+      if (!classificacoesGlobais || !classificacoesGlobais.descricoes_conhecidas) return null;
+      if (!classificacaoParsed.inicializado) inicializarClassificacao();
 
       const desc = descricao.toUpperCase().trim();
+
+      // Nível 1: Match exato em descrições conhecidas
       for (const [chave, classificacao] of Object.entries(classificacoesGlobais.descricoes_conhecidas)) {
         if (desc.includes(chave.toUpperCase())) {
-          return classificacao;
+          return {
+            categoria: classificacao.categoria,
+            pessoa: classificacao.pessoa,
+            tipo_despesa_id: mapCategoriaToTipoDespesa(classificacao.categoria),
+            confianca: 'alta',
+            metodo: 'exact_match'
+          };
         }
       }
+
+      // Nível 2: Keyword-based scoring
+      const keywordMap = {
+        alimentacao: ['MERCADO', 'SUPERMERC', 'PADARIA', 'COMIDA', 'ALIMENT', 'RESTAUR', 'LANCH', 'AÇAI', 'PASTEL', 'PÃO', 'IFOOD', 'FRIGGOR', 'HORTIFRUT', 'CARREFOUR', 'CANTINA', 'BAR', 'FEIRA', 'QUITANDA', 'AÇOUGUE', 'BIFE', 'PIZZA', 'DOCE', 'BOLO', 'CONFEIT'],
+        transporte: ['COMBUSTIVEL', 'GASOLINA', 'DIESEL', 'POSTO', 'UBER', '99APP', '99RIDE', 'TAXI', 'ONIBUS', 'PASSAGEM', 'METRO', 'ÔNIBUS', 'BUS', 'SEGURO CARRO', 'AUTO PEÇA', 'REVISÃO', 'CONSERT', 'MECÂNICA', 'PNEU', 'TOYOTA', 'CHEVROLET', 'CORRENTAO', 'AMOREIRAS', 'ANDRADE', 'RIVIERA', 'TOKIO MARINE', 'CARRO', 'MOTO', 'BICICLETA', 'PASSAGEM AEREA'],
+        moradia: ['CPFL', 'SANASA', 'CLARO', 'ENERGIA', 'AGUA', 'LUZ', 'GAS', 'CONDOMINIO', 'ALUGUEL', 'TELEFONE', 'INTERNET', 'BANDA LARGA', 'FORNECEDORA', 'HIDRO', 'CATAGUAZES', 'ELETROPAULO', 'SABESP', 'COPASA', 'CESP', 'IMÓVEL', 'REFORMA'],
+        utilidades: ['CPFL', 'SANASA', 'CLARO', 'ENERGIA', 'AGUA', 'LUZ', 'GAS', 'INTERNET', 'TELEFONE', 'BANDA LARGA', 'PROVEDOR'],
+        educacao: ['ESCOLA', 'VAN', 'ESCOLAR', 'CURSO', 'AULA', 'MATRÍC', 'MENSALID', 'EDUCAÇÃO', 'LIVRO', 'MATERIAL', 'VALENTINA', 'LUCA', 'GUILHER', 'PROFESSOR', 'TREINAMENTO', 'WORKSHOP', 'SEMINÁRIO'],
+        saude: ['FARMACIA', 'DROGAL', 'MEDICO', 'DENTISTA', 'ORTODONTIA', 'HOSPITAL', 'CLINICA', 'MEDICA', 'SAUDE', 'OTORRIN', 'OFTALM', 'DERMA', 'PEDIATRIA', 'DRAMARINA', 'PIRAC', 'PSICO', 'FISIO', 'VACINA', 'ULTRASSOM', 'EXAME'],
+        negocio: ['STIMA', 'MEI', 'KIWIFY', 'BENETTI', 'CONTADOR', 'IMPOSTO', 'CONSULTOR', 'EMPRESA', 'NEGOCIO', 'COMERCIO', 'AFILIADO', 'COMISSÃO', 'TAXA COMERCIAL', 'CONTABILIDADE', 'FISCAL', 'ASSESSORIA'],
+        assinatura: ['APPLE', 'SPOTIFY', 'NETFLIX', 'GOOGLE', 'DISNEY', 'PRIME', 'ADOBE', 'CANVA', 'SUBSCRIPTION', 'MEMBRO', 'CLUBE', 'GAMING', 'PARAMOUNT', 'HBO', 'GLOBOPLAY', 'CRUNCHYROLL', 'COURSERA', 'LINKEDIN'],
+        lazer: ['OMEGA', 'DECATHLON', 'ACADEMIA', 'CINEMA', 'TEATRO', 'PARQUE', 'PASSEIO', 'JOGO', 'DIVERSÃO', 'EVENTOS', 'INGRESSO', 'SHOW', 'MUSEU', 'PARQUE AQUÁTICO', 'RECREAÇÃO', 'ARTE', 'PISCINA', 'ESPORTE'],
+        pessoal: ['UNIAO', 'SOCORRO', 'MAGALU', 'MAGAZINE', 'ROUPA', 'CALÇADO', 'SAPATO', 'MODA', 'LOJA', 'H&M', 'ZARA', 'PAQUETA', 'LOJAS AMERICANAS', 'CABELEIREIRO', 'BARBA', 'MANICURE', 'PEDICURE', 'HIGIENE', 'COSMETICO', 'PERFUME', 'MAQUIAGEM'],
+        transferencia: ['PIX TRANSF', 'TRANSF', 'EDILE', 'NILZ', 'IGREJA', 'APE', 'LOCKERS', 'GUARDA', 'MOVEL', 'MOVEIS', 'ARMAZEN', 'DEPOSIT', 'DOAÇÃO'],
+        divida: ['CONSIGNADO', 'CREDITO', 'FATURAITAU', 'MASTERCARD', 'BRADESCO', 'ITAU', 'IOF', 'JUROS', 'PARCELA', 'PARCELAMENTO', 'EMPRESTIMO', 'CHEQUE ESPECIAL', 'CAIXA', 'SANTANDER', 'NUBANK', 'CARTÃO']
+      };
+
+      const scores = {};
+      for (const categoria of Object.keys(keywordMap)) scores[categoria] = 0;
+      for (const [categoria, keywords] of Object.entries(keywordMap)) {
+        for (const keyword of keywords) {
+          if (desc.includes(keyword)) scores[categoria]++;
+        }
+      }
+
+      let bestCategoria = null, bestScore = 0;
+      for (const [categoria, score] of Object.entries(scores)) {
+        if (score > bestScore) { bestScore = score; bestCategoria = categoria; }
+      }
+
+      // Nível 3: Detecção de pessoa
+      let pessoa = 'Ambos';
+      const julianePatterns = ['ELEKTRO', 'MASTERCARD BLACK', 'APPLE', 'SPOTIFY', 'GOOGLE ONE', 'KIWIFY', 'INSTM', 'MAGIC', 'UNIAO', 'MAGALU', '99APP', '99RIDE', 'BENETTI UP', 'DONA TEREZINHA', 'STIMA', 'DAS MEI', 'FATURAITAU', 'PIX QRS', 'SALARIO', 'REMUNERACAO'];
+      const hugoPatterns = ['PIX TRANSF HUGO', 'HUGO FE', 'COMBUSTIVEL', 'POSTO', 'AUTO PEÇA', 'ROCHA', 'TOKIO MARINE', 'SEGURO CARRO', 'MARCIA DE CARLA', 'SAVEGNAGO', 'SUPERMERCADOS JL', 'RENDA HUGO', 'RENDA'];
+      const julianeMatches = julianePatterns.filter(p => desc.includes(p)).length;
+      const hugoMatches = hugoPatterns.filter(p => desc.includes(p)).length;
+
+      if (julianeMatches > hugoMatches && julianeMatches > 0) pessoa = 'Juliane';
+      else if (hugoMatches > julianeMatches && hugoMatches > 0) pessoa = 'Hugo';
+
+      if (bestScore > 0) {
+        return {
+          categoria: bestCategoria,
+          pessoa: pessoa,
+          tipo_despesa_id: mapCategoriaToTipoDespesa(bestCategoria),
+          confianca: bestScore >= 2 ? 'alta' : 'media',
+          metodo: 'keyword_match',
+          matchCount: bestScore
+        };
+      }
+
       return null;
     }
 
