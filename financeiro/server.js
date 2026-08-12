@@ -15,6 +15,7 @@ const FINANCEIRO_PATH = path.join(__dirname, 'data', 'financeiro.json');
 const APONTAMENTOS_PATH = path.join(__dirname, 'data', 'apontamentos.json');
 const CLASSIFICACOES_PATH = path.join(__dirname, 'data', 'classificacoes.json');
 const CONFIGURACOES_PATH = path.join(__dirname, 'data', 'configuracoes.json');
+const CARGAS_PATH = path.join(__dirname, 'data', 'cargas.json');
 
 function readFinanceiro() {
   try {
@@ -100,6 +101,28 @@ function writeConfiguracoes(data) {
     return true;
   } catch (err) {
     console.error('Erro escrevendo configuracoes.json:', err);
+    return false;
+  }
+}
+
+function readCargas() {
+  try {
+    if (!fs.existsSync(CARGAS_PATH)) {
+      return { cargas: [] };
+    }
+    return JSON.parse(fs.readFileSync(CARGAS_PATH, 'utf8'));
+  } catch (err) {
+    console.error('Erro lendo cargas.json:', err);
+    return { cargas: [] };
+  }
+}
+
+function writeCargas(data) {
+  try {
+    fs.writeFileSync(CARGAS_PATH, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Erro escrevendo cargas.json:', err);
     return false;
   }
 }
@@ -242,6 +265,74 @@ app.post('/api/importar-dados', (req, res) => {
   } catch (err) {
     console.error('Erro na importação:', err);
     res.status(500).json({ error: 'Erro ao processar importação: ' + err.message });
+  }
+});
+
+app.get('/api/cargas', (req, res) => {
+  const cargas = readCargas();
+  res.json(cargas);
+});
+
+app.post('/api/cargas', (req, res) => {
+  const { tipoArquivo, quantidadeRegistros, transacaoIds } = req.body;
+
+  if (!tipoArquivo || !quantidadeRegistros || !Array.isArray(transacaoIds)) {
+    return res.status(400).json({ error: 'Dados de carga inválidos' });
+  }
+
+  const cargas = readCargas();
+  const cargaId = `carga_${Date.now()}`;
+
+  const novaCarga = {
+    id: cargaId,
+    data_importacao: new Date().toISOString(),
+    tipo_arquivo: tipoArquivo,
+    quantidade_registros: quantidadeRegistros,
+    status: 'ativa',
+    transacoes_ids: transacaoIds
+  };
+
+  cargas.cargas.push(novaCarga);
+
+  if (writeCargas(cargas)) {
+    res.json({ success: true, carga: novaCarga });
+  } else {
+    res.status(500).json({ error: 'Erro ao registrar carga' });
+  }
+});
+
+app.delete('/api/cargas/:cargaId', (req, res) => {
+  const cargaId = req.params.cargaId;
+  const cargas = readCargas();
+  const financeiro = readFinanceiro();
+
+  const carga = cargas.cargas.find(c => c.id === cargaId);
+  if (!carga) {
+    return res.status(404).json({ error: 'Carga não encontrada' });
+  }
+
+  if (!financeiro.fluxo_mensal || !financeiro.fluxo_mensal.transacoes) {
+    return res.status(400).json({ error: 'Nenhuma transação para remover' });
+  }
+
+  // Remover transações dessa carga
+  const transacoesAntes = financeiro.fluxo_mensal.transacoes.length;
+  financeiro.fluxo_mensal.transacoes = financeiro.fluxo_mensal.transacoes.filter(
+    txn => txn.carga_id !== cargaId
+  );
+  const removidas = transacoesAntes - financeiro.fluxo_mensal.transacoes.length;
+
+  // Marcar carga como deletada
+  carga.status = 'deletada';
+
+  if (writeCargas(cargas) && writeFinanceiro(financeiro)) {
+    res.json({
+      success: true,
+      message: `${removidas} transações removidas`,
+      removidas
+    });
+  } else {
+    res.status(500).json({ error: 'Erro ao deletar carga' });
   }
 });
 

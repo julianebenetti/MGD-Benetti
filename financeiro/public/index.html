@@ -1603,6 +1603,16 @@
         </div>
       </div>
 
+      <!-- SEÇÃO: CARGAS RECENTES -->
+      <div class="card full-width" style="margin-top: 20px;">
+        <div class="form-section">
+          <div class="form-section-title">📜 Cargas Recentes</div>
+          <div id="cargasRecentesContainer" style="margin-top: 15px;">
+            <div style="padding: 15px; color: var(--text-secondary); text-align: center;">Carregando...</div>
+          </div>
+        </div>
+      </div>
+
       <!-- ETAPA 2: PREVIEW -->
       <div id="etapa2-preview" class="card full-width" style="display: none;">
         <div class="preview-section">
@@ -1767,6 +1777,8 @@
       pessoas: [],
       tipos_despesa: []
     };
+    let cargasGlobais = { cargas: [] };
+    let cargasAtuais = [];
 
     // Configuração de abas
     const abasDisponibles = [
@@ -1951,10 +1963,24 @@
         dadosGlobais = await response.json();
         await carregarClassificacoes();
         await carregarConfiguracoes();
+        await carregarCargas();
         renderizarTodas();
       } catch (err) {
         console.error(err);
         mostrarErro('Erro ao carregar dados: ' + err.message);
+      }
+    }
+
+    async function carregarCargas() {
+      try {
+        const response = await fetch('/api/cargas');
+        if (response.ok) {
+          cargasGlobais = await response.json();
+          cargasAtuais = cargasGlobais.cargas || [];
+        }
+      } catch (err) {
+        console.warn('Cargas não carregadas:', err);
+        cargasAtuais = [];
       }
     }
 
@@ -1991,6 +2017,7 @@
       atualizarEditor();
       preencherFormularios();
       aplicarConfigAbasNaDash();
+      renderizarListaCargas();
     }
 
     function renderizarResumo() {
@@ -3278,6 +3305,11 @@
         btn.classList.add('active');
         const tabId = btn.getAttribute('data-tab');
         document.getElementById(tabId).classList.add('active');
+
+        // Renderizar cargas quando aba importar é ativada
+        if (tabId === 'importar') {
+          renderizarListaCargas();
+        }
       });
     });
 
@@ -4247,6 +4279,11 @@
             dadosGlobais.fluxo_mensal.transacoes = [];
           }
 
+          // Gerar ID único para essa carga
+          const cargaId = `carga_${Date.now()}`;
+          const tipoArquivo = document.getElementById('tipoArquivo')?.value || 'outro';
+          const transacaoIds = [];
+
           // Verificar duplicatas
           let adicionadas = 0;
           let duplicatas = 0;
@@ -4259,7 +4296,10 @@
             );
 
             if (!ehDuplicata) {
+              // Adicionar carga_id à transação
+              novaTxn.carga_id = cargaId;
               dadosGlobais.fluxo_mensal.transacoes.push(novaTxn);
+              transacaoIds.push(`txn_${Date.now()}_${Math.random()}`);
               adicionadas++;
             } else {
               duplicatas++;
@@ -4267,6 +4307,17 @@
           });
 
           console.log(`✅ Transações: ${adicionadas} adicionadas, ${duplicatas} duplicatas ignoradas`);
+
+          // Registrar carga na API
+          await fetch('/api/cargas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              tipoArquivo,
+              quantidadeRegistros: adicionadas,
+              transacaoIds
+            })
+          }).catch(err => console.error('Erro ao registrar carga:', err));
         }
 
         // Salvar na API
@@ -4278,7 +4329,10 @@
 
         if (!response.ok) throw new Error('Erro ao salvar');
 
+        // Recarregar cargas
+        await carregarCargas();
         renderizarTodas();
+        renderizarListaCargas();
 
         // Mostrar sucesso
         document.getElementById('etapa3-confirmacao').style.display = 'none';
@@ -4297,12 +4351,122 @@
       }
     }
 
+    async function registrarCarga(tipoArquivo, quantidade, idsTransacoes) {
+      try {
+        const response = await fetch('/api/cargas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipoArquivo,
+            quantidadeRegistros: quantidade,
+            transacaoIds: idsTransacoes
+          })
+        });
+        if (!response.ok) throw new Error('Erro ao registrar carga');
+        return await response.json();
+      } catch (err) {
+        console.error('Erro ao registrar carga:', err);
+        return null;
+      }
+    }
+
+    async function deletarCarga(cargaId) {
+      try {
+        const response = await fetch(`/api/cargas/${cargaId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error('Erro ao deletar carga');
+        const result = await response.json();
+
+        // Recarregar dados
+        await carregarCargas();
+        await carregarDados();
+        renderizarListaCargas();
+        alert(`✅ Carga deletada! ${result.removidas} transações foram removidas.`);
+        return result;
+      } catch (err) {
+        alert('❌ Erro ao deletar carga: ' + err.message);
+        return null;
+      }
+    }
+
+    function listarCargas() {
+      return cargasAtuais.filter(c => c.status === 'ativa').slice(0, 10);
+    }
+
+    function confirmarDeletarCarga(cargaId) {
+      const carga = cargasAtuais.find(c => c.id === cargaId);
+      if (!carga) return;
+
+      const data = new Date(carga.data_importacao).toLocaleString('pt-BR');
+      const confirmacao = confirm(
+        `Tem certeza que deseja deletar esta carga?\n\n` +
+        `📅 Data: ${data}\n` +
+        `📋 Tipo: ${carga.tipo_arquivo}\n` +
+        `📊 Registros: ${carga.quantidade_registros}\n\n` +
+        `⚠️ Esta ação removerá ${carga.quantidade_registros} transações e não pode ser desfeita.`
+      );
+
+      if (confirmacao) {
+        deletarCarga(cargaId);
+      }
+    }
+
+    function renderizarListaCargas() {
+      const container = document.getElementById('cargasRecentesContainer');
+      if (!container) return;
+
+      const cargas = listarCargas();
+
+      if (cargas.length === 0) {
+        container.innerHTML = '<div style="padding: 15px; color: var(--text-secondary); text-align: center;">Nenhuma carga importada ainda</div>';
+        return;
+      }
+
+      let html = '<div style="margin-top: 15px;">';
+
+      cargas.forEach(carga => {
+        const data = new Date(carga.data_importacao);
+        const dataFormatada = data.toLocaleString('pt-BR');
+        const tiposDisponiveis = {
+          'cartao_credito': '💳 Cartão de Crédito',
+          'extrato_bancario': '🏦 Extrato Bancário',
+          'outro': '📄 Outro'
+        };
+        const tipoExibicao = tiposDisponiveis[carga.tipo_arquivo] || carga.tipo_arquivo;
+
+        html += `
+          <div style="background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1;">
+              <div style="font-weight: 500; color: var(--text-primary); margin-bottom: 4px;">
+                ${tipoExibicao}
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin: 2px 0;">
+                📅 ${dataFormatada}
+              </div>
+              <div style="font-size: 12px; color: var(--text-secondary);">
+                📊 ${carga.quantidade_registros} registro${carga.quantidade_registros !== 1 ? 's' : ''}
+              </div>
+            </div>
+            <button class="btn-danger" onclick="confirmarDeletarCarga('${carga.id}')" style="padding: 8px 12px; font-size: 12px;">
+              🗑️ Deletar
+            </button>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
     function voltarParaUpload() {
       document.getElementById('etapa2-preview').style.display = 'none';
       document.getElementById('etapa3-confirmacao').style.display = 'none';
       document.getElementById('etapa4-sucesso').style.display = 'none';
       document.getElementById('etapa1-upload').style.display = 'block';
       atualizarSteps(1);
+      renderizarListaCargas();
     }
 
     function voltarParaPreview() {
