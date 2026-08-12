@@ -2388,6 +2388,7 @@
               <th>Mês Ref</th>
               <th>Tipo</th>
               <th>Parcela</th>
+              <th>Carga</th>
               <th>Valor</th>
             </tr>
           </thead>
@@ -2423,6 +2424,8 @@
         // Parcela
         const parcela = txn.parcela ? txn.parcela : (tipoGasto === 'Parcelada' ? 'Editar' : '—');
 
+        const cargaIdExibicao = txn.carga_id ? `<span style="font-size: 11px; color: var(--text-secondary);">${txn.carga_id.substring(0, 12)}...</span>` : '<span style="color: var(--text-secondary);">—</span>';
+
         html += `
           <tr>
             <td class="transaction-date transaction-editable" onclick="editarCampo(${txnIdx}, 'data')" title="Clique para editar">${dataFormatada}</td>
@@ -2433,6 +2436,7 @@
             <td style="font-size: 12px;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'mes_referencia')" title="Clique para editar">${mesRef}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'parcela')" title="Clique para editar">${parcela}</td>
+            <td style="font-size: 11px;" title="${txn.carga_id || 'Sem carga'}">${cargaIdExibicao}</td>
             <td class="transaction-value ${txn.tipo === 'entrada' ? 'positive' : 'negative'} transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${txn.valor ? (txn.tipo === 'entrada' ? '+' : '-') + ' R$ ' + txn.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>
         `;
