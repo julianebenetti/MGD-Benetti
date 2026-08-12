@@ -111,6 +111,8 @@
     "mes": "2026-08",
     "entradas": 6550,
     "saidas": 10974,
+    "total_entradas": 6550,
+    "total_saidas": 10974,
     "deficit": -4424,
     "saldo_anterior": 8898,
     "saldo_final": 4474,
