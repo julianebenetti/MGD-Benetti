@@ -3229,20 +3229,45 @@
     function parseExcel(workbook) {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+
+      // Ler todas as linhas sem processar como JSON primeiro
+      const allRows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false, blankrows: true });
 
       const dados = { fluxo_mensal: { transacoes: [] } };
 
-      if (rows.length === 0) {
+      if (allRows.length === 0) {
         console.log('Nenhuma linha encontrada no Excel');
         return dados;
       }
 
+      // Encontrar a linha real de headers (procura por linhas com colunas conhecidas)
+      let headerRowIdx = 0;
+      let headerRow = null;
+
+      for (let i = 0; i < Math.min(allRows.length, 30); i++) {
+        const row = allRows[i];
+        const keys = Object.keys(row).map(k => k.toLowerCase().trim());
+        const hasDataCol = keys.some(k => k.match(/^data$|date|data_txn|lançamento|lancamento|histórico|história/));
+        const hasValorCol = keys.some(k => k.match(/^valor$|^value$|amount|montante/));
+
+        if (hasDataCol || hasValorCol) {
+          headerRowIdx = i;
+          headerRow = row;
+          break;
+        }
+      }
+
+      if (!headerRow) {
+        console.log('Nenhuma linha de headers encontrada');
+        return dados;
+      }
+
+      console.log('Linha de headers encontrada em:', headerRowIdx);
+
       // Auto-detect column names (case-insensitive)
-      const firstRow = rows[0];
       const colMap = {};
 
-      Object.keys(firstRow).forEach(key => {
+      Object.keys(headerRow).forEach(key => {
         const keyLower = key.toLowerCase().trim();
 
         // Detecção de Data
@@ -3280,14 +3305,17 @@
       });
 
       console.log('Colunas detectadas:', colMap);
-      console.log('Primeira linha:', firstRow);
+      console.log('Linha de headers:', headerRow);
 
-      rows.forEach((row, idx) => {
+      // Processar apenas as linhas após o header
+      for (let i = headerRowIdx + 1; i < allRows.length; i++) {
+        const row = allRows[i];
+
         const dataStr = colMap.data ? row[colMap.data] : '';
-        if (!dataStr) return;
+        if (!dataStr) continue;
 
         const descricao = colMap.descricao ? row[colMap.descricao] : '';
-        if (!descricao) return;
+        if (!descricao) continue;
 
         const classificacao = classificarTransacao(descricao);
 
@@ -3353,7 +3381,7 @@
 
           dados.fluxo_mensal.transacoes.push(txn);
         }
-      });
+      }
 
       console.log('Transações importadas:', dados.fluxo_mensal.transacoes.length);
       return dados;
