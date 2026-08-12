@@ -674,6 +674,223 @@
       color: var(--accent-red);
     }
 
+    .extrato-header {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .extrato-summary-item {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .extrato-summary-label {
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .extrato-summary-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--accent-blue);
+    }
+
+    .extrato-summary-value.positive {
+      color: var(--accent-green);
+    }
+
+    .extrato-summary-value.negative {
+      color: var(--accent-red);
+    }
+
+    .filters-container {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .filters-title {
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .filters-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .filter-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .filter-control {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-control input,
+    .filter-control select {
+      flex: 1;
+      font-size: 13px;
+      padding: 8px;
+    }
+
+    .filter-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 12px;
+    }
+
+    .transactions-table-container {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .transactions-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .transactions-table thead {
+      background-color: var(--bg-tertiary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .transactions-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-size: 11px;
+      border-right: 1px solid var(--border-color);
+    }
+
+    .transactions-table th:last-child {
+      border-right: none;
+    }
+
+    .transactions-table tbody tr {
+      border-bottom: 1px solid var(--border-color);
+      transition: background-color 0.2s ease;
+    }
+
+    .transactions-table tbody tr:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .transactions-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .transactions-table td {
+      padding: 12px;
+      color: var(--text-primary);
+      border-right: 1px solid var(--border-color);
+    }
+
+    .transactions-table td:last-child {
+      border-right: none;
+    }
+
+    .transaction-date {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .transaction-description {
+      font-weight: 500;
+    }
+
+    .transaction-person {
+      background-color: var(--bg-tertiary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .transaction-account {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .transaction-category {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      font-size: 11px;
+    }
+
+    .transaction-value.positive {
+      color: var(--accent-green);
+      font-weight: bold;
+    }
+
+    .transaction-value.negative {
+      color: var(--accent-red);
+      font-weight: bold;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      background-color: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .pagination-button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 10px;
@@ -804,6 +1021,130 @@
             <div class="fluxo-label">Resultado</div>
             <div class="fluxo-valor fluxo-negative">-R$ 4.674</div>
           </div>
+        </div>
+      </div>
+
+      <div class="section-title">📊 Extrato de Fluxo Detalhado</div>
+
+      <!-- Resumo do Mês -->
+      <div class="card full-width">
+        <div class="section-title" style="margin-top: 0;">📈 Resumo do Mês</div>
+        <div class="extrato-header">
+          <div class="extrato-summary-item">
+            <div class="extrato-summary-label">Entradas</div>
+            <div class="extrato-summary-value positive" id="extrato_entradas">R$ 0</div>
+          </div>
+          <div class="extrato-summary-item">
+            <div class="extrato-summary-label">Saídas</div>
+            <div class="extrato-summary-value negative" id="extrato_saidas">R$ 0</div>
+          </div>
+          <div class="extrato-summary-item">
+            <div class="extrato-summary-label">Saldo</div>
+            <div class="extrato-summary-value" id="extrato_saldo">R$ 0</div>
+          </div>
+          <div class="extrato-summary-item">
+            <div class="extrato-summary-label">Saldo Anterior</div>
+            <div class="extrato-summary-value" id="extrato_saldo_anterior">R$ 0</div>
+          </div>
+          <div class="extrato-summary-item">
+            <div class="extrato-summary-label">Saldo Final</div>
+            <div class="extrato-summary-value" id="extrato_saldo_final">R$ 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filters-container">
+        <div class="filters-title">🔍 Filtros Avançados</div>
+
+        <div class="filters-row">
+          <div class="filter-group">
+            <label class="filter-label">De</label>
+            <input type="date" id="filter_data_inicio" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Até</label>
+            <input type="date" id="filter_data_fim" class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Pessoa</label>
+            <select id="filter_pessoa" class="filter-input">
+              <option value="">Todos</option>
+              <option value="Juliane">Juliane</option>
+              <option value="Hugo">Hugo</option>
+              <option value="Ambos">Ambos</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Tipo</label>
+            <select id="filter_tipo" class="filter-input">
+              <option value="">Todos</option>
+              <option value="entrada">Entrada</option>
+              <option value="saida">Saída</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <div class="filter-group">
+            <label class="filter-label">Conta</label>
+            <select id="filter_conta" class="filter-input">
+              <option value="">Todas</option>
+              <option value="Banco Itaú">Banco Itaú</option>
+              <option value="Mastercard Black">Mastercard Black</option>
+              <option value="Mercado Pago">Mercado Pago</option>
+              <option value="CC">Cartão de Crédito</option>
+              <option value="PIX">PIX</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Categoria</label>
+            <select id="filter_categoria" class="filter-input">
+              <option value="">Todas</option>
+              <option value="salário">Salário</option>
+              <option value="renda">Renda</option>
+              <option value="necessidade">Necessidade</option>
+              <option value="divida">Dívida</option>
+              <option value="despesa">Despesa</option>
+              <option value="pessoal">Pessoal</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Status</label>
+            <select id="filter_status" class="filter-input">
+              <option value="">Todos</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="pendente">Pendente</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Buscar</label>
+            <input type="text" id="filter_busca" placeholder="Descrição..." class="filter-input">
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn-primary btn-small" onclick="aplicarFiltros()">🔍 Filtrar</button>
+          <button class="btn-secondary btn-small" onclick="limparFiltros()">❌ Limpar</button>
+          <button class="btn-secondary btn-small" onclick="exportarExtrato()">📥 Exportar</button>
+        </div>
+      </div>
+
+      <!-- Tabela de Transações -->
+      <div class="transactions-table-container">
+        <div id="extratoVazio" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📋</div>
+          <div>Nenhuma transação encontrada com os filtros selecionados</div>
+        </div>
+        <div id="extratoTabela"></div>
+      </div>
+
+      <!-- Paginação -->
+      <div class="pagination" id="paginacao" style="display: none;">
+        <div id="paginacao-info">Página 1 de 1</div>
+        <div class="pagination-controls">
+          <button class="btn-secondary pagination-button" onclick="paginaAnterior()" id="btn-anterior">← Anterior</button>
+          <button class="btn-secondary pagination-button" onclick="proximaPagina()" id="btn-proxima">Próxima →</button>
         </div>
       </div>
 
@@ -1288,9 +1629,14 @@
     }
 
     function renderizarFluxo() {
+      renderizarExtratoFluxo();
+      renderizarAlertasFluxo();
+      renderizarCenariosFluxo();
+    }
+
+    function renderizarAlertasFluxo() {
       const fluxo = dadosGlobais.fluxo_mensal || {};
       const alertasContainer = document.getElementById('alertasContainer');
-      const cenarioContainer = document.getElementById('cenarioContainer');
 
       let alertasHtml = '';
 
@@ -1322,7 +1668,10 @@
       }
 
       alertasContainer.innerHTML = alertasHtml;
+    }
 
+    function renderizarCenariosFluxo() {
+      const cenarioContainer = document.getElementById('cenarioContainer');
       let cenarioHtml = '';
       const cenarios = dadosGlobais.cenarios_futuros || [];
       cenarios.forEach(cenario => {
@@ -1336,8 +1685,188 @@
           </div>
         `;
       });
-
       cenarioContainer.innerHTML = cenarioHtml;
+    }
+
+    // Variáveis de estado para filtros e paginação
+    let transacoesFiltradas = [];
+    let paginaAtual = 1;
+    const ITENS_POR_PAGINA = 10;
+
+    function renderizarExtratoFluxo() {
+      const fluxo = dadosGlobais.fluxo_mensal || {};
+      const transacoes = fluxo.transacoes || [];
+
+      document.getElementById('extrato_entradas').textContent = `R$ ${(fluxo.total_entradas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      document.getElementById('extrato_saidas').textContent = `R$ ${Math.abs(fluxo.total_saidas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+      const saldo = (fluxo.total_entradas || 0) - (fluxo.total_saidas || 0);
+      const saldoElement = document.getElementById('extrato_saldo');
+      saldoElement.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      saldoElement.classList.remove('positive', 'negative');
+      saldoElement.classList.add(saldo >= 0 ? 'positive' : 'negative');
+
+      document.getElementById('extrato_saldo_anterior').textContent = `R$ ${(fluxo.saldo_anterior || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+      const saldoFinalElement = document.getElementById('extrato_saldo_final');
+      saldoFinalElement.textContent = `R$ ${(fluxo.saldo_final || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      saldoFinalElement.classList.remove('positive', 'negative');
+      saldoFinalElement.classList.add((fluxo.saldo_final || 0) >= 0 ? 'positive' : 'negative');
+
+      transacoesFiltradas = [...transacoes];
+      paginaAtual = 1;
+      exibirTransacoes();
+    }
+
+    function aplicarFiltros() {
+      const fluxo = dadosGlobais.fluxo_mensal || {};
+      const transacoes = fluxo.transacoes || [];
+
+      const dataInicio = document.getElementById('filter_data_inicio').value;
+      const dataFim = document.getElementById('filter_data_fim').value;
+      const pessoa = document.getElementById('filter_pessoa').value;
+      const tipo = document.getElementById('filter_tipo').value;
+      const conta = document.getElementById('filter_conta').value;
+      const categoria = document.getElementById('filter_categoria').value;
+      const status = document.getElementById('filter_status').value;
+      const busca = document.getElementById('filter_busca').value.toLowerCase();
+
+      transacoesFiltradas = transacoes.filter(txn => {
+        if (dataInicio && txn.data < dataInicio) return false;
+        if (dataFim && txn.data > dataFim) return false;
+        if (pessoa && txn.pessoa !== pessoa) return false;
+        if (tipo && txn.tipo !== tipo) return false;
+        if (conta && txn.conta_origem !== conta && txn.conta_destino !== conta) return false;
+        if (categoria && txn.categoria !== categoria) return false;
+        if (status && txn.status !== status) return false;
+        if (busca && !txn.descricao.toLowerCase().includes(busca)) return false;
+        return true;
+      });
+
+      paginaAtual = 1;
+      exibirTransacoes();
+    }
+
+    function limparFiltros() {
+      document.getElementById('filter_data_inicio').value = '';
+      document.getElementById('filter_data_fim').value = '';
+      document.getElementById('filter_pessoa').value = '';
+      document.getElementById('filter_tipo').value = '';
+      document.getElementById('filter_conta').value = '';
+      document.getElementById('filter_categoria').value = '';
+      document.getElementById('filter_status').value = '';
+      document.getElementById('filter_busca').value = '';
+
+      renderizarExtratoFluxo();
+    }
+
+    function exibirTransacoes() {
+      const tabelaDiv = document.getElementById('extratoTabela');
+      const vazioDiv = document.getElementById('extratoVazio');
+      const paginacaoDiv = document.getElementById('paginacao');
+
+      if (transacoesFiltradas.length === 0) {
+        tabelaDiv.innerHTML = '';
+        vazioDiv.style.display = 'block';
+        paginacaoDiv.style.display = 'none';
+        return;
+      }
+
+      vazioDiv.style.display = 'none';
+
+      const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+      const fim = inicio + ITENS_POR_PAGINA;
+      const transacoesPagina = transacoesFiltradas.slice(inicio, fim);
+
+      let html = `
+        <table class="transactions-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição</th>
+              <th>Pessoa</th>
+              <th>Conta</th>
+              <th>Categoria</th>
+              <th>Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      transacoesPagina.forEach(txn => {
+        const valorClass = txn.tipo === 'entrada' ? 'positive' : 'negative';
+        const valorSinal = txn.tipo === 'entrada' ? '+' : '-';
+        const [ano, mes, dia] = txn.data.split('-');
+        const dataFormatada = `${dia}/${mes}/${ano}`;
+
+        html += `
+          <tr>
+            <td class="transaction-date">${dataFormatada}</td>
+            <td class="transaction-description">${txn.descricao}</td>
+            <td><span class="transaction-person">${txn.pessoa}</span></td>
+            <td class="transaction-account">${txn.conta_origem}</td>
+            <td><span class="transaction-category">${txn.categoria}</span></td>
+            <td class="transaction-value ${valorClass}">${valorSinal} R$ ${Math.abs(txn.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      tabelaDiv.innerHTML = html;
+
+      const totalPaginas = Math.ceil(transacoesFiltradas.length / ITENS_POR_PAGINA);
+      if (totalPaginas > 1) {
+        paginacaoDiv.style.display = 'flex';
+        document.getElementById('paginacao-info').textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+        document.getElementById('btn-anterior').disabled = paginaAtual === 1;
+        document.getElementById('btn-proxima').disabled = paginaAtual === totalPaginas;
+      } else {
+        paginacaoDiv.style.display = 'none';
+      }
+    }
+
+    function proximaPagina() {
+      const totalPaginas = Math.ceil(transacoesFiltradas.length / ITENS_POR_PAGINA);
+      if (paginaAtual < totalPaginas) {
+        paginaAtual++;
+        exibirTransacoes();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function paginaAnterior() {
+      if (paginaAtual > 1) {
+        paginaAtual--;
+        exibirTransacoes();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+
+    function exportarExtrato() {
+      if (transacoesFiltradas.length === 0) {
+        alert('Nenhuma transação para exportar. Verifique os filtros.');
+        return;
+      }
+
+      let csv = 'Data,Descrição,Pessoa,Conta,Categoria,Tipo,Valor\n';
+
+      transacoesFiltradas.forEach(txn => {
+        const [ano, mes, dia] = txn.data.split('-');
+        const dataFormatada = `${dia}/${mes}/${ano}`;
+        const valorSinal = txn.tipo === 'entrada' ? '' : '-';
+        csv += `"${dataFormatada}","${txn.descricao}","${txn.pessoa}","${txn.conta_origem}","${txn.categoria}","${txn.tipo}","${valorSinal}${txn.valor}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `extrato-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(link.href);
     }
 
     function atualizarEditor() {
