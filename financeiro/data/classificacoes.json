@@ -97,7 +97,7 @@
       "descricao": "Dividendos"
     },
     {
-      "palavra_chave": ["juros", "juros recebido", "juros ganho"],
+      "palavra_chave": ["juros recebido", "juros ganho", "juros creditados"],
       "categoria": "Receitas",
       "subcategoria": "Investimentos",
       "tipo_gasto": "Variável",
@@ -105,7 +105,7 @@
       "descricao": "Juros"
     },
     {
-      "palavra_chave": ["aluguel recebido", "aluguel", "renda aluguel", "pix transf marcos"],
+      "palavra_chave": ["aluguel recebido", "renda aluguel", "pix transf marcos"],
       "categoria": "Receitas",
       "subcategoria": "Investimentos",
       "tipo_gasto": "Fixa",
@@ -129,7 +129,7 @@
       "descricao": "Restituição"
     },
     {
-      "palavra_chave": ["benefício", "auxílio", "bolsa", "auxílio desemprego"],
+      "palavra_chave": ["benefício", "auxílio", "auxílio desemprego"],
       "categoria": "Receitas",
       "subcategoria": "Outras Receitas",
       "tipo_gasto": "Fixa",
@@ -137,7 +137,7 @@
       "descricao": "Benefícios"
     },
     {
-      "palavra_chave": ["presente", "presentes", "presente recebido", "doação"],
+      "palavra_chave": ["presente recebido", "doação", "regalo recebido"],
       "categoria": "Receitas",
       "subcategoria": "Outras Receitas",
       "tipo_gasto": "Extraordinária",
@@ -161,7 +161,7 @@
       "descricao": "Aluguel"
     },
     {
-      "palavra_chave": ["financiamento imóvel", "financiamento casa", "financiamento"],
+      "palavra_chave": ["financiamento imóvel", "financiamento casa", "financiamento imobiliário"],
       "categoria": "Despesas",
       "subcategoria": "Moradia",
       "tipo_gasto": "Fixa",
@@ -177,7 +177,7 @@
       "descricao": "Condomínio"
     },
     {
-      "palavra_chave": ["iptu", "imposto predial", "taxa imóvel"],
+      "palavra_chave": ["iptu", "taxa imóvel"],
       "categoria": "Despesas",
       "subcategoria": "Moradia",
       "tipo_gasto": "Fixa",
@@ -217,15 +217,7 @@
       "descricao": "Internet"
     },
     {
-      "palavra_chave": ["telefone", "celular", "claro celular", "vivo celular", "oi celular", "da claro celular"],
-      "categoria": "Despesas",
-      "subcategoria": "Moradia",
-      "tipo_gasto": "Fixa",
-      "pessoa": "Familia",
-      "descricao": "Telefone"
-    },
-    {
-      "palavra_chave": ["manutenção casa", "manutenção imóvel", "reparo", "reforma"],
+      "palavra_chave": ["manutenção imóvel", "reforma", "obra"],
       "categoria": "Despesas",
       "subcategoria": "Moradia",
       "tipo_gasto": "Extraordinária",
@@ -265,7 +257,7 @@
       "descricao": "Padaria"
     },
     {
-      "palavra_chave": ["açougue", "carne", "açougue"],
+      "palavra_chave": ["açougue", "carne", "açougueiro"],
       "categoria": "Despesas",
       "subcategoria": "Alimentação",
       "tipo_gasto": "Variável",
@@ -273,7 +265,7 @@
       "descricao": "Açougue"
     },
     {
-      "palavra_chave": ["restaurante", "restaurante"],
+      "palavra_chave": ["restaurante", "almoço fora"],
       "categoria": "Despesas",
       "subcategoria": "Alimentação",
       "tipo_gasto": "Variável",
@@ -351,14 +343,6 @@
       "tipo_gasto": "Fixa",
       "pessoa": "Familia",
       "descricao": "Seguro"
-    },
-    {
-      "palavra_chave": ["ipva", "ipva veículo"],
-      "categoria": "Despesas",
-      "subcategoria": "Transporte",
-      "tipo_gasto": "Fixa",
-      "pessoa": "Familia",
-      "descricao": "IPVA"
     },
     {
       "palavra_chave": ["licenciamento", "taxa licenciamento"],
@@ -449,20 +433,12 @@
       "descricao": "Cursos"
     },
     {
-      "palavra_chave": ["material escolar", "material", "livros", "estojo"],
+      "palavra_chave": ["material escolar", "material", "livros", "livro", "estojo"],
       "categoria": "Despesas",
       "subcategoria": "Educação",
       "tipo_gasto": "Variável",
       "pessoa": "Familia",
       "descricao": "Material escolar"
-    },
-    {
-      "palavra_chave": ["livros", "livro"],
-      "categoria": "Despesas",
-      "subcategoria": "Educação",
-      "tipo_gasto": "Variável",
-      "pessoa": "Familia",
-      "descricao": "Livros"
     },
     {
       "palavra_chave": ["uniforme", "uniforme escolar"],
@@ -521,7 +497,7 @@
       "descricao": "Atividades"
     },
     {
-      "palavra_chave": ["celular", "telefone", "chip", "operadora", "claro", "vivo", "oi"],
+      "palavra_chave": ["celular", "telefone", "chip", "operadora", "claro", "vivo", "oi", "claro celular", "vivo celular", "oi celular", "da claro celular"],
       "categoria": "Despesas",
       "subcategoria": "Contas/Serviços",
       "tipo_gasto": "Fixa",
@@ -625,7 +601,7 @@
       "descricao": "Higiene"
     },
     {
-      "palavra_chave": ["acessórios", "bolsa", "bolsa", "relógio", "joias"],
+      "palavra_chave": ["acessórios", "bolsa", "relógio", "joias"],
       "categoria": "Despesas",
       "subcategoria": "Compras Pessoais",
       "tipo_gasto": "Variável",
@@ -641,7 +617,7 @@
       "descricao": "Presentes"
     },
     {
-      "palavra_chave": ["juros", "juros pagos"],
+      "palavra_chave": ["juros", "juros pagos", "juros limite", "juros cheque especial"],
       "categoria": "Despesas",
       "subcategoria": "Financeiras",
       "tipo_gasto": "Variável",
@@ -665,7 +641,7 @@
       "descricao": "Multas"
     },
     {
-      "palavra_chave": ["empréstimo", "empréstimo pessoal"],
+      "palavra_chave": ["empréstimo", "empréstimo pessoal", "crédito pessoal"],
       "categoria": "Despesas",
       "subcategoria": "Dívidas",
       "tipo_gasto": "Fixa",
@@ -673,7 +649,7 @@
       "descricao": "Empréstimo"
     },
     {
-      "palavra_chave": ["financiamento", "parcelamento"],
+      "palavra_chave": ["financiamento pessoal", "parcelamento"],
       "categoria": "Despesas",
       "subcategoria": "Dívidas",
       "tipo_gasto": "Fixa",
@@ -705,7 +681,7 @@
       "descricao": "IR"
     },
     {
-      "palavra_chave": ["iptu", "imposto predial"],
+      "palavra_chave": ["iptu", "imposto predial", "taxa imóvel"],
       "categoria": "Despesas",
       "subcategoria": "Impostos",
       "tipo_gasto": "Fixa",
@@ -713,7 +689,7 @@
       "descricao": "IPTU"
     },
     {
-      "palavra_chave": ["ipva", "taxa ipva"],
+      "palavra_chave": ["ipva", "ipva veículo", "taxa ipva"],
       "categoria": "Despesas",
       "subcategoria": "Impostos",
       "tipo_gasto": "Fixa",
@@ -809,7 +785,7 @@
       "descricao": "Decoração"
     },
     {
-      "palavra_chave": ["reparos", "reparo", "manutenção", "conserto"],
+      "palavra_chave": ["reparos", "reparo", "manutenção casa", "conserto"],
       "categoria": "Despesas",
       "subcategoria": "Casa",
       "tipo_gasto": "Extraordinária",
@@ -825,7 +801,7 @@
       "descricao": "Limpeza"
     },
     {
-      "palavra_chave": ["poupança", "poupança", "conta poupança"],
+      "palavra_chave": ["poupança", "conta poupança", "depósito poupança"],
       "categoria": "Investimentos/Reservas",
       "subcategoria": "Reserva de emergência",
       "tipo_gasto": "Saida",
