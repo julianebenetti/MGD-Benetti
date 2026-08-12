@@ -939,6 +939,7 @@
       <button class="tab-button" data-tab="dividas">🏦 Dívidas</button>
       <button class="tab-button" data-tab="despesas">💸 Despesas</button>
       <button class="tab-button" data-tab="fluxo">📈 Fluxo</button>
+      <button class="tab-button" data-tab="classificacao">🏷️ Classificação</button>
       <button class="tab-button" data-tab="formulario">📝 Adicionar Dados</button>
       <button class="tab-button" data-tab="importar">📤 Importar</button>
       <button class="tab-button" data-tab="editor">⚙️ Editor</button>
@@ -1153,6 +1154,48 @@
 
       <div class="section-title">🔮 Cenários Futuros</div>
       <div class="grid" id="cenarioContainer"></div>
+    </div>
+
+    <!-- TAB: CLASSIFICAÇÃO -->
+    <div id="classificacao" class="tab-content">
+      <div class="section-title">🏷️ Classificar Despesas e Dívidas</div>
+
+      <div class="card full-width" style="margin-bottom: 20px;">
+        <div style="margin-bottom: 20px;">
+          <p style="color: var(--text-secondary); margin-bottom: 15px;">
+            Classifique suas despesas e dívidas para melhor controle financeiro:
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 6px;">
+              <div style="font-size: 16px; font-weight: bold; color: #10b981; margin-bottom: 5px;">💰 Fixas</div>
+              <div style="color: var(--text-secondary); font-size: 13px;">Despesas recorrentes mensais</div>
+            </div>
+            <div style="background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 15px; border-radius: 6px;">
+              <div style="font-size: 16px; font-weight: bold; color: #f59e0b; margin-bottom: 5px;">📦 Parceladas</div>
+              <div style="color: var(--text-secondary); font-size: 13px;">Gastos pagos em instalações</div>
+            </div>
+            <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 6px;">
+              <div style="font-size: 16px; font-weight: bold; color: #ef4444; margin-bottom: 5px;">⚡ Sem Classificação</div>
+              <div style="color: var(--text-secondary); font-size: 13px;">Gastos pontuais do momento</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card full-width" style="margin-bottom: 20px;">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 20px;">Dívidas</div>
+        <div id="classificacaoDividasContainer"></div>
+      </div>
+
+      <div class="card full-width">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 20px;">Despesas</div>
+        <div id="classificacaoDespesasContainer"></div>
+      </div>
+
+      <div class="card full-width" style="margin-top: 20px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+        <div class="section-title" style="margin-top: 0;">📊 Resumo de Classificação</div>
+        <div id="resumoClassificacaoContainer"></div>
+      </div>
     </div>
 
     <!-- TAB: FORMULÁRIO -->
@@ -1485,6 +1528,7 @@
       renderizarDividas();
       renderizarDespesas();
       renderizarFluxo();
+      renderizarClassificacao();
       atualizarEditor();
     }
 
@@ -1910,6 +1954,235 @@
       link.download = `extrato-${new Date().toISOString().slice(0, 10)}.csv`;
       link.click();
       URL.revokeObjectURL(link.href);
+    }
+
+    function renderizarClassificacao() {
+      renderizarClassificacaoDividas();
+      renderizarClassificacaoDespesas();
+      renderizarResumoClassificacao();
+    }
+
+    function renderizarClassificacaoDividas() {
+      const dividas = dadosGlobais.dividas || [];
+      const container = document.getElementById('classificacaoDividasContainer');
+
+      if (dividas.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Nenhuma dívida registrada</div>';
+        return;
+      }
+
+      let html = '';
+
+      dividas.forEach(divida => {
+        const classificacao = divida.classificacao || 'sem_classificacao';
+        const opcoes = ['fixa', 'parcelada', 'sem_classificacao'];
+        const ativecores = {
+          'fixa': '#10b981',
+          'parcelada': '#f59e0b',
+          'sem_classificacao': '#ef4444'
+        };
+        const nomes = {
+          'fixa': '💰 Fixa',
+          'parcelada': '📦 Parcelada',
+          'sem_classificacao': '⚡ Sem Classificação'
+        };
+
+        html += `
+          <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+              <div>
+                <div style="font-weight: 600; margin-bottom: 5px;">${divida.nome}</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">
+                  Montante: R$ ${divida.montante ? divida.montante.toLocaleString('pt-BR') : '-'}
+                  ${divida.parcela_mensal ? `| Parcela: R$ ${divida.parcela_mensal.toLocaleString('pt-BR')}` : ''}
+                </div>
+              </div>
+              <span style="padding: 4px 10px; background-color: rgba(${classificacao === 'fixa' ? '16, 185, 129' : classificacao === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.2); border-radius: 4px; color: ${ativecores[classificacao]}; font-size: 12px; font-weight: 600;">
+                ${nomes[classificacao]}
+              </span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              ${opcoes.map(op => `
+                <button
+                  class="btn-secondary"
+                  style="padding: 8px 12px; font-size: 12px; border: 1px solid ${ativecores[op]}; ${classificacao === op ? `background-color: ${ativecores[op]}; color: white;` : `color: ${ativecores[op]};`}"
+                  onclick="atualizarClassificacaoDivida('${divida.id}', '${op}')">
+                  ${nomes[op]}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderizarClassificacaoDespesas() {
+      const despesas = dadosGlobais.despesas || {};
+      const container = document.getElementById('classificacaoDespesasContainer');
+
+      const ativecores = {
+        'fixa': '#10b981',
+        'parcelada': '#f59e0b',
+        'sem_classificacao': '#ef4444'
+      };
+      const nomes = {
+        'fixa': '💰 Fixa',
+        'parcelada': '📦 Parcelada',
+        'sem_classificacao': '⚡ Sem Classificação'
+      };
+
+      let html = '';
+      let temDespesas = false;
+
+      Object.keys(despesas).forEach(categoria => {
+        if (categoria === 'black_card') return;
+
+        const dados = despesas[categoria];
+        if (!dados || !dados.items || !Array.isArray(dados.items) || dados.items.length === 0) return;
+
+        temDespesas = true;
+
+        dados.items.forEach((item, idx) => {
+          const chaveUnica = `${categoria}_${idx}`;
+          const classificacao = item.classificacao || 'sem_classificacao';
+          const opcoes = ['fixa', 'parcelada', 'sem_classificacao'];
+
+          html += `
+            <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                <div>
+                  <div style="font-weight: 600; margin-bottom: 5px;">${item.nome}</div>
+                  <div style="font-size: 13px; color: var(--text-secondary);">
+                    Categoria: ${dados.categoria} | Valor: R$ ${item.valor.toLocaleString('pt-BR')}
+                  </div>
+                </div>
+                <span style="padding: 4px 10px; background-color: rgba(${classificacao === 'fixa' ? '16, 185, 129' : classificacao === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.2); border-radius: 4px; color: ${ativecores[classificacao]}; font-size: 12px; font-weight: 600;">
+                  ${nomes[classificacao]}
+                </span>
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${opcoes.map(op => `
+                  <button
+                    class="btn-secondary"
+                    style="padding: 8px 12px; font-size: 12px; border: 1px solid ${ativecores[op]}; ${classificacao === op ? `background-color: ${ativecores[op]}; color: white;` : `color: ${ativecores[op]};`}"
+                    onclick="atualizarClassificacaoDespesa('${categoria}', ${idx}, '${op}')">
+                    ${nomes[op]}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        });
+      });
+
+      if (!temDespesas) {
+        html = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Nenhuma despesa registrada</div>';
+      }
+
+      container.innerHTML = html;
+    }
+
+    function renderizarResumoClassificacao() {
+      const dividas = dadosGlobais.dividas || [];
+      const despesas = dadosGlobais.despesas || {};
+
+      const resumo = {
+        fixa: { dividas: 0, despesas: 0, valor_dividas: 0, valor_despesas: 0 },
+        parcelada: { dividas: 0, despesas: 0, valor_dividas: 0, valor_despesas: 0 },
+        sem_classificacao: { dividas: 0, despesas: 0, valor_dividas: 0, valor_despesas: 0 }
+      };
+
+      dividas.forEach(d => {
+        const classe = d.classificacao || 'sem_classificacao';
+        resumo[classe].dividas += 1;
+        resumo[classe].valor_dividas += d.montante || 0;
+      });
+
+      Object.keys(despesas).forEach(categoria => {
+        if (categoria === 'black_card') return;
+        const dados = despesas[categoria];
+        if (dados.items && Array.isArray(dados.items)) {
+          dados.items.forEach(item => {
+            const classe = item.classificacao || 'sem_classificacao';
+            resumo[classe].despesas += 1;
+            resumo[classe].valor_despesas += item.valor || 0;
+          });
+        }
+      });
+
+      const cores = {
+        'fixa': '#10b981',
+        'parcelada': '#f59e0b',
+        'sem_classificacao': '#ef4444'
+      };
+
+      const nomes = {
+        'fixa': '💰 Fixas (Recorrentes)',
+        'parcelada': '📦 Parceladas (Instalações)',
+        'sem_classificacao': '⚡ Sem Classificação (Pontuais)'
+      };
+
+      let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">';
+
+      Object.keys(resumo).forEach(classe => {
+        const dados = resumo[classe];
+        const totalItens = dados.dividas + dados.despesas;
+        const totalValor = dados.valor_dividas + dados.valor_despesas;
+
+        html += `
+          <div style="background-color: rgba(${classe === 'fixa' ? '16, 185, 129' : classe === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.1); border: 1px solid rgba(${classe === 'fixa' ? '16, 185, 129' : classe === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.3); padding: 15px; border-radius: 6px;">
+            <div style="font-weight: 600; color: ${cores[classe]}; margin-bottom: 10px;">${nomes[classe]}</div>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 13px; color: var(--text-secondary);">Dívidas: <span style="color: ${cores[classe]}; font-weight: 600;">${dados.dividas}</span></div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">R$ ${dados.valor_dividas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div>
+              <div style="font-size: 13px; color: var(--text-secondary);">Despesas: <span style="color: ${cores[classe]}; font-weight: 600;">${dados.despesas}</span></div>
+              <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">R$ ${dados.valor_despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div style="border-top: 1px solid rgba(${classe === 'fixa' ? '16, 185, 129' : classe === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.3); margin-top: 10px; padding-top: 10px;">
+              <div style="font-size: 12px; color: var(--text-secondary);">Total</div>
+              <div style="font-size: 16px; font-weight: 700; color: ${cores[classe]};">R$ ${totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 5px;">${totalItens} item${totalItens !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      document.getElementById('resumoClassificacaoContainer').innerHTML = html;
+    }
+
+    function atualizarClassificacaoDivida(divId, classificacao) {
+      const divida = dadosGlobais.dividas.find(d => d.id === divId);
+      if (divida) {
+        divida.classificacao = classificacao;
+        salvarDadosAutomatico();
+        renderizarClassificacao();
+      }
+    }
+
+    function atualizarClassificacaoDespesa(categoria, indice, classificacao) {
+      const despesa = dadosGlobais.despesas[categoria];
+      if (despesa && despesa.items && despesa.items[indice]) {
+        despesa.items[indice].classificacao = classificacao;
+        salvarDadosAutomatico();
+        renderizarClassificacao();
+      }
+    }
+
+    async function salvarDadosAutomatico() {
+      try {
+        await fetch('/api/dados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dadosGlobais)
+        });
+      } catch (err) {
+        console.error('Erro ao salvar dados:', err);
+      }
     }
 
     function atualizarEditor() {
