@@ -3230,65 +3230,63 @@
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
 
-      // Ler todas as linhas sem processar como JSON primeiro
-      const allRows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false, blankrows: true });
-
       const dados = { fluxo_mensal: { transacoes: [] } };
 
-      if (allRows.length === 0) {
-        console.log('Nenhuma linha encontrada no Excel');
-        return dados;
-      }
+      // Converter sheet para array de arrays (para ter mais controle)
+      const range = XLSX.utils.decode_range(sheet['!ref']);
+      console.log('Range do sheet:', sheet['!ref']);
 
-      // Encontrar a linha real de headers (procura por linhas com colunas conhecidas)
-      let headerRowIdx = 0;
-      let headerRow = null;
+      // Procurar pela linha de headers
+      let headerRowIdx = -1;
+      let headerRow = [];
+      const maxLinhas = Math.min(100, range.e.r + 1);
 
-      for (let i = 0; i < Math.min(allRows.length, 50); i++) {
-        const row = allRows[i];
-        const keys = Object.keys(row).map(k => k.toLowerCase().trim());
+      for (let rowIdx = 0; rowIdx < maxLinhas; rowIdx++) {
+        const row = [];
+        let colComConteudo = 0;
 
-        console.log(`Linha ${i}: colunas = ${keys.join(', ')}`);
+        for (let colIdx = 0; colIdx <= range.e.c; colIdx++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
+          const cell = sheet[cellAddress];
+          const valor = cell ? String(cell.v || '').trim().toLowerCase() : '';
+          row.push(valor);
+          if (valor.length > 0) colComConteudo++;
+        }
 
-        // Critérios mais flexíveis - procura por QUALQUER coluna conhecida
-        const temDataLancamento = keys.some(k => k.match(/data|date|lançamento|lancamento|histórico|história|competência|transacao|transaction/));
-        const temValor = keys.some(k => k.match(/valor|value|amount|montante|débito|debit|crédito|credit/));
-        const temNomeOuPessoa = keys.some(k => k.match(/nome|pessoa|person|responsável|responsavel|titularidade/));
+        console.log(`Linha ${rowIdx}: ${row.join(' | ')}`);
 
-        // Se encontrou Data/Lançamento + Valor, ou Data + Pessoa, ou combos válidos
-        if ((temDataLancamento && temValor) || (temDataLancamento && temNomeOuPessoa) || keys.length >= 5) {
-          // Validação adicional: não deve ter muitas colunas vazias
-          const colNaoVazias = keys.filter(k => k && k.trim().length > 0).length;
-          if (colNaoVazias >= 3) {
-            headerRowIdx = i;
-            headerRow = row;
-            console.log('✓ Headers encontrados na linha ' + i);
-            break;
-          }
+        // Procurar por keywords que indicam que é a linha de headers
+        const rowStr = row.join(' ').toLowerCase();
+        if (
+          (rowStr.includes('data') || rowStr.includes('lançamento') || rowStr.includes('lancamento')) &&
+          (rowStr.includes('valor') || rowStr.includes('débito') || rowStr.includes('debito') || rowStr.includes('crédito') || rowStr.includes('credito'))
+        ) {
+          headerRowIdx = rowIdx;
+          headerRow = row;
+          console.log('✓✓✓ HEADERS ENCONTRADOS NA LINHA ' + rowIdx + ' ✓✓✓');
+          break;
         }
       }
 
-      if (!headerRow) {
-        console.log('Nenhuma linha de headers encontrada após 50 linhas. Usando primeira linha com dados.');
-        // Fallback: usar primeira linha não vazia
-        for (let i = 0; i < allRows.length; i++) {
-          const row = allRows[i];
-          const colNaoVazias = Object.keys(row).filter(k => row[k] && String(row[k]).trim().length > 0).length;
-          if (colNaoVazias >= 2) {
-            headerRowIdx = i;
-            headerRow = row;
-            break;
-          }
-        }
-      }
-
-      if (!headerRow) {
-        console.log('Impossível encontrar headers no arquivo');
+      if (headerRowIdx === -1) {
+        console.log('❌ Nenhuma linha de headers encontrada');
         return dados;
       }
 
-      console.log('Linha de headers encontrada em:', headerRowIdx);
-      console.log('Colunas disponíveis:', Object.keys(headerRow));
+      // Mapear colunas baseado na linha de headers
+      const colMap = {};
+      headerRow.forEach((col, idx) => {
+        if (col.includes('data') || col.includes('competência') || col.includes('competencia')) colMap.data = idx;
+        if (col.includes('lançamento') || col.includes('lancamento') || col.includes('histórico') || col.includes('historia') || col.includes('descricao') || col.includes('descricão') || col.includes('descricão')) colMap.descricao = idx;
+        if (col.includes('valor') && !col.includes('parcela')) colMap.valor = idx;
+        if (col.includes('débito') || col.includes('debito') || col.includes('saída') || col.includes('saida')) colMap.debito = idx;
+        if (col.includes('crédito') || col.includes('credito') || col.includes('entrada')) colMap.credito = idx;
+        if (col.includes('tipo')) colMap.tipo = idx;
+        if (col.includes('nome') || col.includes('pessoa') || col.includes('titularidade')) colMap.pessoa = idx;
+        if (col.includes('cartão') || col.includes('cartao') || col.includes('numero') || col.includes('número')) colMap.conta = idx;
+      });
+
+      console.log('Mapa de colunas:', colMap);
 
       // Auto-detect column names (case-insensitive)
       const colMap = {};
@@ -3333,74 +3331,70 @@
       console.log('Colunas detectadas:', colMap);
       console.log('Linha de headers:', headerRow);
 
-      // Processar apenas as linhas após o header
-      for (let i = headerRowIdx + 1; i < allRows.length; i++) {
-        const row = allRows[i];
+      // Processar linhas de dados
+      for (let rowIdx = headerRowIdx + 1; rowIdx <= range.e.r; rowIdx++) {
+        const row = [];
+        for (let colIdx = 0; colIdx <= range.e.c; colIdx++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: rowIdx, c: colIdx });
+          const cell = sheet[cellAddress];
+          row.push(cell ? cell.v : '');
+        }
 
-        const dataStr = colMap.data ? row[colMap.data] : '';
+        // Extrair campos
+        const dataStr = colMap.data !== undefined ? String(row[colMap.data] || '').trim() : '';
         if (!dataStr) continue;
 
-        const descricao = colMap.descricao ? row[colMap.descricao] : '';
+        const descricao = colMap.descricao !== undefined ? String(row[colMap.descricao] || '').trim() : '';
         if (!descricao) continue;
 
         const classificacao = classificarTransacao(descricao);
 
         let valor = 0;
         let tipo = 'saida';
-        let valorOriginal = '';
 
-        // Tentar obter valor (com tratamento para formato Itaú)
-        if (colMap.valor) {
-          valorOriginal = String(row[colMap.valor] || '0').trim();
-          // Remover R$ e espaços
-          let valStr = valorOriginal.replace(/R\$|\.| /g, '').replace(',', '.');
-          const valParsed = parseFloat(valStr);
-
-          if (!isNaN(valParsed)) {
-            valor = Math.abs(valParsed);
-            // Se o valor original é negativo, é saída; se positivo, é entrada
-            tipo = valParsed < 0 ? 'saida' : 'entrada';
-          }
-        }
-
-        // Tentar debito/credito como fallback
-        if (valor === 0) {
-          if (colMap.debito && row[colMap.debito]) {
-            const debStr = String(row[colMap.debito] || '0').replace(/R\$|\.| /g, '').replace(',', '.');
-            const debValor = parseFloat(debStr) || 0;
-            if (debValor !== 0) {
-              valor = Math.abs(debValor);
-              tipo = 'saida';
-            }
-          }
-
-          if (colMap.credito && row[colMap.credito]) {
-            const credStr = String(row[colMap.credito] || '0').replace(/R\$|\.| /g, '').replace(',', '.');
-            const credValor = parseFloat(credStr) || 0;
-            if (credValor !== 0) {
-              valor = Math.abs(credValor);
-              tipo = 'entrada';
+        // Obter valor
+        if (colMap.valor !== undefined) {
+          const valorRaw = row[colMap.valor];
+          if (valorRaw) {
+            const valStr = String(valorRaw).replace(/R\$|\.| /g, '').replace(',', '.');
+            const valParsed = parseFloat(valStr);
+            if (!isNaN(valParsed)) {
+              valor = Math.abs(valParsed);
+              tipo = valParsed < 0 ? 'saida' : 'entrada';
             }
           }
         }
 
-        // Aplicar lógica de tipo se houver coluna específica
-        if (colMap.tipo && row[colMap.tipo]) {
-          const tipoStr = String(row[colMap.tipo]).toLowerCase();
-          tipo = tipoStr.match(/entrada|credito|depósito|deposit/) ? 'entrada' : 'saida';
+        // Fallback: débito/crédito
+        if (valor === 0 && colMap.debito !== undefined && row[colMap.debito]) {
+          const debStr = String(row[colMap.debito]).replace(/R\$|\.| /g, '').replace(',', '.');
+          const debValor = parseFloat(debStr) || 0;
+          if (debValor !== 0) {
+            valor = Math.abs(debValor);
+            tipo = 'saida';
+          }
+        }
+
+        if (valor === 0 && colMap.credito !== undefined && row[colMap.credito]) {
+          const credStr = String(row[colMap.credito]).replace(/R\$|\.| /g, '').replace(',', '.');
+          const credValor = parseFloat(credStr) || 0;
+          if (credValor !== 0) {
+            valor = Math.abs(credValor);
+            tipo = 'entrada';
+          }
         }
 
         if (valor > 0) {
           const txn = {
             id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
             data: formatarDataExcel(dataStr),
-            descricao: descricao || '',
-            pessoa: colMap.pessoa ? (row[colMap.pessoa] || classificacao?.pessoa || 'Ambos') : (classificacao?.pessoa || 'Ambos'),
+            descricao: descricao,
+            pessoa: colMap.pessoa !== undefined ? (row[colMap.pessoa] || classificacao?.pessoa || 'Ambos') : (classificacao?.pessoa || 'Ambos'),
             tipo: tipo,
             valor: valor,
             categoria: classificacao?.categoria || 'despesa',
-            conta_origem: colMap.conta ? (row[colMap.conta] || classificacao?.cartao || 'Itaú Mastercard Black') : (classificacao?.cartao || 'Itaú Mastercard Black'),
-            cartao_origem: colMap.conta ? row[colMap.conta] : (classificacao?.cartao || ''),
+            conta_origem: colMap.conta !== undefined ? (row[colMap.conta] || classificacao?.cartao || 'Itaú Mastercard Black') : (classificacao?.cartao || 'Itaú Mastercard Black'),
+            cartao_origem: colMap.conta !== undefined ? String(row[colMap.conta] || '') : (classificacao?.cartao || ''),
             status: 'confirmado',
             origem: 'importacao'
           };
@@ -3409,7 +3403,7 @@
         }
       }
 
-      console.log('Transações importadas:', dados.fluxo_mensal.transacoes.length);
+      console.log('✅ Total de transações importadas:', dados.fluxo_mensal.transacoes.length);
       return dados;
     }
 
