@@ -1829,17 +1829,18 @@
               <th>Pessoa</th>
               <th>Conta</th>
               <th>Categoria</th>
-              <th>Valor</th>
+              <th>Entrada</th>
+              <th>Saída</th>
             </tr>
           </thead>
           <tbody>
       `;
 
       transacoesPagina.forEach(txn => {
-        const valorClass = txn.tipo === 'entrada' ? 'positive' : 'negative';
-        const valorSinal = txn.tipo === 'entrada' ? '+' : '-';
         const [ano, mes, dia] = txn.data.split('-');
         const dataFormatada = `${dia}/${mes}/${ano}`;
+        const entrada = txn.tipo === 'entrada' ? txn.valor : '';
+        const saida = txn.tipo === 'saida' ? txn.valor : '';
 
         html += `
           <tr>
@@ -1848,7 +1849,8 @@
             <td><span class="transaction-person">${txn.pessoa}</span></td>
             <td class="transaction-account">${txn.conta_origem}</td>
             <td><span class="transaction-category">${txn.categoria}</span></td>
-            <td class="transaction-value ${valorClass}">${valorSinal} R$ ${Math.abs(txn.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+            <td class="transaction-value positive">${entrada ? 'R$ ' + entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
+            <td class="transaction-value negative">${saida ? 'R$ ' + saida.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>
         `;
       });
@@ -1894,13 +1896,14 @@
         return;
       }
 
-      let csv = 'Data,Descrição,Pessoa,Conta,Categoria,Tipo,Valor\n';
+      let csv = 'Data,Descrição,Pessoa,Conta,Categoria,Entrada,Saída\n';
 
       transacoesFiltradas.forEach(txn => {
         const [ano, mes, dia] = txn.data.split('-');
         const dataFormatada = `${dia}/${mes}/${ano}`;
-        const valorSinal = txn.tipo === 'entrada' ? '' : '-';
-        csv += `"${dataFormatada}","${txn.descricao}","${txn.pessoa}","${txn.conta_origem}","${txn.categoria}","${txn.tipo}","${valorSinal}${txn.valor}"\n`;
+        const entrada = txn.tipo === 'entrada' ? txn.valor : '';
+        const saida = txn.tipo === 'saida' ? txn.valor : '';
+        csv += `"${dataFormatada}","${txn.descricao}","${txn.pessoa}","${txn.conta_origem}","${txn.categoria}","${entrada}","${saida}"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
