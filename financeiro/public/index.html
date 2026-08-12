@@ -3229,34 +3229,115 @@
     function parseExcel(workbook) {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
-      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
 
       const dados = { fluxo_mensal: { transacoes: [] } };
 
-      rows.forEach(row => {
-        const data = row['Data'] || row['data'] || '';
-        if (!data) return;
+      if (rows.length === 0) {
+        console.log('Nenhuma linha encontrada no Excel');
+        return dados;
+      }
 
-        const descricao = row['Descrição'] || row['descricao'] || row['Descrição'] || '';
-        const classificacao = classificarTransacao(descricao);
+      // Auto-detect column names (case-insensitive)
+      const firstRow = rows[0];
+      const colMap = {};
 
-        const txn = {
-          data: formatarDataExcel(data),
-          descricao: descricao || '',
-          pessoa: row['Pessoa'] || row['pessoa'] || classificacao?.pessoa || 'Ambos',
-          tipo: (row['Tipo'] || row['tipo'] || classificacao?.tipo || 'saida').toLowerCase() === 'entrada' ? 'entrada' : 'saida',
-          valor: Math.abs(parseFloat(row['Valor'] || row['valor'] || 0)) || 0,
-          categoria: row['Categoria'] || row['categoria'] || classificacao?.categoria || 'despesa',
-          conta_origem: row['Conta'] || row['conta'] || classificacao?.cartao || 'Banco Itaú',
-          cartao_origem: classificacao?.cartao || '',
-          responsavel: row['Responsável'] || row['responsavel'] || classificacao?.pessoa || 'Ambos',
-          status: row['Status'] || row['status'] || 'confirmado',
-          origem: 'importacao'
-        };
-
-        dados.fluxo_mensal.transacoes.push(txn);
+      Object.keys(firstRow).forEach(key => {
+        const keyLower = key.toLowerCase().trim();
+        if (keyLower.match(/data|date|data_txn|data_transacao|competência|período/)) {
+          colMap.data = key;
+        }
+        if (keyLower.match(/descric|description|desc|transacao|transaction|histórico|história/)) {
+          colMap.descricao = key;
+        }
+        if (keyLower.match(/valor|value|amount|montante|crédito|débito|debit|credit/)) {
+          colMap.valor = key;
+        }
+        if (keyLower.match(/^debito|debit|saída|withdrawal|out/)) {
+          colMap.debito = key;
+        }
+        if (keyLower.match(/^credito|credit|entrada|depósito|deposit|in/)) {
+          colMap.credito = key;
+        }
+        if (keyLower.match(/tipo|type|natureza|categoria|category/)) {
+          colMap.tipo = key;
+        }
+        if (keyLower.match(/pessoa|person|responsavel|responsible/)) {
+          colMap.pessoa = key;
+        }
+        if (keyLower.match(/conta|account|banco|bank/)) {
+          colMap.conta = key;
+        }
       });
 
+      console.log('Colunas detectadas:', colMap);
+      console.log('Primeira linha:', firstRow);
+
+      rows.forEach((row, idx) => {
+        if (idx === 0) return;
+
+        const dataStr = colMap.data ? row[colMap.data] : '';
+        if (!dataStr) return;
+
+        const descricao = colMap.descricao ? row[colMap.descricao] : '';
+        if (!descricao) return;
+
+        const classificacao = classificarTransacao(descricao);
+
+        let valor = 0;
+        let tipo = 'saida';
+
+        // Tentar obter valor
+        if (colMap.valor) {
+          const valStr = String(row[colMap.valor] || '0').replace(/[^\d.,\-]/g, '').replace(',', '.');
+          valor = Math.abs(parseFloat(valStr)) || 0;
+        }
+
+        // Tentar debito/credito
+        if (colMap.debito && row[colMap.debito]) {
+          const debStr = String(row[colMap.debito] || '0').replace(/[^\d.,\-]/g, '').replace(',', '.');
+          const debValor = parseFloat(debStr) || 0;
+          if (debValor !== 0) {
+            valor = Math.abs(debValor);
+            tipo = 'saida';
+          }
+        }
+
+        if (colMap.credito && row[colMap.credito]) {
+          const credStr = String(row[colMap.credito] || '0').replace(/[^\d.,\-]/g, '').replace(',', '.');
+          const credValor = parseFloat(credStr) || 0;
+          if (credValor !== 0) {
+            valor = Math.abs(credValor);
+            tipo = 'entrada';
+          }
+        }
+
+        // Aplicar lógica de tipo
+        if (colMap.tipo && row[colMap.tipo]) {
+          const tipoStr = String(row[colMap.tipo]).toLowerCase();
+          tipo = tipoStr.match(/entrada|credito|depósito|deposit/) ? 'entrada' : 'saida';
+        }
+
+        if (valor > 0) {
+          const txn = {
+            id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            data: formatarDataExcel(dataStr),
+            descricao: descricao || '',
+            pessoa: colMap.pessoa ? (row[colMap.pessoa] || classificacao?.pessoa || 'Ambos') : (classificacao?.pessoa || 'Ambos'),
+            tipo: tipo,
+            valor: valor,
+            categoria: colMap.tipo ? (row[colMap.tipo] || classificacao?.categoria || 'despesa') : (classificacao?.categoria || 'despesa'),
+            conta_origem: colMap.conta ? (row[colMap.conta] || classificacao?.cartao || 'Banco Itaú') : (classificacao?.cartao || 'Banco Itaú'),
+            cartao_origem: classificacao?.cartao || '',
+            status: 'confirmado',
+            origem: 'importacao'
+          };
+
+          dados.fluxo_mensal.transacoes.push(txn);
+        }
+      });
+
+      console.log('Transações importadas:', dados.fluxo_mensal.transacoes.length);
       return dados;
     }
 
@@ -3315,47 +3396,83 @@
       }
 
       const preview = document.getElementById('previewContent');
-      let html = '<div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px;">';
+      let html = '';
 
-      if (dadosImportacao.pessoas && dadosImportacao.pessoas.length > 0) {
-        html += '<div class="change-item"><strong>👥 Pessoas:</strong><br>';
-        dadosImportacao.pessoas.forEach(p => {
-          html += `• ${p.nome}: ${p.salario || p.renda || 0}<br>`;
-        });
-        html += '</div>';
-      }
+      // Verificar se há algum dado importado
+      const temDados =
+        (dadosImportacao.pessoas && dadosImportacao.pessoas.length > 0) ||
+        (dadosImportacao.dividas && dadosImportacao.dividas.length > 0) ||
+        (dadosImportacao.despesas) ||
+        (dadosImportacao.fluxo_mensal && dadosImportacao.fluxo_mensal.transacoes && dadosImportacao.fluxo_mensal.transacoes.length > 0);
 
-      if (dadosImportacao.dividas && dadosImportacao.dividas.length > 0) {
-        html += '<div class="change-item"><strong>🏦 Dívidas:</strong><br>';
-        dadosImportacao.dividas.forEach(d => {
-          html += `• ${d.nome}: R$ ${d.montante.toLocaleString('pt-BR')}<br>`;
-        });
-        html += '</div>';
-      }
+      if (!temDados) {
+        html += `
+          <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 20px; border-radius: 6px; text-align: center;">
+            <div style="font-size: 16px; font-weight: 600; color: #ef4444; margin-bottom: 10px;">⚠️ Nenhum dado detectado</div>
+            <div style="color: var(--text-secondary); margin-bottom: 15px;">
+              O arquivo não contém as colunas esperadas. Verifique se o arquivo tem colunas como:<br>
+              <strong>Data, Descrição, Valor, Débito, Crédito, Tipo, Pessoa, Conta</strong>
+            </div>
+            <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 4px; text-align: left; font-size: 12px; margin-top: 15px;">
+              <strong>Colunas detectadas:</strong><br>
+              ${Object.keys(dadosImportacao).length > 0 ?
+                Object.keys(dadosImportacao).map(k => `• ${k}`).join('<br>') :
+                'Nenhuma coluna detectada'}
+            </div>
+            <button class="btn-secondary" style="margin-top: 15px;" onclick="voltarParaUpload()">← Voltar e selecionar outro arquivo</button>
+          </div>
+        `;
+      } else {
+        html = '<div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px;">';
 
-      if (dadosImportacao.despesas) {
-        html += '<div class="change-item"><strong>💸 Despesas Detectadas</strong></div>';
-      }
-
-      if (dadosImportacao.fluxo_mensal && dadosImportacao.fluxo_mensal.transacoes && dadosImportacao.fluxo_mensal.transacoes.length > 0) {
-        html += '<div class="change-item"><strong>💳 Transações Importadas:</strong> ' + dadosImportacao.fluxo_mensal.transacoes.length + ' transações<br>';
-        html += '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 10px; max-height: 200px; overflow-y: auto;">';
-        dadosImportacao.fluxo_mensal.transacoes.slice(0, 10).forEach(t => {
-          html += `• ${t.data} - ${t.descricao} (${t.tipo}) - R$ ${t.valor.toLocaleString('pt-BR')}<br>`;
-        });
-        if (dadosImportacao.fluxo_mensal.transacoes.length > 10) {
-          html += `<br>... e mais ${dadosImportacao.fluxo_mensal.transacoes.length - 10} transações<br>`;
+        if (dadosImportacao.pessoas && dadosImportacao.pessoas.length > 0) {
+          html += '<div class="change-item"><strong>👥 Pessoas:</strong><br>';
+          dadosImportacao.pessoas.forEach(p => {
+            html += `• ${p.nome}: ${p.salario || p.renda || 0}<br>`;
+          });
+          html += '</div>';
         }
-        html += '</div></div>';
+
+        if (dadosImportacao.dividas && dadosImportacao.dividas.length > 0) {
+          html += '<div class="change-item"><strong>🏦 Dívidas:</strong><br>';
+          dadosImportacao.dividas.forEach(d => {
+            html += `• ${d.nome}: R$ ${d.montante.toLocaleString('pt-BR')}<br>`;
+          });
+          html += '</div>';
+        }
+
+        if (dadosImportacao.despesas) {
+          html += '<div class="change-item"><strong>💸 Despesas Detectadas</strong></div>';
+        }
+
+        if (dadosImportacao.fluxo_mensal && dadosImportacao.fluxo_mensal.transacoes && dadosImportacao.fluxo_mensal.transacoes.length > 0) {
+          html += `<div class="change-item"><strong>💳 Transações Importadas:</strong> ${dadosImportacao.fluxo_mensal.transacoes.length} transações<br>`;
+          html += '<div style="font-size: 12px; color: var(--text-secondary); margin-top: 10px; max-height: 200px; overflow-y: auto;">';
+          dadosImportacao.fluxo_mensal.transacoes.slice(0, 10).forEach(t => {
+            const dataFormatada = t.data ? t.data.split('-').reverse().join('/') : 'N/A';
+            html += `• ${dataFormatada} - ${t.descricao} (${t.tipo}) - R$ ${t.valor.toLocaleString('pt-BR')}<br>`;
+          });
+          if (dadosImportacao.fluxo_mensal.transacoes.length > 10) {
+            html += `<br>... e mais ${dadosImportacao.fluxo_mensal.transacoes.length - 10} transações<br>`;
+          }
+          html += '</div></div>';
+        }
+
+        html += '</div>';
       }
 
-      html += '</div>';
       preview.innerHTML = html;
 
       document.getElementById('etapa1-upload').style.display = 'none';
       document.getElementById('etapa2-preview').style.display = 'block';
 
       atualizarSteps(2);
+    }
+
+    function voltarParaUpload() {
+      document.getElementById('etapa1-upload').style.display = 'block';
+      document.getElementById('etapa2-preview').style.display = 'none';
+      atualizarSteps(1);
     }
 
     function avancarParaConfirmacao() {
