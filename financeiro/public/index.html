@@ -3352,15 +3352,17 @@
           return isNegative ? -parsed : parsed;
         }
 
-        // Verificar se é cartão de crédito (precisa inverter sinais)
-        const ehCartaoCredito = colMap.tipo !== undefined &&
-          String(row[colMap.tipo] || '').toLowerCase().includes('crédito') ||
-          String(row[colMap.tipo] || '').toLowerCase().includes('credito') ||
-          (colMap.conta !== undefined &&
-            (String(row[colMap.conta] || '').toLowerCase().includes('cartão') ||
-             String(row[colMap.conta] || '').toLowerCase().includes('cartao') ||
-             String(row[colMap.conta] || '').toLowerCase().includes('crédito') ||
-             String(row[colMap.conta] || '').toLowerCase().includes('credito')));
+        // Verificar se é cartão de crédito
+        let tipoConta = colMap.tipo !== undefined ? String(row[colMap.tipo] || '').toLowerCase() : '';
+        let nomeConta = colMap.conta !== undefined ? String(row[colMap.conta] || '').toLowerCase() : '';
+
+        const ehCartaoCredito =
+          tipoConta.includes('crédito') || tipoConta.includes('credito') ||
+          tipoConta.includes('cartão') || tipoConta.includes('cartao') ||
+          nomeConta.includes('crédito') || nomeConta.includes('credito') ||
+          nomeConta.includes('cartão') || nomeConta.includes('cartao') ||
+          nomeConta.includes('mastercard') || nomeConta.includes('visa') ||
+          nomeConta.includes('elo');
 
         // Obter valor
         if (colMap.valor !== undefined) {
@@ -3368,9 +3370,12 @@
           if (valorRaw) {
             let valParsed = parseValor(valorRaw);
 
-            // Inverter sinais se for cartão de crédito
+            // Para cartões de crédito, inverter o sinal
+            // Positivo na fatura (+100) vira saída (-100)
+            // Negativo na fatura (-100) vira entrada (+100)
             if (ehCartaoCredito) {
               valParsed = -valParsed;
+              console.log(`Cartão detectado: invertendo ${valorRaw} para ${valParsed}`);
             }
 
             if (!isNaN(valParsed)) {
