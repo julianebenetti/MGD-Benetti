@@ -1425,6 +1425,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <script>
     let dadosGlobais = {};
 
@@ -2208,6 +2209,9 @@
             dadosImportacao = JSON.parse(conteudo);
           } else if (file.name.endsWith('.csv')) {
             dadosImportacao = parseCSV(conteudo);
+          } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+            const workbook = XLSX.read(new Uint8Array(conteudo), { type: 'array' });
+            dadosImportacao = parseExcel(workbook);
           }
 
           mostraListaArquivos();
@@ -2217,31 +2221,88 @@
         }
       };
 
-      if (file.type === 'text/plain' || file.name.endsWith('.json') || file.name.endsWith('.csv')) {
+      if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
         reader.readAsText(file);
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        reader.readAsArrayBuffer(file);
       } else {
-        alert('❌ Tipo de arquivo não suportado. Use JSON ou CSV.');
+        alert('❌ Tipo de arquivo não suportado. Use JSON, CSV, XLS ou XLSX.');
       }
     }
 
     function parseCSV(csvText) {
       const linhas = csvText.split('\n').filter(l => l.trim());
-      const dados = { pessoas: [], dividas: [], despesas: {} };
+      const dados = { fluxo_mensal: { transacoes: [] } };
 
       linhas.forEach((linha, idx) => {
         const valores = linha.split(',').map(v => v.trim());
-        if (idx === 0) return; // pula cabeçalho
+        if (idx === 0) return;
 
         if (valores[0]) {
-          dados.dividas.push({
-            nome: valores[0],
-            montante: parseFloat(valores[1]) || 0,
-            parcela_mensal: parseFloat(valores[2]) || 0
+          dados.fluxo_mensal.transacoes.push({
+            data: valores[0],
+            descricao: valores[1] || '',
+            pessoa: valores[2] || 'Ambos',
+            tipo: valores[4] === 'entrada' ? 'entrada' : 'saida',
+            valor: parseFloat(valores[5]) || 0,
+            categoria: valores[3] || 'despesa',
+            conta_origem: valores[3] || 'Banco Itaú',
+            status: 'confirmado',
+            origem: 'importacao'
           });
         }
       });
 
       return dados;
+    }
+
+    function parseExcel(workbook) {
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+      const dados = { fluxo_mensal: { transacoes: [] } };
+
+      rows.forEach(row => {
+        const data = row['Data'] || row['data'] || '';
+        if (!data) return;
+
+        const txn = {
+          data: formatarDataExcel(data),
+          descricao: row['Descrição'] || row['descricao'] || row['Descrição'] || '',
+          pessoa: row['Pessoa'] || row['pessoa'] || 'Ambos',
+          tipo: (row['Tipo'] || row['tipo'] || 'saida').toLowerCase() === 'entrada' ? 'entrada' : 'saida',
+          valor: Math.abs(parseFloat(row['Valor'] || row['valor'] || 0)) || 0,
+          categoria: row['Categoria'] || row['categoria'] || 'despesa',
+          conta_origem: row['Conta'] || row['conta'] || 'Banco Itaú',
+          status: row['Status'] || row['status'] || 'confirmado',
+          origem: 'importacao'
+        };
+
+        dados.fluxo_mensal.transacoes.push(txn);
+      });
+
+      return dados;
+    }
+
+    function formatarDataExcel(data) {
+      if (typeof data === 'string') {
+        if (data.includes('/')) {
+          const [d, m, y] = data.split('/');
+          return `${y.padStart(4, '20')}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+        }
+        return data;
+      }
+
+      if (typeof data === 'number') {
+        const date = new Date((data - 25569) * 86400 * 1000);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      return data;
     }
 
     function mostraListaArquivos() {
