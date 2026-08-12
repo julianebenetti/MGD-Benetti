@@ -13,6 +13,7 @@ app.use(express.static('public'));
 
 const FINANCEIRO_PATH = path.join(__dirname, 'data', 'financeiro.json');
 const APONTAMENTOS_PATH = path.join(__dirname, 'data', 'apontamentos.json');
+const CLASSIFICACOES_PATH = path.join(__dirname, 'data', 'classificacoes.json');
 
 function readFinanceiro() {
   try {
@@ -54,6 +55,28 @@ function writeApontamentos(data) {
     return true;
   } catch (err) {
     console.error('Erro escrevendo apontamentos.json:', err);
+    return false;
+  }
+}
+
+function readClassificacoes() {
+  try {
+    if (!fs.existsSync(CLASSIFICACOES_PATH)) {
+      return null;
+    }
+    return JSON.parse(fs.readFileSync(CLASSIFICACOES_PATH, 'utf8'));
+  } catch (err) {
+    console.error('Erro lendo classificacoes.json:', err);
+    return null;
+  }
+}
+
+function writeClassificacoes(data) {
+  try {
+    fs.writeFileSync(CLASSIFICACOES_PATH, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Erro escrevendo classificacoes.json:', err);
     return false;
   }
 }
@@ -123,6 +146,24 @@ app.delete('/api/apontamentos/:id', (req, res) => {
     res.json({ success: true });
   } else {
     res.status(500).json({ error: 'Erro ao deletar apontamento' });
+  }
+});
+
+app.get('/api/classificacoes', (req, res) => {
+  const classificacoes = readClassificacoes();
+  if (classificacoes) {
+    res.json(classificacoes);
+  } else {
+    res.status(404).json({ error: 'Classificações não encontradas' });
+  }
+});
+
+app.post('/api/classificacoes', (req, res) => {
+  const classificacoes = req.body;
+  if (writeClassificacoes(classificacoes)) {
+    res.json({ success: true, message: 'Classificações salvas com sucesso' });
+  } else {
+    res.status(500).json({ error: 'Erro ao salvar classificações' });
   }
 });
 

@@ -1428,16 +1428,29 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <script>
     let dadosGlobais = {};
+    let classificacoesGlobais = {};
 
     async function carregarDados() {
       try {
         const response = await fetch('/api/dados');
         if (!response.ok) throw new Error('Erro ao carregar dados');
         dadosGlobais = await response.json();
+        await carregarClassificacoes();
         renderizarTodas();
       } catch (err) {
         console.error(err);
         mostrarErro('Erro ao carregar dados: ' + err.message);
+      }
+    }
+
+    async function carregarClassificacoes() {
+      try {
+        const response = await fetch('/api/classificacoes');
+        if (response.ok) {
+          classificacoesGlobais = await response.json();
+        }
+      } catch (err) {
+        console.warn('Classificações não carregadas:', err);
       }
     }
 
@@ -2256,6 +2269,18 @@
       return dados;
     }
 
+    function classificarTransacao(descricao) {
+      if (!classificacoesGlobais.descricoes_conhecidas) return null;
+
+      const desc = descricao.toUpperCase().trim();
+      for (const [chave, classificacao] of Object.entries(classificacoesGlobais.descricoes_conhecidas)) {
+        if (desc.includes(chave.toUpperCase())) {
+          return classificacao;
+        }
+      }
+      return null;
+    }
+
     function parseExcel(workbook) {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
@@ -2267,14 +2292,19 @@
         const data = row['Data'] || row['data'] || '';
         if (!data) return;
 
+        const descricao = row['Descrição'] || row['descricao'] || row['Descrição'] || '';
+        const classificacao = classificarTransacao(descricao);
+
         const txn = {
           data: formatarDataExcel(data),
-          descricao: row['Descrição'] || row['descricao'] || row['Descrição'] || '',
-          pessoa: row['Pessoa'] || row['pessoa'] || 'Ambos',
-          tipo: (row['Tipo'] || row['tipo'] || 'saida').toLowerCase() === 'entrada' ? 'entrada' : 'saida',
+          descricao: descricao || '',
+          pessoa: row['Pessoa'] || row['pessoa'] || classificacao?.pessoa || 'Ambos',
+          tipo: (row['Tipo'] || row['tipo'] || classificacao?.tipo || 'saida').toLowerCase() === 'entrada' ? 'entrada' : 'saida',
           valor: Math.abs(parseFloat(row['Valor'] || row['valor'] || 0)) || 0,
-          categoria: row['Categoria'] || row['categoria'] || 'despesa',
-          conta_origem: row['Conta'] || row['conta'] || 'Banco Itaú',
+          categoria: row['Categoria'] || row['categoria'] || classificacao?.categoria || 'despesa',
+          conta_origem: row['Conta'] || row['conta'] || classificacao?.cartao || 'Banco Itaú',
+          cartao_origem: classificacao?.cartao || '',
+          responsavel: row['Responsável'] || row['responsavel'] || classificacao?.pessoa || 'Ambos',
           status: row['Status'] || row['status'] || 'confirmado',
           origem: 'importacao'
         };

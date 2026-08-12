@@ -1,0 +1,366 @@
+{
+  "descricoes_conhecidas": {
+    "REMUNERACAO/SALARIO": {
+      "categoria": "salário",
+      "pessoa": "Juliane",
+      "tipo": "entrada",
+      "descricao": "Salário Elektro"
+    },
+    "PIX TRANSF Hugo Fe": {
+      "categoria": "transferencia",
+      "pessoa": "Hugo",
+      "tipo": "entrada",
+      "descricao": "Contribuição Hugo (táxi)"
+    },
+    "PIX TRANSF MARCOS": {
+      "categoria": "renda",
+      "pessoa": "Ambos",
+      "tipo": "entrada",
+      "descricao": "Aluguel garagem"
+    },
+    "PAG TIT INT 199060387000": {
+      "categoria": "escola",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Escola Valentina",
+      "vencimento": "dia 10"
+    },
+    "PAG TIT INT 001": {
+      "categoria": "escola",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Escola Luca",
+      "vencimento": "dia 1"
+    },
+    "PIX TRANSF GUILHER": {
+      "categoria": "escola",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Van escolar Luca",
+      "vencimento": "dia 28"
+    },
+    "PAG TIT INT 237": {
+      "categoria": "casa",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Condomínio",
+      "valor": 623,
+      "vencimento": "dia 10"
+    },
+    "DA CPFL PTA": {
+      "categoria": "casa",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Energia elétrica"
+    },
+    "DA SANASA": {
+      "categoria": "casa",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Água"
+    },
+    "DA CLARO BL/IT": {
+      "categoria": "casa",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Internet Claro"
+    },
+    "DA CLARO CELULAR": {
+      "categoria": "casa",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Celular"
+    },
+    "CREDITO CONSIGNADO": {
+      "categoria": "divida",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Consignado C/C"
+    },
+    "FATURAITAU UNICLASS": {
+      "categoria": "divida",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Fatura Mastercard Black",
+      "vencimento": "dia 26"
+    },
+    "IOF": {
+      "categoria": "divida",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Encargo operação crédito"
+    },
+    "PIX QRS BENETTI UP": {
+      "categoria": "negocio",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Transferência Benetti UP"
+    },
+    "PIX QRS STIMA": {
+      "categoria": "negocio",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Contabilidade STIMA",
+      "valor": 415,
+      "recorrencia": "mensal"
+    },
+    "DA DAS MEI": {
+      "categoria": "negocio",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Imposto MEI",
+      "valor": 87,
+      "recorrencia": "mensal"
+    },
+    "PIX TRANSF EDILEIA": {
+      "categoria": "pessoas",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Aluguel vaga carro",
+      "valor": 200,
+      "recorrencia": "mensal"
+    },
+    "PIX TRANSF Nilza": {
+      "categoria": "pessoas",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Faxina",
+      "valor": 150,
+      "recorrencia": "mensal"
+    },
+    "PIX TRANSF IGREJA": {
+      "categoria": "pessoal",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Dízimo",
+      "valor": 50
+    },
+    "PIX TRANSF APE": {
+      "categoria": "pessoas",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Lockers guarda-móveis",
+      "valor": 223
+    },
+    "JUROS LIMITE": {
+      "categoria": "alerta",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Juros cheque especial",
+      "alerta": "evitável"
+    },
+    "DONA TEREZINHA": {
+      "categoria": "alimentacao",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Almoço trabalho",
+      "cartao": "Mastercard Black"
+    },
+    "MARCIA DE CARLA": {
+      "categoria": "alimentacao",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Varejão/alimentação",
+      "cartao": "Mastercard Black"
+    },
+    "SAVEGNAGO": {
+      "categoria": "alimentacao",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Supermercado",
+      "cartao": "Mastercard Black"
+    },
+    "SUPERMERCADOS JL": {
+      "categoria": "alimentacao",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Supermercado",
+      "cartao": "Mastercard Black"
+    },
+    "PADARIA KI JOIA": {
+      "categoria": "alimentacao",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Padaria",
+      "cartao": "Mastercard Black"
+    },
+    "POSTO DAS AMOREIRAS": {
+      "categoria": "transporte",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Combustível Hugo",
+      "cartao": "Mastercard Black"
+    },
+    "CORRENTAO AUTO POSTO": {
+      "categoria": "transporte",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Combustível Hugo",
+      "cartao": "Mastercard Black"
+    },
+    "PostoAndrade": {
+      "categoria": "transporte",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Combustível Hugo",
+      "cartao": "Mastercard Black"
+    },
+    "PostoRiviera": {
+      "categoria": "transporte",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Combustível Hugo",
+      "cartao": "Mastercard Black"
+    },
+    "TOKIO MARINE": {
+      "categoria": "transporte",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Seguro carro Hugo",
+      "valor": 286,
+      "cartao": "Mastercard Black"
+    },
+    "ROCHA AUTO": {
+      "categoria": "transporte",
+      "pessoa": "Hugo",
+      "tipo": "saida",
+      "descricao": "Auto peças",
+      "cartao": "Mastercard Black"
+    },
+    "MP DRAMARINA": {
+      "categoria": "saude",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Ortodontia Luca",
+      "valor": 250,
+      "cartao": "Mastercard Black"
+    },
+    "DROGAL PIRAC": {
+      "categoria": "saude",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Farmácia",
+      "cartao": "Mastercard Black"
+    },
+    "APPLE.COM/BILL": {
+      "categoria": "assinatura",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Apple",
+      "valor": 60,
+      "cartao": "Mastercard Black"
+    },
+    "EBN *SPOTIFY": {
+      "categoria": "assinatura",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Spotify",
+      "valor": 24,
+      "cartao": "Mastercard Black"
+    },
+    "Google One": {
+      "categoria": "assinatura",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Google One",
+      "valor": 13,
+      "cartao": "Mastercard Black"
+    },
+    "IFD*IFOOD": {
+      "categoria": "assinatura",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "iFood Club",
+      "valor": 6,
+      "cartao": "Mastercard Black"
+    },
+    "99APP": {
+      "categoria": "transporte",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "99 Ride",
+      "cartao": "Mastercard Black"
+    },
+    "DL*99": {
+      "categoria": "transporte",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "99 Ride",
+      "cartao": "Mastercard Black"
+    },
+    "KIWIFY *MGDMentori": {
+      "categoria": "negocio",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Curso/mentoria",
+      "valor": 615,
+      "cartao": "Mastercard Black"
+    },
+    "KIWIFY *InstaMagic": {
+      "categoria": "negocio",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "InstaMAGIC",
+      "valor": 50,
+      "cartao": "Mastercard Black"
+    },
+    "UNIAOSOCORRO": {
+      "categoria": "vestuario",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Roupas (PARAR!)",
+      "valor": 166,
+      "cartao": "Mastercard Black",
+      "alerta": "parar"
+    },
+    "MAGALU *Magalu": {
+      "categoria": "vestuario",
+      "pessoa": "Juliane",
+      "tipo": "saida",
+      "descricao": "Magazine Luiza",
+      "cartao": "Mastercard Black"
+    },
+    "OMEGA": {
+      "categoria": "lazer",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Academia/lazer",
+      "cartao": "Mastercard Black"
+    },
+    "DECATHLON": {
+      "categoria": "lazer",
+      "pessoa": "Ambos",
+      "tipo": "saida",
+      "descricao": "Decathlon",
+      "cartao": "Mastercard Black"
+    }
+  },
+  "categorias": [
+    "salário",
+    "renda",
+    "entrada",
+    "escola",
+    "casa",
+    "divida",
+    "negocio",
+    "pessoas",
+    "pessoal",
+    "alimentacao",
+    "transporte",
+    "saude",
+    "assinatura",
+    "vestuario",
+    "lazer",
+    "alerta",
+    "transferencia"
+  ],
+  "pessoas": ["Juliane", "Hugo", "Ambos"],
+  "cartoes": [
+    "Mastercard Black",
+    "Bradesco Amazon",
+    "Mercado Pago",
+    "Banco Itaú"
+  ],
+  "ultima_atualizacao": "2026-08-12",
+  "notas": "Histórico de classificações para facilitar importação e categorização automática de despesas"
+}
