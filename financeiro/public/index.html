@@ -3309,12 +3309,42 @@
         let valor = 0;
         let tipo = 'saida';
 
+        // Função auxiliar para parsear valores em diferentes formatos
+        function parseValor(valStr) {
+          if (!valStr) return 0;
+
+          let cleanVal = String(valStr).trim();
+          const isNegative = cleanVal.includes('-');
+
+          // Remover R$, espaços, símbolos
+          cleanVal = cleanVal.replace(/R\$|[ \-\+]/g, '').trim();
+
+          // Detectar separadores: se tem ambos ponto e vírgula, o último é decimal
+          if (cleanVal.includes('.') && cleanVal.includes(',')) {
+            const lastDot = cleanVal.lastIndexOf('.');
+            const lastComma = cleanVal.lastIndexOf(',');
+            if (lastComma > lastDot) {
+              // Formato: 2.252,37 (brasileiro)
+              cleanVal = cleanVal.replace(/\./g, '').replace(',', '.');
+            } else {
+              // Formato: 2,252.37 (internacional)
+              cleanVal = cleanVal.replace(/,/g, '');
+            }
+          } else if (cleanVal.includes(',')) {
+            // Só vírgula: formato brasileiro
+            cleanVal = cleanVal.replace(',', '.');
+          }
+          // Se só tiver ponto, já está no formato correto
+
+          const parsed = parseFloat(cleanVal) || 0;
+          return isNegative ? -parsed : parsed;
+        }
+
         // Obter valor
         if (colMap.valor !== undefined) {
           const valorRaw = row[colMap.valor];
           if (valorRaw) {
-            const valStr = String(valorRaw).replace(/R\$|\.| /g, '').replace(',', '.');
-            const valParsed = parseFloat(valStr);
+            const valParsed = parseValor(valorRaw);
             if (!isNaN(valParsed)) {
               valor = Math.abs(valParsed);
               tipo = valParsed < 0 ? 'saida' : 'entrada';
@@ -3324,8 +3354,7 @@
 
         // Fallback: débito/crédito
         if (valor === 0 && colMap.debito !== undefined && row[colMap.debito]) {
-          const debStr = String(row[colMap.debito]).replace(/R\$|\.| /g, '').replace(',', '.');
-          const debValor = parseFloat(debStr) || 0;
+          const debValor = parseValor(row[colMap.debito]);
           if (debValor !== 0) {
             valor = Math.abs(debValor);
             tipo = 'saida';
@@ -3333,8 +3362,7 @@
         }
 
         if (valor === 0 && colMap.credito !== undefined && row[colMap.credito]) {
-          const credStr = String(row[colMap.credito]).replace(/R\$|\.| /g, '').replace(',', '.');
-          const credValor = parseFloat(credStr) || 0;
+          const credValor = parseValor(row[colMap.credito]);
           if (credValor !== 0) {
             valor = Math.abs(credValor);
             tipo = 'entrada';
