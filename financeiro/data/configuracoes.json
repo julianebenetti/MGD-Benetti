@@ -17,8 +17,209 @@
       "nome": "Ambos",
       "cor": "#06b6d4",
       "icone": "👥"
+    },
+    {
+      "id": "valentina",
+      "nome": "Valentina",
+      "cor": "#ec4899",
+      "icone": "👧"
+    },
+    {
+      "id": "luca",
+      "nome": "Luca",
+      "cor": "#f59e0b",
+      "icone": "👦"
+    },
+    {
+      "id": "familia",
+      "nome": "Família",
+      "cor": "#10b981",
+      "icone": "👨‍👩‍👧‍👦"
     }
   ],
+  "categorias": {
+    "receitas": [
+      {
+        "id": "salario",
+        "nome": "Salário/Trabalho",
+        "descricao": "Renda principal de trabalho",
+        "cor": "#059669",
+        "icone": "💼"
+      },
+      {
+        "id": "renda_extra",
+        "nome": "Renda Extra",
+        "descricao": "Trabalhos pontuais, freelance, bicos",
+        "cor": "#10b981",
+        "icone": "💰"
+      },
+      {
+        "id": "investimentos",
+        "nome": "Investimentos",
+        "descricao": "Rentabilidade de investimentos, dividendos, juros",
+        "cor": "#06b6d4",
+        "icone": "📊"
+      },
+      {
+        "id": "outras_receitas",
+        "nome": "Outras Receitas",
+        "descricao": "Presentes, devoluções, outras fontes",
+        "cor": "#6b7280",
+        "icone": "❓"
+      }
+    ],
+    "despesas": [
+      {
+        "id": "moradia",
+        "nome": "Moradia",
+        "descricao": "Aluguel, condomínio, energia, água, gás, internet, etc",
+        "cor": "#ef4444",
+        "icone": "🏠",
+        "subcategorias": ["Aluguel", "Condomínio", "Energia", "Água", "Gás", "Internet"]
+      },
+      {
+        "id": "alimentacao",
+        "nome": "Alimentação",
+        "descricao": "Supermercado, restaurante, delivery, etc",
+        "cor": "#10b981",
+        "icone": "🍔",
+        "subcategorias": ["Supermercado", "Restaurante", "Delivery", "Café"]
+      },
+      {
+        "id": "transporte",
+        "nome": "Transporte",
+        "descricao": "Combustível, Uber, IPVA, seguro, manutenção, etc",
+        "cor": "#f59e0b",
+        "icone": "🚗",
+        "subcategorias": ["Combustível", "Uber/Táxi", "IPVA", "Seguro", "Manutenção"]
+      },
+      {
+        "id": "saude",
+        "nome": "Saúde",
+        "descricao": "Consulta, medicamentos, plano saúde, dentista, etc",
+        "cor": "#ec4899",
+        "icone": "⚕️",
+        "subcategorias": ["Consulta", "Medicamentos", "Plano Saúde", "Dentista", "Ótica"]
+      },
+      {
+        "id": "educacao",
+        "nome": "Educação",
+        "descricao": "Escola, cursos, material escolar, livros, etc",
+        "cor": "#6366f1",
+        "icone": "📚",
+        "subcategorias": ["Escola/Mensalidade", "Cursos", "Material Escolar", "Livros"]
+      },
+      {
+        "id": "filhos",
+        "nome": "Filhos",
+        "descricao": "Roupas infantil, brinquedos, mesada, produtos infantis, etc",
+        "cor": "#a855f7",
+        "icone": "🧸",
+        "subcategorias": ["Roupas Infantil", "Brinquedos", "Mesada", "Fralda/Higiene"]
+      },
+      {
+        "id": "contas_servicos",
+        "nome": "Contas/Serviços",
+        "descricao": "Celular, streaming, internet, TV, etc",
+        "cor": "#3b82f6",
+        "icone": "📱",
+        "subcategorias": ["Celular", "Streaming", "Internet", "TV/Telefone"]
+      },
+      {
+        "id": "lazer",
+        "nome": "Lazer",
+        "descricao": "Cinema, passeios, viagens, atividades de lazer, etc",
+        "cor": "#06b6d4",
+        "icone": "🎬",
+        "subcategorias": ["Cinema", "Viagens", "Passeios", "Entretenimento"]
+      },
+      {
+        "id": "compras_pessoais",
+        "nome": "Compras Pessoais",
+        "descricao": "Roupas, cosméticos, acessórios, higiene pessoal, etc",
+        "cor": "#14b8a6",
+        "icone": "💅",
+        "subcategorias": ["Roupas", "Cosméticos", "Acessórios", "Higiene Pessoal"]
+      },
+      {
+        "id": "financeiras",
+        "nome": "Financeiras",
+        "descricao": "Juros, tarifas bancárias, multas, etc",
+        "cor": "#8b5cf6",
+        "icone": "🏦",
+        "subcategorias": ["Juros", "Tarifas Bancárias", "Multas", "Anuidades"]
+      },
+      {
+        "id": "dividas",
+        "nome": "Dívidas",
+        "descricao": "Pagamentos de empréstimo, financiamento, parcelamento, etc",
+        "cor": "#d946ef",
+        "icone": "💳",
+        "subcategorias": ["Empréstimo", "Financiamento", "Parcelamento", "Crediário"]
+      },
+      {
+        "id": "impostos",
+        "nome": "Impostos",
+        "descricao": "IR, IPTU, IPVA, taxas, contribuições, etc",
+        "cor": "#dc2626",
+        "icone": "📋",
+        "subcategorias": ["IR", "IPTU", "IPVA", "Taxas/Contribuições"]
+      },
+      {
+        "id": "pets",
+        "nome": "Pets",
+        "descricao": "Ração, veterinário, banho/tosa, medicamentos, etc",
+        "cor": "#ea580c",
+        "icone": "🐾",
+        "subcategorias": ["Ração", "Veterinário", "Banho/Tosa", "Medicamentos"]
+      },
+      {
+        "id": "casa",
+        "nome": "Casa",
+        "descricao": "Móveis, reparos, decoração, limpeza, etc",
+        "cor": "#92400e",
+        "icone": "🛋️",
+        "subcategorias": ["Móveis", "Reparos", "Decoração", "Limpeza"]
+      },
+      {
+        "id": "outros",
+        "nome": "Outros",
+        "descricao": "Despesas diversas sem categoria específica",
+        "cor": "#6b7280",
+        "icone": "❓"
+      }
+    ],
+    "investimentos": [
+      {
+        "id": "reserva_emergencia",
+        "nome": "Reserva de Emergência",
+        "descricao": "Fundo de segurança para emergências",
+        "cor": "#dc2626",
+        "icone": "🆘"
+      },
+      {
+        "id": "poupanca",
+        "nome": "Poupança",
+        "descricao": "Aplicações em poupança",
+        "cor": "#f59e0b",
+        "icone": "🏦"
+      },
+      {
+        "id": "investimentos_acoes",
+        "nome": "Investimentos",
+        "descricao": "Ações, fundos, ETFs e outros investimentos",
+        "cor": "#06b6d4",
+        "icone": "📈"
+      },
+      {
+        "id": "previdencia",
+        "nome": "Previdência",
+        "descricao": "PGBL, VGBL, aposentadoria privada",
+        "cor": "#059669",
+        "icone": "🎯"
+      }
+    ]
+  },
   "tipos_despesa": [
     {
       "id": "alimentacao",
@@ -89,6 +290,67 @@
       "descricao": "Despesas diversas sem categoria específica",
       "cor": "#6b7280",
       "icone": "❓"
+    }
+  ],
+  "contas_origem": [
+    {
+      "id": "conta_corrente",
+      "nome": "Conta Corrente",
+      "banco": "Banco Principal",
+      "tipo": "corrente",
+      "ativa": true
+    },
+    {
+      "id": "poupanca_main",
+      "nome": "Poupança Principal",
+      "banco": "Banco Principal",
+      "tipo": "poupanca",
+      "ativa": true
+    },
+    {
+      "id": "cartao_credito",
+      "nome": "Cartão de Crédito",
+      "banco": "Banco Principal",
+      "tipo": "cartao_credito",
+      "ativa": true
+    },
+    {
+      "id": "caixa",
+      "nome": "Caixa/Dinheiro",
+      "tipo": "dinheiro",
+      "ativa": true
+    }
+  ],
+  "abas": [
+    {
+      "id": "dashboard",
+      "nome": "Dashboard",
+      "ordem": 1,
+      "ativa": true
+    },
+    {
+      "id": "receitas",
+      "nome": "Receitas",
+      "ordem": 2,
+      "ativa": true
+    },
+    {
+      "id": "despesas",
+      "nome": "Despesas",
+      "ordem": 3,
+      "ativa": true
+    },
+    {
+      "id": "investimentos",
+      "nome": "Investimentos",
+      "ordem": 4,
+      "ativa": true
+    },
+    {
+      "id": "relatorios",
+      "nome": "Relatórios",
+      "ordem": 5,
+      "ativa": true
     }
   ]
 }
