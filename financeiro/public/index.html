@@ -3298,8 +3298,20 @@
         }
 
         // Extrair campos
-        const dataStr = colMap.data !== undefined ? String(row[colMap.data] || '').trim() : '';
+        let dataStr = colMap.data !== undefined ? row[colMap.data] : '';
         if (!dataStr) continue;
+
+        // Converter para string se for número
+        if (typeof dataStr === 'number') {
+          const dateObj = new Date((dataStr - 25569) * 86400 * 1000);
+          const year = dateObj.getFullYear();
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          dataStr = `${day}/${month}/${year}`;
+          console.log(`Data convertida de serial ${row[colMap.data]} para ${dataStr}`);
+        } else {
+          dataStr = String(dataStr).trim();
+        }
 
         const descricao = colMap.descricao !== undefined ? String(row[colMap.descricao] || '').trim() : '';
         if (!descricao) continue;
