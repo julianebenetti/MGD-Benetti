@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786515342,
-  "updated_at_br": "12/08/2026 03:08",
+  "updated_at": 1786523046,
+  "updated_at_br": "12/08/2026 05:17",
   "period_days": 90,
-  "total_orders": 8109,
-  "total_conversions": 7701,
+  "total_orders": 8108,
+  "total_conversions": 7700,
   "orders": [
     {
       "ID do pedido": "2608113BP1ERA9",
@@ -19782,7 +19782,7 @@
     },
     {
       "ID do pedido": "260806MK9CMNNA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-06 09:31:51",
       "Sub_id1": "01Ago26VEAcalcajogger",
       "Valor de Compra(R$)": "15.9",
@@ -19794,7 +19794,7 @@
       "Comissao total do pedido(R$)": "0.636",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Duo Blush + Iluminador Melu - Ruby Rose",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23698791987",
       "ID da loja": "335101863",
       "Nome da loja": "Make-Up Brasill",
@@ -19802,7 +19802,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239707911110577",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-06"
     },
     {
@@ -202703,31 +202703,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "232446077115428",
       "conversionStatus": "CANCELLED",
-      "data": "2026-05-14"
-    },
-    {
-      "ID do pedido": "260514CRY34RWG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-14 06:25:31",
-      "Sub_id1": "13Mar26PoUnhaPerola",
-      "Valor de Compra(R$)": "18.9",
-      "Comissao liquida do afiliado(R$)": "1.512",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.567",
-      "Comissao do vendedor(R$)": "0.945",
-      "Comissao total do pedido(R$)": "1.512",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 12 e 6 Pó Diamante Pó Sereia Decoração Unhas 12 Potinhos Nail Art",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23798222794",
-      "ID da loja": "539989319",
-      "Nome da loja": "Shopixxx",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232439130156427",
-      "conversionStatus": "COMPLETED",
       "data": "2026-05-14"
     }
   ]
