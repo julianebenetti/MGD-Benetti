@@ -869,6 +869,24 @@
       font-weight: bold;
     }
 
+    .transaction-editable {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: 4px 6px;
+      border-radius: 3px;
+    }
+
+    .transaction-editable:hover {
+      background-color: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+    }
+
+    .transaction-editing {
+      background-color: rgba(59, 130, 246, 0.3);
+      border: 1px solid var(--accent-blue);
+      padding: 2px 4px;
+    }
+
     .pagination {
       display: flex;
       align-items: center;
@@ -2351,46 +2369,46 @@
       `;
 
       transacoesPagina.forEach((txn, idx) => {
+        const txnIdx = inicio + idx;
         const [ano, mes, dia] = txn.data.split('-');
         const dataFormatada = `${dia}/${mes}/${ano}`;
         const entrada = txn.tipo === 'entrada' ? txn.valor : '';
         const saida = txn.tipo === 'saida' ? txn.valor : '';
 
         // Origem (Cartão ou Conta)
-        let origem = txn.conta_origem || 'N/A';
-        if (origem.toLowerCase().includes('mastercard') || origem.toLowerCase().includes('cartão')) {
-          origem = `💳 Mastercard •••• ${origem.slice(-4)}`;
-        } else if (origem.toLowerCase().includes('visa')) {
-          origem = `💳 Visa •••• ${origem.slice(-4)}`;
-        } else if (origem.toLowerCase().includes('elo')) {
-          origem = `💳 Elo •••• ${origem.slice(-4)}`;
-        } else if (origem.toLowerCase().includes('itau') || origem.toLowerCase().includes('bradesco')) {
-          origem = `🏦 ${origem}`;
+        let origemFormatada = txn.conta_origem || 'N/A';
+        if (origemFormatada.toLowerCase().includes('mastercard') || origemFormatada.toLowerCase().includes('cartão')) {
+          origemFormatada = `💳 Mastercard •••• ${origemFormatada.slice(-4)}`;
+        } else if (origemFormatada.toLowerCase().includes('visa')) {
+          origemFormatada = `💳 Visa •••• ${origemFormatada.slice(-4)}`;
+        } else if (origemFormatada.toLowerCase().includes('elo')) {
+          origemFormatada = `💳 Elo •••• ${origemFormatada.slice(-4)}`;
+        } else if (origemFormatada.toLowerCase().includes('itau') || origemFormatada.toLowerCase().includes('bradesco')) {
+          origemFormatada = `🏦 ${origemFormatada}`;
         }
 
-        // Mês de referência (usar mes_referencia se existir, senão deixar editável)
+        // Mês de referência
         const mesRef = txn.mes_referencia || '—';
 
         // Tipo de gasto
         const tipoGasto = txn.tipo_gasto || 'Comum';
         const icone = tipoGasto === 'Fixa' ? '🔒' : tipoGasto === 'Parcelada' ? '📊' : '📌';
 
-        // Parcela (ex: "1/12", "2/6", etc)
+        // Parcela
         const parcela = txn.parcela ? txn.parcela : (tipoGasto === 'Parcelada' ? 'Editar' : '—');
-        const parcelaStyle = tipoGasto === 'Parcelada' ? 'cursor: pointer; color: var(--accent-blue); text-decoration: underline;' : '';
 
         html += `
           <tr>
-            <td class="transaction-date">${dataFormatada}</td>
-            <td class="transaction-description">${txn.descricao}</td>
-            <td><span class="transaction-person">${txn.pessoa}</span></td>
-            <td class="transaction-account">${origem}</td>
-            <td><span class="transaction-category">${txn.categoria}</span></td>
-            <td style="font-size: 12px; color: var(--text-secondary); cursor: pointer;" onclick="editarMesRef(this, ${inicio + idx})" title="Clique para editar">${mesRef}</td>
-            <td style="font-size: 12px; text-align: center;">${icone} ${tipoGasto}</td>
-            <td style="font-size: 12px; text-align: center; ${parcelaStyle}" onclick="editarParcela(this, ${inicio + idx})" title="Clique para editar">${parcela}</td>
-            <td class="transaction-value positive">${entrada ? 'R$ ' + entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
-            <td class="transaction-value negative">${saida ? 'R$ ' + saida.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
+            <td class="transaction-date transaction-editable" onclick="editarCampo(${txnIdx}, 'data')" title="Clique para editar">${dataFormatada}</td>
+            <td class="transaction-description transaction-editable" onclick="editarCampo(${txnIdx}, 'descricao')" title="Clique para editar">${txn.descricao}</td>
+            <td class="transaction-editable" onclick="editarCampo(${txnIdx}, 'pessoa')" title="Clique para editar"><span class="transaction-person">${txn.pessoa}</span></td>
+            <td class="transaction-account transaction-editable" onclick="editarCampo(${txnIdx}, 'conta_origem')" title="Clique para editar">${origemFormatada}</td>
+            <td class="transaction-editable" onclick="editarCampo(${txnIdx}, 'categoria')" title="Clique para editar"><span class="transaction-category">${txn.categoria}</span></td>
+            <td style="font-size: 12px;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'mes_referencia')" title="Clique para editar">${mesRef}</td>
+            <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
+            <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'parcela')" title="Clique para editar">${parcela}</td>
+            <td class="transaction-value positive transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${entrada ? 'R$ ' + entrada.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
+            <td class="transaction-value negative transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${saida ? 'R$ ' + saida.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>
         `;
       });
@@ -2430,38 +2448,60 @@
       }
     }
 
-    function editarMesRef(element, txnIdx) {
+    function editarCampo(txnIdx, campo) {
       const fluxo = dadosGlobais.fluxo_mensal || {};
       const transacoes = fluxo.transacoes || [];
       const txn = transacoes[txnIdx];
 
-      const mesAtual = txn.mes_referencia || '';
-      const novoMes = prompt('Digite o mês de referência (ex: Ago/26, Set/26, etc):', mesAtual);
+      let valorAtual = txn[campo] || '';
+      let label = campo.charAt(0).toUpperCase() + campo.slice(1);
+      let novoValor;
 
-      if (novoMes !== null) {
-        transacoes[txnIdx].mes_referencia = novoMes.trim();
-        salvarDadosAutomatico();
-        element.textContent = novoMes.trim();
-        console.log(`✅ Mês de referência atualizado para "${novoMes.trim()}"`);
+      // Customizar label e inputs para campos específicos
+      const labels = {
+        'data': 'Data (DD/MM/YYYY)',
+        'descricao': 'Descrição',
+        'pessoa': 'Pessoa (Juliane/Hugo/Familia/etc)',
+        'conta_origem': 'Conta/Origem',
+        'categoria': 'Categoria',
+        'mes_referencia': 'Mês Ref (ex: Ago/26)',
+        'tipo_gasto': 'Tipo (Fixa/Parcelada/Comum)',
+        'parcela': 'Parcela (ex: 1/12)',
+        'valor': 'Valor (R$)'
+      };
+
+      label = labels[campo] || label;
+
+      if (campo === 'data') {
+        // Converter DD/MM/YYYY para YYYY-MM-DD para input date
+        if (valorAtual) {
+          const parts = valorAtual.split('-');
+          valorAtual = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        }
+        novoValor = prompt(`Digite ${label}:`, valorAtual);
+        if (novoValor) {
+          novoValor = novoValor.split('-').reverse().join('-'); // Reverter para YYYY-MM-DD
+        }
+      } else if (campo === 'valor') {
+        novoValor = prompt(`Digite ${label} (sem R$):`, valorAtual.toString());
+        if (novoValor) {
+          novoValor = parseFloat(novoValor.replace(',', '.'));
+        }
+      } else {
+        novoValor = prompt(`Digite ${label}:`, valorAtual);
       }
-    }
 
-    function editarParcela(element, txnIdx) {
-      const fluxo = dadosGlobais.fluxo_mensal || {};
-      const transacoes = fluxo.transacoes || [];
-      const txn = transacoes[txnIdx];
+      if (novoValor !== null && novoValor !== '') {
+        transacoes[txnIdx][campo] = novoValor;
 
-      const parcelaAtual = txn.parcela || '';
-      const novaParcela = prompt('Digite a parcela (ex: 1/12, 2/6, etc) ou deixe em branco:', parcelaAtual);
-
-      if (novaParcela !== null) {
-        transacoes[txnIdx].parcela = novaParcela.trim();
-        if (novaParcela.trim()) {
+        // Auto-set tipo_gasto se parcela foi preenchida
+        if (campo === 'parcela' && novoValor) {
           transacoes[txnIdx].tipo_gasto = 'Parcelada';
         }
+
         salvarDadosAutomatico();
-        element.textContent = novaParcela.trim() || '—';
-        console.log(`✅ Parcela atualizada para "${novaParcela.trim()}"`);
+        console.log(`✅ ${label} atualizado para "${novoValor}"`);
+        exibirTransacoes(); // Rerender para mostrar mudanças
       }
     }
 
