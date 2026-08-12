@@ -208,6 +208,43 @@ app.post('/api/configuracoes', (req, res) => {
   }
 });
 
+app.post('/api/importar-dados', (req, res) => {
+  try {
+    const { fluxo_mensal } = req.body;
+
+    if (!fluxo_mensal || !fluxo_mensal.transacoes || !Array.isArray(fluxo_mensal.transacoes)) {
+      return res.status(400).json({ error: 'Formato de importação inválido' });
+    }
+
+    const financeiro = readFinanceiro();
+    if (!financeiro.fluxo_mensal) {
+      financeiro.fluxo_mensal = { transacoes: [] };
+    }
+    if (!financeiro.fluxo_mensal.transacoes) {
+      financeiro.fluxo_mensal.transacoes = [];
+    }
+
+    const novasTransacoes = fluxo_mensal.transacoes;
+    const transacoesAntes = financeiro.fluxo_mensal.transacoes.length;
+
+    financeiro.fluxo_mensal.transacoes.push(...novasTransacoes);
+
+    if (writeFinanceiro(financeiro)) {
+      res.json({
+        success: true,
+        message: `${novasTransacoes.length} transações importadas com sucesso`,
+        imported: novasTransacoes.length,
+        total_transacoes: financeiro.fluxo_mensal.transacoes.length
+      });
+    } else {
+      res.status(500).json({ error: 'Erro ao salvar transações importadas' });
+    }
+  } catch (err) {
+    console.error('Erro na importação:', err);
+    res.status(500).json({ error: 'Erro ao processar importação: ' + err.message });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
