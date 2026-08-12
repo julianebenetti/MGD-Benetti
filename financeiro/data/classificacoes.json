@@ -1,312 +1,1222 @@
 {
+  "regras": [
+    {
+      "palavra_chave": ["salário", "remuneracao", "contracheque", "vencimento", "pró-labore", "salário elektro"],
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Salário principal"
+    },
+    {
+      "palavra_chave": ["salário cônjuge", "salário hugo", "pix transf hugo", "contribuição"],
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Salário do cônjuge"
+    },
+    {
+      "palavra_chave": ["hora extra", "horas extras", "adicional noturno"],
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Hora extra"
+    },
+    {
+      "palavra_chave": ["bônus", "gratificação", "participação lucros"],
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Bônus"
+    },
+    {
+      "palavra_chave": ["13º", "decimo terceiro", "gratificação natalina"],
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "13º salário"
+    },
+    {
+      "palavra_chave": ["freelance", "trabalho freelance", "projeto freelance"],
+      "categoria": "Receitas",
+      "subcategoria": "Renda Extra",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Freelance"
+    },
+    {
+      "palavra_chave": ["serviço prestado", "prestação serviço", "consultoria"],
+      "categoria": "Receitas",
+      "subcategoria": "Renda Extra",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Serviços"
+    },
+    {
+      "palavra_chave": ["venda", "vendas", "comércio"],
+      "categoria": "Receitas",
+      "subcategoria": "Renda Extra",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Vendas"
+    },
+    {
+      "palavra_chave": ["comissão", "comissões", "afiliação"],
+      "categoria": "Receitas",
+      "subcategoria": "Renda Extra",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Comissão"
+    },
+    {
+      "palavra_chave": ["renda afiliado", "renda afiliados", "comissão afiliado", "benetti up"],
+      "categoria": "Receitas",
+      "subcategoria": "Renda Extra",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Renda de afiliados"
+    },
+    {
+      "palavra_chave": ["rendimento", "rendimentos", "juros conta", "juros poupança"],
+      "categoria": "Receitas",
+      "subcategoria": "Investimentos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Rendimentos"
+    },
+    {
+      "palavra_chave": ["dividendo", "dividendos", "proventos"],
+      "categoria": "Receitas",
+      "subcategoria": "Investimentos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Dividendos"
+    },
+    {
+      "palavra_chave": ["juros", "juros recebido", "juros ganho"],
+      "categoria": "Receitas",
+      "subcategoria": "Investimentos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Juros"
+    },
+    {
+      "palavra_chave": ["aluguel recebido", "aluguel", "renda aluguel", "pix transf marcos"],
+      "categoria": "Receitas",
+      "subcategoria": "Investimentos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Aluguel recebido"
+    },
+    {
+      "palavra_chave": ["reembolso", "reembolsos", "devolução compra"],
+      "categoria": "Receitas",
+      "subcategoria": "Outras Receitas",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Reembolsos"
+    },
+    {
+      "palavra_chave": ["restituição", "restituição ir", "ir devolvido"],
+      "categoria": "Receitas",
+      "subcategoria": "Outras Receitas",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Restituição"
+    },
+    {
+      "palavra_chave": ["benefício", "auxílio", "bolsa", "auxílio desemprego"],
+      "categoria": "Receitas",
+      "subcategoria": "Outras Receitas",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Benefícios"
+    },
+    {
+      "palavra_chave": ["presente", "presentes", "presente recebido", "doação"],
+      "categoria": "Receitas",
+      "subcategoria": "Outras Receitas",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Presentes"
+    },
+    {
+      "palavra_chave": ["devolução", "devoluções", "reembolso compra"],
+      "categoria": "Receitas",
+      "subcategoria": "Outras Receitas",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Devolução"
+    },
+    {
+      "palavra_chave": ["aluguel", "aluguel mensal", "proprietário", "imobiliária"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Aluguel"
+    },
+    {
+      "palavra_chave": ["financiamento imóvel", "financiamento casa", "financiamento"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Financiamento"
+    },
+    {
+      "palavra_chave": ["condomínio", "condominio", "taxa condomínio", "pag tit int 237"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Condomínio"
+    },
+    {
+      "palavra_chave": ["iptu", "imposto predial", "taxa imóvel"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "IPTU"
+    },
+    {
+      "palavra_chave": ["energia", "energia elétrica", "eletricidade", "cpfl", "da cpfl"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Energia"
+    },
+    {
+      "palavra_chave": ["água", "água consumo", "sanasa", "da sanasa"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Água"
+    },
+    {
+      "palavra_chave": ["gás", "gás natural", "butano"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Gás"
+    },
+    {
+      "palavra_chave": ["internet", "banda larga", "claro bl", "vivo internet", "oi internet"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Internet"
+    },
+    {
+      "palavra_chave": ["telefone", "celular", "claro celular", "vivo celular", "oi celular", "da claro celular"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Telefone"
+    },
+    {
+      "palavra_chave": ["manutenção casa", "manutenção imóvel", "reparo", "reforma"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Manutenção"
+    },
+    {
+      "palavra_chave": ["seguro residencial", "seguro casa", "seguro imóvel"],
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Seguro residencial"
+    },
+    {
+      "palavra_chave": ["supermercado", "mercado", "compras alimentos", "extra", "carrefour", "pão de açúcar", "savegnago", "supermercados jl", "marcia"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Supermercado"
+    },
+    {
+      "palavra_chave": ["feira", "feira livre", "verdurão"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Feira"
+    },
+    {
+      "palavra_chave": ["padaria", "pão", "padaria ki joia"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Padaria"
+    },
+    {
+      "palavra_chave": ["açougue", "carne", "açougue"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Açougue"
+    },
+    {
+      "palavra_chave": ["restaurante", "restaurante"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Restaurante"
+    },
+    {
+      "palavra_chave": ["delivery", "ifood", "rappi", "uber eats", "didi", "donaterezinha"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Delivery"
+    },
+    {
+      "palavra_chave": ["lanches", "lanche", "fast food", "mcdonald", "burger king"],
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Lanches"
+    },
+    {
+      "palavra_chave": ["combustível", "gasolina", "diesel", "etanol", "posto", "correntao", "andrade", "riviera", "amoreiras"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Combustível"
+    },
+    {
+      "palavra_chave": ["transporte público", "ônibus", "metrô", "trem", "integração"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Transporte público"
+    },
+    {
+      "palavra_chave": ["uber", "99", "99app", "dl*99", "corrida", "taxi"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Uber/99"
+    },
+    {
+      "palavra_chave": ["estacionamento", "estacionamento mensal", "garage"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Estacionamento"
+    },
+    {
+      "palavra_chave": ["pedágio", "rodovia"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Pedágio"
+    },
+    {
+      "palavra_chave": ["manutenção carro", "auto peças", "revisão", "óleo", "filtro", "rocha auto"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Manutenção"
+    },
+    {
+      "palavra_chave": ["seguro carro", "seguro auto", "tokio marine"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Seguro"
+    },
+    {
+      "palavra_chave": ["ipva", "ipva veículo"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "IPVA"
+    },
+    {
+      "palavra_chave": ["licenciamento", "taxa licenciamento"],
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Licenciamento"
+    },
+    {
+      "palavra_chave": ["plano saúde", "plano médico", "seguros de saúde"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Plano de saúde"
+    },
+    {
+      "palavra_chave": ["consulta", "consulta médica", "médico", "especialista"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Consulta"
+    },
+    {
+      "palavra_chave": ["exame", "exames", "ressonância", "tomografia", "raio x"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Exame"
+    },
+    {
+      "palavra_chave": ["dentista", "ortodontia", "dente", "dramarina", "mp dramarina"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Dentista"
+    },
+    {
+      "palavra_chave": ["medicamentos", "medicamento", "farmácia", "drogaria", "drogal"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Medicamentos"
+    },
+    {
+      "palavra_chave": ["óculos", "lentes", "óptica", "armação"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Óculos"
+    },
+    {
+      "palavra_chave": ["tratamento", "fisioterapia", "psicólogo"],
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Tratamento"
+    },
+    {
+      "palavra_chave": ["escola", "escola filhos", "mensalidade escolar", "pag tit int 199060387000", "pag tit int 001"],
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Escola"
+    },
+    {
+      "palavra_chave": ["faculdade", "universidade", "ensino superior"],
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Faculdade"
+    },
+    {
+      "palavra_chave": ["curso", "treinamento", "mentoria", "kiwify"],
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Cursos"
+    },
+    {
+      "palavra_chave": ["material escolar", "material", "livros", "estojo"],
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Material escolar"
+    },
+    {
+      "palavra_chave": ["livros", "livro"],
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Livros"
+    },
+    {
+      "palavra_chave": ["uniforme", "uniforme escolar"],
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Uniformes"
+    },
+    {
+      "palavra_chave": ["roupas criança", "roupas infantil", "roupa filhos"],
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Roupas infantil"
+    },
+    {
+      "palavra_chave": ["calçados infantil", "sapato criança"],
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Calçados"
+    },
+    {
+      "palavra_chave": ["brinquedos", "brinquedo", "lego", "boneca"],
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Brinquedos"
+    },
+    {
+      "palavra_chave": ["fraldas", "fralda"],
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Fraldas"
+    },
+    {
+      "palavra_chave": ["mesada", "semanada"],
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Mesada"
+    },
+    {
+      "palavra_chave": ["atividade filhos", "atividade extra", "futebol", "natação", "ballet", "van escolar"],
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Atividades"
+    },
+    {
+      "palavra_chave": ["celular", "telefone", "chip", "operadora", "claro", "vivo", "oi"],
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Celular"
+    },
+    {
+      "palavra_chave": ["streaming", "netflix", "spotify", "disney+", "prime", "apple", "ebn", "apple.com"],
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Streaming"
+    },
+    {
+      "palavra_chave": ["aplicativo", "app", "software", "assinatura digital", "google one"],
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Aplicativos"
+    },
+    {
+      "palavra_chave": ["assinatura", "assinaturas", "ifd", "ifood club"],
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Assinaturas digitais"
+    },
+    {
+      "palavra_chave": ["cinema", "cinemark", "ingresso cinema"],
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Cinema"
+    },
+    {
+      "palavra_chave": ["passeio", "parque", "zoológico"],
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Passeios"
+    },
+    {
+      "palavra_chave": ["viagem", "hospedagem", "hotel", "passagem aérea"],
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Viagens"
+    },
+    {
+      "palavra_chave": ["eventos", "ingresso", "show", "festival"],
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Eventos"
+    },
+    {
+      "palavra_chave": ["hobbies", "hobby", "hobby pessoal", "coleção", "decathlon", "omega"],
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Hobbies"
+    },
+    {
+      "palavra_chave": ["roupas", "roupa", "vestuário", "uniaosocorro", "magalu"],
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Roupas"
+    },
+    {
+      "palavra_chave": ["calçados", "sapato", "tênis", "chinelo"],
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Calçados"
+    },
+    {
+      "palavra_chave": ["cosméticos", "perfume", "maquiagem", "shampoo"],
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Cosméticos"
+    },
+    {
+      "palavra_chave": ["higiene", "higiene pessoal", "sabonete", "desodorante", "pasta dente"],
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Higiene"
+    },
+    {
+      "palavra_chave": ["acessórios", "bolsa", "bolsa", "relógio", "joias"],
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Acessórios"
+    },
+    {
+      "palavra_chave": ["presentes", "presente", "regalo"],
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Presentes"
+    },
+    {
+      "palavra_chave": ["juros", "juros pagos"],
+      "categoria": "Despesas",
+      "subcategoria": "Financeiras",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Juros"
+    },
+    {
+      "palavra_chave": ["tarifa bancária", "tarifa", "taxa bancária", "serviço bancário"],
+      "categoria": "Despesas",
+      "subcategoria": "Financeiras",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Tarifas bancárias"
+    },
+    {
+      "palavra_chave": ["multa", "multas", "multa de trânsito"],
+      "categoria": "Despesas",
+      "subcategoria": "Financeiras",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Multas"
+    },
+    {
+      "palavra_chave": ["empréstimo", "empréstimo pessoal"],
+      "categoria": "Despesas",
+      "subcategoria": "Dívidas",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Empréstimo"
+    },
+    {
+      "palavra_chave": ["financiamento", "parcelamento"],
+      "categoria": "Despesas",
+      "subcategoria": "Dívidas",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Financiamento"
+    },
+    {
+      "palavra_chave": ["consignado", "crédito consignado", "desconto folha"],
+      "categoria": "Despesas",
+      "subcategoria": "Dívidas",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Consignado"
+    },
+    {
+      "palavra_chave": ["fatura cartão", "cartão de crédito", "fatura", "faturaitau"],
+      "categoria": "Despesas",
+      "subcategoria": "Dívidas",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Fatura cartão"
+    },
+    {
+      "palavra_chave": ["ir", "imposto renda", "irpf"],
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "IR"
+    },
+    {
+      "palavra_chave": ["iptu", "imposto predial"],
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "IPTU"
+    },
+    {
+      "palavra_chave": ["ipva", "taxa ipva"],
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "IPVA"
+    },
+    {
+      "palavra_chave": ["taxas", "taxa", "emolumento"],
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Taxas"
+    },
+    {
+      "palavra_chave": ["documentação", "cartório", "certidão"],
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Documentação"
+    },
+    {
+      "palavra_chave": ["mei", "das mei"],
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "tipo_gasto": "Fixa",
+      "pessoa": "Familia",
+      "descricao": "Imposto MEI"
+    },
+    {
+      "palavra_chave": ["ração", "ração pet", "comida animal"],
+      "categoria": "Despesas",
+      "subcategoria": "Pets",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Ração"
+    },
+    {
+      "palavra_chave": ["veterinário", "vet", "consulta vet"],
+      "categoria": "Despesas",
+      "subcategoria": "Pets",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Veterinário"
+    },
+    {
+      "palavra_chave": ["medicamento pet", "remédio animal"],
+      "categoria": "Despesas",
+      "subcategoria": "Pets",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Medicamentos"
+    },
+    {
+      "palavra_chave": ["banho tosa", "tosa", "banho"],
+      "categoria": "Despesas",
+      "subcategoria": "Pets",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Banho/tosa"
+    },
+    {
+      "palavra_chave": ["móveis", "móvel", "sofá", "mesa", "cadeira"],
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Móveis"
+    },
+    {
+      "palavra_chave": ["eletrodomésticos", "eletrodoméstico", "geladeira", "fogão", "máquina lavar"],
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Eletrodomésticos"
+    },
+    {
+      "palavra_chave": ["utensílios", "utensílio", "panela", "prato"],
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Utensílios"
+    },
+    {
+      "palavra_chave": ["decoração", "cortina", "tapete", "quadro"],
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Decoração"
+    },
+    {
+      "palavra_chave": ["reparos", "reparo", "manutenção", "conserto"],
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "tipo_gasto": "Extraordinária",
+      "pessoa": "Familia",
+      "descricao": "Reparos"
+    },
+    {
+      "palavra_chave": ["limpeza", "produto limpeza", "detergente", "amaciante"],
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "tipo_gasto": "Variável",
+      "pessoa": "Familia",
+      "descricao": "Limpeza"
+    },
+    {
+      "palavra_chave": ["poupança", "poupança", "conta poupança"],
+      "categoria": "Investimentos/Reservas",
+      "subcategoria": "Reserva de emergência",
+      "tipo_gasto": "Saida",
+      "pessoa": "Familia",
+      "descricao": "Poupança"
+    },
+    {
+      "palavra_chave": ["investimento", "investimentos", "renda fixa", "tesouro"],
+      "categoria": "Investimentos/Reservas",
+      "subcategoria": "Investimentos",
+      "tipo_gasto": "Saida",
+      "pessoa": "Familia",
+      "descricao": "Investimentos"
+    },
+    {
+      "palavra_chave": ["previdência", "previdência privada", "pgbl", "vgbl"],
+      "categoria": "Investimentos/Reservas",
+      "subcategoria": "Previdência",
+      "tipo_gasto": "Saida",
+      "pessoa": "Familia",
+      "descricao": "Previdência"
+    },
+    {
+      "palavra_chave": ["objetivo curto prazo", "meta curto prazo"],
+      "categoria": "Investimentos/Reservas",
+      "subcategoria": "Objetivos curto prazo",
+      "tipo_gasto": "Saida",
+      "pessoa": "Familia",
+      "descricao": "Objetivo curto prazo"
+    },
+    {
+      "palavra_chave": ["objetivo longo prazo", "meta longo prazo"],
+      "categoria": "Investimentos/Reservas",
+      "subcategoria": "Objetivos longo prazo",
+      "tipo_gasto": "Saida",
+      "pessoa": "Familia",
+      "descricao": "Objetivo longo prazo"
+    }
+  ],
   "descricoes_conhecidas": {
     "REMUNERACAO/SALARIO": {
-      "categoria": "salário",
-      "pessoa": "Juliane",
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "pessoa": "Familia",
       "tipo": "entrada",
       "descricao": "Salário Elektro"
     },
     "PIX TRANSF Hugo Fe": {
-      "categoria": "transferencia",
-      "pessoa": "Hugo",
+      "categoria": "Receitas",
+      "subcategoria": "Salário/Trabalho",
+      "pessoa": "Familia",
       "tipo": "entrada",
       "descricao": "Contribuição Hugo (táxi)"
     },
     "PIX TRANSF MARCOS": {
-      "categoria": "renda",
-      "pessoa": "Ambos",
+      "categoria": "Receitas",
+      "subcategoria": "Investimentos",
+      "pessoa": "Familia",
       "tipo": "entrada",
       "descricao": "Aluguel garagem"
     },
     "PAG TIT INT 199060387000": {
-      "categoria": "escola",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Escola Valentina",
       "vencimento": "dia 10"
     },
     "PAG TIT INT 001": {
-      "categoria": "escola",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Escola Luca",
       "vencimento": "dia 1"
     },
     "PIX TRANSF GUILHER": {
-      "categoria": "escola",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Filhos",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Van escolar Luca",
       "vencimento": "dia 28"
     },
     "PAG TIT INT 237": {
-      "categoria": "casa",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Condomínio",
       "valor": 623,
       "vencimento": "dia 10"
     },
     "DA CPFL PTA": {
-      "categoria": "casa",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Energia elétrica"
     },
     "DA SANASA": {
-      "categoria": "casa",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Água"
     },
     "DA CLARO BL/IT": {
-      "categoria": "casa",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Moradia",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Internet Claro"
     },
     "DA CLARO CELULAR": {
-      "categoria": "casa",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Celular"
     },
     "CREDITO CONSIGNADO": {
-      "categoria": "divida",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Dívidas",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Consignado C/C"
     },
     "FATURAITAU UNICLASS": {
-      "categoria": "divida",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Dívidas",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Fatura Mastercard Black",
       "vencimento": "dia 26"
     },
     "IOF": {
-      "categoria": "divida",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Financeiras",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Encargo operação crédito"
     },
     "PIX QRS BENETTI UP": {
-      "categoria": "negocio",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Transferência Benetti UP"
     },
     "PIX QRS STIMA": {
-      "categoria": "negocio",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Contabilidade STIMA",
       "valor": 415,
       "recorrencia": "mensal"
     },
     "DA DAS MEI": {
-      "categoria": "negocio",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Impostos",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Imposto MEI",
       "valor": 87,
       "recorrencia": "mensal"
     },
     "PIX TRANSF EDILEIA": {
-      "categoria": "pessoas",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Aluguel vaga carro",
       "valor": 200,
       "recorrencia": "mensal"
     },
     "PIX TRANSF Nilza": {
-      "categoria": "pessoas",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Faxina",
       "valor": 150,
       "recorrencia": "mensal"
     },
     "PIX TRANSF IGREJA": {
-      "categoria": "pessoal",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Dízimo",
       "valor": 50
     },
     "PIX TRANSF APE": {
-      "categoria": "pessoas",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Casa",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Lockers guarda-móveis",
       "valor": 223
     },
     "JUROS LIMITE": {
-      "categoria": "alerta",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Financeiras",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Juros cheque especial",
       "alerta": "evitável"
     },
     "DONA TEREZINHA": {
-      "categoria": "alimentacao",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Almoço trabalho",
       "cartao": "Mastercard Black"
     },
     "MARCIA DE CARLA": {
-      "categoria": "alimentacao",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Varejão/alimentação",
       "cartao": "Mastercard Black"
     },
     "SAVEGNAGO": {
-      "categoria": "alimentacao",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Supermercado",
       "cartao": "Mastercard Black"
     },
     "SUPERMERCADOS JL": {
-      "categoria": "alimentacao",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Supermercado",
       "cartao": "Mastercard Black"
     },
     "PADARIA KI JOIA": {
-      "categoria": "alimentacao",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Alimentação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Padaria",
       "cartao": "Mastercard Black"
     },
     "POSTO DAS AMOREIRAS": {
-      "categoria": "transporte",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Combustível Hugo",
       "cartao": "Mastercard Black"
     },
     "CORRENTAO AUTO POSTO": {
-      "categoria": "transporte",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Combustível Hugo",
       "cartao": "Mastercard Black"
     },
     "PostoAndrade": {
-      "categoria": "transporte",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Combustível Hugo",
       "cartao": "Mastercard Black"
     },
     "PostoRiviera": {
-      "categoria": "transporte",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Combustível Hugo",
       "cartao": "Mastercard Black"
     },
     "TOKIO MARINE": {
-      "categoria": "transporte",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Seguro carro Hugo",
       "valor": 286,
       "cartao": "Mastercard Black"
     },
     "ROCHA AUTO": {
-      "categoria": "transporte",
-      "pessoa": "Hugo",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Auto peças",
       "cartao": "Mastercard Black"
     },
     "MP DRAMARINA": {
-      "categoria": "saude",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Ortodontia Luca",
       "valor": 250,
       "cartao": "Mastercard Black"
     },
     "DROGAL PIRAC": {
-      "categoria": "saude",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Saúde",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Farmácia",
       "cartao": "Mastercard Black"
     },
     "APPLE.COM/BILL": {
-      "categoria": "assinatura",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Apple",
       "valor": 60,
       "cartao": "Mastercard Black"
     },
     "EBN *SPOTIFY": {
-      "categoria": "assinatura",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Spotify",
       "valor": 24,
       "cartao": "Mastercard Black"
     },
     "Google One": {
-      "categoria": "assinatura",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Google One",
       "valor": 13,
       "cartao": "Mastercard Black"
     },
     "IFD*IFOOD": {
-      "categoria": "assinatura",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Contas/Serviços",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "iFood Club",
       "valor": 6,
       "cartao": "Mastercard Black"
     },
     "99APP": {
-      "categoria": "transporte",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "99 Ride",
       "cartao": "Mastercard Black"
     },
     "DL*99": {
-      "categoria": "transporte",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Transporte",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "99 Ride",
       "cartao": "Mastercard Black"
     },
     "KIWIFY *MGDMentori": {
-      "categoria": "negocio",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Curso/mentoria",
       "valor": 615,
       "cartao": "Mastercard Black"
     },
     "KIWIFY *InstaMagic": {
-      "categoria": "negocio",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Educação",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "InstaMAGIC",
       "valor": 50,
       "cartao": "Mastercard Black"
     },
     "UNIAOSOCORRO": {
-      "categoria": "vestuario",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Roupas (PARAR!)",
       "valor": 166,
@@ -314,47 +1224,65 @@
       "alerta": "parar"
     },
     "MAGALU *Magalu": {
-      "categoria": "vestuario",
-      "pessoa": "Juliane",
+      "categoria": "Despesas",
+      "subcategoria": "Compras Pessoais",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Magazine Luiza",
       "cartao": "Mastercard Black"
     },
     "OMEGA": {
-      "categoria": "lazer",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Academia/lazer",
       "cartao": "Mastercard Black"
     },
     "DECATHLON": {
-      "categoria": "lazer",
-      "pessoa": "Ambos",
+      "categoria": "Despesas",
+      "subcategoria": "Lazer",
+      "pessoa": "Familia",
       "tipo": "saida",
       "descricao": "Decathlon",
       "cartao": "Mastercard Black"
     }
   },
-  "categorias": [
-    "salário",
-    "renda",
-    "entrada",
-    "escola",
-    "casa",
-    "divida",
-    "negocio",
-    "pessoas",
-    "pessoal",
-    "alimentacao",
-    "transporte",
-    "saude",
-    "assinatura",
-    "vestuario",
-    "lazer",
-    "alerta",
-    "transferencia"
+  "categorias_principais": [
+    "Receitas",
+    "Despesas",
+    "Investimentos/Reservas"
   ],
-  "pessoas": ["Juliane", "Hugo", "Ambos"],
+  "subcategorias_receitas": [
+    "Salário/Trabalho",
+    "Renda Extra",
+    "Investimentos",
+    "Outras Receitas"
+  ],
+  "subcategorias_despesas": [
+    "Moradia",
+    "Alimentação",
+    "Transporte",
+    "Saúde",
+    "Educação",
+    "Filhos",
+    "Contas/Serviços",
+    "Lazer",
+    "Compras Pessoais",
+    "Financeiras",
+    "Dívidas",
+    "Impostos",
+    "Pets",
+    "Casa"
+  ],
+  "subcategorias_investimentos": [
+    "Reserva de emergência",
+    "Investimentos",
+    "Previdência",
+    "Objetivos curto prazo",
+    "Objetivos longo prazo"
+  ],
+  "pessoas": ["Familia"],
   "cartoes": [
     "Mastercard Black",
     "Bradesco Amazon",
@@ -362,5 +1290,6 @@
     "Banco Itaú"
   ],
   "ultima_atualizacao": "2026-08-12",
-  "notas": "Histórico de classificações para facilitar importação e categorização automática de despesas"
+  "versao": "2.0",
+  "notas": "Classificações estruturadas por regras de palavras-chave para categorização automática de transações financeiras. Mantém compatibilidade com descricoes_conhecidas para mapeamento manual."
 }
