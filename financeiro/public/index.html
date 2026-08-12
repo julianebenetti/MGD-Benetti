@@ -1456,6 +1456,18 @@
         <div class="form-section">
           <div class="form-section-title">1️⃣ Selecione um Arquivo para Importar</div>
 
+          <div style="margin-bottom: 20px; padding: 15px; background-color: var(--bg-tertiary); border-radius: 6px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 500;">📋 Tipo de Arquivo:</label>
+            <select id="tipoArquivo" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--bg-secondary); color: var(--text-primary); font-size: 14px;">
+              <option value="cartao_credito">💳 Cartão de Crédito (Itaú, Nubank, etc)</option>
+              <option value="extrato_bancario">🏦 Extrato Bancário</option>
+              <option value="outro">📄 Outro</option>
+            </select>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+              ℹ️ Cartão de Crédito: inverte os sinais para refletir o fluxo de caixa real
+            </div>
+          </div>
+
           <div class="drop-zone" id="dropZone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
             <div style="font-size: 40px; margin-bottom: 10px;">📁</div>
             <div style="font-size: 16px; font-weight: 500; margin-bottom: 5px;">Arraste um arquivo aqui</div>
@@ -3076,7 +3088,19 @@
     // Funções de Importação
     let arquivoImportacao = null;
     let dadosImportacao = null;
+    let tipoArquivoSelecionado = 'cartao_credito'; // Tipo padrão
     // XLSX é carregado globalmente via script tag CDN, não declarar novamente
+
+    // Setup do seletor de tipo de arquivo
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipoSelect = document.getElementById('tipoArquivo');
+      if (tipoSelect) {
+        tipoSelect.addEventListener('change', (e) => {
+          tipoArquivoSelecionado = e.target.value;
+          console.log('Tipo de arquivo selecionado:', tipoArquivoSelecionado);
+        });
+      }
+    });
 
     function handleDragOver(e) {
       e.preventDefault();
@@ -3352,17 +3376,8 @@
           return isNegative ? -parsed : parsed;
         }
 
-        // Verificar se é cartão de crédito
-        let tipoConta = colMap.tipo !== undefined ? String(row[colMap.tipo] || '').toLowerCase() : '';
-        let nomeConta = colMap.conta !== undefined ? String(row[colMap.conta] || '').toLowerCase() : '';
-
-        const ehCartaoCredito =
-          tipoConta.includes('crédito') || tipoConta.includes('credito') ||
-          tipoConta.includes('cartão') || tipoConta.includes('cartao') ||
-          nomeConta.includes('crédito') || nomeConta.includes('credito') ||
-          nomeConta.includes('cartão') || nomeConta.includes('cartao') ||
-          nomeConta.includes('mastercard') || nomeConta.includes('visa') ||
-          nomeConta.includes('elo');
+        // Verificar se é cartão de crédito (baseado na seleção do usuário)
+        const ehCartaoCredito = tipoArquivoSelecionado === 'cartao_credito';
 
         // Obter valor
         if (colMap.valor !== undefined) {
