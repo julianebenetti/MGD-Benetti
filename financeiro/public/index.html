@@ -1425,21 +1425,35 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Tentar carregar SheetJS de múltiplos CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="carregarXLSXAlterno()"></script>
+
   <script>
-    // Aguardar XLSX carregar
+    // Fallback para outro CDN se jsDelivr falhar
+    function carregarXLSXAlterno() {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+      script.onerror = function() {
+        console.warn('⚠️ Nenhum CDN conseguiu carregar SheetJS. Use CSV como alternativa.');
+      };
+      document.head.appendChild(script);
+    }
+
+    // Aguardar XLSX carregar com timeout
     let XLSX = window.XLSX || null;
     let tentativas = 0;
+    const maxTentativas = 100;
+
     const esperarXLSX = setInterval(() => {
       if (window.XLSX) {
         XLSX = window.XLSX;
         clearInterval(esperarXLSX);
         console.log('✅ XLSX carregado com sucesso');
-      } else if (tentativas++ > 50) {
+      } else if (++tentativas >= maxTentativas) {
         clearInterval(esperarXLSX);
-        console.warn('⚠️ XLSX não carregou do CDN');
+        console.warn('⚠️ XLSX não carregou após timeout. Use CSV como alternativa.');
       }
-    }, 50);
+    }, 100);
 
     let dadosGlobais = {};
     let classificacoesGlobais = {};
@@ -2252,9 +2266,13 @@
       if (nomeArquivoMinusculo.endsWith('.json') || nomeArquivoMinusculo.endsWith('.csv')) {
         reader.readAsText(file);
       } else if (nomeArquivoMinusculo.endsWith('.xlsx') || nomeArquivoMinusculo.endsWith('.xls')) {
+        if (!window.XLSX) {
+          alert('⚠️ A biblioteca Excel (XLSX) ainda não carregou completamente.\n\nOpções:\n1. Aguarde 3 segundos e tente novamente\n2. Converta o arquivo para CSV e faça upload\n3. Use o Editor JSON para editar diretamente');
+          return;
+        }
         reader.readAsArrayBuffer(file);
       } else {
-        alert('❌ Tipo de arquivo não suportado. Use JSON, CSV, XLS ou XLSX.');
+        alert('❌ Tipo de arquivo não suportado.\n\nSuportados: JSON, CSV, XLS, XLSX\n\nSe tiver problema com Excel, converta para CSV.');
       }
     }
 
