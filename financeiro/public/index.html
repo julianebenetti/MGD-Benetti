@@ -3810,6 +3810,23 @@ function renderizarTiposDespesaConfig() {
       return null;
     }
 
+    function extrairMesReferencia(dataISO) {
+      if (!dataISO) return '—';
+
+      // dataISO deve estar em formato YYYY-MM-DD
+      const partes = dataISO.split('-');
+      if (partes.length !== 3) return '—';
+
+      const ano = partes[0];
+      const mes = parseInt(partes[1]);
+      const anoAbrev = ano.slice(-2);
+
+      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const nomeMes = meses[mes - 1] || '—';
+
+      return `${nomeMes}/${anoAbrev}`;
+    }
+
     function parseExcel(workbook) {
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
@@ -3978,9 +3995,11 @@ function renderizarTiposDespesaConfig() {
         }
 
         if (valor > 0) {
+          const dataFormatada = formatarDataExcel(dataStr);
           const txn = {
             id: 'txn_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            data: formatarDataExcel(dataStr),
+            data: dataFormatada,
+            mes_referencia: extrairMesReferencia(dataFormatada),
             descricao: descricao,
             pessoa: colMap.pessoa !== undefined ? (row[colMap.pessoa] || classificacao?.pessoa || 'Familia') : (classificacao?.pessoa || 'Familia'),
             tipo: tipo,
