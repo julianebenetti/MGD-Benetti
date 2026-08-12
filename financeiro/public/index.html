@@ -940,6 +940,7 @@
       <button class="tab-button" data-tab="despesas">💸 Despesas</button>
       <button class="tab-button" data-tab="fluxo">📈 Fluxo</button>
       <button class="tab-button" data-tab="classificacao">🏷️ Classificação</button>
+      <button class="tab-button" data-tab="dashboard_contabil">📑 Dashboard Contábil</button>
       <button class="tab-button" data-tab="formulario">📝 Adicionar Dados</button>
       <button class="tab-button" data-tab="importar">📤 Importar</button>
       <button class="tab-button" data-tab="configuracoes">⚙️ Configurações</button>
@@ -1196,6 +1197,63 @@
       <div class="card full-width" style="margin-top: 20px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
         <div class="section-title" style="margin-top: 0;">📊 Resumo de Classificação</div>
         <div id="resumoClassificacaoContainer"></div>
+      </div>
+    </div>
+
+    <!-- TAB: DASHBOARD CONTÁBIL -->
+    <div id="dashboard_contabil" class="tab-content">
+      <div class="section-title">📑 Dashboard Contábil</div>
+
+      <!-- Filtros -->
+      <div class="card full-width" style="margin-bottom: 20px;">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">🔍 Filtros</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+          <div>
+            <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px;">Tipo de Despesa</label>
+            <select id="filtro_tipo_despesa" class="filter-input" style="width: 100%; padding: 8px;" onchange="atualizarDashboardContabil()">
+              <option value="">Todos os tipos</option>
+            </select>
+          </div>
+          <div>
+            <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px;">Pessoa</label>
+            <select id="filtro_pessoa_contabil" class="filter-input" style="width: 100%; padding: 8px;" onchange="atualizarDashboardContabil()">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          <div>
+            <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px;">Tipo de Classificação</label>
+            <select id="filtro_classificacao_contabil" class="filter-input" style="width: 100%; padding: 8px;" onchange="atualizarDashboardContabil()">
+              <option value="">Todos</option>
+              <option value="fixa">💰 Fixa</option>
+              <option value="parcelada">📦 Parcelada</option>
+              <option value="sem_classificacao">⚡ Sem Classificação</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumo Contábil -->
+      <div class="card full-width" style="margin-bottom: 20px;">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">💰 Resumo Contábil</div>
+        <div id="resumoContabilContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
+      </div>
+
+      <!-- Análise por Tipo de Despesa -->
+      <div class="card full-width" style="margin-bottom: 20px;">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">📂 Análise por Tipo de Despesa</div>
+        <div id="analiseTipoDespesaContainer"></div>
+      </div>
+
+      <!-- Análise por Pessoa -->
+      <div class="card full-width" style="margin-bottom: 20px;">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">👥 Análise por Pessoa</div>
+        <div id="analisePessoaContabilContainer"></div>
+      </div>
+
+      <!-- Análise por Classificação -->
+      <div class="card full-width">
+        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">🏷️ Análise por Classificação</div>
+        <div id="analiseClassificacaoContabilContainer"></div>
       </div>
     </div>
 
@@ -1593,6 +1651,7 @@
       renderizarFluxo();
       renderizarClassificacao();
       renderizarConfiguracoes();
+      inicializarDashboardContabil();
       atualizarEditor();
     }
 
@@ -2126,28 +2185,41 @@
           const chaveUnica = `${categoria}_${idx}`;
           const classificacao = item.classificacao || 'sem_classificacao';
           const pessoa = item.pessoa || '';
+          const tipoDespesa = item.tipo_despesa || '';
           const opcoes = ['fixa', 'parcelada', 'sem_classificacao'];
+          const tipos = configuracoesGlobais.tipos_despesa || [];
 
           html += `
             <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px; margin-bottom: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
                 <div style="flex: 1;">
                   <div style="font-weight: 600; margin-bottom: 5px;">${item.nome}</div>
-                  <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
-                    Categoria: ${dados.categoria} | Valor: R$ ${item.valor.toLocaleString('pt-BR')}
+                  <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
+                    Valor: R$ ${item.valor.toLocaleString('pt-BR')}
                   </div>
-                  <div style="font-size: 12px; margin-bottom: 10px;">
-                    <label style="color: var(--text-secondary); margin-right: 8px;">👤 Pessoa:</label>
-                    <select
-                      id="pessoa_despesa_${categoria}_${idx}"
-                      class="filter-input"
-                      style="padding: 6px; font-size: 12px; width: 150px;"
-                      onchange="atualizarPessoaDespesa('${categoria}', ${idx}, this.value)">
-                      <option value="">Não definido</option>
-                      <option value="Juliane" ${pessoa === 'Juliane' ? 'selected' : ''}>Juliane</option>
-                      <option value="Hugo" ${pessoa === 'Hugo' ? 'selected' : ''}>Hugo</option>
-                      <option value="Ambos" ${pessoa === 'Ambos' ? 'selected' : ''}>Ambos</option>
-                    </select>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <div style="font-size: 12px;">
+                      <label style="color: var(--text-secondary); display: block; margin-bottom: 4px;">👤 Pessoa:</label>
+                      <select
+                        id="pessoa_despesa_${categoria}_${idx}"
+                        class="filter-input"
+                        style="padding: 6px; font-size: 12px; width: 100%;"
+                        onchange="atualizarPessoaDespesa('${categoria}', ${idx}, this.value)">
+                        <option value="">Não definido</option>
+                        ${(configuracoesGlobais.pessoas || []).map(p => `<option value="${p.nome}" ${pessoa === p.nome ? 'selected' : ''}>${p.icone} ${p.nome}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div style="font-size: 12px;">
+                      <label style="color: var(--text-secondary); display: block; margin-bottom: 4px;">📂 Tipo:</label>
+                      <select
+                        id="tipo_despesa_${categoria}_${idx}"
+                        class="filter-input"
+                        style="padding: 6px; font-size: 12px; width: 100%;"
+                        onchange="atualizarTipoDespesaItem('${categoria}', ${idx}, this.value)">
+                        <option value="">Não classificado</option>
+                        ${tipos.map(t => `<option value="${t.id}" ${tipoDespesa === t.id ? 'selected' : ''}>${t.icone} ${t.nome}</option>`).join('')}
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <span style="padding: 4px 10px; background-color: rgba(${classificacao === 'fixa' ? '16, 185, 129' : classificacao === 'parcelada' ? '245, 158, 11' : '239, 68, 68'}, 0.2); border-radius: 4px; color: ${ativecores[classificacao]}; font-size: 12px; font-weight: 600;">
@@ -2283,6 +2355,15 @@
       }
     }
 
+    function atualizarTipoDespesaItem(categoria, indice, tipoDespesa) {
+      const despesa = dadosGlobais.despesas[categoria];
+      if (despesa && despesa.items && despesa.items[indice]) {
+        despesa.items[indice].tipo_despesa = tipoDespesa;
+        salvarDadosAutomatico();
+        renderizarClassificacao();
+      }
+    }
+
     async function salvarDadosAutomatico() {
       try {
         await fetch('/api/dados', {
@@ -2336,18 +2417,26 @@
       let html = '';
       tipos.forEach((tipo, idx) => {
         html += `
-          <div style="background-color: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+          <div style="background-color: var(--bg-tertiary); padding: 15px; border-radius: 6px; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
               <div style="flex: 1;">
-                <div style="font-weight: 600;">${tipo.icone} ${tipo.nome}</div>
-                <div style="font-size: 12px; color: var(--text-secondary); margin: 4px 0;">${tipo.descricao}</div>
-                <div style="font-size: 11px; color: var(--text-secondary);">ID: ${tipo.id}</div>
+                <div style="font-weight: 600; margin-bottom: 6px;">${tipo.icone} ${tipo.nome}</div>
+                <input
+                  type="text"
+                  value="${tipo.descricao}"
+                  placeholder="Descrição da categoria..."
+                  class="filter-input"
+                  style="width: 100%; padding: 8px; margin-bottom: 8px; font-size: 12px;"
+                  onchange="atualizarDescricaoTipoDespesa(${idx}, this.value)">
+                <div style="font-size: 11px; color: var(--text-secondary);">ID: <code style="background-color: var(--bg-primary); padding: 2px 6px; border-radius: 3px;">${tipo.id}</code></div>
               </div>
-              <div style="display: flex; gap: 8px;">
-                <div style="width: 40px; height: 40px; background-color: ${tipo.cor}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
+              <div style="display: flex; gap: 8px; margin-left: 12px;">
+                <div style="width: 50px; height: 50px; background-color: ${tipo.cor}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                  ${tipo.icone}
+                </div>
                 <button
                   class="btn-secondary"
-                  style="padding: 6px 12px; font-size: 12px; background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444;"
+                  style="padding: 8px 12px; font-size: 12px; background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; align-self: center;"
                   onclick="removerTipoDespesa(${idx})">
                   🗑️
                 </button>
@@ -2362,6 +2451,13 @@
       }
 
       container.innerHTML = html;
+    }
+
+    function atualizarDescricaoTipoDespesa(idx, descricao) {
+      if (configuracoesGlobais.tipos_despesa[idx]) {
+        configuracoesGlobais.tipos_despesa[idx].descricao = descricao;
+        salvarConfiguracoes();
+      }
     }
 
     function adicionarPessoa() {
@@ -2436,6 +2532,220 @@
       } catch (err) {
         console.error('Erro ao salvar configurações:', err);
       }
+    }
+
+    function inicializarDashboardContabil() {
+      // Preencher filtros
+      const selectTipo = document.getElementById('filtro_tipo_despesa');
+      const selectPessoa = document.getElementById('filtro_pessoa_contabil');
+
+      selectTipo.innerHTML = '<option value="">Todos os tipos</option>' +
+        (configuracoesGlobais.tipos_despesa || []).map(t => `<option value="${t.id}">${t.icone} ${t.nome}</option>`).join('');
+
+      selectPessoa.innerHTML = '<option value="">Todos</option>' +
+        (configuracoesGlobais.pessoas || []).map(p => `<option value="${p.nome}">${p.icone} ${p.nome}</option>`).join('');
+
+      atualizarDashboardContabil();
+    }
+
+    function atualizarDashboardContabil() {
+      renderizarResumoContabil();
+      renderizarAnaliseTipoDespesa();
+      renderizarAnalisePessoaContabil();
+      renderizarAnaliseClassificacaoContabil();
+    }
+
+    function obterDadosFiltrados() {
+      const filtroTipo = document.getElementById('filtro_tipo_despesa').value;
+      const filtroPessoa = document.getElementById('filtro_pessoa_contabil').value;
+      const filtroClassificacao = document.getElementById('filtro_classificacao_contabil').value;
+
+      const despesas = dadosGlobais.despesas || {};
+      const todos = [];
+
+      Object.keys(despesas).forEach(categoria => {
+        if (categoria === 'black_card') return;
+        const dados = despesas[categoria];
+        if (dados.items && Array.isArray(dados.items)) {
+          dados.items.forEach(item => {
+            if (filtroTipo && item.tipo_despesa !== filtroTipo) return;
+            if (filtroPessoa && item.pessoa !== filtroPessoa) return;
+            if (filtroClassificacao && (item.classificacao || 'sem_classificacao') !== filtroClassificacao) return;
+            todos.push({
+              ...item,
+              categoria_original: categoria,
+              categoria_display: dados.categoria
+            });
+          });
+        }
+      });
+
+      return todos;
+    }
+
+    function renderizarResumoContabil() {
+      const dados = obterDadosFiltrados();
+      const total = dados.reduce((sum, item) => sum + (item.valor || 0), 0);
+      const quantidade = dados.length;
+      const media = quantidade > 0 ? total / quantidade : 0;
+
+      let html = `
+        <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 15px; border-radius: 6px;">
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">TOTAL</div>
+          <div style="font-size: 28px; font-weight: bold; color: var(--accent-blue);">R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+        </div>
+        <div style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 6px;">
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">QUANTIDADE</div>
+          <div style="font-size: 28px; font-weight: bold; color: #10b981;">${quantidade}</div>
+        </div>
+        <div style="background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 15px; border-radius: 6px;">
+          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px;">MÉDIA</div>
+          <div style="font-size: 28px; font-weight: bold; color: #f59e0b;">R$ ${media.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+        </div>
+      `;
+
+      document.getElementById('resumoContabilContainer').innerHTML = html;
+    }
+
+    function renderizarAnaliseTipoDespesa() {
+      const dados = obterDadosFiltrados();
+      const tipos = configuracoesGlobais.tipos_despesa || [];
+      const analise = {};
+
+      tipos.forEach(t => {
+        analise[t.id] = { nome: t.nome, icone: t.icone, cor: t.cor, total: 0, quantidade: 0 };
+      });
+
+      dados.forEach(item => {
+        const tipo = item.tipo_despesa || 'nao_classificado';
+        if (!analise[tipo]) {
+          analise[tipo] = { nome: 'Não Classificado', icone: '❌', cor: '#6b7280', total: 0, quantidade: 0 };
+        }
+        analise[tipo].total += item.valor || 0;
+        analise[tipo].quantidade += 1;
+      });
+
+      let html = '';
+      Object.keys(analise).forEach(tipo => {
+        const info = analise[tipo];
+        if (info.quantidade === 0) return;
+        const porcentagem = dados.length > 0 ? (info.quantidade / dados.length) * 100 : 0;
+
+        html += `
+          <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid ${info.cor};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="font-weight: 600;">${info.icone} ${info.nome}</div>
+              <div style="text-align: right;">
+                <div style="font-size: 16px; font-weight: bold; color: ${info.cor};">R$ ${info.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                <div style="font-size: 12px; color: var(--text-secondary);">${info.quantidade} item${info.quantidade !== 1 ? 'ns' : ''}</div>
+              </div>
+            </div>
+            <div style="background-color: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div style="background-color: ${info.cor}; height: 100%; width: ${porcentagem}%;"></div>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">${porcentagem.toFixed(1)}% do total</div>
+          </div>
+        `;
+      });
+
+      if (html === '') {
+        html = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Nenhuma despesa encontrada</div>';
+      }
+
+      document.getElementById('analiseTipoDespesaContainer').innerHTML = html;
+    }
+
+    function renderizarAnalisePessoaContabil() {
+      const dados = obterDadosFiltrados();
+      const pessoas = configuracoesGlobais.pessoas || [];
+      const analise = {};
+
+      pessoas.forEach(p => {
+        analise[p.nome] = { icone: p.icone, cor: p.cor, total: 0, quantidade: 0 };
+      });
+      analise['Não Definido'] = { icone: '❌', cor: '#6b7280', total: 0, quantidade: 0 };
+
+      dados.forEach(item => {
+        const pessoa = item.pessoa || 'Não Definido';
+        if (!analise[pessoa]) {
+          analise[pessoa] = { icone: '❌', cor: '#6b7280', total: 0, quantidade: 0 };
+        }
+        analise[pessoa].total += item.valor || 0;
+        analise[pessoa].quantidade += 1;
+      });
+
+      let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">';
+
+      Object.keys(analise).forEach(pessoa => {
+        const info = analise[pessoa];
+        if (info.quantidade === 0) return;
+
+        html += `
+          <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 4px solid ${info.cor};">
+            <div style="font-weight: 600; margin-bottom: 10px;">${info.icone} ${pessoa}</div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 14px; color: var(--text-secondary);">Total</div>
+              <div style="font-size: 20px; font-weight: bold; color: ${info.cor};">R$ ${info.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div style="padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <div style="font-size: 12px; color: var(--text-secondary);">${info.quantidade} item${info.quantidade !== 1 ? 'ns' : ''}</div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Média: R$ ${(info.total / info.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+
+      if (dados.length === 0) {
+        html = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Nenhuma despesa encontrada</div>';
+      }
+
+      document.getElementById('analisePessoaContabilContainer').innerHTML = html;
+    }
+
+    function renderizarAnaliseClassificacaoContabil() {
+      const dados = obterDadosFiltrados();
+      const analise = {
+        'fixa': { nome: '💰 Fixa', cor: '#10b981', total: 0, quantidade: 0 },
+        'parcelada': { nome: '📦 Parcelada', cor: '#f59e0b', total: 0, quantidade: 0 },
+        'sem_classificacao': { nome: '⚡ Sem Classificação', cor: '#ef4444', total: 0, quantidade: 0 }
+      };
+
+      dados.forEach(item => {
+        const classe = item.classificacao || 'sem_classificacao';
+        analise[classe].total += item.valor || 0;
+        analise[classe].quantidade += 1;
+      });
+
+      let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">';
+
+      Object.keys(analise).forEach(classe => {
+        const info = analise[classe];
+        if (info.quantidade === 0) return;
+
+        html += `
+          <div style="background-color: var(--bg-secondary); padding: 15px; border-radius: 6px; border-left: 4px solid ${info.cor};">
+            <div style="font-weight: 600; margin-bottom: 10px;">${info.nome}</div>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 14px; color: var(--text-secondary);">Total</div>
+              <div style="font-size: 20px; font-weight: bold; color: ${info.cor};">R$ ${info.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            </div>
+            <div style="padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <div style="font-size: 12px; color: var(--text-secondary);">${info.quantidade} item${info.quantidade !== 1 ? 'ns' : ''}</div>
+              <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Média: R$ ${(info.total / info.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+
+      if (dados.length === 0) {
+        html = '<div style="color: var(--text-secondary); padding: 20px; text-align: center;">Nenhuma despesa encontrada</div>';
+      }
+
+      document.getElementById('analiseClassificacaoContabilContainer').innerHTML = html;
     }
 
     function atualizarEditor() {
