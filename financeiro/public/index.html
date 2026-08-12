@@ -1440,13 +1440,11 @@
     }
 
     // Aguardar XLSX carregar com timeout
-    let XLSX = window.XLSX || null;
     let tentativas = 0;
     const maxTentativas = 100;
 
     const esperarXLSX = setInterval(() => {
       if (window.XLSX) {
-        XLSX = window.XLSX;
         clearInterval(esperarXLSX);
         console.log('✅ XLSX carregado com sucesso');
       } else if (++tentativas >= maxTentativas) {
@@ -2210,6 +2208,7 @@
     // Funções de Importação
     let arquivoImportacao = null;
     let dadosImportacao = null;
+    // XLSX é carregado globalmente via script tag CDN, não declarar novamente
 
     function handleDragOver(e) {
       e.preventDefault();
