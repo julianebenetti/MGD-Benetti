@@ -14,6 +14,7 @@ app.use(express.static('public'));
 const FINANCEIRO_PATH = path.join(__dirname, 'data', 'financeiro.json');
 const APONTAMENTOS_PATH = path.join(__dirname, 'data', 'apontamentos.json');
 const CLASSIFICACOES_PATH = path.join(__dirname, 'data', 'classificacoes.json');
+const CONFIGURACOES_PATH = path.join(__dirname, 'data', 'configuracoes.json');
 
 function readFinanceiro() {
   try {
@@ -77,6 +78,28 @@ function writeClassificacoes(data) {
     return true;
   } catch (err) {
     console.error('Erro escrevendo classificacoes.json:', err);
+    return false;
+  }
+}
+
+function readConfiguracoes() {
+  try {
+    if (!fs.existsSync(CONFIGURACOES_PATH)) {
+      return null;
+    }
+    return JSON.parse(fs.readFileSync(CONFIGURACOES_PATH, 'utf8'));
+  } catch (err) {
+    console.error('Erro lendo configuracoes.json:', err);
+    return null;
+  }
+}
+
+function writeConfiguracoes(data) {
+  try {
+    fs.writeFileSync(CONFIGURACOES_PATH, JSON.stringify(data, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Erro escrevendo configuracoes.json:', err);
     return false;
   }
 }
@@ -164,6 +187,24 @@ app.post('/api/classificacoes', (req, res) => {
     res.json({ success: true, message: 'Classificações salvas com sucesso' });
   } else {
     res.status(500).json({ error: 'Erro ao salvar classificações' });
+  }
+});
+
+app.get('/api/configuracoes', (req, res) => {
+  const configuracoes = readConfiguracoes();
+  if (configuracoes) {
+    res.json(configuracoes);
+  } else {
+    res.status(404).json({ error: 'Configurações não encontradas' });
+  }
+});
+
+app.post('/api/configuracoes', (req, res) => {
+  const configuracoes = req.body;
+  if (writeConfiguracoes(configuracoes)) {
+    res.json({ success: true, message: 'Configurações salvas com sucesso' });
+  } else {
+    res.status(500).json({ error: 'Erro ao salvar configurações' });
   }
 });
 

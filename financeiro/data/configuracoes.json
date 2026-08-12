@@ -1,0 +1,94 @@
+{
+  "pessoas": [
+    {
+      "id": "juliane",
+      "nome": "Juliane",
+      "cor": "#3b82f6",
+      "icone": "👩"
+    },
+    {
+      "id": "hugo",
+      "nome": "Hugo",
+      "cor": "#8b5cf6",
+      "icone": "👨"
+    },
+    {
+      "id": "ambos",
+      "nome": "Ambos",
+      "cor": "#06b6d4",
+      "icone": "👥"
+    }
+  ],
+  "tipos_despesa": [
+    {
+      "id": "alimentacao",
+      "nome": "Alimentação",
+      "descricao": "Compras de mercado, restaurantes e alimentação em geral",
+      "cor": "#10b981",
+      "icone": "🍔"
+    },
+    {
+      "id": "transporte",
+      "nome": "Transporte",
+      "descricao": "Gasolina, Uber, ônibus e despesas de locomoção",
+      "cor": "#f59e0b",
+      "icone": "🚗"
+    },
+    {
+      "id": "moradia",
+      "nome": "Moradia",
+      "descricao": "Aluguel, condomínio e despesas da casa",
+      "cor": "#ef4444",
+      "icone": "🏠"
+    },
+    {
+      "id": "utilidades",
+      "nome": "Utilidades",
+      "descricao": "Água, luz, gás, internet e serviços essenciais",
+      "cor": "#3b82f6",
+      "icone": "💡"
+    },
+    {
+      "id": "saude",
+      "nome": "Saúde",
+      "descricao": "Farmácia, médico, dentista e despesas médicas",
+      "cor": "#ec4899",
+      "icone": "⚕️"
+    },
+    {
+      "id": "educacao",
+      "nome": "Educação",
+      "descricao": "Cursos, livros e material educativo",
+      "cor": "#6366f1",
+      "icone": "📚"
+    },
+    {
+      "id": "lazer",
+      "nome": "Lazer",
+      "descricao": "Cinema, streaming, passeios e diversão",
+      "cor": "#a855f7",
+      "icone": "🎬"
+    },
+    {
+      "id": "pessoal",
+      "nome": "Pessoal",
+      "descricao": "Roupas, cabelo, produtos de higiene",
+      "cor": "#14b8a6",
+      "icone": "💅"
+    },
+    {
+      "id": "investimento",
+      "nome": "Investimento",
+      "descricao": "Aportes, compras de ações, aplicações",
+      "cor": "#06b6d4",
+      "icone": "📈"
+    },
+    {
+      "id": "outros",
+      "nome": "Outros",
+      "descricao": "Despesas diversas sem categoria específica",
+      "cor": "#6b7280",
+      "icone": "❓"
+    }
+  ]
+}
