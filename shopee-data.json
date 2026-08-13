@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786601902,
-  "updated_at_br": "13/08/2026 03:11",
+  "updated_at": 1786609656,
+  "updated_at_br": "13/08/2026 05:20",
   "period_days": 90,
-  "total_orders": 8115,
-  "total_conversions": 7713,
+  "total_orders": 8114,
+  "total_conversions": 7712,
   "orders": [
     {
       "ID do pedido": "2608125TJ3175V",
@@ -45757,7 +45757,7 @@
     },
     {
       "ID do pedido": "260728T0530NKC",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-07-27 23:18:45",
       "Sub_id1": "24Jul26CalcaJoggerVs1",
       "Valor de Compra(R$)": "51.96",
@@ -45769,7 +45769,7 @@
       "Comissao total do pedido(R$)": "2.0784",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Chuteira futsal  salão quadra profissional colada e costurada quadra oferta unica envio veloz adex",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58214374142",
       "ID da loja": "751925955",
       "Nome da loja": "victorsobral429",
@@ -45777,7 +45777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238893524130739",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-07-27"
     },
     {
@@ -202853,31 +202853,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "232537048125576",
       "conversionStatus": "COMPLETED",
-      "data": "2026-05-15"
-    },
-    {
-      "ID do pedido": "260515FF7XKMDY",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-05-15 08:09:30",
-      "Sub_id1": "",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "1 Unidade ou kit 2 Tapete escorredor de Louça em Microfibra Super absorvente Dobrável Aparador de Louça",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "23794035417",
-      "ID da loja": "691362709",
-      "Nome da loja": "estação espacial",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232531769188753",
-      "conversionStatus": "CANCELLED",
       "data": "2026-05-15"
     }
   ]
