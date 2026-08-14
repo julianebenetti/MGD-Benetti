@@ -1,6 +1,6 @@
 {
-  "updated_at": 1786683092,
-  "updated_at_br": "14/08/2026 01:44",
+  "updated_at": 1786688135,
+  "updated_at_br": "14/08/2026 03:08",
   "period_days": 90,
   "total_orders": 8151,
   "total_conversions": 7754,
@@ -21857,7 +21857,7 @@
     },
     {
       "ID do pedido": "260807Q64JMHG7",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-07 10:14:30",
       "Sub_id1": "06Ago26VIPvestidoplissado",
       "Valor de Compra(R$)": "19.99",
@@ -21869,7 +21869,7 @@
       "Comissao total do pedido(R$)": "0.7996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Unha Limpeza Alicate Estojo com 12 peças excelente pra Viagem",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23498100181",
       "ID da loja": "492409068",
       "Nome da loja": "L&Q shop",
@@ -21877,7 +21877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239796870199756",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-07"
     },
     {
