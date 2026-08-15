@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786779456,
-  "updated_at_br": "15/08/2026 04:30",
+  "updated_at": 1786785614,
+  "updated_at_br": "15/08/2026 06:13",
   "period_days": 90,
-  "total_orders": 8122,
-  "total_conversions": 7729,
+  "total_orders": 8121,
+  "total_conversions": 7728,
   "orders": [
     {
       "ID do pedido": "260814AV8Y1SGC",
@@ -203027,31 +203027,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "232709928185625",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-17"
-    },
-    {
-      "ID do pedido": "260517ME83C4B9",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-17 07:34:59",
-      "Sub_id1": "15Mai26ConjSegundaPeleTermica",
-      "Valor de Compra(R$)": "54.3",
-      "Comissao liquida do afiliado(R$)": "6.516",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "1.629",
-      "Comissao do vendedor(R$)": "4.887",
-      "Comissao total do pedido(R$)": "6.516",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Segunda Pele Térmica Flanelado Frio Intenso Preto Proteção Uv+50 Masculino Feminino Unissex",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22698322663",
-      "ID da loja": "1447721952",
-      "Nome da loja": "Inoveecomm",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232702499137327",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-17"
     }
