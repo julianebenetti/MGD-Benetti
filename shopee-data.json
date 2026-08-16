@@ -1,9 +1,9 @@
 {
-  "updated_at": 1786852198,
-  "updated_at_br": "16/08/2026 00:43",
+  "updated_at": 1786858116,
+  "updated_at_br": "16/08/2026 02:21",
   "period_days": 90,
-  "total_orders": 8034,
-  "total_conversions": 7647,
+  "total_orders": 8033,
+  "total_conversions": 7646,
   "orders": [
     {
       "ID do pedido": "260815DCEAC3WN",
@@ -4482,7 +4482,7 @@
     },
     {
       "ID do pedido": "2608138DACD2TP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-13 02:59:46",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "34.9",
@@ -4494,7 +4494,7 @@
       "Comissao total do pedido(R$)": "2.443",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Cortina Box de Tecido Poliéster com Gancho",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19799564411",
       "ID da loja": "1151208937",
       "Nome da loja": "GlamStore18",
@@ -4502,7 +4502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240289185106083",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-13"
     },
     {
@@ -27857,7 +27857,7 @@
     },
     {
       "ID do pedido": "260807P0C7UWNW",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-06 22:58:45",
       "Sub_id1": "06Ago26VEAprotetorpecadeiraV2",
       "Valor de Compra(R$)": "27.99",
@@ -27869,7 +27869,7 @@
       "Comissao total do pedido(R$)": "1.53945",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Percarbonato 100% Puro Tira Manchas Roupas Brancas e Coloridas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23899354882",
       "ID da loja": "1046010418",
       "Nome da loja": "PAPEL.PAPELARIA",
@@ -27877,7 +27877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239756325159006",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-06"
     },
     {
@@ -200828,31 +200828,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "232783766172083",
       "conversionStatus": "COMPLETED",
-      "data": "2026-05-18"
-    },
-    {
-      "ID do pedido": "260518PJYWXB2E",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-05-18 04:05:14",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "56.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Vestido Camponesa Regata Feminino Com Elástex nas Costas Fenda Lateral Rodado Florido Regulável",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "18698016194",
-      "ID da loja": "1269019626",
-      "Nome da loja": "Yudis Modas",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "232776313180191",
-      "conversionStatus": "CANCELLED",
       "data": "2026-05-18"
     }
   ]
