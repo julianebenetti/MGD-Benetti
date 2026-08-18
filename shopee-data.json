@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787039064,
-  "updated_at_br": "18/08/2026 04:37",
+  "updated_at": 1787045107,
+  "updated_at_br": "18/08/2026 06:18",
   "period_days": 90,
-  "total_orders": 7936,
-  "total_conversions": 7560,
+  "total_orders": 7935,
+  "total_conversions": 7559,
   "orders": [
     {
       "ID do pedido": "260817JE967AJY",
@@ -198377,31 +198377,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "232968153113902",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-20"
-    },
-    {
-      "ID do pedido": "260520V44EHF4D",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-20 08:55:17",
-      "Sub_id1": "GruposPromosApp",
-      "Valor de Compra(R$)": "59.9",
-      "Comissao liquida do afiliado(R$)": "3.594",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "3.594",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "3.594",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Seringa Insulina Agulha Fixa Ultrafina 8x0,30mm – 6 / 12 / 20 / 30 Unidades",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58210048584",
-      "ID da loja": "900676807",
-      "Nome da loja": "3D Bezs",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "232966517113178",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-20"
     }
