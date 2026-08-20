@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787197705,
-  "updated_at_br": "20/08/2026 00:41",
+  "updated_at": 1787203825,
+  "updated_at_br": "20/08/2026 02:23",
   "period_days": 90,
   "total_orders": 7821,
   "total_conversions": 7452,
@@ -1207,7 +1207,7 @@
     },
     {
       "ID do pedido": "260818PA87PW9V",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-18 15:42:08",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "31.15",
@@ -1219,7 +1219,7 @@
       "Comissao total do pedido(R$)": "1.71325",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Umidificador De Ar +3 Essências E Difusor Aromatizador De Ambiente Eletrico Umidificador Usb Com Led",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "26394134899",
       "ID da loja": "991338332",
       "Nome da loja": "AROMATERAPY",
@@ -1227,7 +1227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240766928188708",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-18"
     },
     {
@@ -1957,7 +1957,7 @@
     },
     {
       "ID do pedido": "260818N7H0YG41",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-18 05:20:42",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "25.9",
@@ -1969,7 +1969,7 @@
       "Comissao total do pedido(R$)": "1.036",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Garrafinha De Água Squeeze 1 Litro Hello Kitty Escritório Academia Tampa Emborrachada Escola Creche",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58258735979",
       "ID da loja": "396855381",
       "Nome da loja": "ODOM Imports",
@@ -1977,7 +1977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240729642156149",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-18"
     },
     {
@@ -2007,7 +2007,7 @@
     },
     {
       "ID do pedido": "260818N7H0YG3Y",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-18 05:20:42",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "29.89",
@@ -2019,7 +2019,7 @@
       "Comissao total do pedido(R$)": "1.55428",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Dagua Natural Apricot Forte Abrasão Creme Esfoliante Profissional Contém 300g",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "56959374036",
       "ID da loja": "776688264",
       "Nome da loja": "Flor Perfumada Cosméticos",
@@ -2027,7 +2027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240729642156149",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-18"
     },
     {
@@ -5782,7 +5782,7 @@
     },
     {
       "ID do pedido": "260817HBH5RV4K",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-16 16:21:43",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "29.65",
@@ -5794,7 +5794,7 @@
       "Comissao total do pedido(R$)": "1.7197",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bandeja Caixa Areia Gato Higienica Furba Promoção Barato Reforçada  Apartamento Casa Cães Gatos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19397988393",
       "ID da loja": "421503156",
       "Nome da loja": "FATPET",
@@ -5802,7 +5802,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240596503194771",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-16"
     },
     {
@@ -9207,7 +9207,7 @@
     },
     {
       "ID do pedido": "260815DG8WR9RV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-15 03:35:56",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "9.89",
@@ -9219,7 +9219,7 @@
       "Comissao total do pedido(R$)": "0.54395",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "3-1 Filtro Coletor Pelos Máquina Lavar Roupa Fiapos Pet Reutilizável Flutuante Anti Pelos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "52708207338",
       "ID da loja": "859910696",
       "Nome da loja": "Jhons store",
@@ -9227,7 +9227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240464156100228",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-15"
     },
     {
