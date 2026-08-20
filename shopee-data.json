@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787247202,
-  "updated_at_br": "20/08/2026 14:26",
+  "updated_at": 1787254324,
+  "updated_at_br": "20/08/2026 16:25",
   "period_days": 90,
-  "total_orders": 7860,
-  "total_conversions": 7491,
+  "total_orders": 7857,
+  "total_conversions": 7488,
   "orders": [
     {
       "ID do pedido": "260820SWYF80W3",
@@ -1107,27 +1107,27 @@
     },
     {
       "ID do pedido": "260820S3ABC2MK",
-      "Status do Pedido": "UNPAID",
+      "Status do Pedido": "CANCELLED",
       "Horario do pedido": "2026-08-19 18:16:02",
       "Sub_id1": "19Ago26VIPGAMESTICKM15",
-      "Valor de Compra(R$)": "849",
-      "Comissao liquida do afiliado(R$)": "32.262",
+      "Valor de Compra(R$)": "0",
+      "Comissao liquida do afiliado(R$)": "0",
       "Taxa de comissao Shopee do item": "4.00%",
       "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "33.96",
+      "Comissao Shopee(R$)": "0",
       "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "33.96",
+      "Comissao total do pedido(R$)": "0",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Smart Tv Aoc Dled 32 Wi-fi Roku Tv Quad Core 32s5155/78g",
-      "Status do item do afiliado": "UNPAID",
+      "Status do item do afiliado": "CANCELLED",
       "ID do item": "23094510675",
       "ID da loja": "898761179",
       "Nome da loja": "Rep Store",
-      "Quantidade": "1",
+      "Quantidade": "0",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240862562155477",
-      "conversionStatus": "UNPAID",
+      "conversionStatus": "CANCELLED",
       "data": "2026-08-19"
     },
     {
@@ -3032,7 +3032,7 @@
     },
     {
       "ID do pedido": "260819PCP7DR94",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-18 16:25:45",
       "Sub_id1": "25Jul26TapeteHigienicoVs4",
       "Valor de Compra(R$)": "30.8",
@@ -3044,7 +3044,7 @@
       "Comissao total do pedido(R$)": "2.156",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sementes Graminha Natural Pets Cachorros Gatos – Regula Digestão Saudável Fortalece a Imunidade",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "5151203156",
       "ID da loja": "305447203",
       "Nome da loja": "FiuShop",
@@ -3052,7 +3052,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240769545131193",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-18"
     },
     {
@@ -3207,7 +3207,7 @@
     },
     {
       "ID do pedido": "260818P9WJ78KD",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-18 15:36:10",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "35.89",
@@ -3219,7 +3219,7 @@
       "Comissao total do pedido(R$)": "1.97395",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mini Projetor Astronauta Galáxia Luz Noturna Estrela LED Decoração Quarto Infantil USB Rotação 360°",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18397733644",
       "ID da loja": "1127030290",
       "Nome da loja": "JIMMY.STORE",
@@ -3227,7 +3227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240766570118085",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-18"
     },
     {
@@ -5107,7 +5107,7 @@
     },
     {
       "ID do pedido": "260818KYYSPKDF",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-17 17:33:09",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "27.2",
@@ -5119,7 +5119,7 @@
       "Comissao total do pedido(R$)": "2.312",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Nupill Creme Antirrugas Tensine FPS-15 50g",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22794152959",
       "ID da loja": "898614131",
       "Nome da loja": "Beauty Now Cosméticos",
@@ -5127,7 +5127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240687188160554",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-17"
     },
     {
@@ -17232,7 +17232,7 @@
     },
     {
       "ID do pedido": "2608137TBEU9DW",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-12 21:20:21",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "54.19",
@@ -17244,7 +17244,7 @@
       "Comissao total do pedido(R$)": "2.1676",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Calça E Blusa Feminina Conjunto Casual Soltinho Manga Curta Camiseta Leve Social",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23593676854",
       "ID da loja": "347396065",
       "Nome da loja": "Flag Modas",
@@ -17252,7 +17252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240268820125800",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-12"
     },
     {
@@ -20532,7 +20532,7 @@
     },
     {
       "ID do pedido": "2608114PXSX8AK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-11 15:41:35",
       "Sub_id1": "31Jul26VEAtapetehigienico",
       "Valor de Compra(R$)": "36.25",
@@ -20544,7 +20544,7 @@
       "Comissao total do pedido(R$)": "1.45",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Jornal para pet 3KG Sem Uso Limpo Produto de Primeira qualidade jornal",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23991094929",
       "ID da loja": "418659594",
       "Nome da loja": "Robson Papéis",
@@ -20552,7 +20552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240162095112062",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-11"
     },
     {
@@ -21957,7 +21957,7 @@
     },
     {
       "ID do pedido": "2608113B9HUR93",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-11 02:40:11",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "30.47",
@@ -21969,7 +21969,7 @@
       "Comissao total do pedido(R$)": "6.3987",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -21977,7 +21977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240115211101639",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-11"
     },
     {
@@ -27332,7 +27332,7 @@
     },
     {
       "ID do pedido": "260810W21RFVER",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-09 18:17:20",
       "Sub_id1": "07Ago26calcinhaplussizeVS2",
       "Valor de Compra(R$)": "23.9",
@@ -27344,7 +27344,7 @@
       "Comissao total do pedido(R$)": "2.0315",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mangueira De Jardim Reforçada Trançada Completa 10/15/20/25/30/35/50 Metros",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58250403906",
       "ID da loja": "766574061",
       "Nome da loja": "Na Net Utilidades",
@@ -27352,7 +27352,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239998639136263",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-09"
     },
     {
@@ -28382,7 +28382,7 @@
     },
     {
       "ID do pedido": "260809V97H1NHS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-09 10:53:09",
       "Sub_id1": "07Ago26calcinhaplussize",
       "Valor de Compra(R$)": "44.51",
@@ -28394,7 +28394,7 @@
       "Comissao total do pedido(R$)": "3.51629",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 10 Calçolinhas Menina juvenil de Algodão Leve, Respirável e Ideal para o Uso Diário",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58208269168",
       "ID da loja": "1761201063",
       "Nome da loja": "GBA CONFECCOES",
@@ -28402,7 +28402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239971989111852",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-09"
     },
     {
@@ -28582,7 +28582,7 @@
     },
     {
       "ID do pedido": "260809UF3BTEW4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-09 03:05:33",
       "Sub_id1": "29Jul26VEACalcaJoggerRapaz",
       "Valor de Compra(R$)": "54.9",
@@ -28594,7 +28594,7 @@
       "Comissao total do pedido(R$)": "20.862",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Calça Masculina Com Elastano Esportiva Fitness Slim Fit",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22493540968",
       "ID da loja": "318968967",
       "Nome da loja": "Envoy For Men",
@@ -28602,7 +28602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "239943932128798",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-09"
     },
     {
@@ -29932,7 +29932,7 @@
     },
     {
       "ID do pedido": "260809TY6PHBRJ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-08 22:21:04",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "54.9",
@@ -29944,7 +29944,7 @@
       "Comissao total do pedido(R$)": "20.862",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Calça Masculina Com Elastano Esportiva Fitness Slim Fit",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22493540968",
       "ID da loja": "318968967",
       "Nome da loja": "Envoy For Men",
@@ -29952,12 +29952,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "239926864150451",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-08"
     },
     {
       "ID do pedido": "260809TXC5RW2C",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-08 22:06:15",
       "Sub_id1": "31Jul26VEAcoberdrom",
       "Valor de Compra(R$)": "36.99",
@@ -29969,7 +29969,7 @@
       "Comissao total do pedido(R$)": "2.66328",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Protetor Para Sofa De 2 Lugares Total Proteção Capa Com Bolso Lateral Para Guarda Objetos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22492812116",
       "ID da loja": "322966762",
       "Nome da loja": "Laços de Maria",
@@ -29977,7 +29977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239925974161898",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-08"
     },
     {
@@ -31532,7 +31532,7 @@
     },
     {
       "ID do pedido": "260808T9N4EF37",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-08 15:55:26",
       "Sub_id1": "07Ago26calcinhaplussizeVS2",
       "Valor de Compra(R$)": "26.9",
@@ -31544,7 +31544,7 @@
       "Comissao total do pedido(R$)": "1.614",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT 2 BERMUDAS INFANTIL DRYFIT ZIPS NO BOLSO PARA O DIA DIA",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58207375228",
       "ID da loja": "1775494527",
       "Nome da loja": "MáximaModa",
@@ -31552,7 +31552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239903726185406",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-08"
     },
     {
@@ -31982,7 +31982,7 @@
     },
     {
       "ID do pedido": "260808T5P4RG8W",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-08 14:44:26",
       "Sub_id1": "31Jul26VEAtapetehigienico",
       "Valor de Compra(R$)": "89.99",
@@ -31994,7 +31994,7 @@
       "Comissao total do pedido(R$)": "5.3994",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sandália Feminina Modare Ortopética Ultra Conforto Salto Anabela Palmilha Macia Original",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "45312899475",
       "ID da loja": "1538408030",
       "Nome da loja": "Todo Pé Quer Um Chinelo",
@@ -32002,7 +32002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239899465101466",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-08"
     },
     {
@@ -32857,7 +32857,7 @@
     },
     {
       "ID do pedido": "260808SRD3GRK7",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-08 10:46:44",
       "Sub_id1": "06Ago26VIPvestidoplissadoV4",
       "Valor de Compra(R$)": "47.87",
@@ -32869,7 +32869,7 @@
       "Comissao total do pedido(R$)": "3.44664",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Corretivo Camuflagem Angel Wings Pri Lessa Catharine Hill Alta Cobertura",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "16262318132",
       "ID da loja": "667338142",
       "Nome da loja": "MAKE BEAUTY COSMETICOS OFICIAL",
@@ -32877,7 +32877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239885203165803",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-08"
     },
     {
@@ -35132,7 +35132,7 @@
     },
     {
       "ID do pedido": "260808R4KUJ39W",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-07 19:19:55",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "3.72",
@@ -35144,7 +35144,7 @@
       "Comissao total do pedido(R$)": "0.28272",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Biscoito Tapioca Chocolate Zero Açúcar Naturatta 15 g - Vegano",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18797762901",
       "ID da loja": "826485187",
       "Nome da loja": "Vitao Alimentos",
@@ -35152,7 +35152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239829595120704",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-07"
     },
     {
@@ -41082,7 +41082,7 @@
     },
     {
       "ID do pedido": "260806MYJKFBQS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-06 13:11:46",
       "Sub_id1": "31Jul26VEAcoberdrom",
       "Valor de Compra(R$)": "53.76",
@@ -41094,7 +41094,7 @@
       "Comissao total do pedido(R$)": "2.1504",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT COM 2 - Baba da Babosa (Aloe Vera) Alta Performance 500ml Tratamento Cabelo Pele Lord Cosmeticos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23998230375",
       "ID da loja": "298406807",
       "Nome da loja": "GBelo Representações",
@@ -41102,7 +41102,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239721105170190",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-06"
     },
     {
@@ -196428,81 +196428,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "233178970178956",
       "conversionStatus": "COMPLETED",
-      "data": "2026-05-22"
-    },
-    {
-      "ID do pedido": "26052353WHB7BU",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-22 19:06:51",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "55.95",
-      "Comissao liquida do afiliado(R$)": "1.6785",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.6785",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.6785",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Mochila Escolar  Infantil Tamanho G com Rodinhas  minino y minina",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23099182646",
-      "ID da loja": "1494426148",
-      "Nome da loja": "modasjoel",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233176011184276",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-22"
-    },
-    {
-      "ID do pedido": "2605234XFX537V",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-22 17:29:46",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "14.32",
-      "Comissao liquida do afiliado(R$)": "0.4296",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "0.4296",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.4296",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Cinto Feminino 1,10 cm Fivela Quadrada Retro Moda Feminina Fashion Lindo",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18797227877",
-      "ID da loja": "404108675",
-      "Nome da loja": "Rafaela Gouvêa Cintos e Vestuários",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233170186148368",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-22"
-    },
-    {
-      "ID do pedido": "2605234XE7S0GQ",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-05-22 17:28:50",
-      "Sub_id1": "16Mai26SaiaCamaBox",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Saco de Silicone Reutilizável 1 Litro para Armazenar Alimentos Diversas Cores",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "43226728828",
-      "ID da loja": "429350776",
-      "Nome da loja": "topen home",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233170129131521",
-      "conversionStatus": "CANCELLED",
       "data": "2026-05-22"
     }
   ]
