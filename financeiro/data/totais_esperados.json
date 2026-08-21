@@ -1,0 +1,24 @@
+{
+  "faturas": {
+    "2026-01": {
+      "mes": "Janeiro",
+      "total_esperado": 6149.17
+    },
+    "2026-02": {
+      "mes": "Fevereiro",
+      "total_esperado": 9199.46
+    },
+    "2026-03": {
+      "mes": "Março",
+      "total_esperado": 9039.35
+    },
+    "2026-04": {
+      "mes": "Abril",
+      "total_esperado": 7140.33
+    },
+    "2026-05": {
+      "mes": "Maio",
+      "total_esperado": 5692.56
+    }
+  }
+}

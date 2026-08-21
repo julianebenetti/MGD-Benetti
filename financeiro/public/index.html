@@ -1024,6 +1024,8 @@
       <button class="tab-button" data-tab="fluxo">📈 Fluxo</button>
       <button class="tab-button" data-tab="classificacao">🏷️ Classificação</button>
       <button class="tab-button" data-tab="dashboard_contabil">📑 Dashboard Contábil</button>
+      <button class="tab-button" data-tab="reconciliacao">🔍 Reconciliação</button>
+      <button class="tab-button" data-tab="resumo_executivo">📊 Resumo Executivo</button>
       <button class="tab-button" data-tab="configuracoes">⚙️ Configurações</button>
 
       <div id="abas-ocultas" style="display: none;">
@@ -1389,6 +1391,92 @@
       <div class="card full-width">
         <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">🏷️ Análise por Classificação</div>
         <div id="analiseClassificacaoContabilContainer"></div>
+      </div>
+    </div>
+
+    <!-- TAB: RECONCILIAÇÃO -->
+    <div id="reconciliacao" class="tab-content">
+      <div class="section-title">🔍 Reconciliação de Faturas</div>
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">Validação do total carregado vs total esperado da fatura</p>
+
+      <div class="card full-width">
+        <div id="reconciliacao-container"></div>
+      </div>
+
+      <div class="alert alert-info" style="margin-top: 20px;">
+        ✓ Validado: Diferença menor que R$ 5,00 | ❌ Falha: Diferença maior que R$ 5,00
+      </div>
+    </div>
+
+    <!-- TAB: RESUMO EXECUTIVO -->
+    <div id="resumo_executivo" class="tab-content">
+      <div class="section-title">📊 Resumo Executivo</div>
+
+      <!-- KPIs -->
+      <div class="grid">
+        <div class="card kpi-card">
+          <div class="kpi-label">Total Geral (Jan-Mai)</div>
+          <div class="kpi-value" id="kpi-total-geral">R$ 0,00</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-label">Média por Mês</div>
+          <div class="kpi-value" id="kpi-media-mensal">R$ 0,00</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-label">Maior Gasto</div>
+          <div class="kpi-value" id="kpi-maior-gasto">R$ 0,00</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-label">Pessoa com Mais Gastos</div>
+          <div class="kpi-value" id="kpi-pessoa-top" style="font-size: 14px;">-</div>
+        </div>
+      </div>
+
+      <!-- Gráficos -->
+      <div class="section-title" style="margin-top: 30px;">Gráficos</div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="card full-width">
+          <div style="text-align: center; margin-bottom: 10px; font-weight: 500;">Total por Mês</div>
+          <div id="grafico-pizza" style="height: 250px;"></div>
+        </div>
+
+        <div class="card full-width">
+          <div style="text-align: center; margin-bottom: 10px; font-weight: 500;">Total por Pessoa</div>
+          <div id="grafico-barras" style="height: 250px;"></div>
+        </div>
+      </div>
+
+      <div class="card full-width" style="margin-top: 20px;">
+        <div style="text-align: center; margin-bottom: 10px; font-weight: 500;">Evolução Mensal</div>
+        <div id="grafico-linhas" style="height: 250px;"></div>
+      </div>
+
+      <!-- Tabelas de Resumo -->
+      <div class="section-title" style="margin-top: 30px;">Detalhamento</div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="card full-width">
+          <div style="font-weight: 500; margin-bottom: 15px;">Resumo por Mês</div>
+          <div id="resumo-mes-table"></div>
+        </div>
+
+        <div class="card full-width">
+          <div style="font-weight: 500; margin-bottom: 15px;">Resumo por Pessoa</div>
+          <div id="resumo-pessoa-table"></div>
+        </div>
+      </div>
+
+      <div class="card full-width" style="margin-top: 20px;">
+        <div style="font-weight: 500; margin-bottom: 15px;">Resumo por Categoria</div>
+        <div id="resumo-categoria-table"></div>
+      </div>
+
+      <!-- Botão de Exportação -->
+      <div style="margin-top: 30px; text-align: center;">
+        <button class="btn-primary" onclick="exportarParaExcel()" style="font-size: 16px; padding: 12px 24px;">
+          📥 Exportar para Excel
+        </button>
       </div>
     </div>
 
@@ -3314,6 +3402,16 @@ function renderizarTiposDespesaConfig() {
         if (tabId === 'importar') {
           renderizarListaCargas();
         }
+
+        // Renderizar reconciliação quando aba reconciliacao é ativada
+        if (tabId === 'reconciliacao') {
+          renderizarReconciliacao();
+        }
+
+        // Renderizar resumo executivo quando aba resumo_executivo é ativada
+        if (tabId === 'resumo_executivo') {
+          renderizarResumoExecutivo();
+        }
       });
     });
 
@@ -4557,6 +4655,397 @@ function renderizarTiposDespesaConfig() {
           step.classList.remove('active', 'completed');
         }
       }
+    }
+
+    // ============================================
+    // FUNÇÕES PARA RECONCILIAÇÃO E RESUMO EXECUTIVO
+    // ============================================
+
+    async function carregarTotaisEsperados() {
+      try {
+        const response = await fetch('/data/totais_esperados.json');
+        return await response.json();
+      } catch (err) {
+        console.error('Erro ao carregar totais esperados:', err);
+        return null;
+      }
+    }
+
+    function calcularTotalPorMes(transacoes) {
+      const totaisPorMes = {
+        '2026-01': 0,
+        '2026-02': 0,
+        '2026-03': 0,
+        '2026-04': 0,
+        '2026-05': 0
+      };
+
+      if (!transacoes || transacoes.length === 0) return totaisPorMes;
+
+      transacoes.forEach(t => {
+        if (!t.data) return;
+        const mes = t.data.substring(0, 7);
+        if (totaisPorMes.hasOwnProperty(mes)) {
+          const valor = Math.abs(parseFloat(t.valor) || 0);
+          totaisPorMes[mes] += valor;
+        }
+      });
+
+      return totaisPorMes;
+    }
+
+    async function renderizarReconciliacao() {
+      const totaisEsperados = await carregarTotaisEsperados();
+      if (!totaisEsperados) {
+        document.getElementById('reconciliacao-container').innerHTML =
+          '<p style="color: var(--accent-red);">Erro ao carregar dados de reconciliação</p>';
+        return;
+      }
+
+      const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
+      const totalsPorMes = calcularTotalPorMes(transacoes);
+
+      let html = `
+        <table class="transactions-table" style="font-size: 12px;">
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th>Total Carregado</th>
+              <th>Total Esperado</th>
+              <th>Diferença</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      Object.entries(totaisEsperados.faturas).forEach(([key, fatura]) => {
+        const carregado = totalsPorMes[key] || 0;
+        const esperado = fatura.total_esperado || 0;
+        const diferenca = Math.abs(carregado - esperado);
+        const validado = diferenca < 5;
+        const status = validado ? '✓ Validado' : '❌ Falha';
+        const statusColor = validado ? 'var(--accent-green)' : 'var(--accent-red)';
+
+        html += `
+          <tr>
+            <td>${fatura.mes}/26</td>
+            <td>R$ ${carregado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td>R$ ${esperado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td>R$ ${diferenca.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+            <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      document.getElementById('reconciliacao-container').innerHTML = html;
+    }
+
+    function calcularResumosExecutivos() {
+      const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
+      if (!transacoes || transacoes.length === 0) {
+        return null;
+      }
+
+      // Total Geral
+      const totalGeral = transacoes.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+
+      // Média por mês
+      const mediaMensal = totalGeral / 5; // 5 meses
+
+      // Maior gasto
+      const maiorGasto = Math.max(...transacoes.map(t => parseFloat(t.valor) || 0));
+
+      // Totais por pessoa
+      const totalsPorPessoa = {};
+      transacoes.forEach(t => {
+        const pessoa = t.pessoa || 'Sem pessoa';
+        totalsPorPessoa[pessoa] = (totalsPorPessoa[pessoa] || 0) + (parseFloat(t.valor) || 0);
+      });
+
+      // Pessoa com maior gasto
+      let pessoaTop = '-';
+      let maiorValor = 0;
+      Object.entries(totalsPorPessoa).forEach(([pessoa, total]) => {
+        if (total > maiorValor) {
+          maiorValor = total;
+          pessoaTop = pessoa;
+        }
+      });
+
+      // Totais por mês
+      const totalsPorMes = {};
+      const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'];
+      meses.forEach((mes, idx) => {
+        const key = `2026-${String(idx + 1).padStart(2, '0')}`;
+        totalsPorMes[mes] = 0;
+      });
+
+      transacoes.forEach(t => {
+        if (!t.data) return;
+        const mes = parseInt(t.data.substring(5, 7));
+        if (mes >= 1 && mes <= 5) {
+          const mesNome = meses[mes - 1];
+          totalsPorMes[mesNome] += parseFloat(t.valor) || 0;
+        }
+      });
+
+      // Totais por categoria
+      const totalsPorCategoria = {};
+      transacoes.forEach(t => {
+        const categoria = t.categoria || 'Sem categoria';
+        totalsPorCategoria[categoria] = (totalsPorCategoria[categoria] || 0) + (parseFloat(t.valor) || 0);
+      });
+
+      return {
+        totalGeral,
+        mediaMensal,
+        maiorGasto,
+        pessoaTop,
+        totalsPorPessoa,
+        totalsPorMes,
+        totalsPorCategoria
+      };
+    }
+
+    async function renderizarResumoExecutivo() {
+      const resumos = calcularResumosExecutivos();
+      if (!resumos) {
+        return;
+      }
+
+      // KPIs
+      document.getElementById('kpi-total-geral').textContent =
+        'R$ ' + resumos.totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      document.getElementById('kpi-media-mensal').textContent =
+        'R$ ' + resumos.mediaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      document.getElementById('kpi-maior-gasto').textContent =
+        'R$ ' + resumos.maiorGasto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      document.getElementById('kpi-pessoa-top').textContent = resumos.pessoaTop;
+
+      // Gráfico Pizza (por mês)
+      const pizzaCanvas = document.getElementById('grafico-pizza');
+      if (pizzaCanvas && window.Chart) {
+        renderizarGraficoPizza(resumos.totalsPorMes);
+      } else if (pizzaCanvas) {
+        renderizarGraficoPizzaSVG(pizzaCanvas, resumos.totalsPorMes);
+      }
+
+      // Gráfico Barras (por pessoa)
+      const barrasCanvas = document.getElementById('grafico-barras');
+      if (barrasCanvas && window.Chart) {
+        renderizarGraficoBarras(resumos.totalsPorPessoa);
+      } else if (barrasCanvas) {
+        renderizarGraficoBarrasSVG(barrasCanvas, resumos.totalsPorPessoa);
+      }
+
+      // Gráfico Linhas (evolução mensal)
+      const linhasCanvas = document.getElementById('grafico-linhas');
+      if (linhasCanvas && window.Chart) {
+        renderizarGraficoLinhas(resumos.totalsPorMes);
+      } else if (linhasCanvas) {
+        renderizarGraficoLinhasSVG(linhasCanvas, resumos.totalsPorMes);
+      }
+
+      // Tabela Resumo por Mês
+      renderizarTabelaMes(resumos.totalsPorMes);
+
+      // Tabela Resumo por Pessoa
+      renderizarTabelaPessoa(resumos.totalsPorPessoa);
+
+      // Tabela Resumo por Categoria
+      renderizarTabelaCategoria(resumos.totalsPorCategoria);
+    }
+
+    function renderizarGraficoPizzaSVG(container, dados) {
+      const valores = Object.values(dados);
+      const total = valores.reduce((a, b) => a + b, 0);
+      const cores = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+      let html = '<div style="display: flex; justify-content: center; align-items: center;">';
+      html += '<div style="font-size: 12px;">';
+
+      Object.entries(dados).forEach(([mes, valor], idx) => {
+        const percentual = ((valor / total) * 100).toFixed(1);
+        html += `<div style="margin: 5px 0;">
+          <span style="color: ${cores[idx % cores.length]};">■</span>
+          ${mes}: R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (${percentual}%)
+        </div>`;
+      });
+
+      html += '</div></div>';
+      container.innerHTML = html;
+    }
+
+    function renderizarGraficoBarrasSVG(container, dados) {
+      const entrada = Object.entries(dados);
+      if (entrada.length === 0) return;
+
+      const maximo = Math.max(...Object.values(dados));
+      let html = '<div style="font-size: 12px;">';
+
+      entrada.forEach(([pessoa, valor]) => {
+        const percentual = (valor / maximo) * 100;
+        html += `<div style="margin: 10px 0;">
+          <div style="color: var(--text-secondary);">${pessoa}</div>
+          <div style="background-color: var(--bg-tertiary); border-radius: 4px; height: 20px; overflow: hidden;">
+            <div style="background: linear-gradient(90deg, var(--accent-blue), var(--accent-green)); height: 100%; width: ${percentual}%; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 11px; color: white; font-weight: bold;">
+              R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        </div>`;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function renderizarGraficoLinhasSVG(container, dados) {
+      const meses = Object.keys(dados);
+      const valores = Object.values(dados);
+      const maximo = Math.max(...valores);
+
+      if (valores.length === 0) return;
+
+      const largura = 500;
+      const altura = 200;
+      const padding = 20;
+
+      let pontos = '';
+      valores.forEach((valor, idx) => {
+        const x = padding + (idx / (valores.length - 1 || 1)) * (largura - padding * 2);
+        const y = altura - padding - (valor / maximo) * (altura - padding * 2);
+        pontos += `${x},${y} `;
+      });
+
+      let html = `<svg width="100%" height="${altura}" viewBox="0 0 ${largura} ${altura}" style="background-color: var(--bg-tertiary); border-radius: 4px;">`;
+
+      // Linha
+      html += `<polyline points="${pontos}" style="fill: none; stroke: var(--accent-blue); stroke-width: 2;" />`;
+
+      // Pontos
+      valores.forEach((valor, idx) => {
+        const x = padding + (idx / (valores.length - 1 || 1)) * (largura - padding * 2);
+        const y = altura - padding - (valor / maximo) * (altura - padding * 2);
+        html += `<circle cx="${x}" cy="${y}" r="4" style="fill: var(--accent-green);" />`;
+      });
+
+      html += '</svg>';
+      container.innerHTML = html;
+    }
+
+    function renderizarTabelaMes(dados) {
+      let html = '<table class="transactions-table" style="font-size: 12px;"><thead><tr><th>Mês</th><th>Total</th></tr></thead><tbody>';
+
+      Object.entries(dados).forEach(([mes, valor]) => {
+        html += `<tr><td>${mes}</td><td>R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('resumo-mes-table').innerHTML = html;
+    }
+
+    function renderizarTabelaPessoa(dados) {
+      let html = '<table class="transactions-table" style="font-size: 12px;"><thead><tr><th>Pessoa</th><th>Total</th></tr></thead><tbody>';
+
+      Object.entries(dados).forEach(([pessoa, valor]) => {
+        html += `<tr><td>${pessoa}</td><td>R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('resumo-pessoa-table').innerHTML = html;
+    }
+
+    function renderizarTabelaCategoria(dados) {
+      let html = '<table class="transactions-table" style="font-size: 12px;"><thead><tr><th>Categoria</th><th>Total</th></tr></thead><tbody>';
+
+      Object.entries(dados).forEach(([categoria, valor]) => {
+        html += `<tr><td>${categoria}</td><td>R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('resumo-categoria-table').innerHTML = html;
+    }
+
+    async function exportarParaExcel() {
+      if (!window.XLSX) {
+        alert('⚠️ Biblioteca XLSX ainda não foi carregada. Tente novamente.');
+        return;
+      }
+
+      const workbook = XLSX.utils.book_new();
+
+      // Aba 1: Transações
+      const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
+      if (transacoes && transacoes.length > 0) {
+        const ws = XLSX.utils.json_to_sheet(transacoes.map(t => ({
+          'Data': t.data,
+          'Descrição': t.descricao,
+          'Pessoa': t.pessoa,
+          'Conta': t.conta,
+          'Categoria': t.categoria,
+          'Valor': t.valor,
+          'Status': t.status
+        })));
+        XLSX.utils.book_append_sheet(workbook, ws, 'Transações');
+      }
+
+      // Aba 2: Reconciliação
+      const totaisEsperados = await carregarTotaisEsperados();
+      if (totaisEsperados) {
+        const totalsPorMes = calcularTotalPorMes(transacoes);
+        const reconciliacao = Object.entries(totaisEsperados.faturas).map(([key, fatura]) => {
+          const carregado = totalsPorMes[key] || 0;
+          const esperado = fatura.total_esperado || 0;
+          const diferenca = Math.abs(carregado - esperado);
+          return {
+            'Mês': fatura.mes,
+            'Total Carregado': carregado,
+            'Total Esperado': esperado,
+            'Diferença': diferenca,
+            'Status': diferenca < 5 ? 'Validado' : 'Falha'
+          };
+        });
+        const ws = XLSX.utils.json_to_sheet(reconciliacao);
+        XLSX.utils.book_append_sheet(workbook, ws, 'Reconciliação');
+      }
+
+      // Aba 3: Resumo por Mês
+      const resumos = calcularResumosExecutivos();
+      if (resumos) {
+        const resumoMes = Object.entries(resumos.totalsPorMes).map(([mes, total]) => ({
+          'Mês': mes,
+          'Total': total
+        }));
+        const ws = XLSX.utils.json_to_sheet(resumoMes);
+        XLSX.utils.book_append_sheet(workbook, ws, 'Resumo por Mês');
+
+        // Aba 4: Resumo por Pessoa
+        const resumoPessoa = Object.entries(resumos.totalsPorPessoa).map(([pessoa, total]) => ({
+          'Pessoa': pessoa,
+          'Total': total
+        }));
+        const ws2 = XLSX.utils.json_to_sheet(resumoPessoa);
+        XLSX.utils.book_append_sheet(workbook, ws2, 'Resumo por Pessoa');
+
+        // Aba 5: Resumo por Categoria
+        const resumoCategoria = Object.entries(resumos.totalsPorCategoria).map(([categoria, total]) => ({
+          'Categoria': categoria,
+          'Total': total
+        }));
+        const ws3 = XLSX.utils.json_to_sheet(resumoCategoria);
+        XLSX.utils.book_append_sheet(workbook, ws3, 'Resumo por Categoria');
+      }
+
+      XLSX.writeFile(workbook, 'AfiliDash_Financeiro_Relatorio.xlsx');
     }
 
     // Load data on page load
