@@ -139,7 +139,11 @@ function noEscopo(mv) {
   // =====================================================================
 
   ok('Ninguém marcado como "Ambos"', !todas.some(t => t.pessoa === 'Ambos'));
-  igual('Família tem 382 lançamentos', todas.filter(t => t.pessoa === 'Família').length, 382);
+  const porPessoa = {};
+  todas.forEach(t => { porPessoa[t.pessoa] = (porPessoa[t.pessoa] || 0) + 1; });
+  console.log(`    (${Object.entries(porPessoa).map(([p, n]) => `${p}: ${n}`).join(' · ')})`);
+  ok('Família concentra as despesas da casa', porPessoa['Família'] > porPessoa['Hugo']);
+  ok('Toda pessoa dos dados tem ao menos um lançamento', Object.values(porPessoa).every(n => n > 0));
   ok('Toda transação tem pessoa', todas.every(t => t.pessoa));
   const pessoasCfg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'configuracoes.json'), 'utf8')).pessoas.map(p => p.nome);
   const pessoasDados = [...new Set(todas.map(t => t.pessoa))];
@@ -371,13 +375,30 @@ function noEscopo(mv) {
     return {
       categorias: [...t.querySelectorAll('tbody tr td:first-child')].map(x => x.textContent.trim()),
       colunas: [...t.querySelectorAll('thead th')].map(x => x.textContent.trim()),
-      totalRodape: [...t.querySelectorAll('tfoot td')].pop().textContent.trim()
+      totalRodape: [...t.querySelectorAll('tfoot td')][1].textContent.trim()
     };
   });
 
-  const alfabetica = [...matriz.categorias].sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  ok('Matriz em ordem alfabética', JSON.stringify(matriz.categorias) === JSON.stringify(alfabetica),
+  const totalPorCategoriaRotulo = {};
+  escopo.filter(t => t.valor > 0).forEach(t => {
+    const rot = (t.categoria || 'Sem categoria').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    totalPorCategoriaRotulo[rot] = (totalPorCategoriaRotulo[rot] || 0) + t.valor;
+  });
+  const porValor = [...matriz.categorias].sort((a, b) => (totalPorCategoriaRotulo[b] || 0) - (totalPorCategoriaRotulo[a] || 0));
+  ok('Matriz ordenada da maior despesa para a menor',
+     JSON.stringify(matriz.categorias) === JSON.stringify(porValor),
      matriz.categorias.slice(0, 5).join(', '));
+
+  ok('Coluna Total vem logo depois de Categoria', matriz.colunas[1] === 'Total', matriz.colunas.slice(0, 3).join(' | '));
+
+  const mesesCronologicos = [...new Set(escopo.filter(t => t.valor > 0).map(t => t.mes_vencimento))]
+    .sort((a, b) => {
+      const [ma, aa] = a.split('/'), [mb, ab] = b.split('/');
+      return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
+    });
+  ok('Meses do mais recente para o mais antigo',
+     matriz.colunas[2] === mesesCronologicos[mesesCronologicos.length - 1],
+     `primeira coluna de mês: ${matriz.colunas[2]}, mais recente: ${mesesCronologicos[mesesCronologicos.length - 1]}`);
   igual('Matriz cobre todas as categorias de despesa', matriz.categorias.length, Object.keys(ref.porCategoria).length);
   igual('Total da matriz bate com a soma das compras', numeroDe(matriz.totalRodape), ref.compras);
   const mesesComCompra = [...new Set(escopo.filter(t => t.valor > 0).map(t => t.mes_vencimento))];

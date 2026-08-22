@@ -2342,9 +2342,13 @@
       const transacoes = todasTransacoes().filter(t => t.valor > 0);
       const base = pessoa ? transacoes.filter(t => t.pessoa === pessoa) : transacoes;
 
-      const meses = [...new Set(base.map(t => t.mes_vencimento))].sort(ordenarMeses);
+      // Colunas do mais recente para o mais antigo: a fatura que interessa
+      // no dia a dia e a atual, entao ela fica logo depois do Total.
+      const meses = [...new Set(base.map(t => t.mes_vencimento))].sort(ordenarMeses).reverse();
+      // Linhas da maior despesa para a menor, pelo mesmo motivo.
+      const totalCat = cat => base.filter(t => rotuloCategoria(t.categoria) === cat).reduce((s, t) => s + t.valor, 0);
       const categorias = [...new Set(base.map(t => rotuloCategoria(t.categoria)))]
-        .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        .sort((a, b) => totalCat(b) - totalCat(a));
 
       if (!meses.length) {
         document.getElementById('pov_matriz').innerHTML = '';
@@ -2356,7 +2360,6 @@
         .reduce((s, t) => s + t.valor, 0);
 
       const totalMes = mes => base.filter(t => t.mes_vencimento === mes).reduce((s, t) => s + t.valor, 0);
-      const totalCat = cat => base.filter(t => rotuloCategoria(t.categoria) === cat).reduce((s, t) => s + t.valor, 0);
       const totalGeral = base.reduce((s, t) => s + t.valor, 0);
 
       document.getElementById('pov_matriz').innerHTML = `
@@ -2364,26 +2367,26 @@
           <thead>
             <tr>
               <th>Categoria</th>
-              ${meses.map(m => `<th class="num">${m}</th>`).join('')}
               <th class="num">Total</th>
+              ${meses.map((m, i) => `<th class="num"${i === 0 ? ' style="color:var(--accent-blue)"' : ''}>${m}</th>`).join('')}
             </tr>
           </thead>
           <tbody>
             ${categorias.map(cat => `
               <tr>
                 <td>${cat}</td>
+                <td class="num"><b>${moeda(totalCat(cat))}</b></td>
                 ${meses.map(m => {
                   const v = valor(cat, m);
                   return `<td class="num" ${v ? '' : 'style="color:var(--border-color)"'}>${v ? moeda(v) : '—'}</td>`;
                 }).join('')}
-                <td class="num"><b>${moeda(totalCat(cat))}</b></td>
               </tr>`).join('')}
           </tbody>
           <tfoot>
             <tr>
               <td>Total</td>
-              ${meses.map(m => `<td class="num">${moeda(totalMes(m))}</td>`).join('')}
               <td class="num">${moeda(totalGeral)}</td>
+              ${meses.map(m => `<td class="num">${moeda(totalMes(m))}</td>`).join('')}
             </tr>
           </tfoot>
         </table>`;

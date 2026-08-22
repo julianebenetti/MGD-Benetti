@@ -16,8 +16,9 @@
  *   - a coluna "Parcelamento" traz "Parcela N de M";
  *   - as linhas de pagamento vêm identificadas.
  *
- * Categoria e pessoa não vêm na fatura — são classificação da usuária. São
- * herdadas do arquivo atual, casando por descrição.
+ * Categoria e pessoa não vêm na fatura — são classificação da usuária. Saem
+ * das regras de data/regras-classificacao.json e, onde não houver regra, do
+ * que já estava gravado para a mesma descrição.
  *
  * Uso:
  *   node scripts/importar-faturas-itau.js            (simulação)
@@ -79,9 +80,27 @@ function lerFatura(caminho) {
   return { aba, mesVencimento, vencimento, totalPago, itens };
 }
 
-// ---------- classificação herdada ----------
+// ---------- classificação ----------
+//
+// Duas fontes, nesta ordem: as regras de data/regras-classificacao.json, que
+// são a memória do que já foi decidido, e o que já estava gravado para a mesma
+// descrição. A regra vem primeiro porque decide também a pessoa — e a pessoa
+// da despesa é quem se beneficia dela, não quem passou o cartão.
 
 const normalizar = d => d.toLowerCase().replace(/\s+/g, ' ').trim();
+
+const ARQ_REGRAS = path.join(__dirname, '..', 'data', 'regras-classificacao.json');
+
+function carregarRegras() {
+  if (!fs.existsSync(ARQ_REGRAS)) return [];
+  return (JSON.parse(fs.readFileSync(ARQ_REGRAS, 'utf8')).regras || [])
+    .map(r => ({ ...r, re: new RegExp(r.padrao, 'i') }));
+}
+
+function aplicarRegra(descricao, regras) {
+  const alvo = normalizar(descricao);
+  return regras.find(r => r.re.test(alvo)) || null;
+}
 
 function carregarClassificacaoAtual() {
   if (!fs.existsSync(ARQUIVO)) return {};
@@ -120,6 +139,7 @@ if (!arquivos.length) {
 }
 
 const classificacao = carregarClassificacaoAtual();
+const regras = carregarRegras();
 const faturas = arquivos.map(lerFatura)
   .sort((a, b) => a.mesVencimento.slice(-2).localeCompare(b.mesVencimento.slice(-2))
                 || MESES.indexOf(a.mesVencimento.split('/')[0]) - MESES.indexOf(b.mesVencimento.split('/')[0]));
@@ -135,6 +155,7 @@ faturas.forEach(f => {
     const natureza = classificarNatureza(item);
     const parcela = lerParcelamento(item.parcelamento);
     const herdado = classificacao[normalizar(item.descricao)] || {};
+    const regra = aplicarRegra(item.descricao, regras);
 
     if (natureza === 'pagamento') pagamentos += item.valor;
     else if (natureza === 'estorno') estornos += item.valor;
@@ -148,8 +169,9 @@ faturas.forEach(f => {
       natureza,
       descricao: item.descricao,
       valor: item.valor,
-      pessoa: herdado.pessoa || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
-      categoria: herdado.categoria || 'nao_classificado',
+      pessoa: (regra && regra.pessoa) || herdado.pessoa || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
+      categoria: (regra && regra.categoria) || herdado.categoria || 'nao_classificado',
+      classificado_por: regra ? 'regra' : (herdado.categoria ? 'herdado' : null),
       conta_origem: 'Cartão de Crédito Itaú',
       conta_destino: natureza === 'pagamento' ? 'Itaú' : 'Comerciante',
       status: 'confirmado',
@@ -238,6 +260,7 @@ const totalCobrado = resumo.reduce((s, r) => s + r.cobrado, 0);
 const totalPagamentos = resumo.reduce((s, r) => s + r.pagamentos, 0);
 console.log(`Total de lançamentos: ${transacoes.length}`);
 console.log(`Compras parceladas distintas: ${comprasParceladas}`);
+console.log(`Classificados por regra: ${transacoes.filter(t => t.classificado_por === 'regra').length} (${regras.length} regras ativas)`);
 console.log(`Total cobrado nas 5 faturas: R$ ${totalCobrado.toFixed(2)}`);
 console.log(`Pagamentos registrados: R$ ${totalPagamentos.toFixed(2)} (não são despesa)`);
 

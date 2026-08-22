@@ -1,0 +1,116 @@
+{
+  "versao": 1,
+  "atualizado_em": "2026-08-22",
+  "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão.",
+  "principios": [
+    "A pessoa da despesa é quem se beneficia dela, não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da Família.",
+    "Despesa de um filho fica no nome dele quando for individual (escola, material, atividade). Quando for da casa, fica em Família.",
+    "Combustível e manutenção de veículo são da Família — o carro serve a todos."
+  ],
+  "regras": [
+    {
+      "padrao": "savegnago|carrefour|pao de acucar|paodeacucar|assai|atacadao|tenda atacado|sonda|dia %|supermercad|hipermercad|mercado municipal",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Supermercado: compra da casa, independente de qual cartão pagou"
+    },
+    {
+      "padrao": "hortifruti|dona terezinha|quitanda|sacolao|feira livre",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Hortifruti e feira: compra da casa"
+    },
+    {
+      "padrao": "editora sesi|sesi ",
+      "categoria": "educacao",
+      "pessoa": "Luca",
+      "nota": "Escola do Luca e material escolar (informado pela Juliane)"
+    },
+    {
+      "padrao": "escola|colegio|esc inf|mundo cores|creche|bercario|berçario",
+      "categoria": "educacao",
+      "nota": "Escola — CONFIRMAR de qual filho e a despesa. Sem 'pessoa' a regra mantem o que ja esta gravado."
+    },
+    {
+      "padrao": "auto ?posto|posto das|posto de|petrobras|ipiranga|shell |ale combust|combustivel|correntao auto",
+      "categoria": "transporte",
+      "pessoa": "Família",
+      "nota": "Combustível: o carro serve a família toda"
+    },
+    {
+      "padrao": "pneus|oficina|mecanic|autopecas|auto pecas|estacionament|lava rapido|lava-rapido|detran|ipva|licenciament",
+      "categoria": "transporte",
+      "pessoa": "Família",
+      "nota": "Manutenção, estacionamento e encargos do veículo"
+    },
+    {
+      "padrao": "uber|99 ?app|99 ?tecnolog|cabify|taxi",
+      "categoria": "transporte",
+      "nota": "Transporte por aplicativo: fica com quem usou"
+    },
+    {
+      "padrao": "drogal|droga ?raia|drogasil|farmacia|pague menos|panvel|laborator|clinica|hospital|consultorio|unimed|odonto|dentista",
+      "categoria": "saude",
+      "nota": "Saúde: fica com quem foi atendido"
+    },
+    {
+      "padrao": "ifd\\*|ifood|rappi|uber ?eats|delivery|restaurante|pizzaria|lanchonete|hamburgu|padaria|confeitaria|cafe |cafeteria|sorveteria|churrascaria|bar do|espetinho",
+      "categoria": "alimentacao_fora",
+      "nota": "Refeição fora de casa"
+    },
+    {
+      "padrao": "apple\\.com|netflix|spotify|amazon prime|disney|hbo|max |globoplay|youtube premium|google one|icloud|microsoft|adobe|canva|clube livelo|assinatura",
+      "categoria": "assinatura",
+      "nota": "Assinatura recorrente"
+    },
+    {
+      "padrao": "cpfl|enel|sabesp|comgas|vivo|claro|tim |oi fixo|net |internet|condominio|aluguel|iptu",
+      "categoria": "moradia",
+      "pessoa": "Família",
+      "nota": "Conta fixa da casa"
+    },
+    {
+      "padrao": "airbnb|booking|hotel|pousada|resort|decolar|latam|gol linhas|azul linhas|cvc|passagem aerea",
+      "categoria": "viagem",
+      "pessoa": "Família",
+      "nota": "Viagem: normalmente da família toda"
+    },
+    {
+      "padrao": "acampamento|monte dos|colonia de ferias|parque|cinema|ingresso|teatro|show ",
+      "categoria": "lazer",
+      "nota": "Lazer e entretenimento"
+    },
+    {
+      "padrao": "decathlon|academia|smartfit|smart fit|crossfit|natacao|futebol|esporte",
+      "categoria": "esportes",
+      "nota": "Esporte e atividade física"
+    },
+    {
+      "padrao": "renner|riachuelo|c&a|zara|hering|centauro|netshoes|calcado|sapataria|magalu|magazine luiza|casas bahia|ponto frio|americanas|mercadolivre|mercado livre|shopee|shein|aliexpress|amazon",
+      "categoria": "compras",
+      "nota": "Varejo e e-commerce"
+    },
+    {
+      "padrao": "belezaria|salao|cabeleire|barbearia|manicure|estetica|perfumaria|boticario|natura|avon",
+      "categoria": "cuidados_pessoais",
+      "nota": "Cuidados pessoais"
+    },
+    {
+      "padrao": "petz|cobasi|petshop|pet shop|veterinar|lollapets|racao",
+      "categoria": "pet",
+      "pessoa": "Família",
+      "nota": "Despesa com animal de estimação"
+    },
+    {
+      "padrao": "kiwify|hotmart|udemy|alura|curso |mentoria|treinamento",
+      "categoria": "educacao_profissional",
+      "nota": "Curso e capacitação: fica com quem estuda"
+    },
+    {
+      "padrao": "maravilhas do lar|casa jannini|leroy|telha norte|c&c|tok stok|mobly|magazine|utilidades domesticas|loja do oleo",
+      "categoria": "casa",
+      "pessoa": "Família",
+      "nota": "Utilidades e itens para a casa"
+    }
+  ]
+}
