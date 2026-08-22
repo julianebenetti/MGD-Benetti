@@ -20,9 +20,14 @@
  * das regras de data/regras-classificacao.json e, onde não houver regra, do
  * que já estava gravado para a mesma descrição.
  *
+ * A importação é incremental: substitui apenas as faturas presentes nos
+ * arquivos lidos e preserva as demais. Mandar só a fatura nova basta.
+ *
  * Uso:
- *   node scripts/importar-faturas-itau.js            (simulação)
- *   node scripts/importar-faturas-itau.js --aplicar  (grava)
+ *   node scripts/importar-faturas-itau.js                     (simulação)
+ *   node scripts/importar-faturas-itau.js --aplicar           (grava, mesclando)
+ *   node scripts/importar-faturas-itau.js --aplicar --substituir-tudo
+ *   DIR_FATURAS=/caminho node scripts/importar-faturas-itau.js --aplicar
  */
 
 const fs = require('fs');
@@ -50,12 +55,24 @@ const paraISO = br => {
 
 const ehLinhaDeData = v => /^\d{2}\/\d{2}\/\d{4}$/.test(String(v).trim());
 
+// A pasta pode conter outras planilhas (a de classificação, por exemplo).
+// Uma fatura se identifica pela aba no formato "Fatura MM-AA".
+const ABA_FATURA = /^Fatura\s+(\d{2})-(\d{2})$/i;
+
+function ehFatura(caminho) {
+  try {
+    return XLSX.readFile(caminho, { bookSheets: true }).SheetNames.some(n => ABA_FATURA.test(n.trim()));
+  } catch (err) {
+    return false;
+  }
+}
+
 function lerFatura(caminho) {
   const wb = XLSX.readFile(caminho);
-  const aba = wb.SheetNames[0];                       // "Fatura 01-26"
+  const aba = wb.SheetNames.find(n => ABA_FATURA.test(n.trim()));
   const linhas = XLSX.utils.sheet_to_json(wb.Sheets[aba], { header: 1, raw: false, defval: '' });
 
-  const [, mm, aa] = aba.match(/(\d{2})-(\d{2})/);
+  const [, mm, aa] = aba.trim().match(ABA_FATURA);
   const mesVencimento = `${MESES[parseInt(mm, 10) - 1]}/${aa}`;
 
   // O cabeçalho traz "Cartão | Valor | Vencimento"; o vencimento é a última célula preenchida
@@ -129,14 +146,19 @@ function lerParcelamento(texto) {
 
 // ---------- execução ----------
 
-const arquivos = fs.readdirSync(DIR_FATURAS)
-  .filter(f => /\.xlsx$/i.test(f))
+const candidatos = fs.readdirSync(DIR_FATURAS)
+  .filter(f => /\.xlsx$/i.test(f) && !f.startsWith('~$'))
   .map(f => path.join(DIR_FATURAS, f));
 
+const arquivos = candidatos.filter(ehFatura);
+const ignorados = candidatos.length - arquivos.length;
+
 if (!arquivos.length) {
-  console.error(`Nenhuma fatura .xlsx encontrada em ${DIR_FATURAS}`);
+  console.error(`Nenhuma fatura encontrada em ${DIR_FATURAS}`);
+  console.error(`(${candidatos.length} .xlsx examinados; uma fatura tem aba no formato "Fatura MM-AA")`);
   process.exit(1);
 }
+if (ignorados) console.log(`\n${ignorados} arquivo(s) .xlsx ignorado(s) por não serem fatura`);
 
 const classificacao = carregarClassificacaoAtual();
 const regras = carregarRegras();
@@ -261,16 +283,51 @@ const totalPagamentos = resumo.reduce((s, r) => s + r.pagamentos, 0);
 console.log(`Total de lançamentos: ${transacoes.length}`);
 console.log(`Compras parceladas distintas: ${comprasParceladas}`);
 console.log(`Classificados por regra: ${transacoes.filter(t => t.classificado_por === 'regra').length} (${regras.length} regras ativas)`);
-console.log(`Total cobrado nas 5 faturas: R$ ${totalCobrado.toFixed(2)}`);
+console.log(`Total cobrado ${resumo.length === 1 ? 'nesta fatura' : `nas ${resumo.length} faturas`}: R$ ${totalCobrado.toFixed(2)}`);
 console.log(`Pagamentos registrados: R$ ${totalPagamentos.toFixed(2)} (não são despesa)`);
 
 const semCategoria = transacoes.filter(t => t.categoria === 'nao_classificado' && t.natureza === 'despesa').length;
 if (semCategoria) console.log(`\nSem categoria herdada: ${semCategoria} lançamentos`);
 
+// ---------- mesclagem ----------
+//
+// A importacao e incremental: substitui apenas as faturas presentes nos
+// arquivos lidos e preserva as demais. Assim da para mandar uma fatura nova
+// sem precisar reenviar as anteriores. Com --substituir-tudo, descarta o que
+// havia antes e fica so com o que foi lido agora.
+
+const substituirTudo = process.argv.includes('--substituir-tudo');
+const base = fs.existsSync(ARQUIVO) ? JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')) : {};
+const anteriores = (base.fluxo_mensal || {}).transacoes || [];
+const mesesImportados = new Set(faturas.map(f => f.mesVencimento));
+
+const preservadas = substituirTudo
+  ? []
+  : anteriores.filter(t => !mesesImportados.has(t.mes_vencimento));
+
+const substituidas = anteriores.length - preservadas.length;
+const finais = [...preservadas, ...transacoes].sort((a, b) => {
+  const ia = MESES.indexOf(a.mes_vencimento.split('/')[0]) + 12 * +a.mes_vencimento.split('/')[1];
+  const ib = MESES.indexOf(b.mes_vencimento.split('/')[0]) + 12 * +b.mes_vencimento.split('/')[1];
+  return ia - ib || a.data.localeCompare(b.data);
+});
+
+// Cabecalhos: os das faturas lidas agora substituem os antigos de mesmo mes
+const resumoAnterior = (base.faturas_cartao || []).filter(f => !mesesImportados.has(f.mes));
+const resumoFinal = [...resumoAnterior, ...resumo].sort((a, b) => {
+  const ia = MESES.indexOf(a.mes.split('/')[0]) + 12 * +a.mes.split('/')[1];
+  const ib = MESES.indexOf(b.mes.split('/')[0]) + 12 * +b.mes.split('/')[1];
+  return ia - ib;
+});
+
+if (preservadas.length || substituidas) {
+  console.log(`\nMesclagem: ${substituidas} lançamentos substituídos, ${preservadas.length} preservados de outras faturas`);
+  console.log(`Total após a mesclagem: ${finais.length} lançamentos em ${resumoFinal.length} faturas`);
+}
+
 if (aplicar) {
-  const base = fs.existsSync(ARQUIVO) ? JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')) : {};
-  base.fluxo_mensal = { ...(base.fluxo_mensal || {}), transacoes };
-  base.faturas_cartao = resumo;
+  base.fluxo_mensal = { ...(base.fluxo_mensal || {}), transacoes: finais };
+  base.faturas_cartao = resumoFinal;
   fs.writeFileSync(ARQUIVO, JSON.stringify(base, null, 2), 'utf8');
   console.log(`\n✅ Gravado em ${ARQUIVO}\n`);
 } else {

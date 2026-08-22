@@ -29,6 +29,12 @@
       "nome": "Família",
       "cor": "#10b981",
       "icone": "👨‍👩‍👧‍👦"
+    },
+    {
+      "id": "filhos",
+      "nome": "Filhos",
+      "cor": "#10b981",
+      "icone": "👧🧒"
     }
   ],
   "tipos_despesa": [

@@ -1,5 +1,5 @@
 {
-  "versao": 2,
+  "versao": 3,
   "atualizado_em": "2026-08-22",
   "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão.",
   "principios": [
@@ -9,6 +9,18 @@
     "Qualquer posto de combustivel e despesa da Familia, mesmo quando pago no cartao do Hugo."
   ],
   "regras": [
+    {
+      "padrao": "mundo cores|esc inf mundo",
+      "categoria": "educacao",
+      "pessoa": "Valentina",
+      "nota": "Escola infantil da Valentina (Juliane, 22/08)"
+    },
+    {
+      "padrao": "papelaria",
+      "categoria": "educacao",
+      "pessoa": "Filhos",
+      "nota": "Material escolar dos dois filhos (Juliane, 22/08)"
+    },
     {
       "padrao": "omega +campinas|natacao|natação",
       "categoria": "esportes",
@@ -46,9 +58,9 @@
       "nota": "Escola do Luca e material escolar (informado pela Juliane)"
     },
     {
-      "padrao": "escola|colegio|esc inf|mundo cores|creche|bercario|berçario|papelaria|livraria",
+      "padrao": "escola|colegio|esc inf|creche|bercario|berçario|livraria",
       "categoria": "educacao",
-      "nota": "Escola e material escolar. Sem 'pessoa': confirmar de qual filho e a despesa"
+      "nota": "Escola em geral. Sem 'pessoa': confirmar de qual filho antes de atribuir"
     },
     {
       "padrao": "posto|petrobras|ipiranga|shell |ale combust|combustivel",
