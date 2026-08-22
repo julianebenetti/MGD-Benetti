@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787376441,
-  "updated_at_br": "22/08/2026 02:20",
+  "updated_at": 1787384285,
+  "updated_at_br": "22/08/2026 04:31",
   "period_days": 90,
-  "total_orders": 7834,
-  "total_conversions": 7465,
+  "total_orders": 7833,
+  "total_conversions": 7464,
   "orders": [
     {
       "ID do pedido": "260821VF2CMT8S",
@@ -195828,31 +195828,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "233312374199289",
       "conversionStatus": "CANCELLED",
-      "data": "2026-05-24"
-    },
-    {
-      "ID do pedido": "2605248T4SF57R",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-24 06:22:36",
-      "Sub_id1": "16Mai26SaiaCamaBox",
-      "Valor de Compra(R$)": "44.99",
-      "Comissao liquida do afiliado(R$)": "1.3497",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.3497",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.3497",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 3 Cestos Organizador De Bambu Multiuso Com Forro",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23198354528",
-      "ID da loja": "1156621718",
-      "Nome da loja": "coco zone",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233302956126761",
-      "conversionStatus": "COMPLETED",
       "data": "2026-05-24"
     }
   ]
