@@ -2106,6 +2106,8 @@
       renderizarClassificacao();
       renderizarConfiguracoes();
       inicializarDashboardContabil();
+      renderizarReconciliacao();
+      renderizarResumoExecutivo();
       atualizarEditor();
       preencherFormularios();
       aplicarConfigAbasNaDash();
@@ -3164,6 +3166,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosGlobais)
         });
+        renderizarTodas();
       } catch (err) {
         console.error('Erro ao salvar dados:', err);
       }
@@ -3323,6 +3326,8 @@ function renderizarTiposDespesaConfig() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(configuracoesGlobais)
         });
+        renderizarClassificacao();
+        inicializarDashboardContabil();
       } catch (err) {
         console.error('Erro ao salvar configurações:', err);
       }
