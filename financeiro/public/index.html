@@ -2411,15 +2411,11 @@
       const container = document.getElementById('despesasContainer');
 
       let totalGeral = 0;
-      const categorias = [
-        { key: 'necessidades', icon: '✅', cor: '#10b981' },
-        { key: 'avaliar', icon: '⚠️', cor: '#f59e0b' },
-        { key: 'parar', icon: '🔴', cor: '#ef4444' }
-      ];
 
-      categorias.forEach(cat => {
-        if (despesas[cat.key]) {
-          totalGeral += despesas[cat.key].total || 0;
+      // Calculate total from all categories
+      Object.keys(despesas).forEach(key => {
+        if (key !== 'black_card' && despesas[key].total) {
+          totalGeral += despesas[key].total;
         }
       });
 
@@ -2428,43 +2424,49 @@
 
       let html = '';
 
-      categorias.forEach(cat => {
-        const dados = despesas[cat.key];
-        if (!dados) return;
+      // Render all categories dynamically
+      Object.keys(despesas)
+        .filter(key => key !== 'black_card')
+        .sort()
+        .forEach(key => {
+          const dados = despesas[key];
+          if (!dados || !dados.total || dados.total === 0) return;
 
-        const total = dados.total || 0;
-        const percentage = totalGeral > 0 ? (total / totalGeral) * 100 : 0;
+          const total = dados.total || 0;
+          const percentage = totalGeral > 0 ? (total / totalGeral) * 100 : 0;
+          const cores = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+          const cor = cores[Object.keys(despesas).indexOf(key) % cores.length];
 
-        html += `
-          <h3 style="margin: 25px 0 15px 0; color: ${cat.cor};">${cat.icon} ${dados.categoria}</h3>
-        `;
+          html += `
+            <h3 style="margin: 25px 0 15px 0; color: ${cor};">📁 ${dados.categoria}</h3>
+          `;
 
-        if (dados.items && Array.isArray(dados.items)) {
-          dados.items.forEach(item => {
-            html += `
-              <div class="progress-container">
-                <div class="progress-label">
-                  <span>${item.nome}</span>
-                  <span>R$ ${item.valor.toLocaleString('pt-BR')}</span>
+          if (dados.items && Array.isArray(dados.items)) {
+            dados.items.forEach(item => {
+              html += `
+                <div class="progress-container">
+                  <div class="progress-label">
+                    <span>${item.nome}</span>
+                    <span>R$ ${parseFloat(item.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
                 </div>
-              </div>
-            `;
-          });
-        }
+              `;
+            });
+          }
 
-        html += `
-          <div style="background-color: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-            <strong>Subtotal: R$ ${total.toLocaleString('pt-BR')}</strong> (${percentage.toFixed(1)}% do total)
-          </div>
-        `;
-      });
+          html += `
+            <div style="background-color: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+              <strong>Subtotal: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (${percentage.toFixed(1)}% do total)
+            </div>
+          `;
+        });
 
       if (blackCard > 0) {
         const percentage = (blackCard / totalGeral) * 100;
         html += `
           <h3 style="margin: 25px 0 15px 0; color: var(--accent-red);">🏦 Black Card (Acompanhamento)</h3>
           <div style="background-color: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-            <strong>R$ ${blackCard.toLocaleString('pt-BR')}</strong> (${percentage.toFixed(1)}% do total)
+            <strong>R$ ${blackCard.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (${percentage.toFixed(1)}% do total)
             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Redução automática mensal</div>
           </div>
         `;
@@ -2473,7 +2475,7 @@
       html += `
         <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 15px; border-radius: 6px; margin-top: 30px;">
           <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">TOTAL DE DESPESAS MENSAIS</div>
-          <div style="font-size: 24px; font-weight: bold; color: var(--accent-blue);">R$ ${totalGeral.toLocaleString('pt-BR')}</div>
+          <div style="font-size: 24px; font-weight: bold; color: var(--accent-blue);">R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
         </div>
       `;
 
@@ -5037,11 +5039,17 @@ function renderizarTiposDespesaConfig() {
       };
     }
 
-    async function renderizarResumoExecutivo() {
+    function renderizarResumoExecutivo() {
+      const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
+      console.log('📊 Renderizando Resumo Executivo - Transações disponíveis:', transacoes.length);
+
       const resumos = calcularResumosExecutivos();
       if (!resumos) {
+        console.warn('⚠️ Resumos não calculados - sem transações');
         return;
       }
+
+      console.log('📊 Resumos calculados:', resumos);
 
       // KPIs
       document.getElementById('kpi-total-geral').textContent =
