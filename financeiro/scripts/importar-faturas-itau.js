@@ -43,9 +43,36 @@ const aplicar = process.argv.includes('--aplicar');
 
 // ---------- leitura ----------
 
+// O arquivo mistura dois formatos: as celulas de valor vem no padrao americano
+// ("R$ 6,149.17") e o texto do cabecalho no brasileiro ("Voce pagou R$ 6.149,17
+// de"). Tratar os dois igual faria 6.149,17 virar 6,15.
 const dinheiro = v => {
-  const n = parseFloat(String(v).replace(/[R$\s]/g, '').replace(/,/g, ''));
-  return isNaN(n) ? 0 : Math.round(n * 100) / 100;
+  let t = String(v).replace(/[R$\s]/g, '');
+  if (!t) return 0;
+
+  const negativo = t.startsWith('-');
+  t = t.replace(/^-/, '');
+
+  const ultimaVirgula = t.lastIndexOf(',');
+  const ultimoPonto = t.lastIndexOf('.');
+
+  if (ultimaVirgula > -1 && ultimoPonto > -1) {
+    // Ambos presentes: o que vier por ultimo e o separador decimal
+    t = ultimaVirgula > ultimoPonto
+      ? t.replace(/\./g, '').replace(',', '.')   // 6.149,17
+      : t.replace(/,/g, '');                     // 6,149.17
+  } else if (ultimaVirgula > -1) {
+    // So virgula: decimal se separar 1 ou 2 casas, senao milhar
+    t = t.length - ultimaVirgula - 1 <= 2 ? t.replace(',', '.') : t.replace(/,/g, '');
+  } else if (ultimoPonto > -1 && t.length - ultimoPonto - 1 === 3 && !/\.\d{3}$/.test(t.slice(0, ultimoPonto))) {
+    // So ponto separando exatamente 3 casas: milhar (1.500), nao decimal
+    const semPonto = t.replace(/\./g, '');
+    if (!/^\d+$/.test(t.slice(ultimoPonto + 1))) t = semPonto;
+    else t = semPonto;
+  }
+
+  const n = parseFloat(t);
+  return isNaN(n) ? 0 : (negativo ? -1 : 1) * Math.round(Math.abs(n) * 100) / 100;
 };
 
 const paraISO = br => {
@@ -67,6 +94,18 @@ function ehFatura(caminho) {
   }
 }
 
+// Situacao em que a fatura foi exportada. Muda o que os numeros significam:
+//   paga          quitada integralmente
+//   paga_parcial  parte foi paga; o restante rola para a fatura seguinte com juros
+//   fechada       ja fechou e ainda nao venceu
+//   aberta        ainda acumulando lancamentos; o valor nao e final
+const SITUACOES = [
+  [/Fatura\s+Paga\s+Parcial/i, 'paga_parcial'],
+  [/Fatura\s+Paga/i, 'paga'],
+  [/Fatura\s+Fechada/i, 'fechada'],
+  [/Fatura\s+Aberta/i, 'aberta'],
+];
+
 function lerFatura(caminho) {
   const wb = XLSX.readFile(caminho);
   const aba = wb.SheetNames.find(n => ABA_FATURA.test(n.trim()));
@@ -75,11 +114,26 @@ function lerFatura(caminho) {
   const [, mm, aa] = aba.trim().match(ABA_FATURA);
   const mesVencimento = `${MESES[parseInt(mm, 10) - 1]}/${aa}`;
 
-  // O cabeçalho traz "Cartão | Valor | Vencimento"; o vencimento é a última célula preenchida
-  const cabecalho = (linhas.find(l => l.some(c => /^\d{2}\/\d{2}\/\d{4}$/.test(String(c).trim()))) || [])
-    .filter(c => String(c).trim());
-  const vencimento = paraISO(cabecalho[cabecalho.length - 1]);
-  const totalPago = dinheiro((linhas[9] || []).find(c => /^R\$/.test(String(c).trim())));
+  const textoTodo = linhas.slice(0, 12).flat().map(String).join(' ');
+  const situacao = (SITUACOES.find(([re]) => re.test(textoTodo)) || [null, 'desconhecida'])[1];
+
+  // Linha do cartao: "Itau Uniclass Black Mastercard - final 4846 | ... | vencimento"
+  const linhaCartao = linhas.find(l => l.some(c => /final\s+\d{4}/i.test(String(c)))) || [];
+  const celulas = linhaCartao.filter(c => String(c).trim());
+  const descricaoCartao = String(celulas[0] || '').trim();
+  const finalCartao = (descricaoCartao.match(/final\s+(\d{4})/i) || [])[1] || 'sem-numero';
+
+  const vencimento = paraISO(celulas[celulas.length - 1]);
+
+  // Valores monetarios da linha do cartao, na ordem em que aparecem.
+  // Fatura paga:          "Voce pagou R$ X de" | R$ X        -> pago e total sao o mesmo
+  // Fatura paga parcial:  "Voce pagou R$ P de" | R$ T        -> P pago de T
+  // Fechada ou aberta:    R$ T                               -> so o total, nada pago
+  const valores = celulas.flatMap(c => (String(c).match(/R\$\s*[\d.,]+/g) || []).map(dinheiro));
+  const totalFatura = valores.length ? valores[valores.length - 1] : 0;
+  const pago = situacao === 'aberta' || situacao === 'fechada'
+    ? 0
+    : (valores.length > 1 ? valores[0] : totalFatura);
 
   const itens = linhas
     .filter(l => ehLinhaDeData(l[1]))
@@ -94,7 +148,7 @@ function lerFatura(caminho) {
       finalCartao: String(l[9]).trim().replace(/\*/g, ''),
     }));
 
-  return { aba, mesVencimento, vencimento, totalPago, itens };
+  return { aba, mesVencimento, vencimento, situacao, descricaoCartao, finalCartao, totalFatura, pago, itens };
 }
 
 // ---------- classificação ----------
@@ -224,7 +278,8 @@ faturas.forEach(f => {
       pessoa: (regra && regra.pessoa) || herdado.pessoa || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
       categoria: (regra && regra.categoria) || herdado.categoria || 'nao_classificado',
       classificado_por: regra ? 'regra' : (herdado.categoria ? 'herdado' : null),
-      conta_origem: 'Cartão de Crédito Itaú',
+      conta_origem: f.descricaoCartao || 'Cartão de Crédito Itaú',
+      cartao_final: f.finalCartao,
       conta_destino: natureza === 'pagamento' ? 'Itaú' : 'Comerciante',
       status: 'confirmado',
       origem: 'cartao_credito_itau',
@@ -232,7 +287,8 @@ faturas.forEach(f => {
       mes_vencimento: f.mesVencimento,
       data_vencimento_fatura: f.vencimento,
       mes_referencia: f.mesVencimento,
-      fatura_origem: f.aba,
+      fatura_origem: `${f.finalCartao}|${f.mesVencimento}`,
+      fatura_situacao: f.situacao,
       eh_parcelada: !!parcela,
       parcela_numero: parcela ? parcela.numero : null,
       parcela_total: parcela ? parcela.total : null,
@@ -247,15 +303,29 @@ faturas.forEach(f => {
     });
   });
 
+  const doPeriodo = Math.round((compras + estornos) * 100) / 100;
+  // A fatura pode cobrar mais do que os lancamentos do periodo: quando a
+  // anterior nao foi quitada, o saldo rola com juros e entra no total sem
+  // aparecer linha a linha.
+  const saldoAnterior = Math.round((f.totalFatura - doPeriodo) * 100) / 100;
+
   resumo.push({
+    cartao: f.finalCartao,
+    cartao_descricao: f.descricaoCartao,
     mes: f.mesVencimento,
     vencimento: f.vencimento,
+    situacao: f.situacao,
     lancamentos: f.itens.length,
     compras: Math.round(compras * 100) / 100,
     estornos: Math.round(estornos * 100) / 100,
     pagamentos: Math.round(pagamentos * 100) / 100,
-    cobrado: Math.round((compras + estornos) * 100) / 100,
-    pago: f.totalPago,
+    // Lancamentos do proprio periodo
+    cobrado: doPeriodo,
+    // Total que a fatura cobra, incluindo saldo que rolou
+    total_fatura: f.totalFatura,
+    saldo_anterior: Math.abs(saldoAnterior) > 0.05 ? saldoAnterior : 0,
+    pago: f.pago,
+    em_aberto: Math.round((f.totalFatura - f.pago) * 100) / 100,
     parceladas: nParceladas,
   });
 });
@@ -296,19 +366,21 @@ const comprasParceladas = Object.keys(porCompra).length;
 // ---------- relatório ----------
 
 console.log(`\n=== IMPORTAÇÃO DAS FATURAS ${aplicar ? '(APLICADA)' : '(SIMULAÇÃO)'} ===\n`);
-console.log('Fatura   Vencimento   Lanç.  Parcel.      Compras     Estornos       Cobrado         Pago');
-console.log('-'.repeat(94));
+console.log('Cartão  Fatura   Vencimento   Situação       Lanç.   Do período   Saldo ant.   Total fatura         Pago    Em aberto');
+console.log('-'.repeat(122));
 resumo.forEach(r => {
   console.log(
-    `${r.mes.padEnd(8)} ${r.vencimento.split('-').reverse().join('/')}   ` +
-    `${String(r.lancamentos).padStart(4)}  ${String(r.parceladas).padStart(6)}  ` +
-    `${r.compras.toFixed(2).padStart(11)}  ${r.estornos.toFixed(2).padStart(11)}  ` +
-    `${r.cobrado.toFixed(2).padStart(11)}  ${r.pago.toFixed(2).padStart(11)}`
+    `${r.cartao.padEnd(7)} ${r.mes.padEnd(8)} ${r.vencimento.split('-').reverse().join('/')}   ` +
+    `${r.situacao.padEnd(13)} ${String(r.lancamentos).padStart(5)}  ` +
+    `${r.cobrado.toFixed(2).padStart(11)}  ${(r.saldo_anterior || 0).toFixed(2).padStart(11)}  ` +
+    `${r.total_fatura.toFixed(2).padStart(12)} ${r.pago.toFixed(2).padStart(12)} ${r.em_aberto.toFixed(2).padStart(12)}`
   );
 });
-console.log('-'.repeat(94));
+console.log('-'.repeat(122));
 
 const totalCobrado = resumo.reduce((s, r) => s + r.cobrado, 0);
+const comSaldo = resumo.filter(r => r.saldo_anterior > 0.05);
+const emAberto = resumo.filter(r => r.em_aberto > 0.05);
 const totalPagamentos = resumo.reduce((s, r) => s + r.pagamentos, 0);
 console.log(`Total de lançamentos: ${transacoes.length}`);
 console.log(`Compras parceladas distintas: ${comprasParceladas}`);
@@ -321,6 +393,14 @@ if (porDescricao.length) {
 }
 console.log(`Total cobrado ${resumo.length === 1 ? 'nesta fatura' : `nas ${resumo.length} faturas`}: R$ ${totalCobrado.toFixed(2)}`);
 console.log(`Pagamentos registrados: R$ ${totalPagamentos.toFixed(2)} (não são despesa)`);
+if (comSaldo.length) {
+  console.log(`\nFaturas com saldo rolado da anterior (rotativo):`);
+  comSaldo.forEach(r => console.log(`   ${r.mes}: R$ ${r.saldo_anterior.toFixed(2)} veio da fatura anterior`));
+}
+if (emAberto.length) {
+  console.log(`\nEm aberto:`);
+  emAberto.forEach(r => console.log(`   ${r.mes} (${r.situacao}): R$ ${r.em_aberto.toFixed(2)} de R$ ${r.total_fatura.toFixed(2)}`));
+}
 
 const semCategoria = transacoes.filter(t => t.categoria === 'nao_classificado' && t.natureza === 'despesa').length;
 if (semCategoria) console.log(`\nSem categoria herdada: ${semCategoria} lançamentos`);
@@ -335,11 +415,14 @@ if (semCategoria) console.log(`\nSem categoria herdada: ${semCategoria} lançame
 const substituirTudo = process.argv.includes('--substituir-tudo');
 const base = fs.existsSync(ARQUIVO) ? JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')) : {};
 const anteriores = (base.fluxo_mensal || {}).transacoes || [];
-const mesesImportados = new Set(faturas.map(f => f.mesVencimento));
+// A chave e cartao + mes: dois cartoes tem fatura do mesmo mes, e uma nao
+// pode sobrescrever a outra.
+const faturasImportadas = new Set(faturas.map(f => `${f.finalCartao}|${f.mesVencimento}`));
+const chaveDe = t => `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
 
 const preservadas = substituirTudo
   ? []
-  : anteriores.filter(t => !mesesImportados.has(t.mes_vencimento));
+  : anteriores.filter(t => !faturasImportadas.has(chaveDe(t)));
 
 const substituidas = anteriores.length - preservadas.length;
 const finais = [...preservadas, ...transacoes].sort((a, b) => {
@@ -349,11 +432,11 @@ const finais = [...preservadas, ...transacoes].sort((a, b) => {
 });
 
 // Cabecalhos: os das faturas lidas agora substituem os antigos de mesmo mes
-const resumoAnterior = (base.faturas_cartao || []).filter(f => !mesesImportados.has(f.mes));
+const resumoAnterior = (base.faturas_cartao || []).filter(f => !faturasImportadas.has(`${f.cartao || '4846'}|${f.mes}`));
 const resumoFinal = [...resumoAnterior, ...resumo].sort((a, b) => {
   const ia = MESES.indexOf(a.mes.split('/')[0]) + 12 * +a.mes.split('/')[1];
   const ib = MESES.indexOf(b.mes.split('/')[0]) + 12 * +b.mes.split('/')[1];
-  return ia - ib;
+  return (a.cartao || '').localeCompare(b.cartao || '') || ia - ib;
 });
 
 if (preservadas.length || substituidas) {

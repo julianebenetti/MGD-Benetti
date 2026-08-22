@@ -2472,7 +2472,12 @@
 
       kpis.innerHTML =
         cartaoKpi('Faturas carregadas', String(comValor.length), `${comValor[0]} a ${comValor[comValor.length - 1]}`) +
-        cartaoKpi('Pago nas faturas', moeda(Math.abs(pagamentosDeFatura().reduce((s, t) => s + t.valor, 0))), 'quitação, não é gasto') +
+        (() => {
+          const aberto = faturasDoCartao().reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+          return aberto > 0.05
+            ? cartaoKpi('Em aberto no cartão', moeda(aberto), 'faturas não quitadas', 'var(--accent-red)')
+            : cartaoKpi('Pago nas faturas', moeda(Math.abs(pagamentosDeFatura().reduce((s, t) => s + t.valor, 0))), 'quitação, não é gasto');
+        })() +
         cartaoKpi('Média por fatura', moeda(media), `últimas ${recentes.length} faturas`) +
         cartaoKpi('Compras parceladas', String(parcelamentos.length), `${parcelamentos.reduce((s, c) => s + c.totalParcelas, 0)} parcelas`) +
         (abertas.parcelas
@@ -2489,9 +2494,9 @@
         <table class="tabela-dados">
           <thead>
             <tr>
-              <th>Fatura</th><th>Vencimento</th><th class="num">Lançamentos</th>
-              <th class="num">Total carregado</th><th class="num">Fatura real</th>
-              <th class="num">Diferença</th><th>Conferência</th>
+              <th>Fatura</th><th>Vencimento</th><th>Situação</th><th class="num">Lanç.</th>
+              <th class="num">Do período</th><th class="num">Saldo anterior</th>
+              <th class="num">Total da fatura</th><th class="num">Em aberto</th><th>Conferência</th>
             </tr>
           </thead>
           <tbody>
@@ -2501,14 +2506,23 @@
               const f = esperados[m];
               const dif = f ? carregado - f.cobrado : null;
               const ok = dif !== null && Math.abs(dif) < 0.05;
+              const selos = {
+                paga: '<span class="selo selo-ok">paga</span>',
+                paga_parcial: '<span class="selo selo-erro">paga parcial</span>',
+                fechada: '<span class="selo selo-alerta">a pagar</span>',
+                aberta: '<span class="selo selo-neutro">em aberto</span>',
+              };
+              const emAberto = f ? f.em_aberto : 0;
               return `
                 <tr>
                   <td><b>${m}</b></td>
                   <td>${f ? f.vencimento.split('-').reverse().join('/') : '—'}</td>
+                  <td>${f ? (selos[f.situacao] || f.situacao) : '—'}</td>
                   <td class="num">${doMes.length}</td>
                   <td class="num">${moeda(carregado)}</td>
-                  <td class="num">${f ? moeda(f.cobrado) : '—'}</td>
-                  <td class="num" ${dif !== null && !ok ? 'style="color:var(--accent-red)"' : ''}>${dif !== null ? moeda(dif) : '—'}</td>
+                  <td class="num" ${f && f.saldo_anterior > 0.05 ? 'style="color:var(--accent-red)"' : ''}>${f && Math.abs(f.saldo_anterior) > 0.05 ? moeda(f.saldo_anterior) : '—'}</td>
+                  <td class="num">${f ? moeda(f.total_fatura) : '—'}</td>
+                  <td class="num" ${emAberto > 0.05 ? 'style="color:var(--accent-red);font-weight:600"' : ''}>${emAberto > 0.05 ? moeda(emAberto) : '—'}</td>
                   <td>${!f
                         ? '<span class="selo selo-neutro">sem referência</span>'
                         : ok ? '<span class="selo selo-ok">confere</span>'
@@ -2518,14 +2532,34 @@
           </tbody>
         </table>
         ${(() => {
-          const comDif = faturasDoCartao().filter(f => Math.abs(f.pago - f.cobrado) > 0.01);
-          if (!comDif.length) return '';
-          const total = comDif.reduce((s, f) => s + (f.pago - f.cobrado), 0);
-          return `<div class="aviso aviso-atencao">
-            Em ${comDif.length} faturas o valor pago difere da soma dos lançamentos, num total de <b>${moeda(total)}</b>
-            (${comDif.map(f => `${f.mes}: ${moeda(f.pago - f.cobrado)}`).join(', ')}).
-            São encargos ou créditos que a fatura aplica sem detalhar linha a linha.
-          </div>`;
+          const fs = faturasDoCartao();
+          const avisos = [];
+
+          const abertas = fs.filter(f => f.em_aberto > 0.05);
+          if (abertas.length) {
+            const total = abertas.reduce((s, f) => s + f.em_aberto, 0);
+            avisos.push(`<div class="aviso aviso-atencao">
+              <b>${moeda(total)} em aberto no cartão.</b><br>
+              ${abertas.map(f => {
+                const rotulo = { paga_parcial: 'paga só em parte', fechada: 'fechada, ainda não paga', aberta: 'ainda em aberto' }[f.situacao] || f.situacao;
+                return `${f.mes} — ${rotulo}: ${moeda(f.em_aberto)} de ${moeda(f.total_fatura)}`;
+              }).join('<br>')}
+            </div>`);
+          }
+
+          const rolando = fs.filter(f => f.saldo_anterior > 0.05);
+          if (rolando.length) {
+            const juros = rolando.filter(f => f.saldo_anterior > 500);
+            if (juros.length) {
+              avisos.push(`<div class="aviso aviso-atencao">
+                <b>Saldo rolando de uma fatura para a outra.</b><br>
+                ${juros.map(f => `${f.mes} trouxe ${moeda(f.saldo_anterior)} da fatura anterior`).join('<br>')}<br>
+                Isso é crédito rotativo: o que não foi pago volta na fatura seguinte com juros.
+                As colunas "Do período" e "Total da fatura" mostram quanto é gasto novo e quanto é dívida antiga.
+              </div>`);
+            }
+          }
+          return avisos.join('');
         })()}`;
 
       // --- Compras parceladas ---

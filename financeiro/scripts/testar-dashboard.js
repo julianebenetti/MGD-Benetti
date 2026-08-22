@@ -50,6 +50,10 @@ const brl = v => 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigit
 const somar = arr => Math.round(arr.reduce((s, t) => s + t.valor, 0) * 100) / 100;
 const numeroDe = txt => parseFloat(String(txt).replace(/[^\d,-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
 
+const normalizarDescricao = d => String(d)
+  .replace(/^(Canc Parcela Sem Juros|Cancelamento Parcial De Compra|Estorno de)\s*-?\s*/i, '')
+  .toLowerCase().replace(/\s+/g, ' ').trim();
+
 function noEscopo(mv) {
   if (!mv) return false;
   if (mv === A_CONFIRMAR) return true;
@@ -215,8 +219,35 @@ function noEscopo(mv) {
     .filter(([, ps]) => new Set(ps.map(p => p.mes_vencimento)).size === 1 && ps.length > 1);
   console.log(`    (${numaFaturaSo.length} parcelamentos lancados e revertidos numa unica fatura)`);
 
+  // Um parcelamento estornado nao segue sequencia mensal: ao cancelar, o banco
+  // traz as parcelas restantes para a fatura corrente so para reverte-las.
+  // Casar pelo grupo de parcelas, nao pela descricao: o mesmo estabelecimento
+  // pode ter uma compra a vista alem da parcelada, e o liquido nao zeraria.
+  const grupos = Object.entries(compras).map(([id, ps]) => ({
+    id,
+    base: normalizarDescricao(ps[0].descricao),
+    total: Math.round(ps.reduce((s, p) => s + p.valor, 0) * 100) / 100,
+    parcelas: ps[0].parcela_total,
+  }));
+
+  const foiEstornada = ps => {
+    const base = normalizarDescricao(ps[0].descricao);
+    const total = Math.round(ps.reduce((s, p) => s + p.valor, 0) * 100) / 100;
+    // Existe um grupo espelho: mesma descricao, mesmo numero de parcelas, valor oposto
+    return grupos.some(g => g.base === base
+                         && g.parcelas === ps[0].parcela_total
+                         && Math.abs(g.total + total) < 0.05
+                         && Math.abs(g.total) > 0.05);
+  };
+
+  const canceladosNaSequencia = Object.entries(compras)
+    .filter(([, ps]) => new Set(ps.map(p => p.mes_vencimento)).size > 1)
+    .filter(([, ps]) => foiEstornada(ps)).length;
+  if (canceladosNaSequencia) console.log(`    (${canceladosNaSequencia} parcelamento(s) estornado(s), fora da checagem de sequência)`);
+
   const sequenciaFatura = Object.entries(compras)
     .filter(([, ps]) => new Set(ps.map(p => p.mes_vencimento)).size > 1)
+    .filter(([, ps]) => !foiEstornada(ps))
     .filter(([, ps]) => {
     const ord = [...ps].sort((a, b) => a.parcela_numero - b.parcela_numero);
     for (let i = 1; i < ord.length; i++) {
@@ -433,7 +464,9 @@ function noEscopo(mv) {
   const cartao = await pagina.evaluate(() => {
     const linhas = [...document.querySelectorAll('#cartao_faturas tbody tr')].map(tr => {
       const td = [...tr.querySelectorAll('td')].map(x => x.textContent.trim());
-      return { mes: td[0], n: td[2], total: td[3], conferencia: td[6] };
+      // Fatura | Vencimento | Situação | Lanç. | Do período | Saldo anterior | Total da fatura | Em aberto | Conferência
+      return { mes: td[0], situacao: td[2], n: td[3], doPeriodo: td[4],
+               saldoAnterior: td[5], totalFatura: td[6], emAberto: td[7], conferencia: td[8] };
     });
     const parc = [...document.querySelectorAll('#cartao_parcelas tbody tr')].length;
     const kpis = [...document.querySelectorAll('#cartao_kpis .kpi-card')].map(c => c.querySelector('.kpi-value').textContent.trim());
@@ -445,8 +478,33 @@ function noEscopo(mv) {
   cartao.linhas.forEach(l => {
     const mes = l.mes.replace(/a confirmar/i, '').trim();
     if (ref.porMes[mes] !== undefined) {
-      igual(`Cartão: fatura ${mes}`, numeroDe(l.total), ref.porMes[mes]);
+      igual(`Cartão: fatura ${mes} — lançamentos do período`, numeroDe(l.doPeriodo), ref.porMes[mes]);
     }
+  });
+
+  console.log('\n▸ SITUAÇÃO DAS FATURAS\n');
+  faturas.forEach(f => {
+    const linha = cartao.linhas.find(l => l.mes === f.mes);
+    // A tela usa rotulo em linguagem corrente; o dado guarda o nome tecnico
+    const ROTULO = { paga: 'paga', paga_parcial: 'paga parcial', fechada: 'a pagar', aberta: 'em aberto' };
+    ok(`${f.mes} exibe situação "${ROTULO[f.situacao] || f.situacao}"`,
+       linha && linha.situacao.toLowerCase() === (ROTULO[f.situacao] || f.situacao),
+       linha ? `na tela: "${linha.situacao}"` : 'linha não encontrada');
+    if (f.em_aberto > 0.05) {
+      igual(`${f.mes} exibe ${brl(f.em_aberto)} em aberto`, numeroDe(linha.emAberto), f.em_aberto);
+    }
+  });
+
+  const totalAberto = faturas.reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+  console.log(`    (em aberto no cartão: ${brl(totalAberto)})`);
+  ok('Saldo em aberto é a soma do que cada fatura deve',
+     Math.abs(totalAberto - faturas.reduce((s, f) => s + Math.max(0, f.total_fatura - f.pago), 0)) < 0.05);
+
+  // O saldo que rola de uma fatura para a outra e a diferenca entre o total
+  // cobrado e os lancamentos do periodo — dinheiro velho, nao gasto novo.
+  faturas.filter(f => Math.abs(f.saldo_anterior) > 0.05).forEach(f => {
+    igual(`${f.mes}: saldo anterior = total − lançamentos do período`,
+          Math.round((f.total_fatura - f.cobrado) * 100) / 100, f.saldo_anterior);
   });
 
   const comReferencia = cartao.linhas.filter(l => l.conferencia && !/sem referência/i.test(l.conferencia));
