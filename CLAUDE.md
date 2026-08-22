@@ -23,6 +23,33 @@ com Shopee, afiliados ou e-commerce — se surgir essa mistura, é engano.
 - O mês usado em tudo é `mes_vencimento` (regime de caixa) — quando o dinheiro
   sai da conta, não quando a compra foi feita.
 
+### Pessoal x empresa
+A Juliane tem a **Benetti UP**, empresa de marketing digital, e as contas ainda
+não estão separadas na prática — o mesmo cartão traz gasto da casa e da empresa.
+É a razão principal de ela precisar deste controle.
+
+- Pessoa cadastrada com `tipo: "empresa"` em `configuracoes.json` define o
+  campo `ambito` do lançamento (`pessoal` ou `empresa`).
+- Seletor no topo da dashboard: **Pessoal** (padrão) / **Benetti UP** / **Tudo somado**.
+- **A aba Cartão & Faturas nunca filtra por âmbito** — a fatura é obrigação de
+  pagamento e vem inteira, misturada mesmo. As abas de análise (Painel,
+  Lançamentos, Para Onde Vai) filtram.
+- Facebook/Meta/Google Ads → `trafego_pago` / **Benetti UP**.
+
+### Faturas: situação e rotativo
+Cada fatura guarda `situacao` (paga, paga_parcial, fechada, aberta),
+`total_fatura`, `saldo_anterior`, `pago` e `em_aberto`.
+
+**O total da fatura não é o gasto do mês.** Quando a anterior não foi quitada,
+o saldo rola com juros e entra no total sem aparecer linha a linha. Somar o
+total como despesa contaria a mesma coisa duas vezes. Use `cobrado`
+(lançamentos do período) para gasto e `total_fatura` para obrigação.
+
+### Múltiplos cartões
+Dois cartões: **4846** (Itaú Black, pessoal) e **0442** (Visa Infinite, quase
+só tráfego pago). A chave de uma fatura é **cartão + mês** — só o mês faria a
+fatura de um cartão sobrescrever a do outro.
+
 ### Regra de ouro dos dados
 **Onde não há dado cadastrado, a tela diz "não cadastrado" — nunca R$ 0,00.**
 Zero parece informação e induz leitura errada. Foi exatamente isso que fez a
@@ -62,11 +89,10 @@ Regras que ela informou diretamente:
 - **Selva Urbana, Petcamp** → `pet` — ração.
 - **McDonald's, KFC, rodízio** → `alimentacao_fora`.
 - **Papelaria** → `educacao` (material escolar).
+- **Facebook / Meta / Google Ads** → `trafego_pago` / **Benetti UP**.
 
-Pendente de confirmação:
-- **Esc Inf Mundo Cores** (R$ 1.469,70) é escola infantil, mas não foi dito de
-  qual filho. A regra genérica de escola não define pessoa, para não chutar.
-- **Papelaria Paulino** — material escolar, sem dizer de qual filho.
+Confirmados depois: **Mundo Cores** é a escola da Valentina; **papelaria** é
+material dos dois filhos, e por isso existe a pessoa **Filhos**.
 
 ### Ferramentas de manutenção (`financeiro/scripts/`)
 - `importar-faturas-itau.js` — reconstrói tudo a partir dos XLSX. Aceita

@@ -579,6 +579,60 @@
     .aviso-atencao { background-color: rgba(245,158,11,.08); border-color: var(--accent-yellow); }
     .aviso-ok { background-color: rgba(16,185,129,.08); border-color: var(--accent-green); }
 
+
+    /* ---- Separacao entre gasto pessoal e da empresa ---- */
+    .ambito-seletor {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+
+    .ambito-rotulo {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      color: var(--text-secondary);
+      margin-right: 4px;
+    }
+
+    .ambito-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .ambito-btn:hover { color: var(--text-primary); }
+
+    .ambito-btn.ativo {
+      background-color: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #fff;
+    }
+
+    .ambito-btn[data-ambito="empresa"].ativo {
+      background-color: var(--accent-yellow);
+      border-color: var(--accent-yellow);
+      color: #1a1a1a;
+    }
+
+    .ambito-aviso {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
     .full-width {
       grid-column: 1 / -1;
     }
@@ -1141,6 +1195,14 @@
       <h1>💰 AfiliDash Financeiro</h1>
       <p class="header-subtitle">Dashboard financeiro para Juliane e Hugo | Atualizado em tempo real</p>
     </header>
+
+    <div class="ambito-seletor">
+      <span class="ambito-rotulo">Mostrando</span>
+      <button class="ambito-btn ativo" data-ambito="pessoal" onclick="trocarAmbito('pessoal')">🏠 Pessoal</button>
+      <button class="ambito-btn" data-ambito="empresa" onclick="trocarAmbito('empresa')">🏢 Benetti UP</button>
+      <button class="ambito-btn" data-ambito="tudo" onclick="trocarAmbito('tudo')">Tudo somado</button>
+      <span class="ambito-aviso" id="ambito_aviso"></span>
+    </div>
 
     <div class="tabs">
       <button class="tab-button active" data-tab="painel">🏠 Painel</button>
@@ -2031,12 +2093,41 @@
       return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
     }
 
-    // Todas as transacoes dentro do escopo do ano, excluindo os pagamentos da
-    // fatura: eles aparecem no extrato do cartao, mas sao a quitacao da fatura
-    // anterior, nao um gasto. Somar os dois contaria a mesma despesa duas vezes.
+    // Âmbito em exibição: gasto da casa, da empresa, ou os dois somados.
+    // As contas ainda não estão separadas na prática — o mesmo cartão traz as
+    // duas coisas — então somar tudo num número só não diz nada útil. O padrão
+    // é o pessoal, que é o objetivo desta dashboard.
+    let ambitoAtual = localStorage.getItem('ambito') || 'pessoal';
+
+    function trocarAmbito(novo) {
+      ambitoAtual = novo;
+      try { localStorage.setItem('ambito', novo); } catch (e) { /* modo privado */ }
+      document.querySelectorAll('.ambito-btn').forEach(b =>
+        b.classList.toggle('ativo', b.dataset.ambito === novo));
+      renderizarTodas();
+    }
+
+    function noAmbito(t) {
+      if (ambitoAtual === 'tudo') return true;
+      return (t.ambito || 'pessoal') === ambitoAtual;
+    }
+
+    // Todas as transacoes dentro do escopo do ano e do ambito em exibicao,
+    // excluindo os pagamentos da fatura: eles aparecem no extrato do cartao,
+    // mas sao a quitacao da fatura anterior, nao um gasto. Somar os dois
+    // contaria a mesma despesa duas vezes.
     function todasTransacoes() {
       const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
-      return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
+      return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento' && noAmbito(t));
+    }
+
+    // Resumo dos dois âmbitos, para o aviso do cabeçalho.
+    function resumoDosAmbitos() {
+      const brutas = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
+        .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
+      const por = { pessoal: 0, empresa: 0 };
+      brutas.forEach(t => { por[t.ambito || 'pessoal'] += t.valor; });
+      return por;
     }
 
     function pagamentosDeFatura() {
@@ -2446,8 +2537,16 @@
       return { parcelas, valor };
     }
 
+    // A fatura e uma obrigacao de pagamento: vem inteira, sem recorte por
+    // ambito. O cartao pessoal carrega gasto da empresa e vice-versa — e
+    // justamente por isso que a separacao existe nas outras abas.
+    function transacoesDoCartao() {
+      return ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
+        .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
+    }
+
     async function renderizarCartao() {
-      const transacoes = todasTransacoes();
+      const transacoes = transacoesDoCartao();
       const kpis = document.getElementById('cartao_kpis');
       if (!kpis) return;
 
@@ -2459,74 +2558,75 @@
         return;
       }
 
-      const meses = mesesDisponiveis();
-      const totalPorMes = m => transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0);
-      const comValor = meses.filter(m => m !== MES_A_CONFIRMAR && totalPorMes(m) > 0);
+      // Cada fatura e identificada por cartao + mes
+      const faturas = faturasDoCartao();
+      const totalDaFatura = f => transacoes
+        .filter(t => t.mes_vencimento === f.mes && (t.cartao_final || '4846') === f.cartao)
+        .reduce((s, t) => s + t.valor, 0);
+      const comValor = faturas.map(f => f.mes);
+      const cartoes = [...new Set(faturas.map(f => f.cartao))];
       // Faturas antigas trazem so as parcelas remanescentes de compras
       // anteriores, com valores baixos; incluir todas distorce a media.
-      const recentes = comValor.slice(-6);
-      const media = recentes.reduce((s, m) => s + totalPorMes(m), 0) / (recentes.length || 1);
+      // Media so do cartao pessoal e so das faturas ja quitadas: fatura aberta
+      // ainda acumula e distorceria.
+      const recentes = faturas.filter(f => f.cartao === '4846' && f.situacao === 'paga').slice(-6);
+      const media = recentes.reduce((s, f) => s + totalDaFatura(f), 0) / (recentes.length || 1);
 
       const parcelamentos = agruparParcelamentos();
       const abertas = contarParcelasAbertas();
 
       kpis.innerHTML =
-        cartaoKpi('Faturas carregadas', String(comValor.length), `${comValor[0]} a ${comValor[comValor.length - 1]}`) +
+        cartaoKpi('Faturas carregadas', String(faturas.length), `${cartoes.length} cartões · ${comValor[0]} a ${comValor[comValor.length - 1]}`) +
         (() => {
           const aberto = faturasDoCartao().reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
           return aberto > 0.05
             ? cartaoKpi('Em aberto no cartão', moeda(aberto), 'faturas não quitadas', 'var(--accent-red)')
             : cartaoKpi('Pago nas faturas', moeda(Math.abs(pagamentosDeFatura().reduce((s, t) => s + t.valor, 0))), 'quitação, não é gasto');
         })() +
-        cartaoKpi('Média por fatura', moeda(media), `últimas ${recentes.length} faturas`) +
+        cartaoKpi('Média por fatura', moeda(media), `cartão pessoal, ${recentes.length} faturas pagas`) +
         cartaoKpi('Compras parceladas', String(parcelamentos.length), `${parcelamentos.reduce((s, c) => s + c.totalParcelas, 0)} parcelas`) +
         (abertas.parcelas
           ? cartaoKpi('Parcelas a vencer', moeda(abertas.valor), `${abertas.parcelas} parcelas`, 'var(--accent-yellow)')
           : cartaoKpi('Parcelas a vencer', 'a confirmar', 'depende do mês real das parcelas', 'var(--text-secondary)'));
 
       // --- Faturas, com conferência contra o valor real quando disponível ---
-      // O valor de referencia vem do cabecalho da propria fatura importada,
-      // nao de um arquivo mantido a parte.
-      const esperados = {};
-      faturasDoCartao().forEach(f => { esperados[f.mes] = f; });
 
       document.getElementById('cartao_faturas').innerHTML = `
         <table class="tabela-dados">
           <thead>
             <tr>
-              <th>Fatura</th><th>Vencimento</th><th>Situação</th><th class="num">Lanç.</th>
+              <th>Cartão</th><th>Fatura</th><th>Vencimento</th><th>Situação</th><th class="num">Lanç.</th>
               <th class="num">Do período</th><th class="num">Saldo anterior</th>
               <th class="num">Total da fatura</th><th class="num">Em aberto</th><th>Conferência</th>
             </tr>
           </thead>
           <tbody>
-            ${comValor.map(m => {
-              const doMes = transacoes.filter(t => t.mes_vencimento === m);
-              const carregado = totalPorMes(m);
-              const f = esperados[m];
-              const dif = f ? carregado - f.cobrado : null;
-              const ok = dif !== null && Math.abs(dif) < 0.05;
+            ${faturas.map(f => {
+              const m = f.mes;
+              const doMes = transacoes.filter(t => t.mes_vencimento === m && (t.cartao_final || '4846') === f.cartao);
+              const carregado = totalDaFatura(f);
+              const dif = carregado - f.cobrado;
+              const ok = Math.abs(dif) < 0.05;
               const selos = {
                 paga: '<span class="selo selo-ok">paga</span>',
                 paga_parcial: '<span class="selo selo-erro">paga parcial</span>',
                 fechada: '<span class="selo selo-alerta">a pagar</span>',
                 aberta: '<span class="selo selo-neutro">em aberto</span>',
               };
-              const emAberto = f ? f.em_aberto : 0;
+              const emAberto = f.em_aberto || 0;
+              const ehEmpresa = f.cartao !== '4846';
               return `
                 <tr>
+                  <td title="${f.cartao_descricao || ''}">${ehEmpresa ? '🏢' : '🏠'} ${f.cartao}</td>
                   <td><b>${m}</b></td>
-                  <td>${f ? f.vencimento.split('-').reverse().join('/') : '—'}</td>
-                  <td>${f ? (selos[f.situacao] || f.situacao) : '—'}</td>
+                  <td>${f.vencimento.split('-').reverse().join('/')}</td>
+                  <td>${selos[f.situacao] || f.situacao}</td>
                   <td class="num">${doMes.length}</td>
                   <td class="num">${moeda(carregado)}</td>
-                  <td class="num" ${f && f.saldo_anterior > 0.05 ? 'style="color:var(--accent-red)"' : ''}>${f && Math.abs(f.saldo_anterior) > 0.05 ? moeda(f.saldo_anterior) : '—'}</td>
-                  <td class="num">${f ? moeda(f.total_fatura) : '—'}</td>
+                  <td class="num" ${f.saldo_anterior > 0.05 ? 'style="color:var(--accent-red)"' : ''}>${Math.abs(f.saldo_anterior) > 0.05 ? moeda(f.saldo_anterior) : '—'}</td>
+                  <td class="num">${moeda(f.total_fatura)}</td>
                   <td class="num" ${emAberto > 0.05 ? 'style="color:var(--accent-red);font-weight:600"' : ''}>${emAberto > 0.05 ? moeda(emAberto) : '—'}</td>
-                  <td>${!f
-                        ? '<span class="selo selo-neutro">sem referência</span>'
-                        : ok ? '<span class="selo selo-ok">confere</span>'
-                             : '<span class="selo selo-erro">não fecha</span>'}</td>
+                  <td>${ok ? '<span class="selo selo-ok">confere</span>' : '<span class="selo selo-erro">não fecha</span>'}</td>
                 </tr>`;
             }).join('')}
           </tbody>
@@ -2617,7 +2717,7 @@
           Quanto de cada fatura já está comprometido por compras parceladas.
         </p>
         ${mesesParcela.map(m => {
-          const totalDoMes = totalPorMes(m);
+          const totalDoMes = transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0);
           const pct = totalDoMes > 0 ? (porFatura[m] / totalDoMes * 100) : 0;
           return `
             <div class="barra-linha">
@@ -2698,6 +2798,7 @@
     }
 
     function renderizarTodas() {
+      atualizarAvisoAmbito();
       popularFiltros();
 
       // Abas principais
@@ -2899,6 +3000,21 @@
     // Popula os selects de filtro com os valores que existem de fato nos dados.
     // Antes as opcoes eram fixas no HTML e nao batiam com o conteudo importado,
     // o que fazia varios filtros devolverem sempre zero resultados.
+    function atualizarAvisoAmbito() {
+      const el = document.getElementById('ambito_aviso');
+      if (!el) return;
+      const por = resumoDosAmbitos();
+      document.querySelectorAll('.ambito-btn').forEach(b =>
+        b.classList.toggle('ativo', b.dataset.ambito === ambitoAtual));
+
+      if (!por.empresa) { el.textContent = ''; return; }
+      el.innerHTML = ambitoAtual === 'tudo'
+        ? `Somando casa (${moeda(por.pessoal)}) e empresa (${moeda(por.empresa)}) — números de naturezas diferentes`
+        : ambitoAtual === 'empresa'
+          ? `Fora daqui: ${moeda(por.pessoal)} de gasto pessoal`
+          : `Fora daqui: ${moeda(por.empresa)} da Benetti UP`;
+    }
+
     function popularFiltros() {
       const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
       if (!transacoes.length) return;

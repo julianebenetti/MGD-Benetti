@@ -1,14 +1,27 @@
 {
-  "versao": 3,
+  "versao": 4,
   "atualizado_em": "2026-08-22",
   "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão.",
   "principios": [
     "A pessoa da despesa é quem se beneficia dela, não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da Família.",
     "Despesa de um filho fica no nome dele quando for individual (escola, material, atividade). Quando for da casa, fica em Família.",
     "Combustível e manutenção de veículo são da Família — o carro serve a todos.",
-    "Qualquer posto de combustivel e despesa da Familia, mesmo quando pago no cartao do Hugo."
+    "Qualquer posto de combustivel e despesa da Familia, mesmo quando pago no cartao do Hugo.",
+    "A Benetti UP e a empresa de marketing digital da Juliane. Trafego pago e despesa dela, nao da familia. As contas ainda nao estao separadas na pratica, entao a dashboard precisa distinguir o que e pessoal do que e da empresa."
   ],
   "regras": [
+    {
+      "padrao": "facebk|facebook|meta pla|meta ads|instagram ads",
+      "categoria": "trafego_pago",
+      "pessoa": "Benetti UP",
+      "nota": "Trafego pago da Benetti UP (Juliane, 22/08)"
+    },
+    {
+      "padrao": "google ?ads|googleads|tiktok ads|pinterest ads|taboola|outbrain",
+      "categoria": "trafego_pago",
+      "pessoa": "Benetti UP",
+      "nota": "Trafego pago da Benetti UP em outras plataformas"
+    },
     {
       "padrao": "mundo cores|esc inf mundo",
       "categoria": "educacao",

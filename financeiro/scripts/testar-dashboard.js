@@ -86,11 +86,14 @@ function noEscopo(mv) {
     compras: somar(escopo.filter(t => t.valor > 0)),
     estornos: somar(escopo.filter(t => t.valor < 0)),
     porMes: {},
+    porFatura: {},
     porPessoa: {},
     porCategoria: {},
     aConfirmar: somar(escopo.filter(t => t.mes_vencimento === A_CONFIRMAR)),
   };
   escopo.forEach(t => {
+    const chaveFatura = `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
+    ref.porFatura[chaveFatura] = Math.round(((ref.porFatura[chaveFatura] || 0) + t.valor) * 100) / 100;
     ref.porMes[t.mes_vencimento] = Math.round(((ref.porMes[t.mes_vencimento] || 0) + t.valor) * 100) / 100;
     ref.porPessoa[t.pessoa] = Math.round(((ref.porPessoa[t.pessoa] || 0) + t.valor) * 100) / 100;
     if (t.valor > 0) ref.porCategoria[t.categoria] = Math.round(((ref.porCategoria[t.categoria] || 0) + t.valor) * 100) / 100;
@@ -313,6 +316,12 @@ function noEscopo(mv) {
   const carregou = await pagina.evaluate(() => (dadosGlobais.fluxo_mensal || {}).transacoes?.length || 0);
   igual('Dashboard carregou todos os lançamentos', carregou, todosLancamentos.length);
 
+  // A dashboard abre no ambito pessoal, que e o objetivo dela. As comparacoes
+  // a seguir conferem totais contra a referencia completa, entao passam para
+  // "tudo somado"; a separacao em si e testada na secao propria.
+  await pagina.evaluate(() => trocarAmbito('tudo'));
+  await pagina.waitForTimeout(700);
+
   // --- Painel, fatura por fatura ---
   for (const mes of mesesReais.sort((a, b) => {
     const [ma, aa] = a.split('/'), [mb, ab] = b.split('/');
@@ -464,9 +473,9 @@ function noEscopo(mv) {
   const cartao = await pagina.evaluate(() => {
     const linhas = [...document.querySelectorAll('#cartao_faturas tbody tr')].map(tr => {
       const td = [...tr.querySelectorAll('td')].map(x => x.textContent.trim());
-      // Fatura | Vencimento | Situação | Lanç. | Do período | Saldo anterior | Total da fatura | Em aberto | Conferência
-      return { mes: td[0], situacao: td[2], n: td[3], doPeriodo: td[4],
-               saldoAnterior: td[5], totalFatura: td[6], emAberto: td[7], conferencia: td[8] };
+      // Cartão | Fatura | Vencimento | Situação | Lanç. | Do período | Saldo anterior | Total da fatura | Em aberto | Conferência
+      return { cartao: td[0].replace(/\D/g, ''), mes: td[1], situacao: td[3], n: td[4], doPeriodo: td[5],
+               saldoAnterior: td[6], totalFatura: td[7], emAberto: td[8], conferencia: td[9] };
     });
     const parc = [...document.querySelectorAll('#cartao_parcelas tbody tr')].length;
     const kpis = [...document.querySelectorAll('#cartao_kpis .kpi-card')].map(c => c.querySelector('.kpi-value').textContent.trim());
@@ -476,22 +485,51 @@ function noEscopo(mv) {
   const parceladasVisiveis = Object.entries(compras).filter(([, ps]) => !ps[0].compra_cancelada).length;
   igual('Cartão lista as compras parceladas não canceladas', cartao.parc, parceladasVisiveis);
   cartao.linhas.forEach(l => {
-    const mes = l.mes.replace(/a confirmar/i, '').trim();
-    if (ref.porMes[mes] !== undefined) {
-      igual(`Cartão: fatura ${mes} — lançamentos do período`, numeroDe(l.doPeriodo), ref.porMes[mes]);
+    const esperado = ref.porFatura[`${l.cartao}|${l.mes}`];
+    if (esperado !== undefined) {
+      igual(`Cartão ${l.cartao} ${l.mes} — lançamentos do período`, numeroDe(l.doPeriodo), esperado);
     }
   });
 
+  console.log('\n▸ SEPARAÇÃO PESSOAL / EMPRESA\n');
+  const porAmbito = { pessoal: 0, empresa: 0 };
+  todas.forEach(t => { porAmbito[t.ambito || 'pessoal'] += t.valor; });
+  console.log(`    (pessoal ${brl(porAmbito.pessoal)} · empresa ${brl(porAmbito.empresa)})`);
+
+  ok('Todo lançamento tem âmbito', todas.every(t => t.ambito === 'pessoal' || t.ambito === 'empresa'));
+  ok('Benetti UP só aparece no âmbito empresa',
+     todas.filter(t => t.pessoa === 'Benetti UP').every(t => t.ambito === 'empresa'));
+  ok('Nenhuma pessoa da família cai no âmbito empresa',
+     todas.filter(t => t.ambito === 'empresa').every(t => t.pessoa === 'Benetti UP'));
+
+  // A mistura e real: o cartao pessoal carrega gasto da empresa. E por isso
+  // que a separacao existe.
+  const empresaNoCartaoPessoal = todas.filter(t => t.ambito === 'empresa' && (t.cartao_final || '4846') === '4846');
+  if (empresaNoCartaoPessoal.length) {
+    console.log(`    (${empresaNoCartaoPessoal.length} lançamento(s) da empresa no cartão pessoal: ${brl(somar(empresaNoCartaoPessoal))})`);
+  }
+
+  const ambitoNaTela = await pagina.evaluate(() => {
+    const antes = ambitoAtual;
+    const medir = a => { trocarAmbito(a); return todasTransacoes().reduce((s, t) => s + t.valor, 0); };
+    const r = { pessoal: medir('pessoal'), empresa: medir('empresa'), tudo: medir('tudo') };
+    trocarAmbito('tudo');
+    return r;
+  });
+  igual('Seletor "Pessoal" soma só o gasto da casa', ambitoNaTela.pessoal, porAmbito.pessoal);
+  igual('Seletor "Benetti UP" soma só o gasto da empresa', ambitoNaTela.empresa, porAmbito.empresa);
+  igual('Seletor "Tudo" soma os dois', ambitoNaTela.tudo, porAmbito.pessoal + porAmbito.empresa);
+
   console.log('\n▸ SITUAÇÃO DAS FATURAS\n');
   faturas.forEach(f => {
-    const linha = cartao.linhas.find(l => l.mes === f.mes);
+    const linha = cartao.linhas.find(l => l.mes === f.mes && l.cartao === f.cartao);
     // A tela usa rotulo em linguagem corrente; o dado guarda o nome tecnico
     const ROTULO = { paga: 'paga', paga_parcial: 'paga parcial', fechada: 'a pagar', aberta: 'em aberto' };
-    ok(`${f.mes} exibe situação "${ROTULO[f.situacao] || f.situacao}"`,
+    ok(`${f.cartao} ${f.mes} exibe situação "${ROTULO[f.situacao] || f.situacao}"`,
        linha && linha.situacao.toLowerCase() === (ROTULO[f.situacao] || f.situacao),
        linha ? `na tela: "${linha.situacao}"` : 'linha não encontrada');
     if (f.em_aberto > 0.05) {
-      igual(`${f.mes} exibe ${brl(f.em_aberto)} em aberto`, numeroDe(linha.emAberto), f.em_aberto);
+      igual(`${f.cartao} ${f.mes} exibe ${brl(f.em_aberto)} em aberto`, numeroDe(linha.emAberto), f.em_aberto);
     }
   });
 
@@ -503,7 +541,7 @@ function noEscopo(mv) {
   // O saldo que rola de uma fatura para a outra e a diferenca entre o total
   // cobrado e os lancamentos do periodo — dinheiro velho, nao gasto novo.
   faturas.filter(f => Math.abs(f.saldo_anterior) > 0.05).forEach(f => {
-    igual(`${f.mes}: saldo anterior = total − lançamentos do período`,
+    igual(`${f.cartao} ${f.mes}: saldo anterior = total − lançamentos do período`,
           Math.round((f.total_fatura - f.cobrado) * 100) / 100, f.saldo_anterior);
   });
 
@@ -516,10 +554,10 @@ function noEscopo(mv) {
   console.log('\n▸ RECONCILIAÇÃO CONTRA AS FATURAS REAIS\n');
   let erroTotal = 0;
   faturas.forEach(f => {
-    const calculado = ref.porMes[f.mes] || 0;
+    const calculado = ref.porFatura[`${f.cartao}|${f.mes}`] || 0;
     const dif = calculado - f.cobrado;
     erroTotal += Math.abs(dif);
-    ok(`${f.mes} (venceu ${f.vencimento.split('-').reverse().join('/')}): cobrado ${brl(f.cobrado)} · calculado ${brl(calculado)}`,
+    ok(`${f.cartao} ${f.mes} (venceu ${f.vencimento.split('-').reverse().join('/')}): cobrado ${brl(f.cobrado)} · calculado ${brl(calculado)}`,
        Math.abs(dif) < 0.05, `diferença ${brl(dif)}`);
   });
   console.log(`\n    Erro acumulado: ${brl(erroTotal)}  (antes da reimportação: R$ 18.491,02)`);

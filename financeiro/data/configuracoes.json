@@ -35,6 +35,14 @@
       "nome": "Filhos",
       "cor": "#10b981",
       "icone": "👧🧒"
+    },
+    {
+      "id": "benetti_up",
+      "nome": "Benetti UP",
+      "cor": "#f59e0b",
+      "icone": "🏢",
+      "tipo": "empresa",
+      "observacao": "Empresa de marketing digital. Despesas dela nao sao gasto pessoal."
     }
   ],
   "tipos_despesa": [

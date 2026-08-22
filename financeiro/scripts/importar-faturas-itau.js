@@ -173,6 +173,18 @@ function aplicarRegra(descricao, regras) {
   return regras.find(r => r.re.test(alvo)) || null;
 }
 
+// Uma pessoa cadastrada com tipo "empresa" marca o lancamento como despesa da
+// empresa. As contas da Juliane ainda nao estao separadas na pratica, entao o
+// mesmo extrato traz gasto da casa e da Benetti UP; sem essa marca os dois se
+// somariam num total que nao significa nada.
+const ARQ_CONFIG = path.join(__dirname, '..', 'data', 'configuracoes.json');
+
+function pessoasDeEmpresa() {
+  if (!fs.existsSync(ARQ_CONFIG)) return new Set();
+  const cfg = JSON.parse(fs.readFileSync(ARQ_CONFIG, 'utf8'));
+  return new Set((cfg.pessoas || []).filter(p => p.tipo === 'empresa').map(p => p.nome));
+}
+
 function carregarClassificacaoAtual() {
   if (!fs.existsSync(ARQUIVO)) return {};
   const atual = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
@@ -246,6 +258,7 @@ if (ignorados) console.log(`\n${ignorados} arquivo(s) .xlsx ignorado(s) por não
 
 const classificacao = carregarClassificacaoAtual();
 const regras = carregarRegras();
+const empresas = pessoasDeEmpresa();
 const faturas = arquivos.map(lerFatura)
   .sort((a, b) => a.mesVencimento.slice(-2).localeCompare(b.mesVencimento.slice(-2))
                 || MESES.indexOf(a.mesVencimento.split('/')[0]) - MESES.indexOf(b.mesVencimento.split('/')[0]));
@@ -276,6 +289,7 @@ faturas.forEach(f => {
       descricao: item.descricao,
       valor: item.valor,
       pessoa: (regra && regra.pessoa) || herdado.pessoa || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
+
       categoria: (regra && regra.categoria) || herdado.categoria || 'nao_classificado',
       classificado_por: regra ? 'regra' : (herdado.categoria ? 'herdado' : null),
       conta_origem: f.descricaoCartao || 'Cartão de Crédito Itaú',
@@ -329,6 +343,10 @@ faturas.forEach(f => {
     parceladas: nParceladas,
   });
 });
+
+// ---------- ambito: pessoal ou empresa ----------
+
+transacoes.forEach(t => { t.ambito = empresas.has(t.pessoa) ? 'empresa' : 'pessoal'; });
 
 // ---------- vincular parcelas da mesma compra ----------
 //
