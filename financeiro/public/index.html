@@ -2031,10 +2031,26 @@
       return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
     }
 
-    // Todas as transacoes dentro do escopo do ano configurado.
+    // Todas as transacoes dentro do escopo do ano, excluindo os pagamentos da
+    // fatura: eles aparecem no extrato do cartao, mas sao a quitacao da fatura
+    // anterior, nao um gasto. Somar os dois contaria a mesma despesa duas vezes.
     function todasTransacoes() {
       const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
-      return brutas.filter(t => mesNoEscopo(t.mes_vencimento));
+      return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
+    }
+
+    function pagamentosDeFatura() {
+      const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      return brutas.filter(t => t.natureza === 'pagamento' && mesNoEscopo(t.mes_vencimento));
+    }
+
+    // Cabecalho de cada fatura, vindo do proprio arquivo do banco.
+    function faturasDoCartao() {
+      return dadosGlobais.faturas_cartao || [];
+    }
+
+    function faturaDe(mes) {
+      return faturasDoCartao().find(f => f.mes === mes) || null;
     }
 
     // Sem recorte de escopo — usar so onde a contagem total importa.
@@ -2131,8 +2147,11 @@
 
       const variacao = mediaAnterior ? ((liquido - mediaAnterior) / mediaAnterior) * 100 : null;
       const info = document.getElementById('painel_periodo_info');
-      const venc = doMes[0] && doMes[0].data_vencimento_fatura;
-      info.textContent = venc ? `Vence em ${venc.split('-').reverse().join('/')} · ${doMes.length} lançamentos` : `${doMes.length} lançamentos`;
+      const fatura = faturaDe(mes);
+      const venc = (fatura && fatura.vencimento) || (doMes[0] && doMes[0].data_vencimento_fatura);
+      info.textContent = venc
+        ? `Venceu em ${venc.split('-').reverse().join('/')} · ${doMes.length} lançamentos`
+        : `${doMes.length} lançamentos`;
 
       kpis.innerHTML =
         cartaoKpi('Receitas do mês', 'não cadastrado', 'Cadastre em Ferramentas', 'var(--text-secondary)') +
@@ -2157,9 +2176,19 @@
           <tbody>
             <tr><td>Compras do período</td><td class="num">${moeda(gastos)}</td></tr>
             ${estornos < 0 ? `<tr><td>Estornos e cancelamentos</td><td class="num" style="color:var(--accent-green)">${moeda(estornos)}</td></tr>` : ''}
+            ${fatura && Math.abs(fatura.pago - fatura.cobrado) > 0.01 ? `
+              <tr>
+                <td>Diferença entre o cobrado e o pago
+                  <div class="kpi-sub">${fatura.pago > fatura.cobrado
+                    ? 'Encargo que a fatura cobra mas não detalha nos lançamentos'
+                    : 'Parte da fatura foi coberta por saldo ou crédito'}</div>
+                </td>
+                <td class="num">${moeda(fatura.pago - fatura.cobrado)}</td>
+              </tr>` : ''}
           </tbody>
           <tfoot>
-            <tr><td>Total da fatura ${mes}</td><td class="num" style="color:var(--accent-red)">${moeda(liquido)}</td></tr>
+            <tr><td>Cobrado na fatura ${mes}</td><td class="num" style="color:var(--accent-red)">${moeda(liquido)}</td></tr>
+            ${fatura ? `<tr><td>Efetivamente pago</td><td class="num">${moeda(fatura.pago)}</td></tr>` : ''}
           </tfoot>
         </table>`;
 
@@ -2440,6 +2469,7 @@
 
       kpis.innerHTML =
         cartaoKpi('Faturas carregadas', String(comValor.length), `${comValor[0]} a ${comValor[comValor.length - 1]}`) +
+        cartaoKpi('Pago nas faturas', moeda(Math.abs(pagamentosDeFatura().reduce((s, t) => s + t.valor, 0))), 'quitação, não é gasto') +
         cartaoKpi('Média por fatura', moeda(media), `últimas ${recentes.length} faturas`) +
         cartaoKpi('Compras parceladas', String(parcelamentos.length), `${parcelamentos.reduce((s, c) => s + c.totalParcelas, 0)} parcelas`) +
         (abertas.parcelas
@@ -2447,18 +2477,10 @@
           : cartaoKpi('Parcelas a vencer', 'a confirmar', 'depende do mês real das parcelas', 'var(--text-secondary)'));
 
       // --- Faturas, com conferência contra o valor real quando disponível ---
-      let esperados = {};
-      try {
-        const r = await fetch('/api/totais-esperados');
-        if (r.ok) esperados = (await r.json()).faturas || {};
-      } catch (err) {
-        console.warn('Totais esperados indisponíveis:', err);
-      }
-
-      const chaveISO = m => {
-        const [mes, ano] = m.split('/');
-        return `20${ano}-${String(MES_ORDEM.indexOf(mes) + 1).padStart(2, '0')}`;
-      };
+      // O valor de referencia vem do cabecalho da propria fatura importada,
+      // nao de um arquivo mantido a parte.
+      const esperados = {};
+      faturasDoCartao().forEach(f => { esperados[f.mes] = f; });
 
       document.getElementById('cartao_faturas').innerHTML = `
         <table class="tabela-dados">
@@ -2473,20 +2495,18 @@
             ${comValor.map(m => {
               const doMes = transacoes.filter(t => t.mes_vencimento === m);
               const carregado = totalPorMes(m);
-              const esperado = (esperados[chaveISO(m)] || {}).total_esperado;
-              const venc = doMes[0] && doMes[0].data_vencimento_fatura;
-              const dif = esperado !== undefined ? carregado - esperado : null;
-              const ok = dif !== null && Math.abs(dif) < 5;
-              const temAviso = doMes.some(t => t.mes_vencimento_confiavel === false);
+              const f = esperados[m];
+              const dif = f ? carregado - f.cobrado : null;
+              const ok = dif !== null && Math.abs(dif) < 0.05;
               return `
                 <tr>
-                  <td><b>${m}</b>${temAviso ? ' <span class="selo selo-alerta">a confirmar</span>' : ''}</td>
-                  <td>${venc ? venc.split('-').reverse().join('/') : '—'}</td>
+                  <td><b>${m}</b></td>
+                  <td>${f ? f.vencimento.split('-').reverse().join('/') : '—'}</td>
                   <td class="num">${doMes.length}</td>
                   <td class="num">${moeda(carregado)}</td>
-                  <td class="num">${esperado !== undefined ? moeda(esperado) : '—'}</td>
+                  <td class="num">${f ? moeda(f.cobrado) : '—'}</td>
                   <td class="num" ${dif !== null && !ok ? 'style="color:var(--accent-red)"' : ''}>${dif !== null ? moeda(dif) : '—'}</td>
-                  <td>${esperado === undefined
+                  <td>${!f
                         ? '<span class="selo selo-neutro">sem referência</span>'
                         : ok ? '<span class="selo selo-ok">confere</span>'
                              : '<span class="selo selo-erro">não fecha</span>'}</td>
@@ -2494,9 +2514,16 @@
             }).join('')}
           </tbody>
         </table>
-        ${Object.keys(esperados).length
-          ? ''
-          : '<div class="aviso aviso-info">Sem os valores reais das faturas não dá para conferir a importação. Cadastre-os para ativar a conferência.</div>'}`;
+        ${(() => {
+          const comDif = faturasDoCartao().filter(f => Math.abs(f.pago - f.cobrado) > 0.01);
+          if (!comDif.length) return '';
+          const total = comDif.reduce((s, f) => s + (f.pago - f.cobrado), 0);
+          return `<div class="aviso aviso-atencao">
+            Em ${comDif.length} faturas o valor pago difere da soma dos lançamentos, num total de <b>${moeda(total)}</b>
+            (${comDif.map(f => `${f.mes}: ${moeda(f.pago - f.cobrado)}`).join(', ')}).
+            São encargos ou créditos que a fatura aplica sem detalhar linha a linha.
+          </div>`;
+        })()}`;
 
       // --- Compras parceladas ---
       document.getElementById('cartao_parcelas').innerHTML = parcelamentos.length ? `

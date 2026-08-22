@@ -65,7 +65,13 @@ function noEscopo(mv) {
   // Verdade de referência, calculada direto do arquivo
   // ---------------------------------------------------------------------
   const dados = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
-  const todas = dados.fluxo_mensal.transacoes;
+  const todosLancamentos = dados.fluxo_mensal.transacoes;
+  const faturas = dados.faturas_cartao || [];
+
+  // Pagamento de fatura aparece no extrato do cartao mas nao e gasto: e a
+  // quitacao da fatura anterior. Somar junto contaria a despesa duas vezes.
+  const todas = todosLancamentos.filter(t => t.natureza !== 'pagamento');
+  const pagamentos = todosLancamentos.filter(t => t.natureza === 'pagamento');
   const escopo = todas.filter(t => noEscopo(t.mes_vencimento));
 
   const ref = {
@@ -90,13 +96,15 @@ function noEscopo(mv) {
   console.log('\n▸ INTEGRIDADE DOS DADOS\n');
   // =====================================================================
 
-  igual('Contagem de lançamentos preservada', ref.totalLinhas, 629);
-  igual('Soma geral preservada', ref.totalGeral, 40086.47);
+  igual('Contagem de lançamentos de gasto', ref.totalLinhas, 629);
+  igual('Soma dos gastos bate com o total cobrado nas faturas', ref.totalGeral, 40086.47);
+  igual('Pagamentos de fatura separados dos gastos', pagamentos.length, 6);
+  ok('Todo pagamento tem valor negativo', pagamentos.every(t => t.valor < 0));
   igual('Compras menos estornos fecha com o total', ref.compras + ref.estornos, ref.escopoTotal);
 
-  const ids = todas.map(t => t.id);
+  const ids = todosLancamentos.map(t => t.id);
   igual('Nenhum id duplicado', new Set(ids).size, ids.length);
-  ok('Todo lançamento tem id', todas.every(t => t.id));
+  ok('Todo lançamento tem id', todosLancamentos.every(t => t.id));
   ok('Todo lançamento tem data válida', todas.every(t => /^\d{4}-\d{2}-\d{2}$/.test(t.data)),
      todas.filter(t => !/^\d{4}-\d{2}-\d{2}$/.test(t.data)).slice(0, 3).map(t => t.data).join(', '));
   ok('Todo lançamento tem valor numérico', todas.every(t => typeof t.valor === 'number' && !isNaN(t.valor)));
@@ -152,22 +160,42 @@ function noEscopo(mv) {
   ok('parcela_numero nunca excede parcela_total',
      parceladas.every(t => t.parcela_total === null || t.parcela_numero <= t.parcela_total));
 
-  const comTotal = Object.entries(compras).filter(([, ps]) => ps[0].total_parcelas_conhecido !== false);
-  const semTotal = Object.entries(compras).filter(([, ps]) => ps[0].total_parcelas_conhecido === false);
-  console.log(`    (${comTotal.length} compras com total conhecido, ${semTotal.length} anteriores às faturas)`);
+  const comTotal = Object.entries(compras);
+  const semTotal = [];
+  console.log(`    (${parceladas.length} parcelas em ${comTotal.length} compras, lidas da coluna Parcelamento)`);
+  ok('Todo parcelamento veio da fatura, não de dedução',
+     parceladas.every(t => t.parcela_numero >= 1 && t.parcela_total >= 2));
 
-  const somaBate = comTotal.filter(([, ps]) => {
+  // Uma compra so tem todas as parcelas nos dados quando o parcelamento
+  // inteiro cabe dentro das cinco faturas importadas.
+  const completas = comTotal.filter(([, ps]) => ps.length === ps[0].parcela_total);
+  const parciais = comTotal.filter(([, ps]) => ps.length < ps[0].parcela_total);
+  console.log(`    (${completas.length} compras com o parcelamento inteiro, ${parciais.length} parcialmente visíveis)`);
+
+  const somaBate = completas.filter(([, ps]) => ps[0].valor_total_exato).filter(([, ps]) => {
     const soma = ps.reduce((s, p) => s + p.valor, 0);
     return Math.abs(soma - ps[0].valor_total_compra) > 0.05;
   });
   ok('Soma das parcelas bate com o valor total da compra', somaBate.length === 0,
      somaBate.slice(0, 3).map(([id, ps]) => `${ps[0].descricao}: ${ps.reduce((s, p) => s + p.valor, 0).toFixed(2)} vs ${ps[0].valor_total_compra}`).join(' | '));
 
+  ok('Nenhuma compra tem mais parcelas do que o total declarado',
+     comTotal.every(([, ps]) => ps.length <= ps[0].parcela_total),
+     comTotal.filter(([, ps]) => ps.length > ps[0].parcela_total).slice(0, 3).map(([, ps]) => `${ps[0].descricao}: ${ps.length} de ${ps[0].parcela_total}`).join(' | '));
+
   ok('Compra anterior às faturas não finge saber o total',
      semTotal.every(([, ps]) => ps.every(p => p.parcela_total === null && p.valor_total_compra === null)));
 
   // Cada parcela deve cair numa fatura consecutiva a anterior
-  const sequenciaFatura = Object.entries(compras).filter(([, ps]) => {
+  // Quando um parcelamento e cancelado, o banco lanca todas as parcelas e
+  // todos os estornos na mesma fatura. Nesses casos nao ha sequencia mensal.
+  const numaFaturaSo = Object.entries(compras)
+    .filter(([, ps]) => new Set(ps.map(p => p.mes_vencimento)).size === 1 && ps.length > 1);
+  console.log(`    (${numaFaturaSo.length} parcelamentos lancados e revertidos numa unica fatura)`);
+
+  const sequenciaFatura = Object.entries(compras)
+    .filter(([, ps]) => new Set(ps.map(p => p.mes_vencimento)).size > 1)
+    .filter(([, ps]) => {
     const ord = [...ps].sort((a, b) => a.parcela_numero - b.parcela_numero);
     for (let i = 1; i < ord.length; i++) {
       const d = MES_ORDEM.indexOf(ord[i].mes_vencimento.split('/')[0]) + 12 * +ord[i].mes_vencimento.split('/')[1]
@@ -176,7 +204,7 @@ function noEscopo(mv) {
     }
     return false;
   });
-  ok('Parcelas caem em faturas consecutivas', sequenciaFatura.length === 0,
+  ok('Parcelas de um mesmo parcelamento caem em faturas consecutivas', sequenciaFatura.length === 0,
      sequenciaFatura.slice(0, 3).map(([, ps]) => ps[0].descricao).join(' | '));
 
   const numeracaoOk = Object.entries(compras).filter(([, ps]) => {
@@ -187,9 +215,9 @@ function noEscopo(mv) {
   ok('Numeração das parcelas é sequencial e sem buracos', numeracaoOk.length === 0,
      numeracaoOk.slice(0, 3).map(([, ps]) => ps[0].descricao).join(' | '));
 
-  const totalCoerente = comTotal.filter(([, ps]) => ps.length !== ps[0].parcela_total);
-  ok('Quantidade de parcelas bate com parcela_total', totalCoerente.length === 0,
-     totalCoerente.slice(0, 3).map(([, ps]) => `${ps[0].descricao}: ${ps.length} de ${ps[0].parcela_total}`).join(' | '));
+  ok('Cada parcela aparece uma única vez por compra',
+     comTotal.every(([, ps]) => new Set(ps.map(p => p.parcela_numero)).size === ps.length),
+     comTotal.filter(([, ps]) => new Set(ps.map(p => p.parcela_numero)).size !== ps.length).slice(0, 3).map(([, ps]) => ps[0].descricao).join(' | '));
 
   // Uma compra cancelada pode ter sido parcelada — o que precisa valer e que
   // o estorno anule integralmente a cobranca.
@@ -229,7 +257,7 @@ function noEscopo(mv) {
   await pagina.waitForTimeout(3000);
 
   const carregou = await pagina.evaluate(() => (dadosGlobais.fluxo_mensal || {}).transacoes?.length || 0);
-  igual('Dashboard carregou todos os lançamentos', carregou, ref.totalLinhas);
+  igual('Dashboard carregou todos os lançamentos', carregou, todosLancamentos.length);
 
   // --- Painel, fatura por fatura ---
   for (const mes of mesesReais.sort((a, b) => {
@@ -387,17 +415,28 @@ function noEscopo(mv) {
      `${comReferencia.length} faturas conferidas de ${Object.keys(esperados).length} referências`);
 
   console.log('\n▸ RECONCILIAÇÃO CONTRA AS FATURAS REAIS\n');
-  const MES_ISO = { '2026-01': 'Jan/26', '2026-02': 'Fev/26', '2026-03': 'Mar/26', '2026-04': 'Abr/26', '2026-05': 'Mai/26' };
   let erroTotal = 0;
-  Object.entries(esperados).forEach(([iso, f]) => {
-    const mes = MES_ISO[iso];
-    const calculado = ref.porMes[mes] || 0;
-    const dif = calculado - f.total_esperado;
+  faturas.forEach(f => {
+    const calculado = ref.porMes[f.mes] || 0;
+    const dif = calculado - f.cobrado;
     erroTotal += Math.abs(dif);
-    ok(`${mes}: real ${brl(f.total_esperado)} · calculado ${brl(calculado)} · dif ${brl(dif)}`,
-       Math.abs(dif) < 250);
+    ok(`${f.mes} (venceu ${f.vencimento.split('-').reverse().join('/')}): cobrado ${brl(f.cobrado)} · calculado ${brl(calculado)}`,
+       Math.abs(dif) < 0.05, `diferença ${brl(dif)}`);
   });
-  console.log(`\n    Erro acumulado: ${brl(erroTotal)}  (antes da redistribuição: R$ 18.491,02)\n`);
+  console.log(`\n    Erro acumulado: ${brl(erroTotal)}  (antes da reimportação: R$ 18.491,02)`);
+
+  const comDiferenca = faturas.filter(f => Math.abs(f.pago - f.cobrado) > 0.01);
+  console.log(`    Faturas em que o pago difere do cobrado: ${comDiferenca.length}` +
+    (comDiferenca.length ? ` — ${comDiferenca.map(f => `${f.mes} ${brl(f.pago - f.cobrado)}`).join(', ')}` : ''));
+
+  ok('Toda fatura tem data de vencimento registrada',
+     faturas.every(f => /^\d{4}-\d{2}-\d{2}$/.test(f.vencimento)),
+     faturas.map(f => `${f.mes}: ${f.vencimento}`).join(' | '));
+
+  const vencimentos = faturas.map(f => f.vencimento);
+  ok('Vencimentos em ordem cronológica',
+     vencimentos.every((v, i) => i === 0 || v > vencimentos[i - 1]),
+     vencimentos.join(' | '));
 
   // --- Todas as abas renderizam ---
   for (const [id, nome] of [['painel', 'Painel'], ['lancamentos', 'Lançamentos'],
