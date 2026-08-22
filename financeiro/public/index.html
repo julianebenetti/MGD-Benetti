@@ -1169,9 +1169,6 @@
             <label class="filter-label">Pessoa</label>
             <select id="filter_pessoa" class="filter-input">
               <option value="">Todos</option>
-              <option value="Juliane">Juliane</option>
-              <option value="Hugo">Hugo</option>
-              <option value="Familia">Familia</option>
             </select>
           </div>
           <div class="filter-group">
@@ -1189,23 +1186,12 @@
             <label class="filter-label">Conta</label>
             <select id="filter_conta" class="filter-input">
               <option value="">Todas</option>
-              <option value="Banco Itaú">Banco Itaú</option>
-              <option value="Mastercard Black">Mastercard Black</option>
-              <option value="Mercado Pago">Mercado Pago</option>
-              <option value="CC">Cartão de Crédito</option>
-              <option value="PIX">PIX</option>
             </select>
           </div>
           <div class="filter-group">
             <label class="filter-label">Categoria</label>
             <select id="filter_categoria" class="filter-input">
               <option value="">Todas</option>
-              <option value="salário">Salário</option>
-              <option value="renda">Renda</option>
-              <option value="necessidade">Necessidade</option>
-              <option value="divida">Dívida</option>
-              <option value="despesa">Despesa</option>
-              <option value="pessoal">Pessoal</option>
             </select>
           </div>
           <div class="filter-group">
@@ -1224,41 +1210,24 @@
 
         <div class="filters-row">
           <div class="filter-group">
-            <label class="filter-label">Origem</label>
-            <select id="filter_origem" class="filter-input">
-              <option value="">Todas</option>
-              <option value="mastercard">💳 Mastercard</option>
-              <option value="visa">💳 Visa</option>
-              <option value="elo">💳 Elo</option>
-              <option value="itau">🏦 Itaú</option>
-              <option value="bradesco">🏦 Bradesco</option>
+            <label class="filter-label">💳 Mês da Fatura</label>
+            <select id="filter_mes_venc" class="filter-input">
+              <option value="">Todas as faturas</option>
             </select>
           </div>
           <div class="filter-group">
             <label class="filter-label">Mês Ref</label>
             <select id="filter_mes_ref" class="filter-input">
               <option value="">Todos</option>
-              <option value="Jan/26">Jan/26</option>
-              <option value="Fev/26">Fev/26</option>
-              <option value="Mar/26">Mar/26</option>
-              <option value="Abr/26">Abr/26</option>
-              <option value="Mai/26">Mai/26</option>
-              <option value="Jun/26">Jun/26</option>
-              <option value="Jul/26">Jul/26</option>
-              <option value="Ago/26">Ago/26</option>
-              <option value="Set/26">Set/26</option>
-              <option value="Out/26">Out/26</option>
-              <option value="Nov/26">Nov/26</option>
-              <option value="Dez/26">Dez/26</option>
             </select>
           </div>
           <div class="filter-group">
-            <label class="filter-label">Tipo Gasto</label>
+            <label class="filter-label">Forma</label>
             <select id="filter_tipo_gasto" class="filter-input">
               <option value="">Todos</option>
-              <option value="Fixa">🔒 Fixa</option>
-              <option value="Parcelada">📊 Parcelada</option>
-              <option value="Comum">📌 Comum</option>
+              <option value="parcelada">📊 Parceladas</option>
+              <option value="avista">📌 À vista</option>
+              <option value="estorno">↩️ Estornos</option>
             </select>
           </div>
         </div>
@@ -1831,19 +1800,22 @@
     </div>
   </div>
 
-  <!-- Tentar carregar SheetJS de múltiplos CDNs -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="carregarXLSXAlterno()"></script>
-
+  <!-- Fallback precisa existir antes da tag que o chama no onerror -->
   <script>
-    // Fallback para outro CDN se jsDelivr falhar
     function carregarXLSXAlterno() {
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
       script.onerror = function() {
-        console.warn('⚠️ Nenhum CDN conseguiu carregar SheetJS. Use CSV como alternativa.');
+        console.warn('Nenhum CDN conseguiu carregar SheetJS. Use CSV como alternativa.');
       };
       document.head.appendChild(script);
     }
+  </script>
+
+  <!-- Tentar carregar SheetJS de múltiplos CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" onerror="carregarXLSXAlterno()"></script>
+
+  <script>
 
     // Aguardar XLSX carregar com timeout
     let tentativas = 0;
@@ -2485,6 +2457,7 @@
     }
 
     function renderizarFluxo() {
+      popularFiltros();
       renderizarExtratoFluxo();
       renderizarAlertasFluxo();
       renderizarCenariosFluxo();
@@ -2618,9 +2591,9 @@
       const categoria = document.getElementById('filter_categoria').value;
       const status = document.getElementById('filter_status').value;
       const busca = document.getElementById('filter_busca').value.toLowerCase();
-      const origem = document.getElementById('filter_origem').value.toLowerCase();
+      const mesVenc = document.getElementById('filter_mes_venc').value;
       const mesRef = document.getElementById('filter_mes_ref').value;
-      const tipoGasto = document.getElementById('filter_tipo_gasto').value;
+      const forma = document.getElementById('filter_tipo_gasto').value;
 
       transacoesFiltradas = transacoes.filter(txn => {
         if (dataInicio && txn.data < dataInicio) return false;
@@ -2632,30 +2605,64 @@
         if (status && txn.status !== status) return false;
         if (busca && !txn.descricao.toLowerCase().includes(busca)) return false;
 
-        // Filtro de origem
-        if (origem) {
-          const contaOrigemLower = (txn.conta_origem || '').toLowerCase();
-          if (!contaOrigemLower.includes(origem)) return false;
-        }
+        // Mes da fatura (regime de caixa): le o campo gravado, nao recalcula
+        if (mesVenc && txn.mes_vencimento !== mesVenc) return false;
 
-        // Filtro de mês de referência
-        if (mesRef) {
-          const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-          const [ano, mes, dia] = txn.data.split('-');
-          const mesNum = parseInt(mes) - 1;
-          const ano2digitos = ano.slice(-2);
-          const txnMesRef = `${meses[mesNum].charAt(0).toUpperCase() + meses[mesNum].slice(1)}/${ano2digitos}`;
-          if (txnMesRef !== mesRef) return false;
-        }
+        // Mes de referencia (competencia): le o campo gravado
+        if (mesRef && txn.mes_referencia !== mesRef) return false;
 
-        // Filtro de tipo de gasto
-        if (tipoGasto && (txn.tipo_gasto || 'Comum') !== tipoGasto) return false;
+        // Forma: parcelada / a vista / estorno
+        if (forma === 'parcelada' && !txn.eh_parcelada) return false;
+        if (forma === 'avista' && (txn.eh_parcelada || txn.natureza === 'estorno')) return false;
+        if (forma === 'estorno' && txn.natureza !== 'estorno') return false;
 
         return true;
       });
 
       paginaAtual = 1;
       exibirTransacoes();
+    }
+
+
+    // Popula os selects de filtro com os valores que existem de fato nos dados.
+    // Antes as opcoes eram fixas no HTML e nao batiam com o conteudo importado,
+    // o que fazia varios filtros devolverem sempre zero resultados.
+    function popularFiltros() {
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      if (!transacoes.length) return;
+
+      const preencher = (id, valores, ordenador) => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        const selecionado = select.value;
+        const primeira = select.querySelector('option');
+        select.innerHTML = '';
+        if (primeira) select.appendChild(primeira);
+        valores.sort(ordenador || ((a, b) => a.localeCompare(b, 'pt-BR')));
+        valores.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v;
+          opt.textContent = v;
+          select.appendChild(opt);
+        });
+        select.value = selecionado;
+      };
+
+      const unicos = campo => [...new Set(transacoes.map(t => t[campo]).filter(Boolean))];
+
+      // Meses de fatura em ordem cronologica, nao alfabetica
+      const MES_ORDEM = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      const cronologico = (a, b) => {
+        const [ma, aa] = a.split('/');
+        const [mb, ab] = b.split('/');
+        return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
+      };
+
+      preencher('filter_pessoa', unicos('pessoa'));
+      preencher('filter_conta', unicos('conta_origem'));
+      preencher('filter_categoria', unicos('categoria'));
+      preencher('filter_mes_venc', unicos('mes_vencimento'), cronologico);
+      preencher('filter_mes_ref', unicos('mes_referencia'), cronologico);
     }
 
     function limparFiltros() {
@@ -2667,7 +2674,7 @@
       document.getElementById('filter_categoria').value = '';
       document.getElementById('filter_status').value = '';
       document.getElementById('filter_busca').value = '';
-      document.getElementById('filter_origem').value = '';
+      document.getElementById('filter_mes_venc').value = '';
       document.getElementById('filter_mes_ref').value = '';
       document.getElementById('filter_tipo_gasto').value = '';
 
@@ -2702,9 +2709,9 @@
               <th>Origem</th>
               <th>Categoria</th>
               <th>Mês Ref</th>
+              <th>💳 Mês Fatura</th>
               <th>Tipo</th>
               <th>Parcela</th>
-              <th>Carga</th>
               <th>Valor</th>
             </tr>
           </thead>
@@ -2738,22 +2745,25 @@
         const icone = txn.eh_parcelada ? '📊' : '📌';
 
         // Parcela
-        const parcela = txn.descricao_parcela ? txn.descricao_parcela : (txn.eh_parcelada ? 'Editar' : '—');
+        const parcela = txn.eh_parcelada
+          ? `<span title="Compra de R$ ${(txn.valor_total_compra || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} em ${txn.parcela_total}x">${txn.descricao_parcela}</span>`
+          : (txn.natureza === 'estorno' ? '<span style="color: var(--accent-green);">estorno</span>' : '—');
 
         const cargaIdExibicao = txn.carga_id ? `<span style="font-size: 11px; color: var(--text-secondary);">${txn.carga_id.substring(0, 12)}...</span>` : '<span style="color: var(--text-secondary);">—</span>';
 
         html += `
           <tr>
-            <td class="transaction-date transaction-editable" onclick="editarCampo(${txnIdx}, 'data')" title="Clique para editar">${dataFormatada}</td>
-            <td class="transaction-description transaction-editable" onclick="editarCampo(${txnIdx}, 'descricao')" title="Clique para editar">${txn.descricao}</td>
-            <td class="transaction-editable" onclick="editarCampo(${txnIdx}, 'pessoa')" title="Clique para editar"><span class="transaction-person">${txn.pessoa}</span></td>
-            <td class="transaction-account transaction-editable" onclick="editarCampo(${txnIdx}, 'conta_origem')" title="Clique para editar">${origemFormatada}</td>
-            <td class="transaction-editable" onclick="editarCampo(${txnIdx}, 'categoria')" title="Clique para editar"><span class="transaction-category">${txn.categoria}</span></td>
-            <td style="font-size: 12px;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'mes_referencia')" title="Clique para editar">${mesRef}</td>
-            <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
-            <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo(${txnIdx}, 'parcela')" title="Clique para editar">${parcela}</td>
-            <td style="font-size: 11px;" title="${txn.carga_id || 'Sem carga'}">${cargaIdExibicao}</td>
-            <td class="transaction-value ${txn.tipo === 'entrada' ? 'positive' : 'negative'} transaction-editable" onclick="editarCampo(${txnIdx}, 'valor')" title="Clique para editar">${txn.valor ? (txn.tipo === 'entrada' ? '+' : '-') + ' R$ ' + txn.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
+            <td class="transaction-date transaction-editable" onclick="editarCampo('${txn.id}', 'data')" title="Clique para editar">${dataFormatada}</td>
+            <td class="transaction-description transaction-editable" onclick="editarCampo('${txn.id}', 'descricao')" title="Clique para editar">${txn.descricao}</td>
+            <td class="transaction-editable" onclick="editarCampo('${txn.id}', 'pessoa')" title="Clique para editar"><span class="transaction-person">${txn.pessoa}</span></td>
+            <td class="transaction-account transaction-editable" onclick="editarCampo('${txn.id}', 'conta_origem')" title="Clique para editar">${origemFormatada}</td>
+            <td class="transaction-editable" onclick="editarCampo('${txn.id}', 'categoria')" title="Clique para editar"><span class="transaction-category">${txn.categoria}</span></td>
+            <td style="font-size: 12px;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'mes_referencia')" title="Clique para editar">${mesRef}</td>
+            <td style="font-size: 12px;" title="${txn.mes_vencimento_confiavel === false ? 'Mês da fatura precisa ser confirmado na fatura original' : 'Mês em que este valor sai da conta'}">${txn.mes_vencimento || '—'}${txn.mes_vencimento_confiavel === false ? ' <span style="color: var(--accent-yellow);">⚠</span>' : ''}</td>
+            <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
+            <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'parcela')" title="Clique para editar">${parcela}</td>
+
+            <td class="transaction-value ${txn.tipo === 'entrada' ? 'positive' : 'negative'} transaction-editable" onclick="editarCampo('${txn.id}', 'valor')" title="Clique para editar">${txn.valor ? (txn.tipo === 'entrada' ? '+' : '-') + ' R$ ' + txn.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>
         `;
       });
@@ -2793,10 +2803,16 @@
       }
     }
 
-    function editarCampo(txnIdx, campo) {
+    function editarCampo(txnId, campo) {
       const fluxo = dadosGlobais.fluxo_mensal || {};
       const transacoes = fluxo.transacoes || [];
-      const txn = transacoes[txnIdx];
+      // Localiza pelo id, nunca por posicao: a tabela exibe a lista filtrada e
+      // o indice dela nao corresponde ao do array completo.
+      const txn = transacoes.find(t => t.id === txnId);
+      if (!txn) {
+        console.error('Transacao nao encontrada:', txnId);
+        return;
+      }
 
       let valorAtual = txn[campo] || '';
       let label = campo.charAt(0).toUpperCase() + campo.slice(1);
@@ -2837,11 +2853,11 @@
       }
 
       if (novoValor !== null && novoValor !== '') {
-        transacoes[txnIdx][campo] = novoValor;
+        txn[campo] = novoValor;
 
         // Auto-set tipo_gasto se parcela foi preenchida
         if (campo === 'parcela' && novoValor) {
-          transacoes[txnIdx].tipo_gasto = 'Parcelada';
+          txn.tipo_gasto = 'Parcelada';
         }
 
         salvarDadosAutomatico();
@@ -4894,7 +4910,7 @@ function renderizarTiposDespesaConfig() {
 
     async function carregarTotaisEsperados() {
       try {
-        const response = await fetch('/data/totais_esperados.json');
+        const response = await fetch('/api/totais-esperados');
         return await response.json();
       } catch (err) {
         console.error('Erro ao carregar totais esperados:', err);

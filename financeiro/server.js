@@ -336,6 +336,21 @@ app.delete('/api/cargas/:cargaId', (req, res) => {
   }
 });
 
+// A aba Reconciliação buscava /data/totais_esperados.json, caminho que nunca
+// foi servido (só 'public' é estático), então a aba nunca funcionou.
+app.get('/api/totais-esperados', (req, res) => {
+  const caminho = path.join(__dirname, 'data', 'totais_esperados.json');
+  try {
+    if (!fs.existsSync(caminho)) {
+      return res.json({ faturas: {} });
+    }
+    res.json(JSON.parse(fs.readFileSync(caminho, 'utf8')));
+  } catch (err) {
+    console.error('Erro lendo totais_esperados.json:', err);
+    res.status(500).json({ error: 'Erro ao ler totais esperados' });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
