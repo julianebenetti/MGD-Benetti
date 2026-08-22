@@ -269,13 +269,20 @@ function Comando-Enviar {
     Titulo 'Enviando para o GitHub'
     Push-Location $Config.PastaLocal
     try {
-        $mudou = git status --porcelain
-        if (-not $mudou) { Escrever '  Nada mudou.'; return }
+        $mudou = git status --porcelain -- financeiro/data
+        if (-not $mudou) { Escrever '  Nada mudou nos dados.'; return }
 
         Escrever '  Arquivos alterados:'
-        $mudou -split "`n" | ForEach-Object { Escrever "    $_" }
+        $mudou -split "`n" | Where-Object { $_ } | ForEach-Object { Escrever "    $($_.Trim())" }
 
-        git add -A
+        # Envia dados e regras; configuracao de maquina e planilhas geradas ficam de fora
+        git add financeiro/data/financeiro.json financeiro/data/regras-classificacao.json financeiro/data/configuracoes.json 2>$null
+
+        if (-not (git diff --cached --name-only)) {
+            Escrever '  Nenhuma mudanca de dados para enviar.'
+            return
+        }
+
         git commit -m "Atualiza dados financeiros a partir das faturas"
         git push origin $Config.Branch
         Ok 'Enviado. Agora rode .\dash.ps1 deploy.'

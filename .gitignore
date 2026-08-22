@@ -1,0 +1,8 @@
+# Configuração por máquina do dash.ps1 (endereço do VPS, pastas locais)
+financeiro/dash.config.json
+
+# Planilhas geradas para revisão de classificação
+financeiro/data/classificacao-para-revisar.xlsx
+financeiro/data/classificar-pendentes.xlsx
+
+node_modules/

@@ -1,9 +1,0 @@
-{
-  "VpsHost": "root@179.198.96.133",
-  "VpsPasta": "/root/mgd-benetti",
-  "Branch": "claude/financial-dashboard-pbj1ts",
-  "Servico": "financeiro",
-  "UrlDashboard": "http://179.198.96.133:3001",
-  "PastaLocal": "/home/user/MGD-Benetti",
-  "RepoGit": "https://github.com/julianebenetti/MGD-Benetti.git"
-}
