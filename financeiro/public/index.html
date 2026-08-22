@@ -2005,16 +2005,40 @@
 
     const MES_ORDEM = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+    // Ano que a dashboard cobre. Lancamentos de outros anos ficam fora de todas
+    // as visoes ate que se decida incorpora-los.
+    const ANO_DASHBOARD = 26;
+
+    // Balde dos lancamentos que pertencem a uma fatura de 2026 mas cujo mes
+    // exato o importador nao registrou. Contam no total, sem mes fingido.
+    const MES_A_CONFIRMAR = 'A confirmar';
+
+    function mesNoEscopo(mv) {
+      if (!mv) return false;
+      if (mv === MES_A_CONFIRMAR) return true;
+      const ano = parseInt((mv.split('/')[1] || ''), 10);
+      return ano === ANO_DASHBOARD;
+    }
+
     // Categorias que se repetem todo mês independentemente de comportamento.
     const CATEGORIAS_FIXAS = ['assinatura', 'moradia', 'educacao', 'utilidades', 'servicos'];
 
     function ordenarMeses(a, b) {
+      if (a === MES_A_CONFIRMAR) return 1;
+      if (b === MES_A_CONFIRMAR) return -1;
       const [ma, aa] = a.split('/');
       const [mb, ab] = b.split('/');
       return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
     }
 
+    // Todas as transacoes dentro do escopo do ano configurado.
     function todasTransacoes() {
+      const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      return brutas.filter(t => mesNoEscopo(t.mes_vencimento));
+    }
+
+    // Sem recorte de escopo — usar so onde a contagem total importa.
+    function transacoesSemFiltroDeAno() {
       return (dadosGlobais.fluxo_mensal || {}).transacoes || [];
     }
 
@@ -2052,7 +2076,9 @@
       if (anterior && [...select.options].some(o => o.value === anterior)) {
         select.value = anterior;
       } else if (!incluirTodos) {
-        select.value = meses[meses.length - 1]; // fatura mais recente
+        // Abre na fatura real mais recente, nunca no balde "A confirmar"
+        const reais = meses.filter(m => m !== MES_A_CONFIRMAR);
+        select.value = (reais.length ? reais : meses)[Math.max(0, (reais.length ? reais : meses).length - 1)];
       }
     }
 
@@ -2096,7 +2122,9 @@
 
       // Média das faturas anteriores a esta, para comparação
       const meses = mesesDisponiveis();
-      const anteriores = meses.slice(Math.max(0, meses.indexOf(mes) - 3), meses.indexOf(mes));
+      const reaisOrdenados = meses.filter(m => m !== MES_A_CONFIRMAR);
+      const posAtual = reaisOrdenados.indexOf(mes);
+      const anteriores = posAtual > 0 ? reaisOrdenados.slice(Math.max(0, posAtual - 3), posAtual) : [];
       const mediaAnterior = anteriores.length
         ? anteriores.reduce((s, m) => s + transacoes.filter(t => t.mes_vencimento === m).reduce((x, t) => x + t.valor, 0), 0) / anteriores.length
         : null;
@@ -2136,7 +2164,7 @@
         </table>`;
 
       // --- Evolução mês a mês ---
-      const porMes = meses.map(m => ({
+      const porMes = meses.filter(m => m !== MES_A_CONFIRMAR).map(m => ({
         mes: m,
         total: transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0)
       })).filter(x => x.total > 0);
@@ -2398,7 +2426,7 @@
 
       const meses = mesesDisponiveis();
       const totalPorMes = m => transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0);
-      const comValor = meses.filter(m => totalPorMes(m) > 0);
+      const comValor = meses.filter(m => m !== MES_A_CONFIRMAR && totalPorMes(m) > 0);
       // Faturas antigas trazem so as parcelas remanescentes de compras
       // anteriores, com valores baixos; incluir todas distorce a media.
       const recentes = comValor.slice(-6);
@@ -2747,36 +2775,9 @@
     const ITENS_POR_PAGINA = 10;
 
     function renderizarExtratoFluxo() {
-      const fluxo = dadosGlobais.fluxo_mensal || {};
-      const transacoes = fluxo.transacoes || [];
-
-      // Calcular totais a partir das transações se não estiverem pre-calculados
-      let totalEntradas = fluxo.total_entradas || 0;
-      let totalSaidas = fluxo.total_saidas || 0;
-
-      if (totalEntradas === 0 && totalSaidas === 0 && transacoes.length > 0) {
-        transacoes.forEach(txn => {
-          const valor = parseFloat(txn.valor) || 0;
-          if (txn.tipo === 'entrada') {
-            totalEntradas += valor;
-          } else if (txn.tipo === 'saida') {
-            totalSaidas += valor;
-          }
-        });
-      }
-
-
-      const saldo = totalEntradas - totalSaidas;
-
-
-
-      // Atualizar fluxo global para referências futuras
-      fluxo.total_entradas = totalEntradas;
-      fluxo.total_saidas = totalSaidas;
-      fluxo.saldo_final = saldoFinal;
-
-      // Resumo do conjunto filtrado — sem inventar entradas que nao existem
-      atualizarResumoLancamentos();
+      // Parte da lista ja recortada pelo ano em escopo, para que a aba nunca
+      // exiba lancamentos fora do periodo que a dashboard cobre.
+      const transacoes = todasTransacoes();
 
       transacoesFiltradas = [...transacoes];
       paginaAtual = 1;
@@ -2784,8 +2785,7 @@
     }
 
     function aplicarFiltros() {
-      const fluxo = dadosGlobais.fluxo_mensal || {};
-      const transacoes = fluxo.transacoes || [];
+      const transacoes = todasTransacoes();
 
       const dataInicio = document.getElementById('filter_data_inicio').value;
       const dataFim = document.getElementById('filter_data_fim').value;
@@ -2856,6 +2856,21 @@
 
       // Meses de fatura em ordem cronologica, nao alfabetica
       const MES_ORDEM = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    // Ano que a dashboard cobre. Lancamentos de outros anos ficam fora de todas
+    // as visoes ate que se decida incorpora-los.
+    const ANO_DASHBOARD = 26;
+
+    // Balde dos lancamentos que pertencem a uma fatura de 2026 mas cujo mes
+    // exato o importador nao registrou. Contam no total, sem mes fingido.
+    const MES_A_CONFIRMAR = 'A confirmar';
+
+    function mesNoEscopo(mv) {
+      if (!mv) return false;
+      if (mv === MES_A_CONFIRMAR) return true;
+      const ano = parseInt((mv.split('/')[1] || ''), 10);
+      return ano === ANO_DASHBOARD;
+    }
       const cronologico = (a, b) => {
         const [ma, aa] = a.split('/');
         const [mb, ab] = b.split('/');

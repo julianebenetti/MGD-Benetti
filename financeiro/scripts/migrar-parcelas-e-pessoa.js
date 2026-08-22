@@ -174,11 +174,27 @@ Object.entries(grupos).forEach(([chave, todosIndices]) => {
 // compra anterior a isso só pode ser parcela de uma compra mais antiga, e o
 // mês de fatura que o importador gravou (derivado da data da compra) aponta
 // para faturas que nunca foram importadas.
+// As faturas importadas cobrem compras a partir de 2025-12-22. Uma compra
+// anterior a isso so pode estar aqui como parcela de uma compra mais antiga,
+// cobrada em alguma das faturas de 2026.
+//
+// O importador derivou o mes da fatura da data da compra e com isso fabricou
+// sete "faturas" de 2025 que nunca existiram — algumas com um unico
+// lancamento. Mante-las faria a dashboard exibir como fatura de 2025 um gasto
+// que na verdade saiu da conta em 2026.
+//
+// Esses lancamentos passam para o balde MES_A_CONFIRMAR: continuam contando
+// no total (o dinheiro saiu mesmo), mas sem fingir saber de qual fatura vieram.
 const PRIMEIRA_COMPRA_COBERTA = '2025-12-22';
+const MES_A_CONFIRMAR = 'A confirmar';
+
 transacoes.forEach(t => {
   if (t.data < PRIMEIRA_COMPRA_COBERTA) {
+    t.mes_vencimento_importado = t.mes_vencimento;
+    t.mes_vencimento = MES_A_CONFIRMAR;
+    t.data_vencimento_fatura = null;
     t.mes_vencimento_confiavel = false;
-    t.motivo_revisao = 'Compra anterior ao período das faturas importadas — mês de fatura precisa ser confirmado na fatura original';
+    t.motivo_revisao = 'Parcela de compra anterior ao período das faturas importadas. Pertence a uma fatura de 2026, mas o importador não registrou qual.';
     relatorio.mesesNaoConfiaveis++;
   } else {
     t.mes_vencimento_confiavel = true;
@@ -204,6 +220,8 @@ console.log(`Soma geral (inalterada):         R$ ${totalGeral.toFixed(2)}`);
 console.log('\n--- Faturas depois da correção ---');
 Object.keys(porMes)
   .sort((a, b) => {
+    if (a === 'A confirmar') return 1;
+    if (b === 'A confirmar') return -1;
     const A = parseMesVenc(a), B = parseMesVenc(b);
     return A.ano - B.ano || A.mes - B.mes;
   })
