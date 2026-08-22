@@ -454,6 +454,131 @@
       to { transform: rotate(360deg); }
     }
 
+
+    /* ---- Estrutura das abas novas ---- */
+    .periodo-seletor {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+
+    .periodo-info {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin-left: auto;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .vazio {
+      padding: 28px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .vazio strong { color: var(--text-primary); display: block; margin-bottom: 6px; font-size: 15px; }
+
+    .barra-linha { margin: 12px 0; }
+
+    .barra-topo {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 5px;
+      gap: 10px;
+    }
+
+    .barra-nome { color: var(--text-primary); }
+    .barra-valor { color: var(--text-secondary); white-space: nowrap; }
+
+    .barra-trilho {
+      height: 22px;
+      background-color: var(--bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .barra-preenchida {
+      height: 100%;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      transition: width .3s ease;
+    }
+
+    .tabela-dados {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .tabela-dados th {
+      text-align: left;
+      padding: 9px 10px;
+      border-bottom: 2px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+
+    .tabela-dados td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .tabela-dados tbody tr:hover { background-color: var(--bg-tertiary); }
+    .tabela-dados .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tabela-dados tfoot td {
+      padding: 10px;
+      border-top: 2px solid var(--border-color);
+      font-weight: bold;
+    }
+
+    .selo {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .selo-ok { background-color: rgba(16,185,129,.15); color: var(--accent-green); }
+    .selo-alerta { background-color: rgba(245,158,11,.15); color: var(--accent-yellow); }
+    .selo-erro { background-color: rgba(239,68,68,.15); color: var(--accent-red); }
+    .selo-neutro { background-color: var(--bg-tertiary); color: var(--text-secondary); }
+
+    .aviso {
+      padding: 12px 14px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-size: 13px;
+      border-left: 3px solid;
+    }
+
+    .aviso-info { background-color: rgba(59,130,246,.08); border-color: var(--accent-blue); }
+    .aviso-atencao { background-color: rgba(245,158,11,.08); border-color: var(--accent-yellow); }
+    .aviso-ok { background-color: rgba(16,185,129,.08); border-color: var(--accent-green); }
+
     .full-width {
       grid-column: 1 / -1;
     }
@@ -1018,20 +1143,17 @@
     </header>
 
     <div class="tabs">
-      <button class="tab-button active" data-tab="resumo">📊 Resumo</button>
-      <button class="tab-button" data-tab="dividas">🏦 Dívidas</button>
-      <button class="tab-button" data-tab="despesas">💸 Despesas</button>
-      <button class="tab-button" data-tab="fluxo">📈 Fluxo</button>
-      <button class="tab-button" data-tab="classificacao">🏷️ Classificação</button>
-      <button class="tab-button" data-tab="dashboard_contabil">📑 Dashboard Contábil</button>
-      <button class="tab-button" data-tab="reconciliacao">🔍 Reconciliação</button>
-      <button class="tab-button" data-tab="resumo_executivo">📊 Resumo Executivo</button>
-      <button class="tab-button" data-tab="configuracoes">⚙️ Configurações</button>
+      <button class="tab-button active" data-tab="painel">🏠 Painel</button>
+      <button class="tab-button" data-tab="lancamentos">🧾 Lançamentos</button>
+      <button class="tab-button" data-tab="para_onde_vai">📊 Para Onde Vai</button>
+      <button class="tab-button" data-tab="cartao">💳 Cartão &amp; Faturas</button>
+      <button class="tab-button" data-tab="dividas">🏦 Dívidas &amp; Patrimônio</button>
 
       <div id="abas-ocultas" style="display: none;">
-        <button class="tab-button" data-tab="formulario">📝 Adicionar Dados</button>
         <button class="tab-button" data-tab="importar">📤 Importar</button>
-        <button class="tab-button" data-tab="editor">📋 Editor</button>
+        <button class="tab-button" data-tab="configuracoes">⚙️ Configurações</button>
+        <button class="tab-button" data-tab="formulario">📝 Lançar Manual</button>
+        <button class="tab-button" data-tab="editor">📋 Editor JSON</button>
       </div>
 
       <button
@@ -1043,82 +1165,45 @@
       </button>
     </div>
 
-    <!-- TAB: RESUMO -->
-    <div id="resumo" class="tab-content active">
-      <div class="grid">
-        <div class="card kpi-card">
-          <div class="kpi-label">Salário Juliane</div>
-          <div class="kpi-value" id="kpi-salario-juliane">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Renda Hugo</div>
-          <div class="kpi-value" id="kpi-renda-hugo">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Total Mensal</div>
-          <div class="kpi-value" id="kpi-total-mensal">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Saldo em Contas</div>
-          <div class="kpi-value" id="kpi-saldo-contas">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Dívida Total</div>
-          <div class="kpi-value" style="color: var(--accent-red);" id="kpi-divida-total">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Déficit Mensal</div>
-          <div class="kpi-value" style="color: var(--accent-red);" id="kpi-deficit-mensal">R$ 0,00</div>
-        </div>
+    <!-- TAB: PAINEL -->
+    <div id="painel" class="tab-content active">
+
+      <div class="periodo-seletor">
+        <label class="filter-label" style="margin:0">💳 Fatura</label>
+        <select id="painel_mes" class="filter-input" onchange="renderizarPainel()"></select>
+        <span id="painel_periodo_info" class="periodo-info"></span>
       </div>
 
-      <div class="section-title">📉 Evolução Black Card (6 meses + projeção)</div>
-      <div class="card full-width">
-        <div class="chart-container">
-          <div id="blackCardChart"></div>
-        </div>
-      </div>
+      <div class="grid" id="painel_kpis"></div>
 
-      <div class="section-title">🎯 Timeline de Alívios de Dívida</div>
-      <div class="card full-width">
-        <div class="timeline" id="timelineContainer"></div>
-      </div>
+      <div class="section-title">Resultado do mês</div>
+      <div class="card full-width" id="painel_resultado"></div>
 
-      <div class="section-title">⚡ Regra de Ouro</div>
-      <div class="card full-width">
-        <div id="regrasContainer"></div>
-      </div>
-    </div>
+      <div class="section-title">Evolução mês a mês</div>
+      <div class="card full-width" id="painel_evolucao"></div>
 
-    <!-- TAB: DÍVIDAS -->
-    <div id="dividas" class="tab-content">
-      <div class="grid" id="dividasContainer"></div>
-    </div>
+      <div class="section-title">Maiores gastos da fatura</div>
+      <div class="card full-width" id="painel_maiores"></div>
 
-    <!-- TAB: DESPESAS -->
-    <div id="despesas" class="tab-content">
-      <div class="section-title">Distribuição de Despesas</div>
-      <div class="card full-width">
-        <div id="despesasContainer"></div>
-      </div>
+      <div class="section-title">Pontos de atenção</div>
+      <div class="card full-width" id="painel_alertas"></div>
     </div>
 
     <!-- TAB: FLUXO -->
-    <div id="fluxo" class="tab-content">
-      <div class="section-title">💰 Ciclo Mensal</div>
-      <div class="card full-width">
+    <div id="lancamentos" class="tab-content">
+      <div class="card full-width" style="margin-bottom:16px">
         <div class="fluxo-row">
           <div class="fluxo-item">
-            <div class="fluxo-label">Entradas</div>
-            <div class="fluxo-valor fluxo-positive" id="fluxo-entradas">R$ 0,00</div>
+            <div class="fluxo-label">Lançamentos exibidos</div>
+            <div class="fluxo-valor" id="lanc-qtd">—</div>
           </div>
           <div class="fluxo-item">
-            <div class="fluxo-label">Saídas</div>
-            <div class="fluxo-valor fluxo-negative" id="fluxo-saidas">R$ 0,00</div>
+            <div class="fluxo-label">Total das compras</div>
+            <div class="fluxo-valor fluxo-negative" id="lanc-total">—</div>
           </div>
           <div class="fluxo-item">
-            <div class="fluxo-label">Resultado</div>
-            <div class="fluxo-valor fluxo-negative" id="fluxo-resultado">R$ 0,00</div>
+            <div class="fluxo-label">Estornos</div>
+            <div class="fluxo-valor fluxo-positive" id="lanc-estornos">—</div>
           </div>
         </div>
       </div>
@@ -1127,29 +1212,6 @@
 
       <!-- Resumo do Mês -->
       <div class="card full-width">
-        <div class="section-title" style="margin-top: 0;">📈 Resumo do Mês</div>
-        <div class="extrato-header">
-          <div class="extrato-summary-item">
-            <div class="extrato-summary-label">Entradas</div>
-            <div class="extrato-summary-value positive" id="extrato_entradas">R$ 0</div>
-          </div>
-          <div class="extrato-summary-item">
-            <div class="extrato-summary-label">Saídas</div>
-            <div class="extrato-summary-value negative" id="extrato_saidas">R$ 0</div>
-          </div>
-          <div class="extrato-summary-item">
-            <div class="extrato-summary-label">Saldo</div>
-            <div class="extrato-summary-value" id="extrato_saldo">R$ 0</div>
-          </div>
-          <div class="extrato-summary-item">
-            <div class="extrato-summary-label">Saldo Anterior</div>
-            <div class="extrato-summary-value" id="extrato_saldo_anterior">R$ 0</div>
-          </div>
-          <div class="extrato-summary-item">
-            <div class="extrato-summary-label">Saldo Final</div>
-            <div class="extrato-summary-value" id="extrato_saldo_final">R$ 0</div>
-          </div>
-        </div>
       </div>
 
       <!-- Filtros -->
@@ -1264,189 +1326,51 @@
       <div class="grid" id="cenarioContainer"></div>
     </div>
 
-    <!-- TAB: CLASSIFICAÇÃO -->
-    <div id="classificacao" class="tab-content">
-      <div class="section-title">🏷️ Classificar Despesas e Dívidas</div>
+    <!-- TAB: PARA ONDE VAI -->
+    <div id="para_onde_vai" class="tab-content">
 
-      <div class="card full-width" style="margin-bottom: 20px;">
-        <div style="margin-bottom: 20px;">
-          <p style="color: var(--text-secondary); margin-bottom: 15px;">
-            Classifique suas despesas e dívidas para melhor controle financeiro:
-          </p>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-            <div style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 15px; border-radius: 6px;">
-              <div style="font-size: 16px; font-weight: bold; color: #10b981; margin-bottom: 5px;">💰 Fixas</div>
-              <div style="color: var(--text-secondary); font-size: 13px;">Despesas recorrentes mensais</div>
-            </div>
-            <div style="background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 15px; border-radius: 6px;">
-              <div style="font-size: 16px; font-weight: bold; color: #f59e0b; margin-bottom: 5px;">📦 Parceladas</div>
-              <div style="color: var(--text-secondary); font-size: 13px;">Gastos pagos em instalações</div>
-            </div>
-            <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 15px; border-radius: 6px;">
-              <div style="font-size: 16px; font-weight: bold; color: #ef4444; margin-bottom: 5px;">⚡ Sem Classificação</div>
-              <div style="color: var(--text-secondary); font-size: 13px;">Gastos pontuais do momento</div>
-            </div>
-          </div>
-        </div>
+      <div class="periodo-seletor">
+        <label class="filter-label" style="margin:0">Período</label>
+        <select id="pov_mes" class="filter-input" onchange="renderizarParaOndeVai()"></select>
+        <label class="filter-label" style="margin:0 0 0 12px">Pessoa</label>
+        <select id="pov_pessoa" class="filter-input" onchange="renderizarParaOndeVai()">
+          <option value="">Todos</option>
+        </select>
+        <label class="filter-label" style="margin:0 0 0 12px">Ver por</label>
+        <select id="pov_eixo" class="filter-input" onchange="renderizarParaOndeVai()">
+          <option value="categoria">Categoria</option>
+          <option value="pessoa">Pessoa</option>
+          <option value="natureza">Fixa / Variável</option>
+        </select>
       </div>
 
-      <div class="card full-width" style="margin-bottom: 20px;">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 20px;">Dívidas</div>
-        <div id="classificacaoDividasContainer"></div>
-      </div>
+      <div class="grid" id="pov_kpis"></div>
 
-      <div class="card full-width">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 20px;">Despesas</div>
-        <div id="classificacaoDespesasContainer"></div>
-      </div>
+      <div class="section-title">Distribuição</div>
+      <div class="card full-width" id="pov_barras"></div>
 
-      <div class="card full-width" style="margin-top: 20px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
-        <div class="section-title" style="margin-top: 0;">📊 Resumo de Classificação</div>
-        <div id="resumoClassificacaoContainer"></div>
-      </div>
+      <div class="section-title">Categoria × Mês</div>
+      <div class="card full-width" style="overflow-x:auto" id="pov_matriz"></div>
     </div>
 
-    <!-- TAB: DASHBOARD CONTÁBIL -->
-    <div id="dashboard_contabil" class="tab-content">
-      <div class="section-title">📑 Dashboard Contábil</div>
+    <!-- TAB: CARTÃO E FATURAS -->
+    <div id="cartao" class="tab-content">
 
-      <!-- Filtros -->
-      <div class="card full-width" style="margin-bottom: 20px;">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">🔍 Filtros</div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-          <div>
-            <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px;">Tipo de Despesa</label>
-            <select id="filtro_tipo_despesa" class="filter-input" style="width: 100%; padding: 8px;" onchange="atualizarDashboardContabil()">
-              <option value="">Todos os tipos</option>
-            </select>
-          </div>
-          <div>
-            <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px;">Pessoa</label>
-            <select id="filtro_pessoa_contabil" class="filter-input" style="width: 100%; padding: 8px;" onchange="atualizarDashboardContabil()">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          <div>
-            <label style="color: var(--text-secondary); font-size: 12px; display: block; margin-bottom: 4px;">Tipo de Classificação</label>
-            <select id="filtro_classificacao_contabil" class="filter-input" style="width: 100%; padding: 8px;" onchange="atualizarDashboardContabil()">
-              <option value="">Todos</option>
-              <option value="fixa">💰 Fixa</option>
-              <option value="parcelada">📦 Parcelada</option>
-              <option value="sem_classificacao">⚡ Sem Classificação</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <div class="grid" id="cartao_kpis"></div>
 
-      <!-- Resumo Contábil -->
-      <div class="card full-width" style="margin-bottom: 20px;">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">💰 Resumo Contábil</div>
-        <div id="resumoContabilContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
-      </div>
+      <div class="section-title">Faturas</div>
+      <div class="card full-width" style="overflow-x:auto" id="cartao_faturas"></div>
 
-      <!-- Análise por Tipo de Despesa -->
-      <div class="card full-width" style="margin-bottom: 20px;">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">📂 Análise por Tipo de Despesa</div>
-        <div id="analiseTipoDespesaContainer"></div>
-      </div>
+      <div class="section-title">Compras parceladas</div>
+      <div class="card full-width" style="overflow-x:auto" id="cartao_parcelas"></div>
 
-      <!-- Análise por Pessoa -->
-      <div class="card full-width" style="margin-bottom: 20px;">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">👥 Análise por Pessoa</div>
-        <div id="analisePessoaContabilContainer"></div>
-      </div>
-
-      <!-- Análise por Classificação -->
-      <div class="card full-width">
-        <div class="section-title" style="margin-top: 0; margin-bottom: 15px;">🏷️ Análise por Classificação</div>
-        <div id="analiseClassificacaoContabilContainer"></div>
-      </div>
+      <div class="section-title">Parcelas por fatura futura</div>
+      <div class="card full-width" id="cartao_futuro"></div>
     </div>
 
-    <!-- TAB: RECONCILIAÇÃO -->
-    <div id="reconciliacao" class="tab-content">
-      <div class="section-title">🔍 Reconciliação de Faturas</div>
-      <p style="color: var(--text-secondary); margin-bottom: 20px;">Validação do total carregado vs total esperado da fatura</p>
-
-      <div class="card full-width">
-        <div id="reconciliacao-container"></div>
-      </div>
-
-      <div class="alert alert-info" style="margin-top: 20px;">
-        ✓ Validado: Diferença menor que R$ 5,00 | ❌ Falha: Diferença maior que R$ 5,00
-      </div>
-    </div>
-
-    <!-- TAB: RESUMO EXECUTIVO -->
-    <div id="resumo_executivo" class="tab-content">
-      <div class="section-title">📊 Resumo Executivo</div>
-
-      <!-- KPIs -->
-      <div class="grid">
-        <div class="card kpi-card">
-          <div class="kpi-label">Total Geral (Jan-Mai)</div>
-          <div class="kpi-value" id="kpi-total-geral">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Média por Mês</div>
-          <div class="kpi-value" id="kpi-media-mensal">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Maior Gasto</div>
-          <div class="kpi-value" id="kpi-maior-gasto">R$ 0,00</div>
-        </div>
-        <div class="card kpi-card">
-          <div class="kpi-label">Pessoa com Mais Gastos</div>
-          <div class="kpi-value" id="kpi-pessoa-top" style="font-size: 14px;">-</div>
-        </div>
-      </div>
-
-      <!-- Gráficos -->
-      <div class="section-title" style="margin-top: 30px;">Gráficos</div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="card full-width">
-          <div style="text-align: center; margin-bottom: 10px; font-weight: 500;">Total por Mês</div>
-          <div id="grafico-pizza" style="height: 250px;"></div>
-        </div>
-
-        <div class="card full-width">
-          <div style="text-align: center; margin-bottom: 10px; font-weight: 500;">Total por Pessoa</div>
-          <div id="grafico-barras" style="height: 250px;"></div>
-        </div>
-      </div>
-
-      <div class="card full-width" style="margin-top: 20px;">
-        <div style="text-align: center; margin-bottom: 10px; font-weight: 500;">Evolução Mensal</div>
-        <div id="grafico-linhas" style="height: 250px;"></div>
-      </div>
-
-      <!-- Tabelas de Resumo -->
-      <div class="section-title" style="margin-top: 30px;">Detalhamento</div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="card full-width">
-          <div style="font-weight: 500; margin-bottom: 15px;">Resumo por Mês</div>
-          <div id="resumo-mes-table"></div>
-        </div>
-
-        <div class="card full-width">
-          <div style="font-weight: 500; margin-bottom: 15px;">Resumo por Pessoa</div>
-          <div id="resumo-pessoa-table"></div>
-        </div>
-      </div>
-
-      <div class="card full-width" style="margin-top: 20px;">
-        <div style="font-weight: 500; margin-bottom: 15px;">Resumo por Categoria</div>
-        <div id="resumo-categoria-table"></div>
-      </div>
-
-      <!-- Botão de Exportação -->
-      <div style="margin-top: 30px; text-align: center;">
-        <button class="btn-primary" onclick="exportarParaExcel()" style="font-size: 16px; padding: 12px 24px;">
-          📥 Exportar para Excel
-        </button>
-      </div>
+    <!-- TAB: DÍVIDAS E PATRIMÔNIO -->
+    <div id="dividas" class="tab-content">
+      <div id="dividas_conteudo"></div>
     </div>
 
     <!-- TAB: FORMULÁRIO -->
@@ -1842,24 +1766,21 @@
 
     // Configuração de abas
     const abasDisponibles = [
-      { id: 'resumo', nome: '📊 Resumo', visivel: true, ordem: 0 },
-      { id: 'dividas', nome: '🏦 Dívidas', visivel: true, ordem: 1 },
-      { id: 'despesas', nome: '💸 Despesas', visivel: true, ordem: 2 },
-      { id: 'fluxo', nome: '📈 Fluxo', visivel: true, ordem: 3 },
-      { id: 'classificacao', nome: '🏷️ Classificação', visivel: true, ordem: 4 },
-      { id: 'dashboard_contabil', nome: '📑 Dashboard Contábil', visivel: true, ordem: 5 },
-      { id: 'reconciliacao', nome: '🔍 Reconciliação', visivel: true, ordem: 6 },
-      { id: 'resumo_executivo', nome: '📊 Resumo Executivo', visivel: true, ordem: 7 },
-      { id: 'configuracoes', nome: '⚙️ Configurações', visivel: true, ordem: 8 },
-      { id: 'formulario', nome: '📝 Adicionar Dados', visivel: false, ordem: 9 },
-      { id: 'importar', nome: '📤 Importar', visivel: false, ordem: 10 },
-      { id: 'editor', nome: '📋 Editor', visivel: false, ordem: 11 }
+      { id: 'painel', nome: '🏠 Painel', visivel: true, ordem: 0 },
+      { id: 'lancamentos', nome: '🧾 Lançamentos', visivel: true, ordem: 1 },
+      { id: 'para_onde_vai', nome: '📊 Para Onde Vai', visivel: true, ordem: 2 },
+      { id: 'cartao', nome: '💳 Cartão & Faturas', visivel: true, ordem: 3 },
+      { id: 'dividas', nome: '🏦 Dívidas & Patrimônio', visivel: true, ordem: 4 },
+      { id: 'importar', nome: '📤 Importar', visivel: false, ordem: 5 },
+      { id: 'configuracoes', nome: '⚙️ Configurações', visivel: false, ordem: 6 },
+      { id: 'formulario', nome: '📝 Lançar Manual', visivel: false, ordem: 7 },
+      { id: 'editor', nome: '📋 Editor JSON', visivel: false, ordem: 8 }
     ];
 
     let configAbasUsuario = carregarConfigAbasDoLocal();
 
     function carregarConfigAbasDoLocal() {
-      const saved = localStorage.getItem('configAbas');
+      const saved = localStorage.getItem('configAbas_v2');
       if (saved) {
         try {
           return JSON.parse(saved);
@@ -1872,7 +1793,7 @@
     }
 
     function salvarConfigAbasLocalmente() {
-      localStorage.setItem('configAbas', JSON.stringify(configAbasUsuario));
+      localStorage.setItem('configAbas_v2', JSON.stringify(configAbasUsuario));
       alert('✅ Configuração de abas salva!');
       aplicarConfigAbasNaDash();
     }
@@ -1979,8 +1900,10 @@
         if (tabId !== 'ferramentas') btn.remove();
       });
 
-      // Inserir abas visíveis
-      const ferramentasBtn = tabsContainer.querySelector('button[onclick*="toggleAbasOcultas"]');
+      // Inserir abas visíveis antes do bloco de ferramentas, para que a ordem
+      // na tela seja a ordem configurada e não a ordem do DOM original.
+      const ferramentasBtn = tabsContainer.querySelector('#abas-ocultas')
+        || tabsContainer.querySelector('button[onclick*="toggleAbasOcultas"]');
       abasVisiveis.forEach(aba => {
         const btn = document.createElement('button');
         btn.className = `tab-button${aba.id === 'resumo' ? ' active' : ''}`;
@@ -2068,217 +1991,636 @@
       }
     }
 
+
+    // =====================================================================
+    //  ABAS NOVAS — Painel, Para Onde Vai, Cartão & Faturas, Dívidas
+    //
+    //  Regras que valem para tudo aqui:
+    //   - O mês usado é sempre mes_vencimento (regime de caixa): é quando o
+    //     dinheiro efetivamente sai da conta.
+    //   - Nenhuma lista de meses é fixa no código; tudo sai dos dados.
+    //   - Onde não há dado cadastrado a tela diz isso, em vez de mostrar
+    //     R$ 0,00 — zero parece informação e induz a leitura errada.
+    // =====================================================================
+
+    const MES_ORDEM = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    // Categorias que se repetem todo mês independentemente de comportamento.
+    const CATEGORIAS_FIXAS = ['assinatura', 'moradia', 'educacao', 'utilidades', 'servicos'];
+
+    function ordenarMeses(a, b) {
+      const [ma, aa] = a.split('/');
+      const [mb, ab] = b.split('/');
+      return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
+    }
+
+    function todasTransacoes() {
+      return (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+    }
+
+    function mesesDisponiveis() {
+      return [...new Set(todasTransacoes().map(t => t.mes_vencimento).filter(Boolean))].sort(ordenarMeses);
+    }
+
+    function moeda(v) {
+      return 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function rotuloCategoria(cat) {
+      if (!cat) return 'Sem categoria';
+      return cat.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function ehFixa(txn) {
+      return CATEGORIAS_FIXAS.includes(txn.categoria) || txn.eh_parcelada;
+    }
+
+    // Preenche um <select> de meses mantendo a escolha atual quando possível.
+    function preencherSelectMeses(id, incluirTodos) {
+      const select = document.getElementById(id);
+      if (!select) return;
+      const meses = mesesDisponiveis();
+      if (!meses.length) return;
+
+      const anterior = select.value;
+      select.innerHTML = '';
+      if (incluirTodos) {
+        select.appendChild(new Option('Todo o período', ''));
+      }
+      meses.forEach(m => select.appendChild(new Option(m, m)));
+
+      if (anterior && [...select.options].some(o => o.value === anterior)) {
+        select.value = anterior;
+      } else if (!incluirTodos) {
+        select.value = meses[meses.length - 1]; // fatura mais recente
+      }
+    }
+
+    function cartaoKpi(rotulo, valor, sub, cor) {
+      return `
+        <div class="card kpi-card">
+          <div class="kpi-label">${rotulo}</div>
+          <div class="kpi-value" ${cor ? `style="color:${cor}"` : ''}>${valor}</div>
+          ${sub ? `<div class="kpi-sub">${sub}</div>` : ''}
+        </div>`;
+    }
+
+    function blocoVazio(titulo, texto) {
+      return `<div class="vazio"><strong>${titulo}</strong>${texto}</div>`;
+    }
+
+    // ---------------------------------------------------------------- PAINEL
+
+    function renderizarPainel() {
+      const transacoes = todasTransacoes();
+      const kpis = document.getElementById('painel_kpis');
+      if (!kpis) return;
+
+      if (!transacoes.length) {
+        kpis.innerHTML = '';
+        document.getElementById('painel_resultado').innerHTML =
+          blocoVazio('Nenhum lançamento carregado', 'Use <b>Ferramentas → Importar</b> para subir uma fatura.');
+        ['painel_evolucao', 'painel_maiores', 'painel_alertas'].forEach(id => {
+          document.getElementById(id).innerHTML = '';
+        });
+        return;
+      }
+
+      preencherSelectMeses('painel_mes', false);
+      const mes = document.getElementById('painel_mes').value;
+      const doMes = transacoes.filter(t => t.mes_vencimento === mes);
+
+      const gastos = doMes.filter(t => t.valor > 0).reduce((s, t) => s + t.valor, 0);
+      const estornos = doMes.filter(t => t.valor < 0).reduce((s, t) => s + t.valor, 0);
+      const liquido = gastos + estornos;
+
+      // Média das faturas anteriores a esta, para comparação
+      const meses = mesesDisponiveis();
+      const anteriores = meses.slice(Math.max(0, meses.indexOf(mes) - 3), meses.indexOf(mes));
+      const mediaAnterior = anteriores.length
+        ? anteriores.reduce((s, m) => s + transacoes.filter(t => t.mes_vencimento === m).reduce((x, t) => x + t.valor, 0), 0) / anteriores.length
+        : null;
+
+      const variacao = mediaAnterior ? ((liquido - mediaAnterior) / mediaAnterior) * 100 : null;
+      const info = document.getElementById('painel_periodo_info');
+      const venc = doMes[0] && doMes[0].data_vencimento_fatura;
+      info.textContent = venc ? `Vence em ${venc.split('-').reverse().join('/')} · ${doMes.length} lançamentos` : `${doMes.length} lançamentos`;
+
+      kpis.innerHTML =
+        cartaoKpi('Receitas do mês', 'não cadastrado', 'Cadastre em Ferramentas', 'var(--text-secondary)') +
+        cartaoKpi('Fatura do cartão', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)') +
+        cartaoKpi('Parcelas de dívida', 'não cadastrado', 'Cadastre em Dívidas', 'var(--text-secondary)') +
+        cartaoKpi(
+          'vs. média anterior',
+          variacao === null ? '—' : (variacao >= 0 ? '+' : '') + variacao.toFixed(0) + '%',
+          mediaAnterior ? `média ${moeda(mediaAnterior)}` : 'sem histórico',
+          variacao === null ? 'var(--text-secondary)' : (variacao > 0 ? 'var(--accent-red)' : 'var(--accent-green)')
+        );
+
+      // --- Resultado do mês ---
+      document.getElementById('painel_resultado').innerHTML = `
+        <div class="aviso aviso-info">
+          <strong>Ainda não dá para calcular sobra ou falta deste mês.</strong><br>
+          Sabemos o que saiu no cartão (${moeda(liquido)}), mas não o que entrou.
+          Assim que as receitas e as contas do Itaú forem cadastradas, este bloco passa a mostrar
+          <b>Receitas − Saídas = Resultado</b>.
+        </div>
+        <table class="tabela-dados">
+          <tbody>
+            <tr><td>Compras do período</td><td class="num">${moeda(gastos)}</td></tr>
+            ${estornos < 0 ? `<tr><td>Estornos e cancelamentos</td><td class="num" style="color:var(--accent-green)">${moeda(estornos)}</td></tr>` : ''}
+          </tbody>
+          <tfoot>
+            <tr><td>Total da fatura ${mes}</td><td class="num" style="color:var(--accent-red)">${moeda(liquido)}</td></tr>
+          </tfoot>
+        </table>`;
+
+      // --- Evolução mês a mês ---
+      const porMes = meses.map(m => ({
+        mes: m,
+        total: transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0)
+      })).filter(x => x.total > 0);
+
+      const maxMes = Math.max(...porMes.map(x => x.total));
+      document.getElementById('painel_evolucao').innerHTML = porMes.map(x => `
+        <div class="barra-linha">
+          <div class="barra-topo">
+            <span class="barra-nome">${x.mes}${x.mes === mes ? ' <span class="selo selo-ok">atual</span>' : ''}</span>
+            <span class="barra-valor">${moeda(x.total)}</span>
+          </div>
+          <div class="barra-trilho">
+            <div class="barra-preenchida" style="width:${(x.total / maxMes * 100).toFixed(1)}%;background:${x.mes === mes ? 'var(--accent-blue)' : 'var(--bg-tertiary)'}"></div>
+          </div>
+        </div>`).join('');
+
+      // --- Maiores gastos ---
+      const maiores = [...doMes].filter(t => t.valor > 0).sort((a, b) => b.valor - a.valor).slice(0, 8);
+      document.getElementById('painel_maiores').innerHTML = maiores.length ? `
+        <table class="tabela-dados">
+          <thead><tr><th>Descrição</th><th>Categoria</th><th>Pessoa</th><th class="num">Valor</th></tr></thead>
+          <tbody>
+            ${maiores.map(t => `
+              <tr>
+                <td>${t.descricao}${t.eh_parcelada ? ` <span class="selo selo-neutro">${t.descricao_parcela}</span>` : ''}</td>
+                <td>${rotuloCategoria(t.categoria)}</td>
+                <td>${t.pessoa || '—'}</td>
+                <td class="num">${moeda(t.valor)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>` : blocoVazio('Sem lançamentos nesta fatura', '');
+
+      // --- Alertas, todos derivados de dado real ---
+      const alertas = [];
+      if (variacao !== null && variacao > 15) {
+        alertas.push(['aviso-atencao', `Esta fatura está <b>${variacao.toFixed(0)}% acima</b> da média das anteriores (${moeda(mediaAnterior)}).`]);
+      }
+      if (variacao !== null && variacao < -15) {
+        alertas.push(['aviso-ok', `Esta fatura está <b>${Math.abs(variacao).toFixed(0)}% abaixo</b> da média das anteriores.`]);
+      }
+      const parceladasAbertas = contarParcelasAbertas();
+      if (parceladasAbertas.parcelas > 0) {
+        alertas.push(['aviso-atencao', `Existem <b>${parceladasAbertas.parcelas} parcelas</b> ainda por vencer, somando <b>${moeda(parceladasAbertas.valor)}</b>. Veja em Cartão & Faturas.`]);
+      }
+      const nParceladas = agruparParcelamentos().length;
+      if (nParceladas) {
+        alertas.push(['aviso-info', `<b>${nParceladas} compras parceladas</b> identificadas no cartão. Veja o andamento de cada uma em Cartão & Faturas.`]);
+      }
+      const naoConfiaveis = transacoes.filter(t => t.mes_vencimento_confiavel === false).length;
+      if (naoConfiaveis) {
+        alertas.push(['aviso-atencao', `<b>${naoConfiaveis} lançamentos</b> têm o mês da fatura por confirmar — foram importados sem indicação de qual fatura vieram.`]);
+      }
+      if (!alertas.length) alertas.push(['aviso-ok', 'Nada fora do padrão nesta fatura.']);
+
+      document.getElementById('painel_alertas').innerHTML =
+        alertas.map(([cls, txt]) => `<div class="aviso ${cls}">${txt}</div>`).join('');
+    }
+
+    // ------------------------------------------------------- PARA ONDE VAI
+
+    function renderizarParaOndeVai() {
+      const transacoes = todasTransacoes();
+      const kpis = document.getElementById('pov_kpis');
+      if (!kpis) return;
+
+      if (!transacoes.length) {
+        kpis.innerHTML = '';
+        document.getElementById('pov_barras').innerHTML = blocoVazio('Nenhum lançamento carregado', '');
+        document.getElementById('pov_matriz').innerHTML = '';
+        return;
+      }
+
+      preencherSelectMeses('pov_mes', true);
+
+      // Pessoas a partir dos dados
+      const selPessoa = document.getElementById('pov_pessoa');
+      const pessoas = [...new Set(transacoes.map(t => t.pessoa).filter(Boolean))].sort();
+      if (selPessoa.options.length - 1 !== pessoas.length) {
+        const atual = selPessoa.value;
+        selPessoa.innerHTML = '<option value="">Todos</option>';
+        pessoas.forEach(p => selPessoa.appendChild(new Option(p, p)));
+        selPessoa.value = atual;
+      }
+
+      const mes = document.getElementById('pov_mes').value;
+      const pessoa = selPessoa.value;
+      const eixo = document.getElementById('pov_eixo').value;
+
+      let base = transacoes.filter(t => t.valor > 0);
+      if (mes) base = base.filter(t => t.mes_vencimento === mes);
+      if (pessoa) base = base.filter(t => t.pessoa === pessoa);
+
+      const total = base.reduce((s, t) => s + t.valor, 0);
+
+      // Agrupamento conforme o eixo escolhido
+      const chaveDe = t => eixo === 'categoria' ? rotuloCategoria(t.categoria)
+                        : eixo === 'pessoa' ? (t.pessoa || 'Sem pessoa')
+                        : (ehFixa(t) ? 'Fixa / Parcelada' : 'Variável');
+
+      const grupos = {};
+      base.forEach(t => { grupos[chaveDe(t)] = (grupos[chaveDe(t)] || 0) + t.valor; });
+      const ordenados = Object.entries(grupos).sort((a, b) => b[1] - a[1]);
+
+      const fixas = base.filter(ehFixa).reduce((s, t) => s + t.valor, 0);
+      const nMeses = mes ? 1 : mesesDisponiveis().filter(m => transacoes.some(t => t.mes_vencimento === m && t.valor > 0)).length;
+
+      kpis.innerHTML =
+        cartaoKpi('Total', moeda(total), mes ? `fatura ${mes}` : `${nMeses} faturas`) +
+        cartaoKpi('Média por fatura', moeda(total / (nMeses || 1)), nMeses > 1 ? `${nMeses} faturas` : '') +
+        cartaoKpi('Fixas e parceladas', moeda(fixas), total ? `${(fixas / total * 100).toFixed(0)}% do total` : '') +
+        cartaoKpi('Variáveis', moeda(total - fixas), total ? `${((total - fixas) / total * 100).toFixed(0)}% do total` : '');
+
+      const cores = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16'];
+      const maior = ordenados.length ? ordenados[0][1] : 1;
+
+      // Estornos ficam de fora da distribuicao por categoria: eles devolvem
+      // dinheiro, nao indicam para onde ele foi.
+      let baseEstornos = transacoes.filter(t => t.valor < 0);
+      if (mes) baseEstornos = baseEstornos.filter(t => t.mes_vencimento === mes);
+      if (pessoa) baseEstornos = baseEstornos.filter(t => t.pessoa === pessoa);
+      const totalEstornos = baseEstornos.reduce((s, t) => s + t.valor, 0);
+
+      const notaEstornos = totalEstornos < 0
+        ? `<div class="aviso aviso-ok">Os valores acima somam apenas compras (${moeda(total)}).
+             Houve ainda <b>${moeda(totalEstornos)}</b> em estornos no período, que reduzem a fatura
+             mas não pertencem a nenhuma categoria de gasto.
+             Líquido: <b>${moeda(total + totalEstornos)}</b>.</div>`
+        : '';
+
+      document.getElementById('pov_barras').innerHTML = ordenados.length ? ordenados.map(([nome, valor], i) => `
+        <div class="barra-linha">
+          <div class="barra-topo">
+            <span class="barra-nome">${nome}</span>
+            <span class="barra-valor">${moeda(valor)} · ${(valor / total * 100).toFixed(1)}%</span>
+          </div>
+          <div class="barra-trilho">
+            <div class="barra-preenchida" style="width:${(valor / maior * 100).toFixed(1)}%;background:${cores[i % cores.length]}"></div>
+          </div>
+        </div>`).join('') + notaEstornos : blocoVazio('Nada encontrado com esses filtros', '');
+
+      renderizarMatrizCategoriaMes(pessoa);
+    }
+
+    // Matriz categoria × mês, em ordem alfabética de categoria
+    function renderizarMatrizCategoriaMes(pessoa) {
+      const transacoes = todasTransacoes().filter(t => t.valor > 0);
+      const base = pessoa ? transacoes.filter(t => t.pessoa === pessoa) : transacoes;
+
+      const meses = [...new Set(base.map(t => t.mes_vencimento))].sort(ordenarMeses);
+      const categorias = [...new Set(base.map(t => rotuloCategoria(t.categoria)))]
+        .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+      if (!meses.length) {
+        document.getElementById('pov_matriz').innerHTML = '';
+        return;
+      }
+
+      const valor = (cat, mes) => base
+        .filter(t => rotuloCategoria(t.categoria) === cat && t.mes_vencimento === mes)
+        .reduce((s, t) => s + t.valor, 0);
+
+      const totalMes = mes => base.filter(t => t.mes_vencimento === mes).reduce((s, t) => s + t.valor, 0);
+      const totalCat = cat => base.filter(t => rotuloCategoria(t.categoria) === cat).reduce((s, t) => s + t.valor, 0);
+      const totalGeral = base.reduce((s, t) => s + t.valor, 0);
+
+      document.getElementById('pov_matriz').innerHTML = `
+        <table class="tabela-dados">
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              ${meses.map(m => `<th class="num">${m}</th>`).join('')}
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${categorias.map(cat => `
+              <tr>
+                <td>${cat}</td>
+                ${meses.map(m => {
+                  const v = valor(cat, m);
+                  return `<td class="num" ${v ? '' : 'style="color:var(--border-color)"'}>${v ? moeda(v) : '—'}</td>`;
+                }).join('')}
+                <td class="num"><b>${moeda(totalCat(cat))}</b></td>
+              </tr>`).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              ${meses.map(m => `<td class="num">${moeda(totalMes(m))}</td>`).join('')}
+              <td class="num">${moeda(totalGeral)}</td>
+            </tr>
+          </tfoot>
+        </table>`;
+    }
+
+    // --------------------------------------------------- CARTÃO E FATURAS
+
+    // Agrupa as parcelas por compra, para tratar cada parcelamento como um
+    // compromisso único em vez de linhas soltas repetidas.
+    function agruparParcelamentos() {
+      const porCompra = {};
+      todasTransacoes()
+        .filter(t => t.eh_parcelada && t.id_compra && !t.compra_cancelada)
+        .forEach(t => {
+          if (!porCompra[t.id_compra]) {
+            porCompra[t.id_compra] = {
+              descricao: t.descricao,
+              categoria: t.categoria,
+              pessoa: t.pessoa,
+              dataCompra: t.data_compra_original || t.data,
+              valorParcela: t.valor,
+              totalParcelas: t.parcela_total,
+              valorTotal: t.valor_total_compra,
+              parcelas: []
+            };
+          }
+          porCompra[t.id_compra].parcelas.push(t);
+        });
+
+      return Object.values(porCompra)
+        .map(c => {
+          c.parcelas.sort((a, b) => a.parcela_numero - b.parcela_numero);
+          return c;
+        })
+        .sort((a, b) => b.valorTotal - a.valorTotal);
+    }
+
+    // "Aberta" = parcela cujo mês de fatura ainda não venceu em relação à
+    // fatura mais recente que temos carregada.
+    function contarParcelasAbertas() {
+      const meses = mesesDisponiveis();
+      const ultimoIdx = meses.length - 1;
+      let parcelas = 0, valor = 0;
+
+      agruparParcelamentos().forEach(c => {
+        c.parcelas.forEach(p => {
+          if (meses.indexOf(p.mes_vencimento) > ultimoIdx) { parcelas++; valor += p.valor; }
+        });
+        // Parcelas que ainda nem apareceram numa fatura importada
+        const faltam = c.totalParcelas - c.parcelas.length;
+        if (faltam > 0) { parcelas += faltam; valor += faltam * c.valorParcela; }
+      });
+
+      return { parcelas, valor };
+    }
+
+    async function renderizarCartao() {
+      const transacoes = todasTransacoes();
+      const kpis = document.getElementById('cartao_kpis');
+      if (!kpis) return;
+
+      if (!transacoes.length) {
+        kpis.innerHTML = '';
+        document.getElementById('cartao_faturas').innerHTML = blocoVazio('Nenhuma fatura carregada', '');
+        document.getElementById('cartao_parcelas').innerHTML = '';
+        document.getElementById('cartao_futuro').innerHTML = '';
+        return;
+      }
+
+      const meses = mesesDisponiveis();
+      const totalPorMes = m => transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0);
+      const comValor = meses.filter(m => totalPorMes(m) > 0);
+      // Faturas antigas trazem so as parcelas remanescentes de compras
+      // anteriores, com valores baixos; incluir todas distorce a media.
+      const recentes = comValor.slice(-6);
+      const media = recentes.reduce((s, m) => s + totalPorMes(m), 0) / (recentes.length || 1);
+
+      const parcelamentos = agruparParcelamentos();
+      const abertas = contarParcelasAbertas();
+
+      kpis.innerHTML =
+        cartaoKpi('Faturas carregadas', String(comValor.length), `${comValor[0]} a ${comValor[comValor.length - 1]}`) +
+        cartaoKpi('Média por fatura', moeda(media), `últimas ${recentes.length} faturas`) +
+        cartaoKpi('Compras parceladas', String(parcelamentos.length), `${parcelamentos.reduce((s, c) => s + c.totalParcelas, 0)} parcelas`) +
+        (abertas.parcelas
+          ? cartaoKpi('Parcelas a vencer', moeda(abertas.valor), `${abertas.parcelas} parcelas`, 'var(--accent-yellow)')
+          : cartaoKpi('Parcelas a vencer', 'a confirmar', 'depende do mês real das parcelas', 'var(--text-secondary)'));
+
+      // --- Faturas, com conferência contra o valor real quando disponível ---
+      let esperados = {};
+      try {
+        const r = await fetch('/api/totais-esperados');
+        if (r.ok) esperados = (await r.json()).faturas || {};
+      } catch (err) {
+        console.warn('Totais esperados indisponíveis:', err);
+      }
+
+      const chaveISO = m => {
+        const [mes, ano] = m.split('/');
+        return `20${ano}-${String(MES_ORDEM.indexOf(mes) + 1).padStart(2, '0')}`;
+      };
+
+      document.getElementById('cartao_faturas').innerHTML = `
+        <table class="tabela-dados">
+          <thead>
+            <tr>
+              <th>Fatura</th><th>Vencimento</th><th class="num">Lançamentos</th>
+              <th class="num">Total carregado</th><th class="num">Fatura real</th>
+              <th class="num">Diferença</th><th>Conferência</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${comValor.map(m => {
+              const doMes = transacoes.filter(t => t.mes_vencimento === m);
+              const carregado = totalPorMes(m);
+              const esperado = (esperados[chaveISO(m)] || {}).total_esperado;
+              const venc = doMes[0] && doMes[0].data_vencimento_fatura;
+              const dif = esperado !== undefined ? carregado - esperado : null;
+              const ok = dif !== null && Math.abs(dif) < 5;
+              const temAviso = doMes.some(t => t.mes_vencimento_confiavel === false);
+              return `
+                <tr>
+                  <td><b>${m}</b>${temAviso ? ' <span class="selo selo-alerta">a confirmar</span>' : ''}</td>
+                  <td>${venc ? venc.split('-').reverse().join('/') : '—'}</td>
+                  <td class="num">${doMes.length}</td>
+                  <td class="num">${moeda(carregado)}</td>
+                  <td class="num">${esperado !== undefined ? moeda(esperado) : '—'}</td>
+                  <td class="num" ${dif !== null && !ok ? 'style="color:var(--accent-red)"' : ''}>${dif !== null ? moeda(dif) : '—'}</td>
+                  <td>${esperado === undefined
+                        ? '<span class="selo selo-neutro">sem referência</span>'
+                        : ok ? '<span class="selo selo-ok">confere</span>'
+                             : '<span class="selo selo-erro">não fecha</span>'}</td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        ${Object.keys(esperados).length
+          ? ''
+          : '<div class="aviso aviso-info">Sem os valores reais das faturas não dá para conferir a importação. Cadastre-os para ativar a conferência.</div>'}`;
+
+      // --- Compras parceladas ---
+      document.getElementById('cartao_parcelas').innerHTML = parcelamentos.length ? `
+        <table class="tabela-dados">
+          <thead>
+            <tr>
+              <th>Compra</th><th>Categoria</th><th>Pessoa</th>
+              <th class="num">Valor total</th><th class="num">Parcela</th>
+              <th>Andamento</th><th class="num">Falta pagar</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${parcelamentos.map(c => {
+              const pagas = c.parcelas.length;
+              const falta = (c.totalParcelas - pagas) * c.valorParcela;
+              const pct = (pagas / c.totalParcelas) * 100;
+              return `
+                <tr>
+                  <td>${c.descricao}<div class="kpi-sub">compra em ${c.dataCompra.split('-').reverse().join('/')}</div></td>
+                  <td>${rotuloCategoria(c.categoria)}</td>
+                  <td>${c.pessoa || '—'}</td>
+                  <td class="num">${moeda(c.valorTotal)}</td>
+                  <td class="num">${moeda(c.valorParcela)} × ${c.totalParcelas}</td>
+                  <td style="min-width:140px">
+                    <div class="barra-trilho" style="height:16px">
+                      <div class="barra-preenchida" style="width:${pct}%;background:${pct >= 100 ? 'var(--accent-green)' : 'var(--accent-blue)'};font-size:10px">${pagas}/${c.totalParcelas}</div>
+                    </div>
+                  </td>
+                  <td class="num" ${falta > 0 ? 'style="color:var(--accent-yellow)"' : ''}>${falta > 0 ? moeda(falta) : '—'}</td>
+                </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3">${parcelamentos.length} compras parceladas</td>
+              <td class="num">${moeda(parcelamentos.reduce((s, c) => s + c.valorTotal, 0))}</td>
+              <td colspan="2"></td>
+              <td class="num">${moeda(abertas.valor)}</td>
+            </tr>
+          </tfoot>
+        </table>` : blocoVazio('Nenhuma compra parcelada', 'Todas as compras carregadas são à vista.');
+
+      // --- Parcelas por fatura ---
+      const porFatura = {};
+      parcelamentos.forEach(c => c.parcelas.forEach(p => {
+        porFatura[p.mes_vencimento] = (porFatura[p.mes_vencimento] || 0) + p.valor;
+      }));
+      const mesesParcela = Object.keys(porFatura).sort(ordenarMeses);
+      const maxParcela = Math.max(...Object.values(porFatura));
+
+      document.getElementById('cartao_futuro').innerHTML = mesesParcela.length ? `
+        <p style="color:var(--text-secondary);font-size:13px;margin-bottom:14px">
+          Quanto de cada fatura já está comprometido por compras parceladas.
+        </p>
+        ${mesesParcela.map(m => {
+          const totalDoMes = totalPorMes(m);
+          const pct = totalDoMes > 0 ? (porFatura[m] / totalDoMes * 100) : 0;
+          return `
+            <div class="barra-linha">
+              <div class="barra-topo">
+                <span class="barra-nome">${m}</span>
+                <span class="barra-valor">${moeda(porFatura[m])}${totalDoMes > 0 ? ` · ${pct.toFixed(0)}% da fatura` : ''}</span>
+              </div>
+              <div class="barra-trilho">
+                <div class="barra-preenchida" style="width:${(porFatura[m] / maxParcela * 100).toFixed(1)}%;background:var(--accent-yellow)"></div>
+              </div>
+            </div>`;
+        }).join('')}` : '';
+    }
+
+    // ------------------------------------------------ DÍVIDAS E PATRIMÔNIO
+
+    function renderizarDividasPatrimonio() {
+      const container = document.getElementById('dividas_conteudo');
+      if (!container) return;
+
+      const dividas = dadosGlobais.dividas || [];
+      const investimentos = dadosGlobais.investimentos || [];
+      const abertas = contarParcelasAbertas();
+
+      if (!dividas.length && !investimentos.length) {
+        container.innerHTML = `
+          ${blocoVazio(
+            'Nenhuma dívida ou investimento cadastrado',
+            'Esta aba mostra quanto você deve, em quanto tempo quita e como seu patrimônio evolui.<br>' +
+            'Para isso precisa dos empréstimos, financiamentos e aplicações — que ainda não foram enviados.'
+          )}
+          <div class="aviso aviso-info">
+            <b>O que já dá para saber pelo cartão:</b><br>
+            ${abertas.parcelas > 0
+              ? `Existem <b>${abertas.parcelas} parcelas</b> a vencer, somando <b>${moeda(abertas.valor)}</b>. Esse valor é um compromisso assumido e entra como passivo quando o patrimônio for calculado.`
+              : 'Não há parcelas em aberto no cartão.'}
+          </div>`;
+        return;
+      }
+
+      const totalDividas = dividas.reduce((s, d) => s + (d.montante || 0), 0);
+      const totalParcelas = dividas.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
+      const totalInvest = investimentos.reduce((s, i) => s + (i.valor || 0), 0);
+      const patrimonio = totalInvest - totalDividas - abertas.valor;
+
+      container.innerHTML = `
+        <div class="grid">
+          ${cartaoKpi('Dívidas', moeda(totalDividas), `${dividas.length} contratos`, 'var(--accent-red)')}
+          ${cartaoKpi('Parcelas por mês', moeda(totalParcelas))}
+          ${cartaoKpi('Cartão a vencer', moeda(abertas.valor), `${abertas.parcelas} parcelas`, 'var(--accent-yellow)')}
+          ${cartaoKpi('Patrimônio líquido', moeda(patrimonio), 'aplicações − dívidas', patrimonio >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
+        </div>
+
+        <div class="section-title">Contratos</div>
+        <div class="card full-width" style="overflow-x:auto">
+          <table class="tabela-dados">
+            <thead>
+              <tr><th>Dívida</th><th class="num">Saldo</th><th class="num">Parcela</th><th class="num">Meses</th><th>Quitação</th></tr>
+            </thead>
+            <tbody>
+              ${dividas.map(d => `
+                <tr>
+                  <td>${d.nome || 'Sem nome'}</td>
+                  <td class="num">${moeda(d.montante)}</td>
+                  <td class="num">${d.parcela_mensal ? moeda(d.parcela_mensal) : '—'}</td>
+                  <td class="num">${d.meses_restantes || '—'}</td>
+                  <td>${d.meses_restantes ? previsaoQuitacao(d.meses_restantes) : '—'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function previsaoQuitacao(meses) {
+      const d = new Date();
+      d.setMonth(d.getMonth() + meses);
+      return `${MES_ORDEM[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
+    }
+
     function renderizarTodas() {
-      procesarTransacoesParaDespesas();
-      calcularKPIs();
-      renderizarResumo();
-      renderizarDividas();
-      renderizarDespesas();
-      renderizarFluxo();
-      renderizarClassificacao();
+      popularFiltros();
+
+      // Abas principais
+      renderizarPainel();
+      renderizarExtratoFluxo();
+      renderizarParaOndeVai();
+      renderizarCartao();
+      renderizarDividasPatrimonio();
+
+      // Ferramentas
       renderizarConfiguracoes();
-      inicializarDashboardContabil();
-      renderizarReconciliacao();
-      renderizarResumoExecutivo();
       atualizarEditor();
       preencherFormularios();
       aplicarConfigAbasNaDash();
       renderizarListaCargas();
     }
 
-    function procesarTransacoesParaDespesas() {
-      // Se não houver despesas, criar a partir das transações
-      if ((!dadosGlobais.despesas || Object.keys(dadosGlobais.despesas).length === 0) &&
-          dadosGlobais.fluxo_mensal && dadosGlobais.fluxo_mensal.transacoes) {
 
-        const transacoes = dadosGlobais.fluxo_mensal.transacoes || [];
-        const categorias = {};
 
-        // Agrupar transações por categoria
-        transacoes.forEach(txn => {
-          if (txn.tipo === 'saida') {
-            const cat = txn.categoria || 'geral';
-            if (!categorias[cat]) {
-              categorias[cat] = {
-                categoria: cat.charAt(0).toUpperCase() + cat.slice(1),
-                items: [],
-                total: 0
-              };
-            }
-            categorias[cat].items.push({
-              nome: txn.descricao || 'Transação',
-              valor: parseFloat(txn.valor) || 0,
-              pessoa: txn.pessoa || 'N/A'
-            });
-            categorias[cat].total += parseFloat(txn.valor) || 0;
-          }
-        });
-
-        // Atualizar dados globais com despesas
-        if (Object.keys(categorias).length > 0) {
-          dadosGlobais.despesas = categorias;
-          console.log('📊 Despesas processadas automaticamente a partir de transações');
-        }
-      }
-
-      // Se não houver receitas registradas, criar a partir das entradas
-      if ((!dadosGlobais.receitas || dadosGlobais.receitas.length === 0) &&
-          dadosGlobais.fluxo_mensal && dadosGlobais.fluxo_mensal.transacoes) {
-
-        const transacoes = dadosGlobais.fluxo_mensal.transacoes || [];
-        const receitas = [];
-
-        transacoes.forEach(txn => {
-          if (txn.tipo === 'entrada') {
-            receitas.push({
-              descricao: txn.descricao || 'Receita',
-              valor: parseFloat(txn.valor) || 0,
-              pessoa: txn.pessoa || 'N/A',
-              categoria: txn.categoria || 'outro'
-            });
-          }
-        });
-
-        if (receitas.length > 0) {
-          dadosGlobais.receitas = receitas;
-          console.log('📊 Receitas processadas automaticamente a partir de transações');
-        }
-      }
-    }
-
-    function calcularKPIs() {
-      const fluxo = dadosGlobais.fluxo_mensal || {};
-      const transacoes = fluxo.transacoes || [];
-      const dividas = dadosGlobais.dividas || [];
-
-      // Calcular totais de entradas e saídas
-      let totalEntradas = 0;
-      let totalSaidas = 0;
-
-      transacoes.forEach(txn => {
-        const valor = parseFloat(txn.valor) || 0;
-        if (txn.tipo === 'entrada') {
-          totalEntradas += valor;
-        } else if (txn.tipo === 'saida') {
-          totalSaidas += valor;
-        }
-      });
-
-      // Calcular investimentos (transações categorizadas como 'investimento')
-      let totalInvestimentos = 0;
-      transacoes.forEach(txn => {
-        if (txn.categoria === 'investimento' && txn.tipo === 'saida') {
-          totalInvestimentos += parseFloat(txn.valor) || 0;
-        }
-      });
-
-      // Calcular saldo
-      const saldo = totalEntradas - totalSaidas;
-
-      // Calcular dívida total
-      let totalDividas = 0;
-      dividas.forEach(div => {
-        if (div.status === 'ativa') {
-          totalDividas += parseFloat(div.montante) || 0;
-        }
-      });
-
-      // Calcular déficit mensal
-      const deficitMensal = saldo;
-
-      // Atualizar KPIs no resumo
-      const kpiSalarioJuliane = document.getElementById('kpi-salario-juliane');
-      const kpiRendaHugo = document.getElementById('kpi-renda-hugo');
-      const kpiTotalMensal = document.getElementById('kpi-total-mensal');
-      const kpiSaldoContas = document.getElementById('kpi-saldo-contas');
-      const kpiDividaTotal = document.getElementById('kpi-divida-total');
-      const kpiDeficitMensal = document.getElementById('kpi-deficit-mensal');
-
-      // Calcular receitas por pessoa
-      let renderJuliane = 0;
-      let rendaHugo = 0;
-
-      transacoes.forEach(txn => {
-        if (txn.tipo === 'entrada' && txn.categoria === 'salário') {
-          const valor = parseFloat(txn.valor) || 0;
-          if (txn.pessoa === 'Juliane') {
-            renderJuliane += valor;
-          } else if (txn.pessoa === 'Hugo') {
-            rendaHugo += valor;
-          }
-        }
-      });
-
-      // Se não houver salários nos dados, usar entradas totais por pessoa
-      if (renderJuliane === 0 && rendaHugo === 0) {
-        transacoes.forEach(txn => {
-          if (txn.tipo === 'entrada') {
-            const valor = parseFloat(txn.valor) || 0;
-            if (txn.pessoa === 'Juliane') {
-              renderJuliane += valor;
-            } else if (txn.pessoa === 'Hugo') {
-              rendaHugo += valor;
-            }
-          }
-        });
-      }
-
-      // Atualizar elementos HTML
-      if (kpiSalarioJuliane) {
-        kpiSalarioJuliane.textContent = `R$ ${renderJuliane.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-
-      if (kpiRendaHugo) {
-        kpiRendaHugo.textContent = `R$ ${rendaHugo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-
-      if (kpiTotalMensal) {
-        kpiTotalMensal.textContent = `R$ ${totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-
-      if (kpiSaldoContas) {
-        kpiSaldoContas.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        // Mudar cor baseado no saldo
-        if (saldo < 0) {
-          kpiSaldoContas.style.color = 'var(--accent-red)';
-        } else {
-          kpiSaldoContas.style.color = 'var(--accent-green)';
-        }
-      }
-
-      if (kpiDividaTotal) {
-        kpiDividaTotal.textContent = `R$ ${totalDividas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-
-      if (kpiDeficitMensal) {
-        kpiDeficitMensal.textContent = `R$ ${deficitMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        // Mudar cor baseado no deficit
-        if (deficitMensal < 0) {
-          kpiDeficitMensal.style.color = 'var(--accent-red)';
-        } else {
-          kpiDeficitMensal.style.color = 'var(--accent-green)';
-        }
-      }
-
-      // Log para debug
-      console.log('📊 KPIs Calculados:', {
-        totalEntradas,
-        totalSaidas,
-        saldo,
-        totalDividas,
-        totalInvestimentos,
-        renderJuliane,
-        rendaHugo,
-        deficitMensal,
-        transacoesCarregadas: transacoes.length
-      });
-    }
-
-    function renderizarResumo() {
-      renderizarBlackCardChart();
-      renderizarTimeline();
-      renderizarRegras();
-    }
 
     function renderizarBlackCardChart() {
       const historico = dadosGlobais.historico_black_card || [];
@@ -2336,125 +2678,7 @@
       container.innerHTML = html;
     }
 
-    function renderizarDividas() {
-      const dividas = dadosGlobais.dividas || [];
-      const container = document.getElementById('dividasContainer');
 
-      let html = '';
-      dividas.forEach(divida => {
-        const statusClass = divida.status === 'ativa' ? 'ativa' : 'quitada';
-        const montanteFormatado = divida.montante ? `R$ ${divida.montante.toLocaleString('pt-BR')}` : '-';
-
-        let parcelaInfo = '';
-        if (divida.parcela_mensal) {
-          parcelaInfo += `<div class="divida-parcela">💳 Parcela: R$ ${divida.parcela_mensal.toLocaleString('pt-BR')}</div>`;
-        }
-        if (divida.meses_restantes) {
-          parcelaInfo += `<div class="divida-parcela">⏱️ Meses: ${divida.meses_restantes}</div>`;
-        }
-        if (divida.parcelas_pagas !== undefined && divida.parcelas_totais) {
-          const restantes = divida.parcelas_totais - divida.parcelas_pagas;
-          parcelaInfo += `<div class="divida-parcela">📊 Progresso: ${divida.parcelas_pagas}/${divida.parcelas_totais} (${restantes} restantes)</div>`;
-        }
-        if (divida.vencimento) {
-          parcelaInfo += `<div class="divida-parcela">📅 Vencimento: ${divida.vencimento}</div>`;
-        }
-        if (divida.observacao) {
-          parcelaInfo += `<div class="divida-parcela" style="color: var(--accent-yellow);">📌 ${divida.observacao}</div>`;
-        }
-
-        html += `
-          <div class="card divida-card ${statusClass}">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-              <div>
-                <h3 style="margin-bottom: 5px;">${divida.nome || 'Dívida'}</h3>
-                <span class="status-badge status-${statusClass}">${divida.status === 'ativa' ? 'Ativa' : 'Quitada'}</span>
-              </div>
-            </div>
-            <div class="divida-montante">${montanteFormatado}</div>
-            ${parcelaInfo}
-          </div>
-        `;
-      });
-
-      container.innerHTML = html;
-    }
-
-    function renderizarDespesas() {
-      const despesas = dadosGlobais.despesas || {};
-      const container = document.getElementById('despesasContainer');
-
-      let totalGeral = 0;
-
-      // Calculate total from all categories
-      Object.keys(despesas).forEach(key => {
-        if (key !== 'black_card' && despesas[key].total) {
-          totalGeral += despesas[key].total;
-        }
-      });
-
-      const blackCard = despesas.black_card?.valor || 0;
-      totalGeral += blackCard;
-
-      let html = '';
-
-      // Render all categories dynamically
-      Object.keys(despesas)
-        .filter(key => key !== 'black_card')
-        .sort()
-        .forEach(key => {
-          const dados = despesas[key];
-          if (!dados || !dados.total || dados.total === 0) return;
-
-          const total = dados.total || 0;
-          const percentage = totalGeral > 0 ? (total / totalGeral) * 100 : 0;
-          const cores = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
-          const cor = cores[Object.keys(despesas).indexOf(key) % cores.length];
-
-          html += `
-            <h3 style="margin: 25px 0 15px 0; color: ${cor};">📁 ${dados.categoria}</h3>
-          `;
-
-          if (dados.items && Array.isArray(dados.items)) {
-            dados.items.forEach(item => {
-              html += `
-                <div class="progress-container">
-                  <div class="progress-label">
-                    <span>${item.nome}</span>
-                    <span>R$ ${parseFloat(item.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                  </div>
-                </div>
-              `;
-            });
-          }
-
-          html += `
-            <div style="background-color: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-              <strong>Subtotal: R$ ${total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (${percentage.toFixed(1)}% do total)
-            </div>
-          `;
-        });
-
-      if (blackCard > 0) {
-        const percentage = (blackCard / totalGeral) * 100;
-        html += `
-          <h3 style="margin: 25px 0 15px 0; color: var(--accent-red);">🏦 Black Card (Acompanhamento)</h3>
-          <div style="background-color: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-            <strong>R$ ${blackCard.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong> (${percentage.toFixed(1)}% do total)
-            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Redução automática mensal</div>
-          </div>
-        `;
-      }
-
-      html += `
-        <div style="background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 15px; border-radius: 6px; margin-top: 30px;">
-          <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">TOTAL DE DESPESAS MENSAIS</div>
-          <div style="font-size: 24px; font-weight: bold; color: var(--accent-blue);">R$ ${totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-        </div>
-      `;
-
-      container.innerHTML = html;
-    }
 
     function renderizarFluxo() {
       popularFiltros();
@@ -2541,38 +2765,18 @@
         });
       }
 
-      document.getElementById('extrato_entradas').textContent = `R$ ${totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-      document.getElementById('extrato_saidas').textContent = `R$ ${Math.abs(totalSaidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
       const saldo = totalEntradas - totalSaidas;
-      const saldoElement = document.getElementById('extrato_saldo');
-      saldoElement.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-      saldoElement.classList.remove('positive', 'negative');
-      saldoElement.classList.add(saldo >= 0 ? 'positive' : 'negative');
 
-      const saldoAnterior = fluxo.saldo_anterior || 0;
-      document.getElementById('extrato_saldo_anterior').textContent = `R$ ${saldoAnterior.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
-      const saldoFinal = saldoAnterior + saldo;
-      const saldoFinalElement = document.getElementById('extrato_saldo_final');
-      saldoFinalElement.textContent = `R$ ${saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-      saldoFinalElement.classList.remove('positive', 'negative');
-      saldoFinalElement.classList.add(saldoFinal >= 0 ? 'positive' : 'negative');
 
       // Atualizar fluxo global para referências futuras
       fluxo.total_entradas = totalEntradas;
       fluxo.total_saidas = totalSaidas;
       fluxo.saldo_final = saldoFinal;
 
-      // Atualizar os valores do ciclo mensal no topo
-      document.getElementById('fluxo-entradas').textContent = `R$ ${totalEntradas.toLocaleString('pt-BR')}`;
-      document.getElementById('fluxo-saidas').textContent = `R$ ${Math.abs(totalSaidas).toLocaleString('pt-BR')}`;
-      document.getElementById('fluxo-resultado').textContent = `R$ ${saldo.toLocaleString('pt-BR')}`;
-
-      // Atualizar cores do resultado
-      const resultadoElement = document.getElementById('fluxo-resultado');
-      resultadoElement.classList.remove('fluxo-positive', 'fluxo-negative');
-      resultadoElement.classList.add(saldo >= 0 ? 'fluxo-positive' : 'fluxo-negative');
+      // Resumo do conjunto filtrado — sem inventar entradas que nao existem
+      atualizarResumoLancamentos();
 
       transacoesFiltradas = [...transacoes];
       paginaAtual = 1;
@@ -2681,7 +2885,21 @@
       renderizarExtratoFluxo();
     }
 
+
+    // Resume o que esta sendo exibido agora, respeitando os filtros ativos.
+    function atualizarResumoLancamentos() {
+      const lista = transacoesFiltradas || [];
+      const compras = lista.filter(t => t.valor > 0).reduce((s, t) => s + t.valor, 0);
+      const estornos = lista.filter(t => t.valor < 0).reduce((s, t) => s + t.valor, 0);
+
+      const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+      set('lanc-qtd', String(lista.length));
+      set('lanc-total', moeda(compras));
+      set('lanc-estornos', estornos < 0 ? moeda(estornos) : '—');
+    }
+
     function exibirTransacoes() {
+      atualizarResumoLancamentos();
       const tabelaDiv = document.getElementById('extratoTabela');
       const vazioDiv = document.getElementById('extratoVazio');
       const paginacaoDiv = document.getElementById('paginacao');
@@ -3135,7 +3353,6 @@
       if (divida) {
         divida.classificacao = classificacao;
         salvarDadosAutomatico();
-        renderizarClassificacao();
       }
     }
 
@@ -3144,7 +3361,6 @@
       if (despesa && despesa.items && despesa.items[indice]) {
         despesa.items[indice].classificacao = classificacao;
         salvarDadosAutomatico();
-        renderizarClassificacao();
       }
     }
 
@@ -3153,7 +3369,6 @@
       if (divida) {
         divida.pessoa = pessoa;
         salvarDadosAutomatico();
-        renderizarClassificacao();
       }
     }
 
@@ -3162,7 +3377,6 @@
       if (despesa && despesa.items && despesa.items[indice]) {
         despesa.items[indice].pessoa = pessoa;
         salvarDadosAutomatico();
-        renderizarClassificacao();
       }
     }
 
@@ -3171,7 +3385,6 @@
       if (despesa && despesa.items && despesa.items[indice]) {
         despesa.items[indice].tipo_despesa = tipoDespesa;
         salvarDadosAutomatico();
-        renderizarClassificacao();
       }
     }
 
@@ -3342,8 +3555,7 @@ function renderizarTiposDespesaConfig() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(configuracoesGlobais)
         });
-        renderizarClassificacao();
-        inicializarDashboardContabil();
+        renderizarParaOndeVai();
       } catch (err) {
         console.error('Erro ao salvar configurações:', err);
       }
@@ -3650,15 +3862,12 @@ function renderizarTiposDespesaConfig() {
           renderizarListaCargas();
         }
 
-        // Renderizar reconciliação quando aba reconciliacao é ativada
-        if (tabId === 'reconciliacao') {
-          renderizarReconciliacao();
-        }
-
-        // Renderizar resumo executivo quando aba resumo_executivo é ativada
-        if (tabId === 'resumo_executivo') {
-          renderizarResumoExecutivo();
-        }
+        // Abas com conteudo derivado sao recalculadas ao abrir, para refletir
+        // qualquer edicao feita em Lancamentos desde a ultima visita.
+        if (tabId === 'painel') renderizarPainel();
+        if (tabId === 'para_onde_vai') renderizarParaOndeVai();
+        if (tabId === 'cartao') renderizarCartao();
+        if (tabId === 'dividas') renderizarDividasPatrimonio();
       });
     });
 
@@ -4941,57 +5150,6 @@ function renderizarTiposDespesaConfig() {
       return totaisPorMes;
     }
 
-    async function renderizarReconciliacao() {
-      const totaisEsperados = await carregarTotaisEsperados();
-      if (!totaisEsperados) {
-        document.getElementById('reconciliacao-container').innerHTML =
-          '<p style="color: var(--accent-red);">Erro ao carregar dados de reconciliação</p>';
-        return;
-      }
-
-      const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
-      const totalsPorMes = calcularTotalPorMes(transacoes);
-
-      let html = `
-        <table class="transactions-table" style="font-size: 12px;">
-          <thead>
-            <tr>
-              <th>Mês</th>
-              <th>Total Carregado</th>
-              <th>Total Esperado</th>
-              <th>Diferença</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-
-      Object.entries(totaisEsperados.faturas).forEach(([key, fatura]) => {
-        const carregado = totalsPorMes[key] || 0;
-        const esperado = fatura.total_esperado || 0;
-        const diferenca = Math.abs(carregado - esperado);
-        const validado = diferenca < 5;
-        const status = validado ? '✓ Validado' : '❌ Falha';
-        const statusColor = validado ? 'var(--accent-green)' : 'var(--accent-red)';
-
-        html += `
-          <tr>
-            <td>${fatura.mes}/26</td>
-            <td>R$ ${carregado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            <td>R$ ${esperado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            <td>R$ ${diferenca.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
-          </tr>
-        `;
-      });
-
-      html += `
-          </tbody>
-        </table>
-      `;
-
-      document.getElementById('reconciliacao-container').innerHTML = html;
-    }
 
     function calcularResumosExecutivos() {
       const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
@@ -5060,63 +5218,6 @@ function renderizarTiposDespesaConfig() {
       };
     }
 
-    function renderizarResumoExecutivo() {
-      const transacoes = dadosGlobais.fluxo_mensal?.transacoes || [];
-      console.log('📊 Renderizando Resumo Executivo - Transações disponíveis:', transacoes.length);
-
-      const resumos = calcularResumosExecutivos();
-      if (!resumos) {
-        console.warn('⚠️ Resumos não calculados - sem transações');
-        return;
-      }
-
-      console.log('📊 Resumos calculados:', resumos);
-
-      // KPIs
-      document.getElementById('kpi-total-geral').textContent =
-        'R$ ' + resumos.totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      document.getElementById('kpi-media-mensal').textContent =
-        'R$ ' + resumos.mediaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      document.getElementById('kpi-maior-gasto').textContent =
-        'R$ ' + resumos.maiorGasto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-      document.getElementById('kpi-pessoa-top').textContent = resumos.pessoaTop;
-
-      // Gráfico Pizza (por mês)
-      const pizzaCanvas = document.getElementById('grafico-pizza');
-      if (pizzaCanvas && window.Chart) {
-        renderizarGraficoPizza(resumos.totalsPorMes);
-      } else if (pizzaCanvas) {
-        renderizarGraficoPizzaSVG(pizzaCanvas, resumos.totalsPorMes);
-      }
-
-      // Gráfico Barras (por pessoa)
-      const barrasCanvas = document.getElementById('grafico-barras');
-      if (barrasCanvas && window.Chart) {
-        renderizarGraficoBarras(resumos.totalsPorPessoa);
-      } else if (barrasCanvas) {
-        renderizarGraficoBarrasSVG(barrasCanvas, resumos.totalsPorPessoa);
-      }
-
-      // Gráfico Linhas (evolução mensal)
-      const linhasCanvas = document.getElementById('grafico-linhas');
-      if (linhasCanvas && window.Chart) {
-        renderizarGraficoLinhas(resumos.totalsPorMes);
-      } else if (linhasCanvas) {
-        renderizarGraficoLinhasSVG(linhasCanvas, resumos.totalsPorMes);
-      }
-
-      // Tabela Resumo por Mês
-      renderizarTabelaMes(resumos.totalsPorMes);
-
-      // Tabela Resumo por Pessoa
-      renderizarTabelaPessoa(resumos.totalsPorPessoa);
-
-      // Tabela Resumo por Categoria
-      renderizarTabelaCategoria(resumos.totalsPorCategoria);
-    }
 
     function renderizarGraficoPizzaSVG(container, dados) {
       const valores = Object.values(dados);

@@ -111,21 +111,39 @@ transacoes.forEach(t => {
 
 // --- 4. Consolidar parcelamentos ---
 // Agrupa apenas despesas positivas não canceladas, por data+valor+descrição.
+// Agrupa por data + descricao. O valor NAO entra na chave porque a ultima
+// parcela costuma trazer alguns centavos de ajuste de arredondamento
+// (ex.: 4x R$ 1.133,33 + 1x R$ 1.133,35), e exigir valor identico faria a
+// parcela final ficar de fora da compra a que pertence.
 const grupos = {};
 transacoes.forEach((t, idx) => {
   if (t.natureza !== 'despesa' || t.compra_cancelada) return;
-  const chave = `${t.data}|${t.valor}|${t.descricao}`;
+  const chave = `${t.data}|${t.descricao}`;
   (grupos[chave] = grupos[chave] || []).push(idx);
 });
 
-Object.entries(grupos).forEach(([chave, indices]) => {
+// Dentro de um grupo, so sao parcelas da mesma compra os lancamentos de valor
+// equivalente (ate 5 centavos de diferenca). Valores distintos no mesmo dia e
+// no mesmo estabelecimento sao compras separadas.
+function separarPorValor(indices) {
+  const blocos = [];
+  indices.forEach(idx => {
+    const v = transacoes[idx].valor;
+    const bloco = blocos.find(b => Math.abs(transacoes[b[0]].valor - v) <= 0.05);
+    if (bloco) bloco.push(idx); else blocos.push([idx]);
+  });
+  return blocos;
+}
+
+Object.entries(grupos).forEach(([chave, todosIndices]) => {
+  separarPorValor(todosIndices).forEach(indices => {
   if (indices.length < 2) return;
 
   const total = indices.length;
   const primeira = transacoes[indices[0]];
   const mesInicial = primeira.mes_vencimento;
   const idCompra = `compra_${primeira.id}`;
-  const valorTotal = Math.round(primeira.valor * total * 100) / 100;
+  const valorTotal = Math.round(indices.reduce((acc, i) => acc + transacoes[i].valor, 0) * 100) / 100;
 
   relatorio.comprasParceladas++;
   relatorio.linhasParcela += total;
@@ -147,6 +165,7 @@ Object.entries(grupos).forEach(([chave, indices]) => {
       t.data_vencimento_fatura = dataVencimentoPara(mesParcela, mapaVenc);
       relatorio.mesesCorrigidos++;
     }
+  });
   });
 });
 
