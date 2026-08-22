@@ -2376,6 +2376,9 @@
               pessoa: t.pessoa,
               dataCompra: t.data_compra_original || t.data,
               valorParcela: t.valor,
+              // Quando a compra e anterior as faturas importadas sabemos o
+              // numero da parcela, mas nao quantas sao ao todo.
+              totalConhecido: t.total_parcelas_conhecido !== false,
               totalParcelas: t.parcela_total,
               valorTotal: t.valor_total_compra,
               parcelas: []
@@ -2387,9 +2390,12 @@
       return Object.values(porCompra)
         .map(c => {
           c.parcelas.sort((a, b) => a.parcela_numero - b.parcela_numero);
+          // Sem o total, o que se sabe e o valor efetivamente cobrado no periodo
+          c.valorNoPeriodo = c.parcelas.reduce((s, p) => s + p.valor, 0);
+          if (!c.totalConhecido) c.valorTotal = null;
           return c;
         })
-        .sort((a, b) => b.valorTotal - a.valorTotal);
+        .sort((a, b) => (b.valorTotal || b.valorNoPeriodo) - (a.valorTotal || a.valorNoPeriodo));
     }
 
     // "Aberta" = parcela cujo mês de fatura ainda não venceu em relação à
@@ -2400,10 +2406,7 @@
       let parcelas = 0, valor = 0;
 
       agruparParcelamentos().forEach(c => {
-        c.parcelas.forEach(p => {
-          if (meses.indexOf(p.mes_vencimento) > ultimoIdx) { parcelas++; valor += p.valor; }
-        });
-        // Parcelas que ainda nem apareceram numa fatura importada
+        if (!c.totalConhecido) return; // sem o total nao da para saber o que falta
         const faltam = c.totalParcelas - c.parcelas.length;
         if (faltam > 0) { parcelas += faltam; valor += faltam * c.valorParcela; }
       });
@@ -2507,29 +2510,30 @@
           </thead>
           <tbody>
             ${parcelamentos.map(c => {
-              const pagas = c.parcelas.length;
-              const falta = (c.totalParcelas - pagas) * c.valorParcela;
-              const pct = (pagas / c.totalParcelas) * 100;
+              const primeira = c.parcelas[0].parcela_numero;
+              const ultima = c.parcelas[c.parcelas.length - 1].parcela_numero;
+              const falta = c.totalConhecido ? (c.totalParcelas - c.parcelas.length) * c.valorParcela : null;
+              const pct = c.totalConhecido ? (ultima / c.totalParcelas) * 100 : 100;
               return `
                 <tr>
                   <td>${c.descricao}<div class="kpi-sub">compra em ${c.dataCompra.split('-').reverse().join('/')}</div></td>
                   <td>${rotuloCategoria(c.categoria)}</td>
                   <td>${c.pessoa || '—'}</td>
-                  <td class="num">${moeda(c.valorTotal)}</td>
-                  <td class="num">${moeda(c.valorParcela)} × ${c.totalParcelas}</td>
+                  <td class="num">${c.valorTotal !== null ? moeda(c.valorTotal) : `<span title="Compra anterior às faturas importadas: o total de parcelas não consta">${moeda(c.valorNoPeriodo)} <span class="selo selo-alerta">parcial</span></span>`}</td>
+                  <td class="num">${moeda(c.valorParcela)} × ${c.totalConhecido ? c.totalParcelas : '?'}</td>
                   <td style="min-width:140px">
                     <div class="barra-trilho" style="height:16px">
-                      <div class="barra-preenchida" style="width:${pct}%;background:${pct >= 100 ? 'var(--accent-green)' : 'var(--accent-blue)'};font-size:10px">${pagas}/${c.totalParcelas}</div>
+                      <div class="barra-preenchida" style="width:${pct}%;background:${c.totalConhecido ? (pct >= 100 ? 'var(--accent-green)' : 'var(--accent-blue)') : 'var(--bg-tertiary)'};font-size:10px">${primeira}–${ultima}${c.totalConhecido ? `/${c.totalParcelas}` : '/?'}</div>
                     </div>
                   </td>
-                  <td class="num" ${falta > 0 ? 'style="color:var(--accent-yellow)"' : ''}>${falta > 0 ? moeda(falta) : '—'}</td>
+                  <td class="num" ${falta > 0 ? 'style="color:var(--accent-yellow)"' : ''}>${falta === null ? '<span class="selo selo-neutro">a confirmar</span>' : (falta > 0 ? moeda(falta) : '—')}</td>
                 </tr>`;
             }).join('')}
           </tbody>
           <tfoot>
             <tr>
               <td colspan="3">${parcelamentos.length} compras parceladas</td>
-              <td class="num">${moeda(parcelamentos.reduce((s, c) => s + c.valorTotal, 0))}</td>
+              <td class="num">${moeda(parcelamentos.reduce((s, c) => s + (c.valorTotal !== null ? c.valorTotal : c.valorNoPeriodo), 0))}</td>
               <td colspan="2"></td>
               <td class="num">${moeda(abertas.valor)}</td>
             </tr>
