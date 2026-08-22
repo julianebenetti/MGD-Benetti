@@ -2097,6 +2097,8 @@
     }
 
     function renderizarTodas() {
+      procesarTransacoesParaDespesas();
+      calcularKPIs();
       renderizarResumo();
       renderizarDividas();
       renderizarDespesas();
@@ -2108,6 +2110,194 @@
       preencherFormularios();
       aplicarConfigAbasNaDash();
       renderizarListaCargas();
+    }
+
+    function procesarTransacoesParaDespesas() {
+      // Se não houver despesas, criar a partir das transações
+      if ((!dadosGlobais.despesas || Object.keys(dadosGlobais.despesas).length === 0) &&
+          dadosGlobais.fluxo_mensal && dadosGlobais.fluxo_mensal.transacoes) {
+
+        const transacoes = dadosGlobais.fluxo_mensal.transacoes || [];
+        const categorias = {};
+
+        // Agrupar transações por categoria
+        transacoes.forEach(txn => {
+          if (txn.tipo === 'saida') {
+            const cat = txn.categoria || 'geral';
+            if (!categorias[cat]) {
+              categorias[cat] = {
+                categoria: cat.charAt(0).toUpperCase() + cat.slice(1),
+                items: [],
+                total: 0
+              };
+            }
+            categorias[cat].items.push({
+              nome: txn.descricao || 'Transação',
+              valor: parseFloat(txn.valor) || 0,
+              pessoa: txn.pessoa || 'N/A'
+            });
+            categorias[cat].total += parseFloat(txn.valor) || 0;
+          }
+        });
+
+        // Atualizar dados globais com despesas
+        if (Object.keys(categorias).length > 0) {
+          dadosGlobais.despesas = categorias;
+          console.log('📊 Despesas processadas automaticamente a partir de transações');
+        }
+      }
+
+      // Se não houver receitas registradas, criar a partir das entradas
+      if ((!dadosGlobais.receitas || dadosGlobais.receitas.length === 0) &&
+          dadosGlobais.fluxo_mensal && dadosGlobais.fluxo_mensal.transacoes) {
+
+        const transacoes = dadosGlobais.fluxo_mensal.transacoes || [];
+        const receitas = [];
+
+        transacoes.forEach(txn => {
+          if (txn.tipo === 'entrada') {
+            receitas.push({
+              descricao: txn.descricao || 'Receita',
+              valor: parseFloat(txn.valor) || 0,
+              pessoa: txn.pessoa || 'N/A',
+              categoria: txn.categoria || 'outro'
+            });
+          }
+        });
+
+        if (receitas.length > 0) {
+          dadosGlobais.receitas = receitas;
+          console.log('📊 Receitas processadas automaticamente a partir de transações');
+        }
+      }
+    }
+
+    function calcularKPIs() {
+      const fluxo = dadosGlobais.fluxo_mensal || {};
+      const transacoes = fluxo.transacoes || [];
+      const dividas = dadosGlobais.dividas || [];
+
+      // Calcular totais de entradas e saídas
+      let totalEntradas = 0;
+      let totalSaidas = 0;
+
+      transacoes.forEach(txn => {
+        const valor = parseFloat(txn.valor) || 0;
+        if (txn.tipo === 'entrada') {
+          totalEntradas += valor;
+        } else if (txn.tipo === 'saida') {
+          totalSaidas += valor;
+        }
+      });
+
+      // Calcular investimentos (transações categorizadas como 'investimento')
+      let totalInvestimentos = 0;
+      transacoes.forEach(txn => {
+        if (txn.categoria === 'investimento' && txn.tipo === 'saida') {
+          totalInvestimentos += parseFloat(txn.valor) || 0;
+        }
+      });
+
+      // Calcular saldo
+      const saldo = totalEntradas - totalSaidas;
+
+      // Calcular dívida total
+      let totalDividas = 0;
+      dividas.forEach(div => {
+        if (div.status === 'ativa') {
+          totalDividas += parseFloat(div.montante) || 0;
+        }
+      });
+
+      // Calcular déficit mensal
+      const deficitMensal = saldo;
+
+      // Atualizar KPIs no resumo
+      const kpiSalarioJuliane = document.getElementById('kpi-salario-juliane');
+      const kpiRendaHugo = document.getElementById('kpi-renda-hugo');
+      const kpiTotalMensal = document.getElementById('kpi-total-mensal');
+      const kpiSaldoContas = document.getElementById('kpi-saldo-contas');
+      const kpiDividaTotal = document.getElementById('kpi-divida-total');
+      const kpiDeficitMensal = document.getElementById('kpi-deficit-mensal');
+
+      // Calcular receitas por pessoa
+      let renderJuliane = 0;
+      let rendaHugo = 0;
+
+      transacoes.forEach(txn => {
+        if (txn.tipo === 'entrada' && txn.categoria === 'salário') {
+          const valor = parseFloat(txn.valor) || 0;
+          if (txn.pessoa === 'Juliane') {
+            renderJuliane += valor;
+          } else if (txn.pessoa === 'Hugo') {
+            rendaHugo += valor;
+          }
+        }
+      });
+
+      // Se não houver salários nos dados, usar entradas totais por pessoa
+      if (renderJuliane === 0 && rendaHugo === 0) {
+        transacoes.forEach(txn => {
+          if (txn.tipo === 'entrada') {
+            const valor = parseFloat(txn.valor) || 0;
+            if (txn.pessoa === 'Juliane') {
+              renderJuliane += valor;
+            } else if (txn.pessoa === 'Hugo') {
+              rendaHugo += valor;
+            }
+          }
+        });
+      }
+
+      // Atualizar elementos HTML
+      if (kpiSalarioJuliane) {
+        kpiSalarioJuliane.textContent = `R$ ${renderJuliane.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+
+      if (kpiRendaHugo) {
+        kpiRendaHugo.textContent = `R$ ${rendaHugo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+
+      if (kpiTotalMensal) {
+        kpiTotalMensal.textContent = `R$ ${totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+
+      if (kpiSaldoContas) {
+        kpiSaldoContas.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Mudar cor baseado no saldo
+        if (saldo < 0) {
+          kpiSaldoContas.style.color = 'var(--accent-red)';
+        } else {
+          kpiSaldoContas.style.color = 'var(--accent-green)';
+        }
+      }
+
+      if (kpiDividaTotal) {
+        kpiDividaTotal.textContent = `R$ ${totalDividas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+
+      if (kpiDeficitMensal) {
+        kpiDeficitMensal.textContent = `R$ ${deficitMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // Mudar cor baseado no deficit
+        if (deficitMensal < 0) {
+          kpiDeficitMensal.style.color = 'var(--accent-red)';
+        } else {
+          kpiDeficitMensal.style.color = 'var(--accent-green)';
+        }
+      }
+
+      // Log para debug
+      console.log('📊 KPIs Calculados:', {
+        totalEntradas,
+        totalSaidas,
+        saldo,
+        totalDividas,
+        totalInvestimentos,
+        renderJuliane,
+        rendaHugo,
+        deficitMensal,
+        transacoesCarregadas: transacoes.length
+      });
     }
 
     function renderizarResumo() {
@@ -2359,21 +2549,53 @@
       const fluxo = dadosGlobais.fluxo_mensal || {};
       const transacoes = fluxo.transacoes || [];
 
-      document.getElementById('extrato_entradas').textContent = `R$ ${(fluxo.total_entradas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-      document.getElementById('extrato_saidas').textContent = `R$ ${Math.abs(fluxo.total_saidas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      // Calcular totais a partir das transações se não estiverem pre-calculados
+      let totalEntradas = fluxo.total_entradas || 0;
+      let totalSaidas = fluxo.total_saidas || 0;
 
-      const saldo = (fluxo.total_entradas || 0) - (fluxo.total_saidas || 0);
+      if (totalEntradas === 0 && totalSaidas === 0 && transacoes.length > 0) {
+        transacoes.forEach(txn => {
+          const valor = parseFloat(txn.valor) || 0;
+          if (txn.tipo === 'entrada') {
+            totalEntradas += valor;
+          } else if (txn.tipo === 'saida') {
+            totalSaidas += valor;
+          }
+        });
+      }
+
+      document.getElementById('extrato_entradas').textContent = `R$ ${totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      document.getElementById('extrato_saidas').textContent = `R$ ${Math.abs(totalSaidas).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+      const saldo = totalEntradas - totalSaidas;
       const saldoElement = document.getElementById('extrato_saldo');
       saldoElement.textContent = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
       saldoElement.classList.remove('positive', 'negative');
       saldoElement.classList.add(saldo >= 0 ? 'positive' : 'negative');
 
-      document.getElementById('extrato_saldo_anterior').textContent = `R$ ${(fluxo.saldo_anterior || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      const saldoAnterior = fluxo.saldo_anterior || 0;
+      document.getElementById('extrato_saldo_anterior').textContent = `R$ ${saldoAnterior.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 
+      const saldoFinal = saldoAnterior + saldo;
       const saldoFinalElement = document.getElementById('extrato_saldo_final');
-      saldoFinalElement.textContent = `R$ ${(fluxo.saldo_final || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      saldoFinalElement.textContent = `R$ ${saldoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
       saldoFinalElement.classList.remove('positive', 'negative');
-      saldoFinalElement.classList.add((fluxo.saldo_final || 0) >= 0 ? 'positive' : 'negative');
+      saldoFinalElement.classList.add(saldoFinal >= 0 ? 'positive' : 'negative');
+
+      // Atualizar fluxo global para referências futuras
+      fluxo.total_entradas = totalEntradas;
+      fluxo.total_saidas = totalSaidas;
+      fluxo.saldo_final = saldoFinal;
+
+      // Atualizar os valores do ciclo mensal no topo
+      document.getElementById('fluxo-entradas').textContent = `R$ ${totalEntradas.toLocaleString('pt-BR')}`;
+      document.getElementById('fluxo-saidas').textContent = `R$ ${Math.abs(totalSaidas).toLocaleString('pt-BR')}`;
+      document.getElementById('fluxo-resultado').textContent = `R$ ${saldo.toLocaleString('pt-BR')}`;
+
+      // Atualizar cores do resultado
+      const resultadoElement = document.getElementById('fluxo-resultado');
+      resultadoElement.classList.remove('fluxo-positive', 'fluxo-negative');
+      resultadoElement.classList.add(saldo >= 0 ? 'fluxo-positive' : 'fluxo-negative');
 
       transacoesFiltradas = [...transacoes];
       paginaAtual = 1;
