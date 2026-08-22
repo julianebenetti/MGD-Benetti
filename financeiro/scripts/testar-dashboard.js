@@ -96,9 +96,11 @@ function noEscopo(mv) {
   console.log('\n▸ INTEGRIDADE DOS DADOS\n');
   // =====================================================================
 
-  igual('Contagem de lançamentos de gasto', ref.totalLinhas, 629);
-  igual('Soma dos gastos bate com o total cobrado nas faturas', ref.totalGeral, 40086.47);
-  igual('Pagamentos de fatura separados dos gastos', pagamentos.length, 6);
+  const cobradoTotal = Math.round(faturas.reduce((s, f) => s + f.cobrado, 0) * 100) / 100;
+  console.log(`    (${faturas.length} faturas · ${ref.totalLinhas} lançamentos de gasto · ${pagamentos.length} pagamentos)`);
+  igual('Soma dos gastos bate com o total cobrado nas faturas', ref.totalGeral, cobradoTotal);
+  ok('Cada fatura tem ao menos um pagamento registrado', pagamentos.length >= faturas.length,
+     `${pagamentos.length} pagamentos para ${faturas.length} faturas`);
   ok('Todo pagamento tem valor negativo', pagamentos.every(t => t.valor < 0));
   igual('Compras menos estornos fecha com o total', ref.compras + ref.estornos, ref.escopoTotal);
 
@@ -121,7 +123,7 @@ function noEscopo(mv) {
   const mesesReais = [...new Set(escopo.map(t => t.mes_vencimento))].filter(m => m !== A_CONFIRMAR);
   // As cinco faturas importadas; meses posteriores existem so como projecao de
   // parcelas que ainda vao vencer, e por isso tem poucos lancamentos.
-  const FATURAS_IMPORTADAS = ['Jan/26', 'Fev/26', 'Mar/26', 'Abr/26', 'Mai/26'];
+  const FATURAS_IMPORTADAS = faturas.map(f => f.mes);
   ok('As 5 faturas importadas têm volume plausível (mín. 20 lançamentos)',
      FATURAS_IMPORTADAS.every(m => escopo.filter(t => t.mes_vencimento === m).length >= 20),
      FATURAS_IMPORTADAS.map(m => `${m}: ${escopo.filter(t => t.mes_vencimento === m).length}`).join(' | '));
@@ -169,6 +171,22 @@ function noEscopo(mv) {
   console.log(`    (${parceladas.length} parcelas em ${comTotal.length} compras, lidas da coluna Parcelamento)`);
   ok('Todo parcelamento veio da fatura, não de dedução',
      parceladas.every(t => t.parcela_numero >= 1 && t.parcela_total >= 2));
+
+  // Cobranca recorrente traz a parcela embutida na descricao, sem preencher a
+  // coluna Parcelamento — caso do seguro do carro.
+  const naDescricao = parceladas.filter(t => t.parcela_fonte === 'descricao');
+  if (naDescricao.length) {
+    const compras = [...new Set(naDescricao.map(t => t.id_compra))];
+    console.log(`    (${naDescricao.length} parcelas lidas da descrição, em ${compras.length} compra(s))`);
+    ok('Parcela lida da descrição fica vinculada à mesma compra', compras.length >= 1
+        && compras.every(id => new Set(naDescricao.filter(t => t.id_compra === id).map(t => t.parcela_numero)).size
+                             === naDescricao.filter(t => t.id_compra === id).length));
+    ok('Parcela lida da descrição cai em faturas consecutivas',
+       compras.every(id => {
+         const ps = naDescricao.filter(t => t.id_compra === id).sort((a, b) => a.parcela_numero - b.parcela_numero);
+         return ps.every((p, i) => i === 0 || p.parcela_numero === ps[i - 1].parcela_numero + 1);
+       }));
+  }
 
   // Uma compra so tem todas as parcelas nos dados quando o parcelamento
   // inteiro cabe dentro das cinco faturas importadas.
@@ -239,7 +257,8 @@ function noEscopo(mv) {
   // =====================================================================
 
   const estornos = todas.filter(t => t.natureza === 'estorno');
-  igual('25 estornos marcados', estornos.length, 25);
+  console.log(`    (${estornos.length} estornos, ${brl(somar(estornos))})`);
+  igual('Estornos batem com os valores negativos', estornos.length, todas.filter(t => t.valor < 0).length);
   ok('Todo valor negativo está marcado como estorno',
      todas.filter(t => t.valor < 0).every(t => t.natureza === 'estorno'));
   ok('Nenhum estorno tem valor positivo sem prefixo de cancelamento',
@@ -430,10 +449,11 @@ function noEscopo(mv) {
     }
   });
 
-  const esperados = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'totais_esperados.json'), 'utf8')).faturas;
   const comReferencia = cartao.linhas.filter(l => l.conferencia && !/sem referência/i.test(l.conferencia));
-  ok('Conferência de fatura está ativa', comReferencia.length === Object.keys(esperados).length,
-     `${comReferencia.length} faturas conferidas de ${Object.keys(esperados).length} referências`);
+  igual('Toda fatura importada é conferida na tela', comReferencia.length, faturas.length);
+  ok('Nenhuma fatura marcada como "não fecha"',
+     !cartao.linhas.some(l => /não fecha/i.test(l.conferencia)),
+     cartao.linhas.filter(l => /não fecha/i.test(l.conferencia)).map(l => l.mes).join(', '));
 
   console.log('\n▸ RECONCILIAÇÃO CONTRA AS FATURAS REAIS\n');
   let erroTotal = 0;

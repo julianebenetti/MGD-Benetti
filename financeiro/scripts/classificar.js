@@ -15,7 +15,7 @@
  *   node scripts/classificar.js aplicar [--aplicar]
  *       Roda as regras sobre os lançamentos. Sem --aplicar só simula.
  *
- *   node scripts/classificar.js exportar [arquivo.xlsx]
+ *   node scripts/classificar.js exportar [arquivo.xlsx] [--so-pendentes]
  *       Gera uma planilha com um estabelecimento por linha, para revisar em
  *       lote. São 225 estabelecimentos para 604 lançamentos.
  *
@@ -145,7 +145,12 @@ function cmdExportar() {
     e.meses.add(t.mes_vencimento);
   });
 
+  // --so-pendentes deixa de fora o que ja esta coberto por regra, para nao
+  // pedir revisao do que ja foi decidido.
+  const soPendentes = process.argv.includes('--so-pendentes');
+
   const linhas = Object.values(porEstabelecimento)
+    .filter(e => !soPendentes || !casar(e.descricao, regras))
     .sort((a, b) => b.total - a.total)
     .map(e => {
       const regra = casar(e.descricao, regras);
@@ -202,9 +207,11 @@ function cmdExportar() {
   XLSX.writeFile(wb, saida);
 
   const semRegra = linhas.filter(l => !l['Regra que já aplica']).length;
+  const valor = linhas.reduce((s, l) => s + l['Total'], 0);
   console.log(`\n✅ ${saida}\n`);
-  console.log(`${linhas.length} estabelecimentos (${transacoes.length} lançamentos)`);
-  console.log(`${linhas.length - semRegra} já cobertos por regra · ${semRegra} sem regra`);
+  console.log(`${linhas.length} estabelecimentos · ${brl(valor)}`);
+  if (!soPendentes) console.log(`${linhas.length - semRegra} já cobertos por regra · ${semRegra} sem regra`);
+  else console.log('Só os que ainda não têm regra — o que já foi decidido ficou de fora');
   console.log(`\nPreencha NOVA CATEGORIA / NOVA PESSOA e devolva. Depois:`);
   console.log(`  node scripts/classificar.js importar ${path.basename(saida)} --aplicar\n`);
 }

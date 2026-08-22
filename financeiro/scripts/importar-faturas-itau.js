@@ -138,10 +138,40 @@ function classificarNatureza(item) {
   return 'despesa';
 }
 
-function lerParcelamento(texto) {
-  const m = texto.match(/Parcela\s+(\d+)\s+de\s+(\d+)/i);
-  if (!m) return null;
-  return { numero: parseInt(m[1], 10), total: parseInt(m[2], 10) };
+// A coluna Parcelamento e a fonte primaria: "Parcela 3 de 12".
+//
+// Alguns lancamentos recorrentes nao usam essa coluna e trazem a parcela
+// embutida na descricao — o seguro do carro aparece como
+// "Tokio Marine*auto05d12sao Paulobra", que e a parcela 5 de 12. Sem ler isso,
+// as 12 parcelas ficam como despesas avulsas e o compromisso que falta vencer
+// nao aparece em lugar nenhum.
+const PARCELA_NA_DESCRICAO = /(\d{2})d(\d{2})/i;
+
+function lerParcelamento(texto, descricao) {
+  const naColuna = texto.match(/Parcela\s+(\d+)\s+de\s+(\d+)/i);
+  if (naColuna) {
+    return { numero: parseInt(naColuna[1], 10), total: parseInt(naColuna[2], 10), fonte: 'coluna' };
+  }
+
+  const naDescricao = String(descricao || '').match(PARCELA_NA_DESCRICAO);
+  if (naDescricao) {
+    const numero = parseInt(naDescricao[1], 10);
+    const total = parseInt(naDescricao[2], 10);
+    // Guarda contra falso positivo: so aceita se formar um parcelamento plausivel
+    if (numero >= 1 && total >= 2 && numero <= total && total <= 48) {
+      return { numero, total, fonte: 'descricao' };
+    }
+  }
+  return null;
+}
+
+// Numa cobranca recorrente a descricao muda a cada parcela. Normalizar permite
+// reconhecer que sao a mesma compra.
+function chaveDaCompra(t) {
+  const desc = normalizar(t.descricao).replace(PARCELA_NA_DESCRICAO, 'NNdMM');
+  return t.parcela_fonte === 'descricao'
+    ? `recorrente|${desc}|${t.parcela_total}`          // a data varia todo mes
+    : `${t.data}|${desc}|${t.parcela_total}`;          // parcelas com data unica
 }
 
 // ---------- execução ----------
@@ -175,7 +205,7 @@ faturas.forEach(f => {
 
   f.itens.forEach(item => {
     const natureza = classificarNatureza(item);
-    const parcela = lerParcelamento(item.parcelamento);
+    const parcela = lerParcelamento(item.parcelamento, item.descricao);
     const herdado = classificacao[normalizar(item.descricao)] || {};
     const regra = aplicarRegra(item.descricao, regras);
 
@@ -207,6 +237,7 @@ faturas.forEach(f => {
       parcela_numero: parcela ? parcela.numero : null,
       parcela_total: parcela ? parcela.total : null,
       descricao_parcela: parcela ? `${parcela.numero}/${parcela.total}` : null,
+      parcela_fonte: parcela ? parcela.fonte : null,
       valor_total_compra: parcela ? Math.round(item.valor * parcela.total * 100) / 100 : null,
       titularidade: item.titularidade,
       portador: item.portador,
@@ -236,8 +267,7 @@ faturas.forEach(f => {
 
 const porCompra = {};
 transacoes.filter(t => t.eh_parcelada).forEach(t => {
-  const chave = `${t.data}|${normalizar(t.descricao)}|${t.parcela_total}`;
-  (porCompra[chave] = porCompra[chave] || []).push(t);
+  (porCompra[chaveDaCompra(t)] = porCompra[chaveDaCompra(t)] || []).push(t);
 });
 
 Object.values(porCompra).forEach(parcelas => {
@@ -283,6 +313,12 @@ const totalPagamentos = resumo.reduce((s, r) => s + r.pagamentos, 0);
 console.log(`Total de lançamentos: ${transacoes.length}`);
 console.log(`Compras parceladas distintas: ${comprasParceladas}`);
 console.log(`Classificados por regra: ${transacoes.filter(t => t.classificado_por === 'regra').length} (${regras.length} regras ativas)`);
+const porDescricao = transacoes.filter(t => t.parcela_fonte === 'descricao');
+if (porDescricao.length) {
+  console.log(`Parcelas lidas da descrição (sem coluna Parcelamento): ${porDescricao.length}`);
+  [...new Set(porDescricao.map(t => t.descricao.replace(PARCELA_NA_DESCRICAO, 'NNdMM')))]
+    .forEach(d => console.log(`   ${d}`));
+}
 console.log(`Total cobrado ${resumo.length === 1 ? 'nesta fatura' : `nas ${resumo.length} faturas`}: R$ ${totalCobrado.toFixed(2)}`);
 console.log(`Pagamentos registrados: R$ ${totalPagamentos.toFixed(2)} (não são despesa)`);
 
