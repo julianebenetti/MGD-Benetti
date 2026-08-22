@@ -1,13 +1,32 @@
 {
-  "versao": 1,
+  "versao": 2,
   "atualizado_em": "2026-08-22",
   "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão.",
   "principios": [
     "A pessoa da despesa é quem se beneficia dela, não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da Família.",
     "Despesa de um filho fica no nome dele quando for individual (escola, material, atividade). Quando for da casa, fica em Família.",
-    "Combustível e manutenção de veículo são da Família — o carro serve a todos."
+    "Combustível e manutenção de veículo são da Família — o carro serve a todos.",
+    "Qualquer posto de combustivel e despesa da Familia, mesmo quando pago no cartao do Hugo."
   ],
   "regras": [
+    {
+      "padrao": "omega +campinas|natacao|natação",
+      "categoria": "esportes",
+      "pessoa": "Valentina",
+      "nota": "Natacao da Valentina (Juliane, revisao 22/08)"
+    },
+    {
+      "padrao": "transurc|emdec|bilhete unico|vale transporte",
+      "categoria": "transporte",
+      "pessoa": "Juliane",
+      "nota": "Transporte publico para o trabalho da Juliane (Juliane, revisao 22/08)"
+    },
+    {
+      "padrao": "tokio marine|porto seguro|allianz|sulamerica auto|bradesco seguro|azul seguro|seguro auto",
+      "categoria": "seguro",
+      "pessoa": "Família",
+      "nota": "Seguro do carro (Juliane, revisao 22/08)"
+    },
     {
       "padrao": "savegnago|carrefour|pao de acucar|paodeacucar|assai|atacadao|tenda atacado|sonda|dia %|supermercad|hipermercad|mercado municipal",
       "categoria": "alimentacao",
@@ -27,15 +46,15 @@
       "nota": "Escola do Luca e material escolar (informado pela Juliane)"
     },
     {
-      "padrao": "escola|colegio|esc inf|mundo cores|creche|bercario|berçario",
+      "padrao": "escola|colegio|esc inf|mundo cores|creche|bercario|berçario|papelaria|livraria",
       "categoria": "educacao",
-      "nota": "Escola — CONFIRMAR de qual filho e a despesa. Sem 'pessoa' a regra mantem o que ja esta gravado."
+      "nota": "Escola e material escolar. Sem 'pessoa': confirmar de qual filho e a despesa"
     },
     {
-      "padrao": "auto ?posto|posto das|posto de|petrobras|ipiranga|shell |ale combust|combustivel|correntao auto",
+      "padrao": "posto|petrobras|ipiranga|shell |ale combust|combustivel",
       "categoria": "transporte",
       "pessoa": "Família",
-      "nota": "Combustível: o carro serve a família toda"
+      "nota": "Combustivel: o carro serve a familia toda. Vale para qualquer posto, nao so os que tem 'auto' no nome (Juliane, revisao 22/08)"
     },
     {
       "padrao": "pneus|oficina|mecanic|autopecas|auto pecas|estacionament|lava rapido|lava-rapido|detran|ipva|licenciament",
@@ -54,9 +73,9 @@
       "nota": "Saúde: fica com quem foi atendido"
     },
     {
-      "padrao": "ifd\\*|ifood|rappi|uber ?eats|delivery|restaurante|pizzaria|lanchonete|hamburgu|padaria|confeitaria|cafe |cafeteria|sorveteria|churrascaria|bar do|espetinho",
+      "padrao": "ifd\\*|ifood|rappi|uber ?eats|delivery|restaurante|pizzaria|lanchonete|hamburgu|padaria|confeitaria|cafe |cafeteria|sorveteria|churrascaria|bar do|espetinho|mc ?donalds|arcos dourados|burger king|kfc|subway|habibs|giraffas|outback|rodizio|bar |boteco",
       "categoria": "alimentacao_fora",
-      "nota": "Refeição fora de casa"
+      "nota": "Refeicao fora de casa, incluindo lanchonete e rodizio"
     },
     {
       "padrao": "apple\\.com|netflix|spotify|amazon prime|disney|hbo|max |globoplay|youtube premium|google one|icloud|microsoft|adobe|canva|clube livelo|assinatura",
@@ -96,10 +115,10 @@
       "nota": "Cuidados pessoais"
     },
     {
-      "padrao": "petz|cobasi|petshop|pet shop|veterinar|lollapets|racao",
+      "padrao": "petz|cobasi|petshop|pet ?shop|petcamp|selva urbana|veterinar|lollapets|racao|ração",
       "categoria": "pet",
       "pessoa": "Família",
-      "nota": "Despesa com animal de estimação"
+      "nota": "Racao e despesa com os pets"
     },
     {
       "padrao": "kiwify|hotmart|udemy|alura|curso |mentoria|treinamento",

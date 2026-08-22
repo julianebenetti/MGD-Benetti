@@ -53,11 +53,20 @@ Regras que ela informou diretamente:
 - **Savegnago** (e supermercado em geral) → `alimentacao` / **Família**, mesmo
   quando pago no cartão do Hugo.
 - **Sesi / Editora Sesi** → `educacao` / **Luca** — é a escola onde o filho estuda.
-- **Auto posto / combustível** → `transporte` / **Família** — o carro serve a todos.
+- **Qualquer posto de combustível** → `transporte` / **Família**. Vale para
+  qualquer posto, não só os que têm "auto" no nome — a primeira versão da regra
+  exigia "auto posto" e deixava escapar Posto Riviera, Posto Big e outros.
+- **Transurc** → `transporte` / **Juliane** — transporte público para o trabalho.
+- **Omega / natação** → `esportes` / **Valentina**.
+- **Tokio Marine** → `seguro` / **Família** — seguro do carro.
+- **Selva Urbana, Petcamp** → `pet` — ração.
+- **McDonald's, KFC, rodízio** → `alimentacao_fora`.
+- **Papelaria** → `educacao` (material escolar).
 
-Pendente de confirmação: **Esc Inf Mundo Cores** é escola infantil, mas não foi
-dito de qual filho (Luca ou Valentina). A regra genérica de escola não define
-pessoa, justamente para não chutar.
+Pendente de confirmação:
+- **Esc Inf Mundo Cores** (R$ 1.469,70) é escola infantil, mas não foi dito de
+  qual filho. A regra genérica de escola não define pessoa, para não chutar.
+- **Papelaria Paulino** — material escolar, sem dizer de qual filho.
 
 ### Ferramentas de manutenção (`financeiro/scripts/`)
 - `importar-faturas-itau.js` — reconstrói tudo a partir dos XLSX. Aceita
