@@ -141,6 +141,43 @@ despesa recorrente.
 - Cada comprovante é conferido contra o próprio líquido antes de gravar. Rubrica
   sem regra **para a importação** em vez de entrar sem classificação.
 
+### Extrato da conta (Itaú)
+Terceira fonte, ao lado da fatura e do holerite. Traz o que as outras não veem:
+boleto, débito automático, PIX e o custo do cheque especial. Conta corrente
+**ag. 0642, c/c 00806-4** — a mesma em que o salário cai.
+
+**O risco é contar duas vezes.** O extrato repete, como movimento de caixa,
+coisas que já entraram linha a linha por outra fonte. Ficam com
+`natureza: "transferencia"` — aparecem, mexem no saldo, e não entram em receita
+nem em despesa:
+
+- **crédito do salário**, que o holerite já lançou como provento e descontos;
+- **pagamento da fatura**, cujas compras já estão lançadas uma a uma;
+- **PIX entre contas próprias** da Juliane, nos dois sentidos.
+
+Isso só vale se a outra fonte existir: **sem o holerite do mês, o crédito do
+salário volta a contar como receita**, senão a renda daquele mês desaparece. O
+script avisa quando faz isso — ao importar o holerite que faltava, reimporte o
+extrato.
+
+Decisões que a Juliane tomou (23/08):
+- **PIX de/para "Juliane"** → conta dela em outro banco, transferência.
+- **PIX da Benetti UP para ela** → `pro_labore`, receita pessoal.
+- **PIX dela para a Benetti UP** → aporte na empresa, fora do consumo.
+- **PIX do Hugo** → `contribuicao_casa`, receita.
+
+Outros pontos:
+- **"Credito Consignado N/60"** é um **quarto** empréstimo, além dos três da
+  folha: R$ 1.402,67/mês debitados direto na conta.
+- **"Credito Consignado" sem parcela e positivo** é liberação de empréstimo:
+  `natureza: "emprestimo"`. Dinheiro entrando que é dívida, não renda.
+- **Juros do limite e IOF** são `encargos_financeiros` — custo do cheque especial.
+- **DAS do MEI** é imposto da empresa: âmbito **Benetti UP**.
+- Lançamento com data futura é **PIX agendado**: fica com `status: "agendado"`,
+  porque o dinheiro ainda não saiu.
+- O `.xls` traz valor no padrão americano (`-1,402.67`) e texto latin-1 lido
+  como utf-8 ("cartÃ£o"). As duas coisas são tratadas na leitura.
+
 ### Classificação de despesas
 As regras vivem em **`financeiro/data/regras-classificacao.json`**. Ao aprender
 uma regra nova da Juliane, **gravar lá** — não só corrigir os lançamentos, senão
