@@ -157,10 +157,20 @@
       "nota": "Utilidades e itens para a casa"
     },
     {
-      "padrao": "iof refinanciamento|encargos refinanciamento|juros de mora|encargos pix|juros de financiamento|multa de mora|encargos de atraso",
+      "padrao": "^iof (internacional|compra internacional)",
+      "categoria": "encargos_financeiros",
+      "nota": "IOF de compra internacional: despesa financeira, mas a pessoa vem de quem fez a compra (Juliane, 23/08)"
+    },
+    {
+      "padrao": "^estorno (custo de iof|iof)",
+      "categoria": "encargos_financeiros",
+      "nota": "Estorno de IOF, mesma categoria da cobranca (Juliane, 23/08)"
+    },
+    {
+      "padrao": "juros de mora|juros de financiamento|encargos refinanciamento|iof refinanciamento|encargos pix|iof pix|anuidade|^multa$|multa de mora|encargos de atraso|^iof$|rotativo",
       "categoria": "encargos_financeiros",
       "pessoa": "Família",
-      "nota": "Custo do parcelamento da fatura: juros, IOF e encargos. E gasto novo de verdade, ao contrario da parcela do principal (Juliane, 23/08)"
+      "nota": "Custo do credito e do cartao: juros, mora, multa, anuidade, IOF e encargos do refinanciamento. Pagar a menor a fatura financia o saldo, e esse custo e despesa financeira, nao despesa comum (Juliane, 23/08)"
     }
   ]
 }

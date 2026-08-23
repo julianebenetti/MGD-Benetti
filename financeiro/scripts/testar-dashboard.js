@@ -126,6 +126,27 @@ function noEscopo(mv) {
   ok('Todo pagamento tem valor negativo', pagamentos.every(t => t.valor < 0));
   igual('Compras menos estornos fecha com o total', ref.compras + ref.estornos, ref.escopoTotal);
 
+  // Custo de crédito é despesa financeira, nunca despesa comum. Pagar a fatura a
+  // menor financia o saldo, e o que o banco cobra por isso tem de ficar visível
+  // como tal — diluído entre as categorias de consumo, some.
+  const custoDeCredito = todosLancamentos.filter(t =>
+    /juros|encargo|mora|multa|anuidade|^iof|refinanc|rotativ/i.test(t.descricao)
+    && !/^canc|^cancelamento|sem juros/i.test(t.descricao)
+    && t.natureza !== 'pagamento' && t.natureza !== 'divida_parcelada');
+  const foraDaFinanceira = custoDeCredito.filter(t => t.categoria !== 'encargos_financeiros');
+  console.log(`    (${custoDeCredito.length} lançamentos de custo financeiro, ${brl(somar(custoDeCredito))})`);
+  ok('Todo custo de crédito está em encargos_financeiros', foraDaFinanceira.length === 0,
+     [...new Set(foraDaFinanceira.map(t => `${t.descricao.trim().slice(0, 30)} → ${t.categoria}`))].slice(0, 5).join(' | '));
+
+  // O principal que rola não é despesa: são as mesmas compras sendo carregadas.
+  // Se algum dia virar lançamento com natureza de despesa, o gasto do mês passa
+  // a contar duas vezes a mesma compra.
+  const principalComoDespesa = todosLancamentos.filter(t =>
+    /^(parc\s+fatura|parcela\s+de\s+refinanciamento|credito\s+por\s+parcelamento)/i.test(t.descricao)
+    && t.natureza !== 'divida_parcelada');
+  ok('Principal de dívida parcelada nunca entra como despesa', principalComoDespesa.length === 0,
+     principalComoDespesa.map(t => `${t.descricao.trim().slice(0, 30)} (${t.natureza})`).join(' | '));
+
   const ids = todosLancamentos.map(t => t.id);
   igual('Nenhum id duplicado', new Set(ids).size, ids.length);
   ok('Todo lançamento tem id', todosLancamentos.every(t => t.id));

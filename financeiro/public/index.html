@@ -2798,6 +2798,100 @@
         .sort((a, b) => a.data.localeCompare(b.data));
     }
 
+    // Pagar a fatura a menor e tomar credito: o saldo nao pago rola para a
+    // seguinte e o banco cobra juros e IOF por carregar. E financiamento, e nao
+    // aparece em lugar nenhum como tal — o principal nao vem linha a linha, so
+    // engorda o total da fatura seguinte.
+    //
+    // O principal que rola nao e despesa: sao as mesmas compras sendo
+    // carregadas, ja contadas quando aconteceram. O que e despesa, e despesa
+    // financeira, e o custo de carregar: juros, mora, IOF e encargos.
+    function financiamentoPorPagarAMenor() {
+      const hoje = new Date().toISOString().slice(0, 10);
+      const linhas = [];
+
+      [...new Set(faturasDoCartao().map(f => f.cartao || '4846'))].forEach(cartao => {
+        const doCartao = faturasDoCartao()
+          .filter(f => (f.cartao || '4846') === cartao)
+          .sort((a, b) => (a.vencimento || '').localeCompare(b.vencimento || ''));
+
+        doCartao.forEach((f, i) => {
+          // Fatura que ainda nao venceu nao esta em atraso: nao ter pagamento e
+          // o esperado, nao pagamento a menor.
+          if ((f.vencimento || '') > hoje) return;
+
+          const pgs = pagamentosQueQuitaram(cartao, f.mes);
+          if (pgs === null) return;                 // sem a seguinte, nao da para saber
+
+          const pago = pgs.reduce((s, t) => s + Math.abs(t.valor), 0);
+          const ficou = Math.round((f.total_fatura - pago) * 100) / 100;
+          if (ficou <= 0.05) return;                // quitou, ou pagou a mais
+
+          // So o encargo que decorre de carregar o saldo. A anuidade e o IOF de
+          // compra internacional tambem sao despesa financeira, mas seriam
+          // cobrados de qualquer jeito — atribui-los ao rotativo inflaria o
+          // custo do credito com valor que nao veio dele.
+          const seguinte = doCartao[i + 1];
+          const CUSTO_DE_CARREGAR = /juros|mora|multa|refinanc|rotativ|atraso|^iof$/i;
+          const custo = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
+            .filter(t => (t.cartao_final || '4846') === cartao
+                      && t.mes_vencimento === seguinte.mes
+                      && t.categoria === 'encargos_financeiros'
+                      && t.valor > 0
+                      && CUSTO_DE_CARREGAR.test(t.descricao.trim()));
+
+          linhas.push({
+            cartao, mes: f.mes, vencimento: f.vencimento,
+            total: f.total_fatura, pago, ficou,
+            rolouPara: seguinte.mes,
+            confirmado: Math.abs((seguinte.saldo_anterior || 0) - ficou) < 0.05,
+            custo: custo.reduce((s, t) => s + t.valor, 0),
+            custoDetalhe: custo.map(t => t.descricao.trim().replace(/\s+/g, ' ')),
+          });
+        });
+      });
+
+      if (!linhas.length) return '';
+
+      const financiado = linhas.reduce((s, l) => s + l.ficou, 0);
+      const custoTotal = linhas.reduce((s, l) => s + l.custo, 0);
+
+      return `
+        <div class="section-title">Fatura paga a menor</div>
+        <div class="aviso aviso-info">
+          Pagar menos que o total da fatura é <b>tomar crédito</b>: o saldo rola para a fatura seguinte
+          e o banco cobra por carregar. O principal que rola <b>não conta como gasto</b> — são as mesmas
+          compras sendo carregadas, já contadas quando aconteceram. O que entra como despesa é o custo
+          de carregar, em <b>despesa financeira</b>: juros, mora, IOF e encargos.
+        </div>
+        <div class="grid">
+          ${cartaoKpi('Financiado no ano', moeda(financiado), `${linhas.length} ${linhas.length === 1 ? 'fatura paga a menor' : 'faturas pagas a menor'}`, 'var(--accent-yellow)')}
+          ${cartaoKpi('Custo desse crédito', custoTotal > 0 ? moeda(custoTotal) : 'não cobrado até aqui', 'juros, mora, IOF e encargos', 'var(--accent-red)')}
+        </div>
+        <div class="card full-width" style="overflow-x:auto">
+          <table class="tabela-dados">
+            <thead>
+              <tr><th>Cartão</th><th>Fatura</th><th>Venceu</th><th class="num">Total</th><th class="num">Pago</th><th class="num">Ficou devendo</th><th>Rolou para</th><th class="num">Custo cobrado</th></tr>
+            </thead>
+            <tbody>
+              ${linhas.map(l => `
+                <tr>
+                  <td>${nomeDoCartao(l.cartao)}</td>
+                  <td>${l.mes}</td>
+                  <td>${dataBr(l.vencimento) || '<span class="texto-suave">não cadastrado</span>'}</td>
+                  <td class="num">${moeda(l.total)}</td>
+                  <td class="num">${moeda(l.pago)}</td>
+                  <td class="num" style="color: var(--accent-yellow)">${moeda(l.ficou)}</td>
+                  <td>${l.rolouPara}${l.confirmado ? '' : ' <span class="texto-suave">(não confere com o saldo declarado)</span>'}</td>
+                  <td class="num">${l.custo > 0
+                    ? `${moeda(l.custo)}<div class="kpi-sub">${l.custoDetalhe.join('<br>')}</div>`
+                    : '<span class="texto-suave">sem cobrança na fatura seguinte</span>'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
     // Fatura renegociada: as parcelas nao entram no gasto, entao sem este bloco
     // sumiriam da tela — e sao dinheiro saindo da conta todo mes. Aqui aparecem
     // pelo que sao: divida sendo quitada, parcela a parcela.
@@ -2919,6 +3013,7 @@
       const investimentos = dadosGlobais.investimentos || [];
       const abertas = contarParcelasAbertas();
       const renegociada = blocoFaturaRenegociada();
+      const aMenor = financiamentoPorPagarAMenor();
 
       if (!dividas.length && !investimentos.length) {
         container.innerHTML = `
@@ -2933,7 +3028,8 @@
               ? `Existem <b>${abertas.parcelas} parcelas</b> a vencer, somando <b>${moeda(abertas.valor)}</b>. Esse valor é um compromisso assumido e entra como passivo quando o patrimônio for calculado.`
               : 'Não há parcelas em aberto no cartão.'}
           </div>
-          ${renegociada}`;
+          ${aMenor}
+        ${renegociada}`;
         return;
       }
 
@@ -2968,6 +3064,7 @@
             </tbody>
           </table>
         </div>
+        ${aMenor}
         ${renegociada}`;
     }
 
