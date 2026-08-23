@@ -259,19 +259,33 @@ function noEscopo(mv) {
     .filter(([, ps]) => foiEstornada(ps)).length;
   if (canceladosNaSequencia) console.log(`    (${canceladosNaSequencia} parcelamento(s) estornado(s), fora da checagem de sequência)`);
 
+  // Uma parcela por fatura, sempre avancando. Pular um mes com a numeracao
+  // inteira nao e erro: quando o vencimento do cartao muda de dia, um ciclo pode
+  // nao vencer em mes nenhum — foi o que houve no 3794 entre maio e julho. O que
+  // denuncia fatura faltando e buraco na numeracao, e disso cuida o teste
+  // seguinte. Aqui so pega o que nao tem explicacao: duas parcelas na mesma
+  // fatura, ou uma parcela posterior vencendo antes da anterior.
+  const mesOrdinal = t => MES_ORDEM.indexOf(t.mes_vencimento.split('/')[0]) + 12 * +t.mes_vencimento.split('/')[1];
+  const saltos = [];
   const sequenciaFatura = Object.entries(compras)
     .filter(([, ps]) => new Set(ps.map(p => p.mes_vencimento)).size > 1)
     .filter(([, ps]) => !foiEstornada(ps))
     .filter(([, ps]) => {
-    const ord = [...ps].sort((a, b) => a.parcela_numero - b.parcela_numero);
-    for (let i = 1; i < ord.length; i++) {
-      const d = MES_ORDEM.indexOf(ord[i].mes_vencimento.split('/')[0]) + 12 * +ord[i].mes_vencimento.split('/')[1]
-              - MES_ORDEM.indexOf(ord[i - 1].mes_vencimento.split('/')[0]) - 12 * +ord[i - 1].mes_vencimento.split('/')[1];
-      if (d !== 1) return true;
-    }
-    return false;
-  });
-  ok('Parcelas de um mesmo parcelamento caem em faturas consecutivas', sequenciaFatura.length === 0,
+      const ord = [...ps].sort((a, b) => a.parcela_numero - b.parcela_numero);
+      let ruim = false;
+      for (let i = 1; i < ord.length; i++) {
+        const d = mesOrdinal(ord[i]) - mesOrdinal(ord[i - 1]);
+        if (d < 1) ruim = true;
+        else if (d > 1 && ord[i].parcela_numero === ord[i - 1].parcela_numero + 1) {
+          saltos.push(`${ord[i].descricao.trim().slice(0, 24)} ${ord[i - 1].mes_vencimento}→${ord[i].mes_vencimento}`);
+        }
+      }
+      return ruim;
+    });
+  if (saltos.length) {
+    console.log(`    (${saltos.length} parcelamento(s) pulam um mês sem perder parcela — vencimento mudou de dia: ${saltos.slice(0, 3).join(', ')})`);
+  }
+  ok('Cada parcela cai numa fatura, e sempre adiante da anterior', sequenciaFatura.length === 0,
      sequenciaFatura.slice(0, 3).map(([, ps]) => ps[0].descricao).join(' | '));
 
   const numeracaoOk = Object.entries(compras).filter(([, ps]) => {

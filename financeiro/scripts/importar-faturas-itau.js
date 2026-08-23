@@ -430,31 +430,79 @@ transacoes.forEach(t => { t.ambito = empresas.has(t.pessoa) ? 'empresa' : 'pesso
 //
 // A mesma compra parcelada aparece em varias faturas, sempre com a data e o
 // valor de parcela originais. Isso identifica a compra atraves das faturas.
+//
+// Roda sobre o conjunto inteiro depois da mesclagem, nunca so sobre o lote
+// recem-lido: importando fatura por fatura, cada parcela formaria sozinha uma
+// "compra" de uma parcela so, sem enxergar as irmas ja gravadas.
+
+// O mesmo estabelecimento vem ora com a cidade, ora sem: "Magic Kids" numa
+// fatura e "Magic Kids        Jundiai       Br" na seguinte. Pela descricao as
+// duas viram compras diferentes, e o parcelamento aparece partido ao meio.
+//
+// Fundir so quando tudo mais coincide — mesma data de compra, mesmo numero de
+// parcelas, mesmo valor — e uma descricao e prefixo da outra. Duas compras
+// distintas que casem nos tres numeros ainda ficam separadas se o nome divergir
+// no meio.
+function fundirVariacoesDeNome(grupos) {
+  const porNumeros = {};
+  Object.entries(grupos).forEach(([chave, ps]) => {
+    if (ps[0].parcela_fonte === 'descricao') return;   // recorrente: a data varia
+    const k = `${ps[0].data}|${ps[0].parcela_total}|${ps[0].valor.toFixed(2)}`;
+    (porNumeros[k] = porNumeros[k] || []).push(chave);
+  });
+
+  let fundidos = 0;
+  Object.values(porNumeros).filter(cs => cs.length > 1).forEach(chaves => {
+    const nome = c => normalizar(grupos[c][0].descricao);
+    const base = chaves.reduce((a, b) => (nome(a).length <= nome(b).length ? a : b));
+    const juntar = chaves.filter(c => c === base || nome(c).startsWith(nome(base)));
+    if (juntar.length < 2) return;
+
+    const destino = juntar.reduce((a, b) => (grupos[a].length >= grupos[b].length ? a : b));
+    juntar.filter(c => c !== destino).forEach(c => {
+      grupos[destino].push(...grupos[c]);
+      delete grupos[c];
+      fundidos++;
+    });
+  });
+  return fundidos;
+}
+
+function vincularParcelas(todas) {
+  const porCompra = {};
+  todas.filter(t => t.eh_parcelada).forEach(t => {
+    (porCompra[chaveDaCompra(t)] = porCompra[chaveDaCompra(t)] || []).push(t);
+  });
+
+  fundirVariacoesDeNome(porCompra);
+
+  Object.values(porCompra).forEach(parcelas => {
+    parcelas.sort((a, b) => a.parcela_numero - b.parcela_numero);
+    const idCompra = `compra_${parcelas[0].id}`;
+    const completa = parcelas.length === parcelas[0].parcela_total;
+    // Com o parcelamento inteiro a vista, o total e a soma real das parcelas —
+    // a ultima costuma trazer alguns centavos de ajuste. Sem ele, o total e uma
+    // estimativa a partir do valor da parcela.
+    const valorTotal = completa
+      ? Math.round(parcelas.reduce((acc, p) => acc + p.valor, 0) * 100) / 100
+      : Math.round(parcelas[0].valor * parcelas[0].parcela_total * 100) / 100;
+    parcelas.forEach(p => {
+      p.id_compra = idCompra;
+      p.data_compra_original = p.data;
+      p.valor_total_compra = valorTotal;
+      p.valor_total_exato = completa;
+      // Parcelas que caem fora das faturas importadas: as anteriores a primeira
+      // e as posteriores a ultima.
+      p.parcelas_no_periodo = parcelas.length;
+    });
+  });
+
+  return Object.keys(porCompra).length;
+}
 
 const porCompra = {};
 transacoes.filter(t => t.eh_parcelada).forEach(t => {
   (porCompra[chaveDaCompra(t)] = porCompra[chaveDaCompra(t)] || []).push(t);
-});
-
-Object.values(porCompra).forEach(parcelas => {
-  parcelas.sort((a, b) => a.parcela_numero - b.parcela_numero);
-  const idCompra = `compra_${parcelas[0].id}`;
-  const completa = parcelas.length === parcelas[0].parcela_total;
-  // Com o parcelamento inteiro a vista, o total e a soma real das parcelas —
-  // a ultima costuma trazer alguns centavos de ajuste. Sem ele, o total e uma
-  // estimativa a partir do valor da parcela.
-  const valorTotal = completa
-    ? Math.round(parcelas.reduce((acc, p) => acc + p.valor, 0) * 100) / 100
-    : Math.round(parcelas[0].valor * parcelas[0].parcela_total * 100) / 100;
-  parcelas.forEach(p => {
-    p.id_compra = idCompra;
-    p.data_compra_original = p.data;
-    p.valor_total_compra = valorTotal;
-    p.valor_total_exato = completa;
-    // Parcelas que caem fora das faturas importadas: as anteriores a primeira
-    // e as posteriores a ultima.
-    p.parcelas_no_periodo = parcelas.length;
-  });
 });
 
 const comprasParceladas = Object.keys(porCompra).length;
@@ -526,6 +574,13 @@ const finais = [...preservadas, ...transacoes].sort((a, b) => {
   const ib = MESES.indexOf(b.mes_vencimento.split('/')[0]) + 12 * +b.mes_vencimento.split('/')[1];
   return ia - ib || a.data.localeCompare(b.data);
 });
+
+// So agora da para ligar as parcelas: e aqui que as recem-lidas encontram as
+// irmas que ja estavam gravadas.
+const comprasLigadas = vincularParcelas(finais);
+if (preservadas.length) {
+  console.log(`\nParcelamentos religados com o que já estava gravado: ${comprasLigadas} compras`);
+}
 
 // Cabecalhos: os das faturas lidas agora substituem os antigos de mesmo mes.
 // Com --substituir-tudo os antigos vao junto com os lancamentos — mante-los
