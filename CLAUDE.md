@@ -17,8 +17,9 @@ Controle das contas **pessoais** da Juliane e do Hugo. Não tem relação nenhum
 com Shopee, afiliados ou e-commerce — se surgir essa mistura, é engano.
 
 ### Estrutura
-- 5 abas: Painel, Lançamentos, Para Onde Vai, Cartão & Faturas, Dívidas & Patrimônio.
-  Importar / Configurações / Editor ficam no menu **⚡ Ferramentas**.
+- 7 abas: Painel, Lançamentos, Para Onde Vai, Cartão & Faturas, Dívidas &
+  Patrimônio, Fluxo de Caixa, Imposto de Renda. Importar / Configurações /
+  Editor ficam no menu **⚡ Ferramentas**.
 - Escopo: **somente 2026** (`ANO_DASHBOARD` em `public/index.html`).
 - O mês usado em tudo é `mes_vencimento` (regime de caixa) — quando o dinheiro
   sai da conta, não quando a compra foi feita.
@@ -79,6 +80,37 @@ financiados.
 - O IOF que acompanha uma compra (`Iof Internacional - Hostinger`) herda a
   **pessoa** de quem comprou. Fixar Família jogaria para a casa o IOF de
   assinatura da Benetti UP.
+
+### Fluxo de Caixa (previsto x realizado)
+Um mês é **realizado** ou **previsto** pela data de calendário de verdade
+(`new Date()` no momento do render comparado ao `mes_vencimento`), nunca por
+ter ou não ter lançamento — uma fatura aberta de setembro já traz algumas
+compras antes mesmo de setembro chegar, e isso não faz setembro virar passado.
+
+- **Mês passado**: mostra receita e despesa reais, comparadas com a **média do
+  próprio ano**. Não existe orçamento cadastrado para comparar — a média é a
+  única referência honesta disponível.
+- **Mês futuro** soma duas coisas que a tela nunca mistura:
+  - `compromisso` — parcela de dívida (`divida_parcelada`) e de compra no
+    cartão que **já se sabe o valor exato**, vencida ou projetada a partir da
+    última parcela conhecida de cada contrato/compra.
+  - `estimativa` — o resto do gasto (mercado, combustível, farmácia), que não
+    está contratado mas se repete todo mês. Calculada pela média do gasto
+    avulso (`!eh_parcelada`) dos meses já realizados.
+- **Compromisso nunca é só o projetado.** Uma fatura pode fechar com
+  vencimento num mês futuro trazendo uma parcela **já lançada de verdade**
+  (`divida_parcelada` ou `despesa` parcelada com `mes_vencimento` à frente de
+  hoje) — isso não é projeção, é fato, e entra no compromisso do mês em vez de
+  ficar de fora. Ignorar isso subestimou o compromisso de setembro/2026 em
+  R$ 6.184,53 na primeira versão.
+- **O que já apareceu numa fatura aberta é piso, não substitui a estimativa**:
+  `Math.max(mediaAvulsa, avulsaJaLancadaNoMes)` — a fatura aberta só reflete o
+  que aconteceu até a data do arquivo, o mês continua enchendo.
+- Receita futura é a média das receitas já realizadas — **inclui PLR e
+  adiantamento**, que puxam a média para cima. É estimativa, não promessa; a
+  tela avisa isso.
+- Respeita o seletor de âmbito (Pessoal / Benetti UP / Tudo somado), ao
+  contrário do Imposto de Renda, que é sempre pessoal.
 
 ### Múltiplos cartões
 Três cartões: **4846** (Itaú Black, pessoal), **0442** (Visa Infinite, quase

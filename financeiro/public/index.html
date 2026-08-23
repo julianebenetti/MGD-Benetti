@@ -1217,6 +1217,7 @@
       <button class="tab-button" data-tab="para_onde_vai">📊 Para Onde Vai</button>
       <button class="tab-button" data-tab="cartao">💳 Cartão &amp; Faturas</button>
       <button class="tab-button" data-tab="dividas">🏦 Dívidas &amp; Patrimônio</button>
+      <button class="tab-button" data-tab="fluxocaixa">📅 Fluxo de Caixa</button>
       <button class="tab-button" data-tab="irpf">🧮 Imposto de Renda</button>
 
       <div id="abas-ocultas" style="display: none;">
@@ -1438,13 +1439,18 @@
       <div class="card full-width" id="cartao_futuro"></div>
     </div>
 
-    <!-- TAB: DÍVIDAS E PATRIMÔNIO -->
-    <div id="irpf" class="tab-content">
-      <div id="irpf_conteudo"></div>
-    </div>
-
     <div id="dividas" class="tab-content">
       <div id="dividas_conteudo"></div>
+    </div>
+
+    <!-- TAB: FLUXO DE CAIXA PREVISTO x REALIZADO -->
+    <div id="fluxocaixa" class="tab-content">
+      <div id="fluxocaixa_conteudo"></div>
+    </div>
+
+    <!-- TAB: IMPOSTO DE RENDA -->
+    <div id="irpf" class="tab-content">
+      <div id="irpf_conteudo"></div>
     </div>
 
     <!-- TAB: FORMULÁRIO -->
@@ -1862,11 +1868,12 @@
       { id: 'para_onde_vai', nome: '📊 Para Onde Vai', visivel: true, ordem: 2 },
       { id: 'cartao', nome: '💳 Cartão & Faturas', visivel: true, ordem: 3 },
       { id: 'dividas', nome: '🏦 Dívidas & Patrimônio', visivel: true, ordem: 4 },
-      { id: 'irpf', nome: '🧮 Imposto de Renda', visivel: true, ordem: 5 },
-      { id: 'importar', nome: '📤 Importar', visivel: false, ordem: 6 },
-      { id: 'configuracoes', nome: '⚙️ Configurações', visivel: false, ordem: 7 },
-      { id: 'formulario', nome: '📝 Lançar Manual', visivel: false, ordem: 8 },
-      { id: 'editor', nome: '📋 Editor JSON', visivel: false, ordem: 9 }
+      { id: 'fluxocaixa', nome: '📅 Fluxo de Caixa', visivel: true, ordem: 5 },
+      { id: 'irpf', nome: '🧮 Imposto de Renda', visivel: true, ordem: 6 },
+      { id: 'importar', nome: '📤 Importar', visivel: false, ordem: 7 },
+      { id: 'configuracoes', nome: '⚙️ Configurações', visivel: false, ordem: 8 },
+      { id: 'formulario', nome: '📝 Lançar Manual', visivel: false, ordem: 9 },
+      { id: 'editor', nome: '📋 Editor JSON', visivel: false, ordem: 10 }
     ];
 
     let configAbasUsuario = carregarConfigAbasDoLocal();
@@ -2840,6 +2847,42 @@
     // consignado da folha nao traz essa informacao no holerite: dizer que ele
     // acaba num mes qualquer seria invencao, entao a tela diz que nao sabe.
 
+    // Meses que ainda vao vencer de um parcelamento, a partir do mes seguinte ao
+    // da ultima parcela conhecida. Usado tanto pelas dividas quanto pelas
+    // compras parceladas do cartao — a mesma aritmetica de calendario serve
+    // para as duas.
+    function mesesAVencer(mesDaUltima, numeroAtual, total, valor) {
+      const aVencer = [];
+      if (!total || !numeroAtual || numeroAtual >= total) return aVencer;
+      const [m0, a0] = mesDaUltima.split('/');
+      let idx = MES_ORDEM.indexOf(m0) + 12 * (+a0);
+      for (let n = numeroAtual + 1; n <= total; n++) {
+        idx++;
+        aVencer.push({ numero: n, mes: `${MES_ORDEM[idx % 12]}/${String(Math.floor(idx / 12)).padStart(2, '0')}`, valor });
+      }
+      return aVencer;
+    }
+
+    // Parcelas de compra no cartao que ainda vao vencer — nao sao divida, sao
+    // consumo ja decidido, mas o gasto de meses futuros so aparece se essas
+    // parcelas entrarem na conta. Sem isso o fluxo de caixa previsto ignoraria
+    // um compromisso que ja se sabe qual e.
+    function comprasParceladasAVencer() {
+      const itens = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
+        .filter(t => t.eh_parcelada && t.id_compra && t.natureza === 'despesa'
+                  && t.valor > 0 && mesNoEscopo(t.mes_vencimento) && noAmbito(t));
+
+      const porCompra = {};
+      itens.forEach(t => (porCompra[t.id_compra] = porCompra[t.id_compra] || []).push(t));
+
+      return Object.values(porCompra).flatMap(ps => {
+        ps.sort((a, b) => ordenarMeses(a.mes_vencimento, b.mes_vencimento));
+        const ultima = ps[ps.length - 1];
+        return mesesAVencer(ultima.mes_vencimento, ultima.parcela_numero, ultima.parcela_total, ps[0].valor)
+          .map(p => ({ ...p, descricao: ultima.descricao.trim().replace(/\s+/g, ' '), pessoa: ultima.pessoa }));
+      });
+    }
+
     function contratosDeDivida() {
       const parcelas = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
         .filter(t => t.natureza === 'divida_parcelada' && t.valor > 0 && mesNoEscopo(t.mes_vencimento));
@@ -2868,21 +2911,7 @@
         const total = ps[0].parcela_total || null;
         const numeroAtual = ultima.parcela_numero || null;
 
-        // Meses que ainda vao vencer, um por parcela restante, a partir do mes
-        // seguinte ao da ultima parcela conhecida.
-        const aVencer = [];
-        if (total && numeroAtual && numeroAtual < total) {
-          const [m0, a0] = ultima.mes_vencimento.split('/');
-          let idx = MES_ORDEM.indexOf(m0) + 12 * (+a0);
-          for (let n = numeroAtual + 1; n <= total; n++) {
-            idx++;
-            aVencer.push({
-              numero: n,
-              mes: `${MES_ORDEM[idx % 12]}/${String(Math.floor(idx / 12)).padStart(2, '0')}`,
-              valor,
-            });
-          }
-        }
+        const aVencer = mesesAVencer(ultima.mes_vencimento, numeroAtual, total, valor);
 
         return {
           nome: ps[0].descricao.trim().replace(/\s+/g, ' '),
@@ -3146,6 +3175,191 @@
         </div>`;
     }
 
+
+    // ---------- Fluxo de caixa previsto x realizado ----------
+    //
+    // Mes que ja passou mostra o que de fato aconteceu, comparado com a media do
+    // proprio ano — nao existe orcamento registrado para comparar, entao a media
+    // e a unica referencia honesta disponivel.
+    //
+    // Mes que ainda nao chegou mostra uma previsao com duas pecas bem
+    // distintas, marcadas separadamente para nao virarem uma coisa so:
+    //
+    //   compromisso   parcela de divida e de compra no cartao cujo valor e mes
+    //                 ja se conhece — nao e estimativa, e o numero exato.
+    //   estimativa    o resto do gasto (mercado, combustivel, farmacia), que
+    //                 nao esta contratado mas se repete todo mes. Vira a media
+    //                 do gasto avulso (nao parcelado) dos meses ja realizados.
+    //
+    // Receita futura usa a mesma logica: media do que ja entrou. Isso inclui
+    // meses com PLR e adiantamento, que puxam a media para cima — e por isso a
+    // tela avisa que e estimativa, nao promessa.
+
+    function ordinalDoMes(mv) {
+      const [m, a] = mv.split('/');
+      return MES_ORDEM.indexOf(m) + 12 * (2000 + (+a));
+    }
+
+    function dadosFluxoDeCaixa() {
+      const hoje = new Date();
+      const hojeOrdinal = hoje.getMonth() + 12 * hoje.getFullYear();
+      const ano = 2000 + ANO_DASHBOARD;
+
+      const meses = MES_ORDEM.map(m => `${m}/${ANO_DASHBOARD}`);
+      const todas = ((dadosGlobais.fluxo_mensal || {}).transacoes || []).filter(noAmbito);
+
+      const doMes = mv => todas.filter(t => t.mes_vencimento === mv);
+      const despesaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0).reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      const receitaDoMes = ts => Math.round(ts.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      const avulsaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0 && !t.eh_parcelada).reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      const parceladaDoMes = ts => Math.round(ts.filter(t => t.natureza === 'despesa' && t.valor > 0 && t.eh_parcelada).reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      // Parcela de divida (consignado, refinanciamento) nao e ehConsumo — de
+      // proposito, para nao contar como gasto — mas quando ja esta lancada num
+      // mes futuro (fatura fechada com vencimento adiante) e compromisso real,
+      // nao projetado, e tem de entrar no fluxo de caixa como tal.
+      const dividaDoMes = ts => Math.round(ts.filter(t => t.natureza === 'divida_parcelada' && t.valor > 0).reduce((s, t) => s + t.valor, 0) * 100) / 100;
+
+      const linhasBase = meses.map(mv => {
+        const ts = doMes(mv);
+        return {
+          mes: mv,
+          passado: ordinalDoMes(mv) <= hojeOrdinal,
+          temDados: ts.length > 0,
+          receitaReal: receitaDoMes(ts),
+          despesaReal: despesaDoMes(ts),
+          avulsaReal: avulsaDoMes(ts),
+          parceladaReal: parceladaDoMes(ts),
+          dividaReal: dividaDoMes(ts),
+        };
+      });
+
+      const passadosComDados = linhasBase.filter(l => l.passado && l.temDados);
+      const media = campo => passadosComDados.length
+        ? Math.round((passadosComDados.reduce((s, l) => s + l[campo], 0) / passadosComDados.length) * 100) / 100
+        : 0;
+
+      const mediaReceita = media('receitaReal');
+      const mediaAvulsa = media('avulsaReal');
+      const mediaDespesaTotal = media('despesaReal');
+
+      // Compromisso conhecido: parcela de divida e de compra no cartao que ainda
+      // vao vencer, projetadas a partir da ultima parcela ja lancada de cada
+      // contrato/compra.
+      const compromissoPorMes = {};
+      const somarCompromisso = (mv, valor) => { compromissoPorMes[mv] = (compromissoPorMes[mv] || 0) + valor; };
+      contratosDeDivida().forEach(c => c.aVencer.forEach(p => somarCompromisso(p.mes, p.valor)));
+      comprasParceladasAVencer().forEach(p => somarCompromisso(p.mes, p.valor));
+
+      const linhas = linhasBase.map(l => {
+        if (l.passado) {
+          const acimaDaMedia = mediaDespesaTotal > 0
+            ? Math.round(((l.despesaReal - mediaDespesaTotal) / mediaDespesaTotal) * 1000) / 10
+            : null;
+          return { ...l, situacao: 'realizado', receita: l.receitaReal, despesa: l.despesaReal,
+                    saldo: Math.round((l.receitaReal - l.despesaReal) * 100) / 100, acimaDaMedia };
+        }
+
+        const compromisso = Math.round(((compromissoPorMes[l.mes] || 0) + l.parceladaReal + l.dividaReal) * 100) / 100;
+        // O que ja apareceu na fatura aberta deste mes e piso, nao substitui a
+        // estimativa: fatura aberta so tem o que ja aconteceu ate a data do
+        // arquivo, o mes continua enchendo.
+        const estimativa = Math.max(mediaAvulsa, l.avulsaReal);
+        const despesa = Math.round((compromisso + estimativa) * 100) / 100;
+        const receita = Math.max(mediaReceita, l.receitaReal);
+
+        return { ...l, situacao: 'previsto', receita, despesa,
+                  saldo: Math.round((receita - despesa) * 100) / 100, compromisso, estimativa };
+      });
+
+      const aConfirmar = despesaDoMes(doMes(MES_A_CONFIRMAR));
+
+      return { linhas, mediaReceita, mediaAvulsa, mediaDespesaTotal, aConfirmar, ano };
+    }
+
+    function blocoFluxoDeCaixa() {
+      const { linhas, mediaReceita, mediaAvulsa, aConfirmar, ano } = dadosFluxoDeCaixa();
+
+      const passados = linhas.filter(l => l.situacao === 'realizado' && l.temDados);
+      const futuros = linhas.filter(l => l.situacao === 'previsto');
+
+      const saldoAteAgora = Math.round(passados.reduce((s, l) => s + l.saldo, 0) * 100) / 100;
+      const saldoProjetadoRestante = Math.round(futuros.reduce((s, l) => s + l.saldo, 0) * 100) / 100;
+      const compromissoRestante = Math.round(futuros.reduce((s, l) => s + l.compromisso, 0) * 100) / 100;
+
+      return `
+        <div class="section-title">Fluxo de caixa ${ano} — previsto x realizado</div>
+        <div class="aviso aviso-info">
+          Meses que já aconteceram mostram o que de fato entrou e saiu, comparado com a
+          <b>média do próprio ano</b> — não há orçamento registrado, então a média é a referência.
+          Meses futuros mostram duas coisas separadas: <b>compromisso</b> (parcela de dívida e de
+          cartão já contratada, valor exato) e <b>estimativa</b> (o resto do gasto, pela média do que
+          já aconteceu). A receita futura também é estimativa — inclui meses com PLR e adiantamento,
+          que puxam a média para cima.
+        </div>
+
+        <div class="grid">
+          ${cartaoKpi('Saldo até hoje', moeda(saldoAteAgora), `${passados.length} meses realizados`, saldoAteAgora >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
+          ${cartaoKpi('Saldo projetado no resto do ano', moeda(saldoProjetadoRestante), `${futuros.length} meses previstos`, saldoProjetadoRestante >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
+          ${cartaoKpi('Compromisso já contratado', moeda(compromissoRestante), 'dívida e parcelas de cartão a vencer', 'var(--accent-yellow)')}
+          ${cartaoKpi('Estimativa de gasto avulso/mês', moeda(mediaAvulsa), 'média dos meses realizados', 'var(--accent-yellow)')}
+        </div>
+
+        <div class="card full-width" style="overflow-x:auto">
+          <table class="tabela-dados">
+            <thead>
+              <tr><th>Mês</th><th>Situação</th><th class="num">Receita</th><th class="num">Despesa</th>
+                  <th class="num">Saldo</th><th>Detalhe</th></tr>
+            </thead>
+            <tbody>
+              ${linhas.map(l => {
+                if (l.situacao === 'realizado' && !l.temDados) {
+                  return `
+                    <tr>
+                      <td>${l.mes}</td>
+                      <td><span class="texto-suave">sem dado</span></td>
+                      <td class="num"><span class="texto-suave">não cadastrado</span></td>
+                      <td class="num"><span class="texto-suave">não cadastrado</span></td>
+                      <td class="num">—</td>
+                      <td class="kpi-sub">nenhuma fatura, holerite ou extrato deste mês foi importado</td>
+                    </tr>`;
+                }
+                if (l.situacao === 'realizado') {
+                  const cor = l.saldo >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                  const comparacao = l.acimaDaMedia === null ? ''
+                    : l.acimaDaMedia > 0.5
+                      ? `<span style="color: var(--accent-red)">${l.acimaDaMedia.toFixed(1)}% acima da média do ano</span>`
+                      : l.acimaDaMedia < -0.5
+                        ? `<span style="color: var(--accent-green)">${Math.abs(l.acimaDaMedia).toFixed(1)}% abaixo da média do ano</span>`
+                        : '<span class="kpi-sub">na média do ano</span>';
+                  return `
+                    <tr>
+                      <td>${l.mes}</td>
+                      <td><span style="color: var(--accent-green)">realizado</span></td>
+                      <td class="num">${moeda(l.receita)}</td>
+                      <td class="num">${moeda(l.despesa)}</td>
+                      <td class="num" style="color:${cor}">${moeda(l.saldo)}</td>
+                      <td>${comparacao}</td>
+                    </tr>`;
+                }
+                return `
+                  <tr>
+                    <td>${l.mes}</td>
+                    <td><span style="color: var(--accent-yellow)">previsto</span></td>
+                    <td class="num">${moeda(l.receita)}</td>
+                    <td class="num">${moeda(l.despesa)}</td>
+                    <td class="num">${moeda(l.saldo)}</td>
+                    <td class="kpi-sub">compromisso ${moeda(l.compromisso)} + estimativa ${moeda(l.estimativa)}</td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="kpi-sub" style="margin: 4px 0 16px">
+          Receita futura estimada em ${moeda(mediaReceita)}/mês, pela média dos meses já realizados.
+          ${aConfirmar > 0.005 ? `Fora da tabela: ${moeda(aConfirmar)} em lançamentos de fatura sem o mês exato registrado ("A confirmar").` : ''}
+        </div>`;
+    }
 
     // ---------- Imposto de Renda ----------
     //
@@ -3417,6 +3631,12 @@
       return `${MES_ORDEM[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`;
     }
 
+    function renderizarFluxoDeCaixa() {
+      const container = document.getElementById('fluxocaixa_conteudo');
+      if (!container) return;
+      container.innerHTML = blocoFluxoDeCaixa();
+    }
+
     function renderizarTodas() {
       atualizarAvisoAmbito();
       popularFiltros();
@@ -3427,6 +3647,7 @@
       renderizarParaOndeVai();
       renderizarCartao();
       renderizarDividasPatrimonio();
+      renderizarFluxoDeCaixa();
       renderizarIrpf();
 
       // Ferramentas
@@ -4688,6 +4909,7 @@ function renderizarTiposDespesaConfig() {
         if (tabId === 'para_onde_vai') renderizarParaOndeVai();
         if (tabId === 'cartao') renderizarCartao();
         if (tabId === 'dividas') renderizarDividasPatrimonio();
+        if (tabId === 'fluxocaixa') renderizarFluxoDeCaixa();
         if (tabId === 'irpf') renderizarIrpf();
       });
     });

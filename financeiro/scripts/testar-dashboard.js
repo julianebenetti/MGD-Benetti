@@ -654,7 +654,8 @@ function noEscopo(mv) {
   // --- Todas as abas renderizam ---
   for (const [id, nome] of [['painel', 'Painel'], ['lancamentos', 'Lançamentos'],
                             ['para_onde_vai', 'Para Onde Vai'], ['cartao', 'Cartão & Faturas'],
-                            ['dividas', 'Dívidas & Patrimônio'], ['irpf', 'Imposto de Renda']]) {
+                            ['dividas', 'Dívidas & Patrimônio'], ['fluxocaixa', 'Fluxo de Caixa'],
+                            ['irpf', 'Imposto de Renda']]) {
     await pagina.click(`[data-tab="${id}"]`);
     await pagina.waitForTimeout(800);
     const r = await pagina.evaluate(i => {
@@ -698,6 +699,63 @@ function noEscopo(mv) {
   ok('Contrato sem prazo é declarado como tal, não projetado',
      temContratoSemTotal === semTotalNaTela,
      `no JSON há contrato sem total: ${temContratoSemTotal} · a tela declara: ${semTotalNaTela}`);
+
+  // --- Fluxo de Caixa (previsto x realizado) ---
+  //
+  // O risco desta aba e o compromisso do mes futuro sair menor do que o que ja
+  // foi de fato lancado nele — pode acontecer quando uma fatura fecha com
+  // vencimento adiante (parcela real, nao projetada) e o calculo so soma o que
+  // foi projetado, ignorando o que ja existe. Foi um bug real desta sessao.
+  // Um passo anterior da suite deixa o ambito em 'tudo'. O fluxo de caixa
+  // respeita o ambito em exibicao (ao contrario do IRPF, que e sempre pessoal),
+  // entao o teste fixa 'pessoal' para comparar com o que o cálculo abaixo
+  // reproduz — sem isso, a comparacao dependeria de ordem de execucao.
+  await pagina.evaluate(() => trocarAmbito('pessoal'));
+  await pagina.click('[data-tab="fluxocaixa"]');
+  await pagina.waitForTimeout(900);
+  const fluxo = await pagina.evaluate(() => document.getElementById('fluxocaixa_conteudo').innerText);
+  const linhasFluxo = fluxo.split('\n');
+
+  const agora = new Date();
+  const hojeOrdinal = agora.getMonth() + 12 * agora.getFullYear();
+  const ordinalMes = mv => MES_ORDEM.indexOf(mv.split('/')[0]) + 12 * (2000 + +mv.split('/')[1]);
+  const mesesAno = MES_ORDEM.map(m => `${m}/${ANO}`);
+
+  const pessoalNoAno = todosLancamentos.filter(t =>
+    (t.ambito || 'pessoal') === 'pessoal' && t.mes_vencimento !== A_CONFIRMAR && noEscopo(t.mes_vencimento));
+
+  const saldoAteAgoraEsperado = Math.round(mesesAno
+    .filter(mv => ordinalMes(mv) <= hojeOrdinal)
+    .reduce((s, mv) => {
+      const ts = pessoalNoAno.filter(t => t.mes_vencimento === mv);
+      if (!ts.length) return s;
+      return s + somar(ts.filter(t => t.natureza === 'receita'))
+                - somar(ts.filter(t => !NAO_E_CONSUMO.includes(t.natureza) && t.valor > 0));
+    }, 0) * 100) / 100;
+  const saldoNaTela = numeroDe((fluxo.match(/SALDO ATÉ HOJE\s*\n\s*(R\$ -?[\d.,]+)/) || [])[1]);
+  igual('Fluxo de caixa: saldo até hoje bate com o calculado do JSON', saldoNaTela, saldoAteAgoraEsperado, 0.05);
+
+  const subestimou = [];
+  const classificacaoErrada = [];
+  mesesAno.forEach(mv => {
+    const linha = linhasFluxo.find(l => l.trim().startsWith(mv));
+    if (!linha) return;
+
+    const esperado = ordinalMes(mv) <= hojeOrdinal ? 'realizado' : 'previsto';
+    const situacao = /previsto/i.test(linha) ? 'previsto' : /realizado|sem dado/i.test(linha) ? 'realizado' : null;
+    if (situacao && situacao !== esperado) classificacaoErrada.push(mv);
+
+    if (situacao !== 'previsto') return;
+    const compromisso = numeroDe((linha.match(/compromisso (R\$ [\d.,]+)/) || [])[1]);
+    const ts = pessoalNoAno.filter(t => t.mes_vencimento === mv);
+    const lancado = somar(ts.filter(t =>
+      (t.natureza === 'divida_parcelada' && t.valor > 0) || (t.natureza === 'despesa' && t.valor > 0 && t.eh_parcelada)));
+    if (compromisso < lancado - 0.05) subestimou.push(`${mv}: compromisso ${brl(compromisso)} < já lançado ${brl(lancado)}`);
+  });
+  ok('Fluxo de caixa classifica cada mês como realizado ou previsto pela data certa',
+     classificacaoErrada.length === 0, classificacaoErrada.join(', '));
+  ok('Fluxo de caixa: compromisso do mês futuro nunca é menor que o já lançado nele',
+     subestimou.length === 0, subestimou.join(' | '));
 
   // --- Imposto de Renda ---
   //
