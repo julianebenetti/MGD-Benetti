@@ -284,7 +284,7 @@
 
     .fluxo-row {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(4, 1fr);
       gap: 10px;
       margin: 10px 0;
     }
@@ -1279,6 +1279,10 @@
           <div class="fluxo-item">
             <div class="fluxo-label">Estornos</div>
             <div class="fluxo-valor fluxo-positive" id="lanc-estornos">—</div>
+          </div>
+          <div class="fluxo-item">
+            <div class="fluxo-label">Soma desta seleção</div>
+            <div class="fluxo-valor" id="lanc-soma">—</div>
           </div>
         </div>
       </div>
@@ -3852,7 +3856,7 @@
     // Variáveis de estado para filtros e paginação
     let transacoesFiltradas = [];
     let paginaAtual = 1;
-    const ITENS_POR_PAGINA = 10;
+    const ITENS_POR_PAGINA = 50;
 
     function renderizarExtratoFluxo() {
       // Parte da lista ja recortada pelo ano em escopo, para que a aba nunca
@@ -4034,11 +4038,16 @@
       // somariam junto com compra e o "Total" deixaria de significar gasto.
       const compras = lista.filter(t => t.natureza === 'despesa' && t.valor > 0).reduce((s, t) => s + t.valor, 0);
       const estornos = lista.filter(t => t.natureza === 'estorno').reduce((s, t) => s + t.valor, 0);
+      // Soma crua de tudo que está na tela, sinal como gravado — útil quando o
+      // filtro já isola uma natureza só (ex: Natureza = receita, ou = divida
+      // parcelada), caso em que "compras"/"estornos" acima não dizem nada.
+      const soma = lista.reduce((s, t) => s + t.valor, 0);
 
       const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
       set('lanc-qtd', String(lista.length));
       set('lanc-total', moeda(compras));
       set('lanc-estornos', estornos < 0 ? moeda(estornos) : '—');
+      set('lanc-soma', moeda(soma));
     }
 
     function exibirTransacoes() {
