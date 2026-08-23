@@ -140,6 +140,9 @@ Regras que ela informou diretamente:
 - **Papelaria** → `educacao` (material escolar).
 - **Facebook / Meta / Google Ads** → `trafego_pago` / **Benetti UP**.
 
+- **Hostinger, OpenAI, Anthropic, Netlify, TurboScribe** → `ferramentas` /
+  **Benetti UP** — hospedagem, IA, deploy e transcrição usados no trabalho.
+
 Confirmados depois: **Mundo Cores** é a escola da Valentina; **papelaria** é
 material dos dois filhos, e por isso existe a pessoa **Filhos**.
 
