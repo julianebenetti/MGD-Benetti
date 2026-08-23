@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão Financeira - Benetti Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --light: #ecf0f1;
+      --bg: #f8f9fa;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, #e8ecf1 100%);
+      color: var(--primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      animation: slideDown 0.6s ease-out;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      opacity: 0.95;
+      animation: slideUp 0.6s ease-out 0.2s both;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1rem;
+    }
+
+    .status-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+      border-left: 4px solid var(--success);
+      animation: fadeIn 0.6s ease-out 0.3s both;
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .status-icon {
+      font-size: 2rem;
+      margin-right: 1rem;
+    }
+
+    .status-text h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .status-text p {
+      color: #7f8c8d;
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      transition: all 0.3s ease;
+      animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .card-description {
+      color: #7f8c8d;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+    .card:nth-child(4) { animation-delay: 0.4s; }
+    .card:nth-child(5) { animation-delay: 0.5s; }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .features {
+      margin: 3rem 0;
+    }
+
+    .features h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      text-align: center;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .feature-item {
+      background: white;
+      padding: 1.25rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .feature-icon {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+    }
+
+    .feature-text {
+      flex: 1;
+    }
+
+    .feature-text strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      color: var(--primary);
+    }
+
+    .feature-text small {
+      color: #7f8c8d;
+    }
+
+    .cta-section {
+      background: linear-gradient(135deg, var(--secondary) 0%, #2980b9 100%);
+      color: white;
+      padding: 2.5rem;
+      border-radius: 12px;
+      text-align: center;
+      margin: 2rem 0;
+      box-shadow: 0 4px 20px rgba(52, 152, 219, 0.3);
+    }
+
+    .cta-section h3 {
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      font-size: 1.05rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.95;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--secondary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .categories-preview {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin: 2rem 0;
+    }
+
+    .categories-preview h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .category-badge {
+      background: #f0f4f8;
+      color: var(--primary);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.9rem;
+      border-left: 3px solid var(--secondary);
+      transition: all 0.3s;
+    }
+
+    .category-badge:hover {
+      background: var(--light);
+      border-left-color: var(--success);
+    }
+
+    footer {
+      background: var(--primary);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 3rem;
+    }
+
+    .stats-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1.5rem;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.95rem;
+      opacity: 0.95;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.75rem;
+      }
+
+      .feature-list {
+        grid-template-columns: 1fr;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📊 Gestão Financeira</h1>
+    <p>Seu sistema de controle financeiro restaurado e pronto para usar</p>
+  </header>
+
+  <div class="container">
+    <!-- Status -->
+    <div class="status-box">
+      <div class="status-header">
+        <span class="status-icon">✅</span>
+        <div class="status-text">
+          <h2>Backup Restaurado com Sucesso!</h2>
+          <p>Todos os seus dados foram processados e organizados em um novo sistema moderno</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats-banner">
+      <div class="stat">
+        <div class="stat-value">536</div>
+        <div class="stat-label">Categorias</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">20</div>
+        <div class="stat-label">Classificações</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1</div>
+        <div class="stat-label">Dashboard</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">2026</div>
+        <div class="stat-label">Ano</div>
+      </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Dashboard</div>
+        <div class="card-description">Interface visual completa com gráficos e resumos</div>
+        <div class="card-number">4</div>
+        <small>Abas principais</small>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📂</div>
+        <div class="card-title">Categorias</div>
+        <div class="card-description">Hierarquia completa de despesas e receitas</div>
+        <div class="card-number">536</div>
+        <small>Categorias disponíveis</small>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">💾</div>
+        <div class="card-title">Dados</div>
+        <div class="card-description">Backup JSON, SQL e arquivos estruturados</div>
+        <div class="card-number">4</div>
+        <small>Formatos diferentes</small>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🚀</div>
+        <div class="card-title">Deploy</div>
+        <div class="card-description">Scripts prontos para publicar no VPS</div>
+        <div class="card-number">1</div>
+        <small>Script de automação</small>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📖</div>
+        <div class="card-title">Documentação</div>
+        <div class="card-description">Guias completos de uso e configuração</div>
+        <div class="card-number">3</div>
+        <small>Arquivos README</small>
+      </div>
+    </div>
+
+    <!-- CTA Principal -->
+    <div class="cta-section">
+      <h3>🎯 Comece Agora!</h3>
+      <p>Acesse o dashboard completo de gestão financeira</p>
+      <div class="button-group">
+        <a href="GestaoFinanceira.html" class="btn btn-primary">Abrir Dashboard</a>
+        <a href="FINANCIAL_BACKUP_README.md" class="btn btn-secondary" target="_blank">Ver Documentação</a>
+      </div>
+    </div>
+
+    <!-- Recursos -->
+    <div class="features">
+      <h3>✨ Recursos Principais</h3>
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon">📊</span>
+          <div class="feature-text">
+            <strong>Dashboard Interativo</strong>
+            <small>Visualize receitas, despesas e saldo em tempo real</small>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">💰</span>
+          <div class="feature-text">
+            <strong>Gerenciar Transações</strong>
+            <small>Adicione receitas e despesas com categorias</small>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">📈</span>
+          <div class="feature-text">
+            <strong>Gráficos Analíticos</strong>
+            <small>Veja distribuição de gastos com gráficos</small>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">🔍</span>
+          <div class="feature-text">
+            <strong>Explorar Categorias</strong>
+            <small>Acesse 536 categorias organizadas</small>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">💾</span>
+          <div class="feature-text">
+            <strong>Armazenamento Local</strong>
+            <small>Seus dados salvos no navegador automaticamente</small>
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <span class="feature-icon">📱</span>
+          <div class="feature-text">
+            <strong>Responsivo</strong>
+            <small>Funciona em computador, tablet e celular</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categorias Preview -->
+    <div class="categories-preview">
+      <h3>📂 Categorias Principais Disponíveis</h3>
+      <div class="categories-grid">
+        <div class="category-badge">Moradia</div>
+        <div class="category-badge">Alimentação</div>
+        <div class="category-badge">Educação</div>
+        <div class="category-badge">Saúde</div>
+        <div class="category-badge">Cultura e Lazer</div>
+        <div class="category-badge">Pessoais</div>
+        <div class="category-badge">Despesas de Trabalho</div>
+        <div class="category-badge">Impostos</div>
+        <div class="category-badge">Seguros</div>
+        <div class="category-badge">Financeiras</div>
+        <div class="category-badge">Aplicações</div>
+        <div class="category-badge">Supérfluas</div>
+        <div class="category-badge">Despesas com Filhos</div>
+        <div class="category-badge">Lazer</div>
+        <div class="category-badge">Bancos</div>
+        <div class="category-badge">Itens Domésticos</div>
+        <div class="category-badge">Educação de Filhos</div>
+        <div class="category-badge">Rendas de Trabalho</div>
+        <div class="category-badge">Cartão de Crédito</div>
+        <div class="category-badge">E mais 516...</div>
+      </div>
+    </div>
+
+    <!-- Próximos Passos -->
+    <div class="status-box" style="border-left-color: var(--warning);">
+      <div class="status-header">
+        <span class="status-icon">📝</span>
+        <div class="status-text">
+          <h2>Próximos Passos</h2>
+          <p>Recomendações para aproveitar ao máximo seu sistema</p>
+        </div>
+      </div>
+      <ol style="margin-left: 1rem; color: #7f8c8d;">
+        <li style="margin-bottom: 0.75rem;">Abra o <strong>GestaoFinanceira.html</strong> para começar</li>
+        <li style="margin-bottom: 0.75rem;">Explore as <strong>536 categorias</strong> disponíveis</li>
+        <li style="margin-bottom: 0.75rem;">Adicione suas <strong>transações</strong> para começar a rastrear</li>
+        <li style="margin-bottom: 0.75rem;">Configure <strong>backup automático</strong> (optional)</li>
+        <li>Publique no VPS usando <strong>scripts/deploy-to-vps.sh</strong></li>
+      </ol>
+    </div>
+  </div>
+
+  <footer>
+    <p>🎉 Gestão Financeira © 2026 | Backup restaurado com sucesso e pronto para uso</p>
+    <p style="margin-top: 0.5rem; opacity: 0.8; font-size: 0.9rem;">
+      Desenvolvido para Juliane Benetti | Sincronize, gerencie e analise suas finanças
+    </p>
+  </footer>
+</body>
+</html>
