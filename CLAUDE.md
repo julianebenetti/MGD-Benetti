@@ -109,6 +109,9 @@ Confirmados depois: **Mundo Cores** é a escola da Valentina; **papelaria** é
 material dos dois filhos, e por isso existe a pessoa **Filhos**.
 
 ### Ferramentas de manutenção (`financeiro/scripts/`)
+- `conferir-fatura.js arquivo.xlsx [...]` — só leitura. Diz de que mês a fatura
+  é de verdade (pelo vencimento), se já está gravada, se o conteúdo bate e qual
+  fatura anterior ela quita. Serve para checar um envio antes de importar.
 - `importar-faturas-itau.js` — reconstrói tudo a partir dos XLSX. Aceita
   `DIR_FATURAS` por variável de ambiente.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha
