@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787457127,
-  "updated_at_br": "23/08/2026 00:45",
+  "updated_at": 1787462983,
+  "updated_at_br": "23/08/2026 02:23",
   "period_days": 90,
-  "total_orders": 7838,
-  "total_conversions": 7474,
+  "total_orders": 7837,
+  "total_conversions": 7473,
   "orders": [
     {
       "ID do pedido": "2608221W9XERYG",
@@ -14157,7 +14157,7 @@
     },
     {
       "ID do pedido": "260816F9J9WF2J",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-15 20:41:15",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "25",
@@ -14169,7 +14169,7 @@
       "Comissao total do pedido(R$)": "1",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "SHOWER GEL EUDORA PULSE INTENSE (2 UNIDADES)",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58259985753",
       "ID da loja": "458363813",
       "Nome da loja": "Beleza no Precinho 2",
@@ -14177,7 +14177,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240525674131944",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-15"
     },
     {
@@ -14207,7 +14207,7 @@
     },
     {
       "ID do pedido": "260816F9J9WF2G",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-15 20:41:15",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "19.7",
@@ -14219,7 +14219,7 @@
       "Comissao total do pedido(R$)": "1.0244",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Shampoo Anticaspa Masculino Mentol Hidratação Men 325ml Above",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22594980175",
       "ID da loja": "340560457",
       "Nome da loja": "Ana Lu Universo Virtual Variedades",
@@ -14227,7 +14227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240525674131944",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-15"
     },
     {
@@ -15307,7 +15307,7 @@
     },
     {
       "ID do pedido": "260815EN42W7TM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-15 14:35:23",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "78.9",
@@ -15319,7 +15319,7 @@
       "Comissao total do pedido(R$)": "15.78",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Mochila Mala Viagem De Bordo Executiva MALETA Expansível Até 45l Boa Presentes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23494919037",
       "ID da loja": "1643020166",
       "Nome da loja": "DASÁRABIA",
@@ -15327,7 +15327,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240503722184373",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-15"
     },
     {
@@ -20507,7 +20507,7 @@
     },
     {
       "ID do pedido": "2608138B1GNP6X",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-13 02:19:00",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "32.92",
@@ -20519,7 +20519,7 @@
       "Comissao total do pedido(R$)": "3.7858",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Arranjo c/ 3 Trepadeira Folha de HERA + Vaso Trançado Marrom",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22993711209",
       "ID da loja": "1454188932",
       "Nome da loja": "SATO WORLD",
@@ -20527,7 +20527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240286740109315",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-13"
     },
     {
@@ -26532,7 +26532,7 @@
     },
     {
       "ID do pedido": "260811405JH0A8",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-11 08:53:46",
       "Sub_id1": "05Ago26MochilaExpansivel",
       "Valor de Compra(R$)": "73.16",
@@ -26544,7 +26544,7 @@
       "Comissao total do pedido(R$)": "2.9264",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Tênis Esportivo + Chinelo Masculino Leve Confortável Caminhada Academia Casual",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "45663953493",
       "ID da loja": "1546442406",
       "Nome da loja": "ARMYZ | Domi",
@@ -26552,7 +26552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240137626154327",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-11"
     },
     {
@@ -195928,31 +195928,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "233400577167199",
       "conversionStatus": "CANCELLED",
-      "data": "2026-05-25"
-    },
-    {
-      "ID do pedido": "260525B52JBCM4",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-25 04:43:32",
-      "Sub_id1": "16Mai26SaiaCamaBox",
-      "Valor de Compra(R$)": "51.89",
-      "Comissao liquida do afiliado(R$)": "1.5567",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "6.00%",
-      "Comissao Shopee(R$)": "1.5567",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.5567",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Suporte De Geladeira / Maquina De Lavar E Fogão Inox Com Rodinhas Grande",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19498142345",
-      "ID da loja": "390307022",
-      "Nome da loja": "ZSZ_brasil",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233383412188226",
-      "conversionStatus": "COMPLETED",
       "data": "2026-05-25"
     }
   ]
