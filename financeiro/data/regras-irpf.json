@@ -7,7 +7,6 @@
     "https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/perguntas-frequentes/imposto-de-renda/dirpf/deducoes/despesas-com-educacao",
     "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/preenchimento/manual-mir/pagamentos-ou-doacoes/despesas-dedutiveis"
   ],
-
   "limites": {
     "dependente": 2275.08,
     "instrucao_por_pessoa": 3561.5,
@@ -17,7 +16,6 @@
     "despesas_medicas": null,
     "pensao_alimenticia_judicial": null
   },
-
   "grupos": {
     "saude": {
       "rotulo": "Despesas médicas",
@@ -45,12 +43,13 @@
       "observacao": "Filho até 21 anos, ou até 24 se cursando ensino superior. Declarar dependente obriga a somar os rendimentos dele à declaração."
     }
   },
-
   "classificacao": [
     {
       "grupo": "saude",
       "dedutivel": true,
-      "categorias": ["saude"],
+      "categorias": [
+        "saude"
+      ],
       "excecoes_nao_dedutiveis": {
         "padrao": "drogal|drogasil|drogaria|farmacia|farmácia|panvel|pague menos|raia",
         "motivo": "Medicamento comprado na farmácia não é dedutível. Só entra remédio que faça parte da conta de internação hospitalar."
@@ -60,7 +59,9 @@
     {
       "grupo": "instrucao",
       "dedutivel": true,
-      "categorias": ["educacao"],
+      "categorias": [
+        "educacao"
+      ],
       "excecoes_nao_dedutiveis": {
         "padrao": "papelaria|megapapelaria|material escolar|uniforme|livraria",
         "motivo": "Material escolar, uniforme e transporte não contam como instrução para a Receita — só mensalidade e anuidade."
@@ -70,39 +71,73 @@
     {
       "grupo": "previdencia_oficial",
       "dedutivel": true,
-      "categorias": ["inss"],
+      "categorias": [
+        "inss"
+      ],
       "nota": "Contribuição retida na folha da Elektro."
     },
     {
       "grupo": "previdencia_privada",
       "dedutivel": true,
-      "categorias": ["previdencia_privada"],
+      "categorias": [
+        "previdencia_privada"
+      ],
       "nota": "NEOS CD, entidade fechada de previdência complementar da Elektro."
     },
     {
       "grupo": "nao_dedutivel",
       "dedutivel": false,
       "categorias": [
-        "educacao_profissional", "esportes", "alimentacao", "alimentacao_fora",
-        "transporte", "viagem", "compras", "compras_diversas", "varejo", "lazer",
-        "lazer_esportes", "cuidados_pessoais", "casa", "moradia", "pet",
-        "assinatura", "ferramentas", "trafego_pago", "seguro", "servicos",
-        "servicos_misc", "hortifruti", "pessoal", "pessoal_misc", "trabalho",
-        "encargos_financeiros", "saude_pessoal", "investimento", "transferencias",
-        "nao_classificado", "entrada"
+        "educacao_profissional",
+        "esportes",
+        "alimentacao",
+        "alimentacao_fora",
+        "transporte",
+        "viagem",
+        "compras",
+        "compras_diversas",
+        "varejo",
+        "lazer",
+        "lazer_esportes",
+        "cuidados_pessoais",
+        "casa",
+        "moradia",
+        "pet",
+        "assinatura",
+        "ferramentas",
+        "trafego_pago",
+        "seguro",
+        "servicos",
+        "servicos_misc",
+        "hortifruti",
+        "pessoal",
+        "pessoal_misc",
+        "trabalho",
+        "encargos_financeiros",
+        "saude_pessoal",
+        "investimento",
+        "transferencias",
+        "nao_classificado",
+        "entrada",
+        "doacao"
       ],
-      "nota": "Curso livre, mentoria, academia, seguro de carro e consumo em geral não deduzem. Despesa da Benetti UP é da empresa, não da pessoa física."
+      "nota": "Curso livre, mentoria, academia, seguro de carro e consumo em geral não deduzem. Doação a igreja também não: a lei só permite as feitas a fundo da criança e do idoso, Rouanet, audiovisual, desporto e PRONAS/PRONON. Despesa da Benetti UP é da empresa, não da pessoa física."
     },
     {
       "grupo": "imposto_pago",
       "dedutivel": false,
-      "categorias": ["imposto_renda"],
+      "categorias": [
+        "imposto_renda"
+      ],
       "nota": "Não é dedução: é o imposto já retido na fonte, que entra na declaração como valor pago e abate o que houver a pagar."
     },
     {
       "grupo": "divida",
       "dedutivel": false,
-      "categorias": ["consignado", "divida_parcelada"],
+      "categorias": [
+        "consignado",
+        "divida_parcelada"
+      ],
       "nota": "Pagamento de empréstimo não é despesa dedutível. O saldo devedor vai na ficha de Dívidas e Ônus Reais."
     }
   ]

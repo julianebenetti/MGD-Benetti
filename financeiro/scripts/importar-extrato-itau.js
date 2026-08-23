@@ -150,6 +150,15 @@ const REGRAS = [
     nota: 'Imposto da empresa. Entra no âmbito empresa, não no gasto pessoal.',
   },
 
+  // Oferta semanal (Juliane, 23/08). Nao deduz no imposto de renda: a lei so
+  // permite doacao a fundo da crianca e do idoso, Rouanet, audiovisual, desporto
+  // e PRONAS/PRONON. Instituicao religiosa fica de fora.
+  {
+    padrao: /PIX (TRANSF|QRS) IGREJA/i,
+    natureza: 'despesa', categoria: 'doacao', pessoa: 'Família',
+    descricao: 'Oferta à igreja',
+  },
+
   // --- boletos identificáveis pelo nome ---
   { padrao: /ESC INF NO MUND|MUNDO CORES/i, natureza: 'despesa', categoria: 'educacao', pessoa: 'Valentina', descricao: 'Escola Mundo Cores' },
   { padrao: /SOCIUM CONDOMIN|CONDOMINIO/i,  natureza: 'despesa', categoria: 'moradia',  pessoa: 'Família',   descricao: 'Condomínio' },

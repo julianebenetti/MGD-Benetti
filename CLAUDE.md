@@ -204,6 +204,10 @@ Regras que ela informou diretamente:
 - **Hostinger, OpenAI, Anthropic, Netlify, TurboScribe** → `ferramentas` /
   **Benetti UP** — hospedagem, IA, deploy e transcrição usados no trabalho.
 
+- **PIX para igreja** → `doacao` / **Família** — oferta semanal. **Não deduz no IR**:
+  a lei só permite doação a fundo da criança e do idoso, Rouanet, audiovisual,
+  desporto e PRONAS/PRONON.
+
 Confirmados depois: **Mundo Cores** é a escola da Valentina; **papelaria** é
 material dos dois filhos, e por isso existe a pessoa **Filhos**.
 
