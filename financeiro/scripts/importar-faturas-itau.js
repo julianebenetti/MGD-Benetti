@@ -279,7 +279,11 @@ function carregarClassificacaoAtual() {
 // Ficam com natureza propria: somem dos totais de gasto e do "Para Onde Vai",
 // e aparecem como divida a pagar. Ja os juros, o IOF e os encargos do
 // parcelamento sao custo novo de verdade, e seguem como despesa.
-const DIVIDA_PARCELADA = /^(parc\s+fatura|parcela\s+de\s+refinanciamento|credito\s+por\s+parcelamento)/i;
+// O Itau abrevia o mesmo evento de varias formas — "Parc Fatura Seg" e
+// "Cred Parc Fat Seguro" sao as duas pontas do mesmo parcelamento. Exigir o nome
+// por extenso deixou R$ 11.417,46 de credito entrarem como estorno comum, e
+// agosto fechou com consumo negativo.
+const DIVIDA_PARCELADA = /^(parc\s+fat|cred\s+parc\s+fat|parcela\s+de\s+refinanciamento|credito\s+(por|de)\s+parcelamento)/i;
 
 function classificarNatureza(item) {
   if (/^pagamento/i.test(item.descricao)) return 'pagamento';
@@ -402,6 +406,8 @@ faturas.forEach(f => {
 
       categoria: natureza === 'divida_parcelada'
         ? 'divida_parcelada'
+        : natureza === 'pagamento'
+        ? 'pagamento_fatura'
         : (regra && regra.categoria) || herdado.categoria || 'nao_classificado',
       classificado_por: regra ? 'regra' : (herdado.categoria ? 'herdado' : null),
       conta_origem: f.descricaoCartao || 'Cartão de Crédito Itaú',
