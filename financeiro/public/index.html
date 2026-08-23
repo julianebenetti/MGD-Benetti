@@ -480,6 +480,13 @@
       margin-top: 2px;
     }
 
+    /* Onde o dado nao existe. Nunca preencher com zero nem deixar em branco:
+       a tela diz que nao esta cadastrado. */
+    .texto-suave {
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
     .vazio {
       padding: 28px 20px;
       text-align: center;
@@ -2770,39 +2777,89 @@
 
     // ------------------------------------------------ DÍVIDAS E PATRIMÔNIO
 
+    const dataBr = d => (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) ? d.split('-').reverse().join('/') : null;
+
+    // Quem quitou a fatura de um mes aparece na fatura SEGUINTE do mesmo cartao:
+    // o extrato registra o pagamento no ciclo em que ele caiu. Por isso a busca e
+    // pela proxima fatura do cartao por vencimento, e nao pelo mes calendario —
+    // o 3794 nao tem fatura vencendo em junho e pular direto para julho e o certo.
+    //
+    // Sem a fatura seguinte importada nao da para saber se foi paga: devolve null
+    // para a tela dizer "não cadastrado" em vez de fingir que nao houve pagamento.
+    function pagamentosQueQuitaram(cartao, mes) {
+      const doCartao = faturasDoCartao()
+        .filter(f => (f.cartao || '4846') === cartao)
+        .sort((a, b) => (a.vencimento || '').localeCompare(b.vencimento || ''));
+      const i = doCartao.findIndex(f => f.mes === mes);
+      if (i < 0 || i + 1 >= doCartao.length) return null;
+      const seguinte = doCartao[i + 1];
+      return pagamentosDeFatura()
+        .filter(t => (t.cartao_final || '4846') === cartao && t.mes_vencimento === seguinte.mes)
+        .sort((a, b) => a.data.localeCompare(b.data));
+    }
+
     // Fatura renegociada: as parcelas nao entram no gasto, entao sem este bloco
     // sumiriam da tela — e sao dinheiro saindo da conta todo mes. Aqui aparecem
-    // pelo que sao: divida sendo quitada, com o que ja foi e o que falta.
+    // pelo que sao: divida sendo quitada, parcela a parcela.
     function blocoFaturaRenegociada() {
       const parcelas = parcelasDeDivida().filter(t => t.eh_parcelada && t.valor > 0);
       if (!parcelas.length) return '';
 
       const porAcordo = {};
       parcelas.forEach(t => {
-        const chave = `${t.cartao_final}|${t.descricao.trim().replace(/\s+/g, ' ')}|${t.parcela_total}`;
+        const chave = `${t.cartao_final}|${t.descricao.trim().replace(/\s+/g, ' ')}|${t.parcela_total}|${t.data}`;
         (porAcordo[chave] = porAcordo[chave] || []).push(t);
       });
 
-      const linhas = Object.values(porAcordo).map(ps => {
+      const acordos = Object.values(porAcordo).map(ps => {
         ps.sort((a, b) => a.parcela_numero - b.parcela_numero);
-        const ultima = ps[ps.length - 1];
         const total = ps[0].parcela_total;
-        const faltam = total - ultima.parcela_numero;
-        const restante = faltam * ps[0].valor;
+        const ultima = ps[ps.length - 1];
         return {
-          cartao: nomeDoCartao(ps[0].cartao_final),
+          cartao: ps[0].cartao_final,
           descricao: ps[0].descricao.trim().replace(/\s+/g, ' '),
-          parcela: ps[0].valor,
-          paga: ultima.parcela_numero,
+          negociado: ps[0].data,
+          valorParcela: ps[0].valor,
           total,
-          faltam,
-          restante,
-          ultimoMes: ultima.mes_vencimento,
+          conhecidas: ps.length,
+          faltam: total - ultima.parcela_numero,
+          restante: (total - ultima.parcela_numero) * ps[0].valor,
+          parcelas: ps,
         };
       }).sort((a, b) => b.restante - a.restante);
 
-      const aPagar = linhas.reduce((s, l) => s + l.restante, 0);
-      const jaPago = linhas.reduce((s, l) => s + l.paga * l.parcela, 0);
+      // Uma parcela so esta paga se a fatura que a cobrou foi quitada. Fatura
+      // paga em parte nao autoriza dizer que esta parcela especifica foi paga.
+      const situacaoDaParcela = p => {
+        const pgs = pagamentosQueQuitaram(p.cartao_final, p.mes_vencimento);
+        if (p.fatura_situacao === 'paga') {
+          const quando = pgs === null
+            ? null
+            : pgs.map(x => `${dataBr(x.data)} (${moeda(Math.abs(x.valor))})`).join('<br>');
+          return {
+            rotulo: '<span style="color: var(--accent-green);">paga</span>',
+            quando: quando || '<span class="texto-suave">não cadastrado</span>',
+            paga: true,
+          };
+        }
+        if (p.fatura_situacao === 'paga_parcial') {
+          return {
+            rotulo: '<span style="color: var(--accent-yellow);">fatura paga em parte</span>',
+            quando: '<span class="texto-suave">não dá para separar</span>',
+            paga: false,
+          };
+        }
+        return {
+          rotulo: `<span style="color: var(--accent-yellow);">a vencer</span>`,
+          quando: '—',
+          paga: false,
+        };
+      };
+
+      const quitadas = acordos.flatMap(a => a.parcelas).filter(p => situacaoDaParcela(p).paga);
+      const jaPago = quitadas.reduce((s, p) => s + p.valor, 0);
+      const aPagar = acordos.reduce((s, a) => s + a.restante, 0);
+      const faltam = acordos.reduce((s, a) => s + a.faltam, 0);
 
       return `
         <div class="section-title">Fatura renegociada</div>
@@ -2812,27 +2869,46 @@
           contadas quando aconteceram. Os juros e o IOF do parcelamento, esses sim, entram como despesa.
         </div>
         <div class="grid">
-          ${cartaoKpi('Ainda a pagar', moeda(aPagar), `${linhas.reduce((s, l) => s + l.faltam, 0)} parcelas`, 'var(--accent-red)')}
-          ${cartaoKpi('Já pago', moeda(jaPago), `${linhas.reduce((s, l) => s + l.paga, 0)} parcelas`, 'var(--accent-green)')}
+          ${cartaoKpi('Ainda a pagar', moeda(aPagar), `${faltam} ${faltam === 1 ? 'parcela' : 'parcelas'}`, 'var(--accent-red)')}
+          ${cartaoKpi('Já quitado', moeda(jaPago), `${quitadas.length} ${quitadas.length === 1 ? 'parcela' : 'parcelas'}`, 'var(--accent-green)')}
         </div>
-        <div class="card full-width" style="overflow-x:auto">
-          <table class="tabela-dados">
-            <thead>
-              <tr><th>Cartão</th><th>Acordo</th><th class="num">Parcela</th><th class="num">Pagas</th><th class="num">Faltam</th><th class="num">A pagar</th></tr>
-            </thead>
-            <tbody>
-              ${linhas.map(l => `
-                <tr>
-                  <td>${l.cartao}</td>
-                  <td>${l.descricao}</td>
-                  <td class="num">${moeda(l.parcela)}</td>
-                  <td class="num">${l.paga} de ${l.total}</td>
-                  <td class="num">${l.faltam || '—'}</td>
-                  <td class="num">${l.restante ? moeda(l.restante) : 'quitado'}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        </div>`;
+
+        ${acordos.map(a => `
+          <div class="card full-width" style="overflow-x:auto">
+            <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:baseline; margin-bottom:12px">
+              <b>${a.descricao}</b>
+              <span class="kpi-sub">${nomeDoCartao(a.cartao)}</span>
+              <span class="kpi-sub">negociado em ${dataBr(a.negociado) || 'data não cadastrada'}</span>
+              <span class="kpi-sub">${a.total}× de ${moeda(a.valorParcela)}</span>
+              <span class="kpi-sub">total ${moeda(a.valorParcela * a.total)}</span>
+            </div>
+            <table class="tabela-dados">
+              <thead>
+                <tr><th>Parcela</th><th class="num">Valor</th><th>Vence em</th><th>Na fatura</th><th>Situação</th><th>Fatura paga em</th></tr>
+              </thead>
+              <tbody>
+                ${a.parcelas.map(p => {
+                  const s = situacaoDaParcela(p);
+                  return `
+                    <tr>
+                      <td>${p.parcela_numero} de ${p.parcela_total}</td>
+                      <td class="num">${moeda(p.valor)}</td>
+                      <td>${dataBr(p.data_vencimento_fatura) || '<span class="texto-suave">não cadastrado</span>'}</td>
+                      <td>${p.mes_vencimento}</td>
+                      <td>${s.rotulo}</td>
+                      <td>${s.quando}</td>
+                    </tr>`;
+                }).join('')}
+                ${a.faltam > 0 ? `
+                  <tr>
+                    <td colspan="6" class="texto-suave" style="padding-top:10px">
+                      ${a.faltam} ${a.faltam === 1 ? 'parcela ainda não apareceu' : 'parcelas ainda não apareceram'} em fatura
+                      — ${moeda(a.restante)} a vencer depois de ${a.parcelas[a.parcelas.length - 1].mes_vencimento}
+                    </td>
+                  </tr>` : ''}
+              </tbody>
+            </table>
+          </div>`).join('')}`;
     }
 
     function renderizarDividasPatrimonio() {
