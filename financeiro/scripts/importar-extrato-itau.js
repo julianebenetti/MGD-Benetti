@@ -273,9 +273,22 @@ todos.sort((a, b) => a.data.localeCompare(b.data)).forEach(item => {
     mes_vencimento: mes,
     mes_referencia: mes,
     data_vencimento_fatura: item.data,
-    eh_parcelada: false,
-    parcela_numero: null,
-    parcela_total: null,
+    // "CREDITO CONSIGNADO 28/60" diz em que ponto do contrato a parcela esta.
+    // Sem ler isso, nao da para saber quantas faltam nem projetar o que ainda
+    // vai vencer — a divida vira um debito mensal sem fim a vista.
+    //
+    // So vale onde o numero e mesmo de parcela. O PIX traz a data no fim da
+    // descricao ("PIX TRANSF IGREJA 01/02"), e ler aquilo como "parcela 1 de 2"
+    // inventava um parcelamento que nao existe.
+    ...(() => {
+      const ehParcelamento = natureza === 'divida_parcelada';
+      const p = ehParcelamento && item.descricao.match(/\b(\d{1,3})\/(\d{1,3})\s*$/);
+      const n = p ? parseInt(p[1], 10) : null;
+      const total = p ? parseInt(p[2], 10) : null;
+      return p && n >= 1 && total >= 2 && n <= total && total <= 120
+        ? { eh_parcelada: true, parcela_numero: n, parcela_total: total, descricao_parcela: `${n}/${total}` }
+        : { eh_parcelada: false, parcela_numero: null, parcela_total: null };
+    })(),
     carga_id: 'extrato_itau_2026',
   });
 });

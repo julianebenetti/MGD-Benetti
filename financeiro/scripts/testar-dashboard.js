@@ -664,6 +664,41 @@ function noEscopo(mv) {
     ok(`Aba ${nome} renderiza conteúdo`, r.ativo && r.chars > 100, `${r.chars} caracteres`);
   }
 
+  // --- Fluxo de caixa das dívidas ---
+  //
+  // O risco desta tela e projetar parcela que nao existe: um numero N/M lido do
+  // lugar errado inventa um parcelamento, e a projecao vira compromisso
+  // imaginario. E o oposto tambem — contrato sem prazo nao pode ganhar uma data
+  // de fim inventada.
+  await pagina.click('[data-tab="dividas"]');
+  await pagina.waitForTimeout(900);
+  const dividas = await pagina.evaluate(() => document.getElementById('dividas_conteudo').innerText);
+
+  const parcelasDeDivida = todosLancamentos.filter(t =>
+    t.natureza === 'divida_parcelada' && t.valor > 0 && noEscopo(t.mes_vencimento));
+  const pagoEmDivida = somar(parcelasDeDivida);
+  const naTela = numeroDe((dividas.match(/PAGO EM \d{4}\s*\n\s*(R\$ [\d.,]+)/) || [])[1]);
+  igual('Dívidas: pago no ano bate com o calculado do JSON', naTela, pagoEmDivida, 0.02);
+
+  // Uma parcela por mês, por contrato: se um contrato mostrasse duas parcelas no
+  // mesmo mês, ou o agrupamento está errado ou há lançamento duplicado.
+  const porContratoMes = {};
+  parcelasDeDivida.forEach(t => {
+    const k = [t.origem, t.rubrica || t.cartao_final || '', t.descricao.trim().replace(/\s+/g, ' '),
+               t.parcela_total || '', t.mes_vencimento].join('|');
+    porContratoMes[k] = (porContratoMes[k] || 0) + 1;
+  });
+  const repetidas = Object.entries(porContratoMes).filter(([, n]) => n > 1);
+  ok('Nenhum contrato com duas parcelas no mesmo mês', repetidas.length === 0,
+     repetidas.slice(0, 3).map(([k, n]) => `${k.split('|')[2]} ${k.split('|')[4]}: ${n}x`).join(' | '));
+
+  // Contrato sem total de parcelas não pode aparecer com projeção.
+  const semTotalNaTela = /total de parcelas não cadastrado/.test(dividas);
+  const temContratoSemTotal = parcelasDeDivida.some(t => !t.parcela_total);
+  ok('Contrato sem prazo é declarado como tal, não projetado',
+     temContratoSemTotal === semTotalNaTela,
+     `no JSON há contrato sem total: ${temContratoSemTotal} · a tela declara: ${semTotalNaTela}`);
+
   // --- Imposto de Renda ---
   //
   // O risco desta aba e mandar a pessoa deduzir o que nao pode. Farmacia esta em
