@@ -46,12 +46,19 @@ if curl -sf localhost:3001/api/health > /dev/null; then
   total="$(curl -s localhost:3001/api/dados | node -e '
     let e="";process.stdin.on("data",d=>e+=d).on("end",()=>{
       const t=(JSON.parse(e).fluxo_mensal||{}).transacoes||[];
-      const g=t.filter(x=>x.natureza!=="pagamento");
-      // Conferir contra o arquivo dá números diferentes se este total não
-      // disser que as linhas de pagamento de fatura ficam de fora.
-      const pag=t.length-g.length;
-      console.log(`${g.length} lançamentos · R$ ${g.reduce((s,x)=>s+x.valor,0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`);
-      console.log(`   (${t.length} linhas no arquivo, menos ${pag} de pagamento de fatura)`);
+      // Nem toda linha do arquivo e gasto. Alem do pagamento de fatura, agora ha
+      // receita, transferencia entre contas, parcela de divida e emprestimo
+      // tomado — somar tudo daria um numero que nao significa nada. Tem de
+      // casar com NAO_E_CONSUMO no index.html.
+      const fora=["pagamento","divida_parcelada","receita","ajuste","transferencia","emprestimo"];
+      const brl=v=>"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2});
+      const pessoal=x=>(x.ambito||"pessoal")==="pessoal";
+      const gasto=t.filter(x=>!fora.includes(x.natureza));
+      const receita=t.filter(x=>x.natureza==="receita"&&pessoal(x));
+      console.log(`${t.length} lançamentos`);
+      console.log(`   gasto ${brl(gasto.reduce((s,x)=>s+x.valor,0))} em ${gasto.length} linhas`);
+      console.log(`   receita pessoal ${brl(receita.reduce((s,x)=>s+x.valor,0))} em ${receita.length} linhas`);
+      console.log(`   ${t.length-gasto.length-receita.length} linhas fora dos totais: pagamento de fatura, transferência e dívida`);
     });')"
   echo "→ No ar: $total"
   echo

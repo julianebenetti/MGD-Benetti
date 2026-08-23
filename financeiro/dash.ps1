@@ -144,11 +144,14 @@ curl -s localhost:3001/api/dados | node -e '
 let e="";process.stdin.on("data",d=>e+=d).on("end",()=>{
   const j=JSON.parse(e);
   const t=(j.fluxo_mensal||{}).transacoes||[];
-  const g=t.filter(x=>x.natureza!=="pagamento");
+  const fora=["pagamento","divida_parcelada","receita","ajuste","transferencia","emprestimo"];
+  const g=t.filter(x=>!fora.includes(x.natureza));
   const brl=v=>"R$ "+v.toLocaleString("pt-BR",{minimumFractionDigits:2});
   const por={};g.forEach(x=>{const a=x.ambito||"pessoal";por[a]=(por[a]||0)+x.valor;});
-  console.log("lancamentos|"+g.length);
-  console.log("linhas no arquivo|"+t.length+" ("+(t.length-g.length)+" de pagamento de fatura)");
+  const rec=t.filter(x=>x.natureza==="receita"&&(x.ambito||"pessoal")==="pessoal");
+  console.log("gasto|"+g.length+" lancamentos");
+  console.log("receita pessoal|"+brl(rec.reduce((s,x)=>s+x.valor,0)));
+  console.log("linhas no arquivo|"+t.length+" ("+(t.length-g.length)+" fora dos totais)");
   Object.entries(por).forEach(([k,v])=>console.log(k+"|"+brl(v)));
   (j.faturas_cartao||[]).filter(f=>f.em_aberto>0.05)
     .forEach(f=>console.log("aberto "+f.cartao+" "+f.mes+"|"+brl(f.em_aberto)));
