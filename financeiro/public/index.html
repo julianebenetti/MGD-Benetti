@@ -2138,18 +2138,30 @@
       return (t.ambito || 'pessoal') === ambitoAtual;
     }
 
-    // Naturezas que aparecem no extrato do cartao mas nao sao consumo:
+    // Naturezas que existem no extrato mas nao sao consumo:
     //
     //   pagamento         quitacao da fatura anterior
-    //   divida_parcelada  parcela da fatura que foi renegociada
+    //   divida_parcelada  parcela de fatura renegociada ou de consignado
+    //   receita           dinheiro entrando: salario, PLR, benefício
+    //   ajuste            acerto de competencia na folha; entra e sai igual
     //
-    // As duas contariam a mesma despesa duas vezes — as compras ja entraram uma
-    // a uma na fatura em que aconteceram. A parcela do refinanciamento e dinheiro
-    // saindo da conta, e por isso aparece como divida a pagar, mas nao entra em
-    // quanto se gastou nem no "Para Onde Vai". Ja os juros e o IOF do
-    // parcelamento sao custo novo e seguem como despesa comum.
-    const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada'];
+    // Pagamento e divida contariam a mesma despesa duas vezes — as compras ja
+    // entraram uma a uma quando aconteceram. A parcela e dinheiro saindo da
+    // conta, e por isso aparece como divida a pagar, mas nao entra em quanto se
+    // gastou nem no "Para Onde Vai". Ja os juros e o IOF do parcelamento sao
+    // custo novo e seguem como despesa comum.
+    const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada', 'receita', 'ajuste'];
     const ehConsumo = t => !NAO_E_CONSUMO.includes(t.natureza);
+
+    function receitas() {
+      const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      return brutas.filter(t => t.natureza === 'receita' && mesNoEscopo(t.mes_vencimento) && noAmbito(t));
+    }
+
+    // Nem todo lançamento vem de fatura: o desconto em folha também é lançamento
+    // do mês. Sem esta checagem ele cairia no cartão 4846, que é só o padrão de
+    // quem não tem cartão anotado — e a fatura deixaria de fechar.
+    const veioDoCartao = t => (t.origem || '').startsWith('cartao_credito');
 
     function todasTransacoes() {
       const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
@@ -2587,7 +2599,7 @@
     // nao bater com o valor a pagar.
     function transacoesDoCartao() {
       return ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
-        .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
+        .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento' && veioDoCartao(t));
     }
 
     async function renderizarCartao() {

@@ -603,9 +603,16 @@ const anteriores = (base.fluxo_mensal || {}).transacoes || [];
 const faturasImportadas = new Set(faturas.map(f => `${f.finalCartao}|${f.mesVencimento}`));
 const chaveDe = t => `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
 
+// Este script so manda no que veio de fatura. Holerite e qualquer outra origem
+// ficam de pe ate com --substituir-tudo: sem isso, um lancamento de folha de
+// marco herdaria a chave "4846|Mar/26" pelo padrao do cartao e sumiria ao
+// reimportar a fatura daquele mes.
+const daFatura = t => (t.origem || '').startsWith('cartao_credito');
+const deOutraOrigem = anteriores.filter(t => !daFatura(t));
+
 const preservadas = substituirTudo
-  ? []
-  : anteriores.filter(t => !faturasImportadas.has(chaveDe(t)));
+  ? deOutraOrigem
+  : anteriores.filter(t => !daFatura(t) || !faturasImportadas.has(chaveDe(t)));
 
 const substituidas = anteriores.length - preservadas.length;
 const finais = [...preservadas, ...transacoes].sort((a, b) => {

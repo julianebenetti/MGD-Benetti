@@ -76,7 +76,7 @@ function noEscopo(mv) {
   // que quita a fatura anterior, e a parcela da fatura renegociada, que quita
   // parceladamente compras ja contadas na epoca. Somar junto cobraria as mesmas
   // compras duas vezes. Tem de casar com NAO_E_CONSUMO no index.html.
-  const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada'];
+  const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada', 'receita', 'ajuste'];
   const todas = todosLancamentos.filter(t => !NAO_E_CONSUMO.includes(t.natureza));
   const pagamentos = todosLancamentos.filter(t => t.natureza === 'pagamento');
   const dividaParcelada = todosLancamentos.filter(t => t.natureza === 'divida_parcelada');
@@ -98,7 +98,8 @@ function noEscopo(mv) {
   // A reconciliacao contra a fatura soma tambem a parcela da fatura renegociada:
   // a fatura cobra ela, e o 'cobrado' do cabecalho a inclui. Ela sai dos totais
   // de gasto, nao do que o cartao esta cobrando.
-  [...escopo, ...dividaParcelada.filter(t => noEscopo(t.mes_vencimento))].forEach(t => {
+  const veioDoCartao = t => (t.origem || '').startsWith('cartao_credito');
+  [...escopo, ...dividaParcelada.filter(t => noEscopo(t.mes_vencimento))].filter(veioDoCartao).forEach(t => {
     const chaveFatura = `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
     ref.porFatura[chaveFatura] = Math.round(((ref.porFatura[chaveFatura] || 0) + t.valor) * 100) / 100;
   });
@@ -115,12 +116,21 @@ function noEscopo(mv) {
   // O cobrado do cabecalho inclui a parcela da fatura renegociada, que sai do
   // total de gasto. Descontar aqui e o que faz as duas contas falarem da mesma
   // coisa: consumo de um lado, consumo do outro.
+  //
+  // Compara so o que veio de cartao: desconto em folha e gasto, mas nenhuma
+  // fatura o cobra, e somar os dois faria a conta nunca fechar.
   const cobradoTotal = Math.round(faturas.reduce((s, f) => s + f.cobrado, 0) * 100) / 100;
-  const dividaTotal = Math.round(somar(dividaParcelada.filter(t => noEscopo(t.mes_vencimento))) * 100) / 100;
+  const dividaNoCartao = dividaParcelada.filter(t => noEscopo(t.mes_vencimento) && veioDoCartao(t));
+  const dividaTotal = Math.round(somar(dividaNoCartao) * 100) / 100;
+  const gastoNoCartao = Math.round(somar(todas.filter(veioDoCartao)) * 100) / 100;
+  const foraDoCartao = todas.filter(t => !veioDoCartao(t));
   console.log(`    (${faturas.length} faturas · ${ref.totalLinhas} lançamentos de gasto · ` +
     `${pagamentos.length} pagamentos · ${dividaParcelada.length} de dívida parcelada, ${brl(dividaTotal)})`);
-  igual('Soma dos gastos bate com o cobrado, fora a dívida parcelada',
-        ref.totalGeral, Math.round((cobradoTotal - dividaTotal) * 100) / 100);
+  if (foraDoCartao.length) {
+    console.log(`    (${foraDoCartao.length} lançamentos fora do cartão — desconto em folha, ${brl(somar(foraDoCartao))})`);
+  }
+  igual('Gasto no cartão bate com o cobrado, fora a dívida parcelada',
+        gastoNoCartao, Math.round((cobradoTotal - dividaTotal) * 100) / 100);
   ok('Cada fatura tem ao menos um pagamento registrado', pagamentos.length >= faturas.length,
      `${pagamentos.length} pagamentos para ${faturas.length} faturas`);
   ok('Todo pagamento tem valor negativo', pagamentos.every(t => t.valor < 0));
@@ -176,7 +186,7 @@ function noEscopo(mv) {
   // Conta sobre todos os lancamentos, nao sobre 'escopo': o cabecalho declara as
   // linhas da fatura, e a fatura inclui as de pagamento que 'escopo' descarta.
   const contar = f => todosLancamentos
-    .filter(t => (t.cartao_final || '4846') === f.cartao && t.mes_vencimento === f.mes).length;
+    .filter(t => veioDoCartao(t) && (t.cartao_final || '4846') === f.cartao && t.mes_vencimento === f.mes).length;
   const divergentes = faturas.filter(f => contar(f) !== f.lancamentos);
   ok(`As ${faturas.length} faturas trazem os lançamentos que o cabeçalho declara`,
      divergentes.length === 0,
@@ -565,7 +575,7 @@ function noEscopo(mv) {
 
   // A mistura e real: o cartao pessoal carrega gasto da empresa. E por isso
   // que a separacao existe.
-  const empresaNoCartaoPessoal = todas.filter(t => t.ambito === 'empresa' && (t.cartao_final || '4846') === '4846');
+  const empresaNoCartaoPessoal = todas.filter(t => t.ambito === 'empresa' && veioDoCartao(t) && (t.cartao_final || '4846') === '4846');
   if (empresaNoCartaoPessoal.length) {
     console.log(`    (${empresaNoCartaoPessoal.length} lançamento(s) da empresa no cartão pessoal: ${brl(somar(empresaNoCartaoPessoal))})`);
   }
