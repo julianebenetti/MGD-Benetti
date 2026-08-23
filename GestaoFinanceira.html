@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão Financeira - Juliane Benetti</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --light: #ecf0f1;
+      --bg: #f8f9fa;
+      --text: #2c3e50;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: white;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--light);
+    }
+
+    .tab-button {
+      padding: 1rem 1.5rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-button:hover {
+      color: var(--secondary);
+    }
+
+    .tab-button.active {
+      color: var(--secondary);
+      border-bottom-color: var(--secondary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .card-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 1rem 0;
+    }
+
+    .card-label {
+      color: #7f8c8d;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .value-positive {
+      color: var(--success);
+    }
+
+    .value-negative {
+      color: var(--danger);
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .chart-container h3 {
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .form-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 600px;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--primary);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #2980b9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .transaction-list {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .transaction-item {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .transaction-item:last-child {
+      border-bottom: none;
+    }
+
+    .transaction-info h4 {
+      margin-bottom: 0.25rem;
+      color: var(--primary);
+    }
+
+    .transaction-info p {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+    }
+
+    .transaction-amount {
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .amount-income {
+      color: var(--success);
+    }
+
+    .amount-expense {
+      color: var(--danger);
+    }
+
+    .category-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .category-item {
+      background: white;
+      padding: 1rem;
+      border-radius: 6px;
+      border-left: 4px solid var(--secondary);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .category-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .category-name {
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .category-meta {
+      font-size: 0.85rem;
+      color: #7f8c8d;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-box {
+      background: var(--light);
+      padding: 1rem;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--secondary);
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-top: 0.5rem;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #7f8c8d;
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    footer {
+      background: var(--primary);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.5rem;
+      }
+
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .tab-button {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--secondary);
+    }
+
+    .alert {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📊 Gestão Financeira</h1>
+    <p>Juliane Benetti | Seu controle de receitas e despesas</p>
+  </header>
+
+  <div class="container">
+    <!-- Abas -->
+    <div class="tabs">
+      <button class="tab-button active" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-button" onclick="switchTab('transacoes')">Transações</button>
+      <button class="tab-button" onclick="switchTab('categorias')">Categorias</button>
+      <button class="tab-button" onclick="switchTab('relatorios')">Relatórios</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="tab-content active">
+      <div id="resumo-container" class="grid"></div>
+
+      <div class="charts-grid">
+        <div class="chart-container">
+          <h3>Distribuição de Despesas</h3>
+          <canvas id="chartDespesas"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Distribuição de Receitas</h3>
+          <canvas id="chartReceitas"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3>Resumo por Centro de Classificação</h3>
+        <canvas id="chartClassificacao"></canvas>
+      </div>
+    </div>
+
+    <!-- Transações -->
+    <div id="transacoes" class="tab-content">
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+        <div>
+          <h2>Adicionar Transação</h2>
+          <div class="form-section">
+            <div id="alert-container"></div>
+            <form id="form-transacao">
+              <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="desc" placeholder="Ex: Compra no supermercado" required>
+              </div>
+
+              <div class="form-group">
+                <label>Categoria</label>
+                <select id="categoria" required>
+                  <option value="">Selecione uma categoria...</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Valor (R$)</label>
+                  <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                  <label>Tipo</label>
+                  <select id="tipo">
+                    <option value="despesa">Despesa</option>
+                    <option value="receita">Receita</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="data" required>
+              </div>
+
+              <div class="form-group">
+                <label>Observações</label>
+                <textarea id="obs" placeholder="Adicione notas sobre a transação..." rows="3"></textarea>
+              </div>
+
+              <button type="submit" class="btn-success" style="width: 100%;">Adicionar Transação</button>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <h2>Transações Recentes</h2>
+          <div id="lista-transacoes" class="transaction-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categorias -->
+    <div id="categorias" class="tab-content">
+      <h2>Categorias Disponíveis</h2>
+      <div style="margin-bottom: 1.5rem;">
+        <input type="text" id="filtro-categorias" placeholder="Filtrar categorias..." style="max-width: 300px;">
+      </div>
+      <div id="lista-categorias" class="category-list"></div>
+    </div>
+
+    <!-- Relatórios -->
+    <div id="relatorios" class="tab-content">
+      <h2>Relatórios</h2>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-label">Total de Receitas</div>
+          <div class="card-value value-positive" id="total-receitas">R$ 0,00</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total de Despesas</div>
+          <div class="card-value value-negative" id="total-despesas">R$ 0,00</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Saldo</div>
+          <div class="card-value" id="saldo">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3>Receitas vs Despesas (últimos 30 dias)</h3>
+        <canvas id="chartComparativo"></canvas>
+      </div>
+
+      <div class="chart-container">
+        <h3>Tendência de Gastos</h3>
+        <canvas id="chartTendencia"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Gestão Financeira © 2026 | Backup restaurado com sucesso</p>
+  </footer>
+
+  <script>
+    // State
+    const state = {
+      transacoes: [],
+      categorias: [],
+      classificacoes: [],
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      setupDateInput();
+      setupFormHandler();
+      setupCategoryFilter();
+    });
+
+    function loadData() {
+      // Load categories from JSON backup
+      fetch('financial-backup.json')
+        .then(r => r.json())
+        .then(data => {
+          state.categorias = data.categories || [];
+          state.classificacoes = data.classificationCenters || [];
+          renderCategoriasList();
+          populateCategorySelect();
+          updateDashboard();
+        })
+        .catch(err => console.error('Error loading backup:', err));
+
+      // Load transactions from localStorage
+      const saved = localStorage.getItem('transacoes');
+      if (saved) {
+        state.transacoes = JSON.parse(saved);
+        renderTransacoesList();
+      }
+    }
+
+    function setupDateInput() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('data').value = today;
+    }
+
+    function setupFormHandler() {
+      document.getElementById('form-transacao').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const transacao = {
+          id: Date.now(),
+          descricao: document.getElementById('desc').value,
+          categoria: document.getElementById('categoria').value,
+          valor: parseFloat(document.getElementById('valor').value),
+          tipo: document.getElementById('tipo').value,
+          data: document.getElementById('data').value,
+          obs: document.getElementById('obs').value,
+        };
+
+        state.transacoes.unshift(transacao);
+        localStorage.setItem('transacoes', JSON.stringify(state.transacoes));
+
+        showAlert('Transação adicionada com sucesso!', 'success');
+        document.getElementById('form-transacao').reset();
+        setupDateInput();
+        renderTransacoesList();
+        updateDashboard();
+      });
+    }
+
+    function setupCategoryFilter() {
+      document.getElementById('filtro-categorias').addEventListener('input', (e) => {
+        const filter = e.target.value.toLowerCase();
+        document.querySelectorAll('.category-item').forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(filter) ? 'block' : 'none';
+        });
+      });
+    }
+
+    function populateCategorySelect() {
+      const select = document.getElementById('categoria');
+      const mainCategories = state.categorias.filter(c => !c.parentId);
+
+      mainCategories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.name;
+        select.appendChild(option);
+      });
+    }
+
+    function renderCategoriasList() {
+      const container = document.getElementById('lista-categorias');
+      const mainCategories = state.categorias.filter(c => !c.parentId);
+
+      container.innerHTML = mainCategories.map(cat => {
+        const subCategories = state.categorias.filter(c => c.parentId === cat.id);
+        return `
+          <div class="category-item">
+            <div class="category-name">${cat.name}</div>
+            <div class="category-meta">
+              <p>Sub-categorias: ${subCategories.length}</p>
+              <p>Usos: ${cat.useCount || 0}</p>
+              <p>${cat.isCost ? '💰 Despesa' : ''} ${cat.isRevenue ? '💸 Receita' : ''}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTransacoesList() {
+      const container = document.getElementById('lista-transacoes');
+
+      if (state.transacoes.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Nenhuma transação adicionada ainda</p></div>';
+        return;
+      }
+
+      container.innerHTML = state.transacoes.map(t => {
+        const cat = state.categorias.find(c => c.id == t.categoria);
+        const catName = cat ? cat.name : 'Sem categoria';
+        const isIncome = t.tipo === 'receita';
+
+        return `
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <h4>${t.descricao}</h4>
+              <p>${catName} • ${formatDate(t.data)}</p>
+              ${t.obs ? `<p style="font-size: 0.85rem; color: #95a5a6;">📝 ${t.obs}</p>` : ''}
+            </div>
+            <div class="transaction-amount ${isIncome ? 'amount-income' : 'amount-expense'}">
+              ${isIncome ? '+' : '-'}R$ ${formatCurrency(t.valor)}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateDashboard() {
+      updateResumo();
+      updateCharts();
+      updateRelatorios();
+    }
+
+    function updateResumo() {
+      const container = document.getElementById('resumo-container');
+
+      const totalReceita = state.transacoes
+        .filter(t => t.tipo === 'receita')
+        .reduce((sum, t) => sum + t.valor, 0);
+
+      const totalDespesa = state.transacoes
+        .filter(t => t.tipo === 'despesa')
+        .reduce((sum, t) => sum + t.valor, 0);
+
+      const saldo = totalReceita - totalDespesa;
+
+      container.innerHTML = `
+        <div class="card">
+          <div class="card-label">Receitas</div>
+          <div class="card-value value-positive">R$ ${formatCurrency(totalReceita)}</div>
+          <div class="stat-row">
+            <div class="stat-box">
+              <div class="stat-label">Transações</div>
+              <div class="stat-value">${state.transacoes.filter(t => t.tipo === 'receita').length}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-label">Despesas</div>
+          <div class="card-value value-negative">R$ ${formatCurrency(totalDespesa)}</div>
+          <div class="stat-row">
+            <div class="stat-box">
+              <div class="stat-label">Transações</div>
+              <div class="stat-value">${state.transacoes.filter(t => t.tipo === 'despesa').length}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-label">Saldo</div>
+          <div class="card-value ${saldo >= 0 ? 'value-positive' : 'value-negative'}">R$ ${formatCurrency(Math.abs(saldo))}</div>
+          <div class="stat-row">
+            <div class="stat-box">
+              <div class="stat-label">Total Transações</div>
+              <div class="stat-value">${state.transacoes.length}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateCharts() {
+      // Despesas by category
+      const despesasByCategory = {};
+      const receitasByCategory = {};
+
+      state.transacoes.forEach(t => {
+        const cat = state.categorias.find(c => c.id == t.categoria);
+        const catName = cat ? cat.name : 'Sem categoria';
+
+        if (t.tipo === 'despesa') {
+          despesasByCategory[catName] = (despesasByCategory[catName] || 0) + t.valor;
+        } else {
+          receitasByCategory[catName] = (receitasByCategory[catName] || 0) + t.valor;
+        }
+      });
+
+      // Chart 1: Despesas
+      const ctx1 = document.getElementById('chartDespesas');
+      if (ctx1) {
+        new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(despesasByCategory),
+            datasets: [{
+              data: Object.values(despesasByCategory),
+              backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'],
+              borderColor: '#fff',
+              borderWidth: 2,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { position: 'bottom' },
+            },
+          },
+        });
+      }
+
+      // Chart 2: Receitas
+      const ctx2 = document.getElementById('chartReceitas');
+      if (ctx2) {
+        new Chart(ctx2, {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(receitasByCategory),
+            datasets: [{
+              data: Object.values(receitasByCategory),
+              backgroundColor: ['#27AE60', '#16A085', '#2ECC71', '#1ABC9C', '#3498DB'],
+              borderColor: '#fff',
+              borderWidth: 2,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { position: 'bottom' },
+            },
+          },
+        });
+      }
+    }
+
+    function updateRelatorios() {
+      const totalReceita = state.transacoes
+        .filter(t => t.tipo === 'receita')
+        .reduce((sum, t) => sum + t.valor, 0);
+
+      const totalDespesa = state.transacoes
+        .filter(t => t.tipo === 'despesa')
+        .reduce((sum, t) => sum + t.valor, 0);
+
+      const saldo = totalReceita - totalDespesa;
+
+      document.getElementById('total-receitas').textContent = `R$ ${formatCurrency(totalReceita)}`;
+      document.getElementById('total-despesas').textContent = `R$ ${formatCurrency(totalDespesa)}`;
+      document.getElementById('saldo').textContent = `R$ ${formatCurrency(Math.abs(saldo))}`;
+      document.getElementById('saldo').className = 'card-value ' + (saldo >= 0 ? 'value-positive' : 'value-negative');
+    }
+
+    function showAlert(message, type = 'info') {
+      const container = document.getElementById('alert-container');
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type}`;
+      alert.textContent = message;
+      container.appendChild(alert);
+
+      setTimeout(() => alert.remove(), 3000);
+    }
+
+    function switchTab(tabName) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function formatCurrency(value) {
+      return value.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('pt-BR');
+    }
+  </script>
+</body>
+</html>

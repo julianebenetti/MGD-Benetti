@@ -1,0 +1,5365 @@
+{
+  "categories": [
+    {
+      "id": "470079",
+      "name": "CPMF",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470082",
+      "name": "PIS",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888469",
+      "name": "Seguro Obrigatório",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888431",
+      "name": "Licenciamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888441",
+      "name": "Multa",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3522726",
+      "name": "Inventário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470077",
+      "name": "IPTU",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470081",
+      "name": "FGTS",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470078",
+      "name": "IPVA",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470080",
+      "name": "INSS",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5508988",
+      "name": "E-Social",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470086",
+      "name": "IOF",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470083",
+      "name": "IRRF",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470077",
+      "name": "IPTU",
+      "fullName": "Impostos / IPTU",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 204,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470078",
+      "name": "IPVA",
+      "fullName": "Impostos / IPVA",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 35,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470079",
+      "name": "CPMF",
+      "fullName": "Impostos / CPMF",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470080",
+      "name": "INSS",
+      "fullName": "Impostos / INSS",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 579,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470081",
+      "name": "FGTS",
+      "fullName": "Impostos / FGTS",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 363,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470082",
+      "name": "PIS",
+      "fullName": "Impostos / PIS",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470083",
+      "name": "IRRF",
+      "fullName": "Impostos / IRRF",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 292,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470086",
+      "name": "IOF",
+      "fullName": "Impostos / IOF",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 119,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470090",
+      "name": "Outros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470088",
+      "name": "Feira",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888359",
+      "name": "Frangonete",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888361",
+      "name": "Peixaria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888358",
+      "name": "Açougue",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888360",
+      "name": "Lanchonete",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470089",
+      "name": "Supermercado",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888362",
+      "name": "Varejão",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470092",
+      "name": "Restaurantes",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470091",
+      "name": "Padaria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470088",
+      "name": "Feira",
+      "fullName": "Alimentação / Feira",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 11,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470089",
+      "name": "Supermercado",
+      "fullName": "Alimentação / Supermercado",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 1240,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470090",
+      "name": "Outros",
+      "fullName": "Alimentação / Outros",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 67,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470091",
+      "name": "Padaria",
+      "fullName": "Alimentação / Padaria",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 741,
+      "createdAt": "2011-12-09T18:15:17-02:00"
+    },
+    {
+      "id": "470092",
+      "name": "Restaurantes",
+      "fullName": "Alimentação / Restaurantes",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 863,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470094",
+      "name": "Animal de Estimação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470093",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470096",
+      "name": "Veterinário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470093",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470095",
+      "name": "Suprimentos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470093",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470094",
+      "name": "Animal de Estimação",
+      "fullName": "Animal de Estimação / Animal de Estimação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470093",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470095",
+      "name": "Suprimentos",
+      "fullName": "Animal de Estimação / Suprimentos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470093",
+      "useCount": 8,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470096",
+      "name": "Veterinário",
+      "fullName": "Animal de Estimação / Veterinário",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470093",
+      "useCount": 7,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470098",
+      "name": "Juros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888342",
+      "name": "Taxas Bancárias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888424",
+      "name": "Encargos Financeiros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888427",
+      "name": "Taxa de Serviço",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888425",
+      "name": "Tarifa C.C.",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821392",
+      "name": "Cartão de Crédito",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470098",
+      "name": "Juros",
+      "fullName": "Bancos / Juros",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 39,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470100",
+      "name": "Aposentadoria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470099",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470102",
+      "name": "Plano de Previdência",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470099",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470100",
+      "name": "Aposentadoria",
+      "fullName": "Benefícios / Aposentadoria",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470099",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470102",
+      "name": "Plano de Previdência",
+      "fullName": "Benefícios / Plano de Previdência",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470099",
+      "useCount": 1,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470110",
+      "name": "Mesada",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470105",
+      "name": "Lazer",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4515617",
+      "name": "Vacina",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4606484",
+      "name": "Importados",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4116057",
+      "name": "Brinquedos e Jogos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5597253",
+      "name": "Presentes",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4090922",
+      "name": "Festa",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4904778",
+      "name": "Escola - Natação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3890154",
+      "name": "Enxoval",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4250964",
+      "name": "Remédio",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470108",
+      "name": "Médico",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3947686",
+      "name": "Higiene e Limpeza",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5591241",
+      "name": "Escola - Transporte",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5658276",
+      "name": "Escola - Ballet",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5592181",
+      "name": "Escola - Uniforme",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5670858",
+      "name": "Dentista - Ortodontista",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470109",
+      "name": "Escola",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5780832",
+      "name": "Terapia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470106",
+      "name": "Babá",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470107",
+      "name": "Vestuário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5599944",
+      "name": "Escola - Material Escolar",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470105",
+      "name": "Lazer",
+      "fullName": "Despesas com Filhos / Lazer",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 6,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470106",
+      "name": "Babá",
+      "fullName": "Despesas com Filhos / Babá",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 168,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470107",
+      "name": "Vestuário",
+      "fullName": "Despesas com Filhos / Vestuário",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 1075,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470108",
+      "name": "Médico",
+      "fullName": "Despesas com Filhos / Médico",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 162,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470109",
+      "name": "Escola",
+      "fullName": "Despesas com Filhos / Escola",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 790,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470110",
+      "name": "Mesada",
+      "fullName": "Despesas com Filhos / Mesada",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470103",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470112",
+      "name": "Táxi - Combustível",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888433",
+      "name": "Seguro de Vida",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888435",
+      "name": "Assistencia Médica",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888458",
+      "name": "Táxi",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888445",
+      "name": "Desconto de Outros Beneficios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888471",
+      "name": "Confraternização - Festas",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3599394",
+      "name": "Táxi - Pedágio",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3599392",
+      "name": "Táxi - Fone Ponto",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3676329",
+      "name": "Táxi - Lava-rápido",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3890296",
+      "name": "Despesas de Trabalho",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4524060",
+      "name": "Táxi - Acessórios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5639321",
+      "name": "Táxi - Aplicativo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5691199",
+      "name": "Transporte",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5632737",
+      "name": "Táxi - Arrendamento - Permissão 0614",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3676328",
+      "name": "Táxi - Documentação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888444",
+      "name": "Desconto Folha Pgto",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888432",
+      "name": "Sindicato",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5608311",
+      "name": "Táxi - MEI Micro Empreendedor Individual",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888436",
+      "name": "Assistencia Odontologica",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888363",
+      "name": "Refeição",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3136116",
+      "name": "Táxi - Manutenção",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470112",
+      "name": "Táxi - Combustível",
+      "fullName": "Despesas de Trabalho / Táxi - Combustível",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 156,
+      "createdAt": "2011-12-09T18:15:18-02:00"
+    },
+    {
+      "id": "470116",
+      "name": "Escola - Universidade",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470117",
+      "name": "Outros Gastos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888365",
+      "name": "Pós-Graduação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888366",
+      "name": "Transporte",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888367",
+      "name": "Xerox",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888364",
+      "name": "Material Escolar",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470115",
+      "name": "Livros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470114",
+      "name": "Cursos e Treinamentos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888396",
+      "name": "Conselho Regional",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470114",
+      "name": "Cursos e Treinamentos",
+      "fullName": "Educação / Cursos e Treinamentos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 279,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470115",
+      "name": "Livros",
+      "fullName": "Educação / Livros",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 19,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470116",
+      "name": "Escola - Universidade",
+      "fullName": "Educação / Escola - Universidade",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470117",
+      "name": "Outros Gastos",
+      "fullName": "Educação / Outros Gastos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 5,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "1888397",
+      "name": "Material de limpeza",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3687727",
+      "name": "Computadores",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888438",
+      "name": "Decoração",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821391",
+      "name": "Ar Condicionado",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5222788",
+      "name": "Higiene",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888475",
+      "name": "Cama, mesa e banho",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470119",
+      "name": "Utensílios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470119",
+      "name": "Utensílios",
+      "fullName": "Itens Domésticos / Utensílios",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 253,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470129",
+      "name": "Fitas e CDs",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470128",
+      "name": "Eventos Esportivos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470125",
+      "name": "Cinema e Locação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470130",
+      "name": "Livros e Revistas",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470124",
+      "name": "Brinquedos e Jogos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888380",
+      "name": "Teatro",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888370",
+      "name": "Artigos Esportivos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888371",
+      "name": "Barzinho",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888374",
+      "name": "Danceteria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888378",
+      "name": "Praia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888373",
+      "name": "Clube",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888453",
+      "name": "Artesanato",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888376",
+      "name": "Jogos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888381",
+      "name": "Sorveteria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888372",
+      "name": "Churrasco",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888375",
+      "name": "Festa",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888379",
+      "name": "Show",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888456",
+      "name": "Doceria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470127",
+      "name": "Eventos Culturais",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3090700",
+      "name": "Estadia - Hotel",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470126",
+      "name": "Diversão",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5592182",
+      "name": "Viagem - Programa Milhas",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470123",
+      "name": "Viagem",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888377",
+      "name": "Parque",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470123",
+      "name": "Viagem",
+      "fullName": "Lazer / Viagem",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 671,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470124",
+      "name": "Brinquedos e Jogos",
+      "fullName": "Lazer / Brinquedos e Jogos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 14,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470125",
+      "name": "Cinema e Locação",
+      "fullName": "Lazer / Cinema e Locação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 240,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470126",
+      "name": "Diversão",
+      "fullName": "Lazer / Diversão",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 41,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470127",
+      "name": "Eventos Culturais",
+      "fullName": "Lazer / Eventos Culturais",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 6,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470128",
+      "name": "Eventos Esportivos",
+      "fullName": "Lazer / Eventos Esportivos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 1,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470129",
+      "name": "Fitas e CDs",
+      "fullName": "Lazer / Fitas e CDs",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 2,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470130",
+      "name": "Livros e Revistas",
+      "fullName": "Lazer / Livros e Revistas",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 66,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470133",
+      "name": "Aluguel",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470139",
+      "name": "Condicionadores de Ar",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888440",
+      "name": "Condominio - Fundo de Reserva",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888395",
+      "name": "Lavanderia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888452",
+      "name": "Reforma",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888467",
+      "name": "Manutenção",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2263249",
+      "name": "Eletro-Doméstico",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2263259",
+      "name": "Mobiliário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470132",
+      "name": "Água e Esgoto",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5401909",
+      "name": "Aluguel Box Armazenamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888439",
+      "name": "Condomínio - Taxa de Melhorias - Obras",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470134",
+      "name": "Condomínio",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2263257",
+      "name": "Eletro-Eletrônico",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888344",
+      "name": "Energia Elétrica",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470132",
+      "name": "Água e Esgoto",
+      "fullName": "Moradia / Água e Esgoto",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 401,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470133",
+      "name": "Aluguel",
+      "fullName": "Moradia / Aluguel",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 5,
+      "createdAt": "2011-12-09T18:15:19-02:00"
+    },
+    {
+      "id": "470134",
+      "name": "Condomínio",
+      "fullName": "Moradia / Condomínio",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 680,
+      "createdAt": "2011-12-09T18:15:20-02:00"
+    },
+    {
+      "id": "470139",
+      "name": "Condicionadores de Ar",
+      "fullName": "Moradia / Condicionadores de Ar",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 7,
+      "createdAt": "2011-12-09T18:15:20-02:00"
+    },
+    {
+      "id": "1888443",
+      "name": "Serviço Funerário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888341",
+      "name": "Loteria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1938194",
+      "name": "Oferta",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3601511",
+      "name": "Cartório",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3841364",
+      "name": "Fotografia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470144",
+      "name": "Devolução de Impostos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888455",
+      "name": "Venda Artesanato",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888450",
+      "name": "EROC - IGREJA DE CRISTO",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888454",
+      "name": "Diversos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3109840",
+      "name": "Venda Produtos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470147",
+      "name": "Principal do Empréstimo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3009702",
+      "name": "Programa Pontos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470143",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470144",
+      "name": "Devolução de Impostos",
+      "fullName": "Outros Rendimentos / Devolução de Impostos",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 53,
+      "createdAt": "2011-12-09T18:15:20-02:00"
+    },
+    {
+      "id": "470147",
+      "name": "Principal do Empréstimo",
+      "fullName": "Outros Rendimentos / Principal do Empréstimo",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 1101,
+      "createdAt": "2011-12-09T18:15:20-02:00"
+    },
+    {
+      "id": "470151",
+      "name": "Fisioterapia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470152",
+      "name": "Hospital",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470150",
+      "name": "Dentista",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888474",
+      "name": "Psicoterapia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888408",
+      "name": "Exame",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2881508",
+      "name": "Tratamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470153",
+      "name": "Médico",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470155",
+      "name": "Remédios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888434",
+      "name": "Pilates",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470154",
+      "name": "Ótica",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5401910",
+      "name": "Diversos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888407",
+      "name": "Convênio",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470150",
+      "name": "Dentista",
+      "fullName": "Saúde / Dentista",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 10,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470151",
+      "name": "Fisioterapia",
+      "fullName": "Saúde / Fisioterapia",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470152",
+      "name": "Hospital",
+      "fullName": "Saúde / Hospital",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 1,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470153",
+      "name": "Médico",
+      "fullName": "Saúde / Médico",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 9,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470154",
+      "name": "Ótica",
+      "fullName": "Saúde / Ótica",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 53,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470155",
+      "name": "Remédios",
+      "fullName": "Saúde / Remédios",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 714,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470158",
+      "name": "Benefícios do INSS",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470157",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470159",
+      "name": "Previdência Privada",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470157",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470158",
+      "name": "Benefícios do INSS",
+      "fullName": "Rendimento de Aposentadoria / Benefícios do INSS",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470157",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470159",
+      "name": "Previdência Privada",
+      "fullName": "Rendimento de Aposentadoria / Previdência Privada",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470157",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470164",
+      "name": "Juros não-tributáveis",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470160",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470165",
+      "name": "Outros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470160",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470166",
+      "name": "Renda de Aluguel",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470160",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470163",
+      "name": "Juros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470160",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470163",
+      "name": "Juros",
+      "fullName": "Rendimento de Investimentos / Juros",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470160",
+      "useCount": 181,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470164",
+      "name": "Juros não-tributáveis",
+      "fullName": "Rendimento de Investimentos / Juros não-tributáveis",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470160",
+      "useCount": 1,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470165",
+      "name": "Outros",
+      "fullName": "Rendimento de Investimentos / Outros",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470160",
+      "useCount": 2,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470166",
+      "name": "Renda de Aluguel",
+      "fullName": "Rendimento de Investimentos / Renda de Aluguel",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470160",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470168",
+      "name": "Bônus",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470169",
+      "name": "Comissão",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888420",
+      "name": "Arredondamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888421",
+      "name": "Aviso Prévio",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888423",
+      "name": "Rescisão",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888464",
+      "name": "Média de férias (abono)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888463",
+      "name": "1_3 Média de férias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888418",
+      "name": "13º Salário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888460",
+      "name": "1_3 Abono de férias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888422",
+      "name": "Férias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888465",
+      "name": "1_3 Média de férias (abono)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888459",
+      "name": "Abono de férias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888462",
+      "name": "Média de férias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1933552",
+      "name": "Requalificação Profissional",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3704003",
+      "name": "Prest. Serviço - Táxi (Cartão)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5632735",
+      "name": "Prest. Serviço - Táxi (Arrendamento - Permissão 0614)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2026018",
+      "name": "Gratificação de férias - acordo coletivo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888461",
+      "name": "1_3 Férias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888470",
+      "name": "Alimentação - Refeição",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3775796",
+      "name": "Prest. Serviço - Táxi (Voucher)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3782806",
+      "name": "Prest. Serviço - Táxi (Depósito)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888473",
+      "name": "PLR - Participação Lucros e Resultados",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888430",
+      "name": "Prest. Serviço - Táxi",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888419",
+      "name": "Adiantamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5632734",
+      "name": "Prest. Serviço - Táxi (Mercado Pago)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470171",
+      "name": "Salários",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470170",
+      "name": "Horas Extras",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470168",
+      "name": "Bônus",
+      "fullName": "Proventos / Bônus",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 4,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470169",
+      "name": "Comissão",
+      "fullName": "Proventos / Comissão",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470170",
+      "name": "Horas Extras",
+      "fullName": "Proventos / Horas Extras",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 86,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470171",
+      "name": "Salários",
+      "fullName": "Proventos / Salários",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 432,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470175",
+      "name": "Saúde",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470177",
+      "name": "Vida",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470173",
+      "name": "Automóvel",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888345",
+      "name": "Veículo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888347",
+      "name": "Residência",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3742286",
+      "name": "Táxi",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3599395",
+      "name": "Banco",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470173",
+      "name": "Automóvel",
+      "fullName": "Seguros / Automóvel",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 14,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470175",
+      "name": "Saúde",
+      "fullName": "Seguros / Saúde",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470177",
+      "name": "Vida",
+      "fullName": "Seguros / Vida",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 14,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470184",
+      "name": "Telefone Fixo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470183",
+      "name": "Internet",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470185",
+      "name": "TV a cabo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470182",
+      "name": "Celular",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470182",
+      "name": "Celular",
+      "fullName": "Telecomunicações / Celular",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 1045,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470183",
+      "name": "Internet",
+      "fullName": "Telecomunicações / Internet",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 605,
+      "createdAt": "2011-12-09T18:15:21-02:00"
+    },
+    {
+      "id": "470184",
+      "name": "Telefone Fixo",
+      "fullName": "Telecomunicações / Telefone Fixo",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 81,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470185",
+      "name": "TV a cabo",
+      "fullName": "Telecomunicações / TV a cabo",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470181",
+      "useCount": 409,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470188",
+      "name": "Metrô",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470189",
+      "name": "Ônibus",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470187",
+      "name": "Avião",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470194",
+      "name": "Estacionamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2149674",
+      "name": "Pedágio",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821399",
+      "name": "Lava rápido",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470193",
+      "name": "Combustível",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2437425",
+      "name": "Documentação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470190",
+      "name": "Táxi",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470195",
+      "name": "Manutenção",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470192",
+      "name": "Prestação do Carro",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470187",
+      "name": "Avião",
+      "fullName": "Transportes / Avião",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 2,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470188",
+      "name": "Metrô",
+      "fullName": "Transportes / Metrô",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 1,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470189",
+      "name": "Ônibus",
+      "fullName": "Transportes / Ônibus",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 101,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470190",
+      "name": "Táxi",
+      "fullName": "Transportes / Táxi",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 94,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470192",
+      "name": "Prestação do Carro",
+      "fullName": "Transportes / Prestação do Carro",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 38,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470193",
+      "name": "Combustível",
+      "fullName": "Transportes / Combustível",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 655,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470194",
+      "name": "Estacionamento",
+      "fullName": "Transportes / Estacionamento",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 222,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "470195",
+      "name": "Manutenção",
+      "fullName": "Transportes / Manutenção",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 31,
+      "createdAt": "2011-12-09T18:15:22-02:00"
+    },
+    {
+      "id": "1888368",
+      "name": "Passadeira",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470197",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888349",
+      "name": "Faxineira",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470197",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888416",
+      "name": "Moda Ginástica",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888448",
+      "name": "Costureira",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888457",
+      "name": "Perfumes",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888411",
+      "name": "Moda Praia",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888417",
+      "name": "Vestido",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3924948",
+      "name": "Gestante",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888415",
+      "name": "Lingeries - Meias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888410",
+      "name": "Acessórios - Bijouterias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888413",
+      "name": "Bermudas - Calças",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888414",
+      "name": "Sapatos - Sandálias",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888412",
+      "name": "Blusa - Blaser",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470204",
+      "name": "Roupas e Acessórios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470204",
+      "name": "Roupas e Acessórios",
+      "fullName": "Vestuário / Roupas e Acessórios",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 95,
+      "createdAt": "2011-12-09T18:15:23-02:00"
+    },
+    {
+      "id": "470207",
+      "name": "Musculação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888354",
+      "name": "Depilação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888355",
+      "name": "Limpeza de Pele",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888356",
+      "name": "Podóloga",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888449",
+      "name": "Centro de Beleza",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888353",
+      "name": "Produtos de Beleza",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888350",
+      "name": "Manicure - Pedicure",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888357",
+      "name": "Cabeleireiro",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470207",
+      "name": "Musculação",
+      "fullName": "Estética / Musculação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 0,
+      "createdAt": "2011-12-09T18:15:23-02:00"
+    },
+    {
+      "id": "470211",
+      "name": "Juros do Empréstimo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470209",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888369",
+      "name": "À Terceiros",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470209",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470210",
+      "name": "Empréstimo",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470209",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470210",
+      "name": "Empréstimo",
+      "fullName": "Empréstimo / Empréstimo",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470209",
+      "useCount": 411,
+      "createdAt": "2011-12-09T18:15:23-02:00"
+    },
+    {
+      "id": "470211",
+      "name": "Juros do Empréstimo",
+      "fullName": "Empréstimo / Juros do Empréstimo",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470209",
+      "useCount": 4,
+      "createdAt": "2011-12-09T18:15:23-02:00"
+    },
+    {
+      "id": "470213",
+      "name": "Imóvel",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888426",
+      "name": "Titulo Capitalização",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888437",
+      "name": "Automóvel",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888472",
+      "name": "Aplicação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2386367",
+      "name": "Poupança",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4645713",
+      "name": "Imóvel (cota)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888346",
+      "name": "Pecúlio (Seguro de Vida)",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888428",
+      "name": "Previdência Privada",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "470213",
+      "name": "Imóvel",
+      "fullName": "Investimentos / Imóvel",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 201,
+      "createdAt": "2011-12-09T18:15:23-02:00"
+    },
+    {
+      "id": "2639526",
+      "name": "Lar Cristão",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821389",
+      "name": "Amigo Secreto",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821395",
+      "name": "Chá de bebê",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821397",
+      "name": "Sobrinhas",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821390",
+      "name": "Amigos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2955977",
+      "name": "Casamento",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2263258",
+      "name": "Natal",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3821396",
+      "name": "Data comemorativa",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "2485016",
+      "name": "Aniversário",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888337",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888341",
+      "name": "Loteria",
+      "fullName": "Outros / Loteria",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 72,
+      "createdAt": "2013-01-29T08:25:25-02:00"
+    },
+    {
+      "id": "1888342",
+      "name": "Taxas Bancárias",
+      "fullName": "Bancos / Taxas Bancárias",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 4,
+      "createdAt": "2013-01-29T08:25:25-02:00"
+    },
+    {
+      "id": "1888451",
+      "name": "EROC - IGREJA DE CRISTO",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888343",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888351",
+      "name": "Transferência Poupança",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888343",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888352",
+      "name": "Transferência Investimentos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "1888343",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "1888344",
+      "name": "Energia Elétrica",
+      "fullName": "Moradia / Energia Elétrica",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 397,
+      "createdAt": "2013-01-29T08:25:34-02:00"
+    },
+    {
+      "id": "1888345",
+      "name": "Veículo",
+      "fullName": "Seguros / Veículo",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 65,
+      "createdAt": "2013-01-29T08:25:38-02:00"
+    },
+    {
+      "id": "1888346",
+      "name": "Pecúlio (Seguro de Vida)",
+      "fullName": "Investimentos / Pecúlio (Seguro de Vida)",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 393,
+      "createdAt": "2013-01-29T08:25:40-02:00"
+    },
+    {
+      "id": "1888347",
+      "name": "Residência",
+      "fullName": "Seguros / Residência",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470172",
+      "useCount": 180,
+      "createdAt": "2013-01-29T08:25:42-02:00"
+    },
+    {
+      "id": "1888349",
+      "name": "Faxineira",
+      "fullName": "Empregados / Faxineira",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470197",
+      "useCount": 491,
+      "createdAt": "2013-01-29T08:25:43-02:00"
+    },
+    {
+      "id": "1888350",
+      "name": "Manicure - Pedicure",
+      "fullName": "Estética / Manicure - Pedicure",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 295,
+      "createdAt": "2013-01-29T08:25:43-02:00"
+    },
+    {
+      "id": "1888351",
+      "name": "Transferência Poupança",
+      "fullName": "Transferência entre Contas / Transferência Poupança",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "1888343",
+      "useCount": 107,
+      "createdAt": "2013-01-29T08:25:44-02:00"
+    },
+    {
+      "id": "1888352",
+      "name": "Transferência Investimentos",
+      "fullName": "Transferência entre Contas / Transferência Investimentos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "1888343",
+      "useCount": 92,
+      "createdAt": "2013-01-29T08:25:44-02:00"
+    },
+    {
+      "id": "1888353",
+      "name": "Produtos de Beleza",
+      "fullName": "Estética / Produtos de Beleza",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 269,
+      "createdAt": "2013-01-29T08:25:44-02:00"
+    },
+    {
+      "id": "1888354",
+      "name": "Depilação",
+      "fullName": "Estética / Depilação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 54,
+      "createdAt": "2013-01-29T08:25:44-02:00"
+    },
+    {
+      "id": "1888355",
+      "name": "Limpeza de Pele",
+      "fullName": "Estética / Limpeza de Pele",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 12,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888356",
+      "name": "Podóloga",
+      "fullName": "Estética / Podóloga",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 43,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888357",
+      "name": "Cabeleireiro",
+      "fullName": "Estética / Cabeleireiro",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 195,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888358",
+      "name": "Açougue",
+      "fullName": "Alimentação / Açougue",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 22,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888359",
+      "name": "Frangonete",
+      "fullName": "Alimentação / Frangonete",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 20,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888360",
+      "name": "Lanchonete",
+      "fullName": "Alimentação / Lanchonete",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 975,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888361",
+      "name": "Peixaria",
+      "fullName": "Alimentação / Peixaria",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 32,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888362",
+      "name": "Varejão",
+      "fullName": "Alimentação / Varejão",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470087",
+      "useCount": 554,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888363",
+      "name": "Refeição",
+      "fullName": "Despesas de Trabalho / Refeição",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 984,
+      "createdAt": "2013-01-29T08:25:45-02:00"
+    },
+    {
+      "id": "1888364",
+      "name": "Material Escolar",
+      "fullName": "Educação / Material Escolar",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 20,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888365",
+      "name": "Pós-Graduação",
+      "fullName": "Educação / Pós-Graduação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888366",
+      "name": "Transporte",
+      "fullName": "Educação / Transporte",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 0,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888367",
+      "name": "Xerox",
+      "fullName": "Educação / Xerox",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 4,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888368",
+      "name": "Passadeira",
+      "fullName": "Empregados / Passadeira",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470197",
+      "useCount": 12,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888369",
+      "name": "À Terceiros",
+      "fullName": "Empréstimo / À Terceiros",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470209",
+      "useCount": 2368,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888370",
+      "name": "Artigos Esportivos",
+      "fullName": "Lazer / Artigos Esportivos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 0,
+      "createdAt": "2013-01-29T08:25:46-02:00"
+    },
+    {
+      "id": "1888371",
+      "name": "Barzinho",
+      "fullName": "Lazer / Barzinho",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 4,
+      "createdAt": "2013-01-29T08:25:47-02:00"
+    },
+    {
+      "id": "1888372",
+      "name": "Churrasco",
+      "fullName": "Lazer / Churrasco",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 22,
+      "createdAt": "2013-01-29T08:25:47-02:00"
+    },
+    {
+      "id": "1888373",
+      "name": "Clube",
+      "fullName": "Lazer / Clube",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 16,
+      "createdAt": "2013-01-29T08:25:47-02:00"
+    },
+    {
+      "id": "1888374",
+      "name": "Danceteria",
+      "fullName": "Lazer / Danceteria",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 3,
+      "createdAt": "2013-01-29T08:25:48-02:00"
+    },
+    {
+      "id": "1888375",
+      "name": "Festa",
+      "fullName": "Lazer / Festa",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 38,
+      "createdAt": "2013-01-29T08:25:48-02:00"
+    },
+    {
+      "id": "1888376",
+      "name": "Jogos",
+      "fullName": "Lazer / Jogos",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 8,
+      "createdAt": "2013-01-29T08:25:48-02:00"
+    },
+    {
+      "id": "1888377",
+      "name": "Parque",
+      "fullName": "Lazer / Parque",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 52,
+      "createdAt": "2013-01-29T08:25:48-02:00"
+    },
+    {
+      "id": "1888378",
+      "name": "Praia",
+      "fullName": "Lazer / Praia",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 9,
+      "createdAt": "2013-01-29T08:25:49-02:00"
+    },
+    {
+      "id": "1888379",
+      "name": "Show",
+      "fullName": "Lazer / Show",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 17,
+      "createdAt": "2013-01-29T08:25:49-02:00"
+    },
+    {
+      "id": "1888380",
+      "name": "Teatro",
+      "fullName": "Lazer / Teatro",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 3,
+      "createdAt": "2013-01-29T08:25:49-02:00"
+    },
+    {
+      "id": "1888381",
+      "name": "Sorveteria",
+      "fullName": "Lazer / Sorveteria",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 198,
+      "createdAt": "2013-01-29T08:25:50-02:00"
+    },
+    {
+      "id": "1888395",
+      "name": "Lavanderia",
+      "fullName": "Moradia / Lavanderia",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 8,
+      "createdAt": "2013-01-29T08:25:51-02:00"
+    },
+    {
+      "id": "1888396",
+      "name": "Conselho Regional",
+      "fullName": "Educação / Conselho Regional",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470113",
+      "useCount": 72,
+      "createdAt": "2013-01-29T08:25:51-02:00"
+    },
+    {
+      "id": "1888397",
+      "name": "Material de limpeza",
+      "fullName": "Itens Domésticos / Material de limpeza",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 6,
+      "createdAt": "2013-01-29T08:25:51-02:00"
+    },
+    {
+      "id": "1888407",
+      "name": "Convênio",
+      "fullName": "Saúde / Convênio",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 473,
+      "createdAt": "2013-01-29T08:25:51-02:00"
+    },
+    {
+      "id": "1888408",
+      "name": "Exame",
+      "fullName": "Saúde / Exame",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 31,
+      "createdAt": "2013-01-29T08:25:52-02:00"
+    },
+    {
+      "id": "1888410",
+      "name": "Acessórios - Bijouterias",
+      "fullName": "Vestuário / Acessórios - Bijouterias",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 159,
+      "createdAt": "2013-01-29T08:25:52-02:00"
+    },
+    {
+      "id": "1888411",
+      "name": "Moda Praia",
+      "fullName": "Vestuário / Moda Praia",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 36,
+      "createdAt": "2013-01-29T08:25:52-02:00"
+    },
+    {
+      "id": "1888412",
+      "name": "Blusa - Blaser",
+      "fullName": "Vestuário / Blusa - Blaser",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 519,
+      "createdAt": "2013-01-29T08:25:52-02:00"
+    },
+    {
+      "id": "1888413",
+      "name": "Bermudas - Calças",
+      "fullName": "Vestuário / Bermudas - Calças",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 168,
+      "createdAt": "2013-01-29T08:25:52-02:00"
+    },
+    {
+      "id": "1888414",
+      "name": "Sapatos - Sandálias",
+      "fullName": "Vestuário / Sapatos - Sandálias",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 300,
+      "createdAt": "2013-01-29T08:25:52-02:00"
+    },
+    {
+      "id": "1888415",
+      "name": "Lingeries - Meias",
+      "fullName": "Vestuário / Lingeries - Meias",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 122,
+      "createdAt": "2013-01-29T08:25:53-02:00"
+    },
+    {
+      "id": "1888416",
+      "name": "Moda Ginástica",
+      "fullName": "Vestuário / Moda Ginástica",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 9,
+      "createdAt": "2013-01-29T08:25:53-02:00"
+    },
+    {
+      "id": "1888417",
+      "name": "Vestido",
+      "fullName": "Vestuário / Vestido",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 55,
+      "createdAt": "2013-01-29T08:25:53-02:00"
+    },
+    {
+      "id": "1888418",
+      "name": "13º Salário",
+      "fullName": "Proventos / 13º Salário",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 85,
+      "createdAt": "2013-01-29T08:25:53-02:00"
+    },
+    {
+      "id": "1888419",
+      "name": "Adiantamento",
+      "fullName": "Proventos / Adiantamento",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 480,
+      "createdAt": "2013-01-29T08:25:54-02:00"
+    },
+    {
+      "id": "1888420",
+      "name": "Arredondamento",
+      "fullName": "Proventos / Arredondamento",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 23,
+      "createdAt": "2013-01-29T08:25:54-02:00"
+    },
+    {
+      "id": "1888421",
+      "name": "Aviso Prévio",
+      "fullName": "Proventos / Aviso Prévio",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 0,
+      "createdAt": "2013-01-29T08:25:54-02:00"
+    },
+    {
+      "id": "1888422",
+      "name": "Férias",
+      "fullName": "Proventos / Férias",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 50,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888423",
+      "name": "Rescisão",
+      "fullName": "Proventos / Rescisão",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 3,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888424",
+      "name": "Encargos Financeiros",
+      "fullName": "Bancos / Encargos Financeiros",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 175,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888425",
+      "name": "Tarifa C.C.",
+      "fullName": "Bancos / Tarifa C.C.",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 74,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888426",
+      "name": "Titulo Capitalização",
+      "fullName": "Investimentos / Titulo Capitalização",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 23,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888427",
+      "name": "Taxa de Serviço",
+      "fullName": "Bancos / Taxa de Serviço",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470097",
+      "useCount": 191,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888428",
+      "name": "Previdência Privada",
+      "fullName": "Investimentos / Previdência Privada",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 516,
+      "createdAt": "2013-01-29T08:25:55-02:00"
+    },
+    {
+      "id": "1888430",
+      "name": "Prest. Serviço - Táxi",
+      "fullName": "Proventos / Prest. Serviço - Táxi",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 884,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888431",
+      "name": "Licenciamento",
+      "fullName": "Impostos / Licenciamento",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 23,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888432",
+      "name": "Sindicato",
+      "fullName": "Despesas de Trabalho / Sindicato",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 21,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888433",
+      "name": "Seguro de Vida",
+      "fullName": "Despesas de Trabalho / Seguro de Vida",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 127,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888434",
+      "name": "Pilates",
+      "fullName": "Saúde / Pilates",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 34,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888435",
+      "name": "Assistencia Médica",
+      "fullName": "Despesas de Trabalho / Assistencia Médica",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 74,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888436",
+      "name": "Assistencia Odontologica",
+      "fullName": "Despesas de Trabalho / Assistencia Odontologica",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 20,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888437",
+      "name": "Automóvel",
+      "fullName": "Investimentos / Automóvel",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 52,
+      "createdAt": "2013-01-29T08:25:56-02:00"
+    },
+    {
+      "id": "1888438",
+      "name": "Decoração",
+      "fullName": "Itens Domésticos / Decoração",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 95,
+      "createdAt": "2013-01-29T08:25:57-02:00"
+    },
+    {
+      "id": "1888439",
+      "name": "Condomínio - Taxa de Melhorias - Obras",
+      "fullName": "Moradia / Condomínio - Taxa de Melhorias - Obras",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 28,
+      "createdAt": "2013-01-29T08:25:57-02:00"
+    },
+    {
+      "id": "1888440",
+      "name": "Condominio - Fundo de Reserva",
+      "fullName": "Moradia / Condominio - Fundo de Reserva",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 5,
+      "createdAt": "2013-01-29T08:25:57-02:00"
+    },
+    {
+      "id": "1888441",
+      "name": "Multa",
+      "fullName": "Impostos / Multa",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 22,
+      "createdAt": "2013-01-29T08:25:58-02:00"
+    },
+    {
+      "id": "1888443",
+      "name": "Serviço Funerário",
+      "fullName": "Outros / Serviço Funerário",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 3,
+      "createdAt": "2013-01-29T08:25:58-02:00"
+    },
+    {
+      "id": "1888444",
+      "name": "Desconto Folha Pgto",
+      "fullName": "Despesas de Trabalho / Desconto Folha Pgto",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 184,
+      "createdAt": "2013-01-29T08:25:58-02:00"
+    },
+    {
+      "id": "1888445",
+      "name": "Desconto de Outros Beneficios",
+      "fullName": "Despesas de Trabalho / Desconto de Outros Beneficios",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 3,
+      "createdAt": "2013-01-29T08:25:58-02:00"
+    },
+    {
+      "id": "1888448",
+      "name": "Costureira",
+      "fullName": "Vestuário / Costureira",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 20,
+      "createdAt": "2013-01-29T08:25:58-02:00"
+    },
+    {
+      "id": "1888449",
+      "name": "Centro de Beleza",
+      "fullName": "Estética / Centro de Beleza",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470206",
+      "useCount": 64,
+      "createdAt": "2013-01-29T08:25:59-02:00"
+    },
+    {
+      "id": "1888450",
+      "name": "EROC - IGREJA DE CRISTO",
+      "fullName": "Outros Rendimentos / EROC - IGREJA DE CRISTO",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 61,
+      "createdAt": "2013-01-29T08:25:59-02:00"
+    },
+    {
+      "id": "1888451",
+      "name": "EROC - IGREJA DE CRISTO",
+      "fullName": "Transferência entre Contas / EROC - IGREJA DE CRISTO",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "1888343",
+      "useCount": 17,
+      "createdAt": "2013-01-29T08:25:59-02:00"
+    },
+    {
+      "id": "1888452",
+      "name": "Reforma",
+      "fullName": "Moradia / Reforma",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 0,
+      "createdAt": "2013-01-29T08:25:59-02:00"
+    },
+    {
+      "id": "1888453",
+      "name": "Artesanato",
+      "fullName": "Lazer / Artesanato",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 120,
+      "createdAt": "2013-01-29T08:25:59-02:00"
+    },
+    {
+      "id": "1888454",
+      "name": "Diversos",
+      "fullName": "Outros Rendimentos / Diversos",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 44,
+      "createdAt": "2013-01-29T08:26:00-02:00"
+    },
+    {
+      "id": "1888455",
+      "name": "Venda Artesanato",
+      "fullName": "Outros Rendimentos / Venda Artesanato",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 48,
+      "createdAt": "2013-01-29T08:26:00-02:00"
+    },
+    {
+      "id": "1888456",
+      "name": "Doceria",
+      "fullName": "Lazer / Doceria",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470121",
+      "useCount": 240,
+      "createdAt": "2013-01-29T08:26:01-02:00"
+    },
+    {
+      "id": "1888457",
+      "name": "Perfumes",
+      "fullName": "Vestuário / Perfumes",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470203",
+      "useCount": 0,
+      "createdAt": "2013-01-29T08:26:01-02:00"
+    },
+    {
+      "id": "1888458",
+      "name": "Táxi",
+      "fullName": "Despesas de Trabalho / Táxi",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 36,
+      "createdAt": "2013-01-29T08:26:01-02:00"
+    },
+    {
+      "id": "1888459",
+      "name": "Abono de férias",
+      "fullName": "Proventos / Abono de férias",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 15,
+      "createdAt": "2013-01-29T08:26:02-02:00"
+    },
+    {
+      "id": "1888460",
+      "name": "1_3 Abono de férias",
+      "fullName": "Proventos / 1_3 Abono de férias",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 5,
+      "createdAt": "2013-01-29T08:26:02-02:00"
+    },
+    {
+      "id": "1888461",
+      "name": "1_3 Férias",
+      "fullName": "Proventos / 1_3 Férias",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 32,
+      "createdAt": "2013-01-29T08:26:02-02:00"
+    },
+    {
+      "id": "1888462",
+      "name": "Média de férias",
+      "fullName": "Proventos / Média de férias",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 29,
+      "createdAt": "2013-01-29T08:26:02-02:00"
+    },
+    {
+      "id": "1888463",
+      "name": "1_3 Média de férias",
+      "fullName": "Proventos / 1_3 Média de férias",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 18,
+      "createdAt": "2013-01-29T08:26:03-02:00"
+    },
+    {
+      "id": "1888464",
+      "name": "Média de férias (abono)",
+      "fullName": "Proventos / Média de férias (abono)",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 1,
+      "createdAt": "2013-01-29T08:26:03-02:00"
+    },
+    {
+      "id": "1888465",
+      "name": "1_3 Média de férias (abono)",
+      "fullName": "Proventos / 1_3 Média de férias (abono)",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 6,
+      "createdAt": "2013-01-29T08:26:04-02:00"
+    },
+    {
+      "id": "1888467",
+      "name": "Manutenção",
+      "fullName": "Moradia / Manutenção",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470131",
+      "useCount": 35,
+      "createdAt": "2013-01-29T08:26:04-02:00"
+    },
+    {
+      "id": "1888469",
+      "name": "Seguro Obrigatório",
+      "fullName": "Impostos / Seguro Obrigatório",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 5,
+      "createdAt": "2013-01-29T08:26:04-02:00"
+    },
+    {
+      "id": "1888470",
+      "name": "Alimentação - Refeição",
+      "fullName": "Proventos / Alimentação - Refeição",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 37,
+      "createdAt": "2013-01-29T08:26:05-02:00"
+    },
+    {
+      "id": "1888471",
+      "name": "Confraternização - Festas",
+      "fullName": "Despesas de Trabalho / Confraternização - Festas",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 3,
+      "createdAt": "2013-01-29T08:26:05-02:00"
+    },
+    {
+      "id": "1888472",
+      "name": "Aplicação",
+      "fullName": "Investimentos / Aplicação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470212",
+      "useCount": 43,
+      "createdAt": "2013-01-29T08:26:05-02:00"
+    },
+    {
+      "id": "1888473",
+      "name": "PLR - Participação Lucros e Resultados",
+      "fullName": "Proventos / PLR - Participação Lucros e Resultados",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 46,
+      "createdAt": "2013-01-29T08:26:05-02:00"
+    },
+    {
+      "id": "1888474",
+      "name": "Psicoterapia",
+      "fullName": "Saúde / Psicoterapia",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 14,
+      "createdAt": "2013-01-29T08:26:06-02:00"
+    },
+    {
+      "id": "1888475",
+      "name": "Cama, mesa e banho",
+      "fullName": "Itens Domésticos / Cama, mesa e banho",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470118",
+      "useCount": 139,
+      "createdAt": "2013-01-29T08:26:06-02:00"
+    },
+    {
+      "id": "1933552",
+      "name": "Requalificação Profissional",
+      "fullName": "Proventos / Requalificação Profissional",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 90,
+      "createdAt": "2013-02-28T10:07:28-03:00"
+    },
+    {
+      "id": "1938194",
+      "name": "Oferta",
+      "fullName": "Outros / Oferta",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470140",
+      "useCount": 342,
+      "createdAt": "2013-03-04T09:34:55-03:00"
+    },
+    {
+      "id": "2026018",
+      "name": "Gratificação de férias - acordo coletivo",
+      "fullName": "Proventos / Gratificação de férias - acordo coletivo",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 28,
+      "createdAt": "2013-05-11T16:18:03-03:00"
+    },
+    {
+      "id": "2149674",
+      "name": "Pedágio",
+      "fullName": "Transportes / Pedágio",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470186",
+      "useCount": 85,
+      "createdAt": "2013-07-29T13:38:21-03:00"
+    },
+    {
+      "id": "2263249",
+      "name": "Eletro-Doméstico",
+      "fullName": "Moradia / Eletro-Doméstico",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470131",
+      "useCount": 28,
+      "createdAt": "2013-09-06T09:23:09-03:00"
+    },
+    {
+      "id": "2263257",
+      "name": "Eletro-Eletrônico",
+      "fullName": "Moradia / Eletro-Eletrônico",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470131",
+      "useCount": 109,
+      "createdAt": "2013-09-06T09:33:43-03:00"
+    },
+    {
+      "id": "2263258",
+      "name": "Natal",
+      "fullName": "Presentes / Natal",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 82,
+      "createdAt": "2013-09-06T09:39:45-03:00"
+    },
+    {
+      "id": "2263259",
+      "name": "Mobiliário",
+      "fullName": "Moradia / Mobiliário",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470131",
+      "useCount": 20,
+      "createdAt": "2013-09-06T09:41:56-03:00"
+    },
+    {
+      "id": "2386367",
+      "name": "Poupança",
+      "fullName": "Investimentos / Poupança",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470212",
+      "useCount": 60,
+      "createdAt": "2013-10-17T09:59:22-03:00"
+    },
+    {
+      "id": "2437425",
+      "name": "Documentação",
+      "fullName": "Transportes / Documentação",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470186",
+      "useCount": 16,
+      "createdAt": "2013-10-23T19:19:45-02:00"
+    },
+    {
+      "id": "2485016",
+      "name": "Aniversário",
+      "fullName": "Presentes / Aniversário",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 210,
+      "createdAt": "2013-11-12T15:27:20-02:00"
+    },
+    {
+      "id": "2639526",
+      "name": "Lar Cristão",
+      "fullName": "Presentes / Lar Cristão",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 4,
+      "createdAt": "2014-01-12T14:54:50-02:00"
+    },
+    {
+      "id": "2881508",
+      "name": "Tratamento",
+      "fullName": "Saúde / Tratamento",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470149",
+      "useCount": 35,
+      "createdAt": "2014-05-01T17:41:30-03:00"
+    },
+    {
+      "id": "2955977",
+      "name": "Casamento",
+      "fullName": "Presentes / Casamento",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 8,
+      "createdAt": "2014-06-06T20:19:13-03:00"
+    },
+    {
+      "id": "3009702",
+      "name": "Programa Pontos",
+      "fullName": "Outros Rendimentos / Programa Pontos",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 3,
+      "createdAt": "2014-07-08T19:50:02-03:00"
+    },
+    {
+      "id": "3090700",
+      "name": "Estadia - Hotel",
+      "fullName": "Lazer / Estadia - Hotel",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470121",
+      "useCount": 80,
+      "createdAt": "2014-08-20T01:50:54-03:00"
+    },
+    {
+      "id": "3109840",
+      "name": "Venda Produtos",
+      "fullName": "Outros Rendimentos / Venda Produtos",
+      "isCost": false,
+      "isRevenue": true,
+      "parentId": "470143",
+      "useCount": 707,
+      "createdAt": "2014-08-29T21:35:49-03:00"
+    },
+    {
+      "id": "3136116",
+      "name": "Táxi - Manutenção",
+      "fullName": "Despesas de Trabalho / Táxi - Manutenção",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 85,
+      "createdAt": "2014-09-11T20:22:12-03:00"
+    },
+    {
+      "id": "3522726",
+      "name": "Inventário",
+      "fullName": "Impostos / Inventário",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470076",
+      "useCount": 32,
+      "createdAt": "2015-05-01T14:06:00-03:00"
+    },
+    {
+      "id": "4484628",
+      "name": "Doação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "3522728",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3599392",
+      "name": "Táxi - Fone Ponto",
+      "fullName": "Despesas de Trabalho / Táxi - Fone Ponto",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 41,
+      "createdAt": "2015-06-21T13:31:46-03:00"
+    },
+    {
+      "id": "3599394",
+      "name": "Táxi - Pedágio",
+      "fullName": "Despesas de Trabalho / Táxi - Pedágio",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470111",
+      "useCount": 14,
+      "createdAt": "2015-06-21T13:58:47-03:00"
+    },
+    {
+      "id": "3599395",
+      "name": "Banco",
+      "fullName": "Seguros / Banco",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470172",
+      "useCount": 48,
+      "createdAt": "2015-06-21T15:47:06-03:00"
+    },
+    {
+      "id": "3601511",
+      "name": "Cartório",
+      "fullName": "Outros / Cartório",
+      "isCost": true,
+      "isRevenue": false,
+      "parentId": "470140",
+      "useCount": 3,
+      "createdAt": "2015-06-23T13:14:51-03:00"
+    },
+    {
+      "id": "3676328",
+      "name": "Táxi - Documentação",
+      "fullName": "Despesas de Trabalho / Táxi - Documentação",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 59,
+      "createdAt": "2015-08-10T10:14:55-03:00"
+    },
+    {
+      "id": "3676329",
+      "name": "Táxi - Lava-rápido",
+      "fullName": "Despesas de Trabalho / Táxi - Lava-rápido",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 2,
+      "createdAt": "2015-08-10T10:19:36-03:00"
+    },
+    {
+      "id": "3687727",
+      "name": "Computadores",
+      "fullName": "Itens Domésticos / Computadores",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470118",
+      "useCount": 32,
+      "createdAt": "2015-08-19T14:28:58-03:00"
+    },
+    {
+      "id": "3704003",
+      "name": "Prest. Serviço - Táxi (Cartão)",
+      "fullName": "Proventos / Prest. Serviço - Táxi (Cartão)",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 150,
+      "createdAt": "2015-09-01T18:37:39-03:00"
+    },
+    {
+      "id": "3742286",
+      "name": "Táxi",
+      "fullName": "Seguros / Táxi",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470172",
+      "useCount": 53,
+      "createdAt": "2015-10-08T19:45:37-03:00"
+    },
+    {
+      "id": "3775796",
+      "name": "Prest. Serviço - Táxi (Voucher)",
+      "fullName": "Proventos / Prest. Serviço - Táxi (Voucher)",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 91,
+      "createdAt": "2015-11-15T11:05:47-02:00"
+    },
+    {
+      "id": "3782806",
+      "name": "Prest. Serviço - Táxi (Depósito)",
+      "fullName": "Proventos / Prest. Serviço - Táxi (Depósito)",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 26,
+      "createdAt": "2015-11-23T08:32:36-02:00"
+    },
+    {
+      "id": "3821389",
+      "name": "Amigo Secreto",
+      "fullName": "Presentes / Amigo Secreto",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 12,
+      "createdAt": "2015-12-30T11:55:22-02:00"
+    },
+    {
+      "id": "3821390",
+      "name": "Amigos",
+      "fullName": "Presentes / Amigos",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 16,
+      "createdAt": "2015-12-30T12:06:46-02:00"
+    },
+    {
+      "id": "3821391",
+      "name": "Ar Condicionado",
+      "fullName": "Itens Domésticos / Ar Condicionado",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470118",
+      "useCount": 25,
+      "createdAt": "2015-12-30T12:11:37-02:00"
+    },
+    {
+      "id": "3821392",
+      "name": "Cartão de Crédito",
+      "fullName": "Bancos / Cartão de Crédito",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470097",
+      "useCount": 1241,
+      "createdAt": "2015-12-30T12:12:31-02:00"
+    },
+    {
+      "id": "3821395",
+      "name": "Chá de bebê",
+      "fullName": "Presentes / Chá de bebê",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 43,
+      "createdAt": "2015-12-30T12:19:50-02:00"
+    },
+    {
+      "id": "3821396",
+      "name": "Data comemorativa",
+      "fullName": "Presentes / Data comemorativa",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 48,
+      "createdAt": "2015-12-30T12:22:38-02:00"
+    },
+    {
+      "id": "3821397",
+      "name": "Sobrinhas",
+      "fullName": "Presentes / Sobrinhas",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "1888337",
+      "useCount": 26,
+      "createdAt": "2015-12-30T12:26:39-02:00"
+    },
+    {
+      "id": "3821399",
+      "name": "Lava rápido",
+      "fullName": "Transportes / Lava rápido",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470186",
+      "useCount": 1,
+      "createdAt": "2015-12-30T12:27:27-02:00"
+    },
+    {
+      "id": "3841364",
+      "name": "Fotografia",
+      "fullName": "Outros / Fotografia",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470140",
+      "useCount": 26,
+      "createdAt": "2016-01-17T11:59:07-02:00"
+    },
+    {
+      "id": "3890154",
+      "name": "Enxoval",
+      "fullName": "Despesas com Filhos / Enxoval",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 572,
+      "createdAt": "2016-03-06T14:14:14-03:00"
+    },
+    {
+      "id": "3890296",
+      "name": "Despesas de Trabalho",
+      "fullName": "Despesas de Trabalho / Despesas de Trabalho",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": "2016-03-06T19:47:39-03:00"
+    },
+    {
+      "id": "3924948",
+      "name": "Gestante",
+      "fullName": "Vestuário / Gestante",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470203",
+      "useCount": 41,
+      "createdAt": "2016-04-17T09:39:40-03:00"
+    },
+    {
+      "id": "3947686",
+      "name": "Higiene e Limpeza",
+      "fullName": "Despesas com Filhos / Higiene e Limpeza",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 311,
+      "createdAt": "2016-05-22T14:49:29-03:00"
+    },
+    {
+      "id": "3990734",
+      "name": "Transferência Artesanato",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "3990733",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "4632342",
+      "name": "Transferência Poupança",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "3990733",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "3990734",
+      "name": "Transferência Artesanato",
+      "fullName": "Transferência entre Contas / Transferência Artesanato",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "3990733",
+      "useCount": 3,
+      "createdAt": "2016-07-19T21:06:49-03:00"
+    },
+    {
+      "id": "4090922",
+      "name": "Festa",
+      "fullName": "Despesas com Filhos / Festa",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 234,
+      "createdAt": "2016-12-20T22:54:39-02:00"
+    },
+    {
+      "id": "4116057",
+      "name": "Brinquedos e Jogos",
+      "fullName": "Despesas com Filhos / Brinquedos e Jogos",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 148,
+      "createdAt": "2017-01-24T16:41:21-02:00"
+    },
+    {
+      "id": "4250964",
+      "name": "Remédio",
+      "fullName": "Despesas com Filhos / Remédio",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 105,
+      "createdAt": "2017-07-25T16:33:25-03:00"
+    },
+    {
+      "id": "4484628",
+      "name": "Doação",
+      "fullName": "Despesas Diversas / Doação",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "3522728",
+      "useCount": 453,
+      "createdAt": "2018-01-15T21:17:56-02:00"
+    },
+    {
+      "id": "4515617",
+      "name": "Vacina",
+      "fullName": "Despesas com Filhos / Vacina",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 35,
+      "createdAt": "2018-02-02T22:24:40-02:00"
+    },
+    {
+      "id": "4524060",
+      "name": "Táxi - Acessórios",
+      "fullName": "Despesas de Trabalho / Táxi - Acessórios",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 1,
+      "createdAt": "2018-02-10T09:58:21-02:00"
+    },
+    {
+      "id": "4606484",
+      "name": "Importados",
+      "fullName": "Despesas com Filhos / Importados",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 43,
+      "createdAt": "2018-04-18T23:06:02-03:00"
+    },
+    {
+      "id": "4632342",
+      "name": "Transferência Poupança",
+      "fullName": "Transferência entre Contas / Transferência Poupança",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "3990733",
+      "useCount": 40,
+      "createdAt": "2018-05-10T22:22:48-03:00"
+    },
+    {
+      "id": "4645713",
+      "name": "Imóvel (cota)",
+      "fullName": "Investimentos / Imóvel (cota)",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470212",
+      "useCount": 77,
+      "createdAt": "2018-05-26T13:04:28-03:00"
+    },
+    {
+      "id": "4904778",
+      "name": "Escola - Natação",
+      "fullName": "Despesas com Filhos / Escola - Natação",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 19,
+      "createdAt": "2019-01-25T22:52:06-02:00"
+    },
+    {
+      "id": "5222789",
+      "name": "Comissão - Bônus Inicio Rápido",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5168311",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5222792",
+      "name": "Vendas",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5168311",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5222790",
+      "name": "Acessórios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5168311",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5222791",
+      "name": "Óleos Essenciais",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5168311",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5222788",
+      "name": "Higiene",
+      "fullName": "Itens Domésticos / Higiene",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470118",
+      "useCount": 68,
+      "createdAt": "2019-12-06T10:36:03-03:00"
+    },
+    {
+      "id": "5222789",
+      "name": "Comissão - Bônus Inicio Rápido",
+      "fullName": "Aromaterapia / Comissão - Bônus Inicio Rápido",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5168311",
+      "useCount": 6,
+      "createdAt": "2019-12-06T10:36:34-03:00"
+    },
+    {
+      "id": "5222790",
+      "name": "Acessórios",
+      "fullName": "Aromaterapia / Acessórios",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5168311",
+      "useCount": 53,
+      "createdAt": "2019-12-06T10:37:01-03:00"
+    },
+    {
+      "id": "5222791",
+      "name": "Óleos Essenciais",
+      "fullName": "Aromaterapia / Óleos Essenciais",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5168311",
+      "useCount": 102,
+      "createdAt": "2019-12-06T10:37:08-03:00"
+    },
+    {
+      "id": "5222792",
+      "name": "Vendas",
+      "fullName": "Aromaterapia / Vendas",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5168311",
+      "useCount": 15,
+      "createdAt": "2019-12-06T10:39:10-03:00"
+    },
+    {
+      "id": "5223087",
+      "name": "Reuniões",
+      "fullName": "Aromaterapia / Reuniões",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": null,
+      "useCount": 3,
+      "createdAt": "2019-12-06T11:02:12-03:00"
+    },
+    {
+      "id": "5269439",
+      "name": "Advogado",
+      "fullName": "Advogado",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": null,
+      "useCount": 20,
+      "createdAt": "2020-02-08T14:56:24-03:00"
+    },
+    {
+      "id": "5401909",
+      "name": "Aluguel Box Armazenamento",
+      "fullName": "Moradia / Aluguel Box Armazenamento",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470131",
+      "useCount": 183,
+      "createdAt": "2020-09-15T13:13:43-03:00"
+    },
+    {
+      "id": "5401910",
+      "name": "Diversos",
+      "fullName": "Saúde / Diversos",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470149",
+      "useCount": 11,
+      "createdAt": "2020-09-15T13:15:40-03:00"
+    },
+    {
+      "id": "5508988",
+      "name": "E-Social",
+      "fullName": "Impostos / E-Social",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470076",
+      "useCount": 17,
+      "createdAt": "2021-08-20T08:52:42-03:00"
+    },
+    {
+      "id": "5591241",
+      "name": "Escola - Transporte",
+      "fullName": "Despesas com Filhos / Escola - Transporte",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 121,
+      "createdAt": "2022-11-22T16:23:27-03:00"
+    },
+    {
+      "id": "5592181",
+      "name": "Escola - Uniforme",
+      "fullName": "Despesas com Filhos / Escola - Uniforme",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 15,
+      "createdAt": "2022-11-26T07:27:07-03:00"
+    },
+    {
+      "id": "5592182",
+      "name": "Viagem - Programa Milhas",
+      "fullName": "Lazer / Viagem - Programa Milhas",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470121",
+      "useCount": 145,
+      "createdAt": "2022-11-26T07:31:37-03:00"
+    },
+    {
+      "id": "5597253",
+      "name": "Presentes",
+      "fullName": "Despesas com Filhos / Presentes",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 1,
+      "createdAt": "2022-12-26T15:20:20-03:00"
+    },
+    {
+      "id": "5599944",
+      "name": "Escola - Material Escolar",
+      "fullName": "Despesas com Filhos / Escola - Material Escolar",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 25,
+      "createdAt": "2023-01-11T01:59:03-03:00"
+    },
+    {
+      "id": "5608311",
+      "name": "Táxi - MEI Micro Empreendedor Individual",
+      "fullName": "Despesas de Trabalho / Táxi - MEI Micro Empreendedor Individual",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 165,
+      "createdAt": "2023-03-23T15:54:48-03:00"
+    },
+    {
+      "id": "5632734",
+      "name": "Prest. Serviço - Táxi (Mercado Pago)",
+      "fullName": "Proventos / Prest. Serviço - Táxi (Mercado Pago)",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 150,
+      "createdAt": "2023-08-22T13:38:13-03:00"
+    },
+    {
+      "id": "5632735",
+      "name": "Prest. Serviço - Táxi (Arrendamento - Permissão 0614)",
+      "fullName": "Proventos / Prest. Serviço - Táxi (Arrendamento - Permissão 0614)",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470167",
+      "useCount": 56,
+      "createdAt": "2023-08-22T13:38:41-03:00"
+    },
+    {
+      "id": "5632737",
+      "name": "Táxi - Arrendamento - Permissão 0614",
+      "fullName": "Despesas de Trabalho / Táxi - Arrendamento - Permissão 0614",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 99,
+      "createdAt": "2023-08-22T13:40:26-03:00"
+    },
+    {
+      "id": "5639321",
+      "name": "Táxi - Aplicativo",
+      "fullName": "Despesas de Trabalho / Táxi - Aplicativo",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 2,
+      "createdAt": "2023-11-12T17:39:58-03:00"
+    },
+    {
+      "id": "5658276",
+      "name": "Escola - Ballet",
+      "fullName": "Despesas com Filhos / Escola - Ballet",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 94,
+      "createdAt": "2024-02-29T19:58:47-03:00"
+    },
+    {
+      "id": "5670858",
+      "name": "Dentista - Ortodontista",
+      "fullName": "Despesas com Filhos / Dentista - Ortodontista",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 86,
+      "createdAt": "2024-06-07T21:56:15-03:00"
+    },
+    {
+      "id": "5691199",
+      "name": "Transporte",
+      "fullName": "Despesas de Trabalho / Transporte",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470111",
+      "useCount": 0,
+      "createdAt": "2025-02-01T18:31:50-03:00"
+    },
+    {
+      "id": "5693732",
+      "name": "Mentoria",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5693736",
+      "name": "Anúncios",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5780092",
+      "name": "Eventos",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5780829",
+      "name": "Vendas",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5780859",
+      "name": "Material Divulgação",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5693735",
+      "name": "Ferramenta",
+      "fullName": null,
+      "isCost": false,
+      "isRevenue": false,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": null
+    },
+    {
+      "id": "5693732",
+      "name": "Mentoria",
+      "fullName": "Marketing Digital / Mentoria",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5693731",
+      "useCount": 31,
+      "createdAt": "2025-02-11T15:30:12-03:00"
+    },
+    {
+      "id": "5693735",
+      "name": "Ferramenta",
+      "fullName": "Marketing Digital / Ferramenta",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5693731",
+      "useCount": 8,
+      "createdAt": "2025-02-11T15:57:54-03:00"
+    },
+    {
+      "id": "5693736",
+      "name": "Anúncios",
+      "fullName": "Marketing Digital / Anúncios",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5693731",
+      "useCount": 20,
+      "createdAt": "2025-02-11T16:37:39-03:00"
+    },
+    {
+      "id": "5780092",
+      "name": "Eventos",
+      "fullName": "Marketing Digital / Eventos",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5693731",
+      "useCount": 0,
+      "createdAt": "2025-07-21T13:06:32-03:00"
+    },
+    {
+      "id": "5780829",
+      "name": "Vendas",
+      "fullName": "Marketing Digital / Vendas",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5693731",
+      "useCount": 10,
+      "createdAt": "2025-07-25T16:03:05-03:00"
+    },
+    {
+      "id": "5780832",
+      "name": "Terapia",
+      "fullName": "Despesas com Filhos / Terapia",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "470103",
+      "useCount": 1,
+      "createdAt": "2025-07-25T17:33:34-03:00"
+    },
+    {
+      "id": "5780859",
+      "name": "Material Divulgação",
+      "fullName": "Marketing Digital / Material Divulgação",
+      "isCost": true,
+      "isRevenue": true,
+      "parentId": "5693731",
+      "useCount": 1,
+      "createdAt": "2025-07-29T16:53:09-03:00"
+    }
+  ],
+  "exportedAt": "2026-08-23T14:07:00.529Z"
+}
