@@ -111,6 +111,7 @@ const RUBRICAS = {
   '/T21': { natureza: 'receita', categoria: 'salario',          descricao: 'DSR sobre horas extras' },
   '/T22': { natureza: 'receita', categoria: 'salario',          descricao: 'DSR sobre adicional noturno' },
   '303N': { natureza: 'receita', categoria: 'salario',          descricao: 'Adicional noturno' },
+  '286N': { natureza: 'receita', categoria: 'salario',          descricao: 'Hora extra interjornada 100%' },
   '206N': { natureza: 'receita', categoria: 'beneficio',        descricao: 'Auxílio-creche' },
   '/332': { natureza: 'receita', categoria: 'decimo_terceiro',  descricao: 'Adiantamento do 13º' },
   '/B10': { natureza: 'receita', categoria: 'plr',              descricao: 'Participação nos lucros' },
@@ -130,9 +131,13 @@ const RUBRICAS = {
   '57AN': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Saúde' },
   '6A9N': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Odonto' },
 
-  // emprestimo consignado: o principal quita divida, nao e consumo novo
-  '1CT1': { natureza: 'divida_parcelada', categoria: 'consignado', pessoa: 'Juliane', descricao: 'Empréstimo consignado 1' },
-  'MCT0': { natureza: 'divida_parcelada', categoria: 'consignado', pessoa: 'Juliane', descricao: 'Empréstimo consignado 2' },
+  // Emprestimo consignado: o principal quita divida, nao e consumo novo.
+  //
+  // Sao tres contratos distintos, e o nome carrega a rubrica em vez de um numero
+  // inventado — so assim da para casar a linha da dashboard com a do holerite.
+  '1CT1': { natureza: 'divida_parcelada', categoria: 'consignado', descricao: 'Empréstimo consignado 1CT1' },
+  '1CT2': { natureza: 'divida_parcelada', categoria: 'consignado', descricao: 'Empréstimo consignado 1CT2' },
+  'MCT0': { natureza: 'divida_parcelada', categoria: 'consignado', descricao: 'Empréstimo consignado MCT0' },
 
   // desconto do adiantamento de PLR ja recebido: nao e gasto, e acerto
   '6F5N': { natureza: 'ajuste', categoria: 'ajuste_folha', pessoa: 'Juliane', descricao: 'Desconto do adiantamento da PLR' },
