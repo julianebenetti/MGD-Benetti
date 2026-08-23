@@ -63,10 +63,27 @@ Na aba **Cartão & Faturas** a parcela continua aparecendo: a fatura cobra ela, 
 tirar faria a soma da tela não bater com o valor a pagar. O `cobrado` do
 cabeçalho também a inclui.
 
+### Fatura paga a menor (rotativo)
+Pagar menos que o total é **tomar crédito**: o saldo rola para a fatura seguinte
+e o banco cobra por carregar. Foram 5 faturas assim em 2026, R$ 15.267,11
+financiados.
+
+- **O principal que rola não é despesa** — são as mesmas compras sendo
+  carregadas, já contadas quando aconteceram. Ele não vem linha a linha: só
+  engorda o `total_fatura` da seguinte e reaparece como `saldo_anterior`.
+- **O custo de carregar é despesa financeira**, categoria `encargos_financeiros`:
+  juros, mora, multa, IOF e encargos de refinanciamento. Nunca despesa comum.
+- **Anuidade e IOF de compra internacional também são despesa financeira**, mas
+  não são custo do rotativo — seriam cobrados de qualquer jeito. Ficam fora do
+  "custo desse crédito" da aba Dívidas, senão o crédito parece mais caro do que foi.
+- O IOF que acompanha uma compra (`Iof Internacional - Hostinger`) herda a
+  **pessoa** de quem comprou. Fixar Família jogaria para a casa o IOF de
+  assinatura da Benetti UP.
+
 ### Múltiplos cartões
-Dois cartões: **4846** (Itaú Black, pessoal) e **0442** (Visa Infinite, quase
-só tráfego pago). A chave de uma fatura é **cartão + mês** — só o mês faria a
-fatura de um cartão sobrescrever a do outro.
+Três cartões: **4846** (Itaú Black, pessoal), **0442** (Visa Infinite, quase
+só tráfego pago) e **3794** (Azul). A chave de uma fatura é **cartão + mês** —
+só o mês faria a fatura de um cartão sobrescrever a do outro.
 
 ### Regra de ouro dos dados
 **Onde não há dado cadastrado, a tela diz "não cadastrado" — nunca R$ 0,00.**
