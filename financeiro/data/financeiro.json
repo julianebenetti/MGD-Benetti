@@ -30284,9 +30284,9 @@
         "natureza": "despesa",
         "descricao": "Anthropic              Anthropic.com Us",
         "valor": 266.08,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -30308,7 +30308,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mai26_0908",
@@ -30680,9 +30680,9 @@
         "natureza": "despesa",
         "descricao": "Anthropic              Anthropic.com Us",
         "valor": 53.32,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -30704,7 +30704,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "2073",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mai26_0896",
@@ -38339,9 +38339,9 @@
         "natureza": "despesa",
         "descricao": "Anthropic              Anthropic.com Us",
         "valor": 42.79,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -38363,7 +38363,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "1617",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jul26_1115",
@@ -43158,9 +43158,9 @@
         "natureza": "despesa",
         "descricao": "Anthropic              Anthropic.com Us",
         "valor": 27.2,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -43182,7 +43182,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1261",
@@ -43508,9 +43508,9 @@
         "natureza": "despesa",
         "descricao": "Anthropicanthropic.comus",
         "valor": 53.07,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -43532,7 +43532,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1260",
@@ -43541,7 +43541,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Anthropicanthropic.comus",
         "valor": 1.86,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
@@ -43565,7 +43565,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1366",
@@ -43809,9 +43809,9 @@
         "natureza": "despesa",
         "descricao": "Netlifynetlify.comus",
         "valor": 48.33,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -43833,7 +43833,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "2025",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1253",
@@ -43842,7 +43842,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Netlifynetlify.comus",
         "valor": 1.69,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
@@ -43866,7 +43866,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "2025",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1254",
@@ -44741,9 +44741,9 @@
         "natureza": "despesa",
         "descricao": "Turboscribe.aiturboscribe.aus",
         "valor": 645.6,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -44765,7 +44765,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1247",
@@ -44774,7 +44774,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Turboscribe.aiturboscribe.aus",
         "valor": 22.6,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
@@ -44798,7 +44798,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1248",
@@ -46723,9 +46723,9 @@
         "natureza": "despesa",
         "descricao": "Hostinger.comlarnakacyp",
         "valor": 635.38,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -46747,7 +46747,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1443",
@@ -46756,7 +46756,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Hostinger.comlarnakacyp",
         "valor": 22.24,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
@@ -46780,7 +46780,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1387",
@@ -47292,9 +47292,9 @@
         "natureza": "despesa",
         "descricao": "Openaiopenai.comus",
         "valor": 54,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
         "cartao_final": "0442",
         "conta_destino": "Comerciante",
@@ -47316,7 +47316,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "4893",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1378",
@@ -47325,7 +47325,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Openaiopenai.comus",
         "valor": 1.89,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -47349,7 +47349,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "4893",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1379",
@@ -47358,9 +47358,9 @@
         "natureza": "despesa",
         "descricao": "Openaiopenai.comus",
         "valor": 53.7,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
         "cartao_final": "0442",
         "conta_destino": "Comerciante",
@@ -47382,7 +47382,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1380",
@@ -47391,7 +47391,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Openaiopenai.comus",
         "valor": 1.88,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -47415,7 +47415,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1435",
@@ -48001,9 +48001,9 @@
         "natureza": "despesa",
         "descricao": "Hostinger.comlarnakacyp",
         "valor": 4.32,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48025,7 +48025,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1423",
@@ -48034,7 +48034,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Hostinger.comlarnakacyp",
         "valor": 0.15,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
@@ -48058,7 +48058,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1424",
@@ -48067,9 +48067,9 @@
         "natureza": "estorno",
         "descricao": "Hostinger.comlarnakacyp",
         "valor": -153.07,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48091,7 +48091,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1425",
@@ -48100,9 +48100,9 @@
         "natureza": "despesa",
         "descricao": "Hostinger.comlarnakacyp",
         "valor": 153.07,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "ferramentas",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48124,7 +48124,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1426",
@@ -48133,7 +48133,7 @@
         "natureza": "despesa",
         "descricao": "Iof Internacional - Hostinger.comlarnakacyp",
         "valor": 5.36,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "encargos_financeiros",
         "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
@@ -48157,7 +48157,7 @@
         "tipo_cartao": "Físico",
         "final_cartao": "7742",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Set26_1421",

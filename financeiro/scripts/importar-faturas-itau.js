@@ -229,6 +229,21 @@ function aplicarRegra(descricao, regras) {
   return regras.find(r => r.re.test(alvo)) || null;
 }
 
+// "Iof Internacional - Hostinger.comlarnakacyp" traz no proprio nome a compra
+// que o gerou. O IOF e despesa financeira — isso vem da regra —, mas a pessoa e
+// a de quem comprou: e a assinatura da Benetti UP que foi paga em dolar, e
+// mandar o IOF para Familia jogaria para a casa uma despesa da empresa.
+//
+// A regra do IOF nao define pessoa justamente para deixar este ponto decidir.
+const IOF_DE_COMPRA = /^iof\s+(?:internacional|compra internacional)\s*[-–]\s*(.+)$/i;
+
+function pessoaDaCompraQueGerou(descricao, regras) {
+  const casou = String(descricao).trim().match(IOF_DE_COMPRA);
+  if (!casou) return null;
+  const daCompra = aplicarRegra(casou[1], regras);
+  return (daCompra && daCompra.pessoa) || null;
+}
+
 // Uma pessoa cadastrada com tipo "empresa" marca o lancamento como despesa da
 // empresa. As contas da Juliane ainda nao estao separadas na pratica, entao o
 // mesmo extrato traz gasto da casa e da Benetti UP; sem essa marca os dois se
@@ -380,7 +395,10 @@ faturas.forEach(f => {
       natureza,
       descricao: item.descricao,
       valor: item.valor,
-      pessoa: (regra && regra.pessoa) || herdado.pessoa || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
+      pessoa: (regra && regra.pessoa)
+        || pessoaDaCompraQueGerou(item.descricao, regras)
+        || herdado.pessoa
+        || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
 
       categoria: natureza === 'divida_parcelada'
         ? 'divida_parcelada'

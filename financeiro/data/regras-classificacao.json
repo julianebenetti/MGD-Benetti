@@ -171,6 +171,12 @@
       "categoria": "encargos_financeiros",
       "pessoa": "Família",
       "nota": "Custo do credito e do cartao: juros, mora, multa, anuidade, IOF e encargos do refinanciamento. Pagar a menor a fatura financia o saldo, e esse custo e despesa financeira, nao despesa comum (Juliane, 23/08)"
+    },
+    {
+      "padrao": "hostinger|openai|anthropic|netlify|turboscribe",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Ferramentas de trabalho da Benetti UP: hospedagem, IA, deploy e transcricao (Juliane, 23/08)"
     }
   ]
 }

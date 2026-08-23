@@ -2107,7 +2107,9 @@
     }
 
     // Categorias que se repetem todo mês independentemente de comportamento.
-    const CATEGORIAS_FIXAS = ['assinatura', 'moradia', 'educacao', 'utilidades', 'servicos'];
+    // 'ferramentas' são as assinaturas de trabalho da Benetti UP — hospedagem,
+    // IA, deploy: cobram todo mês, não dependem de decisão de consumo.
+    const CATEGORIAS_FIXAS = ['assinatura', 'moradia', 'educacao', 'utilidades', 'servicos', 'ferramentas'];
 
     function ordenarMeses(a, b) {
       if (a === MES_A_CONFIRMAR) return 1;
