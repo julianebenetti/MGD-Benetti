@@ -47,7 +47,11 @@ if curl -sf localhost:3001/api/health > /dev/null; then
     let e="";process.stdin.on("data",d=>e+=d).on("end",()=>{
       const t=(JSON.parse(e).fluxo_mensal||{}).transacoes||[];
       const g=t.filter(x=>x.natureza!=="pagamento");
+      // Conferir contra o arquivo dá números diferentes se este total não
+      // disser que as linhas de pagamento de fatura ficam de fora.
+      const pag=t.length-g.length;
       console.log(`${g.length} lançamentos · R$ ${g.reduce((s,x)=>s+x.valor,0).toLocaleString("pt-BR",{minimumFractionDigits:2})}`);
+      console.log(`   (${t.length} linhas no arquivo, menos ${pag} de pagamento de fatura)`);
     });')"
   echo "→ No ar: $total"
   echo
