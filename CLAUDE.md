@@ -67,6 +67,20 @@ Juliane desconfiar da dashboard na primeira versão.
   **pago** — eles diferem quando há saldo, crédito ou encargo.
 - Não existe dia de fechamento fixo no código: cada fatura carrega o próprio
   vencimento, lido do arquivo.
+- **O mês da fatura vem do vencimento, nunca do nome da aba.** O Itaú nomeia a
+  aba pelo ciclo: o 0442 e o 3794 fecham num mês e vencem no dia 1º do seguinte,
+  então a aba diz "Fatura 06-26" e o vencimento diz 01/07/2026. Pelo regime de
+  caixa isso é julho. Lendo a aba, duas faturas seguidas do mesmo cartão caem na
+  mesma chave cartão+mês e uma sobrescreve a outra — foi o que fez quatro
+  faturas parecerem não enviadas.
+- **Nunca somar duas leituras da mesma fatura.** A mesclagem protege contra
+  reimportar uma fatura já gravada, mas não contra ler a mesma fatura duas vezes
+  na mesma rodada. Cópia repetida do mesmo arquivo é ignorada; versões que
+  divergem no conteúdo param a importação em vez de serem escolhidas em
+  silêncio.
+- **Parcela faltando denuncia fatura faltando.** Buraco na numeração ("parcela 3,
+  depois parcela 5") quase sempre é a fatura daquele mês que não foi importada,
+  não erro de leitura.
 
 ### Classificação de despesas
 As regras vivem em **`financeiro/data/regras-classificacao.json`**. Ao aprender
