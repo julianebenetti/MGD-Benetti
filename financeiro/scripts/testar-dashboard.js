@@ -654,7 +654,7 @@ function noEscopo(mv) {
   // --- Todas as abas renderizam ---
   for (const [id, nome] of [['painel', 'Painel'], ['lancamentos', 'Lançamentos'],
                             ['para_onde_vai', 'Para Onde Vai'], ['cartao', 'Cartão & Faturas'],
-                            ['dividas', 'Dívidas & Patrimônio']]) {
+                            ['dividas', 'Dívidas & Patrimônio'], ['irpf', 'Imposto de Renda']]) {
     await pagina.click(`[data-tab="${id}"]`);
     await pagina.waitForTimeout(800);
     const r = await pagina.evaluate(i => {
@@ -663,6 +663,54 @@ function noEscopo(mv) {
     }, id);
     ok(`Aba ${nome} renderiza conteúdo`, r.ativo && r.chars > 100, `${r.chars} caracteres`);
   }
+
+  // --- Imposto de Renda ---
+  //
+  // O risco desta aba e mandar a pessoa deduzir o que nao pode. Farmacia esta em
+  // saude e papelaria esta em educacao, mas nenhuma das duas deduz: se caissem
+  // no total, a declaracao sairia errada. E o ano-base tem de aparecer escrito,
+  // porque a declaracao de um ano apura o anterior.
+  await pagina.click('[data-tab="irpf"]');
+  await pagina.waitForTimeout(900);
+  const irpf = await pagina.evaluate(() => document.getElementById('irpf_conteudo').innerText);
+
+  const naoDedutiveis = /farm[áa]cia|drogal|drogasil|drogaria|papelaria/i;
+  const blocosDeExclusao = irpf.split('não entram').slice(1).join(' ');
+  ok('IRPF separa farmácia e papelaria do que é dedutível',
+     naoDedutiveis.test(blocosDeExclusao),
+     'as exceções deveriam aparecer no bloco "não entram"');
+
+  ok('IRPF diz o ano-base e o ano da entrega',
+     /Ano-base 2026/.test(irpf) && /entregue em 2027/.test(irpf),
+     irpf.slice(0, 80));
+
+  const dedutivelNaTela = numeroDe((irpf.match(/DEDUÇÕES QUE APROVEITAM\s*\n\s*(R\$ [\d.,]+)/) || [])[1]);
+  const esperadoDedutivel = (() => {
+    const regras = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'regras-irpf.json'), 'utf8'));
+    const pessoais = todosLancamentos.filter(t => noEscopo(t.mes_vencimento)
+      && (t.ambito || 'pessoal') === 'pessoal' && t.valor > 0
+      && !['receita', 'pagamento', 'ajuste'].includes(t.natureza));
+    let soma = 0;
+    const porGrupoPessoa = {};
+    pessoais.forEach(t => {
+      const r = (regras.classificacao || []).find(x => (x.categorias || []).includes(t.categoria));
+      if (!r || !r.dedutivel) return;
+      if (r.excecoes_nao_dedutiveis && new RegExp(r.excecoes_nao_dedutiveis.padrao, 'i').test(t.descricao)) return;
+      const g = regras.grupos[r.grupo] || {};
+      if (g.limite_por_pessoa) {
+        const k = `${r.grupo}|${t.pessoa}`;
+        porGrupoPessoa[k] = (porGrupoPessoa[k] || 0) + t.valor;
+      } else {
+        soma += t.valor;
+      }
+    });
+    Object.entries(porGrupoPessoa).forEach(([k, v]) => {
+      const teto = regras.grupos[k.split('|')[0]].limite_por_pessoa;
+      soma += Math.min(v, teto);
+    });
+    return Math.round(soma * 100) / 100;
+  })();
+  igual('Total dedutível do IRPF bate com o calculado do JSON', dedutivelNaTela, esperadoDedutivel, 0.02);
 
   // --- Zeros falsos ---
   const zerosFalsos = await pagina.evaluate(() => {

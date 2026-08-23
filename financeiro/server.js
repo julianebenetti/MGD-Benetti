@@ -351,6 +351,19 @@ app.get('/api/totais-esperados', (req, res) => {
   }
 });
 
+app.get('/api/regras-irpf', (req, res) => {
+  const caminho = path.join(__dirname, 'data', 'regras-irpf.json');
+  try {
+    if (!fs.existsSync(caminho)) {
+      return res.status(404).json({ error: 'Regras do IRPF não cadastradas' });
+    }
+    res.json(JSON.parse(fs.readFileSync(caminho, 'utf8')));
+  } catch (err) {
+    console.error('Erro lendo regras-irpf.json:', err);
+    res.status(500).json({ error: 'Erro ao ler as regras do IRPF' });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

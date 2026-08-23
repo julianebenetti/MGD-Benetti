@@ -1217,6 +1217,7 @@
       <button class="tab-button" data-tab="para_onde_vai">📊 Para Onde Vai</button>
       <button class="tab-button" data-tab="cartao">💳 Cartão &amp; Faturas</button>
       <button class="tab-button" data-tab="dividas">🏦 Dívidas &amp; Patrimônio</button>
+      <button class="tab-button" data-tab="irpf">🧮 Imposto de Renda</button>
 
       <div id="abas-ocultas" style="display: none;">
         <button class="tab-button" data-tab="importar">📤 Importar</button>
@@ -1438,6 +1439,10 @@
     </div>
 
     <!-- TAB: DÍVIDAS E PATRIMÔNIO -->
+    <div id="irpf" class="tab-content">
+      <div id="irpf_conteudo"></div>
+    </div>
+
     <div id="dividas" class="tab-content">
       <div id="dividas_conteudo"></div>
     </div>
@@ -1857,25 +1862,37 @@
       { id: 'para_onde_vai', nome: '📊 Para Onde Vai', visivel: true, ordem: 2 },
       { id: 'cartao', nome: '💳 Cartão & Faturas', visivel: true, ordem: 3 },
       { id: 'dividas', nome: '🏦 Dívidas & Patrimônio', visivel: true, ordem: 4 },
-      { id: 'importar', nome: '📤 Importar', visivel: false, ordem: 5 },
-      { id: 'configuracoes', nome: '⚙️ Configurações', visivel: false, ordem: 6 },
-      { id: 'formulario', nome: '📝 Lançar Manual', visivel: false, ordem: 7 },
-      { id: 'editor', nome: '📋 Editor JSON', visivel: false, ordem: 8 }
+      { id: 'irpf', nome: '🧮 Imposto de Renda', visivel: true, ordem: 5 },
+      { id: 'importar', nome: '📤 Importar', visivel: false, ordem: 6 },
+      { id: 'configuracoes', nome: '⚙️ Configurações', visivel: false, ordem: 7 },
+      { id: 'formulario', nome: '📝 Lançar Manual', visivel: false, ordem: 8 },
+      { id: 'editor', nome: '📋 Editor JSON', visivel: false, ordem: 9 }
     ];
 
     let configAbasUsuario = carregarConfigAbasDoLocal();
 
     function carregarConfigAbasDoLocal() {
       const saved = localStorage.getItem('configAbas_v2');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.warn('Erro ao carregar config de abas:', e);
-          return [...abasDisponibles];
-        }
+      if (!saved) return [...abasDisponibles];
+
+      let guardada;
+      try {
+        guardada = JSON.parse(saved);
+      } catch (e) {
+        console.warn('Erro ao carregar config de abas:', e);
+        return [...abasDisponibles];
       }
-      return [...abasDisponibles];
+
+      // Aba nova no codigo nao existe na config salva no navegador, e a barra e
+      // reconstruida a partir da config — sem juntar as duas, quem ja usou a
+      // dashboard nunca veria a aba nova, mesmo depois do deploy. A ordem e a
+      // visibilidade que a pessoa escolheu ficam de pe.
+      const conhecidas = new Set(guardada.map(a => a.id));
+      const novas = abasDisponibles.filter(a => !conhecidas.has(a.id));
+      if (!novas.length) return guardada;
+
+      const maiorOrdem = guardada.reduce((m, a) => Math.max(m, a.ordem || 0), 0);
+      return [...guardada, ...novas.map((a, i) => ({ ...a, ordem: maiorOrdem + 1 + i }))];
     }
 
     function salvarConfigAbasLocalmente() {
@@ -3019,6 +3036,207 @@
           </div>`).join('')}`;
     }
 
+    // ---------- Imposto de Renda ----------
+    //
+    // A declaracao do exercicio N cobre o ano-calendario N-1: a de 2026 apurou
+    // 2025, e o que esta aqui, que e 2026, vai para a de 2027. O rotulo diz o
+    // ano-base para nao induzir a juntar comprovante do ano errado.
+    //
+    // Dedutibilidade nao se decide so pela categoria: farmacia esta em saude mas
+    // nao deduz, papelaria esta em educacao mas nao deduz. Por isso cada grupo
+    // tem um padrao de excecao, e o que cai nele aparece separado, dizendo por
+    // que ficou de fora — em vez de sumir da conta sem explicacao.
+
+    let regrasIrpf = null;
+
+    async function carregarRegrasIrpf() {
+      if (regrasIrpf !== null) return regrasIrpf;
+      try {
+        const r = await fetch('/api/regras-irpf');
+        regrasIrpf = r.ok ? await r.json() : false;
+      } catch (err) {
+        regrasIrpf = false;
+      }
+      return regrasIrpf;
+    }
+
+    function apurarIrpf(regras) {
+      // A apuracao e sempre da pessoa fisica: despesa da Benetti UP e da empresa.
+      const doAno = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
+        .filter(t => mesNoEscopo(t.mes_vencimento) && (t.ambito || 'pessoal') === 'pessoal');
+
+      const grupos = {};
+      const naoDedutivel = { total: 0, porCategoria: {} };
+      let rendimentos = 0, impostoRetido = 0;
+
+      doAno.forEach(t => {
+        if (t.natureza === 'receita') { rendimentos += t.valor; return; }
+        if (t.natureza === 'pagamento' || t.natureza === 'ajuste') return;
+        if (t.valor <= 0) return;
+
+        if (t.categoria === 'imposto_renda') { impostoRetido += t.valor; return; }
+
+        const regra = (regras.classificacao || []).find(r => (r.categorias || []).includes(t.categoria));
+        if (!regra || !regra.dedutivel) {
+          naoDedutivel.total += t.valor;
+          naoDedutivel.porCategoria[t.categoria] = (naoDedutivel.porCategoria[t.categoria] || 0) + t.valor;
+          return;
+        }
+
+        const excecao = regra.excecoes_nao_dedutiveis;
+        const forcado = excecao && new RegExp(excecao.padrao, 'i').test(t.descricao);
+
+        const g = grupos[regra.grupo] = grupos[regra.grupo] || {
+          ...(regras.grupos[regra.grupo] || { rotulo: regra.grupo }),
+          chave: regra.grupo, nota: regra.nota,
+          dedutivel: 0, excluido: 0, motivoExclusao: excecao ? excecao.motivo : null,
+          porPessoa: {}, itens: [], itensExcluidos: [],
+        };
+
+        if (forcado) {
+          g.excluido += t.valor;
+          g.itensExcluidos.push(t);
+        } else {
+          g.dedutivel += t.valor;
+          g.porPessoa[t.pessoa] = (g.porPessoa[t.pessoa] || 0) + t.valor;
+          g.itens.push(t);
+        }
+      });
+
+      // O limite de instrucao e por pessoa, nao por familia: o que passa numa
+      // pessoa nao aproveita, mesmo que outra tenha folga.
+      Object.values(grupos).forEach(g => {
+        const teto = g.limite_por_pessoa;
+        g.aproveitavel = teto
+          ? Object.values(g.porPessoa).reduce((s, v) => s + Math.min(v, teto), 0)
+          : g.dedutivel;
+        g.perdido = Math.round((g.dedutivel - g.aproveitavel) * 100) / 100;
+      });
+
+      const somaDeducoes = Object.values(grupos).reduce((s, g) => s + g.aproveitavel, 0);
+      const l = regras.limites || {};
+      const simplificado = Math.min(rendimentos * (l.desconto_simplificado_percentual || 0.2),
+                                    l.desconto_simplificado_teto || Infinity);
+
+      return { grupos, naoDedutivel, rendimentos, impostoRetido, somaDeducoes, simplificado, limites: l };
+    }
+
+    async function renderizarIrpf() {
+      const container = document.getElementById('irpf_conteudo');
+      if (!container) return;
+
+      const regras = await carregarRegrasIrpf();
+      if (!regras) {
+        container.innerHTML = blocoVazio('Regras do IRPF não cadastradas',
+          'O arquivo <code>data/regras-irpf.json</code> não foi encontrado.');
+        return;
+      }
+
+      const a = apurarIrpf(regras);
+      // ANO_DASHBOARD guarda só os dois últimos dígitos (26), porque é assim que
+      // o mês de vencimento vem escrito ("Ago/26").
+      const anoBase = 2000 + ANO_DASHBOARD;
+      const exercicio = anoBase + 1;
+      const ordem = ['saude', 'instrucao', 'previdencia_oficial', 'previdencia_privada'];
+      const grupos = ordem.map(k => a.grupos[k]).filter(Boolean);
+
+      const tetoPrev = a.grupos.previdencia_privada && a.limites.previdencia_privada_percentual_da_renda
+        ? a.rendimentos * a.limites.previdencia_privada_percentual_da_renda
+        : null;
+
+      container.innerHTML = `
+        <div class="aviso aviso-info">
+          <b>Ano-base ${anoBase} — vai na declaração entregue em ${exercicio}.</b><br>
+          A declaração de um ano apura o ano anterior: a de 2026 já cobriu 2025 e foi entregue
+          até 29/05/2026. O que está nesta tela é ${anoBase}, e serve para a declaração de ${exercicio}.
+          Só o âmbito pessoal entra — despesa da Benetti UP é da empresa, não sua.
+        </div>
+
+        <div class="grid">
+          ${cartaoKpi('Rendimento tributável', a.rendimentos > 0 ? moeda(a.rendimentos) : 'não cadastrado', 'salário, PLR e 13º')}
+          ${cartaoKpi('Deduções que aproveitam', moeda(a.somaDeducoes), `${grupos.length} grupos`, 'var(--accent-green)')}
+          ${cartaoKpi('Imposto já retido', a.impostoRetido > 0 ? moeda(a.impostoRetido) : 'não cadastrado', 'na fonte, pela Elektro')}
+          ${cartaoKpi('Desconto simplificado', moeda(a.simplificado), 'a alternativa às deduções', 'var(--accent-yellow)')}
+        </div>
+
+        <div class="aviso ${a.somaDeducoes > a.simplificado ? 'aviso-info' : 'aviso-atencao'}">
+          ${a.somaDeducoes > a.simplificado
+            ? `Pelo que está cadastrado, a <b>declaração completa</b> rende mais: ${moeda(a.somaDeducoes)} de deduções
+               contra ${moeda(a.simplificado)} do desconto simplificado — <b>${moeda(a.somaDeducoes - a.simplificado)}</b> a mais de base abatida.`
+            : `Pelo que está cadastrado, o <b>desconto simplificado</b> rende mais: ${moeda(a.simplificado)}
+               contra ${moeda(a.somaDeducoes)} de deduções. Faltam despesas dedutíveis cadastradas, ou o ano ainda está incompleto.`}
+          Confirme com seu contador antes de escolher — falta aqui o que não passa pelo cartão nem pela folha.
+        </div>
+
+        ${grupos.map(g => `
+          <div class="section-title">${g.rotulo}</div>
+          <div class="card full-width" style="overflow-x:auto">
+            <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:baseline; margin-bottom:10px">
+              <b style="font-size:18px; color: var(--accent-green)">${moeda(g.aproveitavel)}</b>
+              ${g.perdido > 0.005 ? `<span class="kpi-sub" style="color: var(--accent-yellow)">${moeda(g.perdido)} acima do limite, não aproveita</span>` : ''}
+              ${g.limite_por_pessoa ? `<span class="kpi-sub">limite ${moeda(g.limite_por_pessoa)} por pessoa</span>` : ''}
+              ${g.limite_percentual_da_renda ? `<span class="kpi-sub">limite ${(g.limite_percentual_da_renda * 100).toFixed(0)}% da renda${tetoPrev ? ` = ${moeda(tetoPrev)}` : ''}</span>` : ''}
+              ${!g.limite_por_pessoa && !g.limite_percentual_da_renda ? '<span class="kpi-sub">sem teto</span>' : ''}
+            </div>
+            <div class="kpi-sub" style="margin-bottom:12px">${g.observacao || ''}</div>
+            <table class="tabela-dados">
+              <thead><tr><th>Pessoa</th><th class="num">Gasto no ano</th><th class="num">Aproveita</th><th class="num">Perde</th></tr></thead>
+              <tbody>
+                ${Object.entries(g.porPessoa).sort((x, y) => y[1] - x[1]).map(([p, v]) => {
+                  const usa = g.limite_por_pessoa ? Math.min(v, g.limite_por_pessoa) : v;
+                  return `
+                    <tr>
+                      <td>${p}</td>
+                      <td class="num">${moeda(v)}</td>
+                      <td class="num" style="color: var(--accent-green)">${moeda(usa)}</td>
+                      <td class="num">${v - usa > 0.005 ? `<span style="color: var(--accent-yellow)">${moeda(v - usa)}</span>` : '—'}</td>
+                    </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+            ${g.excluido > 0.005 ? `
+              <div class="aviso aviso-atencao" style="margin-top:14px">
+                <b>${moeda(g.excluido)} não entram</b> — ${g.motivoExclusao}
+                <div class="kpi-sub" style="margin-top:6px">
+                  ${[...new Set(g.itensExcluidos.map(t => t.descricao.trim().replace(/\s+/g, ' ').slice(0, 34)))].slice(0, 6).join(' · ')}
+                </div>
+              </div>` : ''}
+          </div>`).join('')}
+
+        <div class="section-title">Dependentes</div>
+        <div class="card full-width">
+          <div class="kpi-sub" style="margin-bottom:10px">
+            ${moeda(a.limites.dependente)} por dependente. ${regras.grupos.dependentes.observacao}
+            Quem é dependente é decisão sua e do contador — a dashboard não tem como saber, então não conta sozinha.
+          </div>
+          <div class="kpi-sub">
+            Candidatos pelos dados: <b>Valentina</b> e <b>Luca</b>. Com os dois,
+            seriam <b>${moeda(a.limites.dependente * 2)}</b> de dedução.
+          </div>
+        </div>
+
+        <div class="section-title">O que não deduz</div>
+        <div class="card full-width" style="overflow-x:auto">
+          <div class="kpi-sub" style="margin-bottom:12px">
+            ${moeda(a.naoDedutivel.total)} de gasto pessoal no ano que não abate imposto. Está aqui para
+            você não procurar comprovante à toa.
+          </div>
+          <table class="tabela-dados">
+            <thead><tr><th>Categoria</th><th class="num">No ano</th></tr></thead>
+            <tbody>
+              ${Object.entries(a.naoDedutivel.porCategoria).sort((x, y) => y[1] - x[1]).slice(0, 12)
+                .map(([c, v]) => `<tr><td>${c}</td><td class="num">${moeda(v)}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="aviso aviso-atencao">
+          <b>O que falta para a declaração ficar completa:</b> despesa médica paga fora do cartão,
+          recibo de consulta, mensalidade paga em boleto ou débito, e o informe de rendimentos da
+          Elektro. A dashboard só enxerga o que passa pelo cartão e pela folha.
+        </div>`;
+    }
+
     function renderizarDividasPatrimonio() {
       const container = document.getElementById('dividas_conteudo');
       if (!container) return;
@@ -3098,6 +3316,7 @@
       renderizarParaOndeVai();
       renderizarCartao();
       renderizarDividasPatrimonio();
+      renderizarIrpf();
 
       // Ferramentas
       renderizarConfiguracoes();
@@ -4358,6 +4577,7 @@ function renderizarTiposDespesaConfig() {
         if (tabId === 'para_onde_vai') renderizarParaOndeVai();
         if (tabId === 'cartao') renderizarCartao();
         if (tabId === 'dividas') renderizarDividasPatrimonio();
+        if (tabId === 'irpf') renderizarIrpf();
       });
     });
 
