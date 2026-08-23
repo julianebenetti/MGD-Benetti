@@ -179,6 +179,8 @@ material dos dois filhos, e por isso existe a pessoa **Filhos**.
 - `importar-holerites.js <pdf|pasta>` — lê os comprovantes de pagamento da
   Elektro. Confere cada um contra o próprio líquido e para se alguma rubrica não
   tiver regra.
+- `importar-extrato-itau.js <arquivo.xls>` — lê o extrato da conta corrente.
+  Marca como transferência o que outra fonte já lançou, para não contar duas vezes.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha
   de revisão em lote (um estabelecimento por linha) e reimporta o que foi
   revisado, opcionalmente virando regra nova.

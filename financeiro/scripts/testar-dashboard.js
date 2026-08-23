@@ -76,7 +76,7 @@ function noEscopo(mv) {
   // que quita a fatura anterior, e a parcela da fatura renegociada, que quita
   // parceladamente compras ja contadas na epoca. Somar junto cobraria as mesmas
   // compras duas vezes. Tem de casar com NAO_E_CONSUMO no index.html.
-  const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada', 'receita', 'ajuste'];
+  const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada', 'receita', 'ajuste', 'transferencia', 'emprestimo'];
   const todas = todosLancamentos.filter(t => !NAO_E_CONSUMO.includes(t.natureza));
   const pagamentos = todosLancamentos.filter(t => t.natureza === 'pagamento');
   const dividaParcelada = todosLancamentos.filter(t => t.natureza === 'divida_parcelada');
