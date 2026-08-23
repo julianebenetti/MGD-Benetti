@@ -4694,9 +4694,9 @@
         "natureza": "despesa",
         "descricao": "Encargos Pix",
         "valor": 5.98,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Família",
+        "categoria": "encargos_financeiros",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
         "cartao_final": "0442",
         "conta_destino": "Comerciante",
@@ -9548,9 +9548,9 @@
         "natureza": "estorno",
         "descricao": "Estorno Juros De Financiamento",
         "valor": -0.49,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Família",
+        "categoria": "encargos_financeiros",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
         "cartao_final": "0442",
         "conta_destino": "Comerciante",
@@ -39796,11 +39796,11 @@
         "id": "txn_Jul26_1201",
         "data": "2026-06-26",
         "tipo": "entrada",
-        "natureza": "estorno",
+        "natureza": "divida_parcelada",
         "descricao": "Credito Por Parcelamento",
         "valor": -5305.49,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
@@ -39829,11 +39829,11 @@
         "id": "txn_Jul26_1202",
         "data": "2026-06-26",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parcela De Refinanciamento",
         "valor": 1769.36,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
@@ -39869,9 +39869,9 @@
         "natureza": "despesa",
         "descricao": "Iof Refinanciamento De Fatura",
         "valor": 54.88,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Família",
+        "categoria": "encargos_financeiros",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
         "conta_destino": "Comerciante",
@@ -41925,7 +41925,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1360",
+        "id": "txn_Ago26_1283",
         "data": "2025-07-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -41962,7 +41962,7 @@
         "parcelas_no_periodo": 7
       },
       {
-        "id": "txn_Ago26_1320",
+        "id": "txn_Ago26_1360",
         "data": "2025-07-27",
         "tipo": "saida",
         "natureza": "despesa",
@@ -41999,7 +41999,7 @@
         "parcelas_no_periodo": 8
       },
       {
-        "id": "txn_Ago26_1319",
+        "id": "txn_Ago26_1359",
         "data": "2025-10-31",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42036,7 +42036,7 @@
         "parcelas_no_periodo": 9
       },
       {
-        "id": "txn_Ago26_1318",
+        "id": "txn_Ago26_1358",
         "data": "2025-11-28",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42110,7 +42110,7 @@
         "parcelas_no_periodo": 7
       },
       {
-        "id": "txn_Ago26_1317",
+        "id": "txn_Ago26_1357",
         "data": "2026-03-03",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42147,7 +42147,7 @@
         "parcelas_no_periodo": 6
       },
       {
-        "id": "txn_Ago26_1316",
+        "id": "txn_Ago26_1356",
         "data": "2026-03-30",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42221,7 +42221,7 @@
         "parcelas_no_periodo": 4
       },
       {
-        "id": "txn_Ago26_1315",
+        "id": "txn_Ago26_1355",
         "data": "2026-05-22",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42258,7 +42258,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1314",
+        "id": "txn_Ago26_1354",
         "data": "2026-05-27",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42295,7 +42295,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1359",
+        "id": "txn_Ago26_1282",
         "data": "2026-05-31",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42332,7 +42332,7 @@
         "parcelas_no_periodo": 4
       },
       {
-        "id": "txn_Ago26_1313",
+        "id": "txn_Ago26_1353",
         "data": "2026-06-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42369,7 +42369,7 @@
         "parcelas_no_periodo": 4
       },
       {
-        "id": "txn_Ago26_1311",
+        "id": "txn_Ago26_1351",
         "data": "2026-06-16",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42406,7 +42406,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1312",
+        "id": "txn_Ago26_1352",
         "data": "2026-06-16",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42443,7 +42443,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1356",
+        "id": "txn_Ago26_1279",
         "data": "2026-06-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42476,7 +42476,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1357",
+        "id": "txn_Ago26_1280",
         "data": "2026-06-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42509,7 +42509,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1358",
+        "id": "txn_Ago26_1281",
         "data": "2026-06-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42542,7 +42542,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1353",
+        "id": "txn_Ago26_1276",
         "data": "2026-06-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42573,13 +42573,13 @@
         "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1353",
+        "id_compra": "compra_txn_Ago26_1276",
         "data_compra_original": "2026-06-25",
         "valor_total_exato": false,
         "parcelas_no_periodo": 1
       },
       {
-        "id": "txn_Ago26_1354",
+        "id": "txn_Ago26_1277",
         "data": "2026-06-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42612,7 +42612,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1355",
+        "id": "txn_Ago26_1278",
         "data": "2026-06-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42645,44 +42645,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1310",
-        "data": "2026-06-26",
-        "tipo": "saida",
-        "natureza": "despesa",
-        "descricao": "Parcela De Refinanciamento",
-        "valor": 1769.36,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
-        "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
-        "cartao_final": "4846",
-        "conta_destino": "Comerciante",
-        "status": "confirmado",
-        "origem": "cartao_credito_itau",
-        "mes_vencimento": "Ago/26",
-        "data_vencimento_fatura": "2026-08-26",
-        "mes_referencia": "Ago/26",
-        "fatura_origem": "4846|Ago/26",
-        "fatura_situacao": "fechada",
-        "eh_parcelada": true,
-        "parcela_numero": 2,
-        "parcela_total": 4,
-        "descricao_parcela": "2/4",
-        "parcela_fonte": "coluna",
-        "valor_total_compra": 7077.44,
-        "titularidade": "Titular",
-        "portador": "Juliane Ferreira Benetti",
-        "tipo_cartao": "Físico",
-        "final_cartao": "4846",
-        "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
-        "id_compra": "compra_txn_Jul26_1202",
-        "data_compra_original": "2026-06-26",
-        "valor_total_exato": false,
-        "parcelas_no_periodo": 3
-      },
-      {
-        "id": "txn_Ago26_1352",
+        "id": "txn_Ago26_1275",
         "data": "2026-06-26",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42713,6 +42676,43 @@
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal"
+      },
+      {
+        "id": "txn_Ago26_1350",
+        "data": "2026-06-26",
+        "tipo": "saida",
+        "natureza": "divida_parcelada",
+        "descricao": "Parcela De Refinanciamento",
+        "valor": 1769.36,
+        "pessoa": "Juliane",
+        "categoria": "divida_parcelada",
+        "classificado_por": "herdado",
+        "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
+        "cartao_final": "4846",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "cartao_credito_itau",
+        "mes_vencimento": "Ago/26",
+        "data_vencimento_fatura": "2026-08-26",
+        "mes_referencia": "Ago/26",
+        "fatura_origem": "4846|Ago/26",
+        "fatura_situacao": "fechada",
+        "eh_parcelada": true,
+        "parcela_numero": 2,
+        "parcela_total": 4,
+        "descricao_parcela": "2/4",
+        "parcela_fonte": "coluna",
+        "valor_total_compra": 7077.44,
+        "titularidade": "Titular",
+        "portador": "Juliane Ferreira Benetti",
+        "tipo_cartao": "Físico",
+        "final_cartao": "4846",
+        "carga_id": "faturas_itau_2026",
+        "ambito": "pessoal",
+        "id_compra": "compra_txn_Jul26_1202",
+        "data_compra_original": "2026-06-26",
+        "valor_total_exato": false,
+        "parcelas_no_periodo": 3
       },
       {
         "id": "txn_Ago26_1361",
@@ -42748,7 +42748,40 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1309",
+        "id": "txn_Ago26_1274",
+        "data": "2026-06-27",
+        "tipo": "saida",
+        "natureza": "despesa",
+        "descricao": "Facebk *9vz6uv55w2     Sao Paulo     Br",
+        "valor": 132.45,
+        "pessoa": "Benetti UP",
+        "categoria": "trafego_pago",
+        "classificado_por": "regra",
+        "conta_origem": "Azul Itau Infinite Visa - final 3794",
+        "cartao_final": "3794",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "cartao_credito_itau",
+        "mes_vencimento": "Ago/26",
+        "data_vencimento_fatura": "2026-08-03",
+        "mes_referencia": "Ago/26",
+        "fatura_origem": "3794|Ago/26",
+        "fatura_situacao": "paga",
+        "eh_parcelada": false,
+        "parcela_numero": null,
+        "parcela_total": null,
+        "descricao_parcela": null,
+        "parcela_fonte": null,
+        "valor_total_compra": null,
+        "titularidade": "Titular",
+        "portador": "Juliane Ferreira Ben",
+        "tipo_cartao": "Virtual recorrente",
+        "final_cartao": "8929",
+        "carga_id": "faturas_itau_2026",
+        "ambito": "empresa"
+      },
+      {
+        "id": "txn_Ago26_1349",
         "data": "2026-06-27",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42785,40 +42818,7 @@
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Ago26_1351",
-        "data": "2026-06-27",
-        "tipo": "saida",
-        "natureza": "despesa",
-        "descricao": "Facebk *9vz6uv55w2     Sao Paulo     Br",
-        "valor": 132.45,
-        "pessoa": "Benetti UP",
-        "categoria": "trafego_pago",
-        "classificado_por": "regra",
-        "conta_origem": "Azul Itau Infinite Visa - final 3794",
-        "cartao_final": "3794",
-        "conta_destino": "Comerciante",
-        "status": "confirmado",
-        "origem": "cartao_credito_itau",
-        "mes_vencimento": "Ago/26",
-        "data_vencimento_fatura": "2026-08-03",
-        "mes_referencia": "Ago/26",
-        "fatura_origem": "3794|Ago/26",
-        "fatura_situacao": "paga",
-        "eh_parcelada": false,
-        "parcela_numero": null,
-        "parcela_total": null,
-        "descricao_parcela": null,
-        "parcela_fonte": null,
-        "valor_total_compra": null,
-        "titularidade": "Titular",
-        "portador": "Juliane Ferreira Ben",
-        "tipo_cartao": "Virtual recorrente",
-        "final_cartao": "8929",
-        "carga_id": "faturas_itau_2026",
-        "ambito": "empresa"
-      },
-      {
-        "id": "txn_Ago26_1350",
+        "id": "txn_Ago26_1273",
         "data": "2026-06-28",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42851,7 +42851,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1349",
+        "id": "txn_Ago26_1272",
         "data": "2026-06-29",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42884,7 +42884,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1348",
+        "id": "txn_Ago26_1271",
         "data": "2026-06-30",
         "tipo": "saida",
         "natureza": "despesa",
@@ -42917,7 +42917,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1322",
+        "id": "txn_Ago26_1245",
         "data": "2026-07-01",
         "tipo": "entrada",
         "natureza": "pagamento",
@@ -42950,7 +42950,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1346",
+        "id": "txn_Ago26_1269",
         "data": "2026-07-01",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -42983,14 +42983,14 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1347",
+        "id": "txn_Ago26_1270",
         "data": "2026-07-01",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parc Fatura Seg",
         "valor": 3880.96,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
@@ -43014,13 +43014,13 @@
         "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1347",
+        "id_compra": "compra_txn_Ago26_1270",
         "data_compra_original": "2026-07-01",
         "valor_total_exato": false,
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1343",
+        "id": "txn_Ago26_1266",
         "data": "2026-07-04",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43053,7 +43053,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1344",
+        "id": "txn_Ago26_1267",
         "data": "2026-07-04",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43086,7 +43086,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1345",
+        "id": "txn_Ago26_1268",
         "data": "2026-07-04",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43119,7 +43119,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1342",
+        "id": "txn_Ago26_1265",
         "data": "2026-07-07",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43152,7 +43152,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1341",
+        "id": "txn_Ago26_1264",
         "data": "2026-07-09",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43185,7 +43185,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1338",
+        "id": "txn_Ago26_1261",
         "data": "2026-07-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43218,7 +43218,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1339",
+        "id": "txn_Ago26_1262",
         "data": "2026-07-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43251,7 +43251,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1340",
+        "id": "txn_Ago26_1263",
         "data": "2026-07-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43317,7 +43317,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1304",
+        "id": "txn_Ago26_1344",
         "data": "2026-07-11",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -43348,13 +43348,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1306",
+        "id_compra": "compra_txn_Ago26_1346",
         "data_compra_original": "2026-07-11",
         "valor_total_exato": true,
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1305",
+        "id": "txn_Ago26_1345",
         "data": "2026-07-11",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -43385,13 +43385,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1306",
+        "id_compra": "compra_txn_Ago26_1346",
         "data_compra_original": "2026-07-11",
         "valor_total_exato": true,
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1306",
+        "id": "txn_Ago26_1346",
         "data": "2026-07-11",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -43422,13 +43422,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1306",
+        "id_compra": "compra_txn_Ago26_1346",
         "data_compra_original": "2026-07-11",
         "valor_total_exato": true,
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1307",
+        "id": "txn_Ago26_1347",
         "data": "2026-07-11",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43465,7 +43465,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1308",
+        "id": "txn_Ago26_1348",
         "data": "2026-07-11",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43502,7 +43502,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1336",
+        "id": "txn_Ago26_1259",
         "data": "2026-07-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43535,7 +43535,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1337",
+        "id": "txn_Ago26_1260",
         "data": "2026-07-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43634,7 +43634,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1332",
+        "id": "txn_Ago26_1255",
         "data": "2026-07-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43667,7 +43667,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1333",
+        "id": "txn_Ago26_1256",
         "data": "2026-07-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43700,7 +43700,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1334",
+        "id": "txn_Ago26_1257",
         "data": "2026-07-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43733,7 +43733,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1335",
+        "id": "txn_Ago26_1258",
         "data": "2026-07-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43766,7 +43766,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1303",
+        "id": "txn_Ago26_1343",
         "data": "2026-07-14",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43803,7 +43803,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Ago26_1329",
+        "id": "txn_Ago26_1252",
         "data": "2026-07-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43836,7 +43836,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1330",
+        "id": "txn_Ago26_1253",
         "data": "2026-07-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43869,7 +43869,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1331",
+        "id": "txn_Ago26_1254",
         "data": "2026-07-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43902,7 +43902,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1301",
+        "id": "txn_Ago26_1341",
         "data": "2026-07-17",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43935,7 +43935,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1302",
+        "id": "txn_Ago26_1342",
         "data": "2026-07-17",
         "tipo": "saida",
         "natureza": "despesa",
@@ -43968,40 +43968,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1300",
-        "data": "2026-07-18",
-        "tipo": "saida",
-        "natureza": "despesa",
-        "descricao": "Tenda Atacado S Acampinasbra",
-        "valor": 30.06,
-        "pessoa": "Família",
-        "categoria": "alimentacao",
-        "classificado_por": "regra",
-        "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
-        "cartao_final": "4846",
-        "conta_destino": "Comerciante",
-        "status": "confirmado",
-        "origem": "cartao_credito_itau",
-        "mes_vencimento": "Ago/26",
-        "data_vencimento_fatura": "2026-08-26",
-        "mes_referencia": "Ago/26",
-        "fatura_origem": "4846|Ago/26",
-        "fatura_situacao": "fechada",
-        "eh_parcelada": false,
-        "parcela_numero": null,
-        "parcela_total": null,
-        "descricao_parcela": null,
-        "parcela_fonte": null,
-        "valor_total_compra": null,
-        "titularidade": "Adicional",
-        "portador": "Hugo Benetti",
-        "tipo_cartao": "Físico",
-        "final_cartao": "4846",
-        "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
-      },
-      {
-        "id": "txn_Ago26_1327",
+        "id": "txn_Ago26_1250",
         "data": "2026-07-18",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44034,7 +44001,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1328",
+        "id": "txn_Ago26_1251",
         "data": "2026-07-18",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44065,10 +44032,43 @@
         "final_cartao": "1312",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1328",
+        "id_compra": "compra_txn_Ago26_1251",
         "data_compra_original": "2026-07-18",
         "valor_total_exato": false,
         "parcelas_no_periodo": 3
+      },
+      {
+        "id": "txn_Ago26_1340",
+        "data": "2026-07-18",
+        "tipo": "saida",
+        "natureza": "despesa",
+        "descricao": "Tenda Atacado S Acampinasbra",
+        "valor": 30.06,
+        "pessoa": "Família",
+        "categoria": "alimentacao",
+        "classificado_por": "regra",
+        "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
+        "cartao_final": "4846",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "cartao_credito_itau",
+        "mes_vencimento": "Ago/26",
+        "data_vencimento_fatura": "2026-08-26",
+        "mes_referencia": "Ago/26",
+        "fatura_origem": "4846|Ago/26",
+        "fatura_situacao": "fechada",
+        "eh_parcelada": false,
+        "parcela_numero": null,
+        "parcela_total": null,
+        "descricao_parcela": null,
+        "parcela_fonte": null,
+        "valor_total_compra": null,
+        "titularidade": "Adicional",
+        "portador": "Hugo Benetti",
+        "tipo_cartao": "Físico",
+        "final_cartao": "4846",
+        "carga_id": "faturas_itau_2026",
+        "ambito": "pessoal"
       },
       {
         "id": "txn_Ago26_1365",
@@ -44104,7 +44104,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1296",
+        "id": "txn_Ago26_1336",
         "data": "2026-07-19",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44137,7 +44137,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1297",
+        "id": "txn_Ago26_1337",
         "data": "2026-07-19",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44170,7 +44170,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1298",
+        "id": "txn_Ago26_1338",
         "data": "2026-07-19",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44203,7 +44203,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1299",
+        "id": "txn_Ago26_1339",
         "data": "2026-07-19",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44269,7 +44269,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1293",
+        "id": "txn_Ago26_1333",
         "data": "2026-07-20",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44302,7 +44302,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1294",
+        "id": "txn_Ago26_1334",
         "data": "2026-07-20",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44335,7 +44335,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1295",
+        "id": "txn_Ago26_1335",
         "data": "2026-07-20",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44368,7 +44368,40 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1291",
+        "id": "txn_Ago26_1244",
+        "data": "2026-07-21",
+        "tipo": "entrada",
+        "natureza": "pagamento",
+        "descricao": "Pagamento Pix",
+        "valor": -6200,
+        "pessoa": "Juliane",
+        "categoria": "nao_classificado",
+        "classificado_por": "herdado",
+        "conta_origem": "Azul Itau Infinite Visa - final 3794",
+        "cartao_final": "3794",
+        "conta_destino": "Itaú",
+        "status": "confirmado",
+        "origem": "cartao_credito_itau",
+        "mes_vencimento": "Ago/26",
+        "data_vencimento_fatura": "2026-08-03",
+        "mes_referencia": "Ago/26",
+        "fatura_origem": "3794|Ago/26",
+        "fatura_situacao": "paga",
+        "eh_parcelada": false,
+        "parcela_numero": null,
+        "parcela_total": null,
+        "descricao_parcela": null,
+        "parcela_fonte": null,
+        "valor_total_compra": null,
+        "titularidade": "Titular",
+        "portador": "Juliane Ferreira Ben",
+        "tipo_cartao": "Físico",
+        "final_cartao": "3794",
+        "carga_id": "faturas_itau_2026",
+        "ambito": "pessoal"
+      },
+      {
+        "id": "txn_Ago26_1331",
         "data": "2026-07-21",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44399,13 +44432,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1291",
+        "id_compra": "compra_txn_Ago26_1331",
         "data_compra_original": "2026-07-21",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Ago26_1292",
+        "id": "txn_Ago26_1332",
         "data": "2026-07-21",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44434,39 +44467,6 @@
         "portador": "Juliane Ferreira Benetti",
         "tipo_cartao": "Físico",
         "final_cartao": "4846",
-        "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
-      },
-      {
-        "id": "txn_Ago26_1321",
-        "data": "2026-07-21",
-        "tipo": "entrada",
-        "natureza": "pagamento",
-        "descricao": "Pagamento Pix",
-        "valor": -6200,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
-        "conta_origem": "Azul Itau Infinite Visa - final 3794",
-        "cartao_final": "3794",
-        "conta_destino": "Itaú",
-        "status": "confirmado",
-        "origem": "cartao_credito_itau",
-        "mes_vencimento": "Ago/26",
-        "data_vencimento_fatura": "2026-08-03",
-        "mes_referencia": "Ago/26",
-        "fatura_origem": "3794|Ago/26",
-        "fatura_situacao": "paga",
-        "eh_parcelada": false,
-        "parcela_numero": null,
-        "parcela_total": null,
-        "descricao_parcela": null,
-        "parcela_fonte": null,
-        "valor_total_compra": null,
-        "titularidade": "Titular",
-        "portador": "Juliane Ferreira Ben",
-        "tipo_cartao": "Físico",
-        "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal"
       },
@@ -44504,7 +44504,40 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1286",
+        "id": "txn_Ago26_1249",
+        "data": "2026-07-22",
+        "tipo": "entrada",
+        "natureza": "estorno",
+        "descricao": "Redução Mensalidade - Plano Do Cartão",
+        "valor": -3.1,
+        "pessoa": "Juliane",
+        "categoria": "nao_classificado",
+        "classificado_por": "herdado",
+        "conta_origem": "Azul Itau Infinite Visa - final 3794",
+        "cartao_final": "3794",
+        "conta_destino": "Comerciante",
+        "status": "confirmado",
+        "origem": "cartao_credito_itau",
+        "mes_vencimento": "Ago/26",
+        "data_vencimento_fatura": "2026-08-03",
+        "mes_referencia": "Ago/26",
+        "fatura_origem": "3794|Ago/26",
+        "fatura_situacao": "paga",
+        "eh_parcelada": false,
+        "parcela_numero": null,
+        "parcela_total": null,
+        "descricao_parcela": null,
+        "parcela_fonte": null,
+        "valor_total_compra": null,
+        "titularidade": "Titular",
+        "portador": "Juliane Ferreira Ben",
+        "tipo_cartao": "Físico",
+        "final_cartao": "3794",
+        "carga_id": "faturas_itau_2026",
+        "ambito": "pessoal"
+      },
+      {
+        "id": "txn_Ago26_1326",
         "data": "2026-07-22",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44537,7 +44570,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1287",
+        "id": "txn_Ago26_1327",
         "data": "2026-07-22",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44570,7 +44603,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1288",
+        "id": "txn_Ago26_1328",
         "data": "2026-07-22",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44603,7 +44636,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1289",
+        "id": "txn_Ago26_1329",
         "data": "2026-07-22",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44636,7 +44669,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1290",
+        "id": "txn_Ago26_1330",
         "data": "2026-07-22",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44665,39 +44698,6 @@
         "portador": "Hugo Benetti",
         "tipo_cartao": "Físico",
         "final_cartao": "4846",
-        "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
-      },
-      {
-        "id": "txn_Ago26_1326",
-        "data": "2026-07-22",
-        "tipo": "entrada",
-        "natureza": "estorno",
-        "descricao": "Redução Mensalidade - Plano Do Cartão",
-        "valor": -3.1,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
-        "conta_origem": "Azul Itau Infinite Visa - final 3794",
-        "cartao_final": "3794",
-        "conta_destino": "Comerciante",
-        "status": "confirmado",
-        "origem": "cartao_credito_itau",
-        "mes_vencimento": "Ago/26",
-        "data_vencimento_fatura": "2026-08-03",
-        "mes_referencia": "Ago/26",
-        "fatura_origem": "3794|Ago/26",
-        "fatura_situacao": "paga",
-        "eh_parcelada": false,
-        "parcela_numero": null,
-        "parcela_total": null,
-        "descricao_parcela": null,
-        "parcela_fonte": null,
-        "valor_total_compra": null,
-        "titularidade": "Titular",
-        "portador": "Juliane Ferreira Ben",
-        "tipo_cartao": "Físico",
-        "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal"
       },
@@ -44735,7 +44735,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Ago26_1323",
+        "id": "txn_Ago26_1246",
         "data": "2026-07-23",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44768,7 +44768,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1324",
+        "id": "txn_Ago26_1247",
         "data": "2026-07-23",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44801,7 +44801,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1325",
+        "id": "txn_Ago26_1248",
         "data": "2026-07-23",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44834,7 +44834,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1283",
+        "id": "txn_Ago26_1323",
         "data": "2026-07-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44867,7 +44867,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1284",
+        "id": "txn_Ago26_1324",
         "data": "2026-07-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44900,7 +44900,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1285",
+        "id": "txn_Ago26_1325",
         "data": "2026-07-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44933,7 +44933,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1281",
+        "id": "txn_Ago26_1321",
         "data": "2026-07-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44966,7 +44966,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1282",
+        "id": "txn_Ago26_1322",
         "data": "2026-07-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -44999,7 +44999,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1277",
+        "id": "txn_Ago26_1317",
         "data": "2026-07-26",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45032,7 +45032,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1278",
+        "id": "txn_Ago26_1318",
         "data": "2026-07-26",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45065,7 +45065,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1279",
+        "id": "txn_Ago26_1319",
         "data": "2026-07-26",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45098,7 +45098,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1280",
+        "id": "txn_Ago26_1320",
         "data": "2026-07-26",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45131,7 +45131,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1274",
+        "id": "txn_Ago26_1314",
         "data": "2026-07-27",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45164,7 +45164,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1275",
+        "id": "txn_Ago26_1315",
         "data": "2026-07-27",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45197,7 +45197,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1276",
+        "id": "txn_Ago26_1316",
         "data": "2026-07-27",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45230,7 +45230,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1270",
+        "id": "txn_Ago26_1310",
         "data": "2026-07-28",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45263,7 +45263,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1271",
+        "id": "txn_Ago26_1311",
         "data": "2026-07-28",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45296,7 +45296,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1272",
+        "id": "txn_Ago26_1312",
         "data": "2026-07-28",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45329,7 +45329,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1273",
+        "id": "txn_Ago26_1313",
         "data": "2026-07-28",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45362,7 +45362,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1269",
+        "id": "txn_Ago26_1309",
         "data": "2026-07-29",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45395,7 +45395,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1268",
+        "id": "txn_Ago26_1308",
         "data": "2026-08-01",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45428,7 +45428,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1244",
+        "id": "txn_Ago26_1284",
         "data": "2026-08-04",
         "tipo": "entrada",
         "natureza": "pagamento",
@@ -45461,7 +45461,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1267",
+        "id": "txn_Ago26_1307",
         "data": "2026-08-05",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45498,7 +45498,7 @@
         "parcelas_no_periodo": 7
       },
       {
-        "id": "txn_Ago26_1266",
+        "id": "txn_Ago26_1306",
         "data": "2026-08-06",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45531,7 +45531,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1265",
+        "id": "txn_Ago26_1305",
         "data": "2026-08-07",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45564,7 +45564,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1261",
+        "id": "txn_Ago26_1301",
         "data": "2026-08-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45595,13 +45595,13 @@
         "final_cartao": "9733",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1261",
+        "id_compra": "compra_txn_Ago26_1301",
         "data_compra_original": "2026-08-10",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Ago26_1262",
+        "id": "txn_Ago26_1302",
         "data": "2026-08-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45632,13 +45632,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1262",
+        "id_compra": "compra_txn_Ago26_1302",
         "data_compra_original": "2026-08-10",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Ago26_1263",
+        "id": "txn_Ago26_1303",
         "data": "2026-08-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45669,13 +45669,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1263",
+        "id_compra": "compra_txn_Ago26_1303",
         "data_compra_original": "2026-08-10",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Ago26_1264",
+        "id": "txn_Ago26_1304",
         "data": "2026-08-10",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45708,7 +45708,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1256",
+        "id": "txn_Ago26_1296",
         "data": "2026-08-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45739,13 +45739,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1256",
+        "id_compra": "compra_txn_Ago26_1296",
         "data_compra_original": "2026-08-12",
         "valor_total_exato": true,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Ago26_1257",
+        "id": "txn_Ago26_1297",
         "data": "2026-08-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45778,7 +45778,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1258",
+        "id": "txn_Ago26_1298",
         "data": "2026-08-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45811,7 +45811,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1259",
+        "id": "txn_Ago26_1299",
         "data": "2026-08-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45844,7 +45844,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1260",
+        "id": "txn_Ago26_1300",
         "data": "2026-08-12",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -45877,7 +45877,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1255",
+        "id": "txn_Ago26_1295",
         "data": "2026-08-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45910,7 +45910,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1251",
+        "id": "txn_Ago26_1291",
         "data": "2026-08-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45943,7 +45943,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1252",
+        "id": "txn_Ago26_1292",
         "data": "2026-08-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -45976,7 +45976,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1253",
+        "id": "txn_Ago26_1293",
         "data": "2026-08-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46009,7 +46009,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1254",
+        "id": "txn_Ago26_1294",
         "data": "2026-08-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46042,7 +46042,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1249",
+        "id": "txn_Ago26_1289",
         "data": "2026-08-16",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46075,7 +46075,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1250",
+        "id": "txn_Ago26_1290",
         "data": "2026-08-16",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46108,7 +46108,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1248",
+        "id": "txn_Ago26_1288",
         "data": "2026-08-17",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46141,7 +46141,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1245",
+        "id": "txn_Ago26_1285",
         "data": "2026-08-18",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46174,15 +46174,15 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1246",
+        "id": "txn_Ago26_1286",
         "data": "2026-08-18",
         "tipo": "saida",
         "natureza": "despesa",
         "descricao": "Juros De Mora",
         "valor": 20.5,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Família",
+        "categoria": "encargos_financeiros",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
         "conta_destino": "Comerciante",
@@ -46207,15 +46207,15 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Ago26_1247",
+        "id": "txn_Ago26_1287",
         "data": "2026-08-18",
         "tipo": "saida",
         "natureza": "despesa",
         "descricao": "Encargos Refinanciamento",
         "valor": 632.37,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Família",
+        "categoria": "encargos_financeiros",
+        "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
         "conta_destino": "Comerciante",
@@ -46425,7 +46425,7 @@
         "parcelas_no_periodo": 4
       },
       {
-        "id": "txn_Set26_0030",
+        "id": "txn_Set26_1446",
         "data": "2026-05-31",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46502,11 +46502,11 @@
         "id": "txn_Set26_1412",
         "data": "2026-06-26",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parcela De Refinanciamento",
         "valor": 1769.36,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
@@ -46536,14 +46536,14 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Set26_0029",
+        "id": "txn_Set26_1445",
         "data": "2026-07-01",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parc Fatura Seg",
         "valor": 3880.96,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
@@ -46567,7 +46567,7 @@
         "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1347",
+        "id_compra": "compra_txn_Ago26_1270",
         "data_compra_original": "2026-07-01",
         "valor_total_exato": false,
         "parcelas_no_periodo": 3
@@ -46610,7 +46610,7 @@
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Set26_0028",
+        "id": "txn_Set26_1444",
         "data": "2026-07-18",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46641,7 +46641,7 @@
         "final_cartao": "1312",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1328",
+        "id_compra": "compra_txn_Ago26_1251",
         "data_compra_original": "2026-07-18",
         "valor_total_exato": false,
         "parcelas_no_periodo": 3
@@ -46678,7 +46678,7 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1291",
+        "id_compra": "compra_txn_Ago26_1331",
         "data_compra_original": "2026-07-21",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
@@ -46717,7 +46717,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0026",
+        "id": "txn_Set26_1442",
         "data": "2026-07-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46725,7 +46725,7 @@
         "valor": 635.38,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -46750,7 +46750,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0027",
+        "id": "txn_Set26_1443",
         "data": "2026-07-24",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46758,7 +46758,7 @@
         "valor": 22.24,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -46816,7 +46816,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0024",
+        "id": "txn_Set26_1440",
         "data": "2026-07-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -46849,7 +46849,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0025",
+        "id": "txn_Set26_1441",
         "data": "2026-07-25",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47084,7 +47084,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0002",
+        "id": "txn_Set26_1418",
         "data": "2026-07-31",
         "tipo": "entrada",
         "natureza": "pagamento",
@@ -47117,14 +47117,14 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0020",
+        "id": "txn_Set26_1436",
         "data": "2026-07-31",
         "tipo": "entrada",
-        "natureza": "estorno",
+        "natureza": "divida_parcelada",
         "descricao": "Credito Por Parcelamento",
         "valor": -1678.29,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
@@ -47150,14 +47150,14 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0021",
+        "id": "txn_Set26_1437",
         "data": "2026-07-31",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parcela De Refinanciamento",
         "valor": 534.21,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
@@ -47181,21 +47181,21 @@
         "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Set26_0021",
+        "id_compra": "compra_txn_Set26_1437",
         "data_compra_original": "2026-07-31",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Set26_0022",
+        "id": "txn_Set26_1438",
         "data": "2026-07-31",
         "tipo": "saida",
         "natureza": "despesa",
         "descricao": "Iof Refinanciamento De Fatura",
         "valor": 17.12,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Família",
+        "categoria": "encargos_financeiros",
+        "classificado_por": "regra",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -47220,7 +47220,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0023",
+        "id": "txn_Set26_1439",
         "data": "2026-07-31",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47418,7 +47418,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0019",
+        "id": "txn_Set26_1435",
         "data": "2026-08-03",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47451,7 +47451,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0018",
+        "id": "txn_Set26_1434",
         "data": "2026-08-06",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47550,7 +47550,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0017",
+        "id": "txn_Set26_1433",
         "data": "2026-08-08",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47583,7 +47583,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0015",
+        "id": "txn_Set26_1431",
         "data": "2026-08-09",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47616,7 +47616,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0016",
+        "id": "txn_Set26_1432",
         "data": "2026-08-09",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -47713,7 +47713,7 @@
         "final_cartao": "9733",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1261",
+        "id_compra": "compra_txn_Ago26_1301",
         "data_compra_original": "2026-08-10",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
@@ -47750,7 +47750,7 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1262",
+        "id_compra": "compra_txn_Ago26_1302",
         "data_compra_original": "2026-08-10",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
@@ -47787,7 +47787,7 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1263",
+        "id_compra": "compra_txn_Ago26_1303",
         "data_compra_original": "2026-08-10",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
@@ -47824,13 +47824,13 @@
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1256",
+        "id_compra": "compra_txn_Ago26_1296",
         "data_compra_original": "2026-08-12",
         "valor_total_exato": true,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Set26_0014",
+        "id": "txn_Set26_1430",
         "data": "2026-08-12",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47896,7 +47896,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0011",
+        "id": "txn_Set26_1427",
         "data": "2026-08-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47929,7 +47929,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0012",
+        "id": "txn_Set26_1428",
         "data": "2026-08-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47962,7 +47962,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0013",
+        "id": "txn_Set26_1429",
         "data": "2026-08-13",
         "tipo": "saida",
         "natureza": "despesa",
@@ -47995,7 +47995,7 @@
         "ambito": "empresa"
       },
       {
-        "id": "txn_Set26_0006",
+        "id": "txn_Set26_1422",
         "data": "2026-08-14",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48003,7 +48003,7 @@
         "valor": 4.32,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48028,7 +48028,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0007",
+        "id": "txn_Set26_1423",
         "data": "2026-08-14",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48036,7 +48036,7 @@
         "valor": 0.15,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48061,7 +48061,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0008",
+        "id": "txn_Set26_1424",
         "data": "2026-08-14",
         "tipo": "entrada",
         "natureza": "estorno",
@@ -48069,7 +48069,7 @@
         "valor": -153.07,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48094,7 +48094,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0009",
+        "id": "txn_Set26_1425",
         "data": "2026-08-14",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48102,7 +48102,7 @@
         "valor": 153.07,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48127,7 +48127,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0010",
+        "id": "txn_Set26_1426",
         "data": "2026-08-14",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48135,7 +48135,7 @@
         "valor": 5.36,
         "pessoa": "Juliane",
         "categoria": "nao_classificado",
-        "classificado_por": null,
+        "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -48160,7 +48160,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0005",
+        "id": "txn_Set26_1421",
         "data": "2026-08-15",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48193,7 +48193,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0004",
+        "id": "txn_Set26_1420",
         "data": "2026-08-16",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48589,7 +48589,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0003",
+        "id": "txn_Set26_1419",
         "data": "2026-08-19",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48787,7 +48787,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Set26_0001",
+        "id": "txn_Set26_1417",
         "data": "2026-08-21",
         "tipo": "entrada",
         "natureza": "pagamento",
@@ -48820,7 +48820,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Out26_1423",
+        "id": "txn_Out26_1453",
         "data": "2026-05-31",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48857,14 +48857,14 @@
         "parcelas_no_periodo": 4
       },
       {
-        "id": "txn_Out26_1422",
+        "id": "txn_Out26_1452",
         "data": "2026-07-01",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parc Fatura Seg",
         "valor": 3880.96,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
@@ -48888,13 +48888,13 @@
         "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1347",
+        "id_compra": "compra_txn_Ago26_1270",
         "data_compra_original": "2026-07-01",
         "valor_total_exato": false,
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Out26_1421",
+        "id": "txn_Out26_1451",
         "data": "2026-07-18",
         "tipo": "saida",
         "natureza": "despesa",
@@ -48925,20 +48925,20 @@
         "final_cartao": "1312",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Ago26_1328",
+        "id_compra": "compra_txn_Ago26_1251",
         "data_compra_original": "2026-07-18",
         "valor_total_exato": false,
         "parcelas_no_periodo": 3
       },
       {
-        "id": "txn_Out26_1420",
+        "id": "txn_Out26_1450",
         "data": "2026-07-31",
         "tipo": "saida",
-        "natureza": "despesa",
+        "natureza": "divida_parcelada",
         "descricao": "Parcela De Refinanciamento",
         "valor": 534.21,
         "pessoa": "Juliane",
-        "categoria": "nao_classificado",
+        "categoria": "divida_parcelada",
         "classificado_por": "herdado",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
@@ -48962,13 +48962,13 @@
         "final_cartao": "3794",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Set26_0021",
+        "id_compra": "compra_txn_Set26_1437",
         "data_compra_original": "2026-07-31",
         "valor_total_exato": false,
         "parcelas_no_periodo": 2
       },
       {
-        "id": "txn_Out26_1417",
+        "id": "txn_Out26_1447",
         "data": "2026-08-21",
         "tipo": "entrada",
         "natureza": "pagamento",
@@ -49001,7 +49001,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Out26_1418",
+        "id": "txn_Out26_1448",
         "data": "2026-08-21",
         "tipo": "saida",
         "natureza": "despesa",
@@ -49034,7 +49034,7 @@
         "ambito": "pessoal"
       },
       {
-        "id": "txn_Out26_1419",
+        "id": "txn_Out26_1449",
         "data": "2026-08-21",
         "tipo": "saida",
         "natureza": "despesa",
@@ -49065,7 +49065,7 @@
         "final_cartao": "8929",
         "carga_id": "faturas_itau_2026",
         "ambito": "pessoal",
-        "id_compra": "compra_txn_Out26_1419",
+        "id_compra": "compra_txn_Out26_1449",
         "data_compra_original": "2026-08-21",
         "valor_total_exato": false,
         "parcelas_no_periodo": 1
@@ -49088,6 +49088,7 @@
       "compras": 35979.96,
       "estornos": 0,
       "pagamentos": -4299.6,
+      "divida_parcelada": 0,
       "cobrado": 35979.96,
       "total_fatura": 35979.96,
       "saldo_anterior": 0,
@@ -49105,6 +49106,7 @@
       "compras": 27560.46,
       "estornos": -0.69,
       "pagamentos": -35979.96,
+      "divida_parcelada": 0,
       "cobrado": 27559.77,
       "total_fatura": 27559.77,
       "saldo_anterior": 0,
@@ -49122,6 +49124,7 @@
       "compras": 15646.77,
       "estornos": -97.99,
       "pagamentos": -27559.77,
+      "divida_parcelada": 0,
       "cobrado": 15548.78,
       "total_fatura": 15548.78,
       "saldo_anterior": 0,
@@ -49139,6 +49142,7 @@
       "compras": 14852.48,
       "estornos": 0,
       "pagamentos": -15548.78,
+      "divida_parcelada": 0,
       "cobrado": 14852.48,
       "total_fatura": 14852.48,
       "saldo_anterior": 0,
@@ -49156,6 +49160,7 @@
       "compras": 3865.01,
       "estornos": 0,
       "pagamentos": -14852.48,
+      "divida_parcelada": 0,
       "cobrado": 3865.01,
       "total_fatura": 3865.01,
       "saldo_anterior": 0,
@@ -49173,6 +49178,7 @@
       "compras": 3213.5,
       "estornos": -64.89,
       "pagamentos": -3865.01,
+      "divida_parcelada": 0,
       "cobrado": 3148.61,
       "total_fatura": 3148.61,
       "saldo_anterior": 0,
@@ -49190,6 +49196,7 @@
       "compras": 737.4,
       "estornos": -0.25,
       "pagamentos": -3148.61,
+      "divida_parcelada": 0,
       "cobrado": 737.15,
       "total_fatura": 737.15,
       "saldo_anterior": 0,
@@ -49207,6 +49214,7 @@
       "compras": 840.32,
       "estornos": -67,
       "pagamentos": -737.15,
+      "divida_parcelada": 0,
       "cobrado": 773.32,
       "total_fatura": 773.32,
       "saldo_anterior": 0,
@@ -49224,6 +49232,7 @@
       "compras": 1382.94,
       "estornos": 0,
       "pagamentos": -773.32,
+      "divida_parcelada": 0,
       "cobrado": 1382.94,
       "total_fatura": 1382.94,
       "saldo_anterior": 0,
@@ -49241,6 +49250,7 @@
       "compras": 1975.12,
       "estornos": 0,
       "pagamentos": -88.65,
+      "divida_parcelada": 0,
       "cobrado": 1975.12,
       "total_fatura": 1975.12,
       "saldo_anterior": 0,
@@ -49258,6 +49268,7 @@
       "compras": 88.65,
       "estornos": 0,
       "pagamentos": -1975.12,
+      "divida_parcelada": 0,
       "cobrado": 88.65,
       "total_fatura": 88.65,
       "saldo_anterior": 0,
@@ -49275,6 +49286,7 @@
       "compras": 5304.12,
       "estornos": 0,
       "pagamentos": -88.65,
+      "divida_parcelada": 0,
       "cobrado": 5304.12,
       "total_fatura": 5304.12,
       "saldo_anterior": 0,
@@ -49292,6 +49304,7 @@
       "compras": 20670.65,
       "estornos": -2084.43,
       "pagamentos": -5304.12,
+      "divida_parcelada": 0,
       "cobrado": 18586.22,
       "total_fatura": 18586.22,
       "saldo_anterior": 0,
@@ -49309,6 +49322,7 @@
       "compras": 10892.1,
       "estornos": -51.09,
       "pagamentos": -18586.22,
+      "divida_parcelada": 0,
       "cobrado": 10841.01,
       "total_fatura": 10841.01,
       "saldo_anterior": 0,
@@ -49326,6 +49340,7 @@
       "compras": 13376.45,
       "estornos": -3.1,
       "pagamentos": -10841.01,
+      "divida_parcelada": 0,
       "cobrado": 13373.35,
       "total_fatura": 13373.35,
       "saldo_anterior": 0,
@@ -49340,9 +49355,10 @@
       "vencimento": "2026-08-03",
       "situacao": "paga",
       "lancamentos": 40,
-      "compras": 15864.27,
+      "compras": 11983.31,
       "estornos": -11420.56,
       "pagamentos": -8155.89,
+      "divida_parcelada": 3880.96,
       "cobrado": 4443.71,
       "total_fatura": 9661.17,
       "saldo_anterior": 5217.46,
@@ -49357,9 +49373,10 @@
       "vencimento": "2026-09-01",
       "situacao": "paga",
       "lancamentos": 30,
-      "compras": 19443.6,
-      "estornos": -1834.46,
+      "compras": 15028.43,
+      "estornos": -156.17,
       "pagamentos": -13000,
+      "divida_parcelada": 2736.88,
       "cobrado": 17609.14,
       "total_fatura": 14270.31,
       "saldo_anterior": -3338.83,
@@ -49374,9 +49391,10 @@
       "vencimento": "2026-10-01",
       "situacao": "aberta",
       "lancamentos": 7,
-      "compras": 4904.34,
+      "compras": 489.17,
       "estornos": 0,
       "pagamentos": -14270.31,
+      "divida_parcelada": 4415.17,
       "cobrado": 4904.34,
       "total_fatura": 4904.34,
       "saldo_anterior": 0,
@@ -49394,6 +49412,7 @@
       "compras": 17617.36,
       "estornos": -8468.19,
       "pagamentos": -10549.86,
+      "divida_parcelada": 0,
       "cobrado": 9149.17,
       "total_fatura": 6149.17,
       "saldo_anterior": -3000,
@@ -49411,6 +49430,7 @@
       "compras": 9302.98,
       "estornos": -103.52,
       "pagamentos": -6149.17,
+      "divida_parcelada": 0,
       "cobrado": 9199.46,
       "total_fatura": 9199.46,
       "saldo_anterior": 0,
@@ -49428,6 +49448,7 @@
       "compras": 9039.35,
       "estornos": 0,
       "pagamentos": -9199.46,
+      "divida_parcelada": 0,
       "cobrado": 9039.35,
       "total_fatura": 9039.35,
       "saldo_anterior": 0,
@@ -49445,6 +49466,7 @@
       "compras": 7192.41,
       "estornos": -97.08,
       "pagamentos": -8994.35,
+      "divida_parcelada": 0,
       "cobrado": 7095.33,
       "total_fatura": 7140.33,
       "saldo_anterior": 45,
@@ -49462,6 +49484,7 @@
       "compras": 5768.18,
       "estornos": -165.02,
       "pagamentos": -7050.93,
+      "divida_parcelada": 0,
       "cobrado": 5603.16,
       "total_fatura": 5692.56,
       "saldo_anterior": 89.4,
@@ -49479,6 +49502,7 @@
       "compras": 6060.85,
       "estornos": -259.07,
       "pagamentos": -5692.56,
+      "divida_parcelada": 0,
       "cobrado": 5801.78,
       "total_fatura": 5801.78,
       "saldo_anterior": 0,
@@ -49493,9 +49517,10 @@
       "vencimento": "2026-07-27",
       "situacao": "paga_parcial",
       "lancamentos": 107,
-      "compras": 7077.59,
-      "estornos": -5411.19,
+      "compras": 5308.23,
+      "estornos": -105.7,
       "pagamentos": -551.17,
+      "divida_parcelada": -3536.13,
       "cobrado": 1666.4,
       "total_fatura": 6917.01,
       "saldo_anterior": 5250.61,
@@ -49510,9 +49535,10 @@
       "vencimento": "2026-08-26",
       "situacao": "fechada",
       "lancamentos": 77,
-      "compras": 6267.9,
+      "compras": 4498.54,
       "estornos": -265.38,
       "pagamentos": -2252.37,
+      "divida_parcelada": 1769.36,
       "cobrado": 6002.52,
       "total_fatura": 10667.16,
       "saldo_anterior": 4664.64,
@@ -49527,9 +49553,10 @@
       "vencimento": "2026-09-28",
       "situacao": "aberta",
       "lancamentos": 26,
-      "compras": 3197.56,
+      "compras": 1428.2,
       "estornos": 0,
       "pagamentos": 0,
+      "divida_parcelada": 1769.36,
       "cobrado": 3197.56,
       "total_fatura": 3197.56,
       "saldo_anterior": 0,

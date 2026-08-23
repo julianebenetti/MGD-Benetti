@@ -45,6 +45,24 @@ o saldo rola com juros e entra no total sem aparecer linha a linha. Somar o
 total como despesa contaria a mesma coisa duas vezes. Use `cobrado`
 (lançamentos do período) para gasto e `total_fatura` para obrigação.
 
+### Fatura renegociada
+A Juliane parcelou o pagamento do total de algumas faturas, e as parcelas vêm
+cobradas nos meses seguintes (`Parc Fatura Seg`, `Parcela de Refinanciamento`,
+`Credito Por Parcelamento`).
+
+**A parcela não é consumo novo** — as compras que geraram a dívida já foram
+contadas uma a uma na fatura em que aconteceram. Ficam com
+`natureza: "divida_parcelada"`: saem dos totais de gasto e do Para Onde Vai, e
+aparecem na aba Dívidas com quanto falta pagar. Contá-las como despesa inflava
+agosto, setembro e outubro em R$ 4 a 6 mil cada.
+
+Os **juros, IOF e encargos** do parcelamento são custo novo de verdade e seguem
+como despesa, na categoria `encargos_financeiros`.
+
+Na aba **Cartão & Faturas** a parcela continua aparecendo: a fatura cobra ela, e
+tirar faria a soma da tela não bater com o valor a pagar. O `cobrado` do
+cabeçalho também a inclui.
+
 ### Múltiplos cartões
 Dois cartões: **4846** (Itaú Black, pessoal) e **0442** (Visa Infinite, quase
 só tráfego pago). A chave de uma fatura é **cartão + mês** — só o mês faria a

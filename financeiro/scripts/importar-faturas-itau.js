@@ -253,9 +253,22 @@ function carregarClassificacaoAtual() {
 }
 
 // ---------- natureza do lançamento ----------
+//
+// Fatura renegociada: a Juliane parcelou o pagamento do total, e as parcelas vem
+// cobradas nos meses seguintes. Elas sao dinheiro saindo da conta, mas nao sao
+// consumo novo — as compras que geraram a divida ja foram contadas uma a uma na
+// fatura em que aconteceram. Contar a parcela como despesa cobraria as mesmas
+// compras duas vezes, e em agosto, setembro e outubro isso pesava de R$ 4 mil a
+// R$ 6 mil por mes.
+//
+// Ficam com natureza propria: somem dos totais de gasto e do "Para Onde Vai",
+// e aparecem como divida a pagar. Ja os juros, o IOF e os encargos do
+// parcelamento sao custo novo de verdade, e seguem como despesa.
+const DIVIDA_PARCELADA = /^(parc\s+fatura|parcela\s+de\s+refinanciamento|credito\s+por\s+parcelamento)/i;
 
 function classificarNatureza(item) {
   if (/^pagamento/i.test(item.descricao)) return 'pagamento';
+  if (DIVIDA_PARCELADA.test(item.descricao)) return 'divida_parcelada';
   if (/^(canc|cancelamento|estorno)/i.test(item.descricao) || item.valor < 0) return 'estorno';
   return 'despesa';
 }
@@ -346,7 +359,7 @@ const resumo = [];
 let seq = 0;
 
 faturas.forEach(f => {
-  let compras = 0, pagamentos = 0, estornos = 0, nParceladas = 0;
+  let compras = 0, pagamentos = 0, estornos = 0, divida = 0, nParceladas = 0;
 
   f.itens.forEach(item => {
     const natureza = classificarNatureza(item);
@@ -356,6 +369,7 @@ faturas.forEach(f => {
 
     if (natureza === 'pagamento') pagamentos += item.valor;
     else if (natureza === 'estorno') estornos += item.valor;
+    else if (natureza === 'divida_parcelada') divida += item.valor;
     else compras += item.valor;
     if (parcela) nParceladas++;
 
@@ -368,7 +382,9 @@ faturas.forEach(f => {
       valor: item.valor,
       pessoa: (regra && regra.pessoa) || herdado.pessoa || (/hugo/i.test(item.portador) ? 'Hugo' : 'Juliane'),
 
-      categoria: (regra && regra.categoria) || herdado.categoria || 'nao_classificado',
+      categoria: natureza === 'divida_parcelada'
+        ? 'divida_parcelada'
+        : (regra && regra.categoria) || herdado.categoria || 'nao_classificado',
       classificado_por: regra ? 'regra' : (herdado.categoria ? 'herdado' : null),
       conta_origem: f.descricaoCartao || 'Cartão de Crédito Itaú',
       cartao_final: f.finalCartao,
@@ -395,7 +411,10 @@ faturas.forEach(f => {
     });
   });
 
-  const doPeriodo = Math.round((compras + estornos) * 100) / 100;
+  // A parcela da fatura renegociada entra no cobrado: a fatura cobra ela de
+  // fato, e sem ela o total nao fecharia e a diferenca viraria saldo anterior
+  // fantasma. O que ela nao e e consumo — disso cuida a natureza.
+  const doPeriodo = Math.round((compras + estornos + divida) * 100) / 100;
   // A fatura pode cobrar mais do que os lancamentos do periodo: quando a
   // anterior nao foi quitada, o saldo rola com juros e entra no total sem
   // aparecer linha a linha.
@@ -411,6 +430,8 @@ faturas.forEach(f => {
     compras: Math.round(compras * 100) / 100,
     estornos: Math.round(estornos * 100) / 100,
     pagamentos: Math.round(pagamentos * 100) / 100,
+    // Parcela da fatura renegociada: cobrada nesta fatura, mas nao e consumo
+    divida_parcelada: Math.round(divida * 100) / 100,
     // Lancamentos do proprio periodo
     cobrado: doPeriodo,
     // Total que a fatura cobra, incluindo saldo que rolou

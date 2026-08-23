@@ -72,10 +72,14 @@ function noEscopo(mv) {
   const todosLancamentos = dados.fluxo_mensal.transacoes;
   const faturas = dados.faturas_cartao || [];
 
-  // Pagamento de fatura aparece no extrato do cartao mas nao e gasto: e a
-  // quitacao da fatura anterior. Somar junto contaria a despesa duas vezes.
-  const todas = todosLancamentos.filter(t => t.natureza !== 'pagamento');
+  // Duas naturezas aparecem no extrato do cartao mas nao sao gasto: o pagamento,
+  // que quita a fatura anterior, e a parcela da fatura renegociada, que quita
+  // parceladamente compras ja contadas na epoca. Somar junto cobraria as mesmas
+  // compras duas vezes. Tem de casar com NAO_E_CONSUMO no index.html.
+  const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada'];
+  const todas = todosLancamentos.filter(t => !NAO_E_CONSUMO.includes(t.natureza));
   const pagamentos = todosLancamentos.filter(t => t.natureza === 'pagamento');
+  const dividaParcelada = todosLancamentos.filter(t => t.natureza === 'divida_parcelada');
   const escopo = todas.filter(t => noEscopo(t.mes_vencimento));
 
   const ref = {
@@ -91,9 +95,14 @@ function noEscopo(mv) {
     porCategoria: {},
     aConfirmar: somar(escopo.filter(t => t.mes_vencimento === A_CONFIRMAR)),
   };
-  escopo.forEach(t => {
+  // A reconciliacao contra a fatura soma tambem a parcela da fatura renegociada:
+  // a fatura cobra ela, e o 'cobrado' do cabecalho a inclui. Ela sai dos totais
+  // de gasto, nao do que o cartao esta cobrando.
+  [...escopo, ...dividaParcelada.filter(t => noEscopo(t.mes_vencimento))].forEach(t => {
     const chaveFatura = `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
     ref.porFatura[chaveFatura] = Math.round(((ref.porFatura[chaveFatura] || 0) + t.valor) * 100) / 100;
+  });
+  escopo.forEach(t => {
     ref.porMes[t.mes_vencimento] = Math.round(((ref.porMes[t.mes_vencimento] || 0) + t.valor) * 100) / 100;
     ref.porPessoa[t.pessoa] = Math.round(((ref.porPessoa[t.pessoa] || 0) + t.valor) * 100) / 100;
     if (t.valor > 0) ref.porCategoria[t.categoria] = Math.round(((ref.porCategoria[t.categoria] || 0) + t.valor) * 100) / 100;
@@ -103,9 +112,15 @@ function noEscopo(mv) {
   console.log('\n▸ INTEGRIDADE DOS DADOS\n');
   // =====================================================================
 
+  // O cobrado do cabecalho inclui a parcela da fatura renegociada, que sai do
+  // total de gasto. Descontar aqui e o que faz as duas contas falarem da mesma
+  // coisa: consumo de um lado, consumo do outro.
   const cobradoTotal = Math.round(faturas.reduce((s, f) => s + f.cobrado, 0) * 100) / 100;
-  console.log(`    (${faturas.length} faturas · ${ref.totalLinhas} lançamentos de gasto · ${pagamentos.length} pagamentos)`);
-  igual('Soma dos gastos bate com o total cobrado nas faturas', ref.totalGeral, cobradoTotal);
+  const dividaTotal = Math.round(somar(dividaParcelada.filter(t => noEscopo(t.mes_vencimento))) * 100) / 100;
+  console.log(`    (${faturas.length} faturas · ${ref.totalLinhas} lançamentos de gasto · ` +
+    `${pagamentos.length} pagamentos · ${dividaParcelada.length} de dívida parcelada, ${brl(dividaTotal)})`);
+  igual('Soma dos gastos bate com o cobrado, fora a dívida parcelada',
+        ref.totalGeral, Math.round((cobradoTotal - dividaTotal) * 100) / 100);
   ok('Cada fatura tem ao menos um pagamento registrado', pagamentos.length >= faturas.length,
      `${pagamentos.length} pagamentos para ${faturas.length} faturas`);
   ok('Todo pagamento tem valor negativo', pagamentos.every(t => t.valor < 0));

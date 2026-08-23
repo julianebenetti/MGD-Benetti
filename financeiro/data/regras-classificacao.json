@@ -155,6 +155,12 @@
       "categoria": "casa",
       "pessoa": "Família",
       "nota": "Utilidades e itens para a casa"
+    },
+    {
+      "padrao": "iof refinanciamento|encargos refinanciamento|juros de mora|encargos pix|juros de financiamento|multa de mora|encargos de atraso",
+      "categoria": "encargos_financeiros",
+      "pessoa": "Família",
+      "nota": "Custo do parcelamento da fatura: juros, IOF e encargos. E gasto novo de verdade, ao contrario da parcela do principal (Juliane, 23/08)"
     }
   ]
 }

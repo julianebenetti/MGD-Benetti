@@ -2129,19 +2129,28 @@
       return (t.ambito || 'pessoal') === ambitoAtual;
     }
 
-    // Todas as transacoes dentro do escopo do ano e do ambito em exibicao,
-    // excluindo os pagamentos da fatura: eles aparecem no extrato do cartao,
-    // mas sao a quitacao da fatura anterior, nao um gasto. Somar os dois
-    // contaria a mesma despesa duas vezes.
+    // Naturezas que aparecem no extrato do cartao mas nao sao consumo:
+    //
+    //   pagamento         quitacao da fatura anterior
+    //   divida_parcelada  parcela da fatura que foi renegociada
+    //
+    // As duas contariam a mesma despesa duas vezes — as compras ja entraram uma
+    // a uma na fatura em que aconteceram. A parcela do refinanciamento e dinheiro
+    // saindo da conta, e por isso aparece como divida a pagar, mas nao entra em
+    // quanto se gastou nem no "Para Onde Vai". Ja os juros e o IOF do
+    // parcelamento sao custo novo e seguem como despesa comum.
+    const NAO_E_CONSUMO = ['pagamento', 'divida_parcelada'];
+    const ehConsumo = t => !NAO_E_CONSUMO.includes(t.natureza);
+
     function todasTransacoes() {
       const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
-      return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento' && noAmbito(t));
+      return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && ehConsumo(t) && noAmbito(t));
     }
 
     // Resumo dos dois âmbitos, para o aviso do cabeçalho.
     function resumoDosAmbitos() {
       const brutas = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
-        .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
+        .filter(t => mesNoEscopo(t.mes_vencimento) && ehConsumo(t));
       const por = { pessoal: 0, empresa: 0 };
       brutas.forEach(t => { por[t.ambito || 'pessoal'] += t.valor; });
       return por;
@@ -2150,6 +2159,12 @@
     function pagamentosDeFatura() {
       const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
       return brutas.filter(t => t.natureza === 'pagamento' && mesNoEscopo(t.mes_vencimento));
+    }
+
+    // Parcelas da fatura renegociada, para a aba Dívidas.
+    function parcelasDeDivida() {
+      const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      return brutas.filter(t => t.natureza === 'divida_parcelada' && mesNoEscopo(t.mes_vencimento));
     }
 
     // Cabecalho de cada fatura, vindo do proprio arquivo do banco.
@@ -2557,6 +2572,10 @@
     // A fatura e uma obrigacao de pagamento: vem inteira, sem recorte por
     // ambito. O cartao pessoal carrega gasto da empresa e vice-versa — e
     // justamente por isso que a separacao existe nas outras abas.
+    //
+    // Aqui a parcela da fatura renegociada continua na lista, ao contrario das
+    // abas de analise: a fatura cobra ela de fato, e tirar faria a soma da tela
+    // nao bater com o valor a pagar.
     function transacoesDoCartao() {
       return ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
         .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento');
@@ -2751,6 +2770,71 @@
 
     // ------------------------------------------------ DÍVIDAS E PATRIMÔNIO
 
+    // Fatura renegociada: as parcelas nao entram no gasto, entao sem este bloco
+    // sumiriam da tela — e sao dinheiro saindo da conta todo mes. Aqui aparecem
+    // pelo que sao: divida sendo quitada, com o que ja foi e o que falta.
+    function blocoFaturaRenegociada() {
+      const parcelas = parcelasDeDivida().filter(t => t.eh_parcelada && t.valor > 0);
+      if (!parcelas.length) return '';
+
+      const porAcordo = {};
+      parcelas.forEach(t => {
+        const chave = `${t.cartao_final}|${t.descricao.trim().replace(/\s+/g, ' ')}|${t.parcela_total}`;
+        (porAcordo[chave] = porAcordo[chave] || []).push(t);
+      });
+
+      const linhas = Object.values(porAcordo).map(ps => {
+        ps.sort((a, b) => a.parcela_numero - b.parcela_numero);
+        const ultima = ps[ps.length - 1];
+        const total = ps[0].parcela_total;
+        const faltam = total - ultima.parcela_numero;
+        const restante = faltam * ps[0].valor;
+        return {
+          cartao: nomeDoCartao(ps[0].cartao_final),
+          descricao: ps[0].descricao.trim().replace(/\s+/g, ' '),
+          parcela: ps[0].valor,
+          paga: ultima.parcela_numero,
+          total,
+          faltam,
+          restante,
+          ultimoMes: ultima.mes_vencimento,
+        };
+      }).sort((a, b) => b.restante - a.restante);
+
+      const aPagar = linhas.reduce((s, l) => s + l.restante, 0);
+      const jaPago = linhas.reduce((s, l) => s + l.paga * l.parcela, 0);
+
+      return `
+        <div class="section-title">Fatura renegociada</div>
+        <div class="aviso aviso-info">
+          Fatura parcelada para pagar aos poucos. As parcelas são dinheiro saindo da conta,
+          mas <b>não contam como gasto do mês</b>: as compras que geraram essa dívida já foram
+          contadas quando aconteceram. Os juros e o IOF do parcelamento, esses sim, entram como despesa.
+        </div>
+        <div class="grid">
+          ${cartaoKpi('Ainda a pagar', moeda(aPagar), `${linhas.reduce((s, l) => s + l.faltam, 0)} parcelas`, 'var(--accent-red)')}
+          ${cartaoKpi('Já pago', moeda(jaPago), `${linhas.reduce((s, l) => s + l.paga, 0)} parcelas`, 'var(--accent-green)')}
+        </div>
+        <div class="card full-width" style="overflow-x:auto">
+          <table class="tabela-dados">
+            <thead>
+              <tr><th>Cartão</th><th>Acordo</th><th class="num">Parcela</th><th class="num">Pagas</th><th class="num">Faltam</th><th class="num">A pagar</th></tr>
+            </thead>
+            <tbody>
+              ${linhas.map(l => `
+                <tr>
+                  <td>${l.cartao}</td>
+                  <td>${l.descricao}</td>
+                  <td class="num">${moeda(l.parcela)}</td>
+                  <td class="num">${l.paga} de ${l.total}</td>
+                  <td class="num">${l.faltam || '—'}</td>
+                  <td class="num">${l.restante ? moeda(l.restante) : 'quitado'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
     function renderizarDividasPatrimonio() {
       const container = document.getElementById('dividas_conteudo');
       if (!container) return;
@@ -2758,6 +2842,7 @@
       const dividas = dadosGlobais.dividas || [];
       const investimentos = dadosGlobais.investimentos || [];
       const abertas = contarParcelasAbertas();
+      const renegociada = blocoFaturaRenegociada();
 
       if (!dividas.length && !investimentos.length) {
         container.innerHTML = `
@@ -2771,7 +2856,8 @@
             ${abertas.parcelas > 0
               ? `Existem <b>${abertas.parcelas} parcelas</b> a vencer, somando <b>${moeda(abertas.valor)}</b>. Esse valor é um compromisso assumido e entra como passivo quando o patrimônio for calculado.`
               : 'Não há parcelas em aberto no cartão.'}
-          </div>`;
+          </div>
+          ${renegociada}`;
         return;
       }
 
@@ -2805,7 +2891,8 @@
                 </tr>`).join('')}
             </tbody>
           </table>
-        </div>`;
+        </div>
+        ${renegociada}`;
     }
 
     function previsaoQuitacao(meses) {
