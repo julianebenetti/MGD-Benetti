@@ -24,6 +24,36 @@ com Shopee, afiliados ou e-commerce — se surgir essa mistura, é engano.
 - O mês usado em tudo é `mes_vencimento` (regime de caixa) — quando o dinheiro
   sai da conta, não quando a compra foi feita.
 
+### Explodir valor em Lançamentos (23/08)
+Clicar num valor em Para Onde Vai, Dívidas & Patrimônio ou Fluxo de Caixa pula
+para a aba Lançamentos já filtrada pelos mesmos critérios que compuseram
+aquele número (`irParaLancamentos()` em `public/index.html`).
+
+- **Lançamentos deixou de ser só despesa/estorno.** Antes a aba usava
+  `todasTransacoes()` (só consumo — exclui receita, dívida parcelada,
+  transferência etc.), o que fazia qualquer clique vindo de Dívidas (tudo
+  `divida_parcelada`) ou da coluna Receita do Fluxo de Caixa sempre devolver
+  zero resultado. Agora usa `transacoesDoAno()`, que traz qualquer natureza —
+  e por isso ganhou um filtro **Natureza** (antes só existia Tipo
+  Entrada/Saída, que mistura receita com pagamento e estorno). Os cards de
+  resumo (Total/Estornos) continuam somando só `despesa`/`estorno` de
+  propósito, senão receita ou dívida inflaria um número que devia significar
+  gasto.
+- Categoria e pessoa exibidas em Para Onde Vai são só formatação
+  (`rotuloCategoria`); o clique usa o valor cru gravado no lançamento, não o
+  rótulo.
+- Em Dívidas, o link usa `busca` com a descrição exata do contrato (mais
+  `natureza: divida_parcelada`) — é o mesmo agrupamento por descrição que
+  `contratosDeDivida()` já faz, então sempre bate com o que a tela mostra.
+  Parcela **a vencer** não é clicável: é projeção, não existe como
+  lançamento ainda — só a **paga** abre.
+- Em "Fatura paga a menor", a linha inteira filtra a fatura (mês + conta,
+  já que duas faturas de cartões diferentes podem cair no mesmo mês); a
+  célula de custo tem o próprio clique, mais específico (mês seguinte +
+  categoria `encargos_financeiros`) — por isso ela impede a propagação do
+  clique da linha (`event.stopPropagation()`), senão o clique mais genérico
+  sobrescreveria o filtro certo.
+
 ### Pessoal x empresa
 A Juliane tem a **Benetti UP**, empresa de marketing digital, e as contas ainda
 não estão separadas na prática — o mesmo cartão traz gasto da casa e da empresa.

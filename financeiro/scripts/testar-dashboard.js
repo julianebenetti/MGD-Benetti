@@ -82,6 +82,12 @@ function noEscopo(mv) {
   const dividaParcelada = todosLancamentos.filter(t => t.natureza === 'divida_parcelada');
   const escopo = todas.filter(t => noEscopo(t.mes_vencimento));
 
+  // A aba Lançamentos é o razão completo (equivalente a transacoesDoAno no
+  // index.html), não o recorte de consumo: mostra também receita, dívida
+  // parcelada, transferência etc., para que o clique de "explodir" um valor
+  // de Dívidas ou Fluxo de Caixa sempre ache o lançamento correspondente.
+  const escopoCompleto = todosLancamentos.filter(t => noEscopo(t.mes_vencimento));
+
   const ref = {
     totalLinhas: todas.length,
     totalGeral: somar(todas),
@@ -432,7 +438,7 @@ function noEscopo(mv) {
       estornos: document.getElementById('lanc-estornos').textContent
     };
   });
-  igual('Lançamentos sem filtro mostra todas as linhas', parseInt(semFiltro.qtd, 10), ref.totalLinhas);
+  igual('Lançamentos sem filtro mostra todas as linhas', parseInt(semFiltro.qtd, 10), escopoCompleto.length);
   igual('Lançamentos soma as compras corretamente', numeroDe(semFiltro.total), ref.compras);
   igual('Lançamentos soma os estornos corretamente', -Math.abs(numeroDe(semFiltro.estornos)), ref.estornos);
 
@@ -444,42 +450,50 @@ function noEscopo(mv) {
       aplicarFiltros();
       return { n: transacoesFiltradas.length, soma: transacoesFiltradas.reduce((s, t) => s + t.valor, 0) };
     }, mes);
-    const esperadoN = escopo.filter(t => t.mes_vencimento === mes).length;
-    ok(`Filtro fatura ${mes}: ${esperadoN} linhas, ${brl(ref.porMes[mes])}`,
-       r.n === esperadoN && Math.abs(r.soma - ref.porMes[mes]) < 0.01,
+    const doMes = escopoCompleto.filter(t => t.mes_vencimento === mes);
+    const esperadoN = doMes.length;
+    const esperadoSoma = somar(doMes);
+    ok(`Filtro fatura ${mes}: ${esperadoN} linhas, ${brl(esperadoSoma)}`,
+       r.n === esperadoN && Math.abs(r.soma - esperadoSoma) < 0.01,
        `obtido: ${r.n} linhas, ${brl(r.soma)}`);
   }
 
   // --- Filtro por pessoa ---
-  for (const pessoa of Object.keys(ref.porPessoa)) {
+  const pessoasCompletas = [...new Set(escopoCompleto.map(t => t.pessoa).filter(Boolean))];
+  for (const pessoa of pessoasCompletas) {
     const r = await pagina.evaluate(p => {
       limparFiltros();
       document.getElementById('filter_pessoa').value = p;
       aplicarFiltros();
       return { n: transacoesFiltradas.length, soma: transacoesFiltradas.reduce((s, t) => s + t.valor, 0) };
     }, pessoa);
-    const esperadoN = escopo.filter(t => t.pessoa === pessoa).length;
+    const doPessoa = escopoCompleto.filter(t => t.pessoa === pessoa);
+    const esperadoN = doPessoa.length;
     ok(`Filtro pessoa ${pessoa}: ${esperadoN} linhas`,
-       r.n === esperadoN && Math.abs(r.soma - ref.porPessoa[pessoa]) < 0.01,
+       r.n === esperadoN && Math.abs(r.soma - somar(doPessoa)) < 0.01,
        `obtido: ${r.n} linhas, ${brl(r.soma)}`);
   }
 
   // --- Filtro de parceladas ---
+  // O ledger completo inclui parcela de dívida também (consignado,
+  // refinanciamento), que também é eh_parcelada — não só a compra no cartão.
+  const parceladasCompletas = escopoCompleto.filter(t => t.eh_parcelada);
   const filtroParc = await pagina.evaluate(() => {
     limparFiltros();
     document.getElementById('filter_tipo_gasto').value = 'parcelada';
     aplicarFiltros();
     return transacoesFiltradas.length;
   });
-  igual('Filtro "Parceladas" devolve só parcelas', filtroParc, parceladas.length);
+  igual('Filtro "Parceladas" devolve só parcelas', filtroParc, parceladasCompletas.length);
 
+  const estornosCompletos = escopoCompleto.filter(t => t.natureza === 'estorno');
   const filtroEst = await pagina.evaluate(() => {
     limparFiltros();
     document.getElementById('filter_tipo_gasto').value = 'estorno';
     aplicarFiltros();
     return transacoesFiltradas.length;
   });
-  igual('Filtro "Estornos" devolve só estornos', filtroEst, estornos.length);
+  igual('Filtro "Estornos" devolve só estornos', filtroEst, estornosCompletos.length);
 
   // --- Filtros combinados ---
   const combinado = await pagina.evaluate(() => {
@@ -489,8 +503,9 @@ function noEscopo(mv) {
     aplicarFiltros();
     return { n: transacoesFiltradas.length, soma: transacoesFiltradas.reduce((s, t) => s + t.valor, 0) };
   });
-  const espCombN = escopo.filter(t => t.pessoa === 'Juliane' && t.mes_vencimento === 'Mar/26').length;
-  const espCombS = somar(escopo.filter(t => t.pessoa === 'Juliane' && t.mes_vencimento === 'Mar/26'));
+  const combRef = escopoCompleto.filter(t => t.pessoa === 'Juliane' && t.mes_vencimento === 'Mar/26');
+  const espCombN = combRef.length;
+  const espCombS = somar(combRef);
   ok(`Filtros combinados (Juliane + Mar/26): ${espCombN} linhas`,
      combinado.n === espCombN && Math.abs(combinado.soma - espCombS) < 0.01,
      `obtido: ${combinado.n} linhas, ${brl(combinado.soma)}`);

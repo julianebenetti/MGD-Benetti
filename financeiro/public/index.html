@@ -554,6 +554,10 @@
 
     .tabela-dados tbody tr:hover { background-color: var(--bg-tertiary); }
     .tabela-dados .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .tabela-dados td.clicavel, .tabela-dados tr.clicavel td { cursor: pointer; }
+    .tabela-dados td.clicavel:hover { text-decoration: underline; }
+    .barra-linha.clicavel { cursor: pointer; border-radius: 6px; padding: 4px 6px; margin: 8px -6px; transition: background .15s; }
+    .barra-linha.clicavel:hover { background-color: var(--bg-tertiary); }
     .tabela-dados tfoot td {
       padding: 10px;
       border-top: 2px solid var(--border-color);
@@ -1361,6 +1365,12 @@
               <option value="parcelada">📊 Parceladas</option>
               <option value="avista">📌 À vista</option>
               <option value="estorno">↩️ Estornos</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Natureza</label>
+            <select id="filter_natureza" class="filter-input">
+              <option value="">Todas</option>
             </select>
           </div>
         </div>
@@ -2192,6 +2202,15 @@
       return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && ehConsumo(t) && noAmbito(t));
     }
 
+    // Lançamentos é o razão completo, não só o consumo: precisa deixar achar
+    // receita, parcela de dívida, transferência etc. também — senão o clique
+    // em "explodir" um valor de Dívidas ou Fluxo de Caixa (que somam esses
+    // tipos) nunca acha nada aqui, e a tela mente que não há lançamento.
+    function transacoesDoAno() {
+      const brutas = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      return brutas.filter(t => mesNoEscopo(t.mes_vencimento) && noAmbito(t));
+    }
+
     // Resumo dos dois âmbitos, para o aviso do cabeçalho.
     function resumoDosAmbitos() {
       const brutas = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
@@ -2461,8 +2480,20 @@
                         : eixo === 'pessoa' ? (t.pessoa || 'Sem pessoa')
                         : (ehFixa(t) ? 'Fixa / Parcelada' : 'Variável');
 
+      // Guarda o valor "cru" (categoria ou pessoa, como gravado no lançamento)
+      // por trás de cada rótulo, pra poder filtrar Lançamentos exatamente por
+      // ele ao clicar na barra — o rótulo é só formatação de exibição.
       const grupos = {};
-      base.forEach(t => { grupos[chaveDe(t)] = (grupos[chaveDe(t)] || 0) + t.valor; });
+      const brutoPorGrupo = {};
+      base.forEach(t => {
+        const chave = chaveDe(t);
+        grupos[chave] = (grupos[chave] || 0) + t.valor;
+        if (!(chave in brutoPorGrupo)) {
+          brutoPorGrupo[chave] = eixo === 'categoria' ? t.categoria
+                              : eixo === 'pessoa' ? t.pessoa
+                              : null;
+        }
+      });
       const ordenados = Object.entries(grupos).sort((a, b) => b[1] - a[1]);
 
       const fixas = base.filter(ehFixa).reduce((s, t) => s + t.valor, 0);
@@ -2491,8 +2522,14 @@
              Líquido: <b>${moeda(total + totalEstornos)}</b>.</div>`
         : '';
 
-      document.getElementById('pov_barras').innerHTML = ordenados.length ? ordenados.map(([nome, valor], i) => `
-        <div class="barra-linha">
+      document.getElementById('pov_barras').innerHTML = ordenados.length ? ordenados.map(([nome, valor], i) => {
+        const bruto = brutoPorGrupo[nome];
+        const filtros = bruto && eixo === 'categoria' ? { categoria: bruto, mes_venc: mes, pessoa }
+                       : bruto && eixo === 'pessoa' ? { pessoa: bruto, mes_venc: mes }
+                       : null;
+        const clique = filtros ? ` clicavel" onclick='irParaLancamentos(${JSON.stringify(filtros)})' title="Ver estes lançamentos"` : '"';
+        return `
+        <div class="barra-linha${clique}>
           <div class="barra-topo">
             <span class="barra-nome">${nome}</span>
             <span class="barra-valor">${moeda(valor)} · ${(valor / total * 100).toFixed(1)}%</span>
@@ -2500,7 +2537,8 @@
           <div class="barra-trilho">
             <div class="barra-preenchida" style="width:${(valor / maior * 100).toFixed(1)}%;background:${cores[i % cores.length]}"></div>
           </div>
-        </div>`).join('') + notaEstornos : blocoVazio('Nada encontrado com esses filtros', '');
+        </div>`;
+      }).join('') + notaEstornos : blocoVazio('Nada encontrado com esses filtros', '');
 
       renderizarMatrizCategoriaMes(pessoa);
     }
@@ -2530,6 +2568,15 @@
       const totalMes = mes => base.filter(t => t.mes_vencimento === mes).reduce((s, t) => s + t.valor, 0);
       const totalGeral = base.reduce((s, t) => s + t.valor, 0);
 
+      // Rótulo é só exibição; guarda o código de categoria por trás dele pra
+      // filtrar Lançamentos pelo valor real, não pelo texto formatado.
+      const rawCatPorLabel = {};
+      base.forEach(t => {
+        const lbl = rotuloCategoria(t.categoria);
+        if (!(lbl in rawCatPorLabel)) rawCatPorLabel[lbl] = t.categoria;
+      });
+      const irCelula = f => `onclick='irParaLancamentos(${JSON.stringify(f)})' title="Ver estes lançamentos"`;
+
       document.getElementById('pov_matriz').innerHTML = `
         <table class="tabela-dados">
           <thead>
@@ -2540,21 +2587,26 @@
             </tr>
           </thead>
           <tbody>
-            ${categorias.map(cat => `
+            ${categorias.map(cat => {
+              const raw = rawCatPorLabel[cat];
+              return `
               <tr>
                 <td>${cat}</td>
-                <td class="num"><b>${moeda(totalCat(cat))}</b></td>
+                <td class="num clicavel" ${irCelula({ categoria: raw, pessoa })}><b>${moeda(totalCat(cat))}</b></td>
                 ${meses.map(m => {
                   const v = valor(cat, m);
-                  return `<td class="num" ${v ? '' : 'style="color:var(--border-color)"'}>${v ? moeda(v) : '—'}</td>`;
+                  return v
+                    ? `<td class="num clicavel" ${irCelula({ categoria: raw, pessoa, mes_venc: m })}>${moeda(v)}</td>`
+                    : `<td class="num" style="color:var(--border-color)">—</td>`;
                 }).join('')}
-              </tr>`).join('')}
+              </tr>`;
+            }).join('')}
           </tbody>
           <tfoot>
             <tr>
               <td>Total</td>
-              <td class="num">${moeda(totalGeral)}</td>
-              ${meses.map(m => `<td class="num">${moeda(totalMes(m))}</td>`).join('')}
+              <td class="num clicavel" ${irCelula({ pessoa })}>${moeda(totalGeral)}</td>
+              ${meses.map(m => `<td class="num clicavel" ${irCelula({ pessoa, mes_venc: m })}>${moeda(totalMes(m))}</td>`).join('')}
             </tr>
           </tfoot>
         </table>`;
@@ -2986,7 +3038,7 @@
               <thead><tr><th>Mês</th><th class="num">Vence</th><th></th><th>Quais</th></tr></thead>
               <tbody>
                 ${mesesFuturos.slice(0, 12).map(m => `
-                  <tr>
+                  <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ mes_venc: m, natureza: 'divida_parcelada' })})' title="Ver o que já está lançado neste mês">
                     <td>${m}</td>
                     <td class="num">${moeda(calendario[m].total)}</td>
                     <td style="width:34%">
@@ -3014,7 +3066,8 @@
 
         ${contratos.map(c => `
           <div class="card full-width" style="overflow-x:auto">
-            <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:baseline; margin-bottom:6px">
+            <div class="clicavel" style="display:flex; flex-wrap:wrap; gap:16px; align-items:baseline; margin-bottom:6px; cursor:pointer"
+                 onclick='irParaLancamentos(${JSON.stringify({ busca: c.nome, pessoa: c.pessoa, natureza: 'divida_parcelada' })})' title="Ver todas as parcelas deste contrato em Lançamentos">
               <b>${c.nome}</b>
               <span class="kpi-sub">${c.origem}${c.cartao ? ` · ${c.cartao}` : ''}</span>
               <span class="kpi-sub">${moeda(c.valor)} por parcela</span>
@@ -3041,13 +3094,15 @@
 
             ${(() => {
               const linhas = [
+                // real: true = lançamento de verdade, dá pra abrir em Lançamentos.
+                // "a vencer" é projeção — ainda não existe como lançamento.
                 ...c.pagas.map(p => ({
                   parcela: p.parcela_numero ? `${p.parcela_numero} de ${p.parcela_total}` : '—',
-                  mes: p.mes_vencimento, valor: p.valor,
+                  mes: p.mes_vencimento, valor: p.valor, real: true,
                   situacao: '<span style="color: var(--accent-green)">paga</span>',
                 })),
                 ...c.aVencer.map(p => ({
-                  parcela: `${p.numero} de ${c.total}`, mes: p.mes, valor: p.valor,
+                  parcela: `${p.numero} de ${c.total}`, mes: p.mes, valor: p.valor, real: false,
                   situacao: '<span style="color: var(--accent-yellow)">a vencer</span>',
                 })),
               ];
@@ -3055,8 +3110,13 @@
                 <table class="tabela-dados">
                   <thead><tr><th>Parcela</th><th>Mês</th><th class="num">Valor</th><th>Situação</th></tr></thead>
                   <tbody>
-                    ${ls.map(l => `<tr><td>${l.parcela}</td><td>${l.mes}</td>` +
-                      `<td class="num">${moeda(l.valor)}</td><td>${l.situacao}</td></tr>`).join('')}
+                    ${ls.map(l => {
+                      const clique = l.real
+                        ? ` class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ busca: c.nome, pessoa: c.pessoa, mes_venc: l.mes, natureza: 'divida_parcelada' })})' title="Ver este lançamento"`
+                        : '';
+                      return `<tr${clique}><td>${l.parcela}</td><td>${l.mes}</td>` +
+                        `<td class="num">${moeda(l.valor)}</td><td>${l.situacao}</td></tr>`;
+                    }).join('')}
                   </tbody>
                 </table>`;
 
@@ -3157,8 +3217,14 @@
               <tr><th>Cartão</th><th>Fatura</th><th>Venceu</th><th class="num">Total</th><th class="num">Pago</th><th class="num">Ficou devendo</th><th>Rolou para</th><th class="num">Custo cobrado</th></tr>
             </thead>
             <tbody>
-              ${linhas.map(l => `
-                <tr>
+              ${linhas.map(l => {
+                const conta = contaOrigemDoCartao(l.cartao);
+                const cliqueFatura = `onclick='irParaLancamentos(${JSON.stringify({ mes_venc: l.mes, conta })})' title="Ver os lançamentos desta fatura"`;
+                const cliqueCusto = l.custo > 0
+                  ? ` class="num clicavel" onclick='event.stopPropagation(); irParaLancamentos(${JSON.stringify({ mes_venc: l.rolouPara, conta, categoria: 'encargos_financeiros' })})' title="Ver este encargo em Lançamentos"`
+                  : ' class="num"';
+                return `
+                <tr class="clicavel" ${cliqueFatura}>
                   <td>${nomeDoCartao(l.cartao)}</td>
                   <td>${l.mes}</td>
                   <td>${dataBr(l.vencimento) || '<span class="texto-suave">não cadastrado</span>'}</td>
@@ -3166,10 +3232,11 @@
                   <td class="num">${moeda(l.pago)}</td>
                   <td class="num" style="color: var(--accent-yellow)">${moeda(l.ficou)}</td>
                   <td>${l.rolouPara}${l.confirmado ? '' : ' <span class="texto-suave">(não confere com o saldo declarado)</span>'}</td>
-                  <td class="num">${l.custo > 0
+                  <td${cliqueCusto}>${l.custo > 0
                     ? `${moeda(l.custo)}<div class="kpi-sub">${l.custoDetalhe.join('<br>')}</div>`
                     : '<span class="texto-suave">sem cobrança na fatura seguinte</span>'}</td>
-                </tr>`).join('')}
+                </tr>`;
+              }).join('')}
             </tbody>
           </table>
         </div>`;
@@ -3331,23 +3398,25 @@
                       : l.acimaDaMedia < -0.5
                         ? `<span style="color: var(--accent-green)">${Math.abs(l.acimaDaMedia).toFixed(1)}% abaixo da média do ano</span>`
                         : '<span class="kpi-sub">na média do ano</span>';
+                  const ir = f => `onclick='irParaLancamentos(${JSON.stringify(f)})' title="Ver estes lançamentos"`;
                   return `
                     <tr>
                       <td>${l.mes}</td>
                       <td><span style="color: var(--accent-green)">realizado</span></td>
-                      <td class="num">${moeda(l.receita)}</td>
-                      <td class="num">${moeda(l.despesa)}</td>
-                      <td class="num" style="color:${cor}">${moeda(l.saldo)}</td>
+                      <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'receita' })}>${moeda(l.receita)}</td>
+                      <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'despesa' })}>${moeda(l.despesa)}</td>
+                      <td class="num clicavel" style="color:${cor}" ${ir({ mes_venc: l.mes })}>${moeda(l.saldo)}</td>
                       <td>${comparacao}</td>
                     </tr>`;
                 }
+                const ir = f => `onclick='irParaLancamentos(${JSON.stringify(f)})' title="Ver o que já está lançado neste mês"`;
                 return `
                   <tr>
                     <td>${l.mes}</td>
                     <td><span style="color: var(--accent-yellow)">previsto</span></td>
-                    <td class="num">${moeda(l.receita)}</td>
-                    <td class="num">${moeda(l.despesa)}</td>
-                    <td class="num">${moeda(l.saldo)}</td>
+                    <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'receita' })}>${moeda(l.receita)}</td>
+                    <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'despesa' })}>${moeda(l.despesa)}</td>
+                    <td class="num clicavel" ${ir({ mes_venc: l.mes })}>${moeda(l.saldo)}</td>
                     <td class="kpi-sub">compromisso ${moeda(l.compromisso)} + estimativa ${moeda(l.estimativa)}</td>
                   </tr>`;
               }).join('')}
@@ -3787,8 +3856,9 @@
 
     function renderizarExtratoFluxo() {
       // Parte da lista ja recortada pelo ano em escopo, para que a aba nunca
-      // exiba lancamentos fora do periodo que a dashboard cobre.
-      const transacoes = todasTransacoes();
+      // exiba lancamentos fora do periodo que a dashboard cobre. Usa o razao
+      // completo (transacoesDoAno), nao o recorte de consumo.
+      const transacoes = transacoesDoAno();
 
       transacoesFiltradas = [...transacoes];
       paginaAtual = 1;
@@ -3796,7 +3866,7 @@
     }
 
     function aplicarFiltros() {
-      const transacoes = todasTransacoes();
+      const transacoes = transacoesDoAno();
 
       const dataInicio = document.getElementById('filter_data_inicio').value;
       const dataFim = document.getElementById('filter_data_fim').value;
@@ -3809,6 +3879,7 @@
       const mesVenc = document.getElementById('filter_mes_venc').value;
       const mesRef = document.getElementById('filter_mes_ref').value;
       const forma = document.getElementById('filter_tipo_gasto').value;
+      const natureza = document.getElementById('filter_natureza').value;
 
       transacoesFiltradas = transacoes.filter(txn => {
         if (dataInicio && txn.data < dataInicio) return false;
@@ -3818,6 +3889,7 @@
         if (conta && txn.conta_origem !== conta && txn.conta_destino !== conta) return false;
         if (categoria && txn.categoria !== categoria) return false;
         if (status && txn.status !== status) return false;
+        if (natureza && txn.natureza !== natureza) return false;
         if (busca && !txn.descricao.toLowerCase().includes(busca)) return false;
 
         // Mes da fatura (regime de caixa): le o campo gravado, nao recalcula
@@ -3908,6 +3980,7 @@
       preencher('filter_categoria', unicos('categoria'));
       preencher('filter_mes_venc', unicos('mes_vencimento'), cronologico);
       preencher('filter_mes_ref', unicos('mes_referencia'), cronologico);
+      preencher('filter_natureza', unicos('natureza'));
     }
 
     function limparFiltros() {
@@ -3922,16 +3995,45 @@
       document.getElementById('filter_mes_venc').value = '';
       document.getElementById('filter_mes_ref').value = '';
       document.getElementById('filter_tipo_gasto').value = '';
+      document.getElementById('filter_natureza').value = '';
 
       renderizarExtratoFluxo();
     }
 
+    // "Explode" um valor exibido em outra aba: pula para Lançamentos já
+    // filtrado pelos mesmos critérios que compuseram aquele número, para a
+    // Juliane ver exatamente quais lançamentos entram na conta. Campos
+    // omitidos em `filtros` voltam para "Todos" — o clique sempre parte de
+    // um filtro limpo, nunca soma com o que já estava selecionado.
+    function irParaLancamentos(filtros) {
+      const campos = ['data_inicio', 'data_fim', 'pessoa', 'tipo', 'conta',
+        'categoria', 'status', 'busca', 'mes_venc', 'mes_ref', 'tipo_gasto', 'natureza'];
+      campos.forEach(c => {
+        const el = document.getElementById('filter_' + c);
+        if (el) el.value = filtros[c] || '';
+      });
+      document.querySelector('[data-tab="lancamentos"]').click();
+      aplicarFiltros();
+    }
+
+    // conta_origem de um cartão a partir do número final, para ligar o
+    // filtro "Conta" ao mesmo texto gravado nos lançamentos — sem isso duas
+    // faturas do mesmo mês (cartões diferentes) não dariam para distinguir.
+    function contaOrigemDoCartao(final) {
+      if (!final) return '';
+      const t = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
+        .find(x => x.cartao_final === final && x.conta_origem);
+      return t ? t.conta_origem : '';
+    }
 
     // Resume o que esta sendo exibido agora, respeitando os filtros ativos.
     function atualizarResumoLancamentos() {
       const lista = transacoesFiltradas || [];
-      const compras = lista.filter(t => t.valor > 0).reduce((s, t) => s + t.valor, 0);
-      const estornos = lista.filter(t => t.valor < 0).reduce((s, t) => s + t.valor, 0);
+      // O resumo soma só consumo de verdade (despesa e estorno), mesmo com a
+      // lista agora mais ampla — senão receita, dívida ou transferência
+      // somariam junto com compra e o "Total" deixaria de significar gasto.
+      const compras = lista.filter(t => t.natureza === 'despesa' && t.valor > 0).reduce((s, t) => s + t.valor, 0);
+      const estornos = lista.filter(t => t.natureza === 'estorno').reduce((s, t) => s + t.valor, 0);
 
       const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
       set('lanc-qtd', String(lista.length));
