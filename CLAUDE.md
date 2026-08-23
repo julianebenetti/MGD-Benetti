@@ -218,6 +218,8 @@ material dos dois filhos, e por isso existe a pessoa **Filhos**.
   tiver regra.
 - `importar-extrato-itau.js <arquivo.xls>` — lê o extrato da conta corrente.
   Marca como transferência o que outra fonte já lançou, para não contar duas vezes.
+- `conciliar.js` — só leitura. Audita as três fontes: o que falta, o que está
+  contado duas vezes e o que não bate. Rode depois de cada importação.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha
   de revisão em lote (um estabelecimento por linha) e reimporta o que foi
   revisado, opcionalmente virando regra nova.
