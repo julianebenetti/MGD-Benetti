@@ -1826,6 +1826,23 @@
     let cargasGlobais = { cargas: [] };
     let cargasAtuais = [];
 
+    // Configuração de cartões
+    const cartoes = {
+      '4846': { nome: 'Black', descricao: 'Itaú Black', cor: '#000000' },
+      '0442': { nome: 'Infinite', descricao: 'Visa Infinite', cor: '#1a1a1a' },
+      '3794': { nome: 'Azul', descricao: 'Cartão Azul', cor: '#0066cc' }
+    };
+
+    function nomeDoCartao(numero) {
+      const cartao = cartoes[numero];
+      return cartao ? `${numero}-${cartao.nome}` : numero;
+    }
+
+    function descricaoCartao(numero) {
+      const cartao = cartoes[numero];
+      return cartao ? cartao.descricao : numero;
+    }
+
     // Configuração de abas
     const abasDisponibles = [
       { id: 'painel', nome: '🏠 Painel', visivel: true, ordem: 0 },
@@ -2617,7 +2634,7 @@
               const ehEmpresa = f.cartao !== '4846';
               return `
                 <tr>
-                  <td title="${f.cartao_descricao || ''}">${ehEmpresa ? '🏢' : '🏠'} ${f.cartao}</td>
+                  <td title="${descricaoCartao(f.cartao)}">${ehEmpresa ? '🏢' : '🏠'} ${nomeDoCartao(f.cartao)}</td>
                   <td><b>${m}</b></td>
                   <td>${f.vencimento.split('-').reverse().join('/')}</td>
                   <td>${selos[f.situacao] || f.situacao}</td>
