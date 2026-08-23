@@ -116,15 +116,19 @@ const RUBRICAS = {
   '/B10': { natureza: 'receita', categoria: 'plr',              descricao: 'Participação nos lucros' },
 
   // descontos
-  '/314': { natureza: 'despesa', categoria: 'inss',                  pessoa: 'Juliane', descricao: 'INSS' },
-  '/401': { natureza: 'despesa', categoria: 'imposto_renda',         pessoa: 'Juliane', descricao: 'Imposto de renda retido' },
-  '/405': { natureza: 'despesa', categoria: 'imposto_renda',         pessoa: 'Juliane', descricao: 'Imposto de renda sobre a PLR' },
-  '55AN': { natureza: 'despesa', categoria: 'previdencia_privada',   pessoa: 'Juliane', descricao: 'Previdência NEOS' },
-  '578N': { natureza: 'despesa', categoria: 'saude',                 pessoa: 'Família', descricao: 'Bradesco — coparticipação médica' },
-  '57AN': { natureza: 'despesa', categoria: 'saude',                 pessoa: 'Família', descricao: 'Bradesco Saúde' },
-  '6A9N': { natureza: 'despesa', categoria: 'saude',                 pessoa: 'Família', descricao: 'Bradesco Odonto' },
-  '/505': { natureza: 'despesa', categoria: 'alimentacao',           pessoa: 'Família', descricao: 'Vale-refeição/alimentação' },
-  '55CN': { natureza: 'despesa', categoria: 'alimentacao',           pessoa: 'Família', descricao: 'Cesta básica' },
+  //
+  // A folha e da Juliane, entao a pessoa e ela por padrao. A excecao e o plano
+  // de saude: o convenio desconta na folha dela, mas cobre a familia inteira, e
+  // pela regra da casa a pessoa da despesa e quem se beneficia dela.
+  '/314': { natureza: 'despesa', categoria: 'inss',                descricao: 'INSS' },
+  '/401': { natureza: 'despesa', categoria: 'imposto_renda',       descricao: 'Imposto de renda retido' },
+  '/405': { natureza: 'despesa', categoria: 'imposto_renda',       descricao: 'Imposto de renda sobre a PLR' },
+  '55AN': { natureza: 'despesa', categoria: 'previdencia_privada', descricao: 'Previdência NEOS' },
+  '/505': { natureza: 'despesa', categoria: 'alimentacao',         descricao: 'Vale-refeição/alimentação' },
+  '55CN': { natureza: 'despesa', categoria: 'alimentacao',         descricao: 'Cesta básica' },
+  '578N': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco — coparticipação médica' },
+  '57AN': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Saúde' },
+  '6A9N': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Odonto' },
 
   // emprestimo consignado: o principal quita divida, nao e consumo novo
   '1CT1': { natureza: 'divida_parcelada', categoria: 'consignado', pessoa: 'Juliane', descricao: 'Empréstimo consignado 1' },
@@ -135,6 +139,28 @@ const RUBRICAS = {
 };
 
 // ---------- interpretacao do holerite ----------
+
+// O comprovante diz em que conta o salario cai — banco, agencia e numero. Ler
+// dali evita fixar no codigo uma conta que pode mudar, e deixa o lancamento
+// dizer para onde o dinheiro foi de verdade.
+const BANCOS = { '341': 'Itaú', '001': 'Banco do Brasil', '033': 'Santander', '104': 'Caixa', '237': 'Bradesco', '260': 'Nubank' };
+
+function contaDeCredito(linhas) {
+  const i = linhas.findIndex(l => /Banco\s*\|\s*Ag[êe]ncia\s*\|\s*Conta/i.test(l));
+  if (i < 0 || !linhas[i + 1]) return null;
+
+  const col = linhas[i + 1].split('|').map(c => c.trim());
+  const banco = (col[3] || '').match(/^\d{3}$/) ? col[3] : null;
+  const agencia = (col[4] || '').match(/^\d+$/) ? col[4] : null;
+  const conta = (col[5] || '').match(/^[\d-]+$/) ? col[5] : null;
+  if (!banco) return null;
+
+  return {
+    banco, agencia, conta,
+    nome: BANCOS[banco] || `Banco ${banco}`,
+    rotulo: `${BANCOS[banco] || `Banco ${banco}`} ag. ${agencia || '?'} c/c ${conta || '?'}`,
+  };
+}
 
 function lerHolerite(caminho) {
   const linhas = linhasDoPdf(caminho);
@@ -184,6 +210,7 @@ function lerHolerite(caminho) {
     arquivo: path.basename(caminho),
     dataCredito: credito ? credito.split('.').reverse().join('-') : null,
     referencia: refer ? `${refer[1]} ${refer[2]}` : null,
+    conta: contaDeCredito(linhas),
     liquido, totais, itens,
   };
 }
@@ -250,7 +277,14 @@ holerites.forEach(h => {
       classificado_por: 'rubrica_folha',
       rubrica: item.rubrica,
       conta_origem: 'Elektro Redes S.A.',
-      conta_destino: natureza === 'receita' ? 'Itaú' : 'Elektro (desconto em folha)',
+      // O provento cai na conta que o proprio comprovante indica. O desconto
+      // nunca chega la — sai antes, na folha.
+      conta_destino: item.ehProvento
+        ? (h.conta ? h.conta.rotulo : 'conta não cadastrada')
+        : 'descontado em folha',
+      banco_credito: h.conta ? h.conta.nome : null,
+      agencia_credito: h.conta ? h.conta.agencia : null,
+      conta_credito: h.conta ? h.conta.conta : null,
       status: 'confirmado',
       origem: 'holerite_elektro',
       mes_vencimento: mesVencimento,
@@ -269,7 +303,8 @@ holerites.forEach(h => {
   const confere = h.liquido !== null && Math.abs(saldo - h.liquido) < 0.02;
   if (!confere) problemas++;
 
-  console.log(`${mesVencimento}  creditado em ${h.dataCredito.split('-').reverse().join('/')}  (ref. ${h.referencia || '?'})`);
+  console.log(`${mesVencimento}  creditado em ${h.dataCredito.split('-').reverse().join('/')}  (ref. ${h.referencia || '?'})` +
+    `  →  ${h.conta ? h.conta.rotulo : 'conta não identificada no comprovante'}`);
   console.log(`   proventos ${brl(entrou).padStart(13)}   descontos ${brl(saiu).padStart(12)}   saldo ${brl(saldo).padStart(12)}`);
   console.log(`   líquido no comprovante ${brl(h.liquido || 0).padStart(12)}   ${confere ? 'confere' : '*** NÃO CONFERE ***'}`);
   console.log('');
@@ -286,6 +321,25 @@ const receitas = transacoes.filter(t => t.natureza === 'receita');
 const despesas = transacoes.filter(t => t.natureza === 'despesa');
 const divida = transacoes.filter(t => t.natureza === 'divida_parcelada');
 const ajustes = transacoes.filter(t => t.natureza === 'ajuste');
+
+// Conferencia da classificacao: uma linha por rubrica, para bater o olho e ver
+// se algo foi para a categoria ou a pessoa errada.
+console.log('Como cada rubrica foi classificada:');
+const porRubrica = {};
+transacoes.forEach(t => {
+  const k = `${t.rubrica}|${t.natureza}|${t.categoria}|${t.pessoa}`;
+  porRubrica[k] = porRubrica[k] || { ...t, n: 0, soma: 0 };
+  porRubrica[k].n++;
+  porRubrica[k].soma += t.valor;
+});
+const ordem = { receita: 0, despesa: 1, divida_parcelada: 2, ajuste: 3 };
+Object.values(porRubrica)
+  .sort((a, b) => ordem[a.natureza] - ordem[b.natureza] || b.soma - a.soma)
+  .forEach(r => console.log(
+    `   ${r.rubrica.padEnd(5)} ${r.descricao.slice(0, 30).padEnd(32)}` +
+    `${brl(r.soma).padStart(13)}  ${String(r.n).padStart(2)}x   ` +
+    `${r.natureza.padEnd(17)} ${r.categoria.padEnd(20)} ${r.pessoa}`));
+console.log('');
 
 console.log(`${transacoes.length} lançamentos em ${holerites.length} comprovantes`);
 console.log(`   receita ............ ${brl(receitas.reduce((s, t) => s + t.valor, 0)).padStart(13)}  (${receitas.length})`);

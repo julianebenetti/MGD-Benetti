@@ -117,6 +117,30 @@ Juliane desconfiar da dashboard na primeira versão.
   depois parcela 5") quase sempre é a fatura daquele mês que não foi importada,
   não erro de leitura.
 
+### Holerite (Elektro)
+A Juliane é analista na **Elektro Redes**. O salário cai no **Itaú, ag. 341700,
+c/c 00806-4** — a conta vem lida do próprio comprovante, não fixada no código.
+
+Entra o **provento bruto como receita** e **cada desconto como lançamento
+próprio**. Guardar só o líquido esconderia que R$ 1.310/mês vão embora em
+consignado antes de o dinheiro chegar, e que plano de saúde e previdência são
+despesa recorrente.
+
+- O mês é o da **data de crédito**, não o de referência (regime de caixa). A PLR
+  caiu em 31/03 e conta em março.
+- A classificação vem da **rubrica** (`M010`, `/314`, `1CT1`), não do texto da
+  descrição — o código é estável entre os meses, o texto varia.
+- **Tudo é da Juliane**, exceto o plano de saúde: Bradesco Saúde, Odonto e
+  coparticipação médica descontam na folha dela mas cobrem a casa toda, então
+  ficam com **Família**.
+- **Consignado** (`1CT1`, `MCT0`) é `divida_parcelada`, não despesa: quita
+  empréstimo, não é consumo novo.
+- **Retificação de competência** (abril acerta março) fica como `ajuste`: lança
+  o mesmo valor como provento e como desconto, e contar um lado só criaria
+  receita ou despesa do nada.
+- Cada comprovante é conferido contra o próprio líquido antes de gravar. Rubrica
+  sem regra **para a importação** em vez de entrar sem classificação.
+
 ### Classificação de despesas
 As regras vivem em **`financeiro/data/regras-classificacao.json`**. Ao aprender
 uma regra nova da Juliane, **gravar lá** — não só corrigir os lançamentos, senão
@@ -152,6 +176,9 @@ material dos dois filhos, e por isso existe a pessoa **Filhos**.
   fatura anterior ela quita. Serve para checar um envio antes de importar.
 - `importar-faturas-itau.js` — reconstrói tudo a partir dos XLSX. Aceita
   `DIR_FATURAS` por variável de ambiente.
+- `importar-holerites.js <pdf|pasta>` — lê os comprovantes de pagamento da
+  Elektro. Confere cada um contra o próprio líquido e para se alguma rubrica não
+  tiver regra.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha
   de revisão em lote (um estabelecimento por linha) e reimporta o que foi
   revisado, opcionalmente virando regra nova.
