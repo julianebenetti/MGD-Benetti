@@ -111,9 +111,6 @@ function lerFatura(caminho) {
   const aba = wb.SheetNames.find(n => ABA_FATURA.test(n.trim()));
   const linhas = XLSX.utils.sheet_to_json(wb.Sheets[aba], { header: 1, raw: false, defval: '' });
 
-  const [, mm, aa] = aba.trim().match(ABA_FATURA);
-  const mesVencimento = `${MESES[parseInt(mm, 10) - 1]}/${aa}`;
-
   const textoTodo = linhas.slice(0, 12).flat().map(String).join(' ');
   const situacao = (SITUACOES.find(([re]) => re.test(textoTodo)) || [null, 'desconhecida'])[1];
 
@@ -124,6 +121,25 @@ function lerFatura(caminho) {
   const finalCartao = (descricaoCartao.match(/final\s+(\d{4})/i) || [])[1] || 'sem-numero';
 
   const vencimento = paraISO(celulas[celulas.length - 1]);
+
+  // O mes vem do vencimento, nao do nome da aba.
+  //
+  // O Itau nomeia a aba pelo ciclo, e o ciclo do 0442 e do 3794 fecha num mes e
+  // vence no dia 1o do seguinte: a aba diz "Fatura 06-26" e o vencimento diz
+  // 01/07/2026. Lendo a aba, cinco faturas caiam um mes antes de sair o dinheiro
+  // e o registro se contradizia — mes_vencimento "Jun/26" ao lado de
+  // data_vencimento_fatura "2026-07-01". Pior: duas faturas seguidas do mesmo
+  // cartao caiam no mesmo mes e uma sobrescrevia a outra na mesclagem.
+  //
+  // O mes usado na dashboard e regime de caixa: conta quando o dinheiro sai da
+  // conta. Isso e a data de vencimento.
+  const mesVencimento = /^\d{4}-\d{2}-\d{2}$/.test(vencimento)
+    ? `${MESES[parseInt(vencimento.slice(5, 7), 10) - 1]}/${vencimento.slice(2, 4)}`
+    : (() => {
+        const [, mm, aa] = aba.trim().match(ABA_FATURA);
+        console.warn(`  ${path.basename(caminho)}: vencimento ilegível, usando o mês da aba (${aba})`);
+        return `${MESES[parseInt(mm, 10) - 1]}/${aa}`;
+      })();
 
   // Valores monetarios da linha do cartao, na ordem em que aparecem.
   // Fatura paga:          "Voce pagou R$ X de" | R$ X        -> pago e total sao o mesmo
@@ -511,8 +527,12 @@ const finais = [...preservadas, ...transacoes].sort((a, b) => {
   return ia - ib || a.data.localeCompare(b.data);
 });
 
-// Cabecalhos: os das faturas lidas agora substituem os antigos de mesmo mes
-const resumoAnterior = (base.faturas_cartao || []).filter(f => !faturasImportadas.has(`${f.cartao || '4846'}|${f.mes}`));
+// Cabecalhos: os das faturas lidas agora substituem os antigos de mesmo mes.
+// Com --substituir-tudo os antigos vao junto com os lancamentos — mante-los
+// deixaria na aba Cartao & Faturas fatura sem nenhum lancamento por tras.
+const resumoAnterior = substituirTudo
+  ? []
+  : (base.faturas_cartao || []).filter(f => !faturasImportadas.has(`${f.cartao || '4846'}|${f.mes}`));
 const resumoFinal = [...resumoAnterior, ...resumo].sort((a, b) => {
   const ia = MESES.indexOf(a.mes.split('/')[0]) + 12 * +a.mes.split('/')[1];
   const ib = MESES.indexOf(b.mes.split('/')[0]) + 12 * +b.mes.split('/')[1];

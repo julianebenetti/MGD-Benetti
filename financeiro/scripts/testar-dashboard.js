@@ -128,12 +128,23 @@ function noEscopo(mv) {
   ok('Nenhuma fatura de ano anterior', mesesFora.length === 0, mesesFora.join(', '));
 
   const mesesReais = [...new Set(escopo.map(t => t.mes_vencimento))].filter(m => m !== A_CONFIRMAR);
-  // As cinco faturas importadas; meses posteriores existem so como projecao de
-  // parcelas que ainda vao vencer, e por isso tem poucos lancamentos.
   const FATURAS_IMPORTADAS = faturas.map(f => f.mes);
-  ok('As 5 faturas importadas têm volume plausível (mín. 20 lançamentos)',
-     FATURAS_IMPORTADAS.every(m => escopo.filter(t => t.mes_vencimento === m).length >= 20),
-     FATURAS_IMPORTADAS.map(m => `${m}: ${escopo.filter(t => t.mes_vencimento === m).length}`).join(' | '));
+
+  // Cada fatura tem de trazer exatamente os lancamentos que o proprio cabecalho
+  // declara. Um piso generico de volume nao serve para isso: o 4846 passa de
+  // cem lancamentos por mes e o 0442 as vezes tem seis, ambos legitimos.
+  //
+  // O que este teste pega e fatura pela metade ou contada duas vezes — julho,
+  // agosto e setembro do 4846 ficaram com cada linha em dobro porque a mesma
+  // fatura foi lida duas vezes na mesma importacao.
+  // Conta sobre todos os lancamentos, nao sobre 'escopo': o cabecalho declara as
+  // linhas da fatura, e a fatura inclui as de pagamento que 'escopo' descarta.
+  const contar = f => todosLancamentos
+    .filter(t => (t.cartao_final || '4846') === f.cartao && t.mes_vencimento === f.mes).length;
+  const divergentes = faturas.filter(f => contar(f) !== f.lancamentos);
+  ok(`As ${faturas.length} faturas trazem os lançamentos que o cabeçalho declara`,
+     divergentes.length === 0,
+     divergentes.map(f => `${f.cartao} ${f.mes}: ${contar(f)} gravados x ${f.lancamentos} declarados`).join(' | '));
 
   const projetadas = mesesReais.filter(m => !FATURAS_IMPORTADAS.includes(m));
   ok('Meses além das faturas importadas contêm só parcelas futuras',
@@ -570,10 +581,15 @@ function noEscopo(mv) {
      faturas.every(f => /^\d{4}-\d{2}-\d{2}$/.test(f.vencimento)),
      faturas.map(f => `${f.mes}: ${f.vencimento}`).join(' | '));
 
-  const vencimentos = faturas.map(f => f.vencimento);
-  ok('Vencimentos em ordem cronológica',
-     vencimentos.every((v, i) => i === 0 || v > vencimentos[i - 1]),
-     vencimentos.join(' | '));
+  // A cronologia so faz sentido dentro de um cartao: sao tres, e a lista vem
+  // agrupada por cartao, entao a sequencia reinicia a cada troca.
+  const porCartao = {};
+  faturas.forEach(f => (porCartao[f.cartao] = porCartao[f.cartao] || []).push(f.vencimento));
+  const foraDeOrdem = Object.entries(porCartao)
+    .filter(([, vs]) => vs.some((v, i) => i > 0 && v <= vs[i - 1]));
+  ok('Vencimentos em ordem cronológica dentro de cada cartão',
+     foraDeOrdem.length === 0,
+     Object.entries(porCartao).map(([c, vs]) => `${c}: ${vs.join(' ')}`).join('\n      '));
 
   // --- Todas as abas renderizam ---
   for (const [id, nome] of [['painel', 'Painel'], ['lancamentos', 'Lançamentos'],
