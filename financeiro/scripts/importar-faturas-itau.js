@@ -148,7 +148,47 @@ function lerFatura(caminho) {
       finalCartao: String(l[9]).trim().replace(/\*/g, ''),
     }));
 
-  return { aba, mesVencimento, vencimento, situacao, descricaoCartao, finalCartao, totalFatura, pago, itens };
+  return { arquivo: path.basename(caminho), aba, mesVencimento, vencimento, situacao, descricaoCartao, finalCartao, totalFatura, pago, itens };
+}
+
+// ---------- a mesma fatura lida duas vezes ----------
+//
+// A mesclagem no fim protege contra reimportar uma fatura ja gravada, mas nao
+// contra ler a mesma fatura duas vezes na mesma rodada: as duas leituras
+// empilhavam seus lancamentos e o gasto do mes aparecia em dobro. Foi o que
+// aconteceu com julho, agosto e setembro do 4846 — a pasta tinha duas copias do
+// mesmo arquivo e cada linha entrou duas vezes.
+//
+// Copia repetida do mesmo arquivo se resolve sozinha: usa uma e ignora as
+// outras. Versoes que divergem no conteudo, nao — qual delas vale e decisao de
+// quem exportou, entao o script para e mostra a diferenca em vez de escolher.
+
+function impressaoDigital(f) {
+  return JSON.stringify([f.situacao, f.totalFatura, f.pago,
+    f.itens.map(i => [i.data, i.descricao, i.valor])]);
+}
+
+function resolverRepetidas(lidas) {
+  const porChave = {};
+  lidas.forEach(f => {
+    const chave = `${f.finalCartao}|${f.mesVencimento}`;
+    (porChave[chave] = porChave[chave] || []).push(f);
+  });
+
+  const escolhidas = [], conflitos = [];
+  let copiasIgnoradas = 0;
+
+  Object.entries(porChave).forEach(([chave, versoes]) => {
+    const distintas = [...new Map(versoes.map(f => [impressaoDigital(f), f])).values()];
+    if (distintas.length === 1) {
+      escolhidas.push(distintas[0]);
+      copiasIgnoradas += versoes.length - 1;
+    } else {
+      conflitos.push({ chave, versoes: distintas });
+    }
+  });
+
+  return { escolhidas, conflitos, copiasIgnoradas };
 }
 
 // ---------- classificação ----------
@@ -259,7 +299,29 @@ if (ignorados) console.log(`\n${ignorados} arquivo(s) .xlsx ignorado(s) por não
 const classificacao = carregarClassificacaoAtual();
 const regras = carregarRegras();
 const empresas = pessoasDeEmpresa();
-const faturas = arquivos.map(lerFatura)
+const { escolhidas, conflitos, copiasIgnoradas } = resolverRepetidas(arquivos.map(lerFatura));
+
+if (copiasIgnoradas) {
+  console.log(`\n${copiasIgnoradas} arquivo(s) ignorado(s) por serem cópia de uma fatura já lida`);
+}
+
+if (conflitos.length) {
+  console.error('\n=== FATURAS COM VERSÕES DIFERENTES NA MESMA PASTA ===\n');
+  conflitos.forEach(({ chave, versoes }) => {
+    console.error(`${chave} veio em ${versoes.length} versões que não batem:`);
+    versoes.forEach(v => {
+      const soma = v.itens.reduce((s, i) => s + i.valor, 0);
+      console.error(`   ${v.situacao.padEnd(13)} ${String(v.itens.length).padStart(3)} lançamentos  ` +
+        `soma R$ ${soma.toFixed(2).padStart(10)}  total R$ ${v.totalFatura.toFixed(2).padStart(10)}   ${v.arquivo}`);
+    });
+    console.error('');
+  });
+  console.error('Importar as duas somaria a mesma fatura duas vezes. Deixe na pasta');
+  console.error('apenas a versão que vale e rode de novo.\n');
+  process.exit(1);
+}
+
+const faturas = escolhidas
   .sort((a, b) => a.mesVencimento.slice(-2).localeCompare(b.mesVencimento.slice(-2))
                 || MESES.indexOf(a.mesVencimento.split('/')[0]) - MESES.indexOf(b.mesVencimento.split('/')[0]));
 
