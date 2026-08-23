@@ -375,8 +375,81 @@ const finais = [...preservadas, ...transacoes].sort((a, b) => {
   return ia - ib || a.data.localeCompare(b.data);
 });
 
+// ---------- conciliação com o extrato ----------
+//
+// Sem o holerite, o extrato conta o credito do salario como receita — e a
+// unica noticia daquela renda. Com o holerite importado, esse mesmo dinheiro
+// passa a estar lancado em detalhe, e deixar os dois contaria a renda duas
+// vezes.
+//
+// A conciliacao acontece aqui, no momento em que o holerite entra, e nao numa
+// reimportacao manual do extrato que alguem precisa lembrar de fazer.
+
+const creditosDoExtrato = finais.filter(t =>
+  t.origem === 'extrato_itau'
+  && /^REMUNERACAO\/SALARIO/i.test(t.descricao_original || '')
+  && mesesLidos.has(t.mes_vencimento));
+
+const conciliados = [];
+creditosDoExtrato.forEach(t => {
+  if (t.natureza === 'transferencia') return;          // ja estava conciliado
+  conciliados.push({ ...t });
+  t.natureza = 'transferencia';
+  t.categoria = 'salario_ja_lancado';
+  t.descricao = 'Crédito do salário (já lançado pelo holerite)';
+  t.nota_classificacao = 'Conciliado ao importar o holerite deste mês: o provento e os descontos entraram em detalhe, então o crédito sai dos totais.';
+});
+
 if (substituidas) console.log(`\nMesclagem: ${substituidas} lançamentos de folha substituídos`);
-console.log(`Total após a mesclagem: ${finais.length} lançamentos`);
+
+// A conferencia sai sempre que houver extrato do mes, tenha havido mudanca ou
+// nao: e ela que mostra que o razao fecha, e um mes que passou a divergir
+// precisa aparecer mesmo quando nada foi reclassificado agora.
+if (creditosDoExtrato.length) {
+  console.log(`\nConciliação com o extrato da conta:`);
+  if (conciliados.length) {
+    console.log(`   ${conciliados.length} crédito(s) de salário saem dos totais agora — o holerite passou a`);
+    console.log('   lançar o mesmo dinheiro em detalhe, e deixar os dois contaria a renda duas vezes.');
+  } else {
+    console.log('   nada a reclassificar: os créditos destes meses já estavam conciliados.');
+  }
+  console.log('');
+
+  // O credito no extrato tem de bater com o liquido do comprovante. Divergencia
+  // aqui e sinal de holerite trocado, valor lido errado ou credito de outra fonte.
+  const liquidoPorMes = {};
+  holerites.forEach(h => {
+    const m = `${MESES[+h.dataCredito.slice(5, 7) - 1]}/${h.dataCredito.slice(2, 4)}`;
+    liquidoPorMes[m] = Math.round(((liquidoPorMes[m] || 0) + (h.liquido || 0)) * 100) / 100;
+  });
+
+  const creditoPorMes = {};
+  creditosDoExtrato.forEach(t => {
+    creditoPorMes[t.mes_vencimento] = Math.round(((creditoPorMes[t.mes_vencimento] || 0) + t.valor) * 100) / 100;
+  });
+
+  const emOrdem = m => MESES.indexOf(m.split('/')[0]) + 12 * +m.split('/')[1];
+  let divergentes = 0;
+  [...mesesLidos].sort((a, b) => emOrdem(a) - emOrdem(b)).forEach(m => {
+    const noExtrato = creditoPorMes[m];
+    const noHolerite = liquidoPorMes[m] || 0;
+    if (noExtrato === undefined) {
+      console.log(`   ${m.padEnd(7)} holerite ${brl(noHolerite).padStart(12)}   extrato: nenhum crédito neste mês`);
+      return;
+    }
+    const bate = Math.abs(noExtrato - noHolerite) < 0.02;
+    if (!bate) divergentes++;
+    console.log(`   ${m.padEnd(7)} holerite ${brl(noHolerite).padStart(12)}   extrato ${brl(noExtrato).padStart(12)}   ${bate ? 'confere' : '*** DIVERGE ***'}`);
+  });
+
+  if (divergentes) {
+    console.log(`\n   ${divergentes} mês(es) em que o líquido do comprovante não bate com o crédito na conta.`);
+    console.log('   Vale conferir antes de confiar no total: pode ser holerite de outro mês,');
+    console.log('   crédito de fonte diferente, ou comprovante faltando.');
+  }
+}
+
+console.log(`\nTotal após a mesclagem: ${finais.length} lançamentos`);
 
 if (aplicar) {
   base.fluxo_mensal = { ...(base.fluxo_mensal || {}), transacoes: finais };
