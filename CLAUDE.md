@@ -243,6 +243,52 @@ Regras que ela informou diretamente:
 Confirmados depois: **Mundo Cores** é a escola da Valentina; **papelaria** é
 material dos dois filhos, e por isso existe a pessoa **Filhos**.
 
+Regras do guia de classificação compilado em 23/08 (conta corrente e fatura):
+- **Dona Terezinha** → `alimentacao_fora` / **Juliane** — almoço de trabalho,
+  não compra da casa. Antes caía junto com hortifruti/Família.
+- **Marcia de Carla, Sumup Marcia de Car** → `alimentacao` / **Hugo**.
+  **Zuleika** → `alimentacao` / **Família**. **Discampchoc** →
+  `alimentacao` / **Hugo** — supermercado dele, antes ficava sem categoria.
+- **Dramarinaortodonto** → `saude` / **Luca** — ortodontia dele.
+- **iFood Club** → `assinatura`, não `alimentacao_fora` — é assinatura
+  recorrente, não pedido avulso.
+- **Kiwify\*MgdMentori** → `educacao_profissional` / **Benetti UP** — mentoria
+  de negócio, não estudo pessoal da Juliane. **Kiwify Afiliados** e
+  **Kiwify\*InstaMagic** → `ferramentas` / **Benetti UP** — ferramentas de
+  trabalho, não curso.
+- **Uniaosocorro, EC\*2Produtoss** → roupas parceladas, mantido como estava
+  (Juliane/pessoal e Família/compras_diversas) para não inventar pessoa que o
+  guia não confirmou.
+- **PIX TRANSF APE** (extrato) → `casa` / **Família**, locker de guarda-móveis.
+  O Itaú emenda a data direto na descrição ("APE25/01"), sem separador — regra
+  tinha `\b` no fim do padrão e isso não é fronteira de palavra entre letra e
+  dígito, então só a linha mais recente (sem data emendada) batia.
+- **PAG TIT INT 237** (R$600–650) → Condomínio; **PAG TIT INT 001** (R$500–600)
+  → Escola do Luca; **PAG TIT INT 199060387000** → Escola da Valentina — o
+  código depois de "PAG TIT INT" é o banco de liquidação (237=Bradesco,
+  001=Banco do Brasil), não o beneficiário: mais de um boleto pode usar o
+  mesmo código, por isso a faixa de valor entra como segundo filtro.
+- **PIX MARCOS** → receita `aluguel_recebido` / Juliane. **PIX GUILHER** →
+  van escolar do Luca, `transporte`/Luca. **PIX EDILEIA** → aluguel de vaga de
+  carro, `moradia`/Família. **PIX Nilza** → faxina, `servicos`/Família.
+  **PIX STIMA** → contabilidade, `contabilidade`/Benetti UP.
+- **FATURA PAGA ITAU UNICLAS** (sem o "S" final) é o pagamento da fatura do
+  0442 (Infinite, Benetti UP) — só essa vai para Benetti UP; as demais
+  ("FATURAITAU UNICLASS M" etc.) continuam Família, porque compras já
+  lançadas uma a uma não podem ser contadas de novo no pagamento.
+- Perguntado e **mantido como já estava** (não confirmar de novo): Selva
+  Urbana continua `pet`/Família (não saúde/Hugo), e combustível/seguro/
+  manutenção do carro do Hugo (Posto das Amoreiras, Correntão, PostoAndrade,
+  PostoRiviera, Tokio Marine, Rocha Auto Peças) continuam `transporte` e
+  `seguro` / **Família** — o carro serve à casa toda, não é custo isolado do
+  táxi dele.
+- Descoberto nessa revisão: `classificar.js` aplicava as regras da fatura em
+  cima de **todo** lançamento (extrato e holerite incluídos), e coincidências
+  de substring corrompiam dado bom — "posto" casava dentro de "Imposto de
+  renda retido", "aluguel" reclassificava aluguel recebido como despesa de
+  moradia. Corrigido para só atingir `origem: "cartao_credito_itau"`, que é
+  o que as regras deste arquivo foram escritas para ler.
+
 ### Ferramentas de manutenção (`financeiro/scripts/`)
 - `conferir-fatura.js arquivo.xlsx [...]` — só leitura. Diz de que mês a fatura
   é de verdade (pelo vencimento), se já está gravada, se o conteúdo bate e qual

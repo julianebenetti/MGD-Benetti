@@ -11,6 +11,12 @@
  * não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da
  * Família. Por isso a regra sobrepõe o portador.
  *
+ * Só atinge lançamentos de origem 'cartao_credito_itau'. As regras deste
+ * arquivo foram escritas pensando em descrição de fatura de cartão; aplicadas
+ * ao extrato ou ao holerite, colidiam por acaso (ex: "posto" casava dentro de
+ * "Imposto de renda retido", "aluguel" reclassificava aluguel recebido como
+ * despesa de moradia) — bug encontrado e corrigido em 23/08.
+ *
  * Comandos:
  *   node scripts/classificar.js aplicar [--aplicar]
  *       Roda as regras sobre os lançamentos. Sem --aplicar só simula.
@@ -34,6 +40,12 @@ const ARQ_FINANCEIRO = path.join(DIR_DADOS, 'financeiro.json');
 const ARQ_REGRAS = path.join(DIR_DADOS, 'regras-classificacao.json');
 const ARQ_CONFIG = path.join(DIR_DADOS, 'configuracoes.json');
 
+function pessoasDeEmpresa() {
+  if (!fs.existsSync(ARQ_CONFIG)) return new Set();
+  const cfg = JSON.parse(fs.readFileSync(ARQ_CONFIG, 'utf8'));
+  return new Set((cfg.pessoas || []).filter(p => p.tipo === 'empresa').map(p => p.nome));
+}
+
 const comando = process.argv[2];
 const aplicar = process.argv.includes('--aplicar');
 
@@ -52,10 +64,12 @@ function cmdAplicar() {
   const dados = ler(ARQ_FINANCEIRO);
   const { regras } = ler(ARQ_REGRAS);
   const transacoes = dados.fluxo_mensal.transacoes;
+  const empresas = pessoasDeEmpresa();
 
   const mudancas = [];
   transacoes.forEach(t => {
     if (t.natureza === 'pagamento') return;
+    if (t.origem !== 'cartao_credito_itau') return;
     const regra = casar(t.descricao, regras);
     if (!regra) return;
 
@@ -73,6 +87,7 @@ function cmdAplicar() {
 
     t.categoria = novaCategoria;
     t.pessoa = novaPessoa;
+    t.ambito = empresas.has(novaPessoa) ? 'empresa' : 'pessoal';
     t.classificado_por = 'regra';
   });
 
@@ -98,7 +113,7 @@ function cmdAplicar() {
       console.log('');
     });
 
-  const semRegra = transacoes.filter(t => t.natureza !== 'pagamento' && !casar(t.descricao, regras));
+  const semRegra = transacoes.filter(t => t.natureza !== 'pagamento' && t.origem === 'cartao_credito_itau' && !casar(t.descricao, regras));
   const estabSemRegra = new Set(semRegra.map(t => normalizar(t.descricao)));
   console.log(`Sem regra: ${semRegra.length} lançamentos em ${estabSemRegra.size} estabelecimentos`);
   console.log(`           ${brl(semRegra.reduce((s, t) => s + t.valor, 0))} — mantêm a classificação atual`);
@@ -121,7 +136,7 @@ function cmdExportar() {
   const dados = ler(ARQ_FINANCEIRO);
   const { regras } = ler(ARQ_REGRAS);
   const config = ler(ARQ_CONFIG);
-  const transacoes = dados.fluxo_mensal.transacoes.filter(t => t.natureza !== 'pagamento');
+  const transacoes = dados.fluxo_mensal.transacoes.filter(t => t.natureza !== 'pagamento' && t.origem === 'cartao_credito_itau');
 
   // Um estabelecimento por linha: 604 lançamentos viram 225 decisões
   const porEstabelecimento = {};
@@ -236,6 +251,7 @@ function cmdImportar() {
   const dados = ler(ARQ_FINANCEIRO);
   const arquivoRegras = ler(ARQ_REGRAS);
   const transacoes = dados.fluxo_mensal.transacoes;
+  const empresas = pessoasDeEmpresa();
 
   let alterados = 0, novasRegras = 0;
   const relatorio = [];
@@ -246,13 +262,16 @@ function cmdImportar() {
     if (!novaCategoria && !novaPessoa) return;
 
     const alvo = normalizar(linha['Estabelecimento']);
-    const atingidos = transacoes.filter(t => normalizar(t.descricao) === alvo && t.natureza !== 'pagamento');
+    const atingidos = transacoes.filter(t => normalizar(t.descricao) === alvo && t.natureza !== 'pagamento' && t.origem === 'cartao_credito_itau');
     if (!atingidos.length) return;
 
     const de = `${atingidos[0].categoria} / ${atingidos[0].pessoa}`;
     atingidos.forEach(t => {
       if (novaCategoria) t.categoria = novaCategoria;
-      if (novaPessoa) t.pessoa = novaPessoa;
+      if (novaPessoa) {
+        t.pessoa = novaPessoa;
+        t.ambito = empresas.has(novaPessoa) ? 'empresa' : 'pessoal';
+      }
       t.classificado_por = 'revisao_manual';
       alterados++;
     });

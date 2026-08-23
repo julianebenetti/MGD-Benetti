@@ -68,6 +68,16 @@ const REGRAS = [
     descricao: 'Crédito do salário (já lançado pelo holerite)',
     nota: 'O holerite lança o provento bruto e cada desconto. Contar o crédito de novo dobraria a renda.',
   },
+  // O 0442 (Infinite) e o cartao de trafego pago da Benetti UP. Essa descricao
+  // especifica e a unica, entre as variacoes de "fatura" que aparecem nesta
+  // conta pessoal, que paga o cartao da empresa — as demais (Black, Azul) sao
+  // pessoais. Tem de vir antes da regra generica abaixo (Juliane, 23/08).
+  {
+    padrao: /^FATURA PAGA ITAU UNICLAS/i,
+    natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Benetti UP',
+    descricao: 'Pagamento da fatura do 0442 (Infinite, tráfego pago)',
+    nota: 'As demais faturas pagas por esta conta são pessoais; só esta é da empresa.',
+  },
   {
     padrao: /FATURA\s*ITAU|FATURA PAGA ITAU|PGTO MIN ITAU|INT AZUL VISA|CARTAO TUDOAZUL|PAG ENTR PARC/i,
     natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Família',
@@ -164,12 +174,77 @@ const REGRAS = [
   { padrao: /SOCIUM CONDOMIN|CONDOMINIO/i,  natureza: 'despesa', categoria: 'moradia',  pessoa: 'Família',   descricao: 'Condomínio' },
   { padrao: /AVANTRA BASKET/i,              natureza: 'despesa', categoria: 'esportes', pessoa: 'Filhos',    descricao: 'Basquete' },
   { padrao: /SERVICO SOCIAL|SESI/i,         natureza: 'despesa', categoria: 'educacao', pessoa: 'Luca',      descricao: 'Sesi' },
+
+  // --- boletos sem nome de beneficiário, so o codigo do banco liquidante ---
+  //
+  // "PAG TIT INT 237" e "PAG TIT INT 001" nao identificam quem recebeu: 237 e
+  // 001 sao os codigos do Bradesco e do Banco do Brasil, os bancos que
+  // liquidaram o boleto, nao um beneficiario unico. Cada codigo paga MAIS de um
+  // boleto diferente — o condominio (~R$623) divide o "237" com outro boleto
+  // bem menor, e a escola do Luca (~R$546) divide o "001" com outro tambem
+  // menor. So o valor na faixa conhecida e classificado; o resto fica de fora
+  // em vez de herdar uma classificacao que pode nao ser dele (Juliane, 23/08).
+  {
+    padrao: /^PAG TIT INT 237$/i, valorEntre: [600, 650],
+    natureza: 'despesa', categoria: 'moradia', pessoa: 'Família',
+    descricao: 'Condomínio',
+  },
+  {
+    padrao: /^PAG TIT INT 001$/i, valorEntre: [500, 600],
+    natureza: 'despesa', categoria: 'educacao', pessoa: 'Luca',
+    descricao: 'Escola do Luca',
+  },
+  // "199060387000" já é o código do beneficiário em si (não do banco
+  // liquidante), então identifica só esse boleto — cobre o valor inteiro sem
+  // precisar de faixa.
+  {
+    padrao: /^PAG TIT INT 199060387000$/i,
+    natureza: 'despesa', categoria: 'educacao', pessoa: 'Valentina',
+    descricao: 'Escola da Valentina',
+  },
+
+  // --- pessoas fixas e negócio, do guia de classificação da Juliane (23/08) ---
+  {
+    padrao: /PIX (TRANSF|QRS) MARCOS/i, entrada: true,
+    natureza: 'receita', categoria: 'aluguel_recebido', pessoa: 'Juliane',
+    descricao: 'Aluguel de garagem',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) GUILHER/i,
+    natureza: 'despesa', categoria: 'transporte', pessoa: 'Luca',
+    descricao: 'Van escolar do Luca',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) EDILEIA/i,
+    natureza: 'despesa', categoria: 'moradia', pessoa: 'Família',
+    descricao: 'Aluguel da vaga de carro',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) Nilza/i,
+    natureza: 'despesa', categoria: 'servicos', pessoa: 'Família',
+    descricao: 'Faxina',
+  },
+  {
+    // Sem \b depois de APE: o Itau emenda a data no fim ("APE25/01"), e a
+    // fronteira de palavra nao existe entre letra e digito.
+    padrao: /PIX (TRANSF|QRS) APE(?![A-Z])/i,
+    natureza: 'despesa', categoria: 'casa', pessoa: 'Família',
+    descricao: 'Locker de guarda-móveis',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) STIMA/i,
+    natureza: 'despesa', categoria: 'contabilidade', pessoa: 'Benetti UP',
+    descricao: 'Contabilidade STIMA',
+  },
 ];
 
 function classificar(desc, valor) {
   const entrada = valor > 0;
+  const abs = Math.abs(valor);
   return REGRAS.find(r =>
-    r.padrao.test(desc) && (r.entrada === undefined || r.entrada === entrada)) || null;
+    r.padrao.test(desc)
+    && (r.entrada === undefined || r.entrada === entrada)
+    && (!r.valorEntre || (abs >= r.valorEntre[0] && abs <= r.valorEntre[1]))) || null;
 }
 
 // ---------- leitura ----------
