@@ -5,3 +5,6 @@ logs/
 .env
 .env.local
 .env.*.local
+
+# Backups gerados pelo atualizar.sh no VPS a cada deploy, não fazem parte do repositório
+data/backups-deploy/

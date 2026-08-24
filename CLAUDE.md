@@ -54,6 +54,30 @@ aquele número (`irParaLancamentos()` em `public/index.html`).
   clique da linha (`event.stopPropagation()`), senão o clique mais genérico
   sobrescreveria o filtro certo.
 
+### Edições na tela não estavam sendo salvas (24/08)
+A Juliane relatou: editou a categoria de um lançamento, rodou `deploy` depois,
+e a classificação tinha sumido. A causa real **não foi o deploy** — testei o
+`git pull --ff-only` do `atualizar.sh` e confirmei que ele recusa sobrescrever
+um arquivo com edição não commitada, não descarta silenciosamente.
+
+A causa de verdade: `server.js` usava `bodyParser.json()` sem `limit`, que
+por padrão aceita só **100kb** de corpo — e `financeiro.json` sozinho já
+passa de **2MB**. Todo `POST /api/dados` (que manda o arquivo inteiro) vinha
+voltando `413 Payload Too Large`, e `salvarDadosAutomatico()` só logava o
+erro no console, sem nenhum aviso na tela. **Toda edição feita pela interface
+nunca foi salva de verdade**, não só essa — o bug existe desde que o arquivo
+passou de 100kb. Corrigido com `bodyParser.json({ limit: '20mb' })`.
+
+Duas camadas a mais pra isso não voltar a acontecer em silêncio:
+- `salvarDadosAutomatico()` agora mostra um aviso visual — "✓ Salvo" (some
+  em 1,5s) ou, se falhar mesmo depois de uma tentativa automática de novo,
+  um aviso vermelho que fica na tela até ser clicado ou 15s passarem.
+- `atualizar.sh` agora faz backup de `financeiro.json` e dos outros arquivos
+  de dados editáveis pela tela (`financeiro/data/backups-deploy/`, fora do
+  git) antes de cada `git pull`, e imprime uma mensagem clara se o pull for
+  recusado — rede de segurança extra, caso a causa de uma próxima perda seja
+  outra.
+
 ### Edição em Lançamentos: seleção e replicação (24/08)
 Categoria e Pessoa deixaram de ser `prompt()` de texto livre — agora abrem um
 `<select>` (`editarCategoriaSelect()`, `editarPessoaSelect()`) com os valores

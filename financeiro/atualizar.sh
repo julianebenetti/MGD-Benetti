@@ -16,9 +16,29 @@ RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$RAIZ"
 
+# Backup dos dados vivos antes de qualquer coisa. financeiro.json e os
+# demais são editados direto pela Juliane na tela — git protege contra o
+# pull sobrescrever uma edição não commitada (ele recusa em vez de
+# descartar), mas isso só ajuda se o pull realmente rodar até o fim; se
+# travar no meio ou o erro passar despercebido, o backup é a rede de
+# segurança de qualquer jeito.
+mkdir -p financeiro/data/backups-deploy
+carimbo="$(date +%Y%m%d-%H%M%S)"
+for arq in financeiro.json configuracoes.json cargas.json apontamentos.json classificacoes.json; do
+  [ -f "financeiro/data/$arq" ] && cp "financeiro/data/$arq" "financeiro/data/backups-deploy/${arq%.json}-$carimbo.json"
+done
+
 echo "→ Buscando atualizações de $BRANCH"
 antes="$(git rev-parse HEAD)"
-git pull --ff-only origin "$BRANCH"
+if ! git pull --ff-only origin "$BRANCH"; then
+  echo
+  echo "→ O pull foi recusado. Normalmente é porque financeiro.json (ou outro"
+  echo "  arquivo de dados) tem uma edição feita pela tela que ainda não foi"
+  echo "  salva no repositório — o git está te protegendo, não descartou nada."
+  echo "  O backup de agora está em financeiro/data/backups-deploy/*-$carimbo.json"
+  echo "  se precisar conferir o que estava salvo antes desta tentativa."
+  exit 1
+fi
 depois="$(git rev-parse HEAD)"
 
 if [ "$antes" = "$depois" ]; then

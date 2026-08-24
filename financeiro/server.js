@@ -7,7 +7,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(bodyParser.json());
+// financeiro.json sozinho já passa de 2MB, bem acima do limite padrão do
+// body-parser (100kb) — todo POST de /api/dados vinha voltando 413 e a
+// edição feita na tela nunca era gravada, silenciosamente (Juliane, 24/08).
+app.use(bodyParser.json({ limit: '20mb' }));
 app.use(cors());
 app.use(express.static('public'));
 
