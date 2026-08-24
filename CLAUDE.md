@@ -54,6 +54,21 @@ aquele número (`irParaLancamentos()` em `public/index.html`).
   clique da linha (`event.stopPropagation()`), senão o clique mais genérico
   sobrescreveria o filtro certo.
 
+### Edição em Lançamentos: seleção e replicação (24/08)
+Categoria e Pessoa deixaram de ser `prompt()` de texto livre — agora abrem um
+`<select>` (`editarCategoriaSelect()`, `editarPessoaSelect()`) com os valores
+que já existem nos dados (mais "+ Outro..." pra criar um novo). Antes exigia
+digitar o valor exato de cabeça, sem nenhuma lista.
+
+Editar **categoria, pessoa ou Fixa/Variável** de um lançamento agora pergunta
+se deve replicar a mudança pros outros lançamentos com a **mesma descrição**
+(`aplicarEdicaoComReplicacao()`, comparação por descrição normalizada —
+minúsculo, espaços colapsados). Fica sempre atrás de um `confirm()`: nunca
+aplica em lote sem a Juliane autorizar antes, e o texto do diálogo já mostra
+quantos lançamentos seriam afetados. Não vale para os outros campos editáveis
+(data, valor, parcela etc.) — esses são fato de cada lançamento, replicar
+seria errado.
+
 ### Fixa x Variável e o mês expansível no Fluxo de Caixa (24/08)
 Toda despesa (`natureza: despesa`) ganhou um campo editável `fixa_variavel`
 (`fixa` ou `variavel`), coluna própria em Lançamentos — clicar no selo

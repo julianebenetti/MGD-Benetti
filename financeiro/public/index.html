@@ -2275,6 +2275,46 @@
       return ehFixa(txn) ? 'fixa' : 'variavel';
     }
 
+    const normalizarDescricao = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+    // Valor "efetivo" de um campo classificatório: pra fixa_variavel isso
+    // considera o palpite automático quando não há valor gravado, senão a
+    // comparação com outros lançamentos sempre acharia diferença onde não há.
+    function valorEfetivoDoCampo(t, campo) {
+      return campo === 'fixa_variavel' ? classificacaoFixaVariavel(t) : t[campo];
+    }
+
+    // Aplica uma edição classificatória (categoria, pessoa, fixa/variável) e,
+    // se houver outros lançamentos com a mesma descrição em valor diferente,
+    // pergunta antes de replicar — nunca aplica em lote sem confirmar
+    // (Juliane, 24/08).
+    function aplicarEdicaoComReplicacao(txn, campo, novoValor) {
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      const alvo = normalizarDescricao(txn.descricao);
+      const irmaos = alvo
+        ? transacoes.filter(t => t.id !== txn.id
+            && normalizarDescricao(t.descricao) === alvo
+            && valorEfetivoDoCampo(t, campo) !== novoValor)
+        : [];
+
+      txn[campo] = novoValor;
+
+      if (irmaos.length) {
+        const nomeCampo = { categoria: 'categoria', pessoa: 'pessoa', fixa_variavel: 'Fixa/Variável' }[campo] || campo;
+        const rotulo = campo === 'categoria' ? rotuloCategoria(novoValor)
+                      : campo === 'fixa_variavel' ? (novoValor === 'fixa' ? 'Fixa' : 'Variável')
+                      : novoValor;
+        const replicar = confirm(
+          `Encontrei mais ${irmaos.length} lançamento(s) com a mesma descrição\n"${txn.descricao.trim()}".\n\n` +
+          `Aplicar ${nomeCampo} = ${rotulo} neles também?`
+        );
+        if (replicar) irmaos.forEach(t => { t[campo] = novoValor; });
+      }
+
+      salvarDadosAutomatico();
+      exibirTransacoes();
+    }
+
     function alternarFixaVariavel(txnId) {
       const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
       const txn = transacoes.find(t => t.id === txnId);
@@ -2282,9 +2322,8 @@
         console.error('Transacao nao encontrada:', txnId);
         return;
       }
-      txn.fixa_variavel = classificacaoFixaVariavel(txn) === 'fixa' ? 'variavel' : 'fixa';
-      exibirTransacoes();
-      salvarDadosAutomatico();
+      const novoValor = classificacaoFixaVariavel(txn) === 'fixa' ? 'variavel' : 'fixa';
+      aplicarEdicaoComReplicacao(txn, 'fixa_variavel', novoValor);
     }
 
     // Preenche um <select> de meses mantendo a escolha atual quando possível.
@@ -4352,9 +4391,7 @@
           novoValor = novoValor.trim();
           if (campo === 'categoria') novoValor = novoValor.toLowerCase().replace(/\s+/g, '_');
         }
-        txn[campo] = novoValor;
-        salvarDadosAutomatico();
-        exibirTransacoes();
+        aplicarEdicaoComReplicacao(txn, campo, novoValor);
       };
 
       select.addEventListener('click', e => e.stopPropagation());
