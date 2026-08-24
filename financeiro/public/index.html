@@ -4229,17 +4229,11 @@
         const entrada = txn.tipo === 'entrada' ? txn.valor : '';
         const saida = txn.tipo === 'saida' ? txn.valor : '';
 
-        // Origem (Cartão ou Conta)
-        let origemFormatada = txn.conta_origem || 'N/A';
-        if (origemFormatada.toLowerCase().includes('mastercard') || origemFormatada.toLowerCase().includes('cartão')) {
-          origemFormatada = `Mastercard •••• ${origemFormatada.slice(-4)}`;
-        } else if (origemFormatada.toLowerCase().includes('visa')) {
-          origemFormatada = `Visa •••• ${origemFormatada.slice(-4)}`;
-        } else if (origemFormatada.toLowerCase().includes('elo')) {
-          origemFormatada = `Elo •••• ${origemFormatada.slice(-4)}`;
-        } else if (origemFormatada.toLowerCase().includes('itau') || origemFormatada.toLowerCase().includes('bradesco')) {
-          origemFormatada = `${origemFormatada}`;
-        }
+        // Origem (Cartão ou Conta): cartão usa o mesmo rótulo "número-nome"
+        // (0442-Infinite, 3794-Azul, 4846-Black) já usado em Cartão & Faturas
+        // e Dívidas, em vez de mascarar com "Mastercard ••••". Extrato e
+        // holerite não têm cartao_final, e mostram a conta como está.
+        const origemFormatada = txn.cartao_final ? nomeDoCartao(txn.cartao_final) : (txn.conta_origem || 'N/A');
 
         // Mês de referência
         const mesRef = txn.mes_referencia || '—';
