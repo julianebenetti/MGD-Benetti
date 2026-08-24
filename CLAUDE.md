@@ -378,6 +378,12 @@ Regras do guia de classificação compilado em 23/08 (conta corrente e fatura):
   de negócio, não estudo pessoal da Juliane. **Kiwify Afiliados** e
   **Kiwify\*InstaMagic** → `ferramentas` / **Benetti UP** — ferramentas de
   trabalho, não curso.
+- **Toda categoria `educacao_profissional` é da Benetti UP** (Juliane, 24/08)
+  — não só o MgdMentori, generalizado pra qualquer curso/mentoria/treinamento
+  (Kiwify, Hotmart, Udemy, Alura etc.): é investimento no negócio, nunca
+  estudo pessoal dela. 48 lançamentos corrigidos de uma vez
+  (`node scripts/classificar.js aplicar --aplicar`), 41 que ainda estavam em
+  Juliane.
 - **Uniaosocorro, EC\*2Produtoss** → roupas parceladas, mantido como estava
   (Juliane/pessoal e Família/compras_diversas) para não inventar pessoa que o
   guia não confirmou.

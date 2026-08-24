@@ -82,7 +82,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Iafotosrea     Campo Grande  Ms",
         "valor": 6.95,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -106,7 +106,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0238",
         "data_compra_original": "2025-06-30",
         "valor_total_exato": false,
@@ -193,7 +193,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Packexpres     Sao Paulo     Bra",
         "valor": 25.9,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -217,7 +217,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0236",
         "data_compra_original": "2025-08-20",
         "valor_total_exato": false,
@@ -230,7 +230,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Aseday    Belford Roxo  Bra",
         "valor": 40.85,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -254,7 +254,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0234",
         "data_compra_original": "2025-09-30",
         "valor_total_exato": false,
@@ -415,7 +415,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Blackase  Belford Roxo  Bra",
         "valor": 67.23,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -439,7 +439,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0230",
         "data_compra_original": "2025-11-06",
         "valor_total_exato": false,
@@ -2187,7 +2187,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mentoescal",
         "valor": 187.64,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -2211,7 +2211,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0044",
         "data_compra_original": "2025-12-06",
         "valor_total_exato": true,
@@ -3065,7 +3065,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Automatisa     Sao Paulo     Br",
         "valor": 107,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -3089,7 +3089,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "7147",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jan26_0027",
@@ -3131,7 +3131,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*suportemar      Cerquilho     Br",
         "valor": 147,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -3155,7 +3155,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "7147",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jan26_0004",
@@ -7075,7 +7075,7 @@
         "natureza": "estorno",
         "descricao": "Cancelamento De Compra - Kiwify *Codigojornbelo Horizontbra",
         "valor": -147,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -7099,7 +7099,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jan26_0121",
@@ -7108,7 +7108,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Codigojornbelo Horizontbra",
         "valor": 147,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -7132,7 +7132,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jan26_0122",
@@ -7690,7 +7690,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Metodovsvarmacao Dos Bbra",
         "valor": 185.25,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -7714,7 +7714,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jan26_0100",
@@ -10114,7 +10114,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Blackase  Belford Roxo  Bra",
         "valor": 67.23,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -10138,7 +10138,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0230",
         "data_compra_original": "2025-11-06",
         "valor_total_exato": false,
@@ -10484,7 +10484,7 @@
         "natureza": "estorno",
         "descricao": "Kiwify*mentoescal      Belford Roxo  Br",
         "valor": -0.2,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -10508,7 +10508,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Fev26_0282",
@@ -10517,7 +10517,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mentoescal Belford Roxo  Br",
         "valor": 187.64,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -10541,7 +10541,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0044",
         "data_compra_original": "2025-12-06",
         "valor_total_exato": true,
@@ -11172,7 +11172,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Packpapela     Franca        Br",
         "valor": 17,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -11196,7 +11196,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "5813",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Fev26_0269",
@@ -14931,7 +14931,7 @@
         "natureza": "estorno",
         "descricao": "Cancelamento De Compra - Kiwify*criativosmcampinasbra",
         "valor": -47,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -14955,7 +14955,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Fev26_0328",
@@ -14964,7 +14964,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*criativosmcampinasbra",
         "valor": 47,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -14988,7 +14988,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Fev26_0329",
@@ -15146,7 +15146,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*criativosmcampinasbra",
         "valor": 37.13,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -15170,7 +15170,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Fev26_0324",
@@ -18272,7 +18272,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mentoescal Belford Roxo  Br",
         "valor": 187.64,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -18296,7 +18296,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0044",
         "data_compra_original": "2025-12-06",
         "valor_total_exato": true,
@@ -19087,7 +19087,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Trafronald     Florianopolis Br",
         "valor": 497,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -19111,7 +19111,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mar26_0465",
@@ -20724,7 +20724,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Colecaodigcampos Dos Gobra",
         "valor": 39.9,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -20748,7 +20748,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mar26_0432",
@@ -20757,7 +20757,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Promosapp Joao Pessoa   Br",
         "valor": 127,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -20781,7 +20781,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mar26_0433",
@@ -26564,7 +26564,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mentoescal Belford Roxo  Br",
         "valor": 187.64,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -26588,7 +26588,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0044",
         "data_compra_original": "2025-12-06",
         "valor_total_exato": true,
@@ -26959,7 +26959,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mgdvita         Caetite       Br",
         "valor": 994,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -26983,7 +26983,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Abr26_0657",
@@ -29379,7 +29379,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Promosapp Joao Pessoa   Br",
         "valor": 127,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -29403,7 +29403,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Abr26_0625",
@@ -34938,7 +34938,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mentoescal Belford Roxo  Br",
         "valor": 187.64,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -34962,7 +34962,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0044",
         "data_compra_original": "2025-12-06",
         "valor_total_exato": true,
@@ -35914,7 +35914,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Metodocrea     Taboao Da Ser Br",
         "valor": 127,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -35938,7 +35938,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mai26_0927",
@@ -36685,7 +36685,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify      *Promosapp Joao Pessoa   Br",
         "valor": 127,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -36709,7 +36709,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mai26_0827",
@@ -41297,7 +41297,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mentoescal Belford Roxo  Br",
         "valor": 187.64,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -41321,7 +41321,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9612",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jan26_0044",
         "data_compra_original": "2025-12-06",
         "valor_total_exato": true,
@@ -42100,7 +42100,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Lidereinfo",
         "valor": 20.49,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -42124,7 +42124,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jun26_1084",
         "data_compra_original": "2026-05-09",
         "valor_total_exato": false,
@@ -42310,7 +42310,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Videosafil     Franca        Br",
         "valor": 26.99,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -42334,7 +42334,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jun26_1076",
@@ -42409,7 +42409,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*desafiosv       Itanhaem      Br",
         "valor": 34.9,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -42433,7 +42433,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jun26_1079",
@@ -42442,7 +42442,7 @@
         "natureza": "estorno",
         "descricao": "Kiwify*desafiosv       Itanhaem      Br",
         "valor": -34.9,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -42466,7 +42466,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jun26_1075",
@@ -42706,7 +42706,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*desafiosv       Itanhaem      Br",
         "valor": 32.9,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -42730,7 +42730,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jun26_1069",
@@ -42739,7 +42739,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*mgdash          Caetite       Br",
         "valor": 94,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -42763,7 +42763,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jun26_1070",
@@ -43036,7 +43036,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*promosapp       Joao Pessoa   Br",
         "valor": 127,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -43060,7 +43060,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jun26_1037",
@@ -47181,7 +47181,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Lidereinfoitanhaem      Br",
         "valor": 20.49,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -47205,7 +47205,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jun26_1084",
         "data_compra_original": "2026-05-09",
         "valor_total_exato": false,
@@ -47218,7 +47218,7 @@
         "natureza": "estorno",
         "descricao": "Kiwify *Lidereinfo     Itanhaem      Br",
         "valor": -0.25,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -47242,7 +47242,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jul26_1237",
@@ -53268,7 +53268,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Lidereinfo     Itanhaem      Br",
         "valor": 20.49,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -53292,7 +53292,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jun26_1084",
         "data_compra_original": "2026-05-09",
         "valor_total_exato": false,
@@ -54652,7 +54652,7 @@
         "natureza": "estorno",
         "descricao": "Cancelamento De Compra - Kiwify*comissoeslaltosbr",
         "valor": -67,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -54676,7 +54676,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "6417",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1367",
@@ -54685,7 +54685,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify*comissoeslaltosbr",
         "valor": 67,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -54709,7 +54709,7 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "6417",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Ago26_1255",
@@ -58023,7 +58023,7 @@
         "natureza": "despesa",
         "descricao": "Kiwify *Lidereinfo     Itanhaem      Br",
         "valor": 20.49,
-        "pessoa": "Juliane",
+        "pessoa": "Benetti UP",
         "categoria": "educacao_profissional",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Infinite Visa - final 0442",
@@ -58047,7 +58047,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal",
+        "ambito": "empresa",
         "id_compra": "compra_txn_Jun26_1084",
         "data_compra_original": "2026-05-09",
         "valor_total_exato": false,
