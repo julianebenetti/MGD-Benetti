@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787549943,
-  "updated_at_br": "24/08/2026 02:32",
+  "updated_at": 1787558644,
+  "updated_at_br": "24/08/2026 04:57",
   "period_days": 90,
   "total_orders": 7807,
   "total_conversions": 7446,
@@ -18457,7 +18457,7 @@
     },
     {
       "ID do pedido": "260814C24U8911",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-14 13:50:27",
       "Sub_id1": "29Jul26VIPtapetehigienicovs1",
       "Valor de Compra(R$)": "56.9",
@@ -18469,7 +18469,7 @@
       "Comissao total do pedido(R$)": "2.276",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapete Higiênico para Cães Smart 50 Unidades (60x60) Alta absorção neutraliza odores secagem rápida anti-vazamento manta",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58262702008",
       "ID da loja": "1162580452",
       "Nome da loja": "Orizon Global",
@@ -18477,7 +18477,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240414627140893",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-14"
     },
     {
