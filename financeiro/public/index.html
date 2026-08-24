@@ -2266,6 +2266,27 @@
       return CATEGORIAS_FIXAS.includes(txn.categoria) || txn.eh_parcelada;
     }
 
+    // Classificação editável de Fixa/Variável para despesas. Começa com o
+    // mesmo palpite que já existia (categoria fixa ou parcelada), mas fica
+    // gravada por lançamento assim que a Juliane clica pra corrigir — o
+    // campo explícito sempre vence sobre o palpite (Juliane, 24/08).
+    function classificacaoFixaVariavel(txn) {
+      if (txn.fixa_variavel === 'fixa' || txn.fixa_variavel === 'variavel') return txn.fixa_variavel;
+      return ehFixa(txn) ? 'fixa' : 'variavel';
+    }
+
+    function alternarFixaVariavel(txnId) {
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      const txn = transacoes.find(t => t.id === txnId);
+      if (!txn) {
+        console.error('Transacao nao encontrada:', txnId);
+        return;
+      }
+      txn.fixa_variavel = classificacaoFixaVariavel(txn) === 'fixa' ? 'variavel' : 'fixa';
+      exibirTransacoes();
+      salvarDadosAutomatico();
+    }
+
     // Preenche um <select> de meses mantendo a escolha atual quando possível.
     function preencherSelectMeses(id, incluirTodos) {
       const select = document.getElementById(id);
@@ -3282,7 +3303,11 @@
       const doMes = mv => todas.filter(t => t.mes_vencimento === mv);
       const despesaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0).reduce((s, t) => s + t.valor, 0) * 100) / 100;
       const receitaDoMes = ts => Math.round(ts.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0) * 100) / 100;
-      const avulsaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0 && !t.eh_parcelada).reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      // O avulso (nao parcelado) se separa em fixo e variavel pela classificacao
+      // de cada lancamento (classificacaoFixaVariavel) — cada balde projeta pela
+      // sua propria media, em vez de uma media unica misturando os dois.
+      const avulsaFixaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0 && !t.eh_parcelada && classificacaoFixaVariavel(t) === 'fixa').reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      const avulsaVariavelDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0 && !t.eh_parcelada && classificacaoFixaVariavel(t) === 'variavel').reduce((s, t) => s + t.valor, 0) * 100) / 100;
       const parceladaDoMes = ts => Math.round(ts.filter(t => t.natureza === 'despesa' && t.valor > 0 && t.eh_parcelada).reduce((s, t) => s + t.valor, 0) * 100) / 100;
       // Parcela de divida (consignado, refinanciamento) nao e ehConsumo — de
       // proposito, para nao contar como gasto — mas quando ja esta lancada num
@@ -3298,7 +3323,8 @@
           temDados: ts.length > 0,
           receitaReal: receitaDoMes(ts),
           despesaReal: despesaDoMes(ts),
-          avulsaReal: avulsaDoMes(ts),
+          avulsaFixaReal: avulsaFixaDoMes(ts),
+          avulsaVariavelReal: avulsaVariavelDoMes(ts),
           parceladaReal: parceladaDoMes(ts),
           dividaReal: dividaDoMes(ts),
         };
@@ -3310,7 +3336,8 @@
         : 0;
 
       const mediaReceita = media('receitaReal');
-      const mediaAvulsa = media('avulsaReal');
+      const mediaAvulsaFixa = media('avulsaFixaReal');
+      const mediaAvulsaVariavel = media('avulsaVariavelReal');
       const mediaDespesaTotal = media('despesaReal');
 
       // Compromisso conhecido: parcela de divida e de compra no cartao que ainda
@@ -3333,22 +3360,114 @@
         const compromisso = Math.round(((compromissoPorMes[l.mes] || 0) + l.parceladaReal + l.dividaReal) * 100) / 100;
         // O que ja apareceu na fatura aberta deste mes e piso, nao substitui a
         // estimativa: fatura aberta so tem o que ja aconteceu ate a data do
-        // arquivo, o mes continua enchendo.
-        const estimativa = Math.max(mediaAvulsa, l.avulsaReal);
+        // arquivo, o mes continua enchendo. O piso vale por balde — fixo e
+        // variavel, separados — senao um gasto variavel alto no mes falsamente
+        // satisfaria o piso do fixo, ou vice-versa.
+        const estimativaFixa = Math.max(mediaAvulsaFixa, l.avulsaFixaReal);
+        const estimativaVariavel = Math.max(mediaAvulsaVariavel, l.avulsaVariavelReal);
+        const estimativa = Math.round((estimativaFixa + estimativaVariavel) * 100) / 100;
         const despesa = Math.round((compromisso + estimativa) * 100) / 100;
         const receita = Math.max(mediaReceita, l.receitaReal);
 
         return { ...l, situacao: 'previsto', receita, despesa,
-                  saldo: Math.round((receita - despesa) * 100) / 100, compromisso, estimativa };
+                  saldo: Math.round((receita - despesa) * 100) / 100, compromisso,
+                  estimativa, estimativaFixa, estimativaVariavel };
       });
 
       const aConfirmar = despesaDoMes(doMes(MES_A_CONFIRMAR));
 
-      return { linhas, mediaReceita, mediaAvulsa, mediaDespesaTotal, aConfirmar, ano };
+      return { linhas, mediaReceita, mediaAvulsaFixa, mediaAvulsaVariavel, mediaDespesaTotal, aConfirmar, ano };
+    }
+
+    function agruparPorCategoria(ts) {
+      const g = {};
+      ts.forEach(t => {
+        const label = rotuloCategoria(t.categoria);
+        if (!g[label]) g[label] = { label, raw: t.categoria, total: 0, n: 0 };
+        g[label].total += t.valor;
+        g[label].n++;
+      });
+      return Object.values(g).sort((a, b) => b.total - a.total);
+    }
+
+    // Composicao de um mes ja realizado: agrupa por categoria, e a despesa
+    // ainda se separa em fixa/variavel (mesma classificacao de Lancamentos),
+    // pra bater com o que a Juliane esta acostumada a olhar la.
+    function detalheFluxoRealizado(l, tsDoMes) {
+      const receitaTs = tsDoMes.filter(t => t.natureza === 'receita');
+      const despesaTs = tsDoMes.filter(t => ehConsumo(t) && t.valor > 0);
+      const fixaTs = despesaTs.filter(t => classificacaoFixaVariavel(t) === 'fixa');
+      const variavelTs = despesaTs.filter(t => classificacaoFixaVariavel(t) === 'variavel');
+
+      const tabela = (titulo, ts, extra) => {
+        const grupos = agruparPorCategoria(ts);
+        if (!grupos.length) return '';
+        const total = grupos.reduce((s, g) => s + g.total, 0);
+        return `
+          <div style="margin-bottom:12px">
+            <b>${titulo}</b> — ${moeda(total)}
+            <table class="tabela-dados" style="margin-top:4px">
+              <tbody>
+                ${grupos.map(g => `
+                  <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ mes_venc: l.mes, categoria: g.raw, ...extra })})' title="Ver estes lançamentos">
+                    <td>${g.label}</td><td class="num">${g.n}x</td><td class="num">${moeda(g.total)}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>`;
+      };
+
+      return `
+        <div style="display:flex; gap:28px; flex-wrap:wrap; padding:4px 0">
+          <div style="flex:1; min-width:220px">${tabela('Receita', receitaTs, { natureza: 'receita' })
+            || '<span class="texto-suave">sem receita neste mês</span>'}</div>
+          <div style="flex:1; min-width:220px">
+            ${tabela('Despesa fixa', fixaTs, { natureza: 'despesa' })}
+            ${tabela('Despesa variável', variavelTs, { natureza: 'despesa' })}
+          </div>
+        </div>`;
+    }
+
+    // Composicao de um mes previsto: o que ja se sabe (compromisso, um a um)
+    // mais os dois baldes de estimativa. "A vencer" nao e lancamento de
+    // verdade ainda, entao essas linhas nao abrem em Lancamentos.
+    function detalheFluxoPrevisto(l) {
+      const comprometidos = [
+        ...contratosDeDivida().flatMap(c => c.aVencer.filter(p => p.mes === l.mes).map(p => ({ desc: c.nome, valor: p.valor }))),
+        ...comprasParceladasAVencer().filter(p => p.mes === l.mes).map(p => ({ desc: p.descricao, valor: p.valor })),
+      ].sort((a, b) => b.valor - a.valor);
+
+      return `
+        <div style="display:flex; gap:28px; flex-wrap:wrap; padding:4px 0">
+          <div style="flex:1; min-width:240px">
+            <b>Compromisso</b> — ${moeda(l.compromisso)}
+            <div class="kpi-sub" style="margin-bottom:6px">Dívida e parcela de cartão já contratada — projeção, ainda não é lançamento.</div>
+            ${comprometidos.length ? `
+              <table class="tabela-dados">
+                <tbody>${comprometidos.map(c => `<tr><td>${c.desc}</td><td class="num">${moeda(c.valor)}</td></tr>`).join('')}</tbody>
+              </table>` : '<span class="texto-suave">nenhum compromisso conhecido para este mês</span>'}
+          </div>
+          <div style="flex:1; min-width:200px">
+            <b>Estimativa fixa</b> — ${moeda(l.estimativaFixa)}
+            <div class="kpi-sub" style="margin-bottom:12px">Média do gasto fixo avulso nos meses já realizados.</div>
+            <b>Estimativa variável</b> — ${moeda(l.estimativaVariavel)}
+            <div class="kpi-sub">Média do gasto variável avulso nos meses já realizados.</div>
+          </div>
+        </div>`;
+    }
+
+    function toggleFluxoDetalhe(chave) {
+      const linha = document.getElementById('fluxo-detalhe-' + chave);
+      const seta = document.getElementById('fluxo-seta-' + chave);
+      if (!linha) return;
+      const abrindo = linha.style.display === 'none';
+      linha.style.display = abrindo ? 'table-row' : 'none';
+      if (seta) seta.textContent = abrindo ? '▾' : '▸';
     }
 
     function blocoFluxoDeCaixa() {
-      const { linhas, mediaReceita, mediaAvulsa, aConfirmar, ano } = dadosFluxoDeCaixa();
+      const { linhas, mediaReceita, mediaAvulsaFixa, mediaAvulsaVariavel, aConfirmar, ano } = dadosFluxoDeCaixa();
+      const todasDoAmbito = ((dadosGlobais.fluxo_mensal || {}).transacoes || []).filter(noAmbito);
 
       const passados = linhas.filter(l => l.situacao === 'realizado' && l.temDados);
       const futuros = linhas.filter(l => l.situacao === 'previsto');
@@ -3363,16 +3482,18 @@
           Meses que já aconteceram mostram o que de fato entrou e saiu, comparado com a
           <b>média do próprio ano</b> — não há orçamento registrado, então a média é a referência.
           Meses futuros mostram duas coisas separadas: <b>compromisso</b> (parcela de dívida e de
-          cartão já contratada, valor exato) e <b>estimativa</b> (o resto do gasto, pela média do que
-          já aconteceu). A receita futura também é estimativa — inclui meses com PLR e adiantamento,
-          que puxam a média para cima.
+          cartão já contratada, valor exato) e <b>estimativa</b> — que agora se divide em
+          <b>fixa</b> e <b>variável</b>, conforme a classificação de cada lançamento em Lançamentos.
+          A receita futura também é estimativa — inclui meses com PLR e adiantamento, que puxam a
+          média para cima. Clique no <b>mês</b> pra ver o que compõe aquele saldo.
         </div>
 
         <div class="grid">
           ${cartaoKpi('Saldo até hoje', moeda(saldoAteAgora), `${passados.length} meses realizados`, saldoAteAgora >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
           ${cartaoKpi('Saldo projetado no resto do ano', moeda(saldoProjetadoRestante), `${futuros.length} meses previstos`, saldoProjetadoRestante >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
           ${cartaoKpi('Compromisso já contratado', moeda(compromissoRestante), 'dívida e parcelas de cartão a vencer', 'var(--accent-yellow)')}
-          ${cartaoKpi('Estimativa de gasto avulso/mês', moeda(mediaAvulsa), 'média dos meses realizados', 'var(--accent-yellow)')}
+          ${cartaoKpi('Gasto fixo estimado/mês', moeda(mediaAvulsaFixa), 'média dos meses realizados', 'var(--accent-blue)')}
+          ${cartaoKpi('Gasto variável estimado/mês', moeda(mediaAvulsaVariavel), 'média dos meses realizados', 'var(--accent-yellow)')}
         </div>
 
         <div class="card full-width" style="overflow-x:auto">
@@ -3383,6 +3504,7 @@
             </thead>
             <tbody>
               ${linhas.map(l => {
+                const chave = l.mes.replace('/', '_');
                 if (l.situacao === 'realizado' && !l.temDados) {
                   return `
                     <tr>
@@ -3394,6 +3516,7 @@
                       <td class="kpi-sub">nenhuma fatura, holerite ou extrato deste mês foi importado</td>
                     </tr>`;
                 }
+                const mesClicavel = `<td class="clicavel" onclick="toggleFluxoDetalhe('${chave}')" title="Ver o que compõe este mês">${l.mes} <span id="fluxo-seta-${chave}">▸</span></td>`;
                 if (l.situacao === 'realizado') {
                   const cor = l.saldo >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
                   const comparacao = l.acimaDaMedia === null ? ''
@@ -3405,23 +3528,33 @@
                   const ir = f => `onclick='irParaLancamentos(${JSON.stringify(f)})' title="Ver estes lançamentos"`;
                   return `
                     <tr>
-                      <td>${l.mes}</td>
+                      ${mesClicavel}
                       <td><span style="color: var(--accent-green)">realizado</span></td>
                       <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'receita' })}>${moeda(l.receita)}</td>
                       <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'despesa' })}>${moeda(l.despesa)}</td>
                       <td class="num clicavel" style="color:${cor}" ${ir({ mes_venc: l.mes })}>${moeda(l.saldo)}</td>
                       <td>${comparacao}</td>
+                    </tr>
+                    <tr id="fluxo-detalhe-${chave}" style="display:none">
+                      <td colspan="6" style="background:var(--bg-tertiary)">
+                        ${detalheFluxoRealizado(l, todasDoAmbito.filter(t => t.mes_vencimento === l.mes))}
+                      </td>
                     </tr>`;
                 }
                 const ir = f => `onclick='irParaLancamentos(${JSON.stringify(f)})' title="Ver o que já está lançado neste mês"`;
                 return `
                   <tr>
-                    <td>${l.mes}</td>
+                    ${mesClicavel}
                     <td><span style="color: var(--accent-yellow)">previsto</span></td>
                     <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'receita' })}>${moeda(l.receita)}</td>
                     <td class="num clicavel" ${ir({ mes_venc: l.mes, natureza: 'despesa' })}>${moeda(l.despesa)}</td>
                     <td class="num clicavel" ${ir({ mes_venc: l.mes })}>${moeda(l.saldo)}</td>
-                    <td class="kpi-sub">compromisso ${moeda(l.compromisso)} + estimativa ${moeda(l.estimativa)}</td>
+                    <td class="kpi-sub">compromisso ${moeda(l.compromisso)} + fixo ${moeda(l.estimativaFixa)} + variável ${moeda(l.estimativaVariavel)}</td>
+                  </tr>
+                  <tr id="fluxo-detalhe-${chave}" style="display:none">
+                    <td colspan="6" style="background:var(--bg-tertiary)">
+                      ${detalheFluxoPrevisto(l)}
+                    </td>
                   </tr>`;
               }).join('')}
             </tbody>
@@ -4082,6 +4215,7 @@
               <th>💳 Mês Fatura</th>
               <th>Tipo</th>
               <th>Parcela</th>
+              <th>Fixo/Var</th>
               <th>Valor</th>
             </tr>
           </thead>
@@ -4121,6 +4255,16 @@
 
         const cargaIdExibicao = txn.carga_id ? `<span style="font-size: 11px; color: var(--text-secondary);">${txn.carga_id.substring(0, 12)}...</span>` : '<span style="color: var(--text-secondary);">—</span>';
 
+        // Fixa/Variável só faz sentido para despesa de consumo; o resto (receita,
+        // dívida parcelada, transferência etc.) mostra "—", sem clique.
+        const fixaVar = txn.natureza === 'despesa'
+          ? (() => {
+              const c = classificacaoFixaVariavel(txn);
+              const cor = c === 'fixa' ? 'var(--accent-blue)' : 'var(--accent-yellow)';
+              return `<span class="selo" style="background:${cor};color:#fff;cursor:pointer" onclick="event.stopPropagation(); alternarFixaVariavel('${txn.id}')" title="Clique para alternar Fixa/Variável">${c === 'fixa' ? '📌 Fixa' : '〰️ Variável'}</span>`;
+            })()
+          : '<span class="texto-suave">—</span>';
+
         html += `
           <tr>
             <td class="transaction-date transaction-editable" onclick="editarCampo('${txn.id}', 'data')" title="Clique para editar">${dataFormatada}</td>
@@ -4132,6 +4276,7 @@
             <td style="font-size: 12px;" title="${txn.mes_vencimento_confiavel === false ? 'Mês da fatura precisa ser confirmado na fatura original' : 'Mês em que este valor sai da conta'}">${txn.mes_vencimento || '—'}${txn.mes_vencimento_confiavel === false ? ' <span style="color: var(--accent-yellow);">⚠</span>' : ''}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'parcela')" title="Clique para editar">${parcela}</td>
+            <td style="font-size: 12px; text-align: center;">${fixaVar}</td>
 
             <td class="transaction-value ${txn.tipo === 'entrada' ? 'positive' : 'negative'} transaction-editable" onclick="editarCampo('${txn.id}', 'valor')" title="Clique para editar">${txn.valor ? (txn.tipo === 'entrada' ? '+' : '-') + ' R$ ' + txn.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '-'}</td>
           </tr>

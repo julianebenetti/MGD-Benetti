@@ -54,6 +54,32 @@ aquele número (`irParaLancamentos()` em `public/index.html`).
   clique da linha (`event.stopPropagation()`), senão o clique mais genérico
   sobrescreveria o filtro certo.
 
+### Fixa x Variável e o mês expansível no Fluxo de Caixa (24/08)
+Toda despesa (`natureza: despesa`) ganhou um campo editável `fixa_variavel`
+(`fixa` ou `variavel`), coluna própria em Lançamentos — clicar no selo
+alterna entre os dois (`alternarFixaVariavel()`).
+
+- **O campo começa com um palpite, não fica em branco.** Sem valor gravado,
+  `classificacaoFixaVariavel()` cai no mesmo critério que já existia
+  (`ehFixa()`: categoria fixa — assinatura, moradia, educação, utilidades,
+  serviços, ferramentas — ou parcelada) antes de perguntar à Juliane. O
+  campo explícito sempre vence sobre o palpite assim que ela clica.
+- **Compra parcelada conta como fixa** mesmo em categoria variável (ex:
+  viagem parcelada) — o valor mensal é conhecido e se repete, que é o
+  sentido de "fixa" aqui: previsibilidade de caixa, não necessidade do gasto.
+- **A projeção do Fluxo de Caixa passou a usar essa classificação.** Antes a
+  estimativa de mês futuro era uma média única do gasto avulso (não
+  parcelado). Agora se divide em `estimativaFixa` e `estimativaVariavel`,
+  cada uma com sua própria média histórica e seu próprio piso (`Math.max`
+  contra o que já foi lançado numa fatura aberta) — separados, para um gasto
+  variável alto no mês não satisfazer artificialmente o piso do fixo.
+- **Clicar no mês, na aba Fluxo de Caixa, expande a composição do saldo**
+  (`toggleFluxoDetalhe()`): mês realizado mostra receita e despesa agrupadas
+  por categoria (despesa ainda separada em fixa/variável); mês previsto
+  mostra o compromisso item a item (cada parcela de dívida/cartão a vencer)
+  mais as duas estimativas. Linha "a vencer" no compromisso não abre em
+  Lançamentos — é projeção, ainda não existe como lançamento.
+
 ### Pessoal x empresa
 A Juliane tem a **Benetti UP**, empresa de marketing digital, e as contas ainda
 não estão separadas na prática — o mesmo cartão traz gasto da casa e da empresa.
