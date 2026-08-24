@@ -4269,9 +4269,9 @@
           <tr>
             <td class="transaction-date transaction-editable" onclick="editarCampo('${txn.id}', 'data')" title="Clique para editar">${dataFormatada}</td>
             <td class="transaction-description transaction-editable" onclick="editarCampo('${txn.id}', 'descricao')" title="Clique para editar">${txn.descricao}</td>
-            <td class="transaction-editable" onclick="editarCampo('${txn.id}', 'pessoa')" title="Clique para editar"><span class="transaction-person">${txn.pessoa}</span></td>
+            <td class="transaction-editable" onclick="editarPessoaSelect('${txn.id}', this)" title="Clique para escolher"><span class="transaction-person">${txn.pessoa}</span></td>
             <td class="transaction-account transaction-editable" onclick="editarCampo('${txn.id}', 'conta_origem')" title="Clique para editar">${origemFormatada}</td>
-            <td class="transaction-editable" onclick="editarCampo('${txn.id}', 'categoria')" title="Clique para editar"><span class="transaction-category">${txn.categoria}</span></td>
+            <td class="transaction-editable" onclick="editarCategoriaSelect('${txn.id}', this)" title="Clique para escolher"><span class="transaction-category">${txn.categoria}</span></td>
             <td style="font-size: 12px;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'mes_referencia')" title="Clique para editar">${mesRef}</td>
             <td style="font-size: 12px;" title="${txn.mes_vencimento_confiavel === false ? 'Mês da fatura precisa ser confirmado na fatura original' : 'Mês em que este valor sai da conta'}">${txn.mes_vencimento || '—'}${txn.mes_vencimento_confiavel === false ? ' <span style="color: var(--accent-yellow);">⚠</span>' : ''}</td>
             <td style="font-size: 12px; text-align: center;" class="transaction-editable" onclick="editarCampo('${txn.id}', 'tipo_gasto')" title="Clique para editar">${icone} ${tipoGasto}</td>
@@ -4316,6 +4316,75 @@
         exibirTransacoes();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
+    }
+
+    // Troca a celula por um <select> com as opções que já existem nos dados,
+    // em vez do prompt() de texto livre (que exigia digitar o nome exato de
+    // cor, sem nenhuma lista pra escolher). "+ Outro..." cai num prompt só
+    // para o caso de precisar mesmo criar um valor novo (Juliane, 24/08).
+    function editarComSelect(txnId, campo, cellEl, opcoes, rotular) {
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      const txn = transacoes.find(t => t.id === txnId);
+      if (!txn) {
+        console.error('Transacao nao encontrada:', txnId);
+        return;
+      }
+
+      const NOVO = '__novo__';
+      const select = document.createElement('select');
+      select.className = 'filter-input';
+      select.style.cssText = 'width:100%; font-size:13px; padding:4px;';
+
+      opcoes.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = rotular ? rotular(v) : v;
+        if (v === txn[campo]) opt.selected = true;
+        select.appendChild(opt);
+      });
+      const optNovo = document.createElement('option');
+      optNovo.value = NOVO;
+      optNovo.textContent = '+ Outro...';
+      select.appendChild(optNovo);
+
+      let concluido = false;
+      const confirmar = () => {
+        if (concluido) return;
+        concluido = true;
+        let novoValor = select.value;
+        if (novoValor === NOVO) {
+          novoValor = prompt('Digite o novo valor:', '');
+          if (!novoValor) { exibirTransacoes(); return; }
+          novoValor = novoValor.trim();
+          if (campo === 'categoria') novoValor = novoValor.toLowerCase().replace(/\s+/g, '_');
+        }
+        txn[campo] = novoValor;
+        salvarDadosAutomatico();
+        exibirTransacoes();
+      };
+
+      select.addEventListener('click', e => e.stopPropagation());
+      select.addEventListener('change', confirmar);
+      select.addEventListener('blur', () => { if (!concluido) exibirTransacoes(); });
+
+      cellEl.innerHTML = '';
+      cellEl.appendChild(select);
+      select.focus();
+    }
+
+    function editarCategoriaSelect(txnId, cellEl) {
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      const categorias = [...new Set(transacoes.map(t => t.categoria).filter(Boolean))]
+        .sort((a, b) => rotuloCategoria(a).localeCompare(rotuloCategoria(b), 'pt-BR'));
+      editarComSelect(txnId, 'categoria', cellEl, categorias, rotuloCategoria);
+    }
+
+    function editarPessoaSelect(txnId, cellEl) {
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+      const cadastradas = (configuracoesGlobais.pessoas || []).map(p => p.nome);
+      const usadas = [...new Set(transacoes.map(t => t.pessoa).filter(Boolean))];
+      const pessoas = [...new Set([...cadastradas, ...usadas])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+      editarComSelect(txnId, 'pessoa', cellEl, pessoas);
     }
 
     function editarCampo(txnId, campo) {
