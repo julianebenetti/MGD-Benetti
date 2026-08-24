@@ -120,6 +120,22 @@ Configurações (`ambitoDaPessoa()`) sempre que o campo editado é `pessoa` —
 tanto no lançamento clicado quanto nos replicados. Mesmo critério que os
 scripts de importação e o `classificar.js` já usavam do lado do servidor.
 
+### Classificação em lote (24/08)
+Filtra (por descrição, categoria, o que for) e aplica Categoria, Pessoa ou
+Fixa/Variável a todos os lançamentos que sobraram no filtro de uma vez
+(`aplicarClassificacaoEmLote()`) — pra quando há muita coisa igual pra
+reclassificar e não vale a pena clicar lançamento por lançamento.
+
+- **Exige algum filtro ativo antes de aplicar.** Sem isso, "aplicar em lote"
+  mudaria os 1912 lançamentos de uma vez sem querer — `algumFiltroDeLancamentosAtivo()`
+  recusa com um aviso se nenhum campo de filtro estiver preenchido.
+- Só uma confirmação para o lote inteiro (não uma por lançamento, ao
+  contrário da replicação por descrição) — o texto do `confirm()` mostra o
+  campo, o valor novo e a quantidade exata antes de aplicar, porque não dá
+  pra revisar item por item quando são centenas.
+- Editar pessoa em lote também recalcula `ambito` pra cada lançamento
+  (mesma `ambitoDaPessoa()` da edição individual).
+
 ### Fixa x Variável e o mês expansível no Fluxo de Caixa (24/08)
 Toda despesa (`natureza: despesa`) ganhou um campo editável `fixa_variavel`
 (`fixa` ou `variavel`), coluna própria em Lançamentos — clicar no selo

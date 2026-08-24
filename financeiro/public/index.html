@@ -1393,6 +1393,30 @@
         </div>
       </div>
 
+      <!-- Classificação em lote: filtra pela descrição (ou qualquer outro
+           filtro) e aplica a mesma categoria/pessoa/fixa-variável a tudo que
+           apareceu, de uma vez -->
+      <div class="filters-container">
+        <div class="filters-title">✏️ Classificar em lote (<span id="lote_qtd">0</span> lançamentos na seleção atual)</div>
+        <div class="filters-row">
+          <div class="filter-group">
+            <label class="filter-label">Campo</label>
+            <select id="lote_campo" class="filter-input" onchange="popularValoresLote()">
+              <option value="categoria">Categoria</option>
+              <option value="pessoa">Pessoa</option>
+              <option value="fixa_variavel">Fixa/Variável</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">Novo valor</label>
+            <select id="lote_valor" class="filter-input"></select>
+          </div>
+          <div class="filter-group" style="justify-content:flex-end">
+            <button class="btn-primary btn-small" onclick="aplicarClassificacaoEmLote()">✅ Aplicar a todos os filtrados</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Tabela de Transações -->
       <div class="transactions-table-container">
         <div id="extratoVazio" class="empty-state" style="display: none;">
@@ -4181,6 +4205,10 @@
       preencher('filter_mes_venc', unicos('mes_vencimento'), cronologico);
       preencher('filter_mes_ref', unicos('mes_referencia'), cronologico);
       preencher('filter_natureza', unicos('natureza'));
+
+      if (document.getElementById('lote_valor') && !document.getElementById('lote_valor').options.length) {
+        popularValoresLote();
+      }
     }
 
     function limparFiltros() {
@@ -4244,6 +4272,86 @@
       set('lanc-total', moeda(compras));
       set('lanc-estornos', estornos < 0 ? moeda(estornos) : '—');
       set('lanc-soma', moeda(soma));
+      set('lote_qtd', String(lista.length));
+    }
+
+    // -------------------------------------------- CLASSIFICAÇÃO EM LOTE
+    //
+    // Filtra (por descrição, categoria, o que for) e aplica o mesmo
+    // campo/valor a todo mundo que sobrou no filtro, de uma vez — pra não
+    // precisar clicar lançamento por lançamento quando há muita coisa igual
+    // pra reclassificar (Juliane, 24/08).
+
+    function algumFiltroDeLancamentosAtivo() {
+      const campos = ['data_inicio', 'data_fim', 'pessoa', 'tipo', 'conta',
+        'categoria', 'status', 'busca', 'mes_venc', 'mes_ref', 'tipo_gasto', 'natureza'];
+      return campos.some(c => {
+        const el = document.getElementById('filter_' + c);
+        return el && el.value;
+      });
+    }
+
+    function popularValoresLote() {
+      const campo = document.getElementById('lote_campo').value;
+      const select = document.getElementById('lote_valor');
+      if (!select) return;
+      select.innerHTML = '';
+      const transacoes = (dadosGlobais.fluxo_mensal || {}).transacoes || [];
+
+      if (campo === 'categoria') {
+        const categorias = [...new Set(transacoes.map(t => t.categoria).filter(Boolean))]
+          .sort((a, b) => rotuloCategoria(a).localeCompare(rotuloCategoria(b), 'pt-BR'));
+        categorias.forEach(c => select.appendChild(new Option(rotuloCategoria(c), c)));
+        select.appendChild(new Option('+ Outro...', '__novo__'));
+      } else if (campo === 'pessoa') {
+        const cadastradas = (configuracoesGlobais.pessoas || []).map(p => p.nome);
+        const usadas = [...new Set(transacoes.map(t => t.pessoa).filter(Boolean))];
+        const pessoas = [...new Set([...cadastradas, ...usadas])].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        pessoas.forEach(p => select.appendChild(new Option(p, p)));
+        select.appendChild(new Option('+ Outro...', '__novo__'));
+      } else if (campo === 'fixa_variavel') {
+        select.appendChild(new Option('Fixa', 'fixa'));
+        select.appendChild(new Option('Variável', 'variavel'));
+      }
+    }
+
+    function aplicarClassificacaoEmLote() {
+      if (!algumFiltroDeLancamentosAtivo()) {
+        alert('Aplique algum filtro primeiro (Buscar, Categoria, Pessoa etc.) — sem filtro isso mudaria TODOS os lançamentos de uma vez.');
+        return;
+      }
+      if (!transacoesFiltradas.length) {
+        alert('Nenhum lançamento na seleção atual.');
+        return;
+      }
+
+      const campo = document.getElementById('lote_campo').value;
+      let novoValor = document.getElementById('lote_valor').value;
+      if (novoValor === '__novo__') {
+        novoValor = prompt('Digite o novo valor:', '');
+        if (!novoValor) return;
+        novoValor = novoValor.trim();
+        if (campo === 'categoria') novoValor = novoValor.toLowerCase().replace(/\s+/g, '_');
+      }
+      if (!novoValor) return;
+
+      const nomeCampo = { categoria: 'Categoria', pessoa: 'Pessoa', fixa_variavel: 'Fixa/Variável' }[campo];
+      const rotulo = campo === 'categoria' ? rotuloCategoria(novoValor)
+                    : campo === 'fixa_variavel' ? (novoValor === 'fixa' ? 'Fixa' : 'Variável')
+                    : novoValor;
+
+      const confirmado = confirm(
+        `Aplicar ${nomeCampo} = "${rotulo}" em TODOS os ${transacoesFiltradas.length} lançamentos da seleção atual?\n\n` +
+        `Essa ação não pede confirmação linha a linha — confira se o filtro está certo antes de continuar.`
+      );
+      if (!confirmado) return;
+
+      transacoesFiltradas.forEach(t => {
+        t[campo] = novoValor;
+        if (campo === 'pessoa') t.ambito = ambitoDaPessoa(novoValor);
+      });
+
+      salvarDadosAutomatico();
     }
 
     function exibirTransacoes() {
