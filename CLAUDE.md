@@ -78,6 +78,22 @@ Duas camadas a mais pra isso não voltar a acontecer em silêncio:
   recusado — rede de segurança extra, caso a causa de uma próxima perda seja
   outra.
 
+**O nginx do VPS tinha o mesmo limite de tamanho, em duas camadas.** Mesmo
+depois de corrigir o `server.js`, o 413 continuou vindo do nginx, que por
+padrão só aceita 1MB de corpo (`client_max_body_size`) — bem menor que o
+`financeiro.json`. E não bastou corrigir um bloco: o VPS tem **dois** blocos
+de config servindo esse domínio na porta 443 (HTTPS, o que a Juliane usa de
+verdade) — um dedicado em
+`/etc/nginx/sites-available/financeiro.descontoirresistivel.com.br`, e outro
+**combinado** dentro de `/etc/nginx/sites-available/descontoirresistivel.conf`
+(`server_name descontoirresistivel.com.br www.descontoirresistivel.com.br
+financeiro.descontoirresistivel.com.br;` numa linha só — esse é o que estava
+realmente ativo). Os dois agora têm `client_max_body_size 20m;`. Documentado
+em `DEPLOY_VPSFINANCEIRO.md`, mas só o arquivo dedicado — se o VPS for
+reconstruído do zero, conferir se o bloco combinado em
+`descontoirresistivel.conf` (compartilhado com os outros sites do domínio
+`descontoirresistivel.com.br`) também precisa da diretiva.
+
 ### Edição em Lançamentos: seleção e replicação (24/08)
 Categoria e Pessoa deixaram de ser `prompt()` de texto livre — agora abrem um
 `<select>` (`editarCategoriaSelect()`, `editarPessoaSelect()`) com os valores
