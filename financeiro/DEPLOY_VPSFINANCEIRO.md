@@ -86,6 +86,12 @@ server {
     listen 80;
     server_name financeiro.descontoirresistivel.com.br;
 
+    # financeiro.json sozinho já passa de 2MB, bem acima do limite padrão do
+    # nginx (1MB) — sem isso, POST /api/dados (salvar edição da tela) volta
+    # 413 do nginx antes mesmo de chegar no Node, mesmo com o limit do
+    # body-parser já aumentado do lado do server.js (Juliane, 24/08).
+    client_max_body_size 20m;
+
     location / {
         proxy_pass http://financeiro_backend;
         proxy_http_version 1.1;
