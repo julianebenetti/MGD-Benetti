@@ -436,6 +436,34 @@ Regras do guia de classificação compilado em 23/08 (conta corrente e fatura):
   moradia. Corrigido para só atingir `origem: "cartao_credito_itau"`, que é
   o que as regras deste arquivo foram escritas para ler.
 
+### Regra por valor: Clube Azul (24/08)
+A Juliane suspeitou de "Azul Linhas Aéreas" duplicada — parcelado e não
+parcelado no mesmo dia — e pediu para rastrear contra o cartão de verdade.
+Não era bug: são três cobranças reais distintas no cartão 3794 (Itaú
+Infinite), todas com texto de descrição quase idêntico ("Azul Linhas
+Aereas...", variando só o sufixo) mas significados diferentes —
+- uma viagem parcelada de 2025 terminando a 12ª parcela (R$37,80/mês,
+  final de cartão virtual 6642);
+- a **assinatura do Clube Azul**, R$37,80/mês recorrente, no cartão
+  virtual 8929 — confirmada pela Juliane;
+- uma compra nova de passagem parcelada em 12x começando out/26 (R$309,60/
+  parcela), no mesmo cartão virtual 8929 que a assinatura.
+
+**Nada nesses lançamentos diferencia assinatura de passagem, exceto o
+valor** — mesmo texto de descrição, mesmo cartão virtual em dois dos três
+casos. `regras-classificacao.json` só comparava por texto até então, então
+uma regra por padrão sempre pegaria as três juntas. Adicionado suporte a um
+campo opcional `valor` na regra: quando presente, ela só casa se o valor do
+lançamento bater (tolerância de 1 centavo) — implementado em `casar()`
+(`classificar.js`) e `aplicarRegra()` (`importar-faturas-itau.js`), os dois
+pontos que leem esse arquivo. A regra do Clube Azul usa `"padrao": "azul
+linhas a"` (pega qualquer variação do texto) `+ "valor": 37.8` — assim só
+a assinatura vira `assinatura`/Família; as duas compras de passagem de
+verdade continuam `viagem`. Em `cmdExportar` (planilha de revisão em lote),
+que agrupa por texto de descrição, o valor comparado é a média do grupo —
+não há problema hoje porque cada texto exato do Itaú só aparece com um
+valor na base atual.
+
 ### Ferramentas de manutenção (`financeiro/scripts/`)
 - `conferir-fatura.js arquivo.xlsx [...]` — só leitura. Diz de que mês a fatura
   é de verdade (pelo vencimento), se já está gravada, se o conteúdo bate e qual

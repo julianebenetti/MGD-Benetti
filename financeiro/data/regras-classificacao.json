@@ -1,7 +1,7 @@
 {
-  "versao": 5,
-  "atualizado_em": "2026-08-23",
-  "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão.",
+  "versao": 6,
+  "atualizado_em": "2026-08-24",
+  "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão. 'valor' opcional: quando presente, a regra só casa se o valor do lançamento for igual (tolerância de 1 centavo) — usado quando duas coisas diferentes compartilham o mesmo texto de descrição e só o valor as distingue.",
   "principios": [
     "A pessoa da despesa é quem se beneficia dela, não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da Família.",
     "Despesa de um filho fica no nome dele quando for individual (escola, material, atividade). Quando for da casa, fica em Família.",
@@ -148,6 +148,13 @@
       "categoria": "moradia",
       "pessoa": "Família",
       "nota": "Conta fixa da casa"
+    },
+    {
+      "padrao": "azul linhas a",
+      "categoria": "assinatura",
+      "pessoa": "Família",
+      "valor": 37.8,
+      "nota": "Clube Azul: assinatura recorrente de R$37,80/mês, cobrada com o mesmo texto de fundo (\"Azul Linhas Aereas...\") da compra de passagem em si — só o valor exato diferencia uma da outra, por isso essa regra tem 'valor' (Juliane, 24/08)"
     },
     {
       "padrao": "airbnb|booking|hotel|pousada|resort|decolar|latam|gol linhas|azul linhas|cvc|passagem aerea",

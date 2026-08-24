@@ -55,9 +55,10 @@ const brl = v => 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigit
 
 // ---------------------------------------------------------------- regras
 
-function casar(descricao, regras) {
+function casar(descricao, valor, regras) {
   const alvo = normalizar(descricao);
-  return regras.find(r => new RegExp(r.padrao, 'i').test(alvo)) || null;
+  return regras.find(r => new RegExp(r.padrao, 'i').test(alvo)
+    && (r.valor === undefined || Math.abs(valor - r.valor) < 0.01)) || null;
 }
 
 function cmdAplicar() {
@@ -70,7 +71,7 @@ function cmdAplicar() {
   transacoes.forEach(t => {
     if (t.natureza === 'pagamento') return;
     if (t.origem !== 'cartao_credito_itau') return;
-    const regra = casar(t.descricao, regras);
+    const regra = casar(t.descricao, t.valor, regras);
     if (!regra) return;
 
     const novaCategoria = regra.categoria || t.categoria;
@@ -113,7 +114,7 @@ function cmdAplicar() {
       console.log('');
     });
 
-  const semRegra = transacoes.filter(t => t.natureza !== 'pagamento' && t.origem === 'cartao_credito_itau' && !casar(t.descricao, regras));
+  const semRegra = transacoes.filter(t => t.natureza !== 'pagamento' && t.origem === 'cartao_credito_itau' && !casar(t.descricao, t.valor, regras));
   const estabSemRegra = new Set(semRegra.map(t => normalizar(t.descricao)));
   console.log(`Sem regra: ${semRegra.length} lançamentos em ${estabSemRegra.size} estabelecimentos`);
   console.log(`           ${brl(semRegra.reduce((s, t) => s + t.valor, 0))} — mantêm a classificação atual`);
@@ -164,11 +165,16 @@ function cmdExportar() {
   // pedir revisao do que ja foi decidido.
   const soPendentes = process.argv.includes('--so-pendentes');
 
+  // Regras com 'valor' comparam contra a média do grupo: dentro de um mesmo
+  // texto de descrição normalizado, o valor costuma ser o mesmo lançamento
+  // repetido (ex: a assinatura do Clube Azul sempre em R$37,80).
+  const valorMedio = e => e.total / e.lancamentos;
+
   const linhas = Object.values(porEstabelecimento)
-    .filter(e => !soPendentes || !casar(e.descricao, regras))
+    .filter(e => !soPendentes || !casar(e.descricao, valorMedio(e), regras))
     .sort((a, b) => b.total - a.total)
     .map(e => {
-      const regra = casar(e.descricao, regras);
+      const regra = casar(e.descricao, valorMedio(e), regras);
       return {
         'Estabelecimento': e.descricao,
         'Lançamentos': e.lancamentos,

@@ -224,9 +224,10 @@ function carregarRegras() {
     .map(r => ({ ...r, re: new RegExp(r.padrao, 'i') }));
 }
 
-function aplicarRegra(descricao, regras) {
+function aplicarRegra(descricao, valor, regras) {
   const alvo = normalizar(descricao);
-  return regras.find(r => r.re.test(alvo)) || null;
+  return regras.find(r => r.re.test(alvo)
+    && (r.valor === undefined || Math.abs(valor - r.valor) < 0.01)) || null;
 }
 
 // "Iof Internacional - Hostinger.comlarnakacyp" traz no proprio nome a compra
@@ -240,7 +241,7 @@ const IOF_DE_COMPRA = /^iof\s+(?:internacional|compra internacional)\s*[-–]\s*
 function pessoaDaCompraQueGerou(descricao, regras) {
   const casou = String(descricao).trim().match(IOF_DE_COMPRA);
   if (!casou) return null;
-  const daCompra = aplicarRegra(casou[1], regras);
+  const daCompra = aplicarRegra(casou[1], undefined, regras);
   return (daCompra && daCompra.pessoa) || null;
 }
 
@@ -384,7 +385,7 @@ faturas.forEach(f => {
     const natureza = classificarNatureza(item);
     const parcela = lerParcelamento(item.parcelamento, item.descricao);
     const herdado = classificacao[normalizar(item.descricao)] || {};
-    const regra = aplicarRegra(item.descricao, regras);
+    const regra = aplicarRegra(item.descricao, item.valor, regras);
 
     if (natureza === 'pagamento') pagamentos += item.valor;
     else if (natureza === 'estorno') estornos += item.valor;
