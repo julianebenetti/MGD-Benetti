@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787558644,
-  "updated_at_br": "24/08/2026 04:57",
+  "updated_at": 1787564359,
+  "updated_at_br": "24/08/2026 06:32",
   "period_days": 90,
-  "total_orders": 7807,
-  "total_conversions": 7446,
+  "total_orders": 7806,
+  "total_conversions": 7445,
   "orders": [
     {
       "ID do pedido": "2608234EJ5KE58",
@@ -195152,31 +195152,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "233488889199299",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-26"
-    },
-    {
-      "ID do pedido": "260526E576W701",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-26 09:24:07",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "10.29",
-      "Comissao liquida do afiliado(R$)": "0.3087",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "0.3087",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.3087",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "2 Arraste Copo Liquidificador Mondial L-99 L-850 L-900 L-1000 L-1200",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "5796026674",
-      "ID da loja": "404326574",
-      "Nome da loja": "Galpão utilidades",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233486647173308",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-26"
     }
