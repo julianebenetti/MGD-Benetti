@@ -69,6 +69,17 @@ quantos lançamentos seriam afetados. Não vale para os outros campos editáveis
 (data, valor, parcela etc.) — esses são fato de cada lançamento, replicar
 seria errado.
 
+**Editar a pessoa também tem que atualizar o âmbito junto.** `ambito`
+(pessoal/empresa) é um campo gravado no lançamento, não recalculado a cada
+render — `noAmbito()` confia nele. Trocar a pessoa para Benetti UP sem
+recalcular `ambito` deixava o campo velho, e o lançamento vazava pro filtro
+errado no seletor do topo (achado pela Juliane: despesa de
+`educacao_profissional` da Benetti UP aparecendo sob o filtro Pessoal).
+`aplicarEdicaoComReplicacao()` agora recalcula `ambito` pelo cadastro em
+Configurações (`ambitoDaPessoa()`) sempre que o campo editado é `pessoa` —
+tanto no lançamento clicado quanto nos replicados. Mesmo critério que os
+scripts de importação e o `classificar.js` já usavam do lado do servidor.
+
 ### Fixa x Variável e o mês expansível no Fluxo de Caixa (24/08)
 Toda despesa (`natureza: despesa`) ganhou um campo editável `fixa_variavel`
 (`fixa` ou `variavel`), coluna própria em Lançamentos — clicar no selo

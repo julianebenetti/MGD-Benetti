@@ -2291,6 +2291,19 @@
       return campo === 'fixa_variavel' ? classificacaoFixaVariavel(t) : t[campo];
     }
 
+    // Âmbito (pessoal/empresa) de uma pessoa, pelo cadastro em Configurações
+    // — mesmo critério que os scripts de importação já usam. Preciso disso
+    // aqui porque ambito é um campo GRAVADO no lançamento, não recalculado a
+    // cada render: mudar a pessoa sem atualizar ambito junto deixa o campo
+    // velho, e o lançamento passa a vazar pro filtro errado no seletor do
+    // topo (Juliane, 24/08 — achou "educacao_profissional" da Benetti UP
+    // aparecendo sob o filtro Pessoal).
+    function ambitoDaPessoa(pessoa) {
+      const empresas = new Set((configuracoesGlobais.pessoas || [])
+        .filter(p => p.tipo === 'empresa').map(p => p.nome));
+      return empresas.has(pessoa) ? 'empresa' : 'pessoal';
+    }
+
     // Aplica uma edição classificatória (categoria, pessoa, fixa/variável) e,
     // se houver outros lançamentos com a mesma descrição em valor diferente,
     // pergunta antes de replicar — nunca aplica em lote sem confirmar
@@ -2305,6 +2318,7 @@
         : [];
 
       txn[campo] = novoValor;
+      if (campo === 'pessoa') txn.ambito = ambitoDaPessoa(novoValor);
 
       if (irmaos.length) {
         const nomeCampo = { categoria: 'categoria', pessoa: 'pessoa', fixa_variavel: 'Fixa/Variável' }[campo] || campo;
@@ -2315,7 +2329,10 @@
           `Encontrei mais ${irmaos.length} lançamento(s) com a mesma descrição\n"${txn.descricao.trim()}".\n\n` +
           `Aplicar ${nomeCampo} = ${rotulo} neles também?`
         );
-        if (replicar) irmaos.forEach(t => { t[campo] = novoValor; });
+        if (replicar) irmaos.forEach(t => {
+          t[campo] = novoValor;
+          if (campo === 'pessoa') t.ambito = ambitoDaPessoa(novoValor);
+        });
       }
 
       salvarDadosAutomatico();
