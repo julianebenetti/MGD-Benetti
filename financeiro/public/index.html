@@ -965,8 +965,15 @@
       background-color: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      overflow: hidden;
+      overflow-y: hidden;
       margin-bottom: 20px;
+    }
+
+    /* A tabela é larga demais pra caber num celular — sem isso, overflow:
+       hidden do container acima cortava tudo depois de Pessoa (Categoria,
+       Tipo, Parcela, Valor...) sem nenhum jeito de rolar até lá. */
+    #extratoTabela {
+      overflow-x: auto;
     }
 
     .transactions-table {
