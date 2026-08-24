@@ -135,7 +135,8 @@
     {
       "padrao": "ifd\\*|ifood|rappi|uber ?eats|delivery|restaurante|pizzaria|lanchonete|hamburgu|padaria|confeitaria|cafe |cafeteria|sorveteria|churrascaria|bar do|espetinho|mc ?donalds|arcos dourados|burger king|kfc|subway|habibs|giraffas|outback|rodizio|bar |boteco",
       "categoria": "alimentacao_fora",
-      "nota": "Refeicao fora de casa, incluindo lanchonete e rodizio"
+      "pessoa": "Família",
+      "nota": "Refeição fora de casa, incluindo lanchonete e rodízio: sai com a família, é gasto da casa (Juliane, 24/08)"
     },
     {
       "padrao": "apple\\.com|netflix|spotify|amazon prime|disney|hbo|max |globoplay|youtube premium|google one|icloud|microsoft|adobe|canva|clube livelo|assinatura",

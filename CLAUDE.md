@@ -367,7 +367,10 @@ Regras que ela informou diretamente:
 - **Omega / natação** → `esportes` / **Valentina**.
 - **Tokio Marine** → `seguro` / **Família** — seguro do carro.
 - **Selva Urbana, Petcamp** → `pet` — ração.
-- **McDonald's, KFC, rodízio** → `alimentacao_fora`.
+- **McDonald's, KFC, rodízio** → `alimentacao_fora` / **Família** — sai com a
+  casa toda, é gasto da família mesmo fora de casa. Exceção: **Dona
+  Terezinha**, que é almoço de trabalho da Juliane sozinha (ver acima), tem
+  regra própria que vale antes desta.
 - **Papelaria** → `educacao` (material escolar).
 - **Facebook / Meta / Google Ads** → `trafego_pago` / **Benetti UP**.
 
