@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787543829,
-  "updated_at_br": "24/08/2026 00:50",
+  "updated_at": 1787549943,
+  "updated_at_br": "24/08/2026 02:32",
   "period_days": 90,
   "total_orders": 7807,
   "total_conversions": 7446,
@@ -20207,7 +20207,7 @@
     },
     {
       "ID do pedido": "260814A59F9UCS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-13 19:41:24",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "54.9",
@@ -20219,7 +20219,7 @@
       "Comissao total do pedido(R$)": "20.862",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Calça Masculina Com Elastano Esportiva Fitness Slim Fit",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22493540968",
       "ID da loja": "318968967",
       "Nome da loja": "Envoy For Men",
@@ -20227,7 +20227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240349284135107",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-13"
     },
     {
