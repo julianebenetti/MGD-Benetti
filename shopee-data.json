@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787644188,
-  "updated_at_br": "25/08/2026 04:43",
+  "updated_at": 1787650105,
+  "updated_at_br": "25/08/2026 06:21",
   "period_days": 90,
   "total_orders": 7768,
   "total_conversions": 7407,
@@ -11207,7 +11207,7 @@
     },
     {
       "ID do pedido": "260818MK7AVRQK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-17 23:17:22",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "19",
@@ -11219,7 +11219,7 @@
       "Comissao total do pedido(R$)": "0.76",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "HUB 7 em 1 Tipo C USB HDTV 4K 30Hz Vídeo USB 3.0 USB 2.0 SD TF Cartão Slot Leitor de Dados USB-C",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19498264749",
       "ID da loja": "1495837089",
       "Nome da loja": "Tops Tech",
@@ -11227,7 +11227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240707842178944",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-17"
     },
     {
@@ -18332,7 +18332,7 @@
     },
     {
       "ID do pedido": "260815CYTB97B2",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-14 22:41:28",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "53.93",
@@ -18344,7 +18344,7 @@
       "Comissao total do pedido(R$)": "11.3253",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -18352,7 +18352,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240446487104378",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-14"
     },
     {
@@ -20482,7 +20482,7 @@
     },
     {
       "ID do pedido": "260814AQ40DN8B",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-14 01:00:28",
       "Sub_id1": "25Jul26TapeteHigienicoVs4",
       "Valor de Compra(R$)": "79.38",
@@ -20494,7 +20494,7 @@
       "Comissao total do pedido(R$)": "11.907",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Tapete Higiênico Descartável para Cachorro Unidades 60x60 cm - Fralda Pet Xixi Cão Pequeno Médio",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "43763851612",
       "ID da loja": "1265597786",
       "Nome da loja": "A T E N A S",
@@ -20502,7 +20502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240368428111903",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-14"
     },
     {
