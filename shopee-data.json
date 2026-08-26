@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787722484,
-  "updated_at_br": "26/08/2026 02:28",
+  "updated_at": 1787730786,
+  "updated_at_br": "26/08/2026 04:46",
   "period_days": 90,
   "total_orders": 7707,
   "total_conversions": 7357,
@@ -24282,7 +24282,7 @@
     },
     {
       "ID do pedido": "26081383XR7QW8",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-13 00:12:11",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "203.2",
@@ -24294,7 +24294,7 @@
       "Comissao total do pedido(R$)": "8.128",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bota Térmica Frigorífica Microfibra com Forro Branca",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58211062500",
       "ID da loja": "1392834804",
       "Nome da loja": "Calcados para Trabalhar",
@@ -24302,7 +24302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240279131184786",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-13"
     },
     {
