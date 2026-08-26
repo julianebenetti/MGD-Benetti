@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787730786,
-  "updated_at_br": "26/08/2026 04:46",
+  "updated_at": 1787736834,
+  "updated_at_br": "26/08/2026 06:27",
   "period_days": 90,
-  "total_orders": 7707,
-  "total_conversions": 7357,
+  "total_orders": 7706,
+  "total_conversions": 7356,
   "orders": [
     {
       "ID do pedido": "260825990HW38H",
@@ -9407,7 +9407,7 @@
     },
     {
       "ID do pedido": "260820RYPCNARM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-19 17:11:11",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "22.74",
@@ -9419,7 +9419,7 @@
       "Comissao total do pedido(R$)": "1.18248",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Lambedor Pet Bolinha Rotativa Tapete De Lamber Cães Gatos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "45910379047",
       "ID da loja": "1275098609",
       "Nome da loja": "Cebola Roxa 3D",
@@ -9427,12 +9427,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240858671190300",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     },
     {
       "ID do pedido": "260820RYPCNARK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-19 17:11:11",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "12.99",
@@ -9444,7 +9444,7 @@
       "Comissao total do pedido(R$)": "0.71445",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Escova Massageadora com Dispenser de Shampoo – Banho Fácil e Relaxante para Cachorros e Gatos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22398659908",
       "ID da loja": "1291506568",
       "Nome da loja": "POPOCOLA",
@@ -9452,12 +9452,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240858671190300",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     },
     {
       "ID do pedido": "260820RYPCNARH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-19 17:11:11",
       "Sub_id1": "31Jul26VIPtapetehigienico",
       "Valor de Compra(R$)": "20.9",
@@ -9469,7 +9469,7 @@
       "Comissao total do pedido(R$)": "1.2122",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Limpador de Lágrimas Ácidas Limpa Olhos Ramela para Cachorro e Gato Pet Clean 100ml",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "8864907634",
       "ID da loja": "428033357",
       "Nome da loja": "Petliz",
@@ -9477,7 +9477,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240858671190300",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     },
     {
@@ -192653,31 +192653,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "233660732138454",
       "conversionStatus": "CANCELLED",
-      "data": "2026-05-28"
-    },
-    {
-      "ID do pedido": "260528K67JU8Q9",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-28 09:25:33",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "20.9",
-      "Comissao liquida do afiliado(R$)": "0.627",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.627",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.627",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Extensor de exercício elástico redutor de tensão multifuncional casa ginásio uso profissional",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "43803183677",
-      "ID da loja": "1511719084",
-      "Nome da loja": "AlouraShop",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233659532123067",
-      "conversionStatus": "COMPLETED",
       "data": "2026-05-28"
     }
   ]
