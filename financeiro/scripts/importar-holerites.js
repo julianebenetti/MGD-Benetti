@@ -115,6 +115,26 @@ const RUBRICAS = {
   '206N': { natureza: 'receita', categoria: 'beneficio',        descricao: 'Auxílio-creche' },
   '/332': { natureza: 'receita', categoria: 'decimo_terceiro',  descricao: 'Adiantamento do 13º' },
   '/B10': { natureza: 'receita', categoria: 'plr',              descricao: 'Participação nos lucros' },
+  '10UN': { natureza: 'receita', categoria: 'plr',              descricao: 'Adiantamento PLR' },
+
+  // Ferias: o comprovante de ferias (pago a parte, antes do salario do mes)
+  // traz o valor bruto e os proventos de media (horas extras, adicional
+  // noturno, DSR aplicados ao adicional de 1/3 de ferias). O holerite do mes
+  // seguinte repete os mesmos itens com outro codigo (ex: 1AM1 espelha 0AM1)
+  // porque o sistema de folha recalcula ferias junto do fechamento mensal —
+  // sao proventos de verdade em cada um dos dois comprovantes, nao a mesma
+  // entrada duplicada (Juliane, 28/08).
+  '0AM1': { natureza: 'receita', categoria: 'ferias', descricao: 'Média de hora extra sobre adicional de férias' },
+  '0AM4': { natureza: 'receita', categoria: 'ferias', descricao: 'Média de adicional noturno sobre adicional de férias' },
+  '0AM7': { natureza: 'receita', categoria: 'ferias', descricao: 'Média de DSR sobre adicional de férias' },
+  '1AM1': { natureza: 'receita', categoria: 'ferias', descricao: 'Média de hora extra sobre férias do mês' },
+  '1AM4': { natureza: 'receita', categoria: 'ferias', descricao: 'Média de adicional noturno sobre férias do mês' },
+  '1AM7': { natureza: 'receita', categoria: 'ferias', descricao: 'Média de DSR sobre férias do mês' },
+  'MZ00': { natureza: 'receita', categoria: 'ferias', descricao: 'Férias' },
+  'MC03': { natureza: 'receita', categoria: 'ferias', descricao: 'Férias no mês' },
+  '066N': { natureza: 'receita', categoria: 'ferias', descricao: 'Provisão de previdência sobre férias devida' },
+  'M389': { natureza: 'receita', categoria: 'ferias', descricao: 'Provisão de contribuição INSS recebida' },
+  'MCP0': { natureza: 'receita', categoria: 'ferias', descricao: 'Parcela/crédito de provisão acumulada de férias' },
 
   // descontos
   //
@@ -131,6 +151,15 @@ const RUBRICAS = {
   '57AN': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Saúde' },
   '6A9N': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Odonto' },
 
+  // Descontos do comprovante de ferias: o INSS e a previdencia privada
+  // calculados sobre o valor de ferias, mesma logica dos descontos normais
+  // de folha, so que sobre o adicional de ferias em vez do salario do mes
+  // (Juliane, 28/08).
+  'M388': { natureza: 'despesa', categoria: 'inss',                descricao: 'Provisão de contribuição INSS dedutível sobre férias' },
+  '54AN': { natureza: 'despesa', categoria: 'previdencia_privada', descricao: 'Previdência NEOS sobre férias' },
+  '548N': { natureza: 'despesa', categoria: 'ferias',              descricao: 'Provisão de descontos sobre férias' },
+  'MCP1': { natureza: 'despesa', categoria: 'ferias',              descricao: 'Parcela/crédito de provisão atual de férias' },
+
   // Emprestimo consignado: o principal quita divida, nao e consumo novo.
   //
   // Sao tres contratos distintos, e o nome carrega a rubrica em vez de um numero
@@ -141,6 +170,13 @@ const RUBRICAS = {
 
   // desconto do adiantamento de PLR ja recebido: nao e gasto, e acerto
   '6F5N': { natureza: 'ajuste', categoria: 'ajuste_folha', pessoa: 'Juliane', descricao: 'Desconto do adiantamento da PLR' },
+
+  // Mesma logica do 6F5N: o comprovante de ferias (pago a parte, dias antes)
+  // ja entrou como receita de verdade nesse mes. O holerite do salario do
+  // mes repete o valor bruto do adiantamento como desconto so para fechar a
+  // competencia contabil — contar como despesa pagaria a mesma ferias duas
+  // vezes ao contrario (Juliane, 28/08).
+  '/355': { natureza: 'ajuste', categoria: 'ajuste_folha', pessoa: 'Juliane', descricao: 'Desconto do adiantamento de férias' },
 };
 
 // ---------- interpretacao do holerite ----------

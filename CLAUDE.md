@@ -311,6 +311,35 @@ despesa recorrente.
 - Cada comprovante é conferido contra o próprio líquido antes de gravar. Rubrica
   sem regra **para a importação** em vez de entrar sem classificação.
 
+### Férias e adiantamento de PLR pelo holerite (28/08)
+Julho/26 trouxe três comprovantes numa competência só: o **adiantamento de
+férias** (10 dias, pago em 08/07, separado do salário), o **salário do mês**
+(24/07) e um **adiantamento de PLR** (31/07). Cada um tem rubricas próprias,
+novas em relação ao que já existia:
+
+- **Férias** (`MZ00`/`MC03` + as médias `0AM1/0AM4/0AM7` no comprovante de
+  férias e `1AM1/1AM4/1AM7` no salário do mês, mais `066N`/`M389`/`MCP0`) →
+  `receita` / categoria nova **`ferias`**. O sistema de folha recalcula
+  férias junto do fechamento mensal, então os dois comprovantes trazem
+  proventos de verdade com valor coincidente — não é a mesma entrada
+  duplicada, ambos batem contra o próprio líquido de cada comprovante.
+- Os descontos sobre férias (`M388` INSS, `54AN` previdência, `548N` e
+  `MCP1`) seguem a mesma lógica dos descontos normais de folha, só que
+  calculados sobre o valor de férias em vez do salário do mês — `despesa`,
+  nas categorias `inss`/`previdencia_privada`/`ferias`.
+- **`/355` "Desc.adiant.férias c/trib"**, no salário de 24/07, é o mesmo
+  mecanismo do `6F5N` (desconto do adiantamento da PLR, já documentado
+  acima): o adiantamento de férias já entrou como receita real no
+  comprovante de 08/07, e essa linha só fecha a competência contábil no
+  salário do mês — `ajuste`, senão a mesma férias contaria como despesa ao
+  contrário.
+- **`10UN` "Adiantamento PLR"** → `receita` / categoria `plr` (mesma
+  categoria de `/B10`). O desconto de imposto de renda que acompanha
+  (`/405`) já tinha regra.
+- Todos os três comprovantes de julho conferem contra o próprio líquido, e o
+  extrato da conta confirma os créditos — a conciliação (`conciliar.js`)
+  fechou sem nenhuma pendência.
+
 ### Extrato da conta (Itaú)
 Terceira fonte, ao lado da fatura e do holerite. Traz o que as outras não veem:
 boleto, débito automático, PIX e o custo do cheque especial. Conta corrente
