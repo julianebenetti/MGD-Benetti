@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787894114,
-  "updated_at_br": "28/08/2026 02:08",
+  "updated_at": 1787899993,
+  "updated_at_br": "28/08/2026 03:46",
   "period_days": 90,
   "total_orders": 7698,
   "total_conversions": 7349,
@@ -7732,7 +7732,7 @@
     },
     {
       "ID do pedido": "2608210RAG1MW0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-21 15:42:03",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "29.94",
@@ -7744,7 +7744,7 @@
       "Comissao total do pedido(R$)": "1.1976",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camiseta Lula Presidente Adulto  Unissex Presidente Brasil Política Blusa Camisa 100% Algodão",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58254209351",
       "ID da loja": "1735804720",
       "Nome da loja": "LS016",
@@ -7752,12 +7752,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241026122171591",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-21"
     },
     {
       "ID do pedido": "2608210RAG1MVY",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-21 15:42:03",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "15.99",
@@ -7769,7 +7769,7 @@
       "Comissao total do pedido(R$)": "0.83148",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Espada Brinquedo Ninja Samurai 3D Retrátil Infantil Presente Cosplay",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22694449185",
       "ID da loja": "1229163871",
       "Nome da loja": "Lar·Doce·Lar ",
@@ -7777,7 +7777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241026122171591",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-21"
     },
     {
