@@ -53,6 +53,16 @@ aquele número (`irParaLancamentos()` em `public/index.html`).
   categoria `encargos_financeiros`) — por isso ela impede a propagação do
   clique da linha (`event.stopPropagation()`), senão o clique mais genérico
   sobrescreveria o filtro certo.
+- **Imposto de Renda também ficou clicável (28/08)**: os dois cards
+  (Rendimento tributável, Imposto já retido), cada linha de pessoa dentro
+  de um grupo dedutível (Saúde, Instrução, Previdência) e cada linha de "O
+  que não deduz" abrem em Lançamentos. Usa `irParaLancamentosPessoal()`,
+  não `irParaLancamentos()` direto — o IRPF ignora o seletor de âmbito do
+  topo (é sempre pessoal), então clicar um valor com "Benetti UP" ou "Tudo
+  somado" selecionado força o seletor de volta para Pessoal antes de
+  filtrar, senão o clique abriria um filtro que não bate com o número que
+  o originou. "Deduções que aproveitam" e "Desconto simplificado" ficaram
+  de fora: são somas com teto por pessoa aplicado, não um filtro único.
 
 ### Edições na tela não estavam sendo salvas (24/08)
 A Juliane relatou: editou a categoria de um lançamento, rodou `deploy` depois,
