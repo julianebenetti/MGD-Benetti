@@ -3680,6 +3680,21 @@
       return regrasIrpf;
     }
 
+    // Imposto devido por uma tabela progressiva (array de faixas {ate, aliquota,
+    // deduzir}, a ultima com ate:null) — mesma formula em toda faixa:
+    // base * aliquota da faixa - parcela a deduzir da faixa.
+    function impostoPelaTabela(base, tabela) {
+      if (base <= 0) return 0;
+      const faixa = tabela.find(f => f.ate === null || base <= f.ate) || tabela[tabela.length - 1];
+      return Math.max(0, base * faixa.aliquota - faixa.deduzir);
+    }
+
+    // PLR e 13o tem tributacao exclusiva/definitiva na fonte: o imposto retido
+    // sobre eles e final, nao soma com o rendimento tributavel normal e nao
+    // gera ajuste (a pagar ou a restituir) na declaracao — so aparecem como
+    // informacao. Por isso ficam fora do rendimento tributavel principal.
+    const CATEGORIAS_TRIBUTACAO_EXCLUSIVA = ['plr', 'decimo_terceiro'];
+
     function apurarIrpf(regras) {
       // A apuracao e sempre da pessoa fisica: despesa da Benetti UP e da empresa.
       const doAno = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
@@ -3688,13 +3703,24 @@
       const grupos = {};
       const naoDedutivel = { total: 0, porCategoria: {} };
       let rendimentos = 0, impostoRetido = 0;
+      let rendimentoExclusivo = 0, impostoRetidoExclusivo = 0;
 
       doAno.forEach(t => {
-        if (t.natureza === 'receita') { rendimentos += t.valor; return; }
+        if (t.natureza === 'receita') {
+          if (CATEGORIAS_TRIBUTACAO_EXCLUSIVA.includes(t.categoria)) rendimentoExclusivo += t.valor;
+          else rendimentos += t.valor;
+          return;
+        }
         if (t.natureza === 'pagamento' || t.natureza === 'ajuste') return;
         if (t.valor <= 0) return;
 
-        if (t.categoria === 'imposto_renda') { impostoRetido += t.valor; return; }
+        if (t.categoria === 'imposto_renda') {
+          // rubrica /405 e o IR retido sobre a PLR (holerite); qualquer outro
+          // imposto retido aqui e sobre o rendimento tributavel normal.
+          if (t.rubrica === '/405') impostoRetidoExclusivo += t.valor;
+          else impostoRetido += t.valor;
+          return;
+        }
 
         const regra = (regras.classificacao || []).find(r => (r.categorias || []).includes(t.categoria));
         if (!regra || !regra.dedutivel) {
@@ -3741,7 +3767,29 @@
       const simplificado = Math.min(rendimentos * (l.desconto_simplificado_percentual || 0.2),
                                     l.desconto_simplificado_teto || Infinity);
 
-      return { grupos, naoDedutivel, rendimentos, impostoRetido, somaDeducoes, simplificado, limites: l };
+      // Imposto devido pela tabela progressiva anual sobre o rendimento
+      // tributavel (ja sem PLR/13o) menos as deducoes — nas duas modalidades,
+      // pra comparar com o que ja foi retido e saber se falta pagar ou sobra
+      // pra restituir. So faz sentido comparado ao que ja foi retido do
+      // MESMO rendimento (impostoRetido), nunca ao retido sobre PLR/13o.
+      const tabela = regras.tabela_progressiva_anual || [];
+      const baseCompleta = Math.max(0, rendimentos - somaDeducoes);
+      const baseSimplificada = Math.max(0, rendimentos - simplificado);
+      const devidoCompleta = impostoPelaTabela(baseCompleta, tabela);
+      const devidoSimplificada = impostoPelaTabela(baseSimplificada, tabela);
+      const saldoCompleta = Math.round((devidoCompleta - impostoRetido) * 100) / 100;
+      const saldoSimplificada = Math.round((devidoSimplificada - impostoRetido) * 100) / 100;
+      // A modalidade que sobra menos a pagar (ou restitui mais) e a que vale
+      // usar — mesmo criterio de "rende mais" que ja compara deducao x simplificado.
+      const usaCompleta = saldoCompleta <= saldoSimplificada;
+      const saldoFinal = usaCompleta ? saldoCompleta : saldoSimplificada;
+      const devidoFinal = usaCompleta ? devidoCompleta : devidoSimplificada;
+
+      return {
+        grupos, naoDedutivel, rendimentos, impostoRetido, somaDeducoes, simplificado, limites: l,
+        rendimentoExclusivo, impostoRetidoExclusivo,
+        devidoCompleta, devidoSimplificada, usaCompleta, devidoFinal, saldoFinal,
+      };
     }
 
     async function renderizarIrpf() {
@@ -3776,7 +3824,7 @@
         </div>
 
         <div class="grid">
-          ${cartaoKpi('Rendimento tributável', a.rendimentos > 0 ? moeda(a.rendimentos) : 'não cadastrado', 'salário, PLR e 13º',
+          ${cartaoKpi('Rendimento tributável', a.rendimentos > 0 ? moeda(a.rendimentos) : 'não cadastrado', 'salário e benefícios — PLR e 13º à parte',
             null, a.rendimentos > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ natureza: 'receita' })})` : null)}
           ${cartaoKpi('Deduções que aproveitam', moeda(a.somaDeducoes), `${grupos.length} grupos`, 'var(--accent-green)')}
           ${cartaoKpi('Imposto já retido', a.impostoRetido > 0 ? moeda(a.impostoRetido) : 'não cadastrado', 'na fonte, pela Elektro',
@@ -3792,6 +3840,41 @@
                contra ${moeda(a.somaDeducoes)} de deduções. Faltam despesas dedutíveis cadastradas, ou o ano ainda está incompleto.`}
           Confirme com seu contador antes de escolher — falta aqui o que não passa pelo cartão nem pela folha.
         </div>
+
+        <div class="section-title">Pra onde você está indo: falta pagar ou vai sobrar pra restituir?</div>
+        <div class="card full-width">
+          <div class="grid" style="margin-bottom:14px">
+            ${cartaoKpi('Base de cálculo', moeda(Math.max(0, a.rendimentos - (a.usaCompleta ? a.somaDeducoes : a.simplificado))),
+              `rendimento tributável − ${a.usaCompleta ? 'deduções' : 'desconto simplificado'}`)}
+            ${cartaoKpi('Imposto devido', moeda(a.devidoFinal), 'pela tabela progressiva anual, sobre a base acima')}
+            ${cartaoKpi('Imposto já retido', moeda(a.impostoRetido), 'só o do rendimento normal, sem PLR/13º')}
+            ${cartaoKpi(a.saldoFinal > 0 ? 'Falta pagar' : 'Sobra pra restituir', moeda(Math.abs(a.saldoFinal)), null,
+              a.saldoFinal > 0 ? 'var(--accent-red)' : 'var(--accent-green)')}
+          </div>
+          <div class="aviso ${a.saldoFinal > 0 ? 'aviso-atencao' : 'aviso-info'}">
+            ${a.saldoFinal > 0
+              ? `Pelo que está lançado até agora (usando ${a.usaCompleta ? 'a declaração completa' : 'o desconto simplificado'},
+                 que rende mais nesse cálculo), o imposto retido na folha não cobre o que a tabela progressiva cobraria sobre
+                 esse rendimento — <b>faltariam ${moeda(a.saldoFinal)}</b>.`
+              : `Pelo que está lançado até agora, o que já foi retido na folha cobre — e sobra <b>${moeda(-a.saldoFinal)}</b> pra restituir.`}
+            <b>Isso é parcial</b>: o ano ainda não fechou, então salário, deduções e retenção dos meses que faltam
+            ainda vão mudar essa conta até dezembro. Tabela vigente em 2026 (Lei 15.270/2025); confirme com seu contador.
+          </div>
+        </div>
+
+        ${a.rendimentoExclusivo > 0.005 ? `
+          <div class="section-title">PLR e 13º (tributação exclusiva)</div>
+          <div class="card full-width">
+            <div class="grid">
+              ${cartaoKpi('Recebido no ano', moeda(a.rendimentoExclusivo), 'PLR + adiantamento de 13º')}
+              ${cartaoKpi('Imposto retido sobre eles', a.impostoRetidoExclusivo > 0 ? moeda(a.impostoRetidoExclusivo) : 'nenhum ainda', 'já é definitivo')}
+            </div>
+            <div class="kpi-sub" style="margin-top:12px">
+              PLR e 13º têm tabela própria e retenção <b>definitiva</b> na fonte — não somam com o rendimento tributável
+              acima, e o que já foi retido sobre eles não entra no cálculo de falta pagar/restituir: é líquido e encerrado,
+              só aparece na declaração como informação.
+            </div>
+          </div>` : ''}
 
         ${grupos.map(g => `
           <div class="section-title">${g.rotulo}</div>

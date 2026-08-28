@@ -5,7 +5,9 @@
   "fontes": [
     "https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/perguntas-frequentes/imposto-de-renda/dirpf/deducoes",
     "https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/perguntas-frequentes/imposto-de-renda/dirpf/deducoes/despesas-com-educacao",
-    "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/preenchimento/manual-mir/pagamentos-ou-doacoes/despesas-dedutiveis"
+    "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/preenchimento/manual-mir/pagamentos-ou-doacoes/despesas-dedutiveis",
+    "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026",
+    "https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-federal-orienta-fontes-pagadoras-e-contribuintes-a-calcular-a-reducao-do-imposto-de-renda-a-partir-de-1o-de-janeiro-de-2026"
   ],
   "limites": {
     "dependente": 2275.08,
@@ -16,6 +18,22 @@
     "despesas_medicas": null,
     "pensao_alimenticia_judicial": null
   },
+  "_nota_tabela_progressiva": "Tabela do IMPOSTO DEVIDO na declaração anual (ano-calendário 2026, vale para a declaração de 2027) — igual à tabela mensal usada para reter na fonte, só que com cada faixa e cada parcela a deduzir multiplicada por 12, que é como a Receita monta a tabela anual. A Lei 15.270/2025 criou um REDUTOR adicional que zera o imposto até R$5.000/mês (R$60.000/ano) e reduz parcialmente até R$7.350/mês (R$88.200/ano) — não implementado aqui porque não se aplica a rendimento anual acima de R$88.200 (o caso da Juliane já passa disso todo mês); se um dia o rendimento anual ficar abaixo desse teto, o cálculo abaixo vai superestimar o imposto devido.",
+  "tabela_progressiva_anual": [
+    { "ate": 29145.60, "aliquota": 0,     "deduzir": 0 },
+    { "ate": 33919.80, "aliquota": 0.075, "deduzir": 2185.92 },
+    { "ate": 45012.60, "aliquota": 0.15,  "deduzir": 4729.92 },
+    { "ate": 55976.16, "aliquota": 0.225, "deduzir": 8105.88 },
+    { "ate": null,      "aliquota": 0.275, "deduzir": 10904.76 }
+  ],
+  "_nota_exclusiva": "PLR e 13º salário têm tributação EXCLUSIVA/DEFINITIVA na fonte, com tabela própria (bem mais generosa que a do salário) — uma vez retido, esse imposto é final: não soma com o rendimento tributável normal, e não gera ajuste (nem a mais nem a menos) na declaração anual. Ficam de fora do cálculo de quanto falta pagar ou vai ser restituído; só entram na declaração como informação.",
+  "tabela_plr_anual": [
+    { "ate": 8214.40,  "aliquota": 0,     "deduzir": 0 },
+    { "ate": 9922.28,  "aliquota": 0.075, "deduzir": 616.08 },
+    { "ate": 13167.00, "aliquota": 0.15,  "deduzir": 1360.35 },
+    { "ate": 16380.38, "aliquota": 0.225, "deduzir": 2347.85 },
+    { "ate": null,      "aliquota": 0.275, "deduzir": 3166.58 }
+  ],
   "grupos": {
     "saude": {
       "rotulo": "Despesas médicas",

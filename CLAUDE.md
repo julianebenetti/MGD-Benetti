@@ -64,6 +64,47 @@ aquele número (`irParaLancamentos()` em `public/index.html`).
   o originou. "Deduções que aproveitam" e "Desconto simplificado" ficaram
   de fora: são somas com teto por pessoa aplicado, não um filtro único.
 
+### Imposto devido x retido: falta pagar ou vai restituir? (28/08)
+A Juliane perguntou se as deduções que já tinha lançado eram suficientes pra
+restituir o imposto retido. A aba até então só mostrava as peças soltas
+(rendimento, deduções, retido) sem nunca montar a conta final — foi
+implementado em `apurarIrpf()`/`renderizarIrpf()` (`public/index.html`) e
+`data/regras-irpf.json`.
+
+- **PLR e 13º são tributação exclusiva/definitiva na fonte** — têm tabela
+  própria (isenção até R$8.214,40/ano, bem mais alta que a do salário) e,
+  uma vez retidos, esse imposto é final: não somam com o rendimento
+  tributável normal, e não entram no ajuste (a pagar ou a restituir) da
+  declaração anual, só aparecem como informação. Excluí-los do "rendimento
+  tributável" foi a correção mais importante — contar tudo junto (como a
+  aba fazia antes) inflava a base e fazia parecer que faltava muito mais
+  imposto a pagar do que falta de verdade. Identificados por categoria
+  (`plr`, `decimo_terceiro`) na receita, e por rubrica (`/405`) no imposto
+  retido — `CATEGORIAS_TRIBUTACAO_EXCLUSIVA` no código.
+- **Tabela progressiva anual em `regras-irpf.json`** (`tabela_progressiva_anual`):
+  é a mesma tabela mensal usada pra reter na fonte, com cada faixa e cada
+  parcela a deduzir multiplicada por 12 — é assim que a Receita monta a
+  tabela anual, não é uma tabela calculada à parte.
+- **A Lei 15.270/2025 mudou a tabela de 2026**: isenção subiu pra R$5.000/mês
+  (R$60.000/ano), com redução parcial até R$7.350/mês (R$88.200/ano) — um
+  redutor aplicado *depois* do cálculo normal pela tabela. Não implementado:
+  o rendimento da Juliane já passa de R$88.200/ano bem antes de agosto, então
+  esse redutor nunca chega a valer pro caso dela. Documentado no `_nota`
+  do JSON para o dia em que isso deixar de ser verdade (licença, mudança de
+  renda) — nesse caso o cálculo atual vai superestimar o imposto devido.
+- **A modalidade usada pro cálculo (completa ou simplificada) é a que sobra
+  menos a pagar** (ou restitui mais), comparando os dois saldos — mesmo
+  critério que já decidia qual delas "rende mais" antes de existir esse
+  bloco nas deduções.
+- Isso é sempre **parcial**: só os meses já lançados. O aviso deixa isso
+  explícito porque salário, dedução e retenção dos meses que faltam vão
+  mudar a conta até dezembro.
+- Tabelas (progressiva e da PLR) e o redutor da Lei 15.270/2025 verificados
+  via busca na web em 28/08 — como não achei acesso direto ao gov.br a
+  partir daqui, cheguei nos números cruzando várias fontes secundárias que
+  concordavam entre si. Vale conferir contra a Receita Federal se um dia os
+  valores mudarem de novo.
+
 ### Edições na tela não estavam sendo salvas (24/08)
 A Juliane relatou: editou a categoria de um lançamento, rodou `deploy` depois,
 e a classificação tinha sumido. A causa real **não foi o deploy** — testei o
