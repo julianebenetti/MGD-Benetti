@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Preços — Supermercados Campinas</title>
+<style>
+:root {
+  --bg:        #f5f4f0;
+  --bg2:       #ffffff;
+  --bg3:       #eeedea;
+  --border:    #e0ddd6;
+  --text:      #1a1916;
+  --muted:     #8a877e;
+  --subtle:    #b8b5ae;
+  --green:     #166534;
+  --green-bg:  #dcfce7;
+  --green-bdr: #86efac;
+  --red:       #991b1b;
+  --red-bg:    #fee2e2;
+  --red-bdr:   #fca5a5;
+  --yellow:    #92400e;
+  --yellow-bg: #fef3c7;
+  --blue:      #1e40af;
+  --blue-bg:   #dbeafe;
+  --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono:      'SF Mono', 'Fira Code', monospace;
+  --r:         8px;
+}
+body.ad-dark {
+  --bg:        #14161a;
+  --bg2:       #1b1e23;
+  --bg3:       #22262c;
+  --border:    #2c3138;
+  --text:      #e8e9eb;
+  --muted:     #9297a1;
+  --subtle:    #5c6169;
+  --green:     #4ade80;
+  --green-bg:  #11331f;
+  --green-bdr: #1f5c3a;
+  --red:       #f87171;
+  --red-bg:    #3a1518;
+  --red-bdr:   #5c2328;
+  --yellow:    #fbbf24;
+  --yellow-bg: #3a2e0f;
+  --blue:      #60a5fa;
+  --blue-bg:   #16233d;
+}
+body.ad-dark table td, body.ad-dark table th { color:var(--text); }
+body.ad-dark ::-webkit-scrollbar { width:10px; height:10px; }
+body.ad-dark ::-webkit-scrollbar-track { background:var(--bg2); }
+body.ad-dark ::-webkit-scrollbar-thumb { background:var(--border); border-radius:6px; }
+body.ad-dark input, body.ad-dark select, body.ad-dark textarea { background:var(--bg2); color:var(--text); border-color:var(--border); }
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:14px; min-height:100vh; }
+
+.top { background:var(--bg2); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:100; }
+.top-title { font-size:16px; font-weight:700; letter-spacing:-.3px; }
+.top-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.top-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+
+.page { padding:20px 28px; max-width:1200px; margin:0 auto; }
+
+.act-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 13px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg2); color:var(--muted); font-size:12px; font-weight:500; cursor:pointer; font-family:var(--font); white-space:nowrap; }
+.act-btn:hover { border-color:#2563eb; color:#2563eb; background:var(--blue-bg); }
+.act-btn.primary { background:#2563eb; color:#fff; border-color:#2563eb; }
+.act-btn.primary:hover { background:#1d4ed8; color:#fff; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:20px; }
+.kpi { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; }
+.kpi-label { font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.kpi-val { font-size:20px; font-weight:700; letter-spacing:-.5px; line-height:1; }
+.kpi-val.pos { color:var(--green); }
+
+.section { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:20px; }
+.section-head { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.section-title { font-size:13px; font-weight:700; letter-spacing:.2px; display:inline-block; background:#2d2b27; color:#f0efec; padding:5px 12px; border-radius:6px; }
+.section-sub { font-size:11px; color:var(--muted); }
+.section-body { padding:16px; }
+
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; align-items:end; }
+.field label { display:block; font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
+.field input, .field select { width:100%; padding:7px 9px; font-size:13px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg); color:var(--text); font-family:var(--font); outline:none; }
+.field input:focus, .field select:focus { border-color:#2563eb; }
+datalist {}
+
+.controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; flex:1; min-width:0; }
+.filter-btn { padding:4px 10px; font-size:11px; border:1px solid var(--border); border-radius:20px; background:transparent; color:var(--muted); cursor:pointer; font-family:var(--font); }
+.filter-btn.on { background:#2563eb; color:#fff; border-color:#2563eb; }
+.search-box { padding:5px 10px; font-size:12px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg); color:var(--text); font-family:var(--font); outline:none; width:160px; }
+
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { padding:7px 8px; text-align:right; font-size:10px; font-weight:700; color:#f0efec; text-transform:uppercase; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:nowrap; background:#2d2b27; position:sticky; top:0; z-index:10; }
+th:first-child { text-align:left; }
+td { padding:7px 8px; text-align:right; border-bottom:1px solid var(--border); color:var(--text); white-space:nowrap; font-size:12px; }
+td:first-child { text-align:left; white-space:normal; word-break:break-word; max-width:220px; }
+tr:last-child td { border-bottom:none; }
+tr.data-row:hover td { background:var(--bg3); }
+
+.badge { display:inline-block; padding:2px 7px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
+.b-cheapest { background:var(--green-bg); color:var(--green); border:1px solid var(--green-bdr); }
+
+@media (max-width:600px) {
+  .top { padding:12px 14px; }
+  .page { padding:12px; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); gap:8px; }
+  .kpi-val { font-size:18px; }
+  .section-head { flex-direction:column; align-items:flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="top-title">🛒 Monitor de Preços</div>
+    <div class="top-sub">Supermercados de Campinas — dados ao vivo do Supabase</div>
+  </div>
+  <div class="top-right">
+    <button class="act-btn" onclick="mpLoadAll()">⟳ Atualizar</button>
+    <button id="btn-dark-mode" onclick="toggleDarkMode()" title="Alternar modo claro/escuro"
+      style="font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--muted);cursor:pointer;">🌙 Modo escuro</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="kpi-grid" id="mp-stats">
+    <div class="kpi"><div class="kpi-label">Carregando</div><div class="kpi-val">—</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">➕ Registrar preço</span>
+      <span class="section-sub">Produto novo? Só digitar o nome — ele é criado automaticamente.</span>
+    </div>
+    <div class="section-body">
+      <form id="mp-form" class="form-grid" onsubmit="return mpSubmit(event)">
+        <div class="field">
+          <label>Produto</label>
+          <input list="mp-produtos-list" id="mp-f-produto" placeholder="Ex: Arroz 5kg" required>
+          <datalist id="mp-produtos-list"></datalist>
+        </div>
+        <div class="field">
+          <label>Unidade</label>
+          <select id="mp-f-unidade">
+            <option value="un">un</option>
+            <option value="kg">kg</option>
+            <option value="g">g</option>
+            <option value="L">L</option>
+            <option value="mL">mL</option>
+            <option value="pacote">pacote</option>
+            <option value="dz">dúzia</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Mercado</label>
+          <select id="mp-f-mercado" required></select>
+        </div>
+        <div class="field">
+          <label>Preço (R$)</label>
+          <input type="text" inputmode="decimal" id="mp-f-preco" placeholder="0,00" required>
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="mp-f-data" required>
+        </div>
+        <div class="field">
+          <label>Observação</label>
+          <input type="text" id="mp-f-obs" placeholder="opcional — ex: promoção, embalagem">
+        </div>
+        <div class="field">
+          <button type="submit" class="act-btn primary" style="width:100%;">Salvar preço</button>
+        </div>
+      </form>
+      <div id="mp-form-msg" style="font-size:11.5px;margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">📊 Comparativo por produto</span>
+      <span class="section-sub" id="mp-compare-sub"></span>
+    </div>
+    <div style="padding:10px 16px;">
+      <input class="search-box" id="mp-compare-search" placeholder="Filtrar produto…" style="width:220px;" oninput="mpRenderCompare()">
+    </div>
+    <div class="tbl-wrap">
+      <table id="mp-compare-table">
+        <thead><tr id="mp-compare-head"></tr></thead>
+        <tbody id="mp-compare-body"><tr><td style="text-align:center;padding:20px;color:var(--muted);">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">🕘 Histórico de registros</span>
+      <span class="section-sub" id="mp-hist-count"></span>
+    </div>
+    <div style="padding:10px 16px; display:flex; gap:8px; flex-wrap:wrap;">
+      <div class="controls" id="mp-hist-filters"></div>
+      <input class="search-box" id="mp-hist-search" placeholder="Filtrar por produto…" oninput="mpRenderHistory()">
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;">Produto</th><th>Mercado</th><th>Preço</th><th>Data</th><th>Observação</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="mp-hist-body"><tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted);">Carregando…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">🏬 Mercados monitorados</span>
+    </div>
+    <div class="section-body">
+      <div id="mp-mercados-chips" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;"></div>
+      <div style="display:flex; gap:8px;">
+        <input class="search-box" id="mp-novo-mercado" placeholder="Nome do novo mercado" style="width:220px;">
+        <button class="act-btn" onclick="mpAddMercado()">+ Adicionar mercado</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Namespace isolado "mp" (Monitor de Preços) — mesmo projeto Supabase do
+// Garimpo, tabelas próprias (monitor_*), sem interferir em nada existente. ──
+const MP_URL = "https://tkxkrbdvcctoajuigvvv.supabase.co";
+const MP_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreGtyYmR2Y2N0b2FqdWlndnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NzY2NzUsImV4cCI6MjA5OTQ1MjY3NX0.-szTE2wYYr9DNTLiff6zmLpbP6UOL1l9SFpvc-29Njs";
+
+let mpMercados = [], mpProdutos = [], mpPrecos = [];
+let mpHistFiltroMercado = "Todos";
+
+function mpFmtBRL(n){ return 'R$' + (parseFloat(n)||0).toFixed(2).replace('.',','); }
+function mpFmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function mpParseNumBR(str){
+  if(str==null || str==='') return null;
+  const n = parseFloat(String(str).replace(/\./g,'').replace(',','.'));
+  return isNaN(n) ? null : n;
+}
+
+async function mpFetch(path){
+  const res = await fetch(`${MP_URL}/rest/v1/${path}`, { headers:{ apikey:MP_KEY, Authorization:`Bearer ${MP_KEY}` } });
+  if(!res.ok) throw new Error(`Erro ${res.status}`);
+  return res.json();
+}
+async function mpPost(table, body, prefer){
+  const res = await fetch(`${MP_URL}/rest/v1/${table}`, {
+    method:'POST',
+    headers:{ apikey:MP_KEY, Authorization:`Bearer ${MP_KEY}`, 'Content-Type':'application/json', Prefer: prefer || 'return=representation' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error(`Erro ${res.status} ao salvar`);
+  return prefer === 'return=minimal' ? null : res.json();
+}
+async function mpDelete(table, id){
+  const res = await fetch(`${MP_URL}/rest/v1/${table}?id=eq.${id}`, {
+    method:'DELETE',
+    headers:{ apikey:MP_KEY, Authorization:`Bearer ${MP_KEY}` }
+  });
+  if(!res.ok) throw new Error(`Erro ${res.status} ao remover`);
+}
+
+async function mpLoadAll(){
+  try{
+    const [mercados, produtos, precos] = await Promise.all([
+      mpFetch('monitor_mercados?select=*&ativo=eq.true&order=nome.asc'),
+      mpFetch('monitor_produtos?select=*&order=nome.asc'),
+      mpFetch('monitor_precos?select=*&order=data.desc,criado_em.desc')
+    ]);
+    mpMercados = mercados; mpProdutos = produtos; mpPrecos = precos;
+    mpRenderStats(); mpRenderForm(); mpRenderCompare(); mpRenderHistory(); mpRenderMercados();
+  }catch(err){
+    document.getElementById('mp-hist-body').innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--red);">Erro ao carregar: ${err.message}. Confira se rodou o script monitor-precos-supabase.sql no Supabase.</td></tr>`;
+  }
+}
+
+function mpRenderStats(){
+  const produtosComPreco = new Set(mpPrecos.map(p=>p.produto_id)).size;
+  const ultimaData = mpPrecos.length ? mpPrecos[0].data : null;
+  document.getElementById('mp-stats').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Mercados</div><div class="kpi-val">${mpMercados.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Produtos monitorados</div><div class="kpi-val">${produtosComPreco}</div></div>
+    <div class="kpi"><div class="kpi-label">Registros de preço</div><div class="kpi-val">${mpPrecos.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Último registro</div><div class="kpi-val pos">${mpFmtDate(ultimaData)}</div></div>
+  `;
+}
+
+function mpRenderForm(){
+  document.getElementById('mp-produtos-list').innerHTML = mpProdutos.map(p=>`<option value="${p.nome.replace(/"/g,'&quot;')}">`).join('');
+  document.getElementById('mp-f-mercado').innerHTML = mpMercados.map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if(!document.getElementById('mp-f-data').value) document.getElementById('mp-f-data').value = new Date().toISOString().slice(0,10);
+}
+
+async function mpSubmit(ev){
+  ev.preventDefault();
+  const msgEl = document.getElementById('mp-form-msg');
+  msgEl.textContent = ''; msgEl.style.color = '';
+  const nomeProduto = document.getElementById('mp-f-produto').value.trim();
+  const unidade = document.getElementById('mp-f-unidade').value;
+  const mercadoId = document.getElementById('mp-f-mercado').value;
+  const preco = mpParseNumBR(document.getElementById('mp-f-preco').value);
+  const data = document.getElementById('mp-f-data').value;
+  const obs = document.getElementById('mp-f-obs').value.trim() || null;
+
+  if(!nomeProduto || !mercadoId || preco==null || !data){
+    msgEl.textContent = 'Preencha produto, mercado, preço e data.'; msgEl.style.color = 'var(--red)';
+    return false;
+  }
+  try{
+    let produto = mpProdutos.find(p=>p.nome.toLowerCase()===nomeProduto.toLowerCase());
+    if(!produto){
+      const created = await mpPost('monitor_produtos', { nome: nomeProduto, unidade });
+      produto = created[0];
+      mpProdutos.push(produto);
+    }
+    await mpPost('monitor_precos', { produto_id: produto.id, mercado_id: parseInt(mercadoId), preco, data, observacao: obs }, 'return=minimal');
+    msgEl.textContent = `✓ Preço de "${nomeProduto}" salvo.`; msgEl.style.color = 'var(--green)';
+    document.getElementById('mp-f-produto').value = '';
+    document.getElementById('mp-f-preco').value = '';
+    document.getElementById('mp-f-obs').value = '';
+    await mpLoadAll();
+  }catch(err){
+    msgEl.textContent = 'Não consegui salvar: ' + err.message; msgEl.style.color = 'var(--red)';
+  }
+  return false;
+}
+
+// último preço registrado por produto+mercado
+function mpUltimoPrecoMap(){
+  const map = {}; // produto_id -> { mercado_id -> preco_entry }
+  mpPrecos.forEach(p=>{
+    if(!map[p.produto_id]) map[p.produto_id] = {};
+    const atual = map[p.produto_id][p.mercado_id];
+    if(!atual || p.data > atual.data || (p.data===atual.data && p.criado_em > atual.criado_em)) {
+      map[p.produto_id][p.mercado_id] = p;
+    }
+  });
+  return map;
+}
+
+function mpRenderCompare(){
+  const map = mpUltimoPrecoMap();
+  const q = (document.getElementById('mp-compare-search')?.value || '').trim().toLowerCase();
+  let produtosComDados = mpProdutos.filter(p => map[p.id] && Object.keys(map[p.id]).length);
+  if(q) produtosComDados = produtosComDados.filter(p=>p.nome.toLowerCase().includes(q));
+
+  document.getElementById('mp-compare-sub').textContent = `${produtosComDados.length} produto(s) com preço registrado em pelo menos 1 mercado`;
+
+  document.getElementById('mp-compare-head').innerHTML =
+    `<th style="text-align:left;">Produto</th>` +
+    mpMercados.map(m=>`<th>${m.nome}</th>`).join('') +
+    `<th>Mais barato</th><th>Economia</th>`;
+
+  if(!produtosComDados.length){
+    document.getElementById('mp-compare-body').innerHTML = `<tr><td colspan="${mpMercados.length+3}" style="text-align:center;padding:20px;color:var(--muted);">Nenhum preço registrado ainda.</td></tr>`;
+    return;
+  }
+
+  document.getElementById('mp-compare-body').innerHTML = produtosComDados.map(prod=>{
+    const porMercado = map[prod.id] || {};
+    const valores = mpMercados.map(m=>porMercado[m.id] ? parseFloat(porMercado[m.id].preco) : null);
+    const validos = valores.filter(v=>v!=null);
+    const min = validos.length ? Math.min(...validos) : null;
+    const max = validos.length ? Math.max(...validos) : null;
+    const economia = (min!=null && max!=null && max>0) ? ((max-min)/max*100) : null;
+    const mercadoMaisBarato = min!=null ? mpMercados[valores.indexOf(min)]?.nome : '—';
+
+    const cols = mpMercados.map((m,i)=>{
+      const v = valores[i];
+      if(v==null) return `<td style="color:var(--subtle);">—</td>`;
+      const isMin = v===min;
+      return `<td style="${isMin?'color:var(--green);font-weight:700;':''}">${mpFmtBRL(v)}</td>`;
+    }).join('');
+
+    return `
+    <tr class="data-row">
+      <td><div style="font-weight:600;">${prod.nome}</div><div style="color:var(--muted);font-size:10.5px;">${prod.unidade||'un'}</div></td>
+      ${cols}
+      <td><span class="badge b-cheapest">${mercadoMaisBarato}</span></td>
+      <td style="${economia?'color:var(--green);font-weight:700;':''}">${economia!=null ? economia.toFixed(0)+'%' : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function mpRenderHistory(){
+  const q = (document.getElementById('mp-hist-search')?.value || '').trim().toLowerCase();
+  const produtoMap = {}; mpProdutos.forEach(p=>produtoMap[p.id]=p);
+  const mercadoMap = {}; mpMercados.forEach(m=>mercadoMap[m.id]=m);
+
+  document.getElementById('mp-hist-filters').innerHTML = ["Todos", ...mpMercados.map(m=>m.nome)].map(n=>
+    `<button class="filter-btn ${n===mpHistFiltroMercado?'on':''}" onclick="mpHistFiltroMercado='${n.replace(/'/g,"\\'")}';mpRenderHistory();">${n}</button>`
+  ).join('');
+
+  let rows = mpPrecos.slice();
+  if(mpHistFiltroMercado!=="Todos") rows = rows.filter(r=>mercadoMap[r.mercado_id]?.nome===mpHistFiltroMercado);
+  if(q) rows = rows.filter(r=>(produtoMap[r.produto_id]?.nome||'').toLowerCase().includes(q));
+
+  document.getElementById('mp-hist-count').textContent = `${rows.length} registro(s)`;
+
+  document.getElementById('mp-hist-body').innerHTML = rows.map(r=>{
+    const prod = produtoMap[r.produto_id], merc = mercadoMap[r.mercado_id];
+    return `
+    <tr class="data-row">
+      <td>${prod?.nome || '—'}</td>
+      <td>${merc?.nome || '—'}</td>
+      <td>${mpFmtBRL(r.preco)}</td>
+      <td style="font-family:var(--mono);font-size:11px;">${mpFmtDate(r.data)}</td>
+      <td style="text-align:left;color:var(--muted);font-size:11px;">${r.observacao||''}</td>
+      <td><button class="act-btn" style="font-size:10.5px;padding:3px 8px;color:var(--red);" onclick="mpDeletePreco(${r.id})">✕</button></td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted);">Nenhum registro com esse filtro.</td></tr>`;
+}
+
+async function mpDeletePreco(id){
+  if(!confirm('Remover este registro de preço?')) return;
+  try{
+    await mpDelete('monitor_precos', id);
+    await mpLoadAll();
+  }catch(err){ alert('Não consegui remover: ' + err.message); }
+}
+
+function mpRenderMercados(){
+  document.getElementById('mp-mercados-chips').innerHTML = mpMercados.map(m=>
+    `<span class="badge" style="background:var(--bg3);color:var(--text);border:1px solid var(--border);">${m.nome}</span>`
+  ).join('') || '<span style="color:var(--muted);font-size:12px;">Nenhum mercado cadastrado.</span>';
+}
+
+async function mpAddMercado(){
+  const input = document.getElementById('mp-novo-mercado');
+  const nome = input.value.trim();
+  if(!nome) return;
+  try{
+    await mpPost('monitor_mercados', { nome }, 'return=minimal');
+    input.value = '';
+    await mpLoadAll();
+  }catch(err){ alert('Não consegui adicionar: ' + err.message); }
+}
+
+// ── Modo escuro (mesma chave usada no AfiliDash / Garimpo) ──
+function toggleDarkMode(forcarEstado) {
+  const btn = document.getElementById('btn-dark-mode');
+  if (!btn) return;
+  const ativo = forcarEstado !== undefined ? forcarEstado : !document.body.classList.contains('ad-dark');
+  document.body.classList.toggle('ad-dark', ativo);
+  btn.textContent = ativo ? '☀️ Modo claro' : '🌙 Modo escuro';
+  localStorage.setItem('ad_dark_mode', ativo ? '1' : '0');
+}
+if (localStorage.getItem('ad_dark_mode') === '1') toggleDarkMode(true);
+
+mpLoadAll();
+</script>
+
+</body>
+</html>
