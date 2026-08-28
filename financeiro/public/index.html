@@ -3989,6 +3989,9 @@
         return;
       }
 
+      // Regra de ouro dos dados: onde falta o valor, a tela diz "nao cadastrado",
+      // nunca R$ 0,00 — zero pareceria dizer que a divida esta quitada.
+      const temMontanteFaltando = dividas.some(d => d.montante === null || d.montante === undefined);
       const totalDividas = dividas.reduce((s, d) => s + (d.montante || 0), 0);
       const totalParcelas = dividas.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
       const totalInvest = investimentos.reduce((s, i) => s + (i.valor || 0), 0);
@@ -3996,10 +3999,13 @@
 
       container.innerHTML = `
         <div class="grid">
-          ${cartaoKpi('Dívidas', moeda(totalDividas), `${dividas.length} contratos`, 'var(--accent-red)')}
+          ${cartaoKpi('Dívidas', moeda(totalDividas),
+            `${dividas.length} contratos${temMontanteFaltando ? ' · soma só o que tem saldo cadastrado' : ''}`, 'var(--accent-red)')}
           ${cartaoKpi('Parcelas por mês', moeda(totalParcelas))}
           ${cartaoKpi('Cartão a vencer', moeda(abertas.valor), `${abertas.parcelas} parcelas`, 'var(--accent-yellow)')}
-          ${cartaoKpi('Patrimônio líquido', moeda(patrimonio), 'aplicações − dívidas', patrimonio >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
+          ${cartaoKpi('Patrimônio líquido', moeda(patrimonio),
+            `aplicações − dívidas${temMontanteFaltando ? ' (parcial: falta saldo de alguma dívida)' : ''}`,
+            patrimonio >= 0 ? 'var(--accent-green)' : 'var(--accent-red)')}
         </div>
 
         <div class="section-title">Contratos</div>
@@ -4012,7 +4018,7 @@
               ${dividas.map(d => `
                 <tr>
                   <td>${d.nome || 'Sem nome'}</td>
-                  <td class="num">${moeda(d.montante)}</td>
+                  <td class="num">${(d.montante === null || d.montante === undefined) ? 'não cadastrado' : moeda(d.montante)}</td>
                   <td class="num">${d.parcela_mensal ? moeda(d.parcela_mensal) : '—'}</td>
                   <td class="num">${d.meses_restantes || '—'}</td>
                   <td>${d.meses_restantes ? previsaoQuitacao(d.meses_restantes) : '—'}</td>

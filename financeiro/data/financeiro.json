@@ -62375,7 +62375,116 @@
       }
     ]
   },
-  "dividas": [],
+  "dividas": [
+    {
+      "id": "consignado_itau_debito_conta",
+      "nome": "Consignado Itaú (débito em conta)",
+      "pessoa": "Juliane",
+      "montante": 25919.53,
+      "parcela_mensal": 1402.67,
+      "meses_restantes": 25,
+      "observacao": "Contrato 000000392319463, tomado 12/07/2023, R$39.836,91 total financiado (com IOF). Debitado direto na conta corrente todo dia 1º, não passa pela folha."
+    },
+    {
+      "id": "econsignado_1ct1",
+      "nome": "Econsignado Itaú (folha) — 1CT1",
+      "pessoa": "Juliane",
+      "montante": 13384.76,
+      "parcela_mensal": 633.9,
+      "meses_restantes": 28,
+      "observacao": "Tomado 10/11/2025, R$15.493,41 total financiado. Descontado direto na folha da Elektro (rubrica 1CT1)."
+    },
+    {
+      "id": "econsignado_1ct2",
+      "nome": "Econsignado Itaú (folha) — 1CT2",
+      "pessoa": "Juliane",
+      "montante": 9254.94,
+      "parcela_mensal": 253.61,
+      "meses_restantes": 81,
+      "observacao": "Tomado 28/03/2026, R$8.945,01 total financiado. Descontado direto na folha da Elektro (rubrica 1CT2)."
+    },
+    {
+      "id": "econsignado_mct0",
+      "nome": "Econsignado Itaú (folha) — MCT0",
+      "pessoa": "Juliane",
+      "montante": 27520.0,
+      "parcela_mensal": 676.11,
+      "meses_restantes": 78,
+      "observacao": "Tomado 31/12/2025, R$27.422,89 total financiado. Descontado direto na folha da Elektro (rubrica MCT0)."
+    },
+    {
+      "id": "mp_linha_credito",
+      "nome": "Mercado Pago — Linha de Crédito",
+      "pessoa": "Juliane",
+      "montante": null,
+      "parcela_mensal": 1294.38,
+      "meses_restantes": null,
+      "observacao": "R$14.000,00 liberados em 05/06/26 (conta pessoal do Mercado Pago). Parcela confirmada em jun e jul/26. Prazo total e saldo devedor exato ainda não informados — falta o detalhe do contrato."
+    },
+    {
+      "id": "mp_parcelas_fixas",
+      "nome": "Mercado Pago — Crédito em Parcelas Fixas",
+      "pessoa": "Juliane",
+      "montante": 9027.48,
+      "parcela_mensal": 752.29,
+      "meses_restantes": 12,
+      "observacao": "Empréstimo #1414088008, tomado 21/08/26, R$6.310,00 liberados. Juros 69% a.a., CET 105,62% a.a. — crédito caro, recém tomado."
+    },
+    {
+      "id": "mp_transferencia_pix",
+      "nome": "Mercado Pago — Transferência via Pix",
+      "pessoa": "Juliane",
+      "montante": 12545.7,
+      "parcela_mensal": null,
+      "meses_restantes": null,
+      "observacao": "Empréstimo #1501923435, tomado 21/08/26, R$9.000,00 liberados. Juros 69% a.a., CET 106,29% a.a. R$0,00 pago até agora — número de parcelas ainda não informado."
+    },
+    {
+      "id": "emprestimo_cenira",
+      "nome": "Empréstimo — Cenira Gomes Ferreira",
+      "pessoa": "Juliane",
+      "montante": null,
+      "parcela_mensal": 646.0,
+      "meses_restantes": null,
+      "observacao": "Empréstimo de pessoa física; ela emprestou pra Juliane, que está pagando de volta. Pagamento recorrente confirmado (25/08 e agendado pra 25/09). Valor total emprestado e parcelas restantes: aguardando a Juliane mandar mais detalhes."
+    },
+    {
+      "id": "crc_sp_anuidade_2026",
+      "nome": "CRC-SP — anuidade 2026 em atraso",
+      "pessoa": "Juliane",
+      "montante": 294.44,
+      "parcela_mensal": null,
+      "meses_restantes": null,
+      "observacao": "Parcelas 4/5 (venc. 31/05/26) e 5/5 (venc. 30/06/26) vencidas, R$147,22 cada. Anuidade do registro profissional de contabilidade dela."
+    },
+    {
+      "id": "iptu_2026",
+      "nome": "IPTU + taxa de lixo 2026 em atraso",
+      "pessoa": "Família",
+      "montante": 431.0,
+      "parcela_mensal": null,
+      "meses_restantes": null,
+      "observacao": "4 parcelas vencidas (mai, jun, jul, ago/26), R$107,75 cada (IPTU + coleta de lixo). Parcelas 8 (10/09) e 9 (13/10) ainda a vencer, não incluídas aqui."
+    },
+    {
+      "id": "escola_valentina_ago_2026",
+      "nome": "Escola Valentina (Mundo das Cores) — mensalidade de agosto",
+      "pessoa": "Valentina",
+      "montante": 1171.1,
+      "parcela_mensal": null,
+      "meses_restantes": null,
+      "observacao": "Venceu 10/08/26. Multa de R$27,22 + mora diária de R$0,46 acumulando desde o vencimento — valor atual real é maior que o registrado aqui."
+    },
+    {
+      "id": "escola_luca_ago_2026",
+      "nome": "Escola Luca (SESI) — parcela 8/8",
+      "pessoa": "Luca",
+      "montante": 545.66,
+      "parcela_mensal": null,
+      "meses_restantes": null,
+      "observacao": "Venceu 15/08/26. Parcela 8 de 8 da matrícula anual — as outras 7 já foram pagas."
+    }
+  ],
   "pessoas": [],
   "investimentos": [],
   "receitas": [],

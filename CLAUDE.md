@@ -116,14 +116,61 @@ decisão dela e do contador, a dashboard não tem como adivinhar.
   soma R$2.275,08 por pessoa marcada, só na declaração completa (o
   desconto simplificado já é um substituto fixo de 20% da renda, não soma
   com dedução por dependente).
-- **O Hugo ficou de fora de propósito.** Ela mencionou "3 dependentes,
-  meus filhos e meu marido", mas declarar cônjuge como dependente obriga a
-  somar a renda inteira dele na declaração dela (`regras-irpf.json` já
-  documentava isso na observação do grupo `dependentes`) — se ele tiver
-  renda própria, isso pode aumentar o imposto devido em vez de diminuir,
-  já que a renda dele passaria a ser tributada pela faixa dela. Perguntei
-  se ele tem renda própria antes de marcar; aguardando resposta antes de
-  adicionar `dependente_irpf: true` no `hugo` de `configuracoes.json`.
+- **O Hugo ficou de fora de propósito, e a conta confirma que deve ficar
+  assim.** Ela mencionou "3 dependentes, meus filhos e meu marido", mas
+  declarar cônjuge como dependente obriga a somar a renda inteira dele na
+  declaração dela. Ele é taxista, ~R$2.000/mês (~R$24.000/ano) — somando
+  isso na faixa de 27,5% dela, o imposto extra (~R$6.600) fica bem maior
+  que a economia da dedução por dependente (R$2.275,08 × 27,5% ≈ R$625):
+  **perderia uns R$5.975 líquidos** se declarasse ele. Não marcado em
+  `configuracoes.json` — e não deveria ser, a menos que a renda dele mude
+  muito.
+
+### Dívidas & Patrimônio cadastrada (28/08)
+A aba `dividas` estava vazia desde o início — a Juliane mandou aos poucos
+(prints do Itaú, Mercado Pago, portal do CRC-SP, boletos de escola) os
+dados de tudo que está em aberto, e isso foi cadastrado de vez em
+`financeiro.json` (`dividas`, 12 contratos).
+
+- **Os 4 consignados do Itaú (débito em conta + 3 descontados na folha)
+  não são dívida nova** — já apareciam todo mês como `divida_parcelada`
+  vindos do extrato e do holerite. O que faltava era o **nível de
+  contrato**: valor total, parcelas restantes, saldo devedor — que só um
+  print do "Resumo de empréstimos contratados" do Itaú (não vem em
+  lançamento nenhum) tem. Cruzado com sucesso: a parcela de cada um bate
+  exatamente com a rubrica já lançada (1CT1, 1CT2, MCT0).
+- **3 empréstimos do Mercado Pago são dívida nova de verdade**, tomados
+  em 2026: R$14.000 (linha de crédito, 05/06), R$6.310 e R$9.000 (ambos
+  21/08, mesmo dia — os dois últimos com CET de ~106% a.a., crédito caro).
+  Conta pessoal, confirmado pela Juliane. O da linha de crédito não tem
+  saldo devedor conhecido (só a parcela, R$1.294,38/mês) — falta o
+  detalhe do contrato.
+- **Empréstimo de pessoa física (Cenira Gomes Ferreira)**: ela emprestou
+  pra Juliane, que paga de volta R$646/mês (recorrente, confirmado via
+  extrato Pix e agendamento). Valor total ainda não informado.
+- **Contas fixas em atraso também entraram como "dívida"** mesmo sem ser
+  financiamento de prazo longo: CRC-SP (anuidade, 2 parcelas), IPTU +
+  lixo (4 parcelas), mensalidade de agosto da Escola Valentina e do Luca.
+  Fazem o mesmo sentido na aba: são compromisso que falta pagar.
+- **Bug real encontrado e corrigido nesse processo**: a tabela de
+  Contratos usava `moeda(d.montante)` direto, que trata `null`/`undefined`
+  como `0` — então os itens sem saldo conhecido (linha de crédito do
+  Mercado Pago, Cenira) apareciam como "R$ 0,00", parecendo quitados.
+  Violava a "regra de ouro dos dados" já documentada neste arquivo. Agora
+  mostra "não cadastrado" nesses casos, e os KPIs de total (Dívidas,
+  Patrimônio líquido) ganharam uma nota avisando que a soma é parcial
+  quando algum contrato está sem saldo. `moeda()` em si não mudou — é
+  função genérica usada em dezenas de lugares onde zero de verdade é
+  legítimo; o fix foi só na tabela de Contratos.
+- **Duas visões da mesma dívida convivem de propósito**: a tabela
+  "Contratos" (dados que a Juliane digitou/print) mostra o saldo devedor
+  real (já descontando amortização) e quando quita; o bloco "Fluxo de
+  caixa das dívidas", mais abaixo, é calculado ao vivo a partir dos
+  lançamentos e mostra o fluxo de caixa mês a mês. Não é duplicação: os
+  números de saldo diferem de propósito (um é o valor contábil real vindo
+  do banco, o outro é a soma nominal das parcelas que faltam, sem
+  desconto) — se ela estranhar dois números diferentes pro mesmo
+  empréstimo, é por isso.
 
 ### Edições na tela não estavam sendo salvas (24/08)
 A Juliane relatou: editou a categoria de um lançamento, rodou `deploy` depois,
