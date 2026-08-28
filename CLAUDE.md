@@ -105,6 +105,26 @@ implementado em `apurarIrpf()`/`renderizarIrpf()` (`public/index.html`) e
   concordavam entre si. Vale conferir contra a Receita Federal se um dia os
   valores mudarem de novo.
 
+### Dependentes no IRPF (28/08)
+A Juliane perguntou se os dependentes tinham entrado na conta de falta
+pagar/restituir — não tinham: o bloco "Dependentes" sempre foi só
+informativo, nunca somava em `somaDeducoes`, porque quem é dependente é
+decisão dela e do contador, a dashboard não tem como adivinhar.
+
+- Marcado com `dependente_irpf: true` na pessoa, em
+  `data/configuracoes.json` — hoje só **Valentina e Luca**. `apurarIrpf()`
+  soma R$2.275,08 por pessoa marcada, só na declaração completa (o
+  desconto simplificado já é um substituto fixo de 20% da renda, não soma
+  com dedução por dependente).
+- **O Hugo ficou de fora de propósito.** Ela mencionou "3 dependentes,
+  meus filhos e meu marido", mas declarar cônjuge como dependente obriga a
+  somar a renda inteira dele na declaração dela (`regras-irpf.json` já
+  documentava isso na observação do grupo `dependentes`) — se ele tiver
+  renda própria, isso pode aumentar o imposto devido em vez de diminuir,
+  já que a renda dele passaria a ser tributada pela faixa dela. Perguntei
+  se ele tem renda própria antes de marcar; aguardando resposta antes de
+  adicionar `dependente_irpf: true` no `hugo` de `configuracoes.json`.
+
 ### Edições na tela não estavam sendo salvas (24/08)
 A Juliane relatou: editou a categoria de um lançamento, rodou `deploy` depois,
 e a classificação tinha sumido. A causa real **não foi o deploy** — testei o

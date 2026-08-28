@@ -816,6 +816,9 @@ function noEscopo(mv) {
       const teto = regras.grupos[k.split('|')[0]].limite_por_pessoa;
       soma += Math.min(v, teto);
     });
+    const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'configuracoes.json'), 'utf8'));
+    const dependentes = (config.pessoas || []).filter(p => p.dependente_irpf);
+    soma += dependentes.length * (regras.limites.dependente || 0);
     return Math.round(soma * 100) / 100;
   })();
   igual('Total dedutível do IRPF bate com o calculado do JSON', dedutivelNaTela, esperadoDedutivel, 0.02);

@@ -16,13 +16,15 @@
       "id": "valentina",
       "nome": "Valentina",
       "cor": "#ec4899",
-      "icone": "👧"
+      "icone": "👧",
+      "dependente_irpf": true
     },
     {
       "id": "luca",
       "nome": "Luca",
       "cor": "#f59e0b",
-      "icone": "👦"
+      "icone": "👦",
+      "dependente_irpf": true
     },
     {
       "id": "familia",

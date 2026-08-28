@@ -3762,8 +3762,14 @@
         g.perdido = Math.round((g.dedutivel - g.aproveitavel) * 100) / 100;
       });
 
-      const somaDeducoes = Object.values(grupos).reduce((s, g) => s + g.aproveitavel, 0);
       const l = regras.limites || {};
+      // Dependente e decisao da Juliane, marcada em configuracoes.json
+      // (dependente_irpf: true na pessoa) — a dashboard nao adivinha quem
+      // declarar. So conta pra declaracao completa; o desconto simplificado
+      // ja e um substituto fixo de 20% da renda, nao soma com deducao.
+      const dependentes = (configuracoesGlobais.pessoas || []).filter(p => p.dependente_irpf);
+      const dependentesDeducao = dependentes.length * (l.dependente || 0);
+      const somaDeducoes = Object.values(grupos).reduce((s, g) => s + g.aproveitavel, 0) + dependentesDeducao;
       const simplificado = Math.min(rendimentos * (l.desconto_simplificado_percentual || 0.2),
                                     l.desconto_simplificado_teto || Infinity);
 
@@ -3787,7 +3793,7 @@
 
       return {
         grupos, naoDedutivel, rendimentos, impostoRetido, somaDeducoes, simplificado, limites: l,
-        rendimentoExclusivo, impostoRetidoExclusivo,
+        rendimentoExclusivo, impostoRetidoExclusivo, dependentes, dependentesDeducao,
         devidoCompleta, devidoSimplificada, usaCompleta, devidoFinal, saldoFinal,
       };
     }
@@ -3919,11 +3925,14 @@
         <div class="card full-width">
           <div class="kpi-sub" style="margin-bottom:10px">
             ${moeda(a.limites.dependente)} por dependente. ${regras.grupos.dependentes.observacao}
-            Quem é dependente é decisão sua e do contador — a dashboard não tem como saber, então não conta sozinha.
+            Quem é dependente é decisão sua e do contador — a dashboard não decide sozinha, só soma quem está
+            marcado com <code>dependente_irpf: true</code> em Configurações.
           </div>
           <div class="kpi-sub">
-            Candidatos pelos dados: <b>Valentina</b> e <b>Luca</b>. Com os dois,
-            seriam <b>${moeda(a.limites.dependente * 2)}</b> de dedução.
+            ${a.dependentes.length
+              ? `Já incluídos na conta acima: <b>${a.dependentes.map(p => p.nome).join(', ')}</b>
+                 (${a.dependentes.length}) — <b>${moeda(a.dependentesDeducao)}</b> de dedução, só na declaração completa.`
+              : 'Nenhum dependente marcado ainda.'}
           </div>
         </div>
 
