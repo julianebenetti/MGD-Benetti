@@ -404,6 +404,16 @@ compras antes mesmo de setembro chegar, e isso não faz setembro virar passado.
   tela avisa isso.
 - Respeita o seletor de âmbito (Pessoal / Benetti UP / Tudo somado), ao
   contrário do Imposto de Renda, que é sempre pessoal.
+- **A abertura de um mês futuro não repetia o resumo simples (29/08)**: a
+  Juliane clicou pra expandir setembro e só viu "Compromisso" + "Estimativa
+  fixa" + "Estimativa variável" soltos, sem nenhuma linha dizendo "recebe X,
+  paga Y, falta/sobra Z" — que é a pergunta que essa aba existe pra
+  responder. A linha fechada já mostrava isso, mas ao abrir o detalhe ela
+  perdia essa âncora. `detalheFluxoPrevisto()` agora abre com um resumo em
+  português simples repetindo recebe/paga/sobra-falta, e explicitando que
+  compromisso + estimativa fixa + estimativa variável = despesa (a soma
+  nunca era mostrada, só os três números separados, e ela tinha que somar
+  de cabeça).
 
 ### Múltiplos cartões
 Três cartões: **4846** (Itaú Black, pessoal), **0442** (Visa Infinite, quase

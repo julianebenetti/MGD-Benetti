@@ -3525,8 +3525,22 @@
         ...contratosDeDivida().flatMap(c => c.aVencer.filter(p => p.mes === l.mes).map(p => ({ desc: c.nome, valor: p.valor }))),
         ...comprasParceladasAVencer().filter(p => p.mes === l.mes).map(p => ({ desc: p.descricao, valor: p.valor })),
       ].sort((a, b) => b.valor - a.valor);
+      const estimativaTotal = l.estimativaFixa + l.estimativaVariavel;
 
       return `
+        <div class="aviso aviso-info" style="margin-bottom:14px">
+          Nesse mês, pelo que já se sabe: <b>recebe ${moeda(l.receita)}</b> e
+          <b>paga ${moeda(l.despesa)}</b> —
+          ${l.saldo >= 0
+            ? `<b style="color: var(--accent-green)">sobra ${moeda(l.saldo)}</b>`
+            : `<b style="color: var(--accent-red)">falta ${moeda(-l.saldo)}</b>`}.
+          <div class="kpi-sub" style="margin-top:4px">
+            Receita é estimativa (média do que já entrou no ano). Da despesa,
+            ${moeda(l.compromisso)} já é dívida e parcela contratada (valor exato, lista abaixo)
+            e ${moeda(estimativaTotal)} é estimativa (${moeda(l.estimativaFixa)} fixa +
+            ${moeda(l.estimativaVariavel)} variável) — soma ${moeda(l.compromisso)} + ${moeda(estimativaTotal)} = ${moeda(l.despesa)}.
+          </div>
+        </div>
         <div style="display:flex; gap:28px; flex-wrap:wrap; padding:4px 0">
           <div style="flex:1; min-width:240px">
             <b>Compromisso</b> — ${moeda(l.compromisso)}
@@ -3538,9 +3552,9 @@
           </div>
           <div style="flex:1; min-width:200px">
             <b>Estimativa fixa</b> — ${moeda(l.estimativaFixa)}
-            <div class="kpi-sub" style="margin-bottom:12px">Média do gasto fixo avulso nos meses já realizados.</div>
+            <div class="kpi-sub" style="margin-bottom:12px">Média do gasto fixo avulso nos meses já realizados — não é lista de lançamentos, é média.</div>
             <b>Estimativa variável</b> — ${moeda(l.estimativaVariavel)}
-            <div class="kpi-sub">Média do gasto variável avulso nos meses já realizados.</div>
+            <div class="kpi-sub">Média do gasto variável avulso nos meses já realizados — não é lista de lançamentos, é média.</div>
           </div>
         </div>`;
     }
