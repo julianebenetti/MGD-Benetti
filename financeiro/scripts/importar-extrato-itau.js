@@ -236,6 +236,28 @@ const REGRAS = [
     natureza: 'despesa', categoria: 'contabilidade', pessoa: 'Benetti UP',
     descricao: 'Contabilidade STIMA',
   },
+
+  // Empréstimo da mãe (Cenira): ela tomou um crédito parcelado pra emprestar
+  // pra Juliane, que paga de volta em parcelas fixas de R$646. O deposito de
+  // R$10.000 (12/05/26) e as demais PIX pra/da Cenira antes dessa data nao
+  // sao deste emprestimo (Juliane, 29/08).
+  {
+    padrao: /PIX (TRANSF|QRS) CENIRA/i, entrada: true, valorEntre: [9000, 11000],
+    natureza: 'emprestimo', categoria: 'emprestimo_tomado', pessoa: 'Juliane',
+    descricao: 'Empréstimo tomado com a mãe (Cenira)',
+    nota: 'Dinheiro entrando que é dívida contraída com a mãe, não renda.',
+  },
+  {
+    // Faixa em vez do valor exato: a parcela é R$645,91 no contrato da mãe,
+    // mas o Pix que a Juliane manda de fato varia um pouco (R$646,00 e
+    // possíveis pequenos ajustes) — sem casar o valor teria de confiar só no
+    // texto, que também casa com PIX antigos não relacionados a este contrato
+    // (ex: R$300 em jan/26, R$500 em abr/26, antes do empréstimo existir).
+    padrao: /PIX (TRANSF|QRS) CENIRA/i, entrada: false, valorEntre: [600, 700],
+    natureza: 'divida_parcelada', categoria: 'emprestimo_familiar', pessoa: 'Juliane',
+    descricao: 'Pagamento do empréstimo da mãe (Cenira)',
+    nota: 'Parcela de empréstimo: quita dívida com a mãe, não é consumo novo.',
+  },
 ];
 
 function classificar(desc, valor) {

@@ -179,6 +179,21 @@ dados de tudo que está em aberto, e isso foi cadastrado de vez em
   quando algum contrato está sem saldo. `moeda()` em si não mudou — é
   função genérica usada em dezenas de lugares onde zero de verdade é
   legítimo; o fix foi só na tabela de Contratos.
+- **Segundo bug, achado quando a Juliane conferiu o extrato de verdade
+  (29/08)**: o depósito de R$10.000 da Cenira (12/05/26) estava
+  classificado como `natureza: receita` no extrato — inflando a renda
+  tributável dela em R$10 mil (chegava a afetar até o cálculo de IRPF).
+  Corrigido pra `natureza: emprestimo` / categoria `emprestimo_tomado`,
+  mesmo padrão já usado pro consignado. As 3 parcelas de R$646 já pagas
+  (jun, jul, ago) também foram corrigidas de `despesa` pra
+  `divida_parcelada` / categoria `emprestimo_familiar` — o saldo estimado
+  por WhatsApp (R$3.600 pagos) estava errado por isso: o extrato mostra
+  só R$1.938 pagos de verdade (3×R$646). Saldo corrigido pra R$21.314,76,
+  faltam 33 de 36 parcelas. Regras persistentes adicionadas em
+  `importar-extrato-itau.js` (`PIX.*CENIRA`, separadas por `entrada` e
+  por `valorEntre` pra não confundir com dois PIX antigos — R$300 em
+  jan/26 e R$500 em abr/26 — que são de antes do empréstimo existir e
+  ainda não foram identificados).
 - **Duas visões da mesma dívida convivem de propósito**: a tabela
   "Contratos" (dados que a Juliane digitou/print) mostra o saldo devedor
   real (já descontando amortização) e quando quita; o bloco "Fluxo de
