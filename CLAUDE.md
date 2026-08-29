@@ -100,6 +100,55 @@ o que está errado.
   cadastrado). Corrigido para navegar explicitamente até um mês sem
   holerite antes de checar, em vez de depender de qual mês é "hoje".
 
+### Abas fora de sincronia entre si (29/08)
+A Juliane pediu para um agente validar que todas as 7 abas "estão se
+conversando" — os mesmos dados, vistos de ângulos diferentes, deveriam
+sempre bater. Mandei um agente comparar número a número entre abas antes
+de mexer em qualquer coisa; ele achou 3 divergências reais, todas
+corrigidas e reverificadas com Playwright depois.
+
+- **Painel e Fluxo de Caixa discordavam do "gasto do mês"** — o Painel
+  soma `gastos + estornos` (estorno tem valor negativo, então abate o
+  gasto), mas `dadosFluxoDeCaixa()` filtrava só `t.valor > 0`, jogando
+  fora o abatimento do estorno. Mesma conta, resultado diferente: Jan/26
+  divergia em R$8.321,19. Corrigido pra `despesaDoMes` somar todo
+  `ehConsumo(t)` sem filtrar o sinal, igual ao Painel já fazia.
+- **Dívidas & Patrimônio nunca respeitava o seletor Pessoal/Benetti
+  UP/Tudo somado** — nem `contratosDeDivida()` nem a tabela de Contratos
+  (que lê `dadosGlobais.dividas` direto) tinham o equivalente de
+  `noAmbito()`. Trocar de Pessoal pra Benetti UP nunca mudava os R$
+  142.119,45 de dívidas nem os R$ 8.885,26 de parcela mensal, quebrando a
+  aditividade (pessoal + empresa = tudo) que o resto do app respeita.
+  Como `dívidas`/`investimentos` são registros declarativos sem campo
+  `ambito` (só `pessoa`), a correção usa `ambitoDaPessoa(d.pessoa)`
+  comparado ao seletor atual, com passagem livre em "tudo somado".
+- **3 cliques do Imposto de Renda mostravam mais lançamentos do que o
+  card representa** — violando a regra já documentada acima ("Explodir
+  valor em Lançamentos") de que o clique tem que reproduzir exatamente o
+  número que o originou:
+  - "Rendimento tributável" filtrava só `natureza: receita`, sem excluir
+    PLR/13º (que têm tributação exclusiva e ficam de fora desse total).
+  - "Imposto já retido" filtrava só `categoria: imposto_renda`, sem
+    excluir a rubrica `/405` (o IR retido sobre a PLR, que é separado).
+  - As linhas por pessoa dentro de Saúde/Instrução (e das demais
+    deduções) não respeitavam a exceção de não-dedutível (farmácia dentro
+    de Saúde, papelaria dentro de Instrução) nem excluíam lançamentos com
+    `natureza: ajuste` (achado ao testar o clique: um acerto retroativo de
+    R$3,52 do plano odonto vazava pro filtro mesmo não entrando na conta
+    do card).
+
+  Os filtros de Lançamentos são só igualdade simples (um select por
+  campo) — não davam conta de "exceto X" ou "campo Y diferente de Z".
+  Em vez de inventar novos selects na tela só para esses casos raros,
+  `irParaLancamentos()`/`irParaLancamentosPessoal()` ganharam um 2º
+  argumento opcional: um predicado JS (`naoEhCategoria(...)`,
+  `naoCasaDescricao(padrao)`, `naoTemRubrica(rubrica)`, `apenasPositivo`)
+  aplicado depois dos filtros normais, guardado numa variável de módulo
+  (`filtroExtra`) sem select correspondente. Ele nunca fica pendurado:
+  toda chamada de `aplicarFiltros()` sem esse 2º argumento (botão
+  "Filtrar", ou outro clique que não precise dele) volta a zerar
+  `filtroExtra` — só vale para o clique que acabou de acontecer.
+
 ### Explodir valor em Lançamentos (23/08)
 Clicar num valor em Para Onde Vai, Dívidas & Patrimônio ou Fluxo de Caixa pula
 para a aba Lançamentos já filtrada pelos mesmos critérios que compuseram

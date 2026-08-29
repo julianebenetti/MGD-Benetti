@@ -3097,7 +3097,7 @@
 
     function contratosDeDivida() {
       const parcelas = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
-        .filter(t => t.natureza === 'divida_parcelada' && t.valor > 0 && mesNoEscopo(t.mes_vencimento));
+        .filter(t => t.natureza === 'divida_parcelada' && t.valor > 0 && mesNoEscopo(t.mes_vencimento) && noAmbito(t));
 
       const porContrato = {};
       parcelas.forEach(t => {
@@ -3436,7 +3436,12 @@
       const todas = ((dadosGlobais.fluxo_mensal || {}).transacoes || []).filter(noAmbito);
 
       const doMes = mv => todas.filter(t => t.mes_vencimento === mv);
-      const despesaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t) && t.valor > 0).reduce((s, t) => s + t.valor, 0) * 100) / 100;
+      // Estorno e ehConsumo tambem (natureza != NAO_E_CONSUMO), mas vem com
+      // valor negativo — soma tudo em vez de filtrar so valor>0, senao o
+      // estorno nunca abate nada e o Painel (que soma gastos+estornos, o
+      // mesmo calculo) diverge do Fluxo de Caixa pro mesmo mes/ambito
+      // (achado por agente, 29/08: R$8.321,19 de diferenca em Jan/26).
+      const despesaDoMes = ts => Math.round(ts.filter(t => ehConsumo(t)).reduce((s, t) => s + t.valor, 0) * 100) / 100;
       const receitaDoMes = ts => Math.round(ts.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0) * 100) / 100;
       // O avulso (nao parcelado) se separa em fixo e variavel pela classificacao
       // de cada lancamento (classificacaoFixaVariavel) — cada balde projeta pela
@@ -3799,6 +3804,7 @@
           // do IRPF hoje mapeia para uma unica categoria.
           categoria: (regra.categorias || []).length === 1 ? regra.categorias[0] : null,
           dedutivel: 0, excluido: 0, motivoExclusao: excecao ? excecao.motivo : null,
+          excecaoPadrao: excecao ? excecao.padrao : null,
           porPessoa: {}, itens: [], itensExcluidos: [],
         };
 
@@ -3891,10 +3897,10 @@
 
         <div class="grid">
           ${cartaoKpi('Rendimento tributável', a.rendimentos > 0 ? moeda(a.rendimentos) : 'não cadastrado', 'salário e benefícios — PLR e 13º à parte',
-            null, a.rendimentos > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ natureza: 'receita' })})` : null)}
+            null, a.rendimentos > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ natureza: 'receita' })}, naoEhCategoria(${CATEGORIAS_TRIBUTACAO_EXCLUSIVA.map(c => JSON.stringify(c)).join(', ')}))` : null)}
           ${cartaoKpi('Deduções que aproveitam', moeda(a.somaDeducoes), `${grupos.length} grupos`, 'var(--accent-green)')}
           ${cartaoKpi('Imposto já retido', a.impostoRetido > 0 ? moeda(a.impostoRetido) : 'não cadastrado', 'na fonte, pela Elektro',
-            null, a.impostoRetido > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ categoria: 'imposto_renda' })})` : null)}
+            null, a.impostoRetido > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ categoria: 'imposto_renda' })}, naoTemRubrica(${JSON.stringify('/405')}))` : null)}
           ${cartaoKpi('Desconto simplificado', moeda(a.simplificado), 'a alternativa às deduções', 'var(--accent-yellow)')}
         </div>
 
@@ -3958,9 +3964,18 @@
               <tbody>
                 ${Object.entries(g.porPessoa).sort((x, y) => y[1] - x[1]).map(([p, v]) => {
                   const usa = g.limite_por_pessoa ? Math.min(v, g.limite_por_pessoa) : v;
-                  const filtro = g.categoria ? { categoria: g.categoria, pessoa: p } : null;
+                  // natureza:'despesa' exclui ajuste/estorno com a mesma categoria —
+                  // apurarIrpf so soma desconto de folha/compra de verdade (valor>0,
+                  // nunca ajuste), e um ajuste positivo (ex: acerto retroativo do
+                  // Bradesco Odonto) vazava pro clique sem essa restricao (achado
+                  // ao testar o clique, 29/08: R$3,52 de diferenca).
+                  const filtro = g.categoria ? { categoria: g.categoria, pessoa: p, natureza: 'despesa' } : null;
+                  // g.dedutivel/porPessoa já exclui quem caiu na exceção (ex:
+                  // farmácia dentro de "saude") — sem repetir a exclusão aqui,
+                  // o clique mostraria em Lançamentos mais do que o valor
+                  // "Aproveita" representa (achado por agente, 29/08).
                   const clique = filtro
-                    ? ` class="clicavel" onclick='irParaLancamentosPessoal(${JSON.stringify(filtro)})' title="Ver estes lançamentos"`
+                    ? ` class="clicavel" onclick='irParaLancamentosPessoal(${JSON.stringify(filtro)}${g.excecaoPadrao ? `, naoCasaDescricao(${JSON.stringify(g.excecaoPadrao)})` : ''})' title="Ver estes lançamentos"`
                     : '';
                   return `
                     <tr${clique}>
@@ -4007,7 +4022,7 @@
             <tbody>
               ${Object.entries(a.naoDedutivel.porCategoria).sort((x, y) => y[1] - x[1]).slice(0, 12)
                 .map(([c, v]) => `
-                  <tr class="clicavel" onclick='irParaLancamentosPessoal(${JSON.stringify({ categoria: c })})' title="Ver estes lançamentos">
+                  <tr class="clicavel" onclick='irParaLancamentosPessoal(${JSON.stringify({ categoria: c })}, apenasPositivo)' title="Ver estes lançamentos">
                     <td>${c}</td><td class="num">${moeda(v)}</td>
                   </tr>`).join('')}
             </tbody>
@@ -4025,8 +4040,15 @@
       const container = document.getElementById('dividas_conteudo');
       if (!container) return;
 
-      const dividas = dadosGlobais.dividas || [];
-      const investimentos = dadosGlobais.investimentos || [];
+      // dividas/investimentos sao registros declarativos (nao tem campo
+      // ambito gravado, so pessoa) — sem filtrar aqui, trocar o seletor
+      // Pessoal/Benetti UP/Tudo somado nunca mudava os totais desta aba,
+      // quebrando a aditividade que o resto do app respeita (achado por
+      // agente, 29/08).
+      const dividas = (dadosGlobais.dividas || [])
+        .filter(d => ambitoAtual === 'tudo' || ambitoDaPessoa(d.pessoa) === ambitoAtual);
+      const investimentos = (dadosGlobais.investimentos || [])
+        .filter(i => ambitoAtual === 'tudo' || ambitoDaPessoa(i.pessoa) === ambitoAtual);
       const abertas = contarParcelasAbertas();
       const fluxoDividas = blocoFluxoDeDividas();
       const aMenor = financiamentoPorPagarAMenor();
@@ -4250,6 +4272,14 @@
     let paginaAtual = 1;
     const ITENS_POR_PAGINA = 50;
 
+    // Predicado extra sem select correspondente na tela — só existe para o
+    // clique-explosivo do IRPF reproduzir exatamente o mesmo recorte que o
+    // card usa (ex: excluir PLR/13º de "receita", ou excluir o item que caiu
+    // na exceção de não-dedutível). Nunca fica pendurado: toda chamada normal
+    // de aplicarFiltros() (botão Filtrar, ou outro clique sem 2º argumento)
+    // reseta para null, então só vale para o clique que acabou de acontecer.
+    let filtroExtra = null;
+
     function renderizarExtratoFluxo() {
       // Parte da lista ja recortada pelo ano em escopo, para que a aba nunca
       // exiba lancamentos fora do periodo que a dashboard cobre. Usa o razao
@@ -4261,7 +4291,8 @@
       exibirTransacoes();
     }
 
-    function aplicarFiltros() {
+    function aplicarFiltros(extra) {
+      filtroExtra = extra !== undefined ? extra : null;
       const transacoes = transacoesDoAno();
 
       const dataInicio = document.getElementById('filter_data_inicio').value;
@@ -4287,6 +4318,7 @@
         if (status && txn.status !== status) return false;
         if (natureza && txn.natureza !== natureza) return false;
         if (busca && !txn.descricao.toLowerCase().includes(busca)) return false;
+        if (filtroExtra && !filtroExtra(txn)) return false;
 
         // Mes da fatura (regime de caixa): le o campo gravado, nao recalcula
         if (mesVenc && txn.mes_vencimento !== mesVenc) return false;
@@ -4405,7 +4437,7 @@
     // Juliane ver exatamente quais lançamentos entram na conta. Campos
     // omitidos em `filtros` voltam para "Todos" — o clique sempre parte de
     // um filtro limpo, nunca soma com o que já estava selecionado.
-    function irParaLancamentos(filtros) {
+    function irParaLancamentos(filtros, extra) {
       const campos = ['data_inicio', 'data_fim', 'pessoa', 'tipo', 'conta',
         'categoria', 'status', 'busca', 'mes_venc', 'mes_ref', 'tipo_gasto', 'natureza'];
       campos.forEach(c => {
@@ -4413,7 +4445,24 @@
         if (el) el.value = filtros[c] || '';
       });
       document.querySelector('[data-tab="lancamentos"]').click();
-      aplicarFiltros();
+      aplicarFiltros(extra);
+    }
+
+    // Fábricas de predicado para o 2º argumento de irParaLancamentos, quando
+    // os selects de filtro (só igualdade simples) não bastam para reproduzir
+    // um recorte que o card excluiu por outro critério.
+    function naoEhCategoria(...categorias) {
+      return t => !categorias.includes(t.categoria);
+    }
+    function naoCasaDescricao(padraoRegex) {
+      const re = new RegExp(padraoRegex, 'i');
+      return t => !re.test(t.descricao);
+    }
+    function naoTemRubrica(rubrica) {
+      return t => t.rubrica !== rubrica;
+    }
+    function apenasPositivo(t) {
+      return t.valor > 0;
     }
 
     // O Imposto de Renda e sempre pessoal (apurarIrpf ignora o seletor do
@@ -4421,9 +4470,9 @@
     // pessoal antes de pular, clicar num valor do IRPF com "Benetti UP" ou
     // "Tudo somado" selecionado mostraria um filtro que nao bate com o
     // numero que originou o clique.
-    function irParaLancamentosPessoal(filtros) {
+    function irParaLancamentosPessoal(filtros, extra) {
       if (ambitoAtual !== 'pessoal') trocarAmbito('pessoal');
-      irParaLancamentos(filtros);
+      irParaLancamentos(filtros, extra);
     }
 
     // conta_origem de um cartão a partir do número final, para ligar o

@@ -744,8 +744,12 @@ function noEscopo(mv) {
     .reduce((s, mv) => {
       const ts = pessoalNoAno.filter(t => t.mes_vencimento === mv);
       if (!ts.length) return s;
+      // Estorno tambem e consumo (natureza fora de NAO_E_CONSUMO), so que com
+      // valor negativo — soma tudo em vez de filtrar so valor>0, senao o
+      // estorno nunca abate nada e diverge do Painel, que soma gasto+estorno
+      // pelo mesmo criterio (bug real corrigido em dadosFluxoDeCaixa, 29/08).
       return s + somar(ts.filter(t => t.natureza === 'receita'))
-                - somar(ts.filter(t => !NAO_E_CONSUMO.includes(t.natureza) && t.valor > 0));
+                - somar(ts.filter(t => !NAO_E_CONSUMO.includes(t.natureza)));
     }, 0) * 100) / 100;
   const saldoNaTela = numeroDe((fluxo.match(/SALDO ATÉ HOJE\s*\n\s*(R\$ -?[\d.,]+)/) || [])[1]);
   igual('Fluxo de caixa: saldo até hoje bate com o calculado do JSON', saldoNaTela, saldoAteAgoraEsperado, 0.05);
