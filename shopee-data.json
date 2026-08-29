@@ -1,6 +1,6 @@
 {
-  "updated_at": 1787958079,
-  "updated_at_br": "28/08/2026 19:54",
+  "updated_at": 1787961908,
+  "updated_at_br": "28/08/2026 20:58",
   "period_days": 90,
   "total_orders": 7735,
   "total_conversions": 7390,
@@ -6282,7 +6282,7 @@
     },
     {
       "ID do pedido": "2608247VPYGHKU",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-24 11:49:15",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "54.9",
@@ -6294,7 +6294,7 @@
       "Comissao total do pedido(R$)": "20.862",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Calça Masculina Com Elastano Esportiva Fitness Slim Fit",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22493540968",
       "ID da loja": "318968967",
       "Nome da loja": "Envoy For Men",
@@ -6302,7 +6302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "241271354183198",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-24"
     },
     {
@@ -7207,27 +7207,27 @@
     },
     {
       "ID do pedido": "2608245Y1AE61U",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "CANCELLED",
       "Horario do pedido": "2026-08-23 17:25:30",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
-      "Valor de Compra(R$)": "13.95",
-      "Comissao liquida do afiliado(R$)": "0.72889",
+      "Valor de Compra(R$)": "0",
+      "Comissao liquida do afiliado(R$)": "0",
       "Taxa de comissao Shopee do item": "4.00%",
       "Taxa de comissao do vendedor do item": "1.50%",
-      "Comissao Shopee(R$)": "0.558",
-      "Comissao do vendedor(R$)": "0.20925",
-      "Comissao total do pedido(R$)": "0.76725",
+      "Comissao Shopee(R$)": "0",
+      "Comissao do vendedor(R$)": "0",
+      "Comissao total do pedido(R$)": "0",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Saco Lixo Preto Resistente 100 Litros / 60L / 40L / 20L - Escolha o TAMANHO",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "CANCELLED",
       "ID do item": "23699122960",
       "ID da loja": "1640908085",
       "Nome da loja": "Biavic Embalagens",
-      "Quantidade": "1",
+      "Quantidade": "0",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241205129195630",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "CANCELLED",
       "data": "2026-08-23"
     },
     {
@@ -13682,7 +13682,7 @@
     },
     {
       "ID do pedido": "260820SS8GV8P4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-20 00:48:43",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "35.19",
@@ -13694,7 +13694,7 @@
       "Comissao total do pedido(R$)": "1.4076",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Meia Masculina Cano Alto Kit 3 a 12 Pares Confortável com Listras Ótima para Frio e Academia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "43308897641",
       "ID da loja": "487020334",
       "Nome da loja": "LP Meias",
@@ -13702,7 +13702,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240886123141621",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-20"
     },
     {
@@ -14007,7 +14007,7 @@
     },
     {
       "ID do pedido": "260820SK1QWGW6",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-19 22:57:34",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "99.77",
@@ -14019,7 +14019,7 @@
       "Comissao total do pedido(R$)": "3.9908",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Picador De Alimentos Moedor De Carne Mixer Elétrica Processador Cozinha Casa Alho - 110v-220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58253145740",
       "ID da loja": "1362240140",
       "Nome da loja": "TOP SHOP ELETRONICO",
@@ -14027,7 +14027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240879453192875",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     },
     {
@@ -18232,7 +18232,7 @@
     },
     {
       "ID do pedido": "260818M469KKEK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-17 18:48:22",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "49.99",
@@ -18244,7 +18244,7 @@
       "Comissao total do pedido(R$)": "1.9996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Calcinhas Conforto de Algodão CANELADA -101 C Feminina Conforto para o Dia a Dia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58258229781",
       "ID da loja": "1019704313",
       "Nome da loja": "BW Distribuidora Importados",
@@ -18252,7 +18252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240691701146868",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-17"
     },
     {
@@ -18982,7 +18982,7 @@
     },
     {
       "ID do pedido": "260817KMA2KHPD",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-17 14:04:08",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "34.99",
@@ -18994,7 +18994,7 @@
       "Comissao total do pedido(R$)": "1.3996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Grande capacidade bolsa de ombro mochila resistente impermeável Nylon saco de masculino crossbody",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "24945357367",
       "ID da loja": "1502507131",
       "Nome da loja": "Daupey.br",
@@ -19002,7 +19002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240674648148091",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-17"
     },
     {
