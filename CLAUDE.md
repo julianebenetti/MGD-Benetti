@@ -24,6 +24,43 @@ com Shopee, afiliados ou e-commerce — se surgir essa mistura, é engano.
 - O mês usado em tudo é `mes_vencimento` (regime de caixa) — quando o dinheiro
   sai da conta, não quando a compra foi feita.
 
+### Painel com cards fixos em "não cadastrado" (29/08)
+A Juliane reportou "a aba Painel não está funcionando corretamente", sem
+mais detalhe — mandei um agente investigar a fundo (rodar a suíte, abrir a
+página de verdade com Playwright, recomputar os números direto do JSON)
+antes de mexer em qualquer coisa, já que "não está certo" sozinho não diz
+o que está errado.
+
+- **Achado real**: os cards "Receitas do mês" e "Parcelas de dívida" em
+  `renderizarPainel()` eram **texto fixo** ("não cadastrado"), nunca
+  calculados — sobraram de antes de existir a importação de holerite
+  (23/08) e a aba Dívidas ser populada (28/08). `receitas()` e a soma de
+  `divida_parcelada` do mês já existiam e tinham dado real (ex: Jan/26,
+  R$14.670,66 de receita e R$2.036,57 de parcela), mas o Painel nunca
+  consultava nenhum dos dois. Corrigido pra usar os valores de verdade,
+  caindo em "não cadastrado" só quando o mês realmente não tem holerite
+  ou parcela lançada (ex: Out/26, mês ainda sem folha importada).
+- O bloco "Resultado do mês" dizia "ainda não dá para calcular sobra ou
+  falta" de forma fixa — falso desde que a receita passou a existir.
+  Agora mostra de verdade **Receita − Gasto = sobrou/faltou** quando há
+  receita do mês, e só mantém o aviso antigo nos meses sem holerite.
+- De quebra, o card "Fatura do cartão" tinha nome errado: o `liquido` que
+  ele mostra vem de `todasTransacoes()`, que já soma consumo de **todas**
+  as origens (cartão, extrato, folha), não só cartão. Renomeado pra
+  "Gasto do mês".
+- **Achado, mas não mexido ainda**: por padrão a tela abre no mês mais
+  recente disponível, que pode ser um mês futuro com fatura ainda em
+  aberto e quase sem lançamento (ex: Out/26, 4 lançamentos, R$489,17) —
+  gera um "vs. média anterior" tipo "-94%" em verde, parecendo boa
+  notícia quando é só fatura incompleta. Mesmo problema que o Fluxo de
+  Caixa já resolveu (piso pelo que já foi lançado numa fatura aberta),
+  nunca replicado no Painel. Fica registrado pra decidir com a Juliane
+  antes de mexer no critério de mês padrão.
+- O teste "Painel informa o que não está cadastrado" só checava se a
+  string aparecia em algum lugar da aba — não testava se os campos
+  certos mostravam número quando havia dado. Por isso a suíte de 215
+  testes nunca pegou esse bug.
+
 ### Explodir valor em Lançamentos (23/08)
 Clicar num valor em Para Onde Vai, Dívidas & Patrimônio ou Fluxo de Caixa pula
 para a aba Lançamentos já filtrada pelos mesmos critérios que compuseram

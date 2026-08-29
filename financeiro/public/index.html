@@ -2437,6 +2437,14 @@
       const estornos = doMes.filter(t => t.valor < 0).reduce((s, t) => s + t.valor, 0);
       const liquido = gastos + estornos;
 
+      // receitas() e transacoesDoAno() trazem o ano inteiro — filtra so o mes
+      // selecionado aqui, igual ja se faz com doMes.
+      const receitaDoMes = receitas().filter(t => t.mes_vencimento === mes).reduce((s, t) => s + t.valor, 0);
+      const parcelasDividaDoMes = transacoesDoAno()
+        .filter(t => t.mes_vencimento === mes && t.natureza === 'divida_parcelada')
+        .reduce((s, t) => s + t.valor, 0);
+      const resultadoDoMes = receitaDoMes - liquido;
+
       // Média das faturas anteriores a esta, para comparação
       const meses = mesesDisponiveis();
       const reaisOrdenados = meses.filter(m => m !== MES_A_CONFIRMAR);
@@ -2455,9 +2463,11 @@
         : `${doMes.length} lançamentos`;
 
       kpis.innerHTML =
-        cartaoKpi('Receitas do mês', 'não cadastrado', 'Cadastre em Ferramentas', 'var(--text-secondary)') +
-        cartaoKpi('Fatura do cartão', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)') +
-        cartaoKpi('Parcelas de dívida', 'não cadastrado', 'Cadastre em Dívidas', 'var(--text-secondary)') +
+        cartaoKpi('Receitas do mês', receitaDoMes > 0 ? moeda(receitaDoMes) : 'não cadastrado',
+          receitaDoMes > 0 ? 'salário, PLR e demais' : 'Nenhum holerite deste mês importado', 'var(--accent-green)') +
+        cartaoKpi('Gasto do mês', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)') +
+        cartaoKpi('Parcelas de dívida', parcelasDividaDoMes > 0 ? moeda(parcelasDividaDoMes) : 'não cadastrado',
+          parcelasDividaDoMes > 0 ? 'consignado, refinanciamento etc.' : 'Nenhuma parcela lançada neste mês', 'var(--accent-yellow)') +
         cartaoKpi(
           'vs. média anterior',
           variacao === null ? '—' : (variacao >= 0 ? '+' : '') + variacao.toFixed(0) + '%',
@@ -2467,14 +2477,20 @@
 
       // --- Resultado do mês ---
       document.getElementById('painel_resultado').innerHTML = `
-        <div class="aviso aviso-info">
-          <strong>Ainda não dá para calcular sobra ou falta deste mês.</strong><br>
-          Sabemos o que saiu no cartão (${moeda(liquido)}), mas não o que entrou.
-          Assim que as receitas e as contas do Itaú forem cadastradas, este bloco passa a mostrar
-          <b>Receitas − Saídas = Resultado</b>.
-        </div>
+        ${receitaDoMes > 0 ? `
+          <div class="aviso ${resultadoDoMes >= 0 ? 'aviso-ok' : 'aviso-atencao'}">
+            <strong>Receita ${moeda(receitaDoMes)} − Gasto ${moeda(liquido)} =
+              ${resultadoDoMes >= 0 ? 'sobrou' : 'faltou'} ${moeda(Math.abs(resultadoDoMes))}</strong><br>
+            <span class="kpi-sub">Gasto aqui é só o que passou pelo cartão/extrato/folha como consumo — não inclui parcela de dívida nem pagamento de fatura, que têm bloco próprio em Dívidas.</span>
+          </div>` : `
+          <div class="aviso aviso-info">
+            <strong>Ainda não dá para calcular sobra ou falta deste mês.</strong><br>
+            Sabemos o que saiu (${moeda(liquido)}), mas não o que entrou — nenhum holerite deste mês foi
+            importado ainda. Assim que for, este bloco passa a mostrar <b>Receita − Gasto = Resultado</b>.
+          </div>`}
         <table class="tabela-dados">
           <tbody>
+            ${receitaDoMes > 0 ? `<tr><td>Receita do mês</td><td class="num" style="color:var(--accent-green)">${moeda(receitaDoMes)}</td></tr>` : ''}
             <tr><td>Compras do período</td><td class="num">${moeda(gastos)}</td></tr>
             ${estornos < 0 ? `<tr><td>Estornos e cancelamentos</td><td class="num" style="color:var(--accent-green)">${moeda(estornos)}</td></tr>` : ''}
             ${fatura && Math.abs(fatura.pago - fatura.cobrado) > 0.01 ? `
@@ -2488,8 +2504,8 @@
               </tr>` : ''}
           </tbody>
           <tfoot>
-            <tr><td>Cobrado na fatura ${mes}</td><td class="num" style="color:var(--accent-red)">${moeda(liquido)}</td></tr>
-            ${fatura ? `<tr><td>Efetivamente pago</td><td class="num">${moeda(fatura.pago)}</td></tr>` : ''}
+            <tr><td>Gasto do mês (${mes})</td><td class="num" style="color:var(--accent-red)">${moeda(liquido)}</td></tr>
+            ${fatura ? `<tr><td>Efetivamente pago (fatura)</td><td class="num">${moeda(fatura.pago)}</td></tr>` : ''}
           </tfoot>
         </table>`;
 
