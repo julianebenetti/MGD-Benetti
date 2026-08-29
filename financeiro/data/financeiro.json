@@ -62445,8 +62445,8 @@
       "pessoa": "Juliane",
       "montante": 19652.76,
       "parcela_mensal": 646.0,
-      "meses_restantes": null,
-      "observacao": "A mãe da Juliane (Cenira) tomou um 'Crédito Parcelado' (R$10.000,00 liberados, IOF R$336,16, total do empréstimo R$10.336,16, 36x R$645,91 = R$23.252,76 no total, débito em conta) pra emprestar pra ela. Juliane paga de volta R$646,00/mês, direto pra Cenira via Pix (confirmado no extrato e agendado mensalmente). Saldo aqui é estimado: R$23.252,76 (total do contrato da mãe) menos R$3.600,00 já pagos (conferido por WhatsApp entre elas) — não é um extrato oficial, pode estar um pouco impreciso."
+      "meses_restantes": 30,
+      "observacao": "A mãe da Juliane (Cenira) tomou um 'Crédito Parcelado' (R$10.000,00 liberados, IOF R$336,16, total do empréstimo R$10.336,16, 36x R$645,91 = R$23.252,76 no total, débito em conta) pra emprestar pra ela. Juliane paga de volta R$646,00/mês, direto pra Cenira via Pix (confirmado no extrato e agendado mensalmente). Saldo e parcelas restantes são estimados: R$3.600,00 já pagos (conferido por WhatsApp entre elas) ÷ R$646,00 ≈ 6 parcelas pagas, restando ~30 de 36 — não vem de um extrato oficial do contrato da mãe, então tanto o saldo (R$19.652,76) quanto o prazo (30 meses) podem estar um pouco imprecisos."
     },
     {
       "id": "crc_sp_anuidade_2026",
