@@ -62441,12 +62441,12 @@
     },
     {
       "id": "emprestimo_cenira",
-      "nome": "Empréstimo — Cenira Gomes Ferreira",
+      "nome": "Empréstimo — Cenira Gomes Ferreira (mãe)",
       "pessoa": "Juliane",
-      "montante": null,
+      "montante": 19652.76,
       "parcela_mensal": 646.0,
       "meses_restantes": null,
-      "observacao": "Empréstimo de pessoa física; ela emprestou pra Juliane, que está pagando de volta. Pagamento recorrente confirmado (25/08 e agendado pra 25/09). Valor total emprestado e parcelas restantes: aguardando a Juliane mandar mais detalhes."
+      "observacao": "A mãe da Juliane (Cenira) tomou um 'Crédito Parcelado' (R$10.000,00 liberados, IOF R$336,16, total do empréstimo R$10.336,16, 36x R$645,91 = R$23.252,76 no total, débito em conta) pra emprestar pra ela. Juliane paga de volta R$646,00/mês, direto pra Cenira via Pix (confirmado no extrato e agendado mensalmente). Saldo aqui é estimado: R$23.252,76 (total do contrato da mãe) menos R$3.600,00 já pagos (conferido por WhatsApp entre elas) — não é um extrato oficial, pode estar um pouco impreciso."
     },
     {
       "id": "crc_sp_anuidade_2026",

@@ -141,13 +141,30 @@ dados de tudo que está em aberto, e isso foi cadastrado de vez em
   exatamente com a rubrica já lançada (1CT1, 1CT2, MCT0).
 - **3 empréstimos do Mercado Pago são dívida nova de verdade**, tomados
   em 2026: R$14.000 (linha de crédito, 05/06), R$6.310 e R$9.000 (ambos
-  21/08, mesmo dia — os dois últimos com CET de ~106% a.a., crédito caro).
-  Conta pessoal, confirmado pela Juliane. O da linha de crédito não tem
-  saldo devedor conhecido (só a parcela, R$1.294,38/mês) — falta o
-  detalhe do contrato.
-- **Empréstimo de pessoa física (Cenira Gomes Ferreira)**: ela emprestou
-  pra Juliane, que paga de volta R$646/mês (recorrente, confirmado via
-  extrato Pix e agendamento). Valor total ainda não informado.
+  21/08, mesmo dia — os dois últimos com CET de ~100-106% a.a., crédito
+  caro). Conta pessoal, confirmado pela Juliane.
+- **As taxas dos dois empréstimos de 21/08 vieram trocadas na primeira
+  leitura** — o ID do empréstimo (#1414088008) da tela de "Condições"
+  batia com o de R$14.000, não com o de R$6.310 como eu tinha assumido
+  por terem chegado juntos na mesma mensagem. Corrigido depois que a
+  Juliane mandou a tela de pagamento mostrando "Empréstimo pessoal,
+  parcela 3 de 18" pro de R$14.000 — 18 parcelas de R$1.294,38, juros
+  69% a.a., CET 105,62% a.a. O de R$6.310 fica com as taxas certas (juros
+  91,82% a.a., CET 100,43% a.a., 12x R$752,29).
+- **Empréstimo de pessoa física é da mãe da Juliane (Cenira Gomes
+  Ferreira)**: ela tomou um "Crédito Parcelado" (R$10.000 liberados, 36x
+  R$645,91, R$23.252,76 no total) pra emprestar pra filha, que paga de
+  volta R$646/mês direto pra ela via Pix. Saldo cadastrado é estimado
+  (total do contrato da mãe menos R$3.600 já pagos, confirmado por
+  WhatsApp entre elas) — não vem de extrato oficial, por isso a nota no
+  campo `observacao` avisando que pode estar impreciso.
+- **Prints antigos podem contaminar o mapeamento** — a Juliane mandou
+  duas telas do consignado de R$38.500 com "parcela 21 de 60" e
+  "vencimento 01 jun 2025", números bem diferentes do que já estava
+  cadastrado (parcela 35/60, saldo do resumo de 28/08/26). Ela confirmou
+  que eram prints antigos e para confiar no extrato/resumo mais recente
+  — o cadastro não mudou por causa deles. Fica registrado o alerta: ao
+  receber print de empréstimo, checar a data antes de usar o número.
 - **Contas fixas em atraso também entraram como "dívida"** mesmo sem ser
   financiamento de prazo longo: CRC-SP (anuidade, 2 parcelas), IPTU +
   lixo (4 parcelas), mensalidade de agosto da Escola Valentina e do Luca.
