@@ -2483,10 +2483,13 @@
 
       kpis.innerHTML =
         cartaoKpi('Receitas do mês', receitaDoMes > 0 ? moeda(receitaDoMes) : 'não cadastrado',
-          receitaDoMes > 0 ? 'salário, PLR e demais' : 'Nenhum holerite deste mês importado', 'var(--accent-green)') +
-        cartaoKpi('Gasto do mês', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)') +
+          receitaDoMes > 0 ? 'salário, PLR e demais' : 'Nenhum holerite deste mês importado', 'var(--accent-green)',
+          receitaDoMes > 0 ? `irParaLancamentos(${JSON.stringify({ natureza: 'receita', mes_venc: mes })})` : null) +
+        cartaoKpi('Gasto do mês', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)',
+          `irParaLancamentos(${JSON.stringify({ mes_venc: mes })})`) +
         cartaoKpi('Parcelas de dívida', temParcelaDivida ? moeda(parcelasDividaDoMes) : 'não cadastrado',
-          temParcelaDivida ? 'consignado, refinanciamento etc.' : 'Nenhuma parcela lançada neste mês', 'var(--accent-yellow)') +
+          temParcelaDivida ? 'consignado, refinanciamento etc.' : 'Nenhuma parcela lançada neste mês', 'var(--accent-yellow)',
+          temParcelaDivida ? `irParaLancamentos(${JSON.stringify({ natureza: 'divida_parcelada', mes_venc: mes })})` : null) +
         cartaoKpi(
           'vs. média anterior',
           variacao === null ? '—' : (variacao >= 0 ? '+' : '') + variacao.toFixed(0) + '%',
@@ -2509,9 +2512,17 @@
           </div>`}
         <table class="tabela-dados">
           <tbody>
-            ${receitaDoMes > 0 ? `<tr><td>Receita do mês</td><td class="num" style="color:var(--accent-green)">${moeda(receitaDoMes)}</td></tr>` : ''}
-            <tr><td>Compras do período</td><td class="num">${moeda(gastos)}</td></tr>
-            ${estornos < 0 ? `<tr><td>Estornos e cancelamentos</td><td class="num" style="color:var(--accent-green)">${moeda(estornos)}</td></tr>` : ''}
+            ${receitaDoMes > 0 ? `
+              <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ natureza: 'receita', mes_venc: mes })})' title="Ver estes lançamentos">
+                <td>Receita do mês</td><td class="num" style="color:var(--accent-green)">${moeda(receitaDoMes)}</td>
+              </tr>` : ''}
+            <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ natureza: 'despesa', mes_venc: mes })})' title="Ver estes lançamentos">
+              <td>Compras do período</td><td class="num">${moeda(gastos)}</td>
+            </tr>
+            ${estornos < 0 ? `
+              <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ natureza: 'estorno', mes_venc: mes })})' title="Ver estes lançamentos">
+                <td>Estornos e cancelamentos</td><td class="num" style="color:var(--accent-green)">${moeda(estornos)}</td>
+              </tr>` : ''}
             ${fatura && Math.abs(fatura.pago - fatura.cobrado) > 0.01 ? `
               <tr>
                 <td>Diferença entre o cobrado e o pago

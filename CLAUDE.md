@@ -58,13 +58,42 @@ o que está errado.
   volta pro comportamento antigo (última fatura real) se o mês vigente
   ainda não tiver nenhum lançamento.
 - **"Parcelas de dívida" também caía em "não cadastrado" por engano**: a
-  checagem original era `soma > 0`, mas agosto teve um crédito grande de
-  seguro cancelado (R$11.417,46, evento já documentado abaixo em "Fatura
-  renegociada") que deixa a soma líquida do mês **negativa** mesmo com
+  checagem original era `soma > 0`, mas agosto teve um crédito de
+  R$11.417,46 (**não é seguro cancelado** — é o lado "crédito" da mesma
+  fatura renegociada do cartão Azul/3794 já documentada em "Fatura
+  renegociada" mais abaixo: `Cred Parc Fat Seguro` estorna o valor
+  integral pra ele ser cobrado em 4x como `Parc Fatura Seg`; "Seguro" aqui
+  é o nome do produto de parcelamento de fatura do Itaú, não uma apólice
+  cancelada) que deixa a soma líquida do mês **negativa** mesmo com
   parcela de verdade lançada. Trocado pra checar a **quantidade** de
   lançamentos daquela natureza no mês, não o sinal da soma — assim o
   card mostra o valor negativo de verdade em vez de esconder atrás de
   "não cadastrado".
+- **Os 2 empréstimos do Mercado Pago tomados em agosto (R$6.310 e
+  R$9.000) nunca tinham virado lançamento de verdade** — desde que
+  mapeei as dívidas (28/08), eu só tinha registrado o resumo do contrato
+  em `dividas` (saldo, parcela, prazo), sem nunca criar a transação real
+  da liberação do dinheiro em `fluxo_mensal.transacoes`. Isso deixava os
+  dois **invisíveis** em Painel, Lançamentos e Para Onde Vai — só
+  apareciam na tabela de Contratos de Dívidas & Patrimônio. A Juliane
+  notou isso ao ver "Parcelas de dívida: não cadastrado" em agosto e
+  esperar ver os empréstimos que tinha acabado de tomar. Adicionadas as
+  2 transações reais (`natureza: emprestimo`, `categoria:
+  emprestimo_tomado`, `origem: mercado_pago`, novo — primeira vez que
+  essa origem aparece, já que não existe importador pra essa conta) —
+  igual já tinha sido feito pro empréstimo da Cenira. Isso não muda
+  "Parcelas de dívida" (que é sobre pagar parcela, não sobre tomar
+  empréstimo novo — são naturezas diferentes de propósito), mas faz os
+  dois aparecerem em Lançamentos e Para Onde Vai quando ela procurar.
+  As parcelas de pagamento desses dois (a partir de setembro) ainda não
+  existem como lançamento — só serão lançadas quando de fato saírem da
+  conta.
+- **Painel ganhou clique explosivo pra Lançamentos (29/08)**, igual já
+  existia em Para Onde Vai, Dívidas, Fluxo de Caixa e IRPF: os 3 cards
+  com dado real (Receitas do mês, Gasto do mês, Parcelas de dívida — "vs.
+  média anterior" ficou de fora por ser uma comparação, não um filtro) e
+  as linhas da tabela "Resultado do mês" (Receita do mês, Compras do
+  período, Estornos e cancelamentos).
 - O teste "Painel informa o que não está cadastrado" só checava se a
   string aparecia em algum lugar da aba, no mês que abrisse por padrão —
   quebrou quando o padrão passou a ser o mês vigente (que pode ter tudo
