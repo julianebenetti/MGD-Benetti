@@ -28,21 +28,51 @@ for arq in financeiro.json configuracoes.json cargas.json apontamentos.json clas
   [ -f "financeiro/data/$arq" ] && cp "financeiro/data/$arq" "financeiro/data/backups-deploy/${arq%.json}-$carimbo.json"
 done
 
+# A tela edita financeiro.json (e outros arquivos de dados) direto no
+# working tree, sem passar por commit — então quase todo deploy encontra
+# alguma edição pendente. Antes isso exigia rodar git stash na mão antes
+# de chamar este script; agora o próprio script guarda e devolve sozinho,
+# então voltar a bastar "deploy" puro (Juliane, 29/08).
+stashed=0
+if [ -n "$(git status --porcelain)" ]; then
+  echo "→ Guardando edição pendente da tela antes de puxar"
+  git stash push -u -m "atualizar.sh $carimbo"
+  stashed=1
+fi
+
+# Devolve a edição guardada, se houver — chamada em todo caminho de saída
+# a partir daqui, com ou sem sucesso, pra nunca deixar a edição perdida
+# dentro do stash sem avisar.
+devolver_stash() {
+  if [ "$stashed" = 1 ]; then
+    echo "→ Devolvendo a edição pendente que tinha sido guardada"
+    if ! git stash pop; then
+      echo
+      echo "→ ATENÇÃO: a edição não voltou sozinha (conflito no merge)."
+      echo "  Ela continua guardada — rode 'git stash list' e 'git stash show -p'"
+      echo "  pra ver o que é, e resolva com cuidado antes de mexer em mais nada."
+      return 1
+    fi
+  fi
+  return 0
+}
+
 echo "→ Buscando atualizações de $BRANCH"
 antes="$(git rev-parse HEAD)"
 if ! git pull --ff-only origin "$BRANCH"; then
   echo
-  echo "→ O pull foi recusado. Normalmente é porque financeiro.json (ou outro"
-  echo "  arquivo de dados) tem uma edição feita pela tela que ainda não foi"
-  echo "  salva no repositório — o git está te protegendo, não descartou nada."
-  echo "  O backup de agora está em financeiro/data/backups-deploy/*-$carimbo.json"
-  echo "  se precisar conferir o que estava salvo antes desta tentativa."
+  echo "→ O pull foi recusado mesmo depois de guardar a edição pendente —"
+  echo "  provavelmente a própria branch remota diverge da local (não é"
+  echo "  fast-forward). O backup de agora está em"
+  echo "  financeiro/data/backups-deploy/*-$carimbo.json se precisar conferir."
+  devolver_stash
   exit 1
 fi
 depois="$(git rev-parse HEAD)"
 
 if [ "$antes" = "$depois" ]; then
   echo "→ Nada novo. A dashboard já está na última versão."
+  devolver_stash
   exit 0
 fi
 
@@ -82,8 +112,10 @@ if curl -sf localhost:3001/api/health > /dev/null; then
     });')"
   echo "→ No ar: $total"
   echo
+  devolver_stash
   echo "Pronto. Abra a dashboard e dê Ctrl+Shift+R para limpar o cache."
 else
   echo "→ O serviço não respondeu. Veja o log com: pm2 logs $APP --lines 40"
+  devolver_stash
   exit 1
 fi

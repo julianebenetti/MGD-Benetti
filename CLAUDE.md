@@ -189,6 +189,26 @@ dados de tudo que está em aberto, e isso foi cadastrado de vez em
   desconto) — se ela estranhar dois números diferentes pro mesmo
   empréstimo, é por isso.
 
+### `atualizar.sh` guarda e devolve edição pendente sozinho (29/08)
+A Juliane notou que rodar só `deploy` tinha "parado de funcionar" — na
+verdade nunca funcionou sozinho quando havia edição pendente da tela; o
+que mudou foi a frequência: como ela mexe na dashboard entre um deploy e
+outro quase toda vez, o `git pull --ff-only` recusava quase sempre,
+exigindo `git stash -u` manual antes e `git stash pop` depois.
+
+- `atualizar.sh` agora faz esse stash sozinho: guarda antes do pull (só se
+  `git status --porcelain` não estiver vazio) e devolve depois que o
+  deploy termina (reinício do PM2 e health check incluídos) — voltou a
+  bastar rodar `deploy` puro.
+- **Conflito de verdade não é escondido.** Se o `git stash pop` não
+  conseguir mesclar sozinho (a mesma parte do arquivo mudou dos dois
+  lados), o script avisa claramente e para (`exit 1`) sem tentar resolver
+  — a edição fica guardada no stash (nunca descartada) e o arquivo de
+  trabalho fica com os marcadores de conflito do próprio git, prontos pra
+  alguém decidir à mão. Testado em repositório descartável nos dois
+  caminhos (merge limpo e conflito de propósito) antes de valer pra valer
+  — nos dois casos nada se perde.
+
 ### Edições na tela não estavam sendo salvas (24/08)
 A Juliane relatou: editou a categoria de um lançamento, rodou `deploy` depois,
 e a classificação tinha sumido. A causa real **não foi o deploy** — testei o
