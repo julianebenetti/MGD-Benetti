@@ -188,6 +188,15 @@ dados de tudo que está em aberto, e isso foi cadastrado de vez em
   do banco, o outro é a soma nominal das parcelas que faltam, sem
   desconto) — se ela estranhar dois números diferentes pro mesmo
   empréstimo, é por isso.
+- **`observacao` de cada dívida nunca aparecia na tela (29/08)**: quando
+  enriqueci os 4 consignados do Itaú com número de contrato, datas e
+  custo total do financiamento, gravei tudo certinho no campo
+  `observacao` do JSON — mas a tabela "Contratos" nunca lia esse campo em
+  lugar nenhum, então a Juliane não via nada de novo mesmo com o dado já
+  salvo e deployado. A Juliane perguntou "por que você não atualizou",
+  quando na verdade tinha atualizado — só não estava aparecendo. Corrigido
+  mostrando `observacao` como legenda pequena embaixo do nome de cada
+  linha da tabela.
 
 ### `atualizar.sh` guarda e devolve edição pendente sozinho (29/08)
 A Juliane notou que rodar só `deploy` tinha "parado de funcionar" — na

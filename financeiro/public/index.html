@@ -4031,7 +4031,7 @@
             <tbody>
               ${dividas.map(d => `
                 <tr>
-                  <td>${d.nome || 'Sem nome'}</td>
+                  <td>${d.nome || 'Sem nome'}${d.observacao ? `<div class="kpi-sub" style="margin-top:2px; white-space:normal">${d.observacao}</div>` : ''}</td>
                   <td class="num">${(d.montante === null || d.montante === undefined) ? 'não cadastrado' : moeda(d.montante)}</td>
                   <td class="num">${d.parcela_mensal ? moeda(d.parcela_mensal) : '—'}</td>
                   <td class="num">${d.meses_restantes || '—'}</td>
