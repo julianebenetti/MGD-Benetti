@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787973137,
-  "updated_at_br": "29/08/2026 00:05",
+  "updated_at": 1787976498,
+  "updated_at_br": "29/08/2026 01:01",
   "period_days": 90,
-  "total_orders": 7731,
-  "total_conversions": 7386,
+  "total_orders": 7730,
+  "total_conversions": 7385,
   "orders": [
     {
       "ID do pedido": "260828GXGHBFYU",
@@ -18207,7 +18207,7 @@
     },
     {
       "ID do pedido": "260818M49KEKCT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-17 18:50:12",
       "Sub_id1": "25Jul26TapeteHigienicoVs4",
       "Valor de Compra(R$)": "29.55",
@@ -18219,7 +18219,7 @@
       "Comissao total do pedido(R$)": "1.84687",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapete Higiênico Descartável para Cachorro Fralda Pet 60x60 Xixi Cão Médio Pequeno Unidades",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "25647560732",
       "ID da loja": "1101178064",
       "Nome da loja": "Jatobraz",
@@ -18227,7 +18227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240691812129321",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-17"
     },
     {
@@ -193252,31 +193252,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "233899469134319",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-31"
-    },
-    {
-      "ID do pedido": "260531T40J31CW",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-31 03:34:28",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "27.61",
-      "Comissao liquida do afiliado(R$)": "0.8283",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.8283",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8283",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Macacão de Menina com ´Zíper Bebê Reborn Malh Canelada",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58209281697",
-      "ID da loja": "811124452",
-      "Nome da loja": "Dali Baby",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233897667138538",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-31"
     }
