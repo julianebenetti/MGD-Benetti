@@ -48,18 +48,28 @@ o que está errado.
   ele mostra vem de `todasTransacoes()`, que já soma consumo de **todas**
   as origens (cartão, extrato, folha), não só cartão. Renomeado pra
   "Gasto do mês".
-- **Achado, mas não mexido ainda**: por padrão a tela abre no mês mais
-  recente disponível, que pode ser um mês futuro com fatura ainda em
-  aberto e quase sem lançamento (ex: Out/26, 4 lançamentos, R$489,17) —
-  gera um "vs. média anterior" tipo "-94%" em verde, parecendo boa
-  notícia quando é só fatura incompleta. Mesmo problema que o Fluxo de
-  Caixa já resolveu (piso pelo que já foi lançado numa fatura aberta),
-  nunca replicado no Painel. Fica registrado pra decidir com a Juliane
-  antes de mexer no critério de mês padrão.
+- **Mês padrão corrigido pra mês vigente (29/08)**: a tela abria no mês
+  mais recente disponível, que podia ser um mês futuro com fatura ainda
+  em aberto e quase sem lançamento (ex: Out/26, 4 lançamentos, R$489,17)
+  — gerava um "vs. média anterior" tipo "-94%" em verde, parecendo boa
+  notícia quando era só fatura incompleta. A Juliane pediu explicitamente
+  que a aba abra sempre no mês vigente (`mesVigente()`, calculado por
+  `new Date()`, não pelo último mês que aparecer na lista) — só cai de
+  volta pro comportamento antigo (última fatura real) se o mês vigente
+  ainda não tiver nenhum lançamento.
+- **"Parcelas de dívida" também caía em "não cadastrado" por engano**: a
+  checagem original era `soma > 0`, mas agosto teve um crédito grande de
+  seguro cancelado (R$11.417,46, evento já documentado abaixo em "Fatura
+  renegociada") que deixa a soma líquida do mês **negativa** mesmo com
+  parcela de verdade lançada. Trocado pra checar a **quantidade** de
+  lançamentos daquela natureza no mês, não o sinal da soma — assim o
+  card mostra o valor negativo de verdade em vez de esconder atrás de
+  "não cadastrado".
 - O teste "Painel informa o que não está cadastrado" só checava se a
-  string aparecia em algum lugar da aba — não testava se os campos
-  certos mostravam número quando havia dado. Por isso a suíte de 215
-  testes nunca pegou esse bug.
+  string aparecia em algum lugar da aba, no mês que abrisse por padrão —
+  quebrou quando o padrão passou a ser o mês vigente (que pode ter tudo
+  cadastrado). Corrigido para navegar explicitamente até um mês sem
+  holerite antes de checar, em vez de depender de qual mês é "hoje".
 
 ### Explodir valor em Lançamentos (23/08)
 Clicar num valor em Para Onde Vai, Dívidas & Patrimônio ou Fluxo de Caixa pula

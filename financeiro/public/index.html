@@ -2162,6 +2162,14 @@
 
     const MES_ORDEM = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+    // "Ago/26" a partir da data real de hoje — usado para abrir o Painel
+    // sempre no mes vigente, nao no ultimo mes que tiver lancamento (que as
+    // vezes e um mes futuro com fatura ainda quase vazia).
+    function mesVigente() {
+      const hoje = new Date();
+      return `${MES_ORDEM[hoje.getMonth()]}/${String(hoje.getFullYear()).slice(2)}`;
+    }
+
     // Ano que a dashboard cobre. Lancamentos de outros anos ficam fora de todas
     // as visoes ate que se decida incorpora-los.
     const ANO_DASHBOARD = 26;
@@ -2393,9 +2401,15 @@
       if (anterior && [...select.options].some(o => o.value === anterior)) {
         select.value = anterior;
       } else if (!incluirTodos) {
-        // Abre na fatura real mais recente, nunca no balde "A confirmar"
+        // Abre no mes vigente (hoje de verdade), nunca no balde "A confirmar".
+        // Se o mes vigente ainda nao tiver lancamento algum, cai na fatura
+        // real mais recente que tiver — nunca num mes futuro so porque ele
+        // aparece por ultimo na lista.
         const reais = meses.filter(m => m !== MES_A_CONFIRMAR);
-        select.value = (reais.length ? reais : meses)[Math.max(0, (reais.length ? reais : meses).length - 1)];
+        const vigente = mesVigente();
+        select.value = reais.includes(vigente)
+          ? vigente
+          : (reais.length ? reais : meses)[Math.max(0, (reais.length ? reais : meses).length - 1)];
       }
     }
 
@@ -2440,9 +2454,14 @@
       // receitas() e transacoesDoAno() trazem o ano inteiro — filtra so o mes
       // selecionado aqui, igual ja se faz com doMes.
       const receitaDoMes = receitas().filter(t => t.mes_vencimento === mes).reduce((s, t) => s + t.valor, 0);
-      const parcelasDividaDoMes = transacoesDoAno()
-        .filter(t => t.mes_vencimento === mes && t.natureza === 'divida_parcelada')
-        .reduce((s, t) => s + t.valor, 0);
+      const dividaDoMes = transacoesDoAno()
+        .filter(t => t.mes_vencimento === mes && t.natureza === 'divida_parcelada');
+      // Soma, nao a quantidade, decide "nao cadastrado": um estorno grande de
+      // fatura renegociada (ex: credito de seguro cancelado) pode deixar o
+      // liquido do mes negativo mesmo com parcela de verdade lancada — a
+      // quantidade de lancamentos e que diz se ha dado, nao o sinal da soma.
+      const parcelasDividaDoMes = dividaDoMes.reduce((s, t) => s + t.valor, 0);
+      const temParcelaDivida = dividaDoMes.length > 0;
       const resultadoDoMes = receitaDoMes - liquido;
 
       // Média das faturas anteriores a esta, para comparação
@@ -2466,8 +2485,8 @@
         cartaoKpi('Receitas do mês', receitaDoMes > 0 ? moeda(receitaDoMes) : 'não cadastrado',
           receitaDoMes > 0 ? 'salário, PLR e demais' : 'Nenhum holerite deste mês importado', 'var(--accent-green)') +
         cartaoKpi('Gasto do mês', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)') +
-        cartaoKpi('Parcelas de dívida', parcelasDividaDoMes > 0 ? moeda(parcelasDividaDoMes) : 'não cadastrado',
-          parcelasDividaDoMes > 0 ? 'consignado, refinanciamento etc.' : 'Nenhuma parcela lançada neste mês', 'var(--accent-yellow)') +
+        cartaoKpi('Parcelas de dívida', temParcelaDivida ? moeda(parcelasDividaDoMes) : 'não cadastrado',
+          temParcelaDivida ? 'consignado, refinanciamento etc.' : 'Nenhuma parcela lançada neste mês', 'var(--accent-yellow)') +
         cartaoKpi(
           'vs. média anterior',
           variacao === null ? '—' : (variacao >= 0 ? '+' : '') + variacao.toFixed(0) + '%',

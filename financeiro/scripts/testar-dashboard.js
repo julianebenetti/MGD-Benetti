@@ -824,16 +824,27 @@ function noEscopo(mv) {
   igual('Total dedutível do IRPF bate com o calculado do JSON', dedutivelNaTela, esperadoDedutivel, 0.02);
 
   // --- Zeros falsos ---
-  const zerosFalsos = await pagina.evaluate(() => {
+  // O Painel abre no mes vigente por padrao, que pode ter tudo cadastrado —
+  // "diz nao cadastrado" so faz sentido testado num mes que de verdade nao
+  // tem holerite ainda, senao o teste depende de sorte de qual mes e "hoje".
+  const mesSemHolerite = [...new Set(escopoCompleto.map(t => t.mes_vencimento))]
+    .find(m => !escopoCompleto.some(t => t.mes_vencimento === m && t.origem === 'holerite_elektro'));
+  const zerosFalsos = await pagina.evaluate((mes) => {
     document.querySelector('[data-tab="painel"]').click();
+    if (mes) {
+      const sel = document.getElementById('painel_mes');
+      sel.value = mes;
+      sel.dispatchEvent(new Event('change'));
+    }
     const txt = document.getElementById('painel').innerText;
     return {
       temDeficitFalso: /R\$\s*-?\s*40\.086,47/.test(txt),
       dizNaoCadastrado: /não cadastrado/i.test(txt)
     };
-  });
+  }, mesSemHolerite);
   ok('Painel não exibe o déficit falso de R$ 40.086,47', !zerosFalsos.temDeficitFalso);
-  ok('Painel informa o que não está cadastrado', zerosFalsos.dizNaoCadastrado);
+  ok('Painel informa o que não está cadastrado', zerosFalsos.dizNaoCadastrado,
+     `mês testado: ${mesSemHolerite || '(nenhum sem holerite achado)'}`);
 
   // --- Edição sob filtro atinge a transação certa ---
   const edicao = await pagina.evaluate(() => {
