@@ -62383,7 +62383,7 @@
       "montante": 25919.53,
       "parcela_mensal": 1402.67,
       "meses_restantes": 25,
-      "observacao": "Contrato 000000392319463, tomado 12/07/2023, R$39.836,91 total financiado (com IOF). Debitado direto na conta corrente todo dia 1º, não passa pela folha."
+      "observacao": "Contrato 392319463, tomado 12/07/2023. Valor escolhido R$38.500,00, total a pagar no contrato inteiro R$84.160,20 (60x R$1.402,67, de 01/10/2023 a 01/09/2028). Debitado direto na conta corrente todo dia 1º, não passa pela folha."
     },
     {
       "id": "econsignado_1ct1",
@@ -62392,7 +62392,7 @@
       "montante": 13384.76,
       "parcela_mensal": 633.9,
       "meses_restantes": 28,
-      "observacao": "Tomado 10/11/2025, R$15.493,41 total financiado. Descontado direto na folha da Elektro (rubrica 1CT1)."
+      "observacao": "Contrato 3860595143, tomado 10/11/2025. Valor escolhido R$15.000,00, total a pagar no contrato inteiro R$22.820,40 (36x R$633,90, de 26/01/2026 a 26/12/2028). Descontado direto na folha da Elektro (rubrica 1CT1)."
     },
     {
       "id": "econsignado_1ct2",
@@ -62401,7 +62401,7 @@
       "montante": 9254.94,
       "parcela_mensal": 253.61,
       "meses_restantes": 81,
-      "observacao": "Tomado 28/03/2026, R$8.945,01 total financiado. Descontado direto na folha da Elektro (rubrica 1CT2)."
+      "observacao": "Contrato 2984104360, tomado 28/03/2026. Valor escolhido R$8.643,30 (mesmo valor já visto como 'Liberação de empréstimo consignado' no extrato de março), total a pagar no contrato inteiro R$21.303,24 (84x R$253,61, de 26/06/2026 a 26/05/2033). Descontado direto na folha da Elektro (rubrica 1CT2)."
     },
     {
       "id": "econsignado_mct0",
@@ -62410,16 +62410,16 @@
       "montante": 27520.0,
       "parcela_mensal": 676.11,
       "meses_restantes": 78,
-      "observacao": "Tomado 31/12/2025, R$27.422,89 total financiado. Descontado direto na folha da Elektro (rubrica MCT0)."
+      "observacao": "Contrato 2874460377, tomado 31/12/2025. Valor escolhido R$26.500,00, total a pagar no contrato inteiro R$56.793,24 (84x R$676,11, de 26/03/2026 a 26/02/2033). Descontado direto na folha da Elektro (rubrica MCT0)."
     },
     {
       "id": "mp_linha_credito",
       "nome": "Mercado Pago — Linha de Crédito",
       "pessoa": "Juliane",
-      "montante": null,
+      "montante": 20710.08,
       "parcela_mensal": 1294.38,
-      "meses_restantes": null,
-      "observacao": "R$14.000,00 liberados em 05/06/26 (conta pessoal do Mercado Pago). Parcela confirmada em jun e jul/26. Prazo total e saldo devedor exato ainda não informados — falta o detalhe do contrato."
+      "meses_restantes": 16,
+      "observacao": "Empréstimo #1414088008, R$14.000,00 creditados em 05/06/26, pago de volta em 18x R$1.294,38. Juros mensais 5,75%, juros anuais 69,00%, CET mensal 6,10%, CET anual 105,62%, IOF 3%. Parcela 3 de 18 vencendo agora (2 já pagas, 16 a vencer) — saldo aqui é a soma nominal das parcelas que faltam, sem desconto de amortização (não é o saldo devedor exato do banco)."
     },
     {
       "id": "mp_parcelas_fixas",
@@ -62428,16 +62428,16 @@
       "montante": 9027.48,
       "parcela_mensal": 752.29,
       "meses_restantes": 12,
-      "observacao": "Empréstimo #1414088008, tomado 21/08/26, R$6.310,00 liberados. Juros 69% a.a., CET 105,62% a.a. — crédito caro, recém tomado."
+      "observacao": "Empréstimo #1501919960, tomado 21/08/26, R$6.310,00 liberados, 12x R$752,29 (R$9.027,48 total: R$2.580,70 de juros + R$136,78 de IOF). Juros mensais 5,50%, juros anuais 91,82%, CET mensal 5,88%, CET anual 100,43%, IOF 3%. Vencimento todo dia 21."
     },
     {
       "id": "mp_transferencia_pix",
       "nome": "Mercado Pago — Transferência via Pix",
       "pessoa": "Juliane",
       "montante": 12545.7,
-      "parcela_mensal": null,
-      "meses_restantes": null,
-      "observacao": "Empréstimo #1501923435, tomado 21/08/26, R$9.000,00 liberados. Juros 69% a.a., CET 106,29% a.a. R$0,00 pago até agora — número de parcelas ainda não informado."
+      "parcela_mensal": 1254.57,
+      "meses_restantes": 10,
+      "observacao": "Empréstimo #1501923435, tomado 21/08/26, R$9.000,00 liberados, 10x R$1.254,57 (R$12.545,70 total). Juros anuais 69,00%, CET anual 106,29%, IOF 3%. Parcela 1 de 10 vence 28/09/26 — nenhuma paga ainda."
     },
     {
       "id": "emprestimo_cenira",
