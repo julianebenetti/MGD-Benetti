@@ -191,9 +191,14 @@ dados de tudo que está em aberto, e isso foi cadastrado de vez em
   só R$1.938 pagos de verdade (3×R$646). Saldo corrigido pra R$21.314,76,
   faltam 33 de 36 parcelas. Regras persistentes adicionadas em
   `importar-extrato-itau.js` (`PIX.*CENIRA`, separadas por `entrada` e
-  por `valorEntre` pra não confundir com dois PIX antigos — R$300 em
-  jan/26 e R$500 em abr/26 — que são de antes do empréstimo existir e
-  ainda não foram identificados).
+  por `valorEntre` pra não confundir com os dois PIX antigos abaixo.
+- **Os dois PIX antigos pra Cenira (R$300 em jan/26, R$500 em abr/26) são
+  ajuda de custo**, não empréstimo — a Juliane confirmou que eram pra
+  ajudar a mãe a pagar conta do mês, antes mesmo do empréstimo de R$10 mil
+  existir. Categoria nova `ajuda_familiar` (`despesa`, não dedutível no
+  IR — adicionada em `nao_dedutivel` de `regras-irpf.json`), com uma
+  terceira regra em `importar-extrato-itau.js` pra qualquer Pix futuro
+  pra Cenira fora da faixa de valor da parcela do empréstimo.
 - **Duas visões da mesma dívida convivem de propósito**: a tabela
   "Contratos" (dados que a Juliane digitou/print) mostra o saldo devedor
   real (já descontando amortização) e quando quita; o bloco "Fluxo de

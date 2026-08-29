@@ -258,6 +258,14 @@ const REGRAS = [
     descricao: 'Pagamento do empréstimo da mãe (Cenira)',
     nota: 'Parcela de empréstimo: quita dívida com a mãe, não é consumo novo.',
   },
+  // Qualquer outro Pix pra Cenira (fora da faixa da parcela) é ajuda de
+  // custo avulsa, não empréstimo — confirmado pela Juliane (29/08). Vem
+  // depois da regra da parcela de propósito: a mais específica vence.
+  {
+    padrao: /PIX (TRANSF|QRS) CENIRA/i, entrada: false,
+    natureza: 'despesa', categoria: 'ajuda_familiar', pessoa: 'Juliane',
+    descricao: 'Ajuda de custo para a mãe (Cenira)',
+  },
 ];
 
 function classificar(desc, valor) {
