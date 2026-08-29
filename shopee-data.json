@@ -1,9 +1,9 @@
 {
-  "updated_at": 1787965085,
-  "updated_at_br": "28/08/2026 21:51",
+  "updated_at": 1787969034,
+  "updated_at_br": "28/08/2026 22:57",
   "period_days": 90,
-  "total_orders": 7732,
-  "total_conversions": 7387,
+  "total_orders": 7731,
+  "total_conversions": 7386,
   "orders": [
     {
       "ID do pedido": "260828GXGHBFYU",
@@ -193277,31 +193277,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "233897667138538",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-05-31"
-    },
-    {
-      "ID do pedido": "260531SV1MBKEB",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-05-31 01:11:53",
-      "Sub_id1": "24Mai26SaiaCamaBoxVEA",
-      "Valor de Compra(R$)": "39.9",
-      "Comissao liquida do afiliado(R$)": "1.197",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "15.00%",
-      "Comissao Shopee(R$)": "1.197",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.197",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 3 Óculos De Grau  Leitura  +1.00 Até +4.00 Masculino e Feminino",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21597926348",
-      "ID da loja": "832646686",
-      "Nome da loja": "BW VISION",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "233889113132954",
       "conversionStatus": "COMPLETED",
       "data": "2026-05-31"
     }
