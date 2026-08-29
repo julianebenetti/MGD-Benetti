@@ -62453,8 +62453,8 @@
       "nome": "CRC-SP — anuidade 2026 em atraso",
       "pessoa": "Juliane",
       "montante": 294.44,
-      "parcela_mensal": null,
-      "meses_restantes": null,
+      "parcela_mensal": 147.22,
+      "meses_restantes": 2,
       "observacao": "Parcelas 4/5 (venc. 31/05/26) e 5/5 (venc. 30/06/26) vencidas, R$147,22 cada. Anuidade do registro profissional de contabilidade dela."
     },
     {
@@ -62462,8 +62462,8 @@
       "nome": "IPTU + taxa de lixo 2026 em atraso",
       "pessoa": "Família",
       "montante": 431.0,
-      "parcela_mensal": null,
-      "meses_restantes": null,
+      "parcela_mensal": 107.75,
+      "meses_restantes": 4,
       "observacao": "4 parcelas vencidas (mai, jun, jul, ago/26), R$107,75 cada (IPTU + coleta de lixo). Parcelas 8 (10/09) e 9 (13/10) ainda a vencer, não incluídas aqui."
     },
     {
@@ -62471,8 +62471,8 @@
       "nome": "Escola Valentina (Mundo das Cores) — mensalidade de agosto",
       "pessoa": "Valentina",
       "montante": 1171.1,
-      "parcela_mensal": null,
-      "meses_restantes": null,
+      "parcela_mensal": 1171.1,
+      "meses_restantes": 1,
       "observacao": "Venceu 10/08/26. Multa de R$27,22 + mora diária de R$0,46 acumulando desde o vencimento — valor atual real é maior que o registrado aqui."
     },
     {
@@ -62480,8 +62480,8 @@
       "nome": "Escola Luca (SESI) — parcela 8/8",
       "pessoa": "Luca",
       "montante": 545.66,
-      "parcela_mensal": null,
-      "meses_restantes": null,
+      "parcela_mensal": 545.66,
+      "meses_restantes": 1,
       "observacao": "Venceu 15/08/26. Parcela 8 de 8 da matrícula anual — as outras 7 já foram pagas."
     }
   ],
