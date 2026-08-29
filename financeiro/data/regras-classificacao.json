@@ -1,6 +1,6 @@
 {
-  "versao": 6,
-  "atualizado_em": "2026-08-24",
+  "versao": 7,
+  "atualizado_em": "2026-08-29",
   "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão. 'valor' opcional: quando presente, a regra só casa se o valor do lançamento for igual (tolerância de 1 centavo) — usado quando duas coisas diferentes compartilham o mesmo texto de descrição e só o valor as distingue.",
   "principios": [
     "A pessoa da despesa é quem se beneficia dela, não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da Família.",
@@ -251,6 +251,60 @@
       "categoria": "ferramentas",
       "pessoa": "Benetti UP",
       "nota": "Ferramentas de trabalho da Benetti UP: hospedagem, IA, deploy e transcricao (Juliane, 23/08)"
+    },
+    {
+      "padrao": "^htm",
+      "categoria": "educacao_profissional",
+      "pessoa": "Benetti UP",
+      "nota": "Descritor de cobranca da Hotmart no cartao (curso/mentoria) — mesma regra ja aplicada a Kiwify/Hotmart (Juliane, 29/08)"
+    },
+    {
+      "padrao": "copycat apps",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Aplicativo de trabalho da Benetti UP (Juliane, 29/08)"
+    },
+    {
+      "padrao": "dental kids",
+      "categoria": "saude",
+      "pessoa": "Valentina",
+      "nota": "Dentista da Valentina (Juliane, 29/08)"
+    },
+    {
+      "padrao": "cinepolis",
+      "categoria": "lazer_esportes",
+      "pessoa": "Família",
+      "nota": "Cinema (Juliane, 29/08)"
+    },
+    {
+      "padrao": "sephora",
+      "categoria": "cuidados_pessoais",
+      "pessoa": "Juliane",
+      "nota": "Juliane, 29/08"
+    },
+    {
+      "padrao": "fft maquiagens",
+      "categoria": "cuidados_pessoais",
+      "pessoa": "Juliane",
+      "nota": "Juliane, 29/08"
+    },
+    {
+      "padrao": "acougue jardim",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Acougue (Juliane, 29/08)"
+    },
+    {
+      "padrao": "rest frangoassado|box 8 barriguda|osiro pasteis|pipocas da sandra|milky moo",
+      "categoria": "alimentacao_fora",
+      "pessoa": "Família",
+      "nota": "Restaurantes e lanches — sai com a familia (Juliane, 29/08)"
+    },
+    {
+      "padrao": "santana e amaral papel",
+      "categoria": "educacao",
+      "pessoa": "Filhos",
+      "nota": "Papelaria — material escolar dos filhos (Juliane, 29/08)"
     }
   ]
 }

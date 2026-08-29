@@ -266,6 +266,33 @@ const REGRAS = [
     natureza: 'despesa', categoria: 'ajuda_familiar', pessoa: 'Juliane',
     descricao: 'Ajuda de custo para a mãe (Cenira)',
   },
+  // Lote de reclassificação do "não classificado" do extrato (Juliane, 29/08).
+  {
+    padrao: /PIX QRS SEM PARAR/i,
+    natureza: 'despesa', categoria: 'transporte', pessoa: 'Família',
+    descricao: 'Sem Parar — pedágio',
+  },
+  {
+    padrao: /PIX QRS FACEBOOK/i,
+    natureza: 'despesa', categoria: 'trafego_pago', pessoa: 'Benetti UP',
+    descricao: 'Facebook Ads',
+  },
+  {
+    padrao: /PIX QRS AMERICANAS/i,
+    natureza: 'despesa', categoria: 'compras', pessoa: 'Família',
+    descricao: 'Americanas',
+  },
+  {
+    padrao: /PIX QRS CINEPOLIS/i,
+    natureza: 'despesa', categoria: 'lazer_esportes', pessoa: 'Família',
+    descricao: 'Cinépolis',
+  },
+  {
+    padrao: /PIX TRANSF Vanders/i,
+    natureza: 'despesa', categoria: 'cuidados_pessoais', pessoa: 'Juliane',
+    descricao: 'Manicure — unha em gel (Vanders)',
+    nota: 'Confirmado pela Juliane (29/08).',
+  },
 ];
 
 function classificar(desc, valor) {
