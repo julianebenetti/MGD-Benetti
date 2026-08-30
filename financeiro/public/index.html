@@ -1302,6 +1302,12 @@
 
       <div class="section-title">Pontos de atenção</div>
       <div class="card full-width" id="painel_alertas"></div>
+
+      <div class="section-title">💰 Fluxo do Mês Vigente</div>
+      <div class="card full-width" id="painel_fluxo_vigente"></div>
+
+      <div class="section-title">⚠️ Atenção! Vencimentos Críticos</div>
+      <div class="card full-width" id="painel_vencimentos_criticos"></div>
     </div>
 
     <!-- TAB: FLUXO -->
@@ -2631,6 +2637,114 @@
 
       document.getElementById('painel_alertas').innerHTML =
         alertas.map(([cls, txt]) => `<div class="aviso ${cls}">${txt}</div>`).join('');
+
+      // --- Fluxo do mês vigente ---
+      const mesVig = mesVigente();
+      const receitaVigente = receitas().filter(t => t.mes_vencimento === mesVig).reduce((s, t) => s + t.valor, 0);
+
+      // Vencimentos: faturas do mês vigente, EXCLUINDO cartão 4846 (Black) e loans do Mercado Pago
+      const faturasVigentes = (dadosGlobais.faturas_cartao || [])
+        .filter(f => f.mes === mesVig && f.cartao !== '4846' && f.cartao !== 'mp_loan');
+      const totalVencimentosReais = faturasVigentes.reduce((s, f) => s + f.em_aberto, 0);
+
+      // Parcelas de dívida do mês vigente (consignado, refinanciamento, etc.)
+      const parcelasDividaVigentes = transacoesDoAno()
+        .filter(t => t.mes_vencimento === mesVig && t.natureza === 'divida_parcelada')
+        .reduce((s, t) => s + t.valor, 0);
+
+      const totalVencimentos = totalVencimentosReais + parcelasDividaVigentes;
+      const saldoVigente = receitaVigente - totalVencimentos;
+      const saudeFinanceira = receitaVigente > 0 ? (saldoVigente / receitaVigente * 100) : null;
+
+      const indicadorSaude = saudeFinanceira === null ? 'aviso-info'
+                             : saudeFinanceira >= 0 ? 'aviso-ok'
+                             : saudeFinanceira >= -20 ? 'aviso-atencao'
+                             : 'aviso-critico';
+
+      const textoSaude = saudeFinanceira === null ? 'Sem receita lançada'
+                        : saudeFinanceira >= 20 ? `Margem confortável: ${saudeFinanceira.toFixed(0)}%`
+                        : saudeFinanceira >= 0 ? `Margem folgada: ${saudeFinanceira.toFixed(0)}%`
+                        : saudeFinanceira >= -20 ? `Margem apertada: ${saudeFinanceira.toFixed(0)}%`
+                        : `Déficit crítico: ${saudeFinanceira.toFixed(0)}%`;
+
+      document.getElementById('painel_fluxo_vigente').innerHTML = `
+        <div class="fluxo-row">
+          <div class="fluxo-item">
+            <div class="fluxo-label">Receita esperada</div>
+            <div class="fluxo-valor" style="color:var(--accent-green)">${receitaVigente > 0 ? moeda(receitaVigente) : 'não cadastrada'}</div>
+            ${receitaVigente > 0 ? '<div class="kpi-sub">Holerite + pro labore</div>' : '<div class="kpi-sub">Nenhum holerite/receita lançado</div>'}
+          </div>
+          <div class="fluxo-item">
+            <div class="fluxo-label">Vencimentos REAIS</div>
+            <div class="fluxo-valor" style="color:var(--accent-red)">${moeda(totalVencimentos)}</div>
+            <div class="kpi-sub">${faturasVigentes.length} cartão(ões) + parcelas</div>
+          </div>
+          <div class="fluxo-item">
+            <div class="fluxo-label">Saldo projetado</div>
+            <div class="fluxo-valor" style="color:${saldoVigente >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${moeda(saldoVigente)}</div>
+            <div class="kpi-sub">${saldoVigente >= 0 ? 'Sobra' : 'Falta'} (desconsiderando Black 4846 e MP loans)</div>
+          </div>
+          <div class="fluxo-item">
+            <div class="fluxo-label">Saúde financeira</div>
+            <div class="fluxo-valor">${saudeFinanceira !== null ? saudeFinanceira.toFixed(0) + '%' : '—'}</div>
+            <div class="kpi-sub">${textoSaude}</div>
+          </div>
+        </div>
+        <div class="aviso ${indicadorSaude}">
+          <strong>${textoSaude}</strong><br>
+          ${receitaVigente > 0
+            ? saldoVigente >= 0
+              ? `Você tem <b>${moeda(Math.abs(saldoVigente))}</b> de margem para o mês. Não há riscos imediatos de falta de caixa.`
+              : `Você terá falta de <b>${moeda(Math.abs(saldoVigente))}</b> neste mês. Planeje o que não pagar ou reserve de mês anterior.`
+            : 'Não há receita lançada para este mês ainda.'}
+        </div>
+      `;
+
+      // --- Vencimentos críticos (faturas com saldo em aberto, excluindo Black 4846) ---
+      const vencimentosCriticos = faturasVigentes
+        .filter(f => f.em_aberto > 0)
+        .sort((a, b) => b.em_aberto - a.em_aberto);
+
+      if (vencimentosCriticos.length) {
+        document.getElementById('painel_vencimentos_criticos').innerHTML = `
+          <table class="tabela-dados">
+            <thead>
+              <tr>
+                <th>Cartão</th>
+                <th>Vencimento</th>
+                <th class="num">Em aberto</th>
+                <th class="num">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${vencimentosCriticos.map(f => {
+                const vencData = new Date(f.vencimento + 'T00:00:00');
+                const hoje = new Date();
+                const vencido = vencData < hoje;
+                const diasParaVencer = Math.ceil((vencData - hoje) / (1000 * 60 * 60 * 24));
+                const statusClass = vencido ? 'em_aberto_vencido' : diasParaVencer <= 5 ? 'em_aberto' : 'pago';
+                const statusTexto = vencido ? `⚠️ VENCIDO (${Math.abs(diasParaVencer)} dias)`
+                                  : diasParaVencer <= 5 ? `⏳ Vence em ${diasParaVencer} dias`
+                                  : `📅 ${diasParaVencer} dias`;
+
+                return `
+                  <tr>
+                    <td><strong>Cartão ${f.cartao}</strong> <br><span class="kpi-sub">${f.cartao_descricao || ''}</span></td>
+                    <td>${f.vencimento.split('-').reverse().join('/')}</td>
+                    <td class="num" style="color:var(--accent-red);font-weight:bold">${moeda(f.em_aberto)}</td>
+                    <td><span class="selo ${statusClass}">${statusTexto}</span></td>
+                  </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          <div class="aviso aviso-atencao" style="margin-top:12px">
+            <strong>💡 Dica:</strong> Vencimentos são calculados pelo regime de caixa (data de vencimento).
+            Pague os mais próximos do vencimento se a margem for apertada.
+          </div>`;
+      } else {
+        document.getElementById('painel_vencimentos_criticos').innerHTML =
+          blocoVazio('Sem vencimentos em aberto', 'Todos os cartões (exceto Black 4846) estão quitados neste mês.');
+      }
     }
 
     // ------------------------------------------------------- PARA ONDE VAI
