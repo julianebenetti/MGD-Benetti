@@ -305,6 +305,18 @@ const REGRAS = [
     descricao: 'Roupas (Daniela)',
     nota: 'Confirmado pela Juliane (30/08).',
   },
+  {
+    padrao: /PIX (TRANSF|QRS) RHUANN/i,
+    natureza: 'despesa', categoria: 'educacao_profissional', pessoa: 'Benetti UP',
+    descricao: 'Mentoria (Rhuann)',
+    nota: 'Confirmado pela Juliane (30/08).',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) ELISABE/i,
+    natureza: 'despesa', categoria: 'trafego_pago', pessoa: 'Benetti UP',
+    descricao: 'Collab / Instagram (Elisabe)',
+    nota: 'Confirmado pela Juliane (30/08) para uma ocorrência; aplicado às demais por mesmo valor/nome.',
+  },
 ];
 
 function classificar(desc, valor) {
