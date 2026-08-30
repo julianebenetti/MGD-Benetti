@@ -408,9 +408,11 @@ function noEscopo(mv) {
       document.querySelector('[data-tab="painel"]').click();
       document.getElementById('painel_mes').value = m;
       renderizarPainel();
-      const cards = [...document.querySelectorAll('#painel_kpis .kpi-card')];
+      // Com a nova estrutura, pegamos o total de vencimentos reais
+      const vencimentosEl = document.querySelector('#painel_vencimentos_criticos table');
+      const totalVencimentos = vencimentosEl ? vencimentosEl.textContent : 'vazio';
       return {
-        fatura: cards[1].querySelector('.kpi-value').textContent.trim(),
+        fatura: totalVencimentos,
         info: document.getElementById('painel_periodo_info').textContent
       };
     }, mes);
