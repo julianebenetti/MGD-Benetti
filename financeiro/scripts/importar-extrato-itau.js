@@ -317,6 +317,12 @@ const REGRAS = [
     descricao: 'Collab / Instagram (Elisabe)',
     nota: 'Confirmado pela Juliane (30/08) para uma ocorrência; aplicado às demais por mesmo valor/nome.',
   },
+  {
+    padrao: /DEV PIX Fabio Gomes/i,
+    natureza: 'despesa', categoria: 'viagem', pessoa: 'Família',
+    descricao: 'Reembolso Airbnb — viagem em família (Fabio Gomes)',
+    nota: 'Confirmado pela Juliane (30/08) nas 2 ocorrências de 2026 (01/05 e 02/07).',
+  },
 ];
 
 function classificar(desc, valor) {
