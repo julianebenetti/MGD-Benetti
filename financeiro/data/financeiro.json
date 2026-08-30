@@ -28556,11 +28556,11 @@
         "data": "2026-03-16",
         "tipo": "saida",
         "natureza": "despesa",
-        "descricao": "Asaasip*61 253 80      Sao Paulo     Br",
+        "descricao": "Consultoria — grupos de WhatsApp",
         "valor": 504.19,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "educacao_profissional",
+        "classificado_por": "revisao_manual",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -28582,7 +28582,9 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "1319",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa",
+        "descricao_original": "Asaasip*61 253 80      Sao Paulo     Br",
+        "nota_classificacao": "Confirmado pela Juliane (30/08): consultoria para grupos de WhatsApp, despesa da Benetti UP."
       },
       {
         "id": "txn_Abr26_0815",
@@ -36363,11 +36365,11 @@
         "data": "2026-04-16",
         "tipo": "saida",
         "natureza": "despesa",
-        "descricao": "Asa*51 701 013 Ronaldo Canoas        Br",
+        "descricao": "Consultoria — grupos de WhatsApp",
         "valor": 497.9,
-        "pessoa": "Juliane",
-        "categoria": "nao_classificado",
-        "classificado_por": "herdado",
+        "pessoa": "Benetti UP",
+        "categoria": "educacao_profissional",
+        "classificado_por": "revisao_manual",
         "conta_origem": "Azul Itau Infinite Visa - final 3794",
         "cartao_final": "3794",
         "conta_destino": "Comerciante",
@@ -36389,7 +36391,9 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "9466",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa",
+        "descricao_original": "Asa*51 701 013 Ronaldo Canoas        Br",
+        "nota_classificacao": "Confirmado pela Juliane (30/08): consultoria para grupos de WhatsApp, despesa da Benetti UP."
       },
       {
         "id": "txn_Mai26_0831",
