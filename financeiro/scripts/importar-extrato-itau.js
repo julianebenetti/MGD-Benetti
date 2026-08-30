@@ -293,6 +293,18 @@ const REGRAS = [
     descricao: 'Manicure — unha em gel (Vanders)',
     nota: 'Confirmado pela Juliane (29/08).',
   },
+  {
+    padrao: /PIX TRANSF KARINA/i,
+    natureza: 'despesa', categoria: 'doacao', pessoa: 'Juliane',
+    descricao: 'Ajuda de custo para Karina Patricia Marcello Ponte',
+    nota: 'Ajuda pontual, sem volta, pessoa fora do círculo familiar próximo — não dedutível (Juliane, 30/08).',
+  },
+  {
+    padrao: /PIX TRANSF DANIELA/i,
+    natureza: 'despesa', categoria: 'compras_diversas', pessoa: 'Juliane',
+    descricao: 'Roupas (Daniela)',
+    nota: 'Confirmado pela Juliane (30/08).',
+  },
 ];
 
 function classificar(desc, valor) {
