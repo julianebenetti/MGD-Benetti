@@ -1284,30 +1284,22 @@
     <div id="painel" class="tab-content active">
 
       <div class="periodo-seletor">
-        <label class="filter-label" style="margin:0">💳 Fatura</label>
+        <label class="filter-label" style="margin:0">📊 Análise Financeira</label>
         <select id="painel_mes" class="filter-input" onchange="renderizarPainel()"></select>
         <span id="painel_periodo_info" class="periodo-info"></span>
       </div>
 
-      <div class="grid" id="painel_kpis"></div>
-
-      <div class="section-title">Resultado do mês</div>
-      <div class="card full-width" id="painel_resultado"></div>
-
-      <div class="section-title">Evolução mês a mês</div>
-      <div class="card full-width" id="painel_evolucao"></div>
-
-      <div class="section-title">Maiores gastos da fatura</div>
-      <div class="card full-width" id="painel_maiores"></div>
-
-      <div class="section-title">Pontos de atenção</div>
-      <div class="card full-width" id="painel_alertas"></div>
-
-      <div class="section-title">💰 Fluxo do Mês Vigente</div>
-      <div class="card full-width" id="painel_fluxo_vigente"></div>
+      <div class="section-title">📊 Fluxo do Mês em 3 Números</div>
+      <div class="card full-width" id="painel_fluxo_3numeros"></div>
 
       <div class="section-title">⚠️ Atenção! Vencimentos Críticos</div>
       <div class="card full-width" id="painel_vencimentos_criticos"></div>
+
+      <div class="section-title">📅 Planejamento do Mês</div>
+      <div class="card full-width" id="painel_planejamento"></div>
+
+      <div class="section-title">💡 Análise Financeira</div>
+      <div class="card full-width" id="painel_analise"></div>
     </div>
 
     <!-- TAB: FLUXO -->
@@ -2470,173 +2462,19 @@
 
     function renderizarPainel() {
       const transacoes = todasTransacoes();
-      const kpis = document.getElementById('painel_kpis');
-      if (!kpis) return;
+      const fluxoBloco = document.getElementById('painel_fluxo_3numeros');
+      if (!fluxoBloco) return;
 
       if (!transacoes.length) {
-        kpis.innerHTML = '';
-        document.getElementById('painel_resultado').innerHTML =
-          blocoVazio('Nenhum lançamento carregado', 'Use <b>Ferramentas → Importar</b> para subir uma fatura.');
-        ['painel_evolucao', 'painel_maiores', 'painel_alertas'].forEach(id => {
-          document.getElementById(id).innerHTML = '';
+        fluxoBloco.innerHTML = blocoVazio('Sem dados', 'Use <b>Ferramentas → Importar</b> para subir uma fatura.');
+        ['painel_vencimentos_criticos', 'painel_planejamento', 'painel_analise'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.innerHTML = '';
         });
         return;
       }
 
       preencherSelectMeses('painel_mes', false);
-      const mes = document.getElementById('painel_mes').value;
-      const doMes = transacoes.filter(t => t.mes_vencimento === mes);
-
-      const gastos = doMes.filter(t => t.valor > 0).reduce((s, t) => s + t.valor, 0);
-      const estornos = doMes.filter(t => t.valor < 0).reduce((s, t) => s + t.valor, 0);
-      const liquido = gastos + estornos;
-
-      // receitas() e transacoesDoAno() trazem o ano inteiro — filtra so o mes
-      // selecionado aqui, igual ja se faz com doMes.
-      const receitaDoMes = receitas().filter(t => t.mes_vencimento === mes).reduce((s, t) => s + t.valor, 0);
-      const dividaDoMes = transacoesDoAno()
-        .filter(t => t.mes_vencimento === mes && t.natureza === 'divida_parcelada');
-      // Soma, nao a quantidade, decide "nao cadastrado": um estorno grande de
-      // fatura renegociada (ex: credito de seguro cancelado) pode deixar o
-      // liquido do mes negativo mesmo com parcela de verdade lancada — a
-      // quantidade de lancamentos e que diz se ha dado, nao o sinal da soma.
-      const parcelasDividaDoMes = dividaDoMes.reduce((s, t) => s + t.valor, 0);
-      const temParcelaDivida = dividaDoMes.length > 0;
-      const resultadoDoMes = receitaDoMes - liquido;
-
-      // Média das faturas anteriores a esta, para comparação
-      const meses = mesesDisponiveis();
-      const reaisOrdenados = meses.filter(m => m !== MES_A_CONFIRMAR);
-      const posAtual = reaisOrdenados.indexOf(mes);
-      const anteriores = posAtual > 0 ? reaisOrdenados.slice(Math.max(0, posAtual - 3), posAtual) : [];
-      const mediaAnterior = anteriores.length
-        ? anteriores.reduce((s, m) => s + transacoes.filter(t => t.mes_vencimento === m).reduce((x, t) => x + t.valor, 0), 0) / anteriores.length
-        : null;
-
-      const variacao = mediaAnterior ? ((liquido - mediaAnterior) / mediaAnterior) * 100 : null;
-      const info = document.getElementById('painel_periodo_info');
-      const fatura = faturaDe(mes);
-      const venc = (fatura && fatura.vencimento) || (doMes[0] && doMes[0].data_vencimento_fatura);
-      info.textContent = venc
-        ? `Venceu em ${venc.split('-').reverse().join('/')} · ${doMes.length} lançamentos`
-        : `${doMes.length} lançamentos`;
-
-      kpis.innerHTML =
-        cartaoKpi('Receitas do mês', receitaDoMes > 0 ? moeda(receitaDoMes) : 'não cadastrado',
-          receitaDoMes > 0 ? 'salário, PLR e demais' : 'Nenhum holerite deste mês importado', 'var(--accent-green)',
-          receitaDoMes > 0 ? `irParaLancamentos(${JSON.stringify({ natureza: 'receita', mes_venc: mes })})` : null) +
-        cartaoKpi('Gasto do mês', moeda(liquido), `${doMes.length} lançamentos`, 'var(--accent-red)',
-          `irParaLancamentos(${JSON.stringify({ mes_venc: mes })})`) +
-        cartaoKpi('Parcelas de dívida', temParcelaDivida ? moeda(parcelasDividaDoMes) : 'não cadastrado',
-          temParcelaDivida ? 'consignado, refinanciamento etc.' : 'Nenhuma parcela lançada neste mês', 'var(--accent-yellow)',
-          temParcelaDivida ? `irParaLancamentos(${JSON.stringify({ natureza: 'divida_parcelada', mes_venc: mes })})` : null) +
-        cartaoKpi(
-          'vs. média anterior',
-          variacao === null ? '—' : (variacao >= 0 ? '+' : '') + variacao.toFixed(0) + '%',
-          mediaAnterior ? `média ${moeda(mediaAnterior)}` : 'sem histórico',
-          variacao === null ? 'var(--text-secondary)' : (variacao > 0 ? 'var(--accent-red)' : 'var(--accent-green)')
-        );
-
-      // --- Resultado do mês ---
-      document.getElementById('painel_resultado').innerHTML = `
-        ${receitaDoMes > 0 ? `
-          <div class="aviso ${resultadoDoMes >= 0 ? 'aviso-ok' : 'aviso-atencao'}">
-            <strong>Receita ${moeda(receitaDoMes)} − Gasto ${moeda(liquido)} =
-              ${resultadoDoMes >= 0 ? 'sobrou' : 'faltou'} ${moeda(Math.abs(resultadoDoMes))}</strong><br>
-            <span class="kpi-sub">Gasto aqui é só o que passou pelo cartão/extrato/folha como consumo — não inclui parcela de dívida nem pagamento de fatura, que têm bloco próprio em Dívidas.</span>
-          </div>` : `
-          <div class="aviso aviso-info">
-            <strong>Ainda não dá para calcular sobra ou falta deste mês.</strong><br>
-            Sabemos o que saiu (${moeda(liquido)}), mas não o que entrou — nenhum holerite deste mês foi
-            importado ainda. Assim que for, este bloco passa a mostrar <b>Receita − Gasto = Resultado</b>.
-          </div>`}
-        <table class="tabela-dados">
-          <tbody>
-            ${receitaDoMes > 0 ? `
-              <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ natureza: 'receita', mes_venc: mes })})' title="Ver estes lançamentos">
-                <td>Receita do mês</td><td class="num" style="color:var(--accent-green)">${moeda(receitaDoMes)}</td>
-              </tr>` : ''}
-            <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ natureza: 'despesa', mes_venc: mes })})' title="Ver estes lançamentos">
-              <td>Compras do período</td><td class="num">${moeda(gastos)}</td>
-            </tr>
-            ${estornos < 0 ? `
-              <tr class="clicavel" onclick='irParaLancamentos(${JSON.stringify({ natureza: 'estorno', mes_venc: mes })})' title="Ver estes lançamentos">
-                <td>Estornos e cancelamentos</td><td class="num" style="color:var(--accent-green)">${moeda(estornos)}</td>
-              </tr>` : ''}
-            ${fatura && Math.abs(fatura.pago - fatura.cobrado) > 0.01 ? `
-              <tr>
-                <td>Diferença entre o cobrado e o pago
-                  <div class="kpi-sub">${fatura.pago > fatura.cobrado
-                    ? 'Encargo que a fatura cobra mas não detalha nos lançamentos'
-                    : 'Parte da fatura foi coberta por saldo ou crédito'}</div>
-                </td>
-                <td class="num">${moeda(fatura.pago - fatura.cobrado)}</td>
-              </tr>` : ''}
-          </tbody>
-          <tfoot>
-            <tr><td>Gasto do mês (${mes})</td><td class="num" style="color:var(--accent-red)">${moeda(liquido)}</td></tr>
-            ${fatura ? `<tr><td>Efetivamente pago (fatura)</td><td class="num">${moeda(fatura.pago)}</td></tr>` : ''}
-          </tfoot>
-        </table>`;
-
-      // --- Evolução mês a mês ---
-      const porMes = meses.filter(m => m !== MES_A_CONFIRMAR).map(m => ({
-        mes: m,
-        total: transacoes.filter(t => t.mes_vencimento === m).reduce((s, t) => s + t.valor, 0)
-      })).filter(x => x.total > 0);
-
-      const maxMes = Math.max(...porMes.map(x => x.total));
-      document.getElementById('painel_evolucao').innerHTML = porMes.map(x => `
-        <div class="barra-linha">
-          <div class="barra-topo">
-            <span class="barra-nome">${x.mes}${x.mes === mes ? ' <span class="selo selo-ok">atual</span>' : ''}</span>
-            <span class="barra-valor">${moeda(x.total)}</span>
-          </div>
-          <div class="barra-trilho">
-            <div class="barra-preenchida" style="width:${(x.total / maxMes * 100).toFixed(1)}%;background:${x.mes === mes ? 'var(--accent-blue)' : 'var(--bg-tertiary)'}"></div>
-          </div>
-        </div>`).join('');
-
-      // --- Maiores gastos ---
-      const maiores = [...doMes].filter(t => t.valor > 0).sort((a, b) => b.valor - a.valor).slice(0, 8);
-      document.getElementById('painel_maiores').innerHTML = maiores.length ? `
-        <table class="tabela-dados">
-          <thead><tr><th>Descrição</th><th>Categoria</th><th>Pessoa</th><th class="num">Valor</th></tr></thead>
-          <tbody>
-            ${maiores.map(t => `
-              <tr>
-                <td>${t.descricao}${t.eh_parcelada ? ` <span class="selo selo-neutro">${t.descricao_parcela}</span>` : ''}</td>
-                <td>${rotuloCategoria(t.categoria)}</td>
-                <td>${t.pessoa || '—'}</td>
-                <td class="num">${moeda(t.valor)}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>` : blocoVazio('Sem lançamentos nesta fatura', '');
-
-      // --- Alertas, todos derivados de dado real ---
-      const alertas = [];
-      if (variacao !== null && variacao > 15) {
-        alertas.push(['aviso-atencao', `Esta fatura está <b>${variacao.toFixed(0)}% acima</b> da média das anteriores (${moeda(mediaAnterior)}).`]);
-      }
-      if (variacao !== null && variacao < -15) {
-        alertas.push(['aviso-ok', `Esta fatura está <b>${Math.abs(variacao).toFixed(0)}% abaixo</b> da média das anteriores.`]);
-      }
-      const parceladasAbertas = contarParcelasAbertas();
-      if (parceladasAbertas.parcelas > 0) {
-        alertas.push(['aviso-atencao', `Existem <b>${parceladasAbertas.parcelas} parcelas</b> ainda por vencer, somando <b>${moeda(parceladasAbertas.valor)}</b>. Veja em Cartão & Faturas.`]);
-      }
-      const nParceladas = agruparParcelamentos().length;
-      if (nParceladas) {
-        alertas.push(['aviso-info', `<b>${nParceladas} compras parceladas</b> identificadas no cartão. Veja o andamento de cada uma em Cartão & Faturas.`]);
-      }
-      const naoConfiaveis = transacoes.filter(t => t.mes_vencimento_confiavel === false).length;
-      if (naoConfiaveis) {
-        alertas.push(['aviso-atencao', `<b>${naoConfiaveis} lançamentos</b> têm o mês da fatura por confirmar — foram importados sem indicação de qual fatura vieram.`]);
-      }
-      if (!alertas.length) alertas.push(['aviso-ok', 'Nada fora do padrão nesta fatura.']);
-
-      document.getElementById('painel_alertas').innerHTML =
-        alertas.map(([cls, txt]) => `<div class="aviso ${cls}">${txt}</div>`).join('');
 
       // --- Fluxo do mês vigente ---
       const mesVig = mesVigente();
@@ -2671,40 +2509,36 @@
                         : saudeFinanceira >= -20 ? `Margem apertada: ${saudeFinanceira.toFixed(0)}%`
                         : `Déficit crítico: ${saudeFinanceira.toFixed(0)}%`;
 
-      document.getElementById('painel_fluxo_vigente').innerHTML = `
+      // --- BLOCO 1: Fluxo do Mês em 3 Números ---
+      document.getElementById('painel_fluxo_3numeros').innerHTML = `
         <div class="fluxo-row">
           <div class="fluxo-item">
-            <div class="fluxo-label">Receita esperada</div>
-            <div class="fluxo-valor" style="color:var(--accent-green)">${receitaVigente > 0 ? moeda(receitaVigente) : 'não cadastrada'}</div>
-            ${receitaVigente > 0 ? '<div class="kpi-sub">Holerite + pro labore</div>' : '<div class="kpi-sub">Nenhum holerite/receita lançado</div>'}
+            <div class="fluxo-label">📊 Receita esperada</div>
+            <div class="fluxo-valor" style="color:var(--accent-green)">${receitaVigente > 0 ? moeda(receitaVigente) : '—'}</div>
+            ${receitaVigente > 0 ? '<div class="kpi-sub">Holerite + benefícios</div>' : '<div class="kpi-sub" style="color:var(--accent-yellow)">Nenhum holerite lançado</div>'}
           </div>
           <div class="fluxo-item">
-            <div class="fluxo-label">Vencimentos REAIS</div>
+            <div class="fluxo-label">💸 Vencimentos REAIS</div>
             <div class="fluxo-valor" style="color:var(--accent-red)">${moeda(totalVencimentos)}</div>
             <div class="kpi-sub">${faturasVigentes.length} cartão(ões) + parcelas</div>
           </div>
           <div class="fluxo-item">
-            <div class="fluxo-label">Saldo projetado</div>
+            <div class="fluxo-label">💰 Saldo (Receita − Vencimentos)</div>
             <div class="fluxo-valor" style="color:${saldoVigente >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${moeda(saldoVigente)}</div>
-            <div class="kpi-sub">${saldoVigente >= 0 ? 'Sobra' : 'Falta'} (desconsiderando Black 4846 e MP loans)</div>
-          </div>
-          <div class="fluxo-item">
-            <div class="fluxo-label">Saúde financeira</div>
-            <div class="fluxo-valor">${saudeFinanceira !== null ? saudeFinanceira.toFixed(0) + '%' : '—'}</div>
-            <div class="kpi-sub">${textoSaude}</div>
+            <div class="kpi-sub">${saldoVigente >= 0 ? '✅ Sobra' : '⚠️ Falta'}</div>
           </div>
         </div>
         <div class="aviso ${indicadorSaude}">
           <strong>${textoSaude}</strong><br>
           ${receitaVigente > 0
             ? saldoVigente >= 0
-              ? `Você tem <b>${moeda(Math.abs(saldoVigente))}</b> de margem para o mês. Não há riscos imediatos de falta de caixa.`
-              : `Você terá falta de <b>${moeda(Math.abs(saldoVigente))}</b> neste mês. Planeje o que não pagar ou reserve de mês anterior.`
-            : 'Não há receita lançada para este mês ainda.'}
+              ? `Você tem <b>${moeda(Math.abs(saldoVigente))}</b> de margem para o mês. Risco baixo de falta de caixa.`
+              : `<b>Falta de ${moeda(Math.abs(saldoVigente))}</b> neste mês. Planeje o que não pagar ou use reserva.`
+            : 'Não há receita lançada para este mês. Importe o holerite para visualizar melhor a situação.'}
         </div>
       `;
 
-      // --- Vencimentos críticos (faturas com saldo em aberto, excluindo Black 4846) ---
+      // --- BLOCO 2: Vencimentos Críticos (faturas com saldo em aberto) ---
       const vencimentosCriticos = faturasVigentes
         .filter(f => f.em_aberto > 0)
         .sort((a, b) => b.em_aberto - a.em_aberto);
@@ -2742,12 +2576,87 @@
             </tbody>
           </table>
           <div class="aviso aviso-atencao" style="margin-top:12px">
-            <strong>💡 Dica:</strong> Vencimentos são calculados pelo regime de caixa (data de vencimento).
-            Pague os mais próximos do vencimento se a margem for apertada.
+            <strong>💡 Estratégia:</strong> Se a margem for apertada, priorize pagar os vencimentos mais próximos.
           </div>`;
       } else {
         document.getElementById('painel_vencimentos_criticos').innerHTML =
-          blocoVazio('Sem vencimentos em aberto', 'Todos os cartões (exceto Black 4846) estão quitados neste mês.');
+          blocoVazio('✅ Sem vencimentos em aberto', 'Todos os cartões (exceto Black 4846) estão quitados neste mês.');
+      }
+
+      // --- BLOCO 3: Planejamento do Mês (Timeline de receita vs despesas) ---
+      const planejamentoDiv = document.getElementById('painel_planejamento');
+      if (planejamentoDiv) {
+        if (receitaVigente > 0) {
+          const holeriteData = dadosGlobais.pessoas?.find(p => p.nome === 'Juliane')?.proximo_holerite || '15';
+          const vencimentosFormatados = vencimentosCriticos
+            .map(f => `<div class="timeline-item" style="margin-bottom:8px">
+              <span style="color:var(--accent-yellow)">📅 ${f.vencimento.split('-').reverse().join('/')}</span>
+              <strong>Cartão ${f.cartao}</strong> — ${moeda(f.em_aberto)}
+            </div>`)
+            .join('');
+
+          planejamentoDiv.innerHTML = `
+            <div style="padding:12px">
+              <div class="timeline-item" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-color)">
+                <span style="color:var(--accent-green);font-weight:bold">💳 ENTRADA: Holerite (~${holeriteData})</span>
+                <div style="margin-top:4px;color:var(--text-secondary)">${moeda(receitaVigente)}</div>
+              </div>
+              <div style="color:var(--text-secondary);margin-bottom:12px">SAÍDAS:</div>
+              ${vencimentosFormatados || '<div style="color:var(--border-color)">Nenhum vencimento</div>'}
+              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
+                <strong>Saldo projetado após pagamentos:</strong>
+                <div style="color:${saldoVigente >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}; font-size:18px; margin-top:4px">${moeda(saldoVigente)}</div>
+              </div>
+            </div>`;
+        } else {
+          planejamentoDiv.innerHTML = blocoVazio('Sem holerite', 'Importe o comprovante de pagamento para ver o planejamento do mês.');
+        }
+      }
+
+      // --- BLOCO 4: Análise Financeira (Recomendações) ---
+      const analiseDiv = document.getElementById('painel_analise');
+      if (analiseDiv) {
+        let recomendacoes = '';
+
+        if (receitaVigente === 0) {
+          recomendacoes = '<div class="aviso aviso-critico"><strong>⚠️ Urgente:</strong> Nenhuma receita cadastrada para este mês. Importe o holerite.</div>';
+        } else if (saldoVigente < 0 && saldoVigente >= -receitaVigente * 0.2) {
+          recomendacoes = `
+            <div class="aviso aviso-atencao">
+              <strong>⚠️ Margem apertada:</strong> Você vai precisar de ${moeda(Math.abs(saldoVigente))} da reserva ou precisará deixar de pagar algo. Considere:
+              <ul style="margin-top:8px;margin-left:20px">
+                <li>Pagar os vencimentos em prioridade (cartão, dívidas)</li>
+                <li>Usar uma linha de crédito se necessário</li>
+                <li>Revisar as despesas mensais para reduzir gastos</li>
+              </ul>
+            </div>`;
+        } else if (saldoVigente < -receitaVigente * 0.2) {
+          recomendacoes = `
+            <div class="aviso aviso-critico">
+              <strong>🚨 CRÍTICO:</strong> Deficit de ${moeda(Math.abs(saldoVigente))} (${Math.abs(saudeFinanceira).toFixed(0)}% da receita).
+              Ação imediata necessária:
+              <ul style="margin-top:8px;margin-left:20px">
+                <li><strong>Cancelar ou renegociar dívidas</strong></li>
+                <li><strong>Cortar despesas não essenciais</strong></li>
+                <li><strong>Buscar renda complementar urgente</strong></li>
+                <li>Não deixe vencimentos em aberto para não piorar juros</li>
+              </ul>
+            </div>`;
+        } else {
+          recomendacoes = `
+            <div class="aviso aviso-ok">
+              <strong>✅ Situação controlada:</strong> Você tem ${moeda(saldoVigente)} de margem.
+              Mantenha as despesas sob controle e continue pagando os vencimentos no prazo.
+            </div>`;
+        }
+
+        recomendacoes += `
+          <div class="aviso aviso-info" style="margin-top:12px">
+            <strong>📊 Nota importante:</strong> Este cálculo exclui o Cartão Black (4846) e empréstimos do Mercado Pago.
+            Dados parciais até ${mesVig}. Revise seus gastos regularmente na aba <strong>Lançamentos</strong>.
+          </div>`;
+
+        analiseDiv.innerHTML = recomendacoes;
       }
     }
 
