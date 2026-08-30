@@ -317,6 +317,12 @@
       "categoria": "ferramentas",
       "pessoa": "Benetti UP",
       "nota": "Cakto — plataforma de checkout/afiliados, provavelmente curso ou ferramenta da Benetti UP (Juliane, 30/08)"
+    },
+    {
+      "padrao": "amazon|amz *|amazon\\.com|amazon\\.com\\.br",
+      "categoria": "compras",
+      "pessoa": "Juliane",
+      "nota": "Amazon Marketplace e Amazon BR - compras diversas (adicionado 30/08, Amazon Mastercard)"
     }
   ]
 }
