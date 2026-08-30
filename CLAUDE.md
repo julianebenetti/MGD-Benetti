@@ -16,6 +16,15 @@
 Controle das contas **pessoais** da Juliane e do Hugo. Não tem relação nenhuma
 com Shopee, afiliados ou e-commerce — se surgir essa mistura, é engano.
 
+**Exceção única, confirmada (30/08)**: o PIX de R$1.961 pra "CSRA Brasil"
+(17/03/26, vinha como `nao_classificado`) é fornecedor do negócio de
+Shopee/afiliados da Juliane, não da Benetti UP — mas ela decidiu
+deliberadamente contar como despesa da Benetti UP nesta dashboard, já que
+é a única empresa cadastrada aqui e não vale criar uma terceira categoria
+de âmbito só por causa de um lançamento. Não é engano nem precedente pra
+tratar toda mistura futura assim — se aparecer mais gasto claramente do
+negócio de e-commerce, perguntar de novo antes de repetir esse tratamento.
+
 ### Estrutura
 - 7 abas: Painel, Lançamentos, Para Onde Vai, Cartão & Faturas, Dívidas &
   Patrimônio, Fluxo de Caixa, Imposto de Renda. Importar / Configurações /
