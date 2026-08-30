@@ -198,8 +198,11 @@ const REGRAS = [
   // não a compra em si) — registrado como despesa mesmo assim, porque
   // marcar como "pagamento" (fora dos totais) o tornaria invisível sem
   // nenhum outro lugar contando esse gasto de verdade.
+  // Achado por agente de validação (30/08): o Itaú varia a ordem das palavras
+  // no mesmo boleto ("INT PAG TIT 237", "PAG TIT BANCO 237") — regex de match
+  // exato perdia essas variações. Basta terminar em "237" com "TIT" no meio.
   {
-    padrao: /^PAG TIT INT 237$/i,
+    padrao: /TIT.*\b237$/i,
     natureza: 'despesa', categoria: 'compras', pessoa: 'Juliane',
     descricao: 'Cartão Amazon (Bradescard)',
   },
