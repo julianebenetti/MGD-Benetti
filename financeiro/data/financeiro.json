@@ -3331,7 +3331,7 @@
         "natureza": "despesa",
         "descricao": "Mp *Afiliadoturboso Caetano Dbra",
         "valor": 25.9,
-        "pessoa": "Família",
+        "pessoa": "Benetti UP",
         "categoria": "trabalho",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -3355,7 +3355,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Jan26_0213",
@@ -3388,7 +3388,8 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "pessoal",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Jan26_0214",
@@ -7924,9 +7925,9 @@
         "descricao": "PIX TRANSF ACAMPAM10/01",
         "descricao_original": "PIX TRANSF ACAMPAM10/01",
         "valor": 80,
-        "pessoa": "Juliane",
+        "pessoa": "Luca",
         "ambito": "pessoal",
-        "categoria": "nao_classificado",
+        "categoria": "viagem",
         "classificado_por": null,
         "nota_classificacao": null,
         "conta_origem": "Itaú ag. 0642 c/c 00806-4",
@@ -7999,9 +8000,9 @@
         "descricao": "PIX TRANSF ACAMPAM10/01",
         "descricao_original": "PIX TRANSF ACAMPAM10/01",
         "valor": 20,
-        "pessoa": "Juliane",
+        "pessoa": "Luca",
         "ambito": "pessoal",
-        "categoria": "nao_classificado",
+        "categoria": "viagem",
         "classificado_por": null,
         "nota_classificacao": null,
         "conta_origem": "Itaú ag. 0642 c/c 00806-4",
@@ -8024,9 +8025,9 @@
         "descricao": "PIX TRANSF ACAMPAM10/01",
         "descricao_original": "PIX TRANSF ACAMPAM10/01",
         "valor": 50,
-        "pessoa": "Juliane",
+        "pessoa": "Luca",
         "ambito": "pessoal",
-        "categoria": "nao_classificado",
+        "categoria": "viagem",
         "classificado_por": null,
         "nota_classificacao": null,
         "conta_origem": "Itaú ag. 0642 c/c 00806-4",
@@ -8905,7 +8906,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jan26_0032",
@@ -9735,7 +9737,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jan26_0049",
@@ -12293,7 +12296,7 @@
         "natureza": "despesa",
         "descricao": "Mp *Afiliadoturboso Caetano Dbra",
         "valor": 25.9,
-        "pessoa": "Família",
+        "pessoa": "Benetti UP",
         "categoria": "trabalho",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -12317,7 +12320,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Fev26_0399",
@@ -12350,7 +12353,8 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "pessoal",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Fev26_0400",
@@ -14707,7 +14711,8 @@
         "parcela_numero": 29,
         "parcela_total": 60,
         "descricao_parcela": "29/60",
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Fev26_0331",
@@ -16017,7 +16022,8 @@
         "tipo_cartao": "Físico",
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "pessoal",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Fev26_0302",
@@ -16893,7 +16899,7 @@
         "valor": 30,
         "pessoa": "Juliane",
         "ambito": "pessoal",
-        "categoria": "nao_classificado",
+        "categoria": "cuidados_pessoais",
         "classificado_por": null,
         "nota_classificacao": null,
         "conta_origem": "Itaú ag. 0642 c/c 00806-4",
@@ -16906,7 +16912,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Fev26_0079",
@@ -17331,7 +17338,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Fev26_0096",
@@ -20169,7 +20177,7 @@
         "natureza": "despesa",
         "descricao": "Mp *Afiliadoturboso Caetano Dbra",
         "valor": 25.9,
-        "pessoa": "Família",
+        "pessoa": "Benetti UP",
         "categoria": "trabalho",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -20193,7 +20201,7 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "2082",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "empresa"
       },
       {
         "id": "txn_Mar26_0596",
@@ -20226,7 +20234,8 @@
         "tipo_cartao": "Físico",
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "pessoal",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Mar26_0597",
@@ -20962,7 +20971,7 @@
         "descricao": "Casa De Carnescampinasbra",
         "valor": 71,
         "pessoa": "Família",
-        "categoria": "moradia",
+        "categoria": "alimentacao",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
@@ -22509,7 +22518,8 @@
         "parcela_numero": 30,
         "parcela_total": 60,
         "descricao_parcela": "30/60",
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mar26_0110",
@@ -24105,7 +24115,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Mar26_0511",
@@ -25151,7 +25162,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mar26_0138",
@@ -25509,7 +25521,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mar26_0151",
@@ -25908,7 +25921,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mar26_0154",
@@ -28108,7 +28122,8 @@
         "id_compra": "compra_txn_Mar26_0509",
         "data_compra_original": "2026-03-11",
         "valor_total_exato": true,
-        "parcelas_no_periodo": 2
+        "parcelas_no_periodo": 2,
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Abr26_0633",
@@ -31943,7 +31958,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Abr26_0180",
@@ -33307,7 +33323,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Abr26_0192",
@@ -34023,7 +34040,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Abr26_0202",
@@ -34551,7 +34569,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Abr26_0208",
@@ -35962,7 +35981,8 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "empresa"
+        "ambito": "empresa",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Mai26_0927",
@@ -38528,7 +38548,8 @@
         "parcela_numero": 32,
         "parcela_total": 60,
         "descricao_parcela": "32/60",
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mai26_0226",
@@ -39507,7 +39528,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mai26_0233",
@@ -40352,7 +40374,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mai26_0247",
@@ -40602,7 +40625,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Mai26_0257",
@@ -42226,7 +42250,8 @@
         "tipo_cartao": "Virtual recorrente",
         "final_cartao": "1172",
         "carga_id": "faturas_itau_2026",
-        "ambito": "empresa"
+        "ambito": "empresa",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Jun26_1053",
@@ -43909,7 +43934,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jun26_0267",
@@ -44634,7 +44660,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Jun26_1001",
@@ -45663,7 +45690,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jun26_0284",
@@ -46408,7 +46436,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jun26_0295",
@@ -46909,7 +46938,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jun26_0301",
@@ -48406,7 +48436,8 @@
         "tipo_cartao": "Virtual temporário",
         "final_cartao": "1758",
         "carga_id": "faturas_itau_2026",
-        "ambito": "empresa"
+        "ambito": "empresa",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Jul26_1118",
@@ -51455,7 +51486,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jul26_0325",
@@ -52593,7 +52625,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jul26_0334",
@@ -52879,7 +52912,7 @@
         "natureza": "despesa",
         "descricao": "Santi Odontologitatibabra",
         "valor": 180,
-        "pessoa": "Juliane",
+        "pessoa": "Filhos",
         "categoria": "saude",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
@@ -53003,7 +53036,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jul26_0341",
@@ -53924,7 +53958,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Jul26_0353",
@@ -55709,7 +55744,8 @@
         "id_compra": "compra_txn_Ago26_1346",
         "data_compra_original": "2026-07-11",
         "valor_total_exato": true,
-        "parcelas_no_periodo": 3
+        "parcelas_no_periodo": 3,
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Ago26_1345",
@@ -56633,8 +56669,8 @@
         "natureza": "despesa",
         "descricao": "Shopee *Fenopararoedorpinhalzinhobra",
         "valor": 18.77,
-        "pessoa": "Juliane",
-        "categoria": "compras",
+        "pessoa": "Família",
+        "categoria": "pet",
         "classificado_por": "regra",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
@@ -57836,7 +57872,8 @@
         "parcela_numero": 35,
         "parcela_total": 60,
         "descricao_parcela": "35/60",
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "txn_Ago26_1284",
@@ -58341,7 +58378,8 @@
         "eh_parcelada": false,
         "parcela_numero": null,
         "parcela_total": null,
-        "carga_id": "extrato_itau_2026"
+        "carga_id": "extrato_itau_2026",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Ago26_0376",
@@ -58793,7 +58831,7 @@
         "descricao": "Casa De Carnescampinasbra",
         "valor": 138,
         "pessoa": "Família",
-        "categoria": "moradia",
+        "categoria": "alimentacao",
         "classificado_por": "herdado",
         "conta_origem": "Itau Uniclass Black Mastercard - final 4846",
         "cartao_final": "4846",
@@ -58874,7 +58912,8 @@
         "tipo_cartao": "Físico",
         "final_cartao": "4846",
         "carga_id": "faturas_itau_2026",
-        "ambito": "pessoal"
+        "ambito": "pessoal",
+        "fixa_variavel": "fixa"
       },
       {
         "id": "ext_Ago26_0380",
