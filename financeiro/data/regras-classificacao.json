@@ -311,6 +311,12 @@
       "categoria": "servicos",
       "pessoa": "Benetti UP",
       "nota": "Casulo Coworking (Fortaleza) — endereço fiscal mensal, R$89, confirmado com fatura e e-mail de cobrança (Juliane, 30/08)"
+    },
+    {
+      "padrao": "ckt\\*\\*affiliates|cakto pay",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Cakto — plataforma de checkout/afiliados, provavelmente curso ou ferramenta da Benetti UP (Juliane, 30/08)"
     }
   ]
 }
