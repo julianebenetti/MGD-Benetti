@@ -25,6 +25,50 @@ de âmbito só por causa de um lançamento. Não é engano nem precedente pra
 tratar toda mistura futura assim — se aparecer mais gasto claramente do
 negócio de e-commerce, perguntar de novo antes de repetir esse tratamento.
 
+### "Não classificado" e o bug real que apareceu no meio da limpeza (30/08)
+A Juliane pediu pra classificar junto o lote de lançamentos `nao_classificado`
+(R$24.271,12 no começo) que sobrou de importações antigas do extrato e da
+fatura — foram várias rodadas de "me diz quem é" até restar só R$9.479,48,
+a maioria cobranças de plataforma sem nome de pessoa (Asa*, Mp*, Ckt*/Cakto,
+Vivianefurtadopor, Assiny) que ela ainda não identificou.
+
+- **A viagem do Airbnb (dez/25) foi da família estendida, não só da casa
+  dela** — irmãos, cunhadas e sobrinhos foram junto, e os PIX recorrentes de
+  Fabio, Rogério e Miriam (R$4.878,56 no total, entrando como `receita`)
+  eram o reembolso da parte de cada família no custo, não renda dela.
+  Contar como receita inflava o rendimento tributável do IRPF. Reclassificado
+  pra `natureza: transferencia` / categoria `reembolso_viagem_familia` — mexe
+  no saldo, não conta como receita nem despesa. As 2 "DEV PIX Fabio Gomes"
+  (R$377,78 e R$264,40) que eu tinha classificado errado como gasto novo de
+  viagem eram, na verdade, estorno de pagamentos dele que bateram errado —
+  valores idênticos aos da recorrência dele, mesma correção.
+- **Bug real achado nesse processo, em `apurarIrpf()`**: `natureza:
+  transferencia` (entre contas próprias, pagamento de fatura, aporte na
+  empresa, o reembolso da viagem) e `natureza: emprestimo` (dinheiro novo
+  tomado — consignado, Mercado Pago) não tinham exclusão própria na função,
+  e categoria sem regra cadastrada cai direto em "não deduz" por padrão.
+  Isso inflava o card "O que não deduz" do IRPF em **R$153 mil de
+  transferências** (entre contas, fatura, aporte) **+ R$34 mil de empréstimo
+  tomado** — nenhum dos dois é gasto de verdade. Corrigido excluindo os dois
+  logo no início do loop, do mesmo jeito que `pagamento`/`ajuste` já eram
+  excluídos. `divida_parcelada` (parcela de empréstimo) continua passando
+  adiante de propósito — tem regra própria no grupo "dívida" que marca como
+  não-dedutível pra aparecer como informativo, isso não mudou.
+- **Os 5 boletos "PAG TIT INT 237" fora da faixa de condomínio (R$600-650)
+  são o cartão Amazon/Bradescard dela**, confirmado com 2 comprovantes reais
+  (R$431,58 venc. 15/01, R$459,31 venc. 18/02). Como essa dashboard só lê o
+  extrato Itaú (não tem acesso à fatura itemizada desse 4º cartão), o boleto
+  pago é a única visão que existe desse gasto — mantido como `despesa`
+  categoria `compras`/Juliane em vez de `pagamento` (que o tornaria
+  invisível, sem nenhum outro lugar contando o gasto de verdade).
+- Cada rodada de classificação virou regra nova em `regras-classificacao.json`
+  (cartão) ou `importar-extrato-itau.js` (extrato), pra próxima importação já
+  classificar sozinha — exceto onde o mesmo texto de descrição cobre coisas
+  diferentes (ex: "COLEGIO" bateu tanto mensalidade da Valentina quanto
+  ballet; "Daniel" bateu tanto transporte do Luca quanto pizza), casos em que
+  a classificação ficou manual, presa à transação exata, pra não contaminar
+  a próxima ocorrência do mesmo nome com o motivo errado.
+
 ### Estrutura
 - 7 abas: Painel, Lançamentos, Para Onde Vai, Cartão & Faturas, Dívidas &
   Patrimônio, Fluxo de Caixa, Imposto de Renda. Importar / Configurações /

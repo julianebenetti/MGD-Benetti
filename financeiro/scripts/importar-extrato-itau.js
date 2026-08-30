@@ -189,6 +189,20 @@ const REGRAS = [
     natureza: 'despesa', categoria: 'moradia', pessoa: 'Família',
     descricao: 'Condomínio',
   },
+  // O mesmo código 237 (Bradesco) também liquida o boleto do cartão
+  // Amazon/Bradescard dela — confirmado por 2 comprovantes (R$431,58 venc.
+  // 15/01 e R$459,31 venc. 18/02, Juliane, 30/08). Vem depois da regra do
+  // condomínio, de propósito: a faixa específica (600-650) vence primeiro,
+  // essa pega o resto. É pagamento de fatura de um 4º cartão que a
+  // dashboard não tem itemizado (só o extrato Itaú vê o boleto sendo pago,
+  // não a compra em si) — registrado como despesa mesmo assim, porque
+  // marcar como "pagamento" (fora dos totais) o tornaria invisível sem
+  // nenhum outro lugar contando esse gasto de verdade.
+  {
+    padrao: /^PAG TIT INT 237$/i,
+    natureza: 'despesa', categoria: 'compras', pessoa: 'Juliane',
+    descricao: 'Cartão Amazon (Bradescard)',
+  },
   {
     padrao: /^PAG TIT INT 001$/i, valorEntre: [500, 600],
     natureza: 'despesa', categoria: 'educacao', pessoa: 'Luca',
@@ -317,11 +331,32 @@ const REGRAS = [
     descricao: 'Collab / Instagram (Elisabe)',
     nota: 'Confirmado pela Juliane (30/08) para uma ocorrência; aplicado às demais por mesmo valor/nome.',
   },
+  // A viagem do Airbnb (dez/25, categoria viagem/Família) foi da família
+  // estendida, não só da casa da Juliane — irmãos, cunhadas e sobrinhos
+  // foram junto. Estes pagamentos são o reembolso da parte de cada família
+  // no custo, não renda dela: tratados como transferencia (mexe no saldo,
+  // não conta como receita nem infla o rendimento tributável do IRPF).
+  // Confirmado pela Juliane, 30/08.
+  {
+    padrao: /PIX (TRANSF|QRS) Fabio G/i, entrada: true,
+    natureza: 'transferencia', categoria: 'reembolso_viagem_familia', pessoa: 'Juliane',
+    descricao: 'Reembolso viagem em família (Fabio)',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) ROGERIO/i, entrada: true,
+    natureza: 'transferencia', categoria: 'reembolso_viagem_familia', pessoa: 'Juliane',
+    descricao: 'Reembolso viagem em família (Rogério)',
+  },
+  {
+    padrao: /PIX (TRANSF|QRS) MIRIAM/i, entrada: true,
+    natureza: 'transferencia', categoria: 'reembolso_viagem_familia', pessoa: 'Juliane',
+    descricao: 'Reembolso viagem em família (Miriam)',
+  },
   {
     padrao: /DEV PIX Fabio Gomes/i,
-    natureza: 'despesa', categoria: 'viagem', pessoa: 'Família',
-    descricao: 'Reembolso Airbnb — viagem em família (Fabio Gomes)',
-    nota: 'Confirmado pela Juliane (30/08) nas 2 ocorrências de 2026 (01/05 e 02/07).',
+    natureza: 'transferencia', categoria: 'reembolso_viagem_familia', pessoa: 'Juliane',
+    descricao: 'Devolução de reembolso da viagem (Fabio)',
+    nota: 'Corrigido (30/08): não é gasto novo de viagem, é estorno de um dos pagamentos de reembolso do Fabio.',
   },
 ];
 

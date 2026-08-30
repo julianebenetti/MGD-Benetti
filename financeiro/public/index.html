@@ -3776,7 +3776,22 @@
           else rendimentos += t.valor;
           return;
         }
-        if (t.natureza === 'pagamento' || t.natureza === 'ajuste') return;
+        // transferencia so mexe no saldo (fatura ja paga linha a linha, PIX
+        // entre contas proprias, aporte na empresa, reembolso de terceiros)
+        // — sem excluir aqui, caia sem regra correspondente em nenhum dos
+        // grupos dedutiveis e fosse parar direto em naoDedutivel, inflando
+        // "o que nao deduz" com dinheiro que nem e gasto de verdade (achado
+        // ao classificar o reembolso da viagem em familia, 30/08: R$153 mil
+        // de transferencias — entre contas, fatura, aporte — ja contavam
+        // errado ali).
+        // emprestimo (dinheiro novo tomado, ex: consignado, Mercado Pago) nao
+        // e gasto — e passivo novo, sem regra de categoria registrada, entao
+        // tambem vazava pra naoDedutivel sem excluir aqui (mesmo achado
+        // acima: R$33.953,30 de emprestimo_tomado contando como "gasto
+        // pessoal que nao deduz"). A parcela de pagamento (divida_parcelada)
+        // continua passando adiante de proposito: tem regra propria no grupo
+        // "divida" que a marca nao-dedutivel, pra aparecer como informativo.
+        if (t.natureza === 'pagamento' || t.natureza === 'ajuste' || t.natureza === 'transferencia' || t.natureza === 'emprestimo') return;
         if (t.valor <= 0) return;
 
         if (t.categoria === 'imposto_renda') {
