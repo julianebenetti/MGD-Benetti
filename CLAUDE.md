@@ -69,6 +69,50 @@ Vivianefurtadopor, Assiny) que ela ainda não identificou.
   a classificação ficou manual, presa à transação exata, pra não contaminar
   a próxima ocorrência do mesmo nome com o motivo errado.
 
+### Benetti UP: conta própria, margem real e entrelaçamento com dívida pessoal (30/08)
+A Juliane mandou o extrato Nubank da Benetti UP (jan-ago/26, conta PJ separada,
+CNPJ 64.020.863/0001-03) pra eu entender se a empresa se sustenta sozinha antes
+de decidir se dava pra contar com ela pra ajudar na crise pessoal. **Essa conta
+não está integrada na dashboard** (financeiro.json só vê o que vaza pro cartão/
+extrato pessoal da Juliane) — a análise abaixo foi feita direto em cima do PDF,
+não é dado gravado em lugar nenhum do sistema.
+
+- **A empresa tem receita real e margem operacional positiva**: R$144.089,43 de
+  receita (via processadoras SHPP e depois Maree — troca de processadora
+  confirmada pela Juliane, não queda de venda) contra R$120.369,66 de despesa
+  operacional real (fatura dos cartões 0442/3794, DAS-Simples Nacional, Receita
+  Federal, contabilidade Stima) = **~R$2.965/mês de margem**. Não é um buraco.
+- **Mas o saldo da conta fecha em R$0,00 todo santo mês**, sem exceção — a
+  Juliane chegou a tentar guardar R$33.000 numa Aplicação RDB em 16/01 e
+  resgatou tudo de volta em 11 dias (20 e 27/01). Nenhuma reserva própria
+  sobrevive.
+- **R$16.855,00 da margem da empresa foram usados pra pagar os empréstimos
+  pessoais dela no Mercado Pago** (27/01, 21/02, 30/06) — confirmado pela
+  Juliane. E, ao mesmo tempo, ela confirmou que **os próprios empréstimos do
+  Mercado Pago foram tomados, em parte, pra pagar fatura da empresa** — ou
+  seja, o dinheiro circula nos dois sentidos entre pessoa física e empresa,
+  o que a deixou confusa sobre "de quem" é essa dívida. Conclusão dada a ela:
+  pra decisão de **o que pagar agora**, tratar como uma dívida só, sem tentar
+  separar pessoal de empresa — essa linha só vai ficar real quando a empresa
+  tiver capital próprio pra não precisar de crédito pessoal.
+- **Confirmado, não só suposto: os 2 cartões da Benetti UP (0442 e 3794) às
+  vezes são pagos por Pix direto em vez de boleto**, pra liberar limite mais
+  rápido — a Juliane reenviou as faturas dos dois cartões e o
+  `conferir-fatura.js` bateu os 3 Pix "misteriosos" do extrato Nubank contra
+  o campo "quita a fatura anterior" de cada uma:
+  - R$737,15 (26/06) → fatura do 0442 vencendo 01/07/2026
+  - R$6.200,00 (21/07) → fatura do 3794 vencendo 03/08/2026
+  - R$5.000,00 (21/08) → fatura do 3794 vencendo 01/09/2026
+  Nenhuma fatura reenviada gerou divergência ou dado novo — as 15 batiam
+  exatamente com o que já estava gravado.
+- **Achado à parte, via Registrato (CCS/Banco Central)**: duas relações
+  bancárias novas, de 11/12/2025, sem explicação — **Nu Financeira S.A. CFI**
+  (braço de crédito do Nubank, diferente da conta de pagamento "Nu Pagamentos"
+  já rastreada) e **Banco Votorantim S.A.**. A Juliane não reconheceu a conta
+  do Votorantim de cabeça. Módulo SCR do Registrato (que mostraria o valor de
+  cada dívida) estava fora do ar na hora de puxar — pendência em aberto, não
+  descartar a possibilidade de ser crédito real não mapeado nos 12 contratos.
+
 ### Estrutura
 - 7 abas: Painel, Lançamentos, Para Onde Vai, Cartão & Faturas, Dívidas &
   Patrimônio, Fluxo de Caixa, Imposto de Renda. Importar / Configurações /
