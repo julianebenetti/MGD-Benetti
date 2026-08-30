@@ -1207,6 +1207,37 @@
         font-size: 12px;
       }
     }
+
+    /* Status de pagamento de cartões */
+    .pago {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .em_aberto {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(96, 165, 250, 0.2);
+      color: #60a5fa;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .em_aberto_vencido {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -1475,6 +1506,9 @@
     <div id="cartao" class="tab-content">
 
       <div class="grid" id="cartao_kpis"></div>
+
+      <div class="section-title">📅 Vencimentos do Mês Corrente</div>
+      <div class="card full-width" style="overflow-x:auto" id="cartao_resumo_mes"></div>
 
       <div class="section-title">Faturas</div>
       <div class="card full-width" style="overflow-x:auto" id="cartao_faturas"></div>
@@ -2838,6 +2872,103 @@
         .filter(t => mesNoEscopo(t.mes_vencimento) && t.natureza !== 'pagamento' && veioDoCartao(t));
     }
 
+    function gerarResumoVencimentosMes() {
+      const faturas = faturasDoCartao();
+      const mesAtual = mesVigente();
+      const faturasDoMes = faturas.filter(f => f.mes === mesAtual).sort((a, b) => {
+        const dataA = new Date(a.vencimento);
+        const dataB = new Date(b.vencimento);
+        return dataA - dataB;
+      });
+
+      if (!faturasDoMes.length) {
+        return '<p style="color: var(--text-secondary);">Nenhuma fatura com vencimento neste mês</p>';
+      }
+
+      let html = `
+        <table class="tabela-dados" style="font-size: 14px;">
+          <thead>
+            <tr>
+              <th>Cartão</th>
+              <th>Vencimento</th>
+              <th>Status</th>
+              <th style="text-align: right;">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      let totalAberto = 0;
+      let totalPago = 0;
+
+      faturasDoMes.forEach(f => {
+        const dataVenc = new Date(f.vencimento);
+        const hoje = new Date();
+        const vencido = dataVenc < hoje && f.em_aberto > 0.01;
+
+        let statusClass = '';
+        let statusTexto = '';
+
+        if (f.em_aberto > 0.01) {
+          statusClass = vencido ? 'em_aberto_vencido' : 'em_aberto';
+          statusTexto = vencido ? '⚠️ VENCIDO' : '⏳ Em aberto';
+          totalAberto += f.em_aberto;
+        } else {
+          statusClass = 'pago';
+          statusTexto = '✓ Pago';
+          totalPago += (f.pago || 0);
+        }
+
+        const cartaoNome = f.cartao_descricao
+          .replace('Bradesco ', '')
+          .replace('Itau ', '')
+          .replace('Azul ', '')
+          .replace('Amazon ', '')
+          .replace('Mastercard Platinum', 'Mastercard')
+          .replace('Visa Infinite', 'Infinite')
+          .replace('Visa', 'Visa')
+          .replace('Uniclass Black', 'Black')
+          .replace(' - final ', ' ');
+
+        const valor = f.em_aberto > 0.01 ? f.em_aberto : f.pago || f.total_fatura;
+
+        html += `
+          <tr style="border-bottom: 1px solid var(--border-color);">
+            <td><strong>${cartaoNome}</strong></td>
+            <td>${new Date(f.vencimento).toLocaleDateString('pt-BR')}</td>
+            <td><span class="${statusClass}">${statusTexto}</span></td>
+            <td style="text-align: right; font-weight: bold; color: ${f.em_aberto > 0.01 ? 'var(--accent-red)' : 'var(--accent-green)'}">${moeda(valor)}</td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      if (totalAberto > 0.01 || totalPago > 0.01) {
+        html += `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border-color);">
+            ${totalAberto > 0.01 ? `
+              <div style="padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; text-align: center;">
+                <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Em aberto</div>
+                <div style="font-size: 20px; font-weight: bold; color: var(--accent-red);">${moeda(totalAberto)}</div>
+              </div>
+            ` : ''}
+            ${totalPago > 0.01 ? `
+              <div style="padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; text-align: center;">
+                <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 4px;">Pago</div>
+                <div style="font-size: 20px; font-weight: bold; color: var(--accent-green);">${moeda(totalPago)}</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+
+      return html;
+    }
+
     async function renderizarCartao() {
       const transacoes = transacoesDoCartao();
       const kpis = document.getElementById('cartao_kpis');
@@ -2881,6 +3012,9 @@
         (abertas.parcelas
           ? cartaoKpi('Parcelas a vencer', moeda(abertas.valor), `${abertas.parcelas} parcelas`, 'var(--accent-yellow)')
           : cartaoKpi('Parcelas a vencer', 'a confirmar', 'depende do mês real das parcelas', 'var(--text-secondary)'));
+
+      // --- Resumo de vencimentos do mês corrente ---
+      document.getElementById('cartao_resumo_mes').innerHTML = gerarResumoVencimentosMes();
 
       // --- Faturas, com conferência contra o valor real quando disponível ---
 
