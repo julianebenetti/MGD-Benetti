@@ -11,6 +11,21 @@
   mesmo Supabase da aba Garimpo da AfiliDash) precisa ser publicado nesse mesmo VPS,
   não em hospedagem compartilhada separada.
 
+## Salário e Receita Previsível (Juliane)
+
+**Salário líquido real: ~R$ 4.270/mês**
+- Salário base Elektro: ~R$ 3.543,89
+- Auxílio-creche: R$ 724,20 (benefício da empresa para Valentina)
+- PLR e férias (quando ocorrem): além do básico, não previsível mensalmente
+
+**O que NÃO conta como receita previsível:**
+- Pró-labore (Juliane não recebe)
+- Contribuições do Hugo (inconstantes, valores variam)
+- Rendimentos de aplicação (esporádicos)
+- Outros PIX e transferências esporádicas
+
+*Regra de ouro: a dashboard usa apenas salário + benefícios fixos (categorias `salario`, `beneficio`, `plr`, `ferias`) para calcular receita esperada.*
+
 ## Dashboard Financeira (`financeiro/`)
 
 Controle das contas **pessoais** da Juliane e do Hugo. Não tem relação nenhuma

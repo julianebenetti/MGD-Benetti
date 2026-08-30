@@ -2640,7 +2640,11 @@
 
       // --- Fluxo do mês vigente ---
       const mesVig = mesVigente();
-      const receitaVigente = receitas().filter(t => t.mes_vencimento === mesVig).reduce((s, t) => s + t.valor, 0);
+      // Receita previsível: APENAS salário + benefícios (auxílio-creche, PLR)
+      // Exclui: pró-labore (não aplica), contribuições do Hugo (inconstantes), rendimentos diversos
+      const receitaVigente = receitas()
+        .filter(t => t.mes_vencimento === mesVig && ['salario', 'beneficio', 'plr', 'ferias'].includes(t.categoria))
+        .reduce((s, t) => s + t.valor, 0);
 
       // Vencimentos: faturas do mês vigente, EXCLUINDO cartão 4846 (Black) e loans do Mercado Pago
       const faturasVigentes = (dadosGlobais.faturas_cartao || [])
