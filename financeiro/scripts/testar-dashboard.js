@@ -69,6 +69,10 @@ function noEscopo(mv) {
   // Verdade de referência, calculada direto do arquivo
   // ---------------------------------------------------------------------
   const dados = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'configuracoes.json'), 'utf8'));
+  // Cartão com pagamento suspenso: a fatura continua sendo cobrada, mas o valor
+  // não sai da conta, então não pode entrar no que a tela diz que ela tem de pagar.
+  const cartaoParado = f => (config.cartoes || []).some(c => c.final === f && c.pagamento_suspenso);
   const todosLancamentos = dados.fluxo_mensal.transacoes;
   const faturas = dados.faturas_cartao || [];
 
@@ -434,7 +438,7 @@ function noEscopo(mv) {
     const cartaoPago = doMes.filter(t => t.origem === 'extrato_itau' &&
       t.categoria === 'pagamento_fatura' && t.valor > 0).reduce((s, t) => s + t.valor, 0);
     const cartaoAberto = (dados.faturas_cartao || [])
-      .filter(f => f.mes === mes)
+      .filter(f => f.mes === mes && !cartaoParado(f.cartao))
       .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
     const cartao = cartaoPago + cartaoAberto;
 
@@ -533,7 +537,7 @@ function noEscopo(mv) {
         .reduce((s, t) => s + t.valor, 0) +
         doMes.filter(t => t.origem === 'extrato_itau' && t.categoria === 'pagamento_fatura' && t.valor > 0)
              .reduce((s, t) => s + t.valor, 0) +
-        (dados.faturas_cartao || []).filter(f => f.mes === mesTeste)
+        (dados.faturas_cartao || []).filter(f => f.mes === mesTeste && !cartaoParado(f.cartao))
           .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
       // Soma tambem a projecao das recorrentes que faltam nesse mes, pela mesma
       // mediana que a tela usa — senao o teste cobraria um numero que a tela
@@ -591,6 +595,65 @@ function noEscopo(mv) {
     ok(`Líquido da folha bate com o crédito no banco (${conferidos} meses de salário puro)`,
        conferidos > 0 && divergentes.length === 0,
        divergentes.join(' · ') || (conferidos === 0 ? 'nenhum mês comparável' : null));
+  }
+
+  // Fatura de cartão com pagamento suspenso não pode entrar no "sai da conta":
+  // ela continua sendo cobrada, mas o dinheiro não sai. Contar ela cobraria da
+  // Juliane um pagamento que ela decidiu não fazer — exatamente o tipo de
+  // número inflado que fez a dashboard perder a confiança dela antes.
+  {
+    const parados = (config.cartoes || []).filter(c => c.pagamento_suspenso).map(c => c.final);
+    if (parados.length) {
+      const mesComParado = (dados.faturas_cartao || [])
+        .filter(f => parados.includes(f.cartao) && (f.em_aberto || 0) > 0.05)
+        .map(f => f.mes)
+        .find(m => mesesReais.includes(m));
+
+      if (mesComParado) {
+        const suspenso = (dados.faturas_cartao || [])
+          .filter(f => f.mes === mesComParado && parados.includes(f.cartao))
+          .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+
+        const tela = await pagina.evaluate(m => {
+          document.getElementById('painel_mes').value = m;
+          renderizarPainel();
+          return {
+            sai: [...document.querySelectorAll('#painel_fluxo_3numeros .fluxo-item')][1].innerText,
+            bloco: document.getElementById('painel_fluxo_3numeros').innerText
+          };
+        }, mesComParado);
+
+        // A projeção das recorrentes daquele mês, lida do próprio subtítulo do
+        // card: aqui o alvo é a fatura parada, não a mediana, que já tem teste
+        // próprio recalculando de forma independente.
+        const previstoNoMesParado = numeroDe((tela.sai.match(/([\d.]+,\d{2}) de conta recorrente/) || [])[1] || '0');
+
+        // Recalcula o "sai da conta" pelas partes, e confere que a soma bate
+        // com a tela SEM o valor parado e não bate COM ele. As duas metades
+        // importam: a primeira prova que a conta está certa, a segunda prova
+        // que ela erraria se a fatura parada entrasse.
+        const doMesP = todosLancamentos.filter(t => t.mes_vencimento === mesComParado);
+        const ehPagCartaoP = t => t.origem === 'extrato_itau' &&
+          (/^Cart[\u00e3a]o\s/i.test(t.descricao || '') ||
+           /bradescard/i.test((t.descricao || '') + ' ' + (t.descricao_original || '')));
+        const semParado = doMesP.filter(t => t.origem === 'extrato_itau' &&
+            t.categoria === 'pagamento_fatura' && t.valor > 0).reduce((s, t) => s + t.valor, 0)
+          + (dados.faturas_cartao || []).filter(f => f.mes === mesComParado && !cartaoParado(f.cartao))
+              .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0)
+          + doMesP.filter(t => t.origem !== 'holerite_elektro' &&
+              !(t.origem || '').startsWith('cartao_credito') && !ehPagCartaoP(t) && t.valor > 0 &&
+              (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+              .reduce((s, t) => s + t.valor, 0);
+        const naTelaP = numeroDe(tela.sai);
+        ok(`Painel ${mesComParado}: fatura parada (${brl(suspenso)}) fica fora do "sai da conta"`,
+           Math.abs(naTelaP - (semParado + previstoNoMesParado)) < 0.05 &&
+           Math.abs(naTelaP - (semParado + previstoNoMesParado + suspenso)) > 0.05,
+           `tela ${brl(naTelaP)} · sem o parado ${brl(semParado + previstoNoMesParado)} · com ele ${brl(semParado + previstoNoMesParado + suspenso)}`);
+        ok(`Painel ${mesComParado}: o valor parado aparece na tela, não some em silêncio`,
+           tela.bloco.includes(brl(suspenso)) && /pagamento parado/i.test(tela.bloco),
+           tela.bloco.split('\n').filter(l => /parado/i.test(l)).join(' | ') || '(nada sobre pagamento parado)');
+      }
+    }
   }
 
   // O boleto do cartão Amazon no extrato é o pagamento da fatura 0013 — os

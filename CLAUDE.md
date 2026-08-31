@@ -260,9 +260,18 @@ futuro ela sumia, e o Painel dava a impressão de que só havia cartão a pagar.
 
 ### Dívida que existe mas não está sendo paga (31/08)
 Depois de ver que as 3 parcelas do Mercado Pago somam **R$ 3.301,24/mês** contra
-um líquido de R$ 2.834,19, a Juliane decidiu: *"pode deixar elas relacionadas,
-nas dívidas, mas não farei o pagamento delas por enquanto"*. Decisão dela,
-registrada — não é esquecimento nem dado faltando.
+um líquido de R$ 2.834,19, a Juliane decidiu parar de pagar quase tudo por um
+tempo. Decisão dela, registrada — não é esquecimento nem dado faltando.
+
+**O que ela continua pagando** (perguntado e confirmado em 31/08):
+os **4 consignados** (o que cai em conta e os 3 da folha), o **empréstimo da
+mãe** (Cenira), as **duas escolas** (Valentina e Luca), os cartões **0442 e
+3794** (que carregam o tráfego pago e são quitados pela conta da Benetti UP), e
+as contas correntes do mês (condomínio, luz, água, van, vaga, Claro, locker).
+
+**O que ficou parado:** os 3 empréstimos do Mercado Pago, o **IPTU**, a
+**anuidade do CRC-SP**, e as faturas dos **4 cartões pessoais** (4846 Black,
+0013 Amazon, 3987 e 3711).
 
 - Os 3 contratos ganharam `em_pagamento: false`, `suspensa_desde` e
   `motivo_suspensao` em `financeiro.json`.
@@ -284,6 +293,29 @@ registrada — não é esquecimento nem dado faltando.
 **Ao cadastrar dívida nova, checar se ela está sendo paga.** `em_pagamento`
 ausente vale como `true` — o padrão é que se paga; só a exceção precisa de
 marca.
+
+### Cartão com pagamento parado, e o cadastro de cartões saindo do código (31/08)
+Fatura de cartão parada é o mesmo princípio da dívida suspensa: continua sendo
+cobrada, o saldo cresce, mas **o valor não sai da conta** — então não pode
+entrar no número que ela usa pra se programar.
+
+- **O cadastro dos cartões saiu do `index.html` e foi para
+  `configuracoes.json`** (`cartoes[]`: `final`, `nome`, `descricao`, `cor`,
+  `pagamento_suspenso`). Estava numa `const` no meio do código — e "parei de
+  pagar esse cartão" é decisão que muda com o tempo, não pode exigir editar
+  código. `CARTOES_PADRAO` continua no arquivo só como valor até a configuração
+  carregar; `cadastroDoCartao()` lê da config e cai nele se não achar.
+- `pagamentoSuspenso(cartao)` é o que o Painel consulta. A fatura parada sai do
+  `cartaoAPagar`, sai do rodapé "ainda a pagar", sai da linha do tempo, e ganha
+  o selo **"pagamento parado"** na tabela de vencimentos.
+- Um aviso próprio mostra **quanto está parado e em quais cartões**, dizendo que
+  a fatura segue sendo cobrada e o saldo cresce com juros de rotativo. O valor
+  nunca some da tela — só sai da conta do que tem de pagar.
+- Efeito em Ago/26: "sai da conta" caiu de R$ 17.332,08 para **R$ 8.702,37**, e
+  a falta do mês de R$ 14.497,89 para **R$ 5.868,18**.
+- 2 testes de regressão, **verificados quebrando o código de propósito** (sem o
+  filtro, 4 testes falham): a soma bate com a tela sem o valor parado e não bate
+  com ele, e o valor parado aparece na tela em vez de sumir.
 
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08

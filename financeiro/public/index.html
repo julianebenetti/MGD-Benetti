@@ -1923,25 +1923,39 @@
     let cargasGlobais = { cargas: [] };
     let cargasAtuais = [];
 
-    // Configuração de cartões. Os três de baixo entraram depois e ficaram de
-    // fora daqui por um tempo: sem nome cadastrado, a tela mostrava só o número
-    // cru ("0013") em vez do cartão.
-    const cartoes = {
-      '4846': { nome: 'Black', descricao: 'Itaú Black', cor: '#000000' },
-      '0442': { nome: 'Infinite', descricao: 'Visa Infinite', cor: '#1a1a1a' },
-      '3794': { nome: 'Azul', descricao: 'Cartão Azul', cor: '#0066cc' },
-      '0013': { nome: 'Amazon', descricao: 'Amazon Mastercard Platinum (Bradescard)', cor: '#ff9900' },
-      '3987': { nome: 'Bradesco', descricao: 'Bradesco Visa Platinum sem anuidade', cor: '#cc092f' },
-      '3711': { nome: 'Bradesco II', descricao: 'Bradesco Visa Platinum sem anuidade', cor: '#cc092f' }
+    // O cadastro dos cartões vive em `configuracoes.json`, não aqui: além do
+    // nome, ele carrega se o pagamento daquele cartão está suspenso, e isso é
+    // decisão que muda com o tempo — não pode exigir editar código. Os valores
+    // abaixo são só o que a tela usa antes de a configuração carregar.
+    const CARTOES_PADRAO = {
+      '4846': { nome: 'Black', descricao: 'Itaú Uniclass Black Mastercard' },
+      '0442': { nome: 'Infinite', descricao: 'Itaú Uniclass Infinite Visa' },
+      '3794': { nome: 'Azul', descricao: 'Azul Itaú Infinite Visa' },
+      '0013': { nome: 'Amazon', descricao: 'Amazon Mastercard Platinum (Bradescard)' },
+      '3987': { nome: 'Bradesco', descricao: 'Bradesco Visa Platinum sem anuidade' },
+      '3711': { nome: 'Bradesco II', descricao: 'Bradesco Visa Platinum sem anuidade' }
     };
 
+    function cadastroDoCartao(numero) {
+      const daConfig = (configuracoesGlobais.cartoes || []).find(c => c.final === numero);
+      return daConfig || CARTOES_PADRAO[numero] || null;
+    }
+
+    // Cartão cujo pagamento a Juliane parou por enquanto. A fatura continua
+    // existindo e sendo cobrada — o que muda é que o valor dela não sai da
+    // conta, e portanto não pode entrar no que ela usa pra se programar.
+    function pagamentoSuspenso(numero) {
+      const c = cadastroDoCartao(numero);
+      return !!(c && c.pagamento_suspenso);
+    }
+
     function nomeDoCartao(numero) {
-      const cartao = cartoes[numero];
+      const cartao = cadastroDoCartao(numero);
       return cartao ? `${numero}-${cartao.nome}` : numero;
     }
 
     function descricaoCartao(numero) {
-      const cartao = cartoes[numero];
+      const cartao = cadastroDoCartao(numero);
       return cartao ? cartao.descricao : numero;
     }
 
@@ -2720,7 +2734,13 @@
       const pagamentosNoExtrato = lancamentosDeCaixa(mes)
         .filter(t => t.origem === 'extrato_itau' && t.categoria === 'pagamento_fatura' && t.valor > 0);
       const cartaoJaPago = pagamentosNoExtrato.reduce((s, t) => s + t.valor, 0);
-      const cartaoAPagar = faturas.reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+
+      // Fatura de cartão com pagamento suspenso continua sendo cobrada, mas o
+      // valor dela não sai da conta enquanto durar a suspensão — entra num
+      // número à parte, nunca somada ao que ela tem de pagar no mês.
+      const emAbertoDe = f => Math.max(0, f.em_aberto || 0);
+      const cartaoAPagar = faturas.filter(f => !pagamentoSuspenso(f.cartao)).reduce((s, f) => s + emAbertoDe(f), 0);
+      const cartaoSuspenso = faturas.filter(f => pagamentoSuspenso(f.cartao)).reduce((s, f) => s + emAbertoDe(f), 0);
       const obrigacaoCartao = cartaoJaPago + cartaoAPagar;
       const faturadoNoMes = faturas.reduce((s, f) => s + (f.total_fatura || 0), 0);
 
@@ -2730,6 +2750,7 @@
       // pago da empresa e acusava um rombo que não é dela sozinha.
       let cartaoEmpresa = 0, cartaoPessoal = 0, cartaoSemClassificacao = 0;
       faturas.forEach(f => {
+        if (pagamentoSuspenso(f.cartao)) return;
         const obrig = Math.max(0, f.em_aberto || 0);
         if (obrig <= 0) return;
         const frac = fracaoEmpresaDaFatura(f);
@@ -2792,10 +2813,18 @@
           A fatura é paga inteira pela sua conta, então o valor sai do caixa de qualquer jeito —
           mas ${cartaoEmpresa > 0 ? 'a parte da empresa deveria ser coberta pela receita dela, não pelo seu salário' : 'a parte sem classificação precisa da fatura importada para se saber de quem é'}.
         </div>` : ''}
-        ${faturadoNoMes > obrigacaoCartao + 0.05 ? `
+        ${cartaoSuspenso > 0.05 ? `
+        <div class="aviso aviso-atencao">
+          <b>${moeda(cartaoSuspenso)} de fatura com pagamento parado</b> neste mês, fora da conta acima:
+          ${faturas.filter(f => pagamentoSuspenso(f.cartao) && emAbertoDe(f) > 0.05)
+                   .map(f => `${nomeDoCartao(f.cartao)} ${moeda(emAbertoDe(f))}`).join(' · ')}.
+          A fatura continua sendo cobrada e o saldo cresce com juros de rotativo — o que muda é que
+          esse valor não sai da sua conta enquanto o pagamento estiver parado.
+        </div>` : ''}
+        ${faturadoNoMes > obrigacaoCartao + cartaoSuspenso + 0.05 ? `
         <div class="aviso aviso-info">
           Os cartões faturaram <b>${moeda(faturadoNoMes)}</b> neste mês, mas só <b>${moeda(obrigacaoCartao)}</b>
-          passam por esta conta. A diferença de <b>${moeda(faturadoNoMes - obrigacaoCartao)}</b> foi quitada por fora —
+          passam por esta conta. A diferença de <b>${moeda(faturadoNoMes - obrigacaoCartao - cartaoSuspenso)}</b> foi quitada por fora —
           historicamente pela conta da Benetti UP no Nubank, que não está integrada nesta dashboard.
         </div>` : ''}
         <div class="aviso ${classe}">
@@ -2818,6 +2847,7 @@
           titulo: `Fatura ${f.cartao_descricao || 'cartão ' + f.cartao}`,
           valor: f.em_aberto > 0 ? f.em_aberto : f.total_fatura,
           quitado: !(f.em_aberto > 0),
+          suspenso: f.em_aberto > 0 && pagamentoSuspenso(f.cartao),
           detalhe: f.em_aberto > 0
             ? (f.pago > 0 ? `pago ${moeda(f.pago)} de ${moeda(f.total_fatura)}` : `total ${moeda(f.total_fatura)}`)
             : 'quitada',
@@ -2845,7 +2875,7 @@
       ].filter(c => c.valor > 0)
        .sort((a, b) => (a.quando || '').localeCompare(b.quando || ''));
 
-      const emAberto = compromissos.filter(c => !c.quitado);
+      const emAberto = compromissos.filter(c => !c.quitado && !c.suspenso);
 
       if (!compromissos.length) {
         alvo.innerHTML = blocoVazio('Nenhum compromisso neste mês', 'Nem fatura de cartão nem boleto lançado para ' + mes + '.');
@@ -2857,17 +2887,18 @@
               ${compromissos.map(c => {
                 const d = c.quando ? new Date(c.quando + 'T00:00:00') : null;
                 const dias = d ? Math.round((d - hoje) / 86400000) : null;
-                const situacao = c.previsto ? '<span class="selo selo-neutro" title="Esta conta não foi lançada ainda neste mês. O valor é a mediana do que foi pago nos meses anteriores.">previsto</span>'
+                const situacao = c.suspenso ? '<span class="selo selo-alerta" title="Pagamento parado por decisão sua. A fatura continua sendo cobrada e o saldo cresce com juros.">pagamento parado</span>'
+                  : c.previsto ? '<span class="selo selo-neutro" title="Esta conta não foi lançada ainda neste mês. O valor é a mediana do que foi pago nos meses anteriores.">previsto</span>'
                   : c.quitado ? '<span class="selo pago">pago</span>'
                   : dias === null ? '<span class="selo">sem data</span>'
                   : dias < 0 ? `<span class="selo em_aberto_vencido">venceu há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}</span>`
                   : dias === 0 ? '<span class="selo em_aberto_vencido">vence hoje</span>'
                   : dias <= 7 ? `<span class="selo em_aberto">vence em ${dias} dia${dias === 1 ? '' : 's'}</span>`
                   : `<span class="selo">em ${dias} dias</span>`;
-                return `<tr${c.quitado ? ' style="opacity:.55"' : c.previsto ? ' style="opacity:.8;font-style:italic"' : ''}>
+                return `<tr${c.quitado ? ' style="opacity:.55"' : c.suspenso ? ' style="opacity:.6"' : c.previsto ? ' style="opacity:.8;font-style:italic"' : ''}>
                   <td>${c.quando ? c.quando.split('-').reverse().join('/') : '—'}</td>
                   <td>${c.titulo}<br><span class="kpi-sub">${c.detalhe}</span></td>
-                  <td class="num"${c.quitado ? '' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
+                  <td class="num"${c.quitado || c.suspenso ? ' style="color:var(--text-secondary)"' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
                   <td>${situacao}</td>
                 </tr>`;
               }).join('')}
@@ -2894,7 +2925,7 @@
           dia: t.data ? parseInt(t.data.split('-')[2], 10) : null,
           tipo: 'entrada', titulo: t.descricao, valor: t.valor
         })),
-        ...compromissos.map(c => ({
+        ...compromissos.filter(c => !c.suspenso).map(c => ({
           dia: c.quando ? parseInt(c.quando.split('-')[2], 10) : null,
           tipo: 'saida', titulo: c.titulo, valor: c.valor, previsto: c.previsto
         }))

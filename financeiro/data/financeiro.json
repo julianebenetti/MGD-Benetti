@@ -66128,7 +66128,10 @@
       "montante": 294.44,
       "parcela_mensal": 147.22,
       "meses_restantes": 2,
-      "observacao": "Parcelas 4/5 (venc. 31/05/26) e 5/5 (venc. 30/06/26) vencidas, R$147,22 cada. Anuidade do registro profissional de contabilidade dela."
+      "observacao": "Parcelas 4/5 (venc. 31/05/26) e 5/5 (venc. 30/06/26) vencidas, R$147,22 cada. Anuidade do registro profissional de contabilidade dela.",
+      "em_pagamento": false,
+      "suspensa_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar por enquanto. Continua pagando os 4 consignados, o emprestimo da mae e as duas escolas."
     },
     {
       "id": "iptu_2026",
@@ -66137,7 +66140,10 @@
       "montante": 431,
       "parcela_mensal": 107.75,
       "meses_restantes": 4,
-      "observacao": "4 parcelas vencidas (mai, jun, jul, ago/26), R$107,75 cada (IPTU + coleta de lixo). Parcelas 8 (10/09) e 9 (13/10) ainda a vencer, não incluídas aqui."
+      "observacao": "4 parcelas vencidas (mai, jun, jul, ago/26), R$107,75 cada (IPTU + coleta de lixo). Parcelas 8 (10/09) e 9 (13/10) ainda a vencer, não incluídas aqui.",
+      "em_pagamento": false,
+      "suspensa_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar por enquanto. Continua pagando os 4 consignados, o emprestimo da mae e as duas escolas."
     },
     {
       "id": "escola_valentina_ago_2026",

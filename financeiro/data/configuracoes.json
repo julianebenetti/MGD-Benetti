@@ -235,5 +235,59 @@
       "ordem": 5,
       "ativa": true
     }
+  ],
+  "cartoes": [
+    {
+      "final": "4846",
+      "nome": "Black",
+      "descricao": "Itaú Uniclass Black Mastercard",
+      "cor": "#000000",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    },
+    {
+      "final": "0442",
+      "nome": "Infinite",
+      "descricao": "Itaú Uniclass Infinite Visa",
+      "cor": "#1a1a1a",
+      "pagamento_suspenso": false,
+      "observacao": "Carrega o tráfego pago da Benetti UP e é quitado pela conta da empresa no Nubank, não pela conta pessoal."
+    },
+    {
+      "final": "3794",
+      "nome": "Azul",
+      "descricao": "Azul Itaú Infinite Visa",
+      "cor": "#0066cc",
+      "pagamento_suspenso": false,
+      "observacao": "As faturas grandes são quitadas pela conta da Benetti UP no Nubank, não pela conta pessoal."
+    },
+    {
+      "final": "0013",
+      "nome": "Amazon",
+      "descricao": "Amazon Mastercard Platinum (Bradescard)",
+      "cor": "#ff9900",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    },
+    {
+      "final": "3987",
+      "nome": "Bradesco",
+      "descricao": "Bradesco Visa Platinum sem anuidade",
+      "cor": "#cc092f",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    },
+    {
+      "final": "3711",
+      "nome": "Bradesco II",
+      "descricao": "Bradesco Visa Platinum sem anuidade",
+      "cor": "#cc092f",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    }
   ]
 }
