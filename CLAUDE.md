@@ -209,22 +209,66 @@ Existem **6 cartões**, não 3: além do 4846 (Black), 0442 (Infinite) e 3794
   39 em que o mês não vinha do vencimento. Aparecia nos vencimentos de agosto e
   sumia de setembro. Corrigida para Set/26.
 
+### As faturas do Bradesco estavam nos uploads da sessão (31/08)
+A Juliane disse que já tinha mandado as faturas do Bradesco. Tinha mesmo: os
+PDFs estavam em `/root/.claude/uploads/<sessão>/` — 13 arquivos únicos, achados
+procurando no transcript por mensagens dela com anexo. **Antes de dizer que um
+dado não existe, procurar ali.** Os arquivos foram copiados para
+`financeiro/faturas-bradesco/` e agora versionam junto com o resto.
+
+- **119 lançamentos e 14 faturas importados** (`ler-faturas-bradesco.py`,
+  `ler-extratos-abertos-bradesco.py`, `importar-faturas-bradesco.py`). Os 3
+  cartões novos deixaram de ser cabeçalho vazio.
+- **A fatura do Bradesco fecha por `total = saldo anterior + soma dos
+  lançamentos`** — diferente da do Itaú, ela lança o pagamento da fatura
+  anterior como linha negativa dentro dela mesma. O importador confere essa
+  identidade em cada fatura e **recusa gravar** se alguma não fechar.
+- **Quando o PDF não imprime "Saldo anterior"** (formato do 3987 e dos extratos
+  em aberto do app), o valor é deduzido da fatura anterior do mesmo cartão e só
+  é aceito se com ele a fatura fechar — nunca entra número inventado.
+- **O extrato "EM ABERTO" do app traz mais de um cartão no mesmo PDF**, em
+  blocos separados por `XXXX.XXXX.XXXX.NNNN`, cada um com seu subtotal. E a
+  descrição às vezes quebra nas linhas de cima e de baixo da linha da data,
+  deixando só o código `000` no meio — precisa ser remontada das vizinhas.
+- **O que a fatura corrigiu no dado que estava gravado:** o `total_fatura` de
+  0013 Ago/26 era 178,92 e o PDF diz **73,27** (o 178,92 vinha de somar o saldo
+  anterior a compras que já o incluíam — era a divergência de R$ 2,03 que estava
+  em aberto); 0013 Jul e Ago estavam como não pagas e as duas foram pagas (20/07
+  e 17/08); 3987 Ago/26 foi paga por débito em conta em 17/08, o que só o
+  extrato do app mostrava.
+- **Os 8 boletos do cartão Amazon no extrato viraram `transferencia` /
+  `pagamento_fatura`** — exatamente o que este arquivo já avisava que teria de
+  acontecer no dia em que a fatura 0013 fosse importada itemizada. Regra
+  permanente em `importar-extrato-itau.js`.
+
+### Conta recorrente projetada pela mediana (31/08)
+A Juliane pediu: "mesmo que você não saiba o valor que terei que pagar, aponte
+um valor médio aproximado, pra eu poder me programar". Conta que se repete todo
+mês só virava lançamento quando o extrato daquele mês era importado — num mês
+futuro ela sumia, e o Painel dava a impressão de que só havia cartão a pagar.
+
+- `perfilDasRecorrentes()` monta o perfil de cada conta que apareceu em **3
+  meses ou mais**: quanto costuma custar e em que dia costuma cair.
+  `recorrentesFaltandoEm(mes)` devolve as que faltam naquele mês.
+- **Mediana, não média.** Uma conta de luz de verão ou uma van cobrada em dobro
+  num mês puxam a média para cima e fazem a projeção prometer um gasto que não é
+  o típico.
+- Toda linha projetada aparece marcada **"previsto"**, dizendo de quanto a
+  quanto variou e em quantos meses — nunca se confunde com lançamento real.
+- Set/26 saiu de "só cartão" para **R$ 6.381,63** de conta recorrente com dia e
+  valor aproximado.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
    anteriores (DAS do MEI, aluguel de garagem, escola da Valentina, escola do
-   Luca, faxina). Todo número de agosto está apoiado num extrato parcial.
-2. **Faturas itemizadas do 0013, 3987 e 3711** — as 12 faturas acima.
-3. **Fatura Bradescard 0013 de agosto** — `total_fatura` (178,92) só fecha com
-   um `saldo_anterior` de 105,65, mas o campo diz 107,68 (que é exatamente o
-   total de julho, padrão de quem copiou o número errado). Diferença de R$ 2,03
-   sem explicação nos dados; a `observacao` do registro cita encargos de
-   R$ 4,78 que não fecham em nenhuma direção.
-4. **Extrato do Mercado Pago** — R$ 15.310 liberados em 21/08 sem rastro de
+   Luca, faxina). Todo número de agosto está apoiado num extrato parcial. A
+   projeção pela mediana cobre isso na tela, mas marcada como previsão.
+2. **Extrato do Mercado Pago** — R$ 15.310 liberados em 21/08 sem rastro de
    onde entraram, e as 3 parcelas (R$ 3.301,24/mês a partir de setembro, mais
    que o líquido inteiro da folha) não existem como lançamento: só aparecem na
    tabela de Contratos.
-5. **Extrato Nubank PJ da Benetti UP** — paga as faturas do 0442 e do 3794.
+3. **Extrato Nubank PJ da Benetti UP** — paga as faturas do 0442 e do 3794.
 
 ### Painel com cards fixos em "não cadastrado" (29/08)
 A Juliane reportou "a aba Painel não está funcionando corretamente", sem
