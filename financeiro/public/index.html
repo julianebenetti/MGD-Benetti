@@ -2582,6 +2582,86 @@
                   && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
     }
 
+    // ------------------------------------------------ contas recorrentes
+    //
+    // Conta que se repete todo mês (condomínio, escola, van escolar, luz, água,
+    // consignado em conta) só vira lançamento quando o extrato daquele mês é
+    // importado. Num mês futuro — ou num mês cujo extrato ainda está pela
+    // metade — ela simplesmente não aparece, e o Painel dá a impressão de que
+    // só há cartão a pagar. Aqui essas contas são projetadas pela mediana do
+    // que foi pago nos meses anteriores, marcadas como previsão, para que dê
+    // para se programar mesmo sem saber o valor exato.
+    //
+    // A mediana é usada de propósito no lugar da média: uma conta de luz de
+    // verão ou uma van cobrada em dobro num mês puxariam a média para cima e
+    // fariam a projeção prometer um gasto que não é o típico.
+    const CHAVE_RECORRENTE = d => String(d || '')
+      .toLowerCase()
+      .replace(/\d+/g, '')
+      .replace(/[^a-zà-ú ]/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    function mediana(v) {
+      if (!v.length) return 0;
+      const o = [...v].sort((a, b) => a - b), m = Math.floor(o.length / 2);
+      return o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2;
+    }
+
+    // Perfil de cada conta que se repete: quanto costuma custar e em que dia
+    // costuma cair. Só entra o que apareceu em pelo menos 3 meses distintos —
+    // abaixo disso não há repetição que sustente uma previsão.
+    function perfilDasRecorrentes() {
+      const porChave = {};
+      transacoesSemFiltroDeAno()
+        .filter(t => mesNoEscopo(t.mes_vencimento)
+                  && t.origem !== 'holerite_elektro'
+                  && !veioDoCartao(t)
+                  && t.valor > 0
+                  && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+        .forEach(t => {
+          const k = CHAVE_RECORRENTE(t.descricao);
+          if (!k) return;
+          (porChave[k] = porChave[k] || { exemplo: t, meses: {}, valores: [], dias: [] });
+          porChave[k].meses[t.mes_vencimento] = true;
+          porChave[k].valores.push(t.valor);
+          if (t.data) porChave[k].dias.push(parseInt(t.data.split('-')[2], 10));
+        });
+
+      return Object.entries(porChave)
+        .map(([k, v]) => ({
+          chave: k,
+          descricao: v.exemplo.descricao,
+          categoria: v.exemplo.categoria,
+          pessoa: v.exemplo.pessoa,
+          natureza: v.exemplo.natureza,
+          nMeses: Object.keys(v.meses).length,
+          valor: Math.round(mediana(v.valores) * 100) / 100,
+          minimo: Math.min(...v.valores),
+          maximo: Math.max(...v.valores),
+          dia: Math.round(mediana(v.dias)) || 15,
+          fixa: Math.max(...v.valores) - Math.min(...v.valores) < 0.02
+        }))
+        .filter(r => r.nMeses >= 3 && r.valor > 0)
+        .sort((a, b) => a.dia - b.dia);
+    }
+
+    // As recorrentes que faltam num mês: as que o extrato daquele mês ainda não
+    // trouxe. Devolve com `previsto: true` para a tela nunca confundir uma
+    // projeção com um lançamento real.
+    function recorrentesFaltandoEm(mes) {
+      const jaTem = new Set(saidasForaDoCartaoDoMes(mes).map(t => CHAVE_RECORRENTE(t.descricao)));
+      const ano = 2000 + parseInt(mes.split('/')[1], 10);
+      const iMes = MES_ORDEM.indexOf(mes.split('/')[0]) + 1;
+      return perfilDasRecorrentes()
+        .filter(r => !jaTem.has(r.chave))
+        .map(r => ({
+          ...r,
+          previsto: true,
+          data: `${ano}-${String(iMes).padStart(2, '0')}-${String(Math.min(r.dia, 28)).padStart(2, '0')}`
+        }));
+    }
+
     // Faturas que vencem no mês. A chave é cartão + mês: filtrar só pelo mês
     // faria a fatura de um cartão esconder a do outro.
     function faturasQueVencemEm(mes) {
@@ -2660,7 +2740,13 @@
       const saidasFora = saidasForaDoCartaoDoMes(mes);
       const somaSaidasFora = saidasFora.reduce((s, t) => s + t.valor, 0);
 
-      const saidaTotal = obrigacaoCartao + somaSaidasFora;
+      // Contas que se repetem todo mês e ainda não apareceram neste — ou porque
+      // o mês é futuro, ou porque o extrato dele ainda está pela metade.
+      // Entram pela mediana do histórico, sempre marcadas como previsão.
+      const previstas = recorrentesFaltandoEm(mes);
+      const somaPrevistas = previstas.reduce((s, r) => s + r.valor, 0);
+
+      const saidaTotal = obrigacaoCartao + somaSaidasFora + somaPrevistas;
       const saldo = folha.liquido - saidaTotal;
       const saldoComOutras = folha.liquido + somaOutrasEntradas - saidaTotal;
 
@@ -2684,7 +2770,7 @@
           <div class="fluxo-item">
             <div class="fluxo-label">Sai da conta</div>
             <div class="fluxo-valor" style="color:var(--accent-red)">${moeda(saidaTotal)}</div>
-            <div class="kpi-sub">${moeda(cartaoJaPago)} de fatura já paga + ${moeda(cartaoAPagar)} de fatura em aberto + ${moeda(somaSaidasFora)} de boleto, débito e PIX</div>
+            <div class="kpi-sub">${moeda(cartaoJaPago)} de fatura paga + ${moeda(cartaoAPagar)} de fatura em aberto + ${moeda(somaSaidasFora)} de boleto e PIX${somaPrevistas > 0 ? ` + <b>${moeda(somaPrevistas)} de conta recorrente prevista</b>` : ''}</div>
           </div>
           <div class="fluxo-item">
             <div class="fluxo-label">${saldo >= 0 ? 'Sobra' : 'Falta'}</div>
@@ -2744,6 +2830,17 @@
           quitado: t.status !== 'agendado' && new Date(t.data + 'T00:00:00') <= hoje,
           detalhe: rotuloCategoria(t.categoria),
           cartao: null
+        })),
+        ...previstas.map(r => ({
+          quando: r.data,
+          titulo: r.descricao,
+          valor: r.valor,
+          quitado: false,
+          previsto: true,
+          detalhe: r.fixa
+            ? `${rotuloCategoria(r.categoria)} · valor fixo nos últimos ${r.nMeses} meses`
+            : `${rotuloCategoria(r.categoria)} · média de ${r.nMeses} meses, variou de ${moeda(r.minimo)} a ${moeda(r.maximo)}`,
+          cartao: null
         }))
       ].filter(c => c.valor > 0)
        .sort((a, b) => (a.quando || '').localeCompare(b.quando || ''));
@@ -2760,13 +2857,14 @@
               ${compromissos.map(c => {
                 const d = c.quando ? new Date(c.quando + 'T00:00:00') : null;
                 const dias = d ? Math.round((d - hoje) / 86400000) : null;
-                const situacao = c.quitado ? '<span class="selo pago">pago</span>'
+                const situacao = c.previsto ? '<span class="selo selo-neutro" title="Esta conta não foi lançada ainda neste mês. O valor é a mediana do que foi pago nos meses anteriores.">previsto</span>'
+                  : c.quitado ? '<span class="selo pago">pago</span>'
                   : dias === null ? '<span class="selo">sem data</span>'
                   : dias < 0 ? `<span class="selo em_aberto_vencido">venceu há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}</span>`
                   : dias === 0 ? '<span class="selo em_aberto_vencido">vence hoje</span>'
                   : dias <= 7 ? `<span class="selo em_aberto">vence em ${dias} dia${dias === 1 ? '' : 's'}</span>`
                   : `<span class="selo">em ${dias} dias</span>`;
-                return `<tr${c.quitado ? ' style="opacity:.55"' : ''}>
+                return `<tr${c.quitado ? ' style="opacity:.55"' : c.previsto ? ' style="opacity:.8;font-style:italic"' : ''}>
                   <td>${c.quando ? c.quando.split('-').reverse().join('/') : '—'}</td>
                   <td>${c.titulo}<br><span class="kpi-sub">${c.detalhe}</span></td>
                   <td class="num"${c.quitado ? '' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
@@ -2775,7 +2873,7 @@
               }).join('')}
             </tbody>
             <tfoot><tr>
-              <td colspan="2">Ainda em aberto (${emAberto.length} de ${compromissos.length})</td>
+              <td colspan="2">Ainda a pagar (${emAberto.length} de ${compromissos.length})${somaPrevistas > 0 ? ` — inclui ${moeda(somaPrevistas)} previsto` : ''}</td>
               <td class="num">${moeda(emAberto.reduce((s, c) => s + c.valor, 0))}</td>
               <td></td>
             </tr></tfoot>
@@ -2798,7 +2896,7 @@
         })),
         ...compromissos.map(c => ({
           dia: c.quando ? parseInt(c.quando.split('-')[2], 10) : null,
-          tipo: 'saida', titulo: c.titulo, valor: c.valor
+          tipo: 'saida', titulo: c.titulo, valor: c.valor, previsto: c.previsto
         }))
       ].filter(e => e.dia).sort((a, b) => a.dia - b.dia);
 
@@ -2810,7 +2908,7 @@
           corrente += e.tipo === 'entrada' ? e.valor : -e.valor;
           return `<tr>
             <td style="width:52px">dia ${e.dia}</td>
-            <td>${e.tipo === 'entrada' ? '↑' : '↓'} ${e.titulo}</td>
+            <td>${e.tipo === 'entrada' ? '↑' : '↓'} ${e.titulo}${e.previsto ? ' <span class="kpi-sub">(previsto)</span>' : ''}</td>
             <td class="num" style="color:${e.tipo === 'entrada' ? 'var(--accent-green)' : 'var(--accent-red)'}">${e.tipo === 'entrada' ? '+' : '−'}${moeda(e.valor)}</td>
             <td class="num" style="color:${corrente >= 0 ? 'var(--text-secondary)' : 'var(--accent-red)'};font-weight:600">${moeda(corrente)}</td>
           </tr>`;

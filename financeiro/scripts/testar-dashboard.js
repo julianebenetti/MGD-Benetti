@@ -438,6 +438,27 @@ function noEscopo(mv) {
       .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
     const cartao = cartaoPago + cartaoAberto;
 
+    // Conta recorrente que ainda não apareceu no mês entra pela mediana do
+    // histórico. Recalculado aqui de forma independente da tela: se a regra
+    // mudar de um lado só, o teste acusa.
+    const chaveRec = x => String(x || '').toLowerCase().replace(/\d+/g, '')
+      .replace(/[^a-zà-ú ]/gi, ' ').replace(/\s+/g, ' ').trim();
+    const med = v => { if (!v.length) return 0; const o=[...v].sort((a,b)=>a-b), i=Math.floor(o.length/2);
+                       return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
+    const foraCartao = t => t.origem !== 'holerite_elektro' &&
+      !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && t.valor > 0 &&
+      (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
+    const perfil = {};
+    todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraCartao(t)).forEach(t => {
+      const k = chaveRec(t.descricao); if (!k) return;
+      (perfil[k] = perfil[k] || { meses: new Set(), valores: [] });
+      perfil[k].meses.add(t.mes_vencimento); perfil[k].valores.push(t.valor);
+    });
+    const jaNoMes = new Set(doMes.filter(foraCartao).map(t => chaveRec(t.descricao)));
+    const previsto = Object.entries(perfil)
+      .filter(([k, v]) => v.meses.size >= 3 && !jaNoMes.has(k) && med(v.valores) > 0)
+      .reduce((s, [, v]) => s + Math.round(med(v.valores) * 100) / 100, 0);
+
     const visto = await pagina.evaluate(m => {
       document.querySelector('[data-tab="painel"]').click();
       document.getElementById('painel_mes').value = m;
@@ -458,8 +479,8 @@ function noEscopo(mv) {
       ok(`Painel ${mes}: sem holerite, diz "não cadastrado" em vez de zero`,
          /não cadastrado/i.test(visto.entra), visto.entra);
     }
-    igual(`Painel ${mes}: sai da conta = cartão + boleto/débito/PIX ${brl(cartao + saidasFora)}`,
-          numeroDe(visto.sai), cartao + saidasFora);
+    igual(`Painel ${mes}: sai da conta = cartão + boleto/PIX + recorrente prevista ${brl(cartao + saidasFora + previsto)}`,
+          numeroDe(visto.sai), cartao + saidasFora + previsto, 0.05);
   }
 
   // O provento bruto nunca pode ser o número da entrada: ele não chega na
@@ -514,9 +535,29 @@ function noEscopo(mv) {
              .reduce((s, t) => s + t.valor, 0) +
         (dados.faturas_cartao || []).filter(f => f.mes === mesTeste)
           .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+      // Soma tambem a projecao das recorrentes que faltam nesse mes, pela mesma
+      // mediana que a tela usa — senao o teste cobraria um numero que a tela
+      // nunca mostrou e falharia por outro motivo que nao o consignado.
+      const chaveR = x => String(x || '').toLowerCase().replace(/\d+/g, '')
+        .replace(/[^a-zà-ú ]/gi, ' ').replace(/\s+/g, ' ').trim();
+      const medR = v => { if (!v.length) return 0; const o=[...v].sort((a,b)=>a-b), i=Math.floor(o.length/2);
+                          return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
+      const foraR = t => t.origem !== 'holerite_elektro' &&
+        !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && t.valor > 0 &&
+        (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
+      const perfR = {};
+      todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraR(t)).forEach(t => {
+        const k = chaveR(t.descricao); if (!k) return;
+        (perfR[k] = perfR[k] || { meses: new Set(), valores: [] });
+        perfR[k].meses.add(t.mes_vencimento); perfR[k].valores.push(t.valor);
+      });
+      const jaR = new Set(doMes.filter(foraR).map(t => chaveR(t.descricao)));
+      const previstoR = Object.entries(perfR)
+        .filter(([k, v]) => v.meses.size >= 3 && !jaR.has(k) && medR(v.valores) > 0)
+        .reduce((s, [, v]) => s + Math.round(medR(v.valores) * 100) / 100, 0);
       ok(`Painel ${mesTeste}: consignado da folha (${brl(consignadoFolha)}) não entra como saída`,
-         Math.abs(numeroDe(saidaVista) - esperado) < 0.05,
-         `tela ${brl(numeroDe(saidaVista))} x esperado ${brl(esperado)}`);
+         Math.abs(numeroDe(saidaVista) - (esperado + previstoR)) < 0.05,
+         `tela ${brl(numeroDe(saidaVista))} x esperado ${brl(esperado + previstoR)}`);
     }
   }
 
@@ -771,7 +812,18 @@ function noEscopo(mv) {
 
   // O saldo que rola de uma fatura para a outra e a diferenca entre o total
   // cobrado e os lancamentos do periodo — dinheiro velho, nao gasto novo.
-  faturas.filter(f => Math.abs(f.saldo_anterior) > 0.05).forEach(f => {
+  //
+  // A fatura do Bradesco lança o pagamento da fatura anterior como linha dentro
+  // dela mesma, coisa que a do Itaú não faz. Por isso a identidade geral é
+  //   total = saldo anterior + cobrado − pagamentos
+  // e não simplesmente total − cobrado: onde não há pagamento embutido,
+  // `pagamentos` é zero e as duas formas coincidem.
+  faturas.filter(f => Math.abs(f.saldo_anterior) > 0.05 && (f.pagamentos || 0) > 0.05).forEach(f => {
+    igual(`${f.cartao} ${f.mes}: total = saldo anterior + cobrado − pagamento embutido`,
+          Math.round((f.saldo_anterior + f.cobrado - f.pagamentos) * 100) / 100,
+          Math.round(f.total_fatura * 100) / 100);
+  });
+  faturas.filter(f => Math.abs(f.saldo_anterior) > 0.05 && !((f.pagamentos || 0) > 0.05)).forEach(f => {
     igual(`${f.cartao} ${f.mes}: saldo anterior = total − lançamentos do período`,
           Math.round((f.total_fatura - f.cobrado) * 100) / 100, f.saldo_anterior);
   });

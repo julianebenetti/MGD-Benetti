@@ -78,6 +78,18 @@ const REGRAS = [
     descricao: 'Pagamento da fatura do 0442 (Infinite, tráfego pago)',
     nota: 'As demais faturas pagas por esta conta são pessoais; só esta é da empresa.',
   },
+  // Boleto do cartao Amazon (Bradescard, final 0013). Ate 31/08 este boleto era
+  // classificado como despesa/compras, porque nao havia fatura desse cartao
+  // cadastrada e o boleto era a unica visao que existia do gasto. Desde que as
+  // 8 faturas do 0013 foram importadas itemizadas, contar os dois lados seria
+  // dupla contagem: as compras ja estao lancadas uma a uma dentro da fatura.
+  // O texto varia entre o normalizado e a string crua do banco.
+  {
+    padrao: /BRADESCARD|CART[AÃ]O AMAZON/i,
+    natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Juliane',
+    descricao: 'Pagamento da fatura do cartão Amazon (0013)',
+    nota: 'As compras já estão lançadas uma a uma pela fatura do 0013.',
+  },
   {
     padrao: /FATURA\s*ITAU|FATURA PAGA ITAU|PGTO MIN ITAU|INT AZUL VISA|CARTAO TUDOAZUL|PAG ENTR PARC/i,
     natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Família',
