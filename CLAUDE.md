@@ -136,6 +136,96 @@ não é dado gravado em lugar nenhum do sistema.
 - O mês usado em tudo é `mes_vencimento` (regime de caixa) — quando o dinheiro
   sai da conta, não quando a compra foi feita.
 
+### Painel virou painel de caixa, e por que os números anteriores mentiam (31/08)
+A Juliane disse que não confiava mais nos dados: "meu salário líquido é em
+torno de 3k, como você mostra que minhas entradas serão de 6k?", "está usando
+no planejamento só as saídas de cartão e eu tenho muita coisa pra pagar antes",
+"falta incluir os novos cartões". As três reclamações estavam certas, e cada
+uma era um erro diferente. Todos conferidos contra o JSON antes de mexer.
+
+- **Provento bruto não é entrada.** O holerite lança o bruto como receita e
+  cada desconto como lançamento próprio (é o desenho certo, documentado
+  acima). O Painel somava só os proventos: Ago/26 dava R$ 6.064,76 quando o
+  que cai na conta é **R$ 2.834,19** — INSS, IR, plano de saúde, previdência e
+  os três consignados saem antes. Agora `folhaDoMes()` devolve
+  `proventos − descontos`.
+- **Desconto de folha não é vencimento.** O consignado descontado na folha
+  (R$ 1.563,62/mês) já está abatido no líquido, e entrava *de novo* como
+  parcela a pagar — o mesmo dinheiro saindo dos dois lados. Só o **quarto**
+  consignado, debitado em conta (R$ 1.402,67), é saída de caixa. O
+  discriminador é `origem` (`holerite_elektro` x `extrato_itau`), **não**
+  `natureza` — as duas são `divida_parcelada`.
+- **Nem toda fatura sai desta conta.** Em 2026 os cartões faturaram
+  **R$ 249.708,46**, mas só **R$ 55.058,28** aparecem como `pagamento_fatura`
+  no extrato pessoal: as faturas do 0442 e as grandes do 3794 são pagas pela
+  conta PJ da Benetti UP no Nubank, que não está integrada. Somar o total de
+  todas as faturas cobrava da Juliane o cartão que a empresa pagou — era o
+  grosso do "rombo" que a tela acusava. A saída do cartão agora tem duas
+  partes honestas: o pagamento que o extrato registra, mais o que segue em
+  aberto nas faturas do mês.
+- **Faltavam as saídas que não são cartão.** Condomínio, escola, van escolar,
+  aluguel de vaga, utilidades, empréstimo da Cenira, locker, doação: R$
+  4.233,63 só em Ago/26, invisíveis no Painel. Entraram, com data.
+- **`ajuste` nem sempre lança os dois lados.** A função excluía a natureza
+  inteira supondo simetria; em Ago/26 existe só a ponta de saída (Bradesco
+  Odonto, acerto de 07/2026, R$ 3,52) e o líquido dava R$ 2.837,71 contra os
+  R$ 2.834,19 do comprovante. Agora soma pelo sinal (`tipo`).
+- **Prova de que a conta está certa:** o líquido calculado da folha bate **ao
+  centavo com o crédito que o banco fez**, em todos os meses comparáveis — são
+  fontes independentes (holerite de um lado, extrato do outro). Virou teste
+  permanente, junto com duas guardas de regressão: o bruto nunca pode aparecer
+  como entrada, e o consignado da folha nunca pode aparecer também como saída.
+
+**O Painel deixou de aplicar o seletor de âmbito.** A conta corrente é uma só e
+não sabe o que é gasto da casa e o que é da Benetti UP — a fatura chega inteira.
+Filtrar as saídas por "pessoal" enquanto a fatura entrava inteira era comparar
+universos diferentes. Em vez de esconder metade, o Painel mostra dentro do total
+quanto é da empresa (`fracaoEmpresaDaFatura()`, lida dos próprios lançamentos).
+Mesma decisão que a aba Cartão & Faturas já tinha, e pelo mesmo motivo.
+
+### Os 3 cartões novos: cabeçalho sem lançamento (31/08)
+Existem **6 cartões**, não 3: além do 4846 (Black), 0442 (Infinite) e 3794
+(Azul), entraram **0013 (Amazon Mastercard, Bradescard)**, **3987** e **3711**
+(dois Bradesco Visa Platinum).
+
+- **12 faturas têm cabeçalho mas nenhum lançamento importado** — as 8 do 0013,
+  as 3 do 3987 e a do 3711. O total aparece, mas nenhuma compra existe em
+  Lançamentos nem em Para Onde Vai: a dashboard sabe *quanto*, não sabe *em
+  quê*. Não há arquivo-fonte dessas faturas no repositório; **para preencher,
+  a Juliane precisa enviar os arquivos**. A aba Cartões agora diz isso
+  explicitamente, em vez de marcar as 12 com um selo vermelho de "não fecha".
+- **Os 7 boletos "Cartão Amazon (Bradescard)" do extrato são o pagamento da
+  fatura 0013** — batem centavo a centavo com o `cobrado` de cada mês. Com o
+  cabeçalho da fatura existindo, contar os dois é dupla contagem; o boleto fica
+  de fora do Painel. O de julho tinha escapado por vir com a descrição crua do
+  banco (`PAG BOLETO BANCO BRADESCARD S A`). **Se um dia a fatura 0013 for
+  importada itemizada, os 8 boletos têm de virar `natureza: pagamento`** — a
+  premissa antiga ("o boleto é a única visão desse gasto") deixou de valer no
+  momento em que os cabeçalhos foram criados.
+- **O âmbito do cartão era chutado por `cartao !== '4846'`**, o que carimbava
+  Amazon e os dois Bradesco (pessoais da Juliane) como Benetti UP. Agora sai
+  dos próprios lançamentos; sem lançamento, a tela diz que não sabe (❔).
+- **A fatura do 3711 estava com `mes: Ago/26` e vencimento 15/09** — única das
+  39 em que o mês não vinha do vencimento. Aparecia nos vencimentos de agosto e
+  sumia de setembro. Corrigida para Set/26.
+
+### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
+1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
+   e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
+   anteriores (DAS do MEI, aluguel de garagem, escola da Valentina, escola do
+   Luca, faxina). Todo número de agosto está apoiado num extrato parcial.
+2. **Faturas itemizadas do 0013, 3987 e 3711** — as 12 faturas acima.
+3. **Fatura Bradescard 0013 de agosto** — `total_fatura` (178,92) só fecha com
+   um `saldo_anterior` de 105,65, mas o campo diz 107,68 (que é exatamente o
+   total de julho, padrão de quem copiou o número errado). Diferença de R$ 2,03
+   sem explicação nos dados; a `observacao` do registro cita encargos de
+   R$ 4,78 que não fecham em nenhuma direção.
+4. **Extrato do Mercado Pago** — R$ 15.310 liberados em 21/08 sem rastro de
+   onde entraram, e as 3 parcelas (R$ 3.301,24/mês a partir de setembro, mais
+   que o líquido inteiro da folha) não existem como lançamento: só aparecem na
+   tabela de Contratos.
+5. **Extrato Nubank PJ da Benetti UP** — paga as faturas do 0442 e do 3794.
+
 ### Painel com cards fixos em "não cadastrado" (29/08)
 A Juliane reportou "a aba Painel não está funcionando corretamente", sem
 mais detalhe — mandei um agente investigar a fundo (rodar a suíte, abrir a
