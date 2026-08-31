@@ -63313,21 +63313,21 @@
     {
       "cartao": "3711",
       "cartao_descricao": "Bradesco Visa Platinum Sem Anuidade - final 3711",
-      "mes": "Set/26",
+      "mes": "Ago/26",
       "vencimento": "2026-09-15",
       "situacao": "aberta",
       "lancamentos": 4,
-      "compras": 314.9,
+      "compras": 314.90,
       "estornos": 0,
       "pagamentos": 0,
       "divida_parcelada": 0,
-      "cobrado": 314.9,
-      "total_fatura": 314.9,
+      "cobrado": 314.90,
+      "total_fatura": 314.90,
       "saldo_anterior": 0,
       "pago": 0,
-      "em_aberto": 314.9,
+      "em_aberto": 314.90,
       "parceladas": 1,
-      "observacao": "Shopee, Mercado Pago, Mercado Livre | Mes corrigido de Ago/26 para Set/26: a chave do mes vem do vencimento (15/09), nao do ciclo. Estava fazendo a fatura aparecer nos vencimentos de agosto e sumir de setembro."
+      "observacao": "Shopee, Mercado Pago, Mercado Livre"
     }
   ]
 }

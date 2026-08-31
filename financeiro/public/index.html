@@ -1923,11 +1923,16 @@
     let cargasGlobais = { cargas: [] };
     let cargasAtuais = [];
 
-    // Configuração de cartões
+    // Configuração de cartões. Os três de baixo entraram depois e ficaram de
+    // fora daqui por um tempo: sem nome cadastrado, a tela mostrava só o número
+    // cru ("0013") em vez do cartão.
     const cartoes = {
       '4846': { nome: 'Black', descricao: 'Itaú Black', cor: '#000000' },
       '0442': { nome: 'Infinite', descricao: 'Visa Infinite', cor: '#1a1a1a' },
-      '3794': { nome: 'Azul', descricao: 'Cartão Azul', cor: '#0066cc' }
+      '3794': { nome: 'Azul', descricao: 'Cartão Azul', cor: '#0066cc' },
+      '0013': { nome: 'Amazon', descricao: 'Amazon Mastercard Platinum (Bradescard)', cor: '#ff9900' },
+      '3987': { nome: 'Bradesco', descricao: 'Bradesco Visa Platinum sem anuidade', cor: '#cc092f' },
+      '3711': { nome: 'Bradesco II', descricao: 'Bradesco Visa Platinum sem anuidade', cor: '#cc092f' }
     };
 
     function nomeDoCartao(numero) {
@@ -2313,8 +2318,20 @@
       return dadosGlobais.faturas_cartao || [];
     }
 
-    function faturaDe(mes) {
-      return faturasDoCartao().find(f => f.mes === mes) || null;
+    // De quem é o cartão, lido dos próprios lançamentos dentro das faturas dele
+    // — não do número. A regra antiga era `cartao !== '4846'`, que carimbava
+    // como Benetti UP qualquer cartão que não fosse o Black: o Amazon (0013) e
+    // os dois Bradesco (3711, 3987), que são pessoais, apareciam como empresa.
+    // Sem nenhum lançamento importado não dá para dizer de quem é, e aí a tela
+    // diz isso em vez de escolher um lado.
+    function ambitoDoCartao(cartao) {
+      const itens = transacoesSemFiltroDeAno()
+        .filter(t => t.cartao_final === cartao && t.natureza === 'despesa' && t.valor > 0);
+      if (!itens.length) return null;
+      const empresa = itens.filter(t => (t.ambito || 'pessoal') === 'empresa')
+                           .reduce((s, t) => s + t.valor, 0);
+      const total = itens.reduce((s, t) => s + t.valor, 0);
+      return total > 0 && empresa / total > 0.5 ? 'empresa' : 'pessoal';
     }
 
     // Sem recorte de escopo — usar so onde a contagem total importa.
@@ -2498,8 +2515,13 @@
     // a fatura 0013 existe e traz o mesmo valor no cabeçalho — os 7 boletos
     // batem centavo a centavo com o `cobrado` de cada fatura. Contar os dois
     // somava o mesmo pagamento duas vezes; quem representa o cartão é a fatura.
+    // O de julho chegou com a descrição crua do banco ("PAG BOLETO BANCO
+    // BRADESCARD S A") e ficou fora do padrão dos outros seis — sozinho, ele
+    // mantinha R$ 107,68 contados duas vezes em Jul/26.
     const ehPagamentoDeCartaoNoExtrato = t =>
-      t.origem === 'extrato_itau' && /^Cart[\u00e3a]o\s/i.test(t.descricao || '');
+      t.origem === 'extrato_itau' &&
+      (/^Cart[\u00e3a]o\s/i.test(t.descricao || '') ||
+       /bradescard/i.test((t.descricao || '') + ' ' + (t.descricao_original || '')));
 
     // Fração da fatura que é gasto da Benetti UP, lida dos próprios lançamentos
     // dentro dela. Devolve null quando a fatura não tem item importado — aí não
@@ -2521,11 +2543,16 @@
       const proventos = daFolha
         .filter(t => t.natureza === 'receita')
         .reduce((s, t) => s + t.valor, 0);
-      // 'ajuste' lança o mesmo valor como provento e como desconto — fica de
-      // fora dos dois lados, senão vira despesa do nada.
+      // 'ajuste' normalmente lança o mesmo valor dos dois lados (provento e
+      // desconto) e se anula — mas nem sempre: em Ago/26 há só a ponta de
+      // saída ("Bradesco Odonto, acerto de 07/2026", R$ 3,52), sem entrada
+      // correspondente. Excluir a natureza inteira devolvia R$ 2.837,71 onde o
+      // comprovante diz R$ 2.834,19. Por isso o ajuste entra somado pelo
+      // sinal: saída abate, entrada devolve — quando é simétrico dá zero
+      // sozinho, e quando não é, o líquido continua batendo com o holerite.
       const descontos = daFolha
-        .filter(t => t.natureza !== 'receita' && t.natureza !== 'ajuste' && t.valor > 0)
-        .reduce((s, t) => s + t.valor, 0);
+        .filter(t => t.natureza !== 'receita' && t.valor > 0)
+        .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
       return {
         proventos, descontos,
         liquido: proventos - descontos,
@@ -2599,9 +2626,23 @@
       const somaOutrasEntradas = outrasEntradas.reduce((s, t) => s + t.valor, 0);
 
       // ---------------- saídas ----------------
+      //
+      // Nem toda fatura sai desta conta. Em 2026 os cartões faturaram
+      // R$ 249.708,46, mas só R$ 55.058,28 aparecem como pagamento de fatura no
+      // extrato pessoal — as faturas do 0442 e as grandes do 3794 são pagas
+      // pela conta PJ da Benetti UP (Nubank), que não está integrada aqui.
+      // Somar o total de todas as faturas como saída da conta dela cobrava
+      // dela o cartão que a empresa pagou: era o grosso do "rombo" que o
+      // Painel acusava. Agora a saída do cartão tem duas partes honestas:
+      //   já saiu  — o pagamento de fatura que o extrato registra de fato;
+      //   a pagar  — o que ainda está em aberto nas faturas que vencem no mês.
       const faturas = faturasQueVencemEm(mes);
-      const obrigacaoCartao = faturas.reduce((s, f) => s + (f.total_fatura || 0), 0);
-      const emAbertoCartao = faturas.reduce((s, f) => s + (f.em_aberto || 0), 0);
+      const pagamentosNoExtrato = lancamentosDeCaixa(mes)
+        .filter(t => t.origem === 'extrato_itau' && t.categoria === 'pagamento_fatura' && t.valor > 0);
+      const cartaoJaPago = pagamentosNoExtrato.reduce((s, t) => s + t.valor, 0);
+      const cartaoAPagar = faturas.reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+      const obrigacaoCartao = cartaoJaPago + cartaoAPagar;
+      const faturadoNoMes = faturas.reduce((s, f) => s + (f.total_fatura || 0), 0);
 
       // Quanto da fatura é gasto da Benetti UP. A fatura é paga inteira pela
       // conta dela, então o valor sai do caixa de qualquer jeito — mas sem
@@ -2609,7 +2650,8 @@
       // pago da empresa e acusava um rombo que não é dela sozinha.
       let cartaoEmpresa = 0, cartaoPessoal = 0, cartaoSemClassificacao = 0;
       faturas.forEach(f => {
-        const obrig = f.total_fatura || 0;
+        const obrig = Math.max(0, f.em_aberto || 0);
+        if (obrig <= 0) return;
         const frac = fracaoEmpresaDaFatura(f);
         if (frac === null) cartaoSemClassificacao += obrig;
         else { cartaoEmpresa += obrig * frac; cartaoPessoal += obrig * (1 - frac); }
@@ -2642,7 +2684,7 @@
           <div class="fluxo-item">
             <div class="fluxo-label">Sai da conta</div>
             <div class="fluxo-valor" style="color:var(--accent-red)">${moeda(saidaTotal)}</div>
-            <div class="kpi-sub">${moeda(obrigacaoCartao)} de cartão + ${moeda(somaSaidasFora)} de boleto, débito e PIX</div>
+            <div class="kpi-sub">${moeda(cartaoJaPago)} de fatura já paga + ${moeda(cartaoAPagar)} de fatura em aberto + ${moeda(somaSaidasFora)} de boleto, débito e PIX</div>
           </div>
           <div class="fluxo-item">
             <div class="fluxo-label">${saldo >= 0 ? 'Sobra' : 'Falta'}</div>
@@ -2659,10 +2701,16 @@
         </div>` : ''}
         ${cartaoEmpresa > 0 || cartaoSemClassificacao > 0 ? `
         <div class="aviso aviso-info">
-          <b>De quem é a saída do cartão (${moeda(obrigacaoCartao)}):</b>
+          <b>De quem é a fatura ainda em aberto (${moeda(cartaoAPagar)}):</b>
           ${cartaoPessoal > 0 ? `${moeda(cartaoPessoal)} da casa` : ''}${cartaoEmpresa > 0 ? ` · <b>${moeda(cartaoEmpresa)} da Benetti UP</b>` : ''}${cartaoSemClassificacao > 0 ? ` · ${moeda(cartaoSemClassificacao)} em faturas sem lançamento importado` : ''}.
           A fatura é paga inteira pela sua conta, então o valor sai do caixa de qualquer jeito —
           mas ${cartaoEmpresa > 0 ? 'a parte da empresa deveria ser coberta pela receita dela, não pelo seu salário' : 'a parte sem classificação precisa da fatura importada para se saber de quem é'}.
+        </div>` : ''}
+        ${faturadoNoMes > obrigacaoCartao + 0.05 ? `
+        <div class="aviso aviso-info">
+          Os cartões faturaram <b>${moeda(faturadoNoMes)}</b> neste mês, mas só <b>${moeda(obrigacaoCartao)}</b>
+          passam por esta conta. A diferença de <b>${moeda(faturadoNoMes - obrigacaoCartao)}</b> foi quitada por fora —
+          historicamente pela conta da Benetti UP no Nubank, que não está integrada nesta dashboard.
         </div>` : ''}
         <div class="aviso ${classe}">
           ${!folha.temFolha
@@ -3247,10 +3295,11 @@
                 aberta: '<span class="selo selo-neutro">em aberto</span>',
               };
               const emAberto = f.em_aberto || 0;
-              const ehEmpresa = f.cartao !== '4846';
+              const ambCartao = ambitoDoCartao(f.cartao);
+              const iconeCartao = ambCartao === 'empresa' ? '🏢' : ambCartao === 'pessoal' ? '🏠' : '❔';
               return `
                 <tr>
-                  <td title="${descricaoCartao(f.cartao)}">${ehEmpresa ? '🏢' : '🏠'} ${nomeDoCartao(f.cartao)}</td>
+                  <td title="${descricaoCartao(f.cartao)}${ambCartao ? '' : ' — sem lançamento importado, não dá para dizer o âmbito'}">${iconeCartao} ${nomeDoCartao(f.cartao)}</td>
                   <td><b>${m}</b></td>
                   <td>${f.vencimento.split('-').reverse().join('/')}</td>
                   <td>${selos[f.situacao] || f.situacao}</td>
@@ -3259,7 +3308,10 @@
                   <td class="num" ${f.saldo_anterior > 0.05 ? 'style="color:var(--accent-red)"' : ''}>${Math.abs(f.saldo_anterior) > 0.05 ? moeda(f.saldo_anterior) : '—'}</td>
                   <td class="num">${moeda(f.total_fatura)}</td>
                   <td class="num" ${emAberto > 0.05 ? 'style="color:var(--accent-red);font-weight:600"' : ''}>${emAberto > 0.05 ? moeda(emAberto) : '—'}</td>
-                  <td>${ok ? '<span class="selo selo-ok">confere</span>' : '<span class="selo selo-erro">não fecha</span>'}</td>
+                  <td>${doMes.length === 0 && f.cobrado > 0.05
+                        ? '<span class="selo selo-alerta" title="A fatura tem total, mas nenhum lançamento foi importado — não dá para ver em que o dinheiro foi gasto.">sem lançamentos</span>'
+                        : ok ? '<span class="selo selo-ok">confere</span>'
+                        : `<span class="selo selo-erro" title="Diferença de ${moeda(dif)} entre o que está lançado e o que a fatura cobra.">não fecha</span>`}</td>
                 </tr>`;
             }).join('')}
           </tbody>
@@ -3277,6 +3329,28 @@
                 const rotulo = { paga_parcial: 'paga só em parte', fechada: 'fechada, ainda não paga', aberta: 'ainda em aberto' }[f.situacao] || f.situacao;
                 return `${f.mes} — ${rotulo}: ${moeda(f.em_aberto)} de ${moeda(f.total_fatura)}`;
               }).join('<br>')}
+            </div>`);
+          }
+
+          // Fatura cujo cabeçalho existe mas nenhum lançamento foi importado: o
+          // total entra nas contas do mês, mas não há como ver em que foi gasto,
+          // e o cartão fica invisível em Lançamentos e em Para Onde Vai.
+          const semItens = fs.filter(f => f.cobrado > 0.05 &&
+            !transacoes.some(t => t.mes_vencimento === f.mes && (t.cartao_final || '4846') === f.cartao));
+          if (semItens.length) {
+            const porCartao = {};
+            semItens.forEach(f => {
+              porCartao[f.cartao] = porCartao[f.cartao] || { nome: f.cartao_descricao || f.cartao, meses: [], total: 0 };
+              porCartao[f.cartao].meses.push(f.mes);
+              porCartao[f.cartao].total += f.cobrado;
+            });
+            avisos.push(`<div class="aviso aviso-atencao">
+              <b>${semItens.length} fatura(s) sem lançamento importado.</b>
+              O total delas conta no mês, mas nenhuma compra aparece em Lançamentos nem em Para Onde Vai —
+              para esses cartões a dashboard sabe quanto, não sabe em quê.<br>
+              ${Object.values(porCartao).map(c =>
+                `${c.nome}: ${moeda(c.total)} em ${c.meses.length} fatura(s) (${c.meses.join(', ')})`).join('<br>')}
+              <br><br>Para preencher, envie o arquivo dessas faturas e rode <b>Ferramentas → Importar</b>.
             </div>`);
           }
 

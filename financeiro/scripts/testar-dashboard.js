@@ -399,27 +399,170 @@ function noEscopo(mv) {
   await pagina.evaluate(() => trocarAmbito('tudo'));
   await pagina.waitForTimeout(700);
 
-  // --- Painel, fatura por fatura ---
+  // --- Painel: contabilidade de caixa ---
+  //
+  // O Painel deixou de mostrar "gasto do mês" e passou a responder o que entra
+  // na conta e o que sai dela. Os testes abaixo recalculam os dois lados
+  // direto do JSON, pela mesma definição que a tela usa, e comparam com o que
+  // o navegador renderiza — se a regra mudar num lado só, quebra aqui.
   for (const mes of mesesReais.sort((a, b) => {
     const [ma, aa] = a.split('/'), [mb, ab] = b.split('/');
     return (aa - ab) || (MES_ORDEM.indexOf(ma) - MES_ORDEM.indexOf(mb));
   })) {
-    const exibido = await pagina.evaluate(m => {
+    const doMes = todosLancamentos.filter(t => t.mes_vencimento === mes);
+    const folha = doMes.filter(t => t.origem === 'holerite_elektro');
+    const proventos = folha.filter(t => t.natureza === 'receita')
+                           .reduce((s, t) => s + t.valor, 0);
+    const descontos = folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+      .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
+    const liquido = proventos - descontos;
+    const temFolha = folha.some(t => t.natureza === 'receita');
+
+    const ehPagCartao = t => t.origem === 'extrato_itau' &&
+      (/^Cart[\u00e3a]o\s/i.test(t.descricao || '') ||
+       /bradescard/i.test((t.descricao || '') + ' ' + (t.descricao_original || '')));
+    const saidasFora = doMes.filter(t =>
+      t.origem !== 'holerite_elektro' &&
+      !(t.origem || '').startsWith('cartao_credito') &&
+      !ehPagCartao(t) && t.valor > 0 &&
+      (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+      .reduce((s, t) => s + t.valor, 0);
+
+    // Saída de cartão = o que de fato passa por esta conta: pagamento de fatura
+    // que o extrato registra, mais o que segue em aberto nas faturas do mês.
+    // O total faturado inclui cartão pago pela conta PJ da Benetti UP.
+    const cartaoPago = doMes.filter(t => t.origem === 'extrato_itau' &&
+      t.categoria === 'pagamento_fatura' && t.valor > 0).reduce((s, t) => s + t.valor, 0);
+    const cartaoAberto = (dados.faturas_cartao || [])
+      .filter(f => f.mes === mes)
+      .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+    const cartao = cartaoPago + cartaoAberto;
+
+    const visto = await pagina.evaluate(m => {
       document.querySelector('[data-tab="painel"]').click();
       document.getElementById('painel_mes').value = m;
       renderizarPainel();
-      // Com a nova estrutura, pegamos o total de vencimentos reais
-      const vencimentosEl = document.querySelector('#painel_vencimentos_criticos table');
-      const totalVencimentos = vencimentosEl ? vencimentosEl.textContent : 'vazio';
+      const linhas = [...document.querySelectorAll('#painel_fluxo_3numeros .fluxo-item')]
+        .map(el => el.innerText);
       return {
-        fatura: totalVencimentos,
+        entra: linhas[0] || '',
+        sai: linhas[1] || '',
         info: document.getElementById('painel_periodo_info').textContent
       };
     }, mes);
-    const esperado = ref.porMes[mes];
-    const qtd = escopo.filter(t => t.mes_vencimento === mes).length;
-    igual(`Painel ${mes} exibe ${brl(esperado)}`, numeroDe(exibido.fatura), esperado);
-    ok(`Painel ${mes} informa ${qtd} lançamentos`, exibido.info.includes(String(qtd)), exibido.info);
+
+    if (temFolha) {
+      igual(`Painel ${mes}: entra na conta = líquido da folha ${brl(liquido)}`,
+            numeroDe(visto.entra), liquido);
+    } else {
+      ok(`Painel ${mes}: sem holerite, diz "não cadastrado" em vez de zero`,
+         /não cadastrado/i.test(visto.entra), visto.entra);
+    }
+    igual(`Painel ${mes}: sai da conta = cartão + boleto/débito/PIX ${brl(cartao + saidasFora)}`,
+          numeroDe(visto.sai), cartao + saidasFora);
+  }
+
+  // O provento bruto nunca pode ser o número da entrada: ele não chega na
+  // conta. Este teste existe porque o Painel já mostrou o bruto por engano,
+  // inflando a receita em mais de R$ 3 mil.
+  {
+    const comFolha = mesesReais.filter(m => todosLancamentos.some(t =>
+      t.mes_vencimento === m && t.origem === 'holerite_elektro' && t.natureza === 'receita'));
+    let brutoNaTela = 0;
+    for (const mes of comFolha) {
+      const folha = todosLancamentos.filter(t => t.mes_vencimento === mes && t.origem === 'holerite_elektro');
+      const bruto = folha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0);
+      const desc = folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+                        .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
+      if (desc < 0.01) continue; // sem desconto, bruto e liquido coincidem
+      const visto = await pagina.evaluate(m => {
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        return document.querySelector('#painel_fluxo_3numeros .fluxo-item').innerText;
+      }, mes);
+      if (Math.abs(numeroDe(visto) - bruto) < 0.01) brutoNaTela++;
+    }
+    ok('Painel nunca mostra o provento bruto como entrada', brutoNaTela === 0,
+       `${brutoNaTela} mês(es) exibindo o bruto`);
+  }
+
+  // Desconto de folha não pode aparecer também como saída de caixa: ele já
+  // está abatido no líquido. O consignado descontado na folha é o caso real
+  // que fez o Painel cobrar o mesmo dinheiro dos dois lados.
+  {
+    const mesTeste = mesesReais.find(m => todosLancamentos.some(t =>
+      t.mes_vencimento === m && t.origem === 'holerite_elektro' && t.natureza === 'divida_parcelada'));
+    if (mesTeste) {
+      const consignadoFolha = todosLancamentos.filter(t =>
+        t.mes_vencimento === mesTeste && t.origem === 'holerite_elektro' &&
+        t.natureza === 'divida_parcelada').reduce((s, t) => s + t.valor, 0);
+      const saidaVista = await pagina.evaluate(m => {
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        return [...document.querySelectorAll('#painel_fluxo_3numeros .fluxo-item')][1].innerText;
+      }, mesTeste);
+      const doMes = todosLancamentos.filter(t => t.mes_vencimento === mesTeste);
+      const ehPagCartao = t => t.origem === 'extrato_itau' &&
+        (/^Cart[\u00e3a]o\s/i.test(t.descricao || '') ||
+         /bradescard/i.test((t.descricao || '') + ' ' + (t.descricao_original || '')));
+      const esperado = doMes.filter(t =>
+        t.origem !== 'holerite_elektro' && !(t.origem || '').startsWith('cartao_credito') &&
+        !ehPagCartao(t) && t.valor > 0 &&
+        (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+        .reduce((s, t) => s + t.valor, 0) +
+        doMes.filter(t => t.origem === 'extrato_itau' && t.categoria === 'pagamento_fatura' && t.valor > 0)
+             .reduce((s, t) => s + t.valor, 0) +
+        (dados.faturas_cartao || []).filter(f => f.mes === mesTeste)
+          .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+      ok(`Painel ${mesTeste}: consignado da folha (${brl(consignadoFolha)}) não entra como saída`,
+         Math.abs(numeroDe(saidaVista) - esperado) < 0.05,
+         `tela ${brl(numeroDe(saidaVista))} x esperado ${brl(esperado)}`);
+    }
+  }
+
+  // A prova mais forte de que a conta do líquido está certa: ele tem de bater
+  // com o valor que o banco de fato creditou. O extrato marca esse crédito como
+  // transferência (para não contar duas vezes com o holerite), então os dois
+  // números vêm de fontes independentes — folha de um lado, banco do outro.
+  {
+    const creditos = {};
+    todosLancamentos
+      .filter(t => t.origem === 'extrato_itau' && /Crédito do salário/i.test(t.descricao || ''))
+      .forEach(t => { creditos[t.mes_vencimento] = (creditos[t.mes_vencimento] || 0) + t.valor; });
+
+    let conferidos = 0, divergentes = [];
+    for (const [mes, creditado] of Object.entries(creditos)) {
+      const folha = todosLancamentos.filter(t => t.mes_vencimento === mes && t.origem === 'holerite_elektro');
+      if (!folha.some(t => t.natureza === 'receita')) continue;
+      const liquido = folha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0)
+                    - folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+                           .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
+      // PLR e férias chegam em comprovante separado e podem cair num mês de
+      // calendário diferente do crédito — esses ficam de fora da conferência
+      // exata, mas os meses de salário puro têm de bater ao centavo.
+      const temExtra = folha.some(t => ['plr', 'ferias', 'decimo_terceiro'].includes(t.categoria));
+      if (temExtra) continue;
+      conferidos++;
+      if (Math.abs(liquido - creditado) > 0.02) {
+        divergentes.push(`${mes}: folha ${brl(liquido)} x banco ${brl(creditado)}`);
+      }
+    }
+    ok(`Líquido da folha bate com o crédito no banco (${conferidos} meses de salário puro)`,
+       conferidos > 0 && divergentes.length === 0,
+       divergentes.join(' · ') || (conferidos === 0 ? 'nenhum mês comparável' : null));
+  }
+
+  // O boleto do cartão Amazon no extrato é o pagamento da fatura 0013 — os
+  // dois não podem ser somados.
+  {
+    const dup = todosLancamentos.filter(t => t.origem === 'extrato_itau' &&
+      (/^Cart[\u00e3a]o\s/i.test(t.descricao || '') ||
+       /bradescard/i.test((t.descricao || '') + ' ' + (t.descricao_original || ''))));
+    const casam = dup.filter(t => (dados.faturas_cartao || []).some(f =>
+      f.mes === t.mes_vencimento && Math.abs((f.cobrado || 0) - t.valor) < 0.01));
+    ok('Boleto de cartão no extrato bate com a fatura correspondente (seria dupla contagem)',
+       dup.length === 0 || casam.length === dup.length,
+       `${casam.length} de ${dup.length} casam com uma fatura`);
   }
 
   // --- Painel não deve abrir no balde "A confirmar" ---
