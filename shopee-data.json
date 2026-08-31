@@ -1,9 +1,9 @@
 {
-  "updated_at": 1788159373,
-  "updated_at_br": "31/08/2026 03:49",
+  "updated_at": 1788168102,
+  "updated_at_br": "31/08/2026 06:15",
   "period_days": 90,
-  "total_orders": 7744,
-  "total_conversions": 7396,
+  "total_orders": 7743,
+  "total_conversions": 7395,
   "orders": [
     {
       "ID do pedido": "260830P16B83QA",
@@ -20182,7 +20182,7 @@
     },
     {
       "ID do pedido": "260820S34259GT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-19 18:12:32",
       "Sub_id1": "05Ago26CalcaJogger",
       "Valor de Compra(R$)": "22.34",
@@ -20194,7 +20194,7 @@
       "Comissao total do pedido(R$)": "0.8936",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bermudas Shorts Calção Futebol Básico Dry Fit Academia Treino Números - Escolha seu Número",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21597273409",
       "ID da loja": "1039691540",
       "Nome da loja": "Lojastillobasic",
@@ -20202,7 +20202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240862351172169",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     },
     {
@@ -193577,31 +193577,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234091308165848",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-02"
-    },
-    {
-      "ID do pedido": "2606022M9VG5CF",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-02 09:08:46",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "90.99",
-      "Comissao liquida do afiliado(R$)": "2.7297",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "6.00%",
-      "Comissao Shopee(R$)": "2.7297",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.7297",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Câmera segurança wi-fi ip sem fio 360 encaixe lampada aplicativo V360 ptz full HD visão noturna 8177",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21698201634",
-      "ID da loja": "1522386275",
-      "Nome da loja": "GBB.STORE",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "234090526197986",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-02"
     }
