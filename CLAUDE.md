@@ -258,6 +258,33 @@ futuro ela sumia, e o Painel dava a impressão de que só havia cartão a pagar.
 - Set/26 saiu de "só cartão" para **R$ 6.381,63** de conta recorrente com dia e
   valor aproximado.
 
+### Dívida que existe mas não está sendo paga (31/08)
+Depois de ver que as 3 parcelas do Mercado Pago somam **R$ 3.301,24/mês** contra
+um líquido de R$ 2.834,19, a Juliane decidiu: *"pode deixar elas relacionadas,
+nas dívidas, mas não farei o pagamento delas por enquanto"*. Decisão dela,
+registrada — não é esquecimento nem dado faltando.
+
+- Os 3 contratos ganharam `em_pagamento: false`, `suspensa_desde` e
+  `motivo_suspensao` em `financeiro.json`.
+- **O contrato continua na lista** (a dívida existe e cresce), mas a parcela
+  **sai do KPI "Parcelas por mês"** — esse número é o que ela usa pra se
+  programar, e somar parcela que não vai ser paga prometeria um pagamento que
+  não vai acontecer. O KPI caiu de R$ 8.885,26 para **R$ 5.584,02**, dizendo no
+  subtítulo quanto está suspenso.
+- Na tabela de Contratos a linha vem marcada **"não está sendo paga"**, com a
+  parcela riscada e a previsão de quitação trocada por "suspensa" — projetar
+  data de quitação de dívida que ninguém está pagando seria ficção.
+- Um aviso abaixo da tabela lista os contratos suspensos e diz o que a tela
+  **não** sabe: o saldo cadastrado é o do contrato original, não o saldo
+  corrigido pelos encargos do atraso. Sem pagamento, o valor real cresce.
+- 3 testes de regressão: o KPI soma só os contratos em dia, o total suspenso
+  aparece na tela em vez de sumir em silêncio, e cada contrato suspenso é
+  marcado como tal na tabela.
+
+**Ao cadastrar dívida nova, checar se ela está sendo paga.** `em_pagamento`
+ausente vale como `true` — o padrão é que se paga; só a exceção precisa de
+marca.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
@@ -265,9 +292,11 @@ futuro ela sumia, e o Painel dava a impressão de que só havia cartão a pagar.
    Luca, faxina). Todo número de agosto está apoiado num extrato parcial. A
    projeção pela mediana cobre isso na tela, mas marcada como previsão.
 2. **Extrato do Mercado Pago** — R$ 15.310 liberados em 21/08 sem rastro de
-   onde entraram, e as 3 parcelas (R$ 3.301,24/mês a partir de setembro, mais
-   que o líquido inteiro da folha) não existem como lançamento: só aparecem na
-   tabela de Contratos.
+   onde entraram (no mesmo dia saíram R$ 19.270,31 pagando o cartão 3794, o que
+   bate com o que ela já tinha confirmado: os empréstimos foram tomados em parte
+   pra pagar fatura da empresa). As 3 parcelas estão **suspensas por decisão
+   dela** (ver acima), então não precisam virar lançamento agora — mas quando o
+   pagamento voltar, o extrato do Mercado Pago é o que permite lançá-las.
 3. **Extrato Nubank PJ da Benetti UP** — paga as faturas do 0442 e do 3794.
 
 ### Painel com cards fixos em "não cadastrado" (29/08)

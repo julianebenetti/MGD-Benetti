@@ -66083,10 +66083,7 @@
       "montante": 20710.08,
       "parcela_mensal": 1294.38,
       "meses_restantes": 16,
-      "observacao": "Empréstimo #1414088008, R$14.000,00 creditados em 05/06/26, pago de volta em 18x R$1.294,38. Juros mensais 5,75%, juros anuais 69,00%, CET mensal 6,10%, CET anual 105,62%, IOF 3%. Parcela 3 de 18 vencendo agora (2 já pagas, 16 a vencer) — saldo aqui é a soma nominal das parcelas que faltam, sem desconto de amortização (não é o saldo devedor exato do banco).",
-      "em_pagamento": false,
-      "suspensa_desde": "2026-08-31",
-      "motivo_suspensao": "Juliane decidiu em 31/08/26 nao pagar por enquanto. O contrato segue cadastrado porque a divida continua existindo — o que muda e que a parcela nao entra no compromisso mensal enquanto estiver suspensa."
+      "observacao": "Empréstimo #1414088008, R$14.000,00 creditados em 05/06/26, pago de volta em 18x R$1.294,38. Juros mensais 5,75%, juros anuais 69,00%, CET mensal 6,10%, CET anual 105,62%, IOF 3%. Parcela 3 de 18 vencendo agora (2 já pagas, 16 a vencer) — saldo aqui é a soma nominal das parcelas que faltam, sem desconto de amortização (não é o saldo devedor exato do banco)."
     },
     {
       "id": "mp_parcelas_fixas",
@@ -66095,10 +66092,7 @@
       "montante": 9027.48,
       "parcela_mensal": 752.29,
       "meses_restantes": 12,
-      "observacao": "Empréstimo #1501919960, tomado 21/08/26, R$6.310,00 liberados, 12x R$752,29 (R$9.027,48 total: R$2.580,70 de juros + R$136,78 de IOF). Juros mensais 5,50%, juros anuais 91,82%, CET mensal 5,88%, CET anual 100,43%, IOF 3%. Vencimento todo dia 21.",
-      "em_pagamento": false,
-      "suspensa_desde": "2026-08-31",
-      "motivo_suspensao": "Juliane decidiu em 31/08/26 nao pagar por enquanto. O contrato segue cadastrado porque a divida continua existindo — o que muda e que a parcela nao entra no compromisso mensal enquanto estiver suspensa."
+      "observacao": "Empréstimo #1501919960, tomado 21/08/26, R$6.310,00 liberados, 12x R$752,29 (R$9.027,48 total: R$2.580,70 de juros + R$136,78 de IOF). Juros mensais 5,50%, juros anuais 91,82%, CET mensal 5,88%, CET anual 100,43%, IOF 3%. Vencimento todo dia 21."
     },
     {
       "id": "mp_transferencia_pix",
@@ -66107,10 +66101,7 @@
       "montante": 12545.7,
       "parcela_mensal": 1254.57,
       "meses_restantes": 10,
-      "observacao": "Empréstimo #1501923435, tomado 21/08/26, R$9.000,00 liberados, 10x R$1.254,57 (R$12.545,70 total). Juros anuais 69,00%, CET anual 106,29%, IOF 3%. Parcela 1 de 10 vence 28/09/26 — nenhuma paga ainda.",
-      "em_pagamento": false,
-      "suspensa_desde": "2026-08-31",
-      "motivo_suspensao": "Juliane decidiu em 31/08/26 nao pagar por enquanto. O contrato segue cadastrado porque a divida continua existindo — o que muda e que a parcela nao entra no compromisso mensal enquanto estiver suspensa."
+      "observacao": "Empréstimo #1501923435, tomado 21/08/26, R$9.000,00 liberados, 10x R$1.254,57 (R$12.545,70 total). Juros anuais 69,00%, CET anual 106,29%, IOF 3%. Parcela 1 de 10 vence 28/09/26 — nenhuma paga ainda."
     },
     {
       "id": "emprestimo_cenira",

@@ -4593,7 +4593,7 @@
               ? `Existem <b>${abertas.parcelas} parcelas</b> a vencer, somando <b>${moeda(abertas.valor)}</b>. Esse valor é um compromisso assumido e entra como passivo quando o patrimônio for calculado.`
               : 'Não há parcelas em aberto no cartão.'}
           </div>
-          ${fluxoDividas}
+        ${fluxoDividas}
         ${aMenor}`;
         return;
       }
@@ -4602,7 +4602,15 @@
       // nunca R$ 0,00 — zero pareceria dizer que a divida esta quitada.
       const temMontanteFaltando = dividas.some(d => d.montante === null || d.montante === undefined);
       const totalDividas = dividas.reduce((s, d) => s + (d.montante || 0), 0);
-      const totalParcelas = dividas.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
+      // Contrato com `em_pagamento: false` continua sendo dívida — o valor
+      // segue devido e cresce — mas a parcela dele não sai da conta enquanto
+      // estiver suspenso. Somar as duas coisas no mesmo "parcelas por mês"
+      // prometeria um pagamento que não vai acontecer, que é justamente o
+      // número que a pessoa usa pra se programar.
+      const suspensas = dividas.filter(d => d.em_pagamento === false);
+      const emDia = dividas.filter(d => d.em_pagamento !== false);
+      const totalParcelas = emDia.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
+      const parcelasSuspensas = suspensas.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
       const totalInvest = investimentos.reduce((s, i) => s + (i.valor || 0), 0);
       const patrimonio = totalInvest - totalDividas - abertas.valor;
 
@@ -4610,7 +4618,10 @@
         <div class="grid">
           ${cartaoKpi('Dívidas', moeda(totalDividas),
             `${dividas.length} contratos${temMontanteFaltando ? ' · soma só o que tem saldo cadastrado' : ''}`, 'var(--accent-red)')}
-          ${cartaoKpi('Parcelas por mês', moeda(totalParcelas))}
+          ${cartaoKpi('Parcelas por mês', moeda(totalParcelas),
+            parcelasSuspensas > 0
+              ? `${emDia.length} contratos em dia · ${moeda(parcelasSuspensas)} suspensos, fora desta conta`
+              : `${emDia.length} contratos`)}
           ${cartaoKpi('Cartão a vencer', moeda(abertas.valor), `${abertas.parcelas} parcelas`, 'var(--accent-yellow)')}
           ${cartaoKpi('Patrimônio líquido', moeda(patrimonio),
             `aplicações − dívidas${temMontanteFaltando ? ' (parcial: falta saldo de alguma dívida)' : ''}`,
@@ -4624,17 +4635,28 @@
               <tr><th>Dívida</th><th class="num">Saldo</th><th class="num">Parcela</th><th class="num">Meses</th><th>Quitação</th></tr>
             </thead>
             <tbody>
-              ${dividas.map(d => `
-                <tr>
-                  <td>${d.nome || 'Sem nome'}${d.observacao ? `<div class="kpi-sub" style="margin-top:2px; white-space:normal">${d.observacao}</div>` : ''}</td>
+              ${dividas.map(d => {
+                const parada = d.em_pagamento === false;
+                return `
+                <tr${parada ? ' style="opacity:.72"' : ''}>
+                  <td>${d.nome || 'Sem nome'}${parada ? ' <span class="selo selo-alerta" title="Contrato cadastrado, mas sem pagamento no momento. A dívida continua existindo.">não está sendo paga</span>' : ''}${d.observacao ? `<div class="kpi-sub" style="margin-top:2px; white-space:normal">${d.observacao}</div>` : ''}</td>
                   <td class="num">${(d.montante === null || d.montante === undefined) ? 'não cadastrado' : moeda(d.montante)}</td>
-                  <td class="num">${d.parcela_mensal ? moeda(d.parcela_mensal) : '—'}</td>
-                  <td class="num">${d.meses_restantes || '—'}</td>
-                  <td>${d.meses_restantes ? previsaoQuitacao(d.meses_restantes) : '—'}</td>
-                </tr>`).join('')}
+                  <td class="num"${parada ? ' style="text-decoration:line-through;color:var(--text-secondary)"' : ''}>${d.parcela_mensal ? moeda(d.parcela_mensal) : '—'}</td>
+                  <td class="num">${parada ? '—' : (d.meses_restantes || '—')}</td>
+                  <td>${parada ? '<span class="kpi-sub">suspensa</span>' : (d.meses_restantes ? previsaoQuitacao(d.meses_restantes) : '—')}</td>
+                </tr>`;
+              }).join('')}
             </tbody>
           </table>
         </div>
+        ${suspensas.length ? `
+        <div class="aviso aviso-atencao">
+          <b>${suspensas.length} contrato(s) sem pagamento no momento</b>, somando ${moeda(parcelasSuspensas)} por mês
+          que ficam fora do "Parcelas por mês" acima: ${suspensas.map(d => d.nome).join(', ')}.
+          Continuam na lista porque a dívida continua existindo — e, sem pagamento, o saldo cresce com
+          juros e mora em vez de diminuir. O valor cadastrado é o do contrato original, não o saldo
+          atualizado com os encargos do atraso.
+        </div>` : ''}
         ${fluxoDividas}
         ${aMenor}`;
     }

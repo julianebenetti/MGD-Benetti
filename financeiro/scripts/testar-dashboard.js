@@ -893,6 +893,38 @@ function noEscopo(mv) {
   const naTela = numeroDe((dividas.match(/PAGO EM \d{4}\s*\n\s*(R\$ [\d.,]+)/) || [])[1]);
   igual('Dívidas: pago no ano bate com o calculado do JSON', naTela, pagoEmDivida, 0.02);
 
+  // Contrato marcado `em_pagamento: false` continua na lista — a dívida existe —
+  // mas a parcela dele não pode entrar no "Parcelas por mês", que é o número
+  // usado pra se programar. Somar as duas coisas prometeria um pagamento que
+  // não vai acontecer.
+  {
+    const todosContratos = dados.dividas || [];
+    const suspensos = todosContratos.filter(d => d.em_pagamento === false);
+    const emDia = todosContratos.filter(d => d.em_pagamento !== false);
+    const esperado = emDia.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
+
+    const kpi = await pagina.evaluate(() => {
+      const card = [...document.querySelectorAll('#dividas_conteudo .kpi-card')]
+        .find(c => /Parcelas por m/i.test(c.innerText));
+      return card ? card.innerText : '';
+    });
+    igual(`Dívidas: "Parcelas por mês" soma só os ${emDia.length} contratos em dia`,
+          numeroDe(kpi.split('\n')[1] || ''), esperado, 0.02);
+
+    if (suspensos.length) {
+      const soma = suspensos.reduce((s, d) => s + (d.parcela_mensal || 0), 0);
+      ok('Dívidas: o total suspenso aparece na tela, não some em silêncio',
+         Math.abs(numeroDe((kpi.match(/R\$\s*[\d.,]+/g) || []).slice(-1)[0] || '') - soma) < 0.02,
+         kpi.replace(/\n/g, ' | '));
+      ok(`Dívidas: os ${suspensos.length} contratos suspensos continuam listados`,
+         suspensos.every(d => dividas.includes(d.nome)),
+         suspensos.filter(d => !dividas.includes(d.nome)).map(d => d.nome).join(', '));
+      ok('Dívidas: cada contrato suspenso é marcado como tal na tabela',
+         (dividas.match(/não está sendo paga/gi) || []).length === suspensos.length,
+         `${(dividas.match(/não está sendo paga/gi) || []).length} marcações para ${suspensos.length} contratos`);
+    }
+  }
+
   // Uma parcela por mês, por contrato: se um contrato mostrasse duas parcelas no
   // mesmo mês, ou o agrupamento está errado ou há lançamento duplicado.
   const porContratoMes = {};
