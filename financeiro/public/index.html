@@ -2484,14 +2484,15 @@
         .filter(t => t.mes_vencimento === mesVig && ['salario', 'beneficio', 'plr', 'ferias'].includes(t.categoria))
         .reduce((s, t) => s + t.valor, 0);
 
-      // Vencimentos: faturas do mês vigente, EXCLUINDO cartão 4846 (Black) e loans do Mercado Pago
+      // Vencimentos: faturas do mês vigente, EXCLUINDO cartão 4846 (Black)
       const faturasVigentes = (dadosGlobais.faturas_cartao || [])
-        .filter(f => f.mes === mesVig && f.cartao !== '4846' && f.cartao !== 'mp_loan');
+        .filter(f => f.mes === mesVig && f.cartao !== '4846');
       const totalVencimentosReais = faturasVigentes.reduce((s, f) => s + f.em_aberto, 0);
 
       // Parcelas de dívida do mês vigente (consignado, refinanciamento, etc.)
+      // Filtra apenas saídas (valor > 0), excluindo créditos/estornos de renegociação
       const parcelasDividaVigentes = transacoesDoAno()
-        .filter(t => t.mes_vencimento === mesVig && t.natureza === 'divida_parcelada')
+        .filter(t => t.mes_vencimento === mesVig && t.natureza === 'divida_parcelada' && t.valor > 0)
         .reduce((s, t) => s + t.valor, 0);
 
       const totalVencimentos = totalVencimentosReais + parcelasDividaVigentes;
@@ -2587,7 +2588,7 @@
       const planejamentoDiv = document.getElementById('painel_planejamento');
       if (planejamentoDiv) {
         if (receitaVigente > 0) {
-          const holeriteData = dadosGlobais.pessoas?.find(p => p.nome === 'Juliane')?.proximo_holerite || '15';
+          const holeriteData = configuracoesGlobais.pessoas?.find(p => p.nome === 'Juliane')?.proximo_holerite || '15';
           const vencimentosFormatados = vencimentosCriticos
             .map(f => `<div class="timeline-item" style="margin-bottom:8px">
               <span style="color:var(--accent-yellow)">📅 ${f.vencimento.split('-').reverse().join('/')}</span>
