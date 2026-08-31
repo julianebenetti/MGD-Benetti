@@ -2460,205 +2460,383 @@
 
     // ---------------------------------------------------------------- PAINEL
 
+    // ===================================================================
+    // PAINEL — o que entra na conta, o que sai dela, o que sobra ou falta.
+    //
+    // Duas armadilhas de contabilidade que já produziram número errado aqui,
+    // as duas contando o MESMO dinheiro duas vezes, uma de cada lado:
+    //
+    //   1. Provento bruto não é entrada. O holerite lança o bruto como receita
+    //      e cada desconto como lançamento próprio. Em Ago/26 o bruto é
+    //      R$ 6.064,76, mas INSS, IR, plano de saúde, previdência e os três
+    //      consignados saem antes de o dinheiro chegar — o que cai na conta é
+    //      R$ 2.834,19. Usar o bruto inflava a entrada em mais de R$ 3 mil.
+    //
+    //   2. Desconto de folha não é vencimento. O consignado descontado na
+    //      folha já está abatido no líquido; contá-lo de novo como parcela a
+    //      pagar cobrava o mesmo dinheiro outra vez, agora do lado da saída.
+    //      Só o quarto consignado (débito em conta) é saída de caixa.
+    //
+    // Por isso: entrada = líquido da folha; saída = o que efetivamente sai da
+    // conta corrente (fatura de cartão + boleto/débito/PIX do extrato).
+
+    // O Painel é um painel de CAIXA. A conta corrente é uma só: ela não sabe o
+    // que é gasto da casa e o que é da Benetti UP, e a fatura chega inteira e
+    // tem de ser paga inteira. Por isso, ao contrário de Para Onde Vai e
+    // Lançamentos, o Painel NÃO aplica o seletor de âmbito do topo — em vez de
+    // esconder metade, ele mostra dentro do total quanto é da empresa.
+    // Filtrar as saídas por "pessoal" enquanto a fatura entrava inteira era o
+    // que fazia o Painel acusar um rombo que não existia daquele tamanho.
+    function lancamentosDeCaixa(mes) {
+      return transacoesSemFiltroDeAno()
+        .filter(t => mesNoEscopo(t.mes_vencimento) && t.mes_vencimento === mes);
+    }
+
+    // O boleto do cartão Amazon aparece no extrato como despesa ("Cartão Amazon
+    // (Bradescard)") porque, quando foi classificado, não havia fatura desse
+    // cartão cadastrada e o boleto era a única visão que existia do gasto. Hoje
+    // a fatura 0013 existe e traz o mesmo valor no cabeçalho — os 7 boletos
+    // batem centavo a centavo com o `cobrado` de cada fatura. Contar os dois
+    // somava o mesmo pagamento duas vezes; quem representa o cartão é a fatura.
+    const ehPagamentoDeCartaoNoExtrato = t =>
+      t.origem === 'extrato_itau' && /^Cart[\u00e3a]o\s/i.test(t.descricao || '');
+
+    // Fração da fatura que é gasto da Benetti UP, lida dos próprios lançamentos
+    // dentro dela. Devolve null quando a fatura não tem item importado — aí não
+    // dá para dizer de quem é, e a tela avisa em vez de chutar.
+    function fracaoEmpresaDaFatura(f) {
+      const itens = transacoesSemFiltroDeAno()
+        .filter(t => t.fatura_origem === `${f.cartao}|${f.mes}` && t.natureza === 'despesa' && t.valor > 0);
+      const total = itens.reduce((s, t) => s + t.valor, 0);
+      if (!itens.length || total <= 0) return null;
+      const empresa = itens.filter(t => (t.ambito || 'pessoal') === 'empresa')
+                           .reduce((s, t) => s + t.valor, 0);
+      return empresa / total;
+    }
+
+    // Proventos, descontos e líquido da folha do mês.
+    function folhaDoMes(mes) {
+      const daFolha = lancamentosDeCaixa(mes)
+        .filter(t => t.origem === 'holerite_elektro');
+      const proventos = daFolha
+        .filter(t => t.natureza === 'receita')
+        .reduce((s, t) => s + t.valor, 0);
+      // 'ajuste' lança o mesmo valor como provento e como desconto — fica de
+      // fora dos dois lados, senão vira despesa do nada.
+      const descontos = daFolha
+        .filter(t => t.natureza !== 'receita' && t.natureza !== 'ajuste' && t.valor > 0)
+        .reduce((s, t) => s + t.valor, 0);
+      return {
+        proventos, descontos,
+        liquido: proventos - descontos,
+        temFolha: daFolha.some(t => t.natureza === 'receita'),
+        lancamentos: daFolha
+      };
+    }
+
+    // Entradas que não são a folha: contribuição do Hugo, aluguel recebido,
+    // pró-labore. Caem na conta de verdade, mas variam de mês para mês — por
+    // isso ficam separadas da receita previsível, nunca somadas a ela.
+    function outrasEntradasDoMes(mes) {
+      return lancamentosDeCaixa(mes)
+        .filter(t => t.natureza === 'receita' && t.origem !== 'holerite_elektro');
+    }
+
+    // Saídas de caixa que não passam pela fatura do cartão: boleto, débito
+    // automático e PIX do extrato, mais parcela de empréstimo debitada em
+    // conta. Exclui a folha (já abatida no líquido) e transferência/pagamento
+    // de fatura (as compras já estão contadas na própria fatura do cartão).
+    function saidasForaDoCartaoDoMes(mes) {
+      return lancamentosDeCaixa(mes)
+        .filter(t => t.origem !== 'holerite_elektro'
+                  && !veioDoCartao(t)
+                  && !ehPagamentoDeCartaoNoExtrato(t)
+                  && t.valor > 0
+                  && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
+    }
+
+    // Faturas que vencem no mês. A chave é cartão + mês: filtrar só pelo mês
+    // faria a fatura de um cartão esconder a do outro.
+    function faturasQueVencemEm(mes) {
+      return faturasDoCartao()
+        .filter(f => f.mes === mes)
+        .sort((a, b) => (b.total_fatura || 0) - (a.total_fatura || 0));
+    }
+
+    // Dia do mês em que a folha costuma cair, lido do próprio extrato (o
+    // crédito do salário fica marcado como transferência para não contar duas
+    // vezes). Sem histórico, devolve null em vez de chutar um dia.
+    function diaTipicoDoSalario() {
+      const dias = transacoesSemFiltroDeAno()
+        .filter(t => t.origem === 'extrato_itau' && /Crédito do salário/i.test(t.descricao || '') && t.data)
+        .map(t => parseInt(t.data.split('-')[2], 10))
+        .filter(d => d >= 15);
+      if (!dias.length) return null;
+      dias.sort((a, b) => a - b);
+      return dias[Math.floor(dias.length / 2)];
+    }
+
     function renderizarPainel() {
-      const transacoes = todasTransacoes();
       const fluxoBloco = document.getElementById('painel_fluxo_3numeros');
       if (!fluxoBloco) return;
 
-      if (!transacoes.length) {
+      const outros = ['painel_vencimentos_criticos', 'painel_planejamento', 'painel_analise']
+        .map(id => document.getElementById(id));
+
+      if (!transacoesSemFiltroDeAno().length) {
         fluxoBloco.innerHTML = blocoVazio('Sem dados', 'Use <b>Ferramentas → Importar</b> para subir uma fatura.');
-        ['painel_vencimentos_criticos', 'painel_planejamento', 'painel_analise'].forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.innerHTML = '';
-        });
+        outros.forEach(el => { if (el) el.innerHTML = ''; });
         return;
       }
 
       preencherSelectMeses('painel_mes', false);
+      const seletor = document.getElementById('painel_mes');
+      const mes = (seletor && seletor.value) || mesVigente();
 
-      // --- Fluxo do mês vigente ---
-      const mesVig = mesVigente();
-      // Receita previsível: APENAS salário + benefícios (auxílio-creche, PLR)
-      // Exclui: pró-labore (não aplica), contribuições do Hugo (inconstantes), rendimentos diversos
-      const receitaVigente = receitas()
-        .filter(t => t.mes_vencimento === mesVig && ['salario', 'beneficio', 'plr', 'ferias'].includes(t.categoria))
-        .reduce((s, t) => s + t.valor, 0);
+      // ---------------- entradas ----------------
+      const folha = folhaDoMes(mes);
+      const outrasEntradas = outrasEntradasDoMes(mes);
+      const somaOutrasEntradas = outrasEntradas.reduce((s, t) => s + t.valor, 0);
 
-      // Vencimentos: faturas do mês vigente, EXCLUINDO cartão 4846 (Black)
-      const faturasVigentes = (dadosGlobais.faturas_cartao || [])
-        .filter(f => f.mes === mesVig && f.cartao !== '4846');
-      const totalVencimentosReais = faturasVigentes.reduce((s, f) => s + f.em_aberto, 0);
+      // ---------------- saídas ----------------
+      const faturas = faturasQueVencemEm(mes);
+      const obrigacaoCartao = faturas.reduce((s, f) => s + (f.total_fatura || 0), 0);
+      const emAbertoCartao = faturas.reduce((s, f) => s + (f.em_aberto || 0), 0);
 
-      // Parcelas de dívida do mês vigente (consignado, refinanciamento, etc.)
-      // Filtra apenas saídas (valor > 0), excluindo créditos/estornos de renegociação
-      const parcelasDividaVigentes = transacoesDoAno()
-        .filter(t => t.mes_vencimento === mesVig && t.natureza === 'divida_parcelada' && t.valor > 0)
-        .reduce((s, t) => s + t.valor, 0);
+      // Quanto da fatura é gasto da Benetti UP. A fatura é paga inteira pela
+      // conta dela, então o valor sai do caixa de qualquer jeito — mas sem
+      // essa separação o Painel comparava o salário pessoal contra o tráfego
+      // pago da empresa e acusava um rombo que não é dela sozinha.
+      let cartaoEmpresa = 0, cartaoPessoal = 0, cartaoSemClassificacao = 0;
+      faturas.forEach(f => {
+        const obrig = f.total_fatura || 0;
+        const frac = fracaoEmpresaDaFatura(f);
+        if (frac === null) cartaoSemClassificacao += obrig;
+        else { cartaoEmpresa += obrig * frac; cartaoPessoal += obrig * (1 - frac); }
+      });
 
-      const totalVencimentos = totalVencimentosReais + parcelasDividaVigentes;
-      const saldoVigente = receitaVigente - totalVencimentos;
-      const saudeFinanceira = receitaVigente > 0 ? (saldoVigente / receitaVigente * 100) : null;
+      const saidasFora = saidasForaDoCartaoDoMes(mes);
+      const somaSaidasFora = saidasFora.reduce((s, t) => s + t.valor, 0);
 
-      const indicadorSaude = saudeFinanceira === null ? 'aviso-info'
-                             : saudeFinanceira >= 0 ? 'aviso-ok'
-                             : saudeFinanceira >= -20 ? 'aviso-atencao'
-                             : 'aviso-critico';
+      const saidaTotal = obrigacaoCartao + somaSaidasFora;
+      const saldo = folha.liquido - saidaTotal;
+      const saldoComOutras = folha.liquido + somaOutrasEntradas - saidaTotal;
 
-      const textoSaude = saudeFinanceira === null ? 'Sem receita lançada'
-                        : saudeFinanceira >= 20 ? `Margem confortável: ${saudeFinanceira.toFixed(0)}%`
-                        : saudeFinanceira >= 0 ? `Margem folgada: ${saudeFinanceira.toFixed(0)}%`
-                        : saudeFinanceira >= -20 ? `Margem apertada: ${saudeFinanceira.toFixed(0)}%`
-                        : `Déficit crítico: ${saudeFinanceira.toFixed(0)}%`;
+      const margem = folha.temFolha && folha.liquido > 0 ? (saldo / folha.liquido * 100) : null;
+      const classe = margem === null ? 'aviso-info'
+                   : margem >= 0 ? 'aviso-ok'
+                   : margem >= -20 ? 'aviso-atencao'
+                   : 'aviso-critico';
 
-      // --- BLOCO 1: Fluxo do Mês em 3 Números ---
-      document.getElementById('painel_fluxo_3numeros').innerHTML = `
+      // ---------------- BLOCO 1: três números ----------------
+      const naoCad = '<span style="color:var(--text-secondary)">não cadastrado</span>';
+      fluxoBloco.innerHTML = `
         <div class="fluxo-row">
           <div class="fluxo-item">
-            <div class="fluxo-label">📊 Receita esperada</div>
-            <div class="fluxo-valor" style="color:var(--accent-green)">${receitaVigente > 0 ? moeda(receitaVigente) : '—'}</div>
-            ${receitaVigente > 0 ? '<div class="kpi-sub">Holerite + benefícios</div>' : '<div class="kpi-sub" style="color:var(--accent-yellow)">Nenhum holerite lançado</div>'}
+            <div class="fluxo-label">Entra na conta</div>
+            <div class="fluxo-valor" style="color:var(--accent-green)">${folha.temFolha ? moeda(folha.liquido) : naoCad}</div>
+            <div class="kpi-sub">${folha.temFolha
+              ? `salário líquido — bruto ${moeda(folha.proventos)} − descontos ${moeda(folha.descontos)}`
+              : 'holerite deste mês ainda não importado'}</div>
           </div>
           <div class="fluxo-item">
-            <div class="fluxo-label">💸 Vencimentos REAIS</div>
-            <div class="fluxo-valor" style="color:var(--accent-red)">${moeda(totalVencimentos)}</div>
-            <div class="kpi-sub">${faturasVigentes.length} cartão(ões) + parcelas</div>
+            <div class="fluxo-label">Sai da conta</div>
+            <div class="fluxo-valor" style="color:var(--accent-red)">${moeda(saidaTotal)}</div>
+            <div class="kpi-sub">${moeda(obrigacaoCartao)} de cartão + ${moeda(somaSaidasFora)} de boleto, débito e PIX</div>
           </div>
           <div class="fluxo-item">
-            <div class="fluxo-label">💰 Saldo (Receita − Vencimentos)</div>
-            <div class="fluxo-valor" style="color:${saldoVigente >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${moeda(saldoVigente)}</div>
-            <div class="kpi-sub">${saldoVigente >= 0 ? '✅ Sobra' : '⚠️ Falta'}</div>
+            <div class="fluxo-label">${saldo >= 0 ? 'Sobra' : 'Falta'}</div>
+            <div class="fluxo-valor" style="color:${saldo >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}">${folha.temFolha ? moeda(saldo) : naoCad}</div>
+            <div class="kpi-sub">${folha.temFolha ? 'só com o salário líquido' : 'sem holerite não dá para calcular'}</div>
           </div>
         </div>
-        <div class="aviso ${indicadorSaude}">
-          <strong>${textoSaude}</strong><br>
-          ${receitaVigente > 0
-            ? saldoVigente >= 0
-              ? `Você tem <b>${moeda(Math.abs(saldoVigente))}</b> de margem para o mês. Risco baixo de falta de caixa.`
-              : `<b>Falta de ${moeda(Math.abs(saldoVigente))}</b> neste mês. Planeje o que não pagar ou use reserva.`
-            : 'Não há receita lançada para este mês. Importe o holerite para visualizar melhor a situação.'}
-        </div>
-      `;
+        ${somaOutrasEntradas > 0 ? `
+        <div class="aviso aviso-info">
+          Além do salário entraram <b>${moeda(somaOutrasEntradas)}</b> de outras fontes
+          (${outrasEntradas.map(t => rotuloCategoria(t.categoria)).filter((v, i, a) => a.indexOf(v) === i).join(', ')}).
+          Contando com elas o mês ${saldoComOutras >= 0 ? 'sobra' : 'falta'} <b>${moeda(Math.abs(saldoComOutras))}</b>.
+          Ficam separadas do número acima porque variam de mês para mês — não dá para contar com elas.
+        </div>` : ''}
+        ${cartaoEmpresa > 0 || cartaoSemClassificacao > 0 ? `
+        <div class="aviso aviso-info">
+          <b>De quem é a saída do cartão (${moeda(obrigacaoCartao)}):</b>
+          ${cartaoPessoal > 0 ? `${moeda(cartaoPessoal)} da casa` : ''}${cartaoEmpresa > 0 ? ` · <b>${moeda(cartaoEmpresa)} da Benetti UP</b>` : ''}${cartaoSemClassificacao > 0 ? ` · ${moeda(cartaoSemClassificacao)} em faturas sem lançamento importado` : ''}.
+          A fatura é paga inteira pela sua conta, então o valor sai do caixa de qualquer jeito —
+          mas ${cartaoEmpresa > 0 ? 'a parte da empresa deveria ser coberta pela receita dela, não pelo seu salário' : 'a parte sem classificação precisa da fatura importada para se saber de quem é'}.
+        </div>` : ''}
+        <div class="aviso ${classe}">
+          ${!folha.temFolha
+            ? 'Sem o holerite deste mês não dá para dizer o que sobra ou falta. Importe o comprovante em <b>Ferramentas → Importar</b>.'
+            : saldo >= 0
+              ? `O salário cobre os compromissos do mês e ainda sobra <b>${moeda(saldo)}</b> (${margem.toFixed(0)}% do líquido).`
+              : `<b>O salário não cobre os compromissos do mês.</b> Faltam <b>${moeda(Math.abs(saldo))}</b> — ${Math.abs(margem).toFixed(0)}% a mais do que entra.`}
+        </div>`;
 
-      // --- BLOCO 2: Vencimentos Críticos (faturas com saldo em aberto) ---
-      const vencimentosCriticos = faturasVigentes
-        .filter(f => f.em_aberto > 0)
-        .sort((a, b) => b.em_aberto - a.em_aberto);
+      // ---------------- BLOCO 2: vencimentos críticos ----------------
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const alvo = document.getElementById('painel_vencimentos_criticos');
 
-      if (vencimentosCriticos.length) {
-        document.getElementById('painel_vencimentos_criticos').innerHTML = `
+      // Junta as duas naturezas de compromisso numa lista só, ordenada por
+      // data: a pergunta "o que vence primeiro" não distingue cartão de boleto.
+      const compromissos = [
+        ...faturas.map(f => ({
+          quando: f.vencimento,
+          titulo: `Fatura ${f.cartao_descricao || 'cartão ' + f.cartao}`,
+          valor: f.em_aberto > 0 ? f.em_aberto : f.total_fatura,
+          quitado: !(f.em_aberto > 0),
+          detalhe: f.em_aberto > 0
+            ? (f.pago > 0 ? `pago ${moeda(f.pago)} de ${moeda(f.total_fatura)}` : `total ${moeda(f.total_fatura)}`)
+            : 'quitada',
+          cartao: f.cartao
+        })),
+        ...saidasFora.map(t => ({
+          quando: t.data,
+          titulo: t.descricao,
+          valor: t.valor,
+          quitado: t.status !== 'agendado' && new Date(t.data + 'T00:00:00') <= hoje,
+          detalhe: rotuloCategoria(t.categoria),
+          cartao: null
+        }))
+      ].filter(c => c.valor > 0)
+       .sort((a, b) => (a.quando || '').localeCompare(b.quando || ''));
+
+      const emAberto = compromissos.filter(c => !c.quitado);
+
+      if (!compromissos.length) {
+        alvo.innerHTML = blocoVazio('Nenhum compromisso neste mês', 'Nem fatura de cartão nem boleto lançado para ' + mes + '.');
+      } else {
+        alvo.innerHTML = `
           <table class="tabela-dados">
-            <thead>
-              <tr>
-                <th>Cartão</th>
-                <th>Vencimento</th>
-                <th class="num">Em aberto</th>
-                <th class="num">Status</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Vence</th><th>O quê</th><th class="num">Valor</th><th>Situação</th></tr></thead>
             <tbody>
-              ${vencimentosCriticos.map(f => {
-                const vencData = new Date(f.vencimento + 'T00:00:00');
-                const hoje = new Date();
-                const vencido = vencData < hoje;
-                const diasParaVencer = Math.ceil((vencData - hoje) / (1000 * 60 * 60 * 24));
-                const statusClass = vencido ? 'em_aberto_vencido' : diasParaVencer <= 5 ? 'em_aberto' : 'pago';
-                const statusTexto = vencido ? `⚠️ VENCIDO (${Math.abs(diasParaVencer)} dias)`
-                                  : diasParaVencer <= 5 ? `⏳ Vence em ${diasParaVencer} dias`
-                                  : `📅 ${diasParaVencer} dias`;
-
-                return `
-                  <tr>
-                    <td><strong>Cartão ${f.cartao}</strong> <br><span class="kpi-sub">${f.cartao_descricao || ''}</span></td>
-                    <td>${f.vencimento.split('-').reverse().join('/')}</td>
-                    <td class="num" style="color:var(--accent-red);font-weight:bold">${moeda(f.em_aberto)}</td>
-                    <td><span class="selo ${statusClass}">${statusTexto}</span></td>
-                  </tr>`;
+              ${compromissos.map(c => {
+                const d = c.quando ? new Date(c.quando + 'T00:00:00') : null;
+                const dias = d ? Math.round((d - hoje) / 86400000) : null;
+                const situacao = c.quitado ? '<span class="selo pago">pago</span>'
+                  : dias === null ? '<span class="selo">sem data</span>'
+                  : dias < 0 ? `<span class="selo em_aberto_vencido">venceu há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}</span>`
+                  : dias === 0 ? '<span class="selo em_aberto_vencido">vence hoje</span>'
+                  : dias <= 7 ? `<span class="selo em_aberto">vence em ${dias} dia${dias === 1 ? '' : 's'}</span>`
+                  : `<span class="selo">em ${dias} dias</span>`;
+                return `<tr${c.quitado ? ' style="opacity:.55"' : ''}>
+                  <td>${c.quando ? c.quando.split('-').reverse().join('/') : '—'}</td>
+                  <td>${c.titulo}<br><span class="kpi-sub">${c.detalhe}</span></td>
+                  <td class="num"${c.quitado ? '' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
+                  <td>${situacao}</td>
+                </tr>`;
               }).join('')}
             </tbody>
-          </table>
-          <div class="aviso aviso-atencao" style="margin-top:12px">
-            <strong>💡 Estratégia:</strong> Se a margem for apertada, priorize pagar os vencimentos mais próximos.
-          </div>`;
+            <tfoot><tr>
+              <td colspan="2">Ainda em aberto (${emAberto.length} de ${compromissos.length})</td>
+              <td class="num">${moeda(emAberto.reduce((s, c) => s + c.valor, 0))}</td>
+              <td></td>
+            </tr></tfoot>
+          </table>`;
+      }
+
+      // ---------------- BLOCO 3: planejamento do mês ----------------
+      const plan = document.getElementById('painel_planejamento');
+      const diaSalario = diaTipicoDoSalario();
+
+      // Linha do tempo: entradas e saídas na mesma régua de dias, com o saldo
+      // correndo. É onde se vê se a conta vira negativa antes de o salário cair.
+      const eventos = [
+        ...(folha.temFolha && diaSalario
+            ? [{ dia: diaSalario, tipo: 'entrada', titulo: 'Salário líquido', valor: folha.liquido }]
+            : []),
+        ...outrasEntradas.map(t => ({
+          dia: t.data ? parseInt(t.data.split('-')[2], 10) : null,
+          tipo: 'entrada', titulo: t.descricao, valor: t.valor
+        })),
+        ...compromissos.map(c => ({
+          dia: c.quando ? parseInt(c.quando.split('-')[2], 10) : null,
+          tipo: 'saida', titulo: c.titulo, valor: c.valor
+        }))
+      ].filter(e => e.dia).sort((a, b) => a.dia - b.dia);
+
+      if (!eventos.length) {
+        plan.innerHTML = blocoVazio('Nada datado neste mês', 'Sem holerite nem compromisso com data para montar a linha do tempo.');
       } else {
-        document.getElementById('painel_vencimentos_criticos').innerHTML =
-          blocoVazio('✅ Sem vencimentos em aberto', 'Todos os cartões (exceto Black 4846) estão quitados neste mês.');
+        let corrente = 0;
+        const linhas = eventos.map(e => {
+          corrente += e.tipo === 'entrada' ? e.valor : -e.valor;
+          return `<tr>
+            <td style="width:52px">dia ${e.dia}</td>
+            <td>${e.tipo === 'entrada' ? '↑' : '↓'} ${e.titulo}</td>
+            <td class="num" style="color:${e.tipo === 'entrada' ? 'var(--accent-green)' : 'var(--accent-red)'}">${e.tipo === 'entrada' ? '+' : '−'}${moeda(e.valor)}</td>
+            <td class="num" style="color:${corrente >= 0 ? 'var(--text-secondary)' : 'var(--accent-red)'};font-weight:600">${moeda(corrente)}</td>
+          </tr>`;
+        }).join('');
+
+        const menorSaldo = eventos.reduce((acc, e) => {
+          acc.c += e.tipo === 'entrada' ? e.valor : -e.valor;
+          if (acc.c < acc.min) { acc.min = acc.c; acc.dia = e.dia; }
+          return acc;
+        }, { c: 0, min: 0, dia: null });
+
+        plan.innerHTML = `
+          <table class="tabela-dados">
+            <thead><tr><th>Dia</th><th>Movimento</th><th class="num">Valor</th><th class="num">Saldo corrido</th></tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+          ${menorSaldo.min < 0 ? `
+          <div class="aviso aviso-atencao" style="margin-top:12px">
+            Pagando tudo na ordem em que vence, a conta fica <b>${moeda(menorSaldo.min)}</b> no dia ${menorSaldo.dia}
+            — o pior ponto do mês. ${diaSalario ? `O salário só cai no dia ${diaSalario}.` : ''}
+            O saldo corrido começa do zero: não considera o que sobrou do mês anterior.
+          </div>` : `
+          <div class="aviso aviso-ok" style="margin-top:12px">
+            Na ordem em que vence, a conta não fica negativa em nenhum dia do mês.
+          </div>`}`;
       }
 
-      // --- BLOCO 3: Planejamento do Mês (Timeline de receita vs despesas) ---
-      const planejamentoDiv = document.getElementById('painel_planejamento');
-      if (planejamentoDiv) {
-        if (receitaVigente > 0) {
-          const holeriteData = configuracoesGlobais.pessoas?.find(p => p.nome === 'Juliane')?.proximo_holerite || '15';
-          const vencimentosFormatados = vencimentosCriticos
-            .map(f => `<div class="timeline-item" style="margin-bottom:8px">
-              <span style="color:var(--accent-yellow)">📅 ${f.vencimento.split('-').reverse().join('/')}</span>
-              <strong>Cartão ${f.cartao}</strong> — ${moeda(f.em_aberto)}
-            </div>`)
-            .join('');
+      // ---------------- BLOCO 4: leitura do mês ----------------
+      const analise = document.getElementById('painel_analise');
+      const pontos = [];
 
-          planejamentoDiv.innerHTML = `
-            <div style="padding:12px">
-              <div class="timeline-item" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border-color)">
-                <span style="color:var(--accent-green);font-weight:bold">💳 ENTRADA: Holerite (~${holeriteData})</span>
-                <div style="margin-top:4px;color:var(--text-secondary)">${moeda(receitaVigente)}</div>
-              </div>
-              <div style="color:var(--text-secondary);margin-bottom:12px">SAÍDAS:</div>
-              ${vencimentosFormatados || '<div style="color:var(--border-color)">Nenhum vencimento</div>'}
-              <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color)">
-                <strong>Saldo projetado após pagamentos:</strong>
-                <div style="color:${saldoVigente >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}; font-size:18px; margin-top:4px">${moeda(saldoVigente)}</div>
-              </div>
-            </div>`;
-        } else {
-          planejamentoDiv.innerHTML = blocoVazio('Sem holerite', 'Importe o comprovante de pagamento para ver o planejamento do mês.');
-        }
+      if (!folha.temFolha) {
+        pontos.push(['aviso-atencao', `O holerite de ${mes} ainda não foi importado — sem ele o Painel não tem o lado da entrada.`]);
       }
 
-      // --- BLOCO 4: Análise Financeira (Recomendações) ---
-      const analiseDiv = document.getElementById('painel_analise');
-      if (analiseDiv) {
-        let recomendacoes = '';
-
-        if (receitaVigente === 0) {
-          recomendacoes = '<div class="aviso aviso-critico"><strong>⚠️ Urgente:</strong> Nenhuma receita cadastrada para este mês. Importe o holerite.</div>';
-        } else if (saldoVigente < 0 && saldoVigente >= -receitaVigente * 0.2) {
-          recomendacoes = `
-            <div class="aviso aviso-atencao">
-              <strong>⚠️ Margem apertada:</strong> Você vai precisar de ${moeda(Math.abs(saldoVigente))} da reserva ou precisará deixar de pagar algo. Considere:
-              <ul style="margin-top:8px;margin-left:20px">
-                <li>Pagar os vencimentos em prioridade (cartão, dívidas)</li>
-                <li>Usar uma linha de crédito se necessário</li>
-                <li>Revisar as despesas mensais para reduzir gastos</li>
-              </ul>
-            </div>`;
-        } else if (saldoVigente < -receitaVigente * 0.2) {
-          recomendacoes = `
-            <div class="aviso aviso-critico">
-              <strong>🚨 CRÍTICO:</strong> Deficit de ${moeda(Math.abs(saldoVigente))} (${Math.abs(saudeFinanceira).toFixed(0)}% da receita).
-              Ação imediata necessária:
-              <ul style="margin-top:8px;margin-left:20px">
-                <li><strong>Cancelar ou renegociar dívidas</strong></li>
-                <li><strong>Cortar despesas não essenciais</strong></li>
-                <li><strong>Buscar renda complementar urgente</strong></li>
-                <li>Não deixe vencimentos em aberto para não piorar juros</li>
-              </ul>
-            </div>`;
-        } else {
-          recomendacoes = `
-            <div class="aviso aviso-ok">
-              <strong>✅ Situação controlada:</strong> Você tem ${moeda(saldoVigente)} de margem.
-              Mantenha as despesas sob controle e continue pagando os vencimentos no prazo.
-            </div>`;
-        }
-
-        recomendacoes += `
-          <div class="aviso aviso-info" style="margin-top:12px">
-            <strong>📊 Nota importante:</strong> Este cálculo exclui o Cartão Black (4846) e empréstimos do Mercado Pago.
-            Dados parciais até ${mesVig}. Revise seus gastos regularmente na aba <strong>Lançamentos</strong>.
-          </div>`;
-
-        analiseDiv.innerHTML = recomendacoes;
+      // Faturas cujo cabeçalho existe mas sem nenhum lançamento gravado: o
+      // total aparece, mas não dá para ver em que o dinheiro foi gasto.
+      const semItens = faturas.filter(f =>
+        (f.cobrado || 0) > 0 &&
+        !transacoesSemFiltroDeAno().some(t => t.fatura_origem === `${f.cartao}|${f.mes}`));
+      if (semItens.length) {
+        pontos.push(['aviso-atencao',
+          `${semItens.length} fatura(s) deste mês têm o total, mas nenhum lançamento importado — ` +
+          semItens.map(f => `<b>${f.cartao_descricao || f.cartao}</b> (${moeda(f.cobrado)})`).join(', ') +
+          `. O valor entra na conta do mês, mas não aparece em Lançamentos nem em Para Onde Vai.`]);
       }
+
+      const rotativo = faturas.filter(f => (f.saldo_anterior || 0) > 0);
+      if (rotativo.length) {
+        pontos.push(['aviso-atencao',
+          `${rotativo.length} fatura(s) chegaram com saldo do mês anterior (` +
+          rotativo.map(f => `${f.cartao}: ${moeda(f.saldo_anterior)}`).join(', ') +
+          `) — é crédito rotativo, o mais caro que existe. Quitar essas primeiro rende mais que qualquer economia de consumo.`]);
+      }
+
+      if (folha.temFolha && saldo < 0) {
+        const maiores = [...compromissos].filter(c => !c.quitado).sort((a, b) => b.valor - a.valor).slice(0, 3);
+        pontos.push(['aviso-critico',
+          `Faltam <b>${moeda(Math.abs(saldo))}</b> para fechar o mês só com o salário. ` +
+          (maiores.length ? `Os maiores compromissos em aberto são ${maiores.map(c => `${c.titulo} (${moeda(c.valor)})`).join(', ')}.` : '') +
+          (cartaoEmpresa > 0
+            ? ` Só que <b>${moeda(cartaoEmpresa)}</b> desse total é gasto da Benetti UP passando pela sua conta — tirando isso, o mês ${(saldo + cartaoEmpresa) >= 0 ? `fecharia positivo em ${moeda(saldo + cartaoEmpresa)}` : `ainda faltaria ${moeda(Math.abs(saldo + cartaoEmpresa))}`}. A primeira decisão não é cortar consumo da casa: é a empresa devolver o que gasta no seu cartão.`
+            : ` Enquanto o gasto do cartão não cair abaixo do líquido, o buraco se repete todo mês.`)]);
+      } else if (folha.temFolha) {
+        pontos.push(['aviso-ok', `O mês fecha positivo em ${moeda(saldo)} contando só o salário líquido.`]);
+      }
+
+      analise.innerHTML = pontos.map(([c, t]) => `<div class="aviso ${c}">${t}</div>`).join('') +
+        `<div class="aviso aviso-info">
+           <b>Como este Painel conta:</b> a entrada é o salário <b>líquido</b> (bruto menos INSS, IR, plano de saúde,
+           previdência e os consignados descontados na folha) — é o que de fato cai na conta. A saída é o que sai da
+           conta corrente: fatura de cartão mais boleto, débito automático e PIX. Desconto de folha não aparece dos dois
+           lados, e pagamento de fatura não é somado às compras que já estão dentro dela.
+         </div>`;
     }
 
     // ------------------------------------------------------- PARA ONDE VAI
