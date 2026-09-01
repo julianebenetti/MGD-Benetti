@@ -1,9 +1,9 @@
 {
-  "updated_at": 1788283087,
-  "updated_at_br": "01/09/2026 14:11",
+  "updated_at": 1788287144,
+  "updated_at_br": "01/09/2026 15:19",
   "period_days": 90,
-  "total_orders": 7783,
-  "total_conversions": 7436,
+  "total_orders": 7782,
+  "total_conversions": 7435,
   "orders": [
     {
       "ID do pedido": "260901U0XQCW8X",
@@ -1082,27 +1082,27 @@
     },
     {
       "ID do pedido": "260901T5BJ6XFN",
-      "Status do Pedido": "UNPAID",
+      "Status do Pedido": "CANCELLED",
       "Horario do pedido": "2026-08-31 18:11:50",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
-      "Valor de Compra(R$)": "31.87",
-      "Comissao liquida do afiliado(R$)": "2.66434",
+      "Valor de Compra(R$)": "0",
+      "Comissao liquida do afiliado(R$)": "0",
       "Taxa de comissao Shopee do item": "4.00%",
       "Taxa de comissao do vendedor do item": "4.80%",
-      "Comissao Shopee(R$)": "1.2748",
-      "Comissao do vendedor(R$)": "1.52976",
-      "Comissao total do pedido(R$)": "2.80456",
+      "Comissao Shopee(R$)": "0",
+      "Comissao do vendedor(R$)": "0",
+      "Comissao total do pedido(R$)": "0",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 2 Body Splash Ameixa Negra, Maracujá, ou Uva Merlot Cereja 200ml BELKIT Alta Projeção e Fixação",
-      "Status do item do afiliado": "UNPAID",
+      "Status do item do afiliado": "CANCELLED",
       "ID do item": "58206612939",
       "ID da loja": "1391354759",
       "Nome da loja": "Bela Beleza Oficial",
-      "Quantidade": "1",
+      "Quantidade": "0",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241899110100498",
-      "conversionStatus": "UNPAID",
+      "conversionStatus": "CANCELLED",
       "data": "2026-08-31"
     },
     {
@@ -11657,7 +11657,7 @@
     },
     {
       "ID do pedido": "260828FX0RM0G1",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-27 16:33:54",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "34.99",
@@ -11669,7 +11669,7 @@
       "Comissao total do pedido(R$)": "1.92445",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Creme Depilatório TIMMI BEAUTY Suave à Base de Plantas Hidratação e Suavidade",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58205942412",
       "ID da loja": "1724093444",
       "Nome da loja": "TIMMI BEAUTY",
@@ -11677,7 +11677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241547634157822",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-27"
     },
     {
@@ -15482,7 +15482,7 @@
     },
     {
       "ID do pedido": "260825A9HW6E72",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-25 10:44:22",
       "Sub_id1": "29Jul26VEACalcaJoggerRapaz",
       "Valor de Compra(R$)": "49.96",
@@ -15494,7 +15494,7 @@
       "Comissao total do pedido(R$)": "10.4916",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Calça Jogger Preta Masculina Dry Fit Com Fitas Esportiva",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22492676165",
       "ID da loja": "413762733",
       "Nome da loja": "ALAN.FONTE.888",
@@ -15502,7 +15502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "241353862103072",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-25"
     },
     {
@@ -20132,7 +20132,7 @@
     },
     {
       "ID do pedido": "2608220XA62T69",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-21 17:29:14",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "52.97",
@@ -20144,7 +20144,7 @@
       "Comissao total do pedido(R$)": "11.1237",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -20152,7 +20152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "241032554185848",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-21"
     },
     {
@@ -22957,7 +22957,7 @@
     },
     {
       "ID do pedido": "260821UHPVYHMS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-20 17:38:55",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "28.99",
@@ -22969,7 +22969,7 @@
       "Comissao total do pedido(R$)": "2.20324",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT COPO TRANSIÇÂO PARA BEBÊ + BICO REFIL - ANTIVAZAMENTO - ANTI-ENGASGO ANTI-RESPINGO MENINA MENINO",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18998192991",
       "ID da loja": "1494369378",
       "Nome da loja": "Delícia de Bebê",
@@ -22977,7 +22977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240946735135953",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-20"
     },
     {
@@ -23057,7 +23057,7 @@
     },
     {
       "ID do pedido": "260821UG84N00U",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-20 17:12:46",
       "Sub_id1": "25Jul26TapeteHigienicoVs4",
       "Valor de Compra(R$)": "33.9",
@@ -23069,7 +23069,7 @@
       "Comissao total do pedido(R$)": "2.712",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Tapete Higiênico PetCharm Slim 50x60cm com Barreiras Antivazamento",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58215877305",
       "ID da loja": "1689398779",
       "Nome da loja": "VF STORE ONLINE",
@@ -23077,7 +23077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240945166124639",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-20"
     },
     {
@@ -23632,7 +23632,7 @@
     },
     {
       "ID do pedido": "260820U27SKK9R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-20 13:02:02",
       "Sub_id1": "25Jul26TapeteHigienicoVs4",
       "Valor de Compra(R$)": "49.9",
@@ -23644,7 +23644,7 @@
       "Comissao total do pedido(R$)": "1.996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Bola Suíça 75cm de Yoga Pilates Fisioterapia com Bomba de Ar Anti-Estouro Cor Aleatória",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58215211640",
       "ID da loja": "1877533254",
       "Nome da loja": "DZMAXCASA",
@@ -23652,7 +23652,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240930122151073",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-20"
     },
     {
@@ -194553,31 +194553,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234211595196757",
       "conversionStatus": "CANCELLED",
-      "data": "2026-06-03"
-    },
-    {
-      "ID do pedido": "26060461YXBF1F",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-03 17:51:45",
-      "Sub_id1": "24Mai26LeggingFlanelada01SacoVerde",
-      "Valor de Compra(R$)": "31.8",
-      "Comissao liquida do afiliado(R$)": "6.678",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "18.00%",
-      "Comissao Shopee(R$)": "0.954",
-      "Comissao do vendedor(R$)": "5.724",
-      "Comissao total do pedido(R$)": "6.678",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Legging Feminina Grossa Flanelada Suplex Térmica Peluciada –Leg Inverno",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21998200201",
-      "ID da loja": "868626894",
-      "Nome da loja": "Lela Moda Íntima",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "234208304191142",
-      "conversionStatus": "COMPLETED",
       "data": "2026-06-03"
     }
   ]
