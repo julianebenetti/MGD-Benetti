@@ -2567,12 +2567,51 @@
       const descontos = daFolha
         .filter(t => t.natureza !== 'receita' && t.valor > 0)
         .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
-      return {
-        proventos, descontos,
-        liquido: proventos - descontos,
-        temFolha: daFolha.some(t => t.natureza === 'receita'),
-        lancamentos: daFolha
-      };
+      if (daFolha.some(t => t.natureza === 'receita')) {
+        return { proventos, descontos, liquido: proventos - descontos,
+                 temFolha: true, previsto: false, lancamentos: daFolha };
+      }
+
+      // Sem holerite do mês. O pagamento cai no dia 25, então durante quase
+      // todo o mês esse dado ainda não existe — e é justamente aí que ela
+      // precisa se programar. Em vez de travar em "não cadastrado", o Painel
+      // projeta pelo último mês de salário puro, marcando como previsão.
+      // Só vale para o mês vigente e os seguintes: num mês passado sem
+      // holerite o dado está faltando, não é futuro, e aí "não cadastrado" é
+      // a resposta honesta.
+      if (ordenarMeses(mes, mesVigente()) < 0) {
+        return { proventos: 0, descontos: 0, liquido: 0, temFolha: false, previsto: false, lancamentos: [] };
+      }
+      const base = referenciaDeSalario();
+      return base
+        ? { proventos: base.proventos, descontos: base.descontos, liquido: base.liquido,
+            temFolha: true, previsto: true, mesBase: base.mes, lancamentos: [] }
+        : { proventos: 0, descontos: 0, liquido: 0, temFolha: false, previsto: false, lancamentos: [] };
+    }
+
+    // Último mês de salário puro — sem PLR nem férias, que são eventuais e
+    // puxariam a previsão para cima. O mais recente, e não a mediana, porque
+    // mudança de salário ou de consignado costuma ser permanente: em Ago/26 o
+    // líquido caiu para R$ 2.834,19 justamente porque o consignado subiu, e
+    // uma mediana dos meses anteriores prometeria um dinheiro que não vem mais.
+    function referenciaDeSalario() {
+      const eventuais = ['plr', 'ferias', 'decimo_terceiro'];
+      const meses = [...new Set(transacoesSemFiltroDeAno()
+        .filter(t => t.origem === 'holerite_elektro' && mesNoEscopo(t.mes_vencimento))
+        .map(t => t.mes_vencimento))].sort(ordenarMeses).reverse();
+
+      for (const m of meses) {
+        const daFolha = transacoesSemFiltroDeAno()
+          .filter(t => t.origem === 'holerite_elektro' && t.mes_vencimento === m);
+        if (!daFolha.some(t => t.natureza === 'receita')) continue;
+        if (daFolha.some(t => eventuais.includes(t.categoria))) continue;
+        const proventos = daFolha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0);
+        const descontos = daFolha
+          .filter(t => t.natureza !== 'receita' && t.valor > 0)
+          .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
+        return { mes: m, proventos, descontos, liquido: proventos - descontos };
+      }
+      return null;
     }
 
     // Entradas que não são a folha: contribuição do Hugo, aluguel recebido,
@@ -2783,10 +2822,12 @@
         <div class="fluxo-row">
           <div class="fluxo-item">
             <div class="fluxo-label">Entra na conta</div>
-            <div class="fluxo-valor" style="color:var(--accent-green)">${folha.temFolha ? moeda(folha.liquido) : naoCad}</div>
-            <div class="kpi-sub">${folha.temFolha
-              ? `salário líquido — bruto ${moeda(folha.proventos)} − descontos ${moeda(folha.descontos)}`
-              : 'holerite deste mês ainda não importado'}</div>
+            <div class="fluxo-valor" style="color:${folha.previsto ? 'var(--accent-yellow)' : 'var(--accent-green)'}">${folha.temFolha ? moeda(folha.liquido) : naoCad}</div>
+            <div class="kpi-sub">${!folha.temFolha
+              ? 'holerite deste mês não foi importado'
+              : folha.previsto
+                ? `<b>previsto</b> — o holerite só sai dia 25; base: o líquido de ${folha.mesBase}`
+                : `salário líquido — bruto ${moeda(folha.proventos)} − descontos ${moeda(folha.descontos)}`}</div>
           </div>
           <div class="fluxo-item">
             <div class="fluxo-label">Sai da conta</div>
@@ -2830,6 +2871,8 @@
         <div class="aviso ${classe}">
           ${!folha.temFolha
             ? 'Sem o holerite deste mês não dá para dizer o que sobra ou falta. Importe o comprovante em <b>Ferramentas → Importar</b>.'
+            : folha.previsto
+            ? `Contando com um salário parecido com o de ${folha.mesBase} (<b>${moeda(folha.liquido)}</b>), o mês ${saldo >= 0 ? 'fecha positivo em' : 'fica negativo em'} <b>${moeda(Math.abs(saldo))}</b>. O holerite de verdade só sai dia 25 — até lá este número é estimativa.`
             : saldo >= 0
               ? `O salário cobre os compromissos do mês e ainda sobra <b>${moeda(saldo)}</b> (${margem.toFixed(0)}% do líquido).`
               : `<b>O salário não cobre os compromissos do mês.</b> Faltam <b>${moeda(Math.abs(saldo))}</b> — ${Math.abs(margem).toFixed(0)}% a mais do que entra.`}
@@ -2919,7 +2962,8 @@
       // correndo. É onde se vê se a conta vira negativa antes de o salário cair.
       const eventos = [
         ...(folha.temFolha && diaSalario
-            ? [{ dia: diaSalario, tipo: 'entrada', titulo: 'Salário líquido', valor: folha.liquido }]
+            ? [{ dia: diaSalario, tipo: 'entrada',
+                 titulo: 'Salário líquido', valor: folha.liquido, previsto: folha.previsto }]
             : []),
         ...outrasEntradas.map(t => ({
           dia: t.data ? parseInt(t.data.split('-')[2], 10) : null,
@@ -3086,11 +3130,20 @@
       const maior = ordenados.length ? ordenados[0][1] : 1;
 
       // Estornos ficam de fora da distribuicao por categoria: eles devolvem
-      // dinheiro, nao indicam para onde ele foi.
+      // dinheiro, nao indicam para onde ele foi. A barra continua medindo o
+      // gasto bruto — mas o rotulo passa a dizer o liquido da categoria quando
+      // ha estorno nela, senao a viagem rateada entre as familias apareceria
+      // como R$ 6.800 quando a parte da Juliane e R$ 2.156.
       let baseEstornos = transacoes.filter(t => t.valor < 0);
       if (mes) baseEstornos = baseEstornos.filter(t => t.mes_vencimento === mes);
       if (pessoa) baseEstornos = baseEstornos.filter(t => t.pessoa === pessoa);
       const totalEstornos = baseEstornos.reduce((s, t) => s + t.valor, 0);
+
+      const estornoPorGrupo = {};
+      baseEstornos.forEach(t => {
+        const chave = chaveDe(t);
+        estornoPorGrupo[chave] = (estornoPorGrupo[chave] || 0) + t.valor;
+      });
 
       const notaEstornos = totalEstornos < 0
         ? `<div class="aviso aviso-ok">Os valores acima somam apenas compras (${moeda(total)}).
@@ -3109,7 +3162,10 @@
         <div class="barra-linha${clique}>
           <div class="barra-topo">
             <span class="barra-nome">${nome}</span>
-            <span class="barra-valor">${moeda(valor)} · ${(valor / total * 100).toFixed(1)}%</span>
+            <span class="barra-valor">${moeda(valor)} · ${(valor / total * 100).toFixed(1)}%${
+              estornoPorGrupo[nome] < -0.05
+                ? ` <span class="kpi-sub">− ${moeda(Math.abs(estornoPorGrupo[nome]))} devolvido = <b>${moeda(valor + estornoPorGrupo[nome])}</b></span>`
+                : ''}</span>
           </div>
           <div class="barra-trilho">
             <div class="barra-preenchida" style="width:${(valor / maior * 100).toFixed(1)}%;background:${cores[i % cores.length]}"></div>
@@ -4303,6 +4359,12 @@
     // informacao. Por isso ficam fora do rendimento tributavel principal.
     const CATEGORIAS_TRIBUTACAO_EXCLUSIVA = ['plr', 'decimo_terceiro'];
 
+    // Dinheiro que entra na conta mas não é rendimento: a restituição do IR é a
+    // devolução de imposto que já foi retido do salário — declarar de novo como
+    // renda cobraria imposto duas vezes sobre o mesmo dinheiro. Entra no caixa,
+    // fica fora da base tributável.
+    const CATEGORIAS_RECEITA_NAO_TRIBUTAVEL = ['restituicao_irpf'];
+
     function apurarIrpf(regras) {
       // A apuracao e sempre da pessoa fisica: despesa da Benetti UP e da empresa.
       const doAno = ((dadosGlobais.fluxo_mensal || {}).transacoes || [])
@@ -4315,6 +4377,7 @@
 
       doAno.forEach(t => {
         if (t.natureza === 'receita') {
+          if (CATEGORIAS_RECEITA_NAO_TRIBUTAVEL.includes(t.categoria)) return;
           if (CATEGORIAS_TRIBUTACAO_EXCLUSIVA.includes(t.categoria)) rendimentoExclusivo += t.valor;
           else rendimentos += t.valor;
           return;
@@ -4455,7 +4518,7 @@
 
         <div class="grid">
           ${cartaoKpi('Rendimento tributável', a.rendimentos > 0 ? moeda(a.rendimentos) : 'não cadastrado', 'salário e benefícios — PLR e 13º à parte',
-            null, a.rendimentos > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ natureza: 'receita' })}, naoEhCategoria(${CATEGORIAS_TRIBUTACAO_EXCLUSIVA.map(c => JSON.stringify(c)).join(', ')}))` : null)}
+            null, a.rendimentos > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ natureza: 'receita' })}, naoEhCategoria(${[...CATEGORIAS_TRIBUTACAO_EXCLUSIVA, ...CATEGORIAS_RECEITA_NAO_TRIBUTAVEL].map(c => JSON.stringify(c)).join(', ')}))` : null)}
           ${cartaoKpi('Deduções que aproveitam', moeda(a.somaDeducoes), `${grupos.length} grupos`, 'var(--accent-green)')}
           ${cartaoKpi('Imposto já retido', a.impostoRetido > 0 ? moeda(a.impostoRetido) : 'não cadastrado', 'na fonte, pela Elektro',
             null, a.impostoRetido > 0 ? `irParaLancamentosPessoal(${JSON.stringify({ categoria: 'imposto_renda' })}, naoTemRubrica(${JSON.stringify('/405')}))` : null)}

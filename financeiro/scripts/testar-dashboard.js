@@ -54,6 +54,16 @@ const normalizarDescricao = d => String(d)
   .replace(/^(Canc Parcela Sem Juros|Cancelamento Parcial De Compra|Estorno de)\s*-?\s*/i, '')
   .toLowerCase().replace(/\s+/g, ' ').trim();
 
+// Mesma ordem que a dashboard usa, para o teste saber o que e passado e o que
+// e mes vigente ou futuro.
+const ordemDoMes = mv => {
+  const [m, a] = String(mv).split('/');
+  return parseInt(a, 10) * 100 + MES_ORDEM.indexOf(m);
+};
+const hojeNoTeste = new Date();
+const mesVigenteNoTeste =
+  `${MES_ORDEM[hojeNoTeste.getMonth()]}/${String(hojeNoTeste.getFullYear()).slice(2)}`;
+
 function noEscopo(mv) {
   if (!mv) return false;
   if (mv === A_CONFIRMAR) return true;
@@ -480,8 +490,20 @@ function noEscopo(mv) {
       igual(`Painel ${mes}: entra na conta = líquido da folha ${brl(liquido)}`,
             numeroDe(visto.entra), liquido);
     } else {
-      ok(`Painel ${mes}: sem holerite, diz "não cadastrado" em vez de zero`,
-         /não cadastrado/i.test(visto.entra), visto.entra);
+      // O holerite só sai dia 25, então o mês vigente e os seguintes passam
+      // quase todo o tempo sem esse dado. Em vez de travar em "não cadastrado",
+      // a tela projeta pelo último mês de salário puro — mas tem de dizer que
+      // é previsão. O que a regra de ouro proíbe é passar estimativa por fato,
+      // não é estimar.
+      const passado = ordemDoMes(mes) < ordemDoMes(mesVigenteNoTeste);
+      if (passado) {
+        ok(`Painel ${mes}: mês passado sem holerite diz "não cadastrado", não estima`,
+           /não cadastrado/i.test(visto.entra), visto.entra);
+      } else {
+        ok(`Painel ${mes}: sem holerite ainda, projeta e diz que é previsão`,
+           /previsto/i.test(visto.entra) && numeroDe(visto.entra) > 0,
+           visto.entra.replace(/\n/g, ' | '));
+      }
     }
     igual(`Painel ${mes}: sai da conta = cartão + boleto/PIX + recorrente prevista ${brl(cartao + saidasFora + previsto)}`,
           numeroDe(visto.sai), cartao + saidasFora + previsto, 0.05);
@@ -653,6 +675,44 @@ function noEscopo(mv) {
            tela.bloco.includes(brl(suspenso)) && /pagamento parado/i.test(tela.bloco),
            tela.bloco.split('\n').filter(l => /parado/i.test(l)).join(' | ') || '(nada sobre pagamento parado)');
       }
+    }
+  }
+
+  // A previsão de salário tem de sair de um mês de salário puro. Usar um mês
+  // com PLR ou férias prometeria um dinheiro que não vem todo mês — Mar/26
+  // (R$ 14.061,72, com PLR) e Jul/26 (R$ 6.200,67, com férias) contra os
+  // R$ 2.834,19 de um mês normal.
+  {
+    const eventuais = ['plr', 'ferias', 'decimo_terceiro'];
+    const mesFuturoSemFolha = mesesReais.find(m =>
+      ordemDoMes(m) >= ordemDoMes(mesVigenteNoTeste) &&
+      !todosLancamentos.some(t => t.mes_vencimento === m &&
+        t.origem === 'holerite_elektro' && t.natureza === 'receita'));
+
+    if (mesFuturoSemFolha) {
+      const comFolha = [...new Set(todosLancamentos
+        .filter(t => t.origem === 'holerite_elektro' && noEscopo(t.mes_vencimento))
+        .map(t => t.mes_vencimento))].sort((a, b) => ordemDoMes(b) - ordemDoMes(a));
+
+      const puro = comFolha.find(m => {
+        const folha = todosLancamentos.filter(t => t.mes_vencimento === m && t.origem === 'holerite_elektro');
+        return folha.some(t => t.natureza === 'receita') && !folha.some(t => eventuais.includes(t.categoria));
+      });
+      const folha = todosLancamentos.filter(t => t.mes_vencimento === puro && t.origem === 'holerite_elektro');
+      const esperado = folha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0)
+        - folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+               .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
+
+      const visto = await pagina.evaluate(m => {
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        return document.querySelector('#painel_fluxo_3numeros .fluxo-item').innerText;
+      }, mesFuturoSemFolha);
+
+      igual(`Painel ${mesFuturoSemFolha}: previsão de salário vem de ${puro} (salário puro)`,
+            numeroDe(visto), esperado, 0.02);
+      ok(`Painel ${mesFuturoSemFolha}: a previsão diz de que mês veio`,
+         visto.includes(puro), visto.replace(/\n/g, ' | '));
     }
   }
 
@@ -1135,12 +1195,20 @@ function noEscopo(mv) {
     const txt = document.getElementById('painel').innerText;
     return {
       temDeficitFalso: /R\$\s*-?\s*40\.086,47/.test(txt),
-      dizNaoCadastrado: /não cadastrado/i.test(txt)
+      dizNaoCadastrado: /não cadastrado/i.test(txt),
+      dizPrevisto: /previsto/i.test(txt),
+      trechoEntrada: ((document.querySelector('#painel_fluxo_3numeros .fluxo-item') || {}).innerText || '')
+        .replace(/\n/g, ' | ')
     };
   }, mesSemHolerite);
   ok('Painel não exibe o déficit falso de R$ 40.086,47', !zerosFalsos.temDeficitFalso);
-  ok('Painel informa o que não está cadastrado', zerosFalsos.dizNaoCadastrado,
-     `mês testado: ${mesSemHolerite || '(nenhum sem holerite achado)'}`);
+  // A regra de ouro nao proibe estimar — proibe passar estimativa por fato.
+  // Num mes sem holerite a tela tem de fazer uma das duas: dizer "nao
+  // cadastrado", ou mostrar um numero marcado como previsao. O que nao pode e
+  // exibir um valor cru como se fosse o holerite de verdade.
+  ok('Painel nunca mostra número sem holerite como se fosse fato',
+     zerosFalsos.dizNaoCadastrado || zerosFalsos.dizPrevisto,
+     `mês testado: ${mesSemHolerite || '(nenhum sem holerite achado)'} — ${zerosFalsos.trechoEntrada}`);
 
   // --- Edição sob filtro atinge a transação certa ---
   const edicao = await pagina.evaluate(() => {
