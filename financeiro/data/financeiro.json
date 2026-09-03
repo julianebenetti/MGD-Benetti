@@ -66913,14 +66913,5 @@
       "em_aberto": 3197.56,
       "parceladas": 11
     }
-  ],
-  "plano_do_mes": {
-    "Set/26": {
-      "orcamento": 9999,
-      "itens": {
-        "fatura|0442|Set/26": "adiar"
-      },
-      "atualizado_em": "2026-09-03"
-    }
-  }
+  ]
 }

@@ -773,7 +773,16 @@ function noEscopo(mv) {
     const [pagarOrc, , sobraOrc] = num(comOrc);
     igual(`Plano ${mes}: a sobra é contra o valor informado`, sobraOrc, 9999 - pagarOrc, 0.02);
 
-    await pagina.evaluate(() => { delete dadosGlobais.plano_do_mes; renderizarPainel(); });
+    // definirOrcamento grava no servidor — a limpeza tem de gravar tambem,
+    // senao o teste deixa um orcamento de mentira no arquivo de dados.
+    await pagina.evaluate(async () => {
+      delete dadosGlobais.plano_do_mes;
+      await fetch('/api/dados', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dadosGlobais) });
+      renderizarPainel();
+    });
+    await pagina.waitForTimeout(400);
   }
 
   // A conferência não pode acusar pagamento que a dashboard só não enxerga.
