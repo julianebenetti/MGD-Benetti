@@ -1,9 +1,9 @@
 {
-  "updated_at": 1788414075,
-  "updated_at_br": "03/09/2026 02:34",
+  "updated_at": 1788421684,
+  "updated_at_br": "03/09/2026 04:41",
   "period_days": 90,
-  "total_orders": 7706,
-  "total_conversions": 7356,
+  "total_orders": 7705,
+  "total_conversions": 7355,
   "orders": [
     {
       "ID do pedido": "2609020BJTQCUG",
@@ -192627,31 +192627,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "234345246121563",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-05"
-    },
-    {
-      "ID do pedido": "2606059X400YRD",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-05 06:53:04",
-      "Sub_id1": "31Mai26TransparexVs4",
-      "Valor de Compra(R$)": "36.8",
-      "Comissao liquida do afiliado(R$)": "1.104",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.104",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.104",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Limpa Granito Marmore Porcelanato Realça Cor Black To Black Revitalizador",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58256349612",
-      "ID da loja": "464132564",
-      "Nome da loja": "Zelo Click",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "234341584152500",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-05"
     }
