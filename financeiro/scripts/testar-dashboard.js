@@ -716,6 +716,122 @@ function noEscopo(mv) {
     }
   }
 
+  // --- Plano de pagamento do mês ---
+  //
+  // A marcação por mês é a decisão que ela toma de verdade ("destas contas,
+  // quais cabem este mês"), diferente do flag permanente de contrato/cartão.
+  {
+    const mes = mesVigenteNoTeste;
+    const estado = await pagina.evaluate(m => {
+      document.querySelector('[data-tab="painel"]').click();
+      document.getElementById('painel_mes').value = m;
+      delete dadosGlobais.plano_do_mes;
+      renderizarPainel();
+      const el = document.getElementById('painel_vencimentos_criticos');
+      const linhas = [...el.querySelectorAll('tbody tr')];
+      return {
+        saldo: (el.querySelector('.plano-saldo') || {}).innerText || '',
+        decidiveis: linhas.filter(tr => tr.querySelector('.plano-btn')).length,
+        jaSaiu: linhas.filter(tr => !tr.querySelector('.plano-btn')).length,
+        adiadosPorPadrao: linhas.filter(tr => tr.querySelector('.plano-btn.ativo-adiar')).length
+      };
+    }, mes);
+
+    // Cartão com pagamento suspenso já entra marcado como "deixo": a Juliane
+    // não deve ter de repetir todo mês uma decisão que já tomou.
+    const cartoesParados = (dados.faturas_cartao || [])
+      .filter(f => f.mes === mes && cartaoParado(f.cartao) && (f.em_aberto || 0) > 0.05).length;
+    igual(`Plano ${mes}: cartão suspenso já entra marcado como "deixo"`,
+          estado.adiadosPorPadrao, cartoesParados);
+    ok(`Plano ${mes}: conta já paga não tem o que decidir`,
+       estado.jaSaiu > 0 && estado.decidiveis > 0,
+       `${estado.jaSaiu} já saíram, ${estado.decidiveis} a decidir`);
+
+    // Marcar "deixo" tem de mover o valor de um lado para o outro do saldo.
+    const mudou = await pagina.evaluate(m => {
+      const el = document.getElementById('painel_vencimentos_criticos');
+      const antes = el.querySelector('.plano-saldo').innerText;
+      const linha = [...el.querySelectorAll('tbody tr')]
+        .find(tr => tr.querySelector('.plano-btn.ativo-pagar'));
+      const valor = linha.cells[2].innerText;
+      linha.querySelectorAll('.plano-btn')[1].click();
+      return { antes, depois: document.getElementById('painel_vencimentos_criticos')
+                 .querySelector('.plano-saldo').innerText, valor };
+    }, mes);
+    const num = txt => (txt.match(/R\$\s*[\d.,]+/g) || []).map(numeroDe);
+    const [pagarAntes, adiarAntes] = num(mudou.antes);
+    const [pagarDepois, adiarDepois] = num(mudou.depois);
+    const v = numeroDe(mudou.valor);
+    igual(`Plano ${mes}: marcar "deixo" tira ${brl(v)} do que vai pagar`, pagarAntes - pagarDepois, v, 0.02);
+    igual(`Plano ${mes}: e soma o mesmo valor no que fica para depois`, adiarDepois - adiarAntes, v, 0.02);
+
+    // O orçamento informado manda: a sobra é contra ele, não contra o salário.
+    const comOrc = await pagina.evaluate(m => {
+      definirOrcamento(m, '9999,00');
+      return document.getElementById('painel_vencimentos_criticos').querySelector('.plano-saldo').innerText;
+    }, mes);
+    const [pagarOrc, , sobraOrc] = num(comOrc);
+    igual(`Plano ${mes}: a sobra é contra o valor informado`, sobraOrc, 9999 - pagarOrc, 0.02);
+
+    await pagina.evaluate(() => { delete dadosGlobais.plano_do_mes; renderizarPainel(); });
+  }
+
+  // A conferência não pode acusar pagamento que a dashboard só não enxerga.
+  // Ago/26 é o caso real: o extrato está incompleto a ponto de não trazer nem o
+  // crédito do salário, então nada daquele mês pode ser dado como não pago.
+  {
+    const mesFalho = mesesReais.find(m => {
+      const doMes = todosLancamentos.filter(t => t.mes_vencimento === m);
+      return doMes.some(t => t.origem === 'holerite_elektro' && t.natureza === 'receita')
+          && !doMes.some(t => t.origem === 'extrato_itau' && /Crédito do salário/i.test(t.descricao || ''));
+    });
+
+    if (mesFalho) {
+      const r = await pagina.evaluate(m => {
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        const el = document.getElementById('painel_vencimentos_criticos');
+        dadosGlobais.plano_do_mes = { [m]: { orcamento: null, itens: {} } };
+        el.querySelectorAll('.plano-btn').forEach(bt => {
+          if (bt.textContent.trim() === 'pago') {
+            const k = bt.getAttribute('onclick').match(/,\s*'([^']+)'\s*,/);
+            if (k) dadosGlobais.plano_do_mes[m].itens[k[1]] = 'pagar';
+          }
+        });
+        renderizarPainel();
+        const txt = document.getElementById('painel_vencimentos_criticos').innerText;
+        delete dadosGlobais.plano_do_mes;
+        return txt;
+      }, mesFalho);
+
+      ok(`Conferência ${mesFalho}: extrato incompleto vira "não dá para conferir", não acusação`,
+         /não dá para conferir/i.test(r) && /extrato deste mês está incompleto/i.test(r),
+         r.split('\n').filter(l => /conferir|não saiu/i.test(l)).join(' | ').slice(0, 260));
+    }
+  }
+
+  // 'agendado' vale no dia da importação, não para sempre: passada a data, o
+  // PIX aconteceu. Sem isso a tela mostrava como vencido o que já tinha saído.
+  {
+    const hojeIso = new Date().toISOString().slice(0, 10);
+    const vencidos = todosLancamentos.filter(t =>
+      t.status === 'agendado' && t.data && t.data < hojeIso && noEscopo(t.mes_vencimento));
+    if (vencidos.length) {
+      const mesAlvo = vencidos[0].mes_vencimento;
+      const aindaVencendo = await pagina.evaluate(m => {
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        return [...document.querySelectorAll('#painel_vencimentos_criticos tbody tr')]
+          .filter(tr => /venceu há/i.test(tr.innerText))
+          .map(tr => tr.cells[1].innerText.split('\n')[0]);
+      }, mesAlvo);
+      const nomes = vencidos.filter(t => t.mes_vencimento === mesAlvo).map(t => t.descricao);
+      ok(`Agendado com data passada não aparece como vencido (${vencidos.length} lançamentos)`,
+         !nomes.some(n => aindaVencendo.includes(n)),
+         aindaVencendo.filter(n => nomes.includes(n)).join(', '));
+    }
+  }
+
   // O boleto do cartão Amazon no extrato é o pagamento da fatura 0013 — os
   // dois não podem ser somados.
   {

@@ -317,6 +317,59 @@ entrar no número que ela usa pra se programar.
   filtro, 4 testes falham): a soma bate com a tela sem o valor parado e não bate
   com ele, e o valor parado aparece na tela em vez de sumir.
 
+### Plano de pagamento do mês, com fechamento (03/09)
+A Juliane perguntou se daria para marcar, na lista de vencimentos, o que vai
+conseguir pagar e o que fica em aberto — e pediu para pensar junto antes. A
+lacuna era real: a dashboard só sabia de decisão **permanente** (`em_pagamento`,
+`pagamento_suspenso`). O que ela decide de verdade todo mês é outra coisa —
+destas contas, quais cabem no dinheiro deste mês — e pode ser diferente no mês
+seguinte. Ela escolheu a versão com fechamento, não só o plano.
+
+- **`dadosGlobais.plano_do_mes[mes]`** = `{ orcamento, itens: {chave: 'pagar'|'adiar'}, atualizado_em }`.
+  Fica fora dos lançamentos de propósito: fatura de cartão não é lançamento, e
+  conta recorrente projetada não existe como registro nenhum. A chave cobre os
+  três casos: `fatura|<cartao>|<mes>`, `lanc|<id>`, `prev|<chave recorrente>`.
+- **Só entra no plano o que ainda não aconteceu.** Lançamento já no extrato é
+  fato, não decisão — marcar "vou pagar" nele não decidiria nada e faria o
+  fechamento dizer sempre que deu certo.
+- **O default vem do que a dashboard já sabe**: cartão suspenso entra como
+  "deixo", o resto como "pago". São ~28 linhas por mês; ninguém marca 28 itens
+  todo mês. A marca do mês **ganha do flag permanente** naquele mês, que é como
+  ela retoma um cartão sem desfazer a decisão geral.
+- **O valor disponível é digitado por ela.** A dashboard não sabe quanto vai
+  ter: além do salário entra o que o Hugo passa e o que circula com a Benetti
+  UP. Sem valor informado, cai no líquido da folha e diz que está fazendo isso.
+- **O fechamento** (`conferirPlano`) compara o que foi marcado contra o que de
+  fato saiu, e é o que impede o plano de virar intenção velha na tela.
+
+**A parte difícil do fechamento foi não acusar errado.** A primeira versão dizia
+que a Juliane não tinha pago a escola, o IPTU e a faxina de agosto — quando a
+verdade é que o extrato de agosto está incompleto e a dashboard só não enxerga.
+Duas defesas, nessa ordem:
+
+1. **`extratoIncompletoNoMes(mes)`** — se o mês tem holerite com provento e o
+   extrato daquele mês não traz o crédito do salário correspondente, falta
+   arquivo, não falta pagamento. Não é heurística de volume: é contradição no
+   dado, e salário ela recebeu. Enquanto isso for verdade, nada daquele mês é
+   dado como não pago.
+2. **`extratoCobreAte()`** — conta que vence depois da última linha do extrato
+   importado também não pode ser julgada.
+
+Fatura de cartão é julgada mesmo assim: o `em_aberto` dela não depende do
+extrato. Em Ago/26 o fechamento passou de "10 acusações falsas" para **uma
+acusação verdadeira** (a fatura do Black, R$ 10.667,16) e 10 itens em "não dá
+para conferir".
+
+**Bug pré-existente achado nesse processo:** 5 lançamentos de agosto
+(R$ 2.669,00 — locker, empréstimo da mãe, van do Luca, PIX Instituto,
+transferência) estavam com `status: 'agendado'` e data já passada. `agendado` é
+verdade no dia da importação, não para sempre — passada a data, o PIX aconteceu,
+tanto que o extrato o lista. A tabela de vencimentos vinha mostrando como
+"venceu há 9 dias" coisa que já tinha sido paga, e o fechamento os acusaria.
+Corrigido na leitura (`quitado` deixou de checar o status), não no dado: o
+status era verdadeiro quando foi gravado, e a correção vale para toda importação
+futura sem precisar reescrever nada.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

@@ -1238,6 +1238,99 @@
       font-size: 12px;
       font-weight: 600;
     }
+
+    /* --- plano de pagamento do mês (aba Painel) --- */
+    .plano-cabecalho {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      margin-bottom: 4px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .plano-orcamento {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .plano-orcamento input {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 17px;
+      font-weight: 600;
+      padding: 7px 11px;
+      width: 150px;
+      font-variant-numeric: tabular-nums;
+    }
+    .plano-orcamento input:focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 1px;
+    }
+    .plano-saldo {
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+    .plano-saldo div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .plano-saldo span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--text-secondary);
+    }
+    .plano-saldo b {
+      font-size: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+    .plano-saldo b.sobra { color: var(--accent-green); }
+    .plano-saldo b.falta { color: var(--accent-red); }
+    .plano-saldo b.adiado { color: var(--accent-yellow); }
+    .plano-nota {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin: 0 0 12px;
+    }
+    .plano-escolha { display: flex; gap: 4px; }
+    .plano-btn {
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 11.5px;
+      padding: 4px 9px;
+      transition: all .15s ease;
+      white-space: nowrap;
+    }
+    .plano-btn:hover { color: var(--text-primary); border-color: var(--text-secondary); }
+    .plano-btn:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+    .plano-btn.ativo-pagar {
+      background: rgba(16, 185, 129, .16);
+      border-color: var(--accent-green);
+      color: var(--accent-green);
+      font-weight: 600;
+    }
+    .plano-btn.ativo-adiar {
+      background: rgba(245, 158, 11, .16);
+      border-color: var(--accent-yellow);
+      color: var(--accent-yellow);
+      font-weight: 600;
+    }
+    tr.linha-adiada { opacity: .62; }
+    @media (prefers-reduced-motion: reduce) {
+      .plano-btn { transition: none; }
+    }
+
   </style>
 </head>
 <body>
@@ -2736,6 +2829,129 @@
       return dias[Math.floor(dias.length / 2)];
     }
 
+    // ------------------------------------------------ plano de pagamento
+    //
+    // O que a dashboard sabia até aqui era só decisão permanente ("parei de
+    // pagar esse cartão"). O que a Juliane decide de verdade todo mês é outra
+    // coisa: destas contas, quais cabem no dinheiro deste mês. É isso que o
+    // plano guarda — por mês, por item, e sempre podendo ser diferente no mês
+    // seguinte.
+    //
+    // Só entra no plano o que ainda não aconteceu. Lançamento que já está no
+    // extrato é fato, não decisão: marcar "vou pagar" nele não significaria
+    // nada, e a conferência do fim do mês diria sempre que deu certo.
+
+    function planoDoMes(mes) {
+      dadosGlobais.plano_do_mes = dadosGlobais.plano_do_mes || {};
+      return dadosGlobais.plano_do_mes[mes] || { orcamento: null, itens: {} };
+    }
+
+    // A decisão de um item: o que a Juliane marcou, e na falta disso o que a
+    // dashboard já sabe — cartão com pagamento suspenso entra como "adiar",
+    // o resto entra como "pagar". A marca do mês ganha do flag permanente,
+    // que é como ela retoma um cartão sem desfazer a decisão geral.
+    function decisaoDoItem(mes, c) {
+      const marcado = planoDoMes(mes).itens[c.chave];
+      if (marcado) return marcado;
+      return c.suspenso ? 'adiar' : 'pagar';
+    }
+
+    // A chave do item vai dentro de um onclick, ou seja, string JS dentro de
+    // atributo HTML. JSON.stringify aqui emitiria aspas duplas, que fecham o
+    // atributo antes da hora e quebram o botão — por isso o escape próprio.
+    const chaveParaAtributo = v => String(v)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/"/g, '&quot;');
+
+    function marcarItem(mes, chave, decisao) {
+      dadosGlobais.plano_do_mes = dadosGlobais.plano_do_mes || {};
+      const plano = dadosGlobais.plano_do_mes[mes] || { orcamento: null, itens: {} };
+      plano.itens[chave] = decisao;
+      plano.atualizado_em = new Date().toISOString().slice(0, 10);
+      dadosGlobais.plano_do_mes[mes] = plano;
+      // Redesenha na hora e salva depois: o salvamento é uma ida ao servidor, e
+      // esperar por ela faria o botão parecer que não respondeu ao clique.
+      renderizarPainel();
+      salvarDadosAutomatico();
+    }
+
+    function definirOrcamento(mes, valor) {
+      dadosGlobais.plano_do_mes = dadosGlobais.plano_do_mes || {};
+      const plano = dadosGlobais.plano_do_mes[mes] || { orcamento: null, itens: {} };
+      const n = parseFloat(String(valor).replace(/\./g, '').replace(',', '.'));
+      plano.orcamento = isNaN(n) || n <= 0 ? null : n;
+      plano.atualizado_em = new Date().toISOString().slice(0, 10);
+      dadosGlobais.plano_do_mes[mes] = plano;
+      renderizarPainel();
+      salvarDadosAutomatico();
+    }
+
+    // Confere o plano contra o que de fato aconteceu. Um plano que ninguém
+    // confere envelhece e vira intenção velha na tela; como a dashboard já
+    // sabe o que saiu da conta, o fechamento sai de graça.
+    //
+    // Só avalia item cuja data já passou — antes disso não há o que conferir.
+    // Até onde o extrato importado enxerga. Sem isso a conferência acusa como
+    // "não pagou" tudo o que ela pagou depois da última linha do arquivo — o
+    // extrato de agosto, por exemplo, para em 28/08 e não traz a escola nem a
+    // faxina do fim do mês. Acusar aí seria a tela inventando uma dívida.
+    function extratoCobreAte() {
+      const datas = transacoesSemFiltroDeAno()
+        .filter(t => t.origem === 'extrato_itau' && t.data)
+        .map(t => t.data)
+        .sort();
+      return datas.length ? datas[datas.length - 1] : null;
+    }
+
+    // Um extrato pode estar incompleto sem que a data revele: o de Ago/26 vai
+    // até 28/08 mas perdeu linhas no meio, inclusive o crédito do salário — e
+    // salário a Juliane recebeu, isso não se discute. O sinal seguro não é a
+    // data, é a contradição: se o mês tem holerite com provento e o extrato
+    // daquele mês não traz o crédito correspondente, falta arquivo, não falta
+    // pagamento. Enquanto isso for verdade, a conferência não acusa ninguém.
+    function extratoIncompletoNoMes(mes) {
+      const doMes = transacoesSemFiltroDeAno().filter(t => t.mes_vencimento === mes);
+      const temHolerite = doMes.some(t => t.origem === 'holerite_elektro' && t.natureza === 'receita');
+      if (!temHolerite) return false;
+      return !doMes.some(t => t.origem === 'extrato_itau' && /Crédito do salário/i.test(t.descricao || ''));
+    }
+
+    function conferirPlano(mes, compromissos) {
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const plano = planoDoMes(mes);
+      const ateOndeSabe = extratoCobreAte();
+      const extratoFalho = extratoIncompletoNoMes(mes);
+      const cumpriu = [], furou = [], semDado = [];
+
+      compromissos.forEach(c => {
+        if (decisaoDoItem(mes, c) !== 'pagar') return;
+        if (!c.quando || new Date(c.quando + 'T00:00:00') > hoje) return;
+
+        if (c.chave.startsWith('fatura|')) {
+          // A fatura diz sozinha se foi paga: não depende do extrato.
+          (c.quitado ? cumpriu : furou).push(c);
+        } else if (c.chave.startsWith('prev|')) {
+          // A conta prevista some da projeção quando vira lançamento de
+          // verdade. Mas só dá para concluir que não saiu se o extrato já
+          // cobrir aquela data — senão o que falta é o arquivo, não o pagamento.
+          const virou = saidasForaDoCartaoDoMes(mes)
+            .some(t => CHAVE_RECORRENTE(t.descricao) === c.chave.slice(5));
+          if (virou) cumpriu.push(c);
+          else if (extratoFalho) semDado.push(c);
+          else if (ateOndeSabe && c.quando <= ateOndeSabe) furou.push(c);
+          else semDado.push(c);
+        } else if (c.quitado) {
+          cumpriu.push(c);
+        } else {
+          furou.push(c);
+        }
+      });
+
+      return { cumpriu, furou, semDado, ateOndeSabe, extratoFalho,
+               temPlano: Object.keys(plano.itens).length > 0 };
+    }
+
     function renderizarPainel() {
       const fluxoBloco = document.getElementById('painel_fluxo_3numeros');
       if (!fluxoBloco) return;
@@ -2894,15 +3110,22 @@
           detalhe: f.em_aberto > 0
             ? (f.pago > 0 ? `pago ${moeda(f.pago)} de ${moeda(f.total_fatura)}` : `total ${moeda(f.total_fatura)}`)
             : 'quitada',
-          cartao: f.cartao
+          cartao: f.cartao,
+          chave: `fatura|${f.cartao}|${f.mes}`
         })),
         ...saidasFora.map(t => ({
           quando: t.data,
           titulo: t.descricao,
           valor: t.valor,
-          quitado: t.status !== 'agendado' && new Date(t.data + 'T00:00:00') <= hoje,
+          // 'agendado' é verdade no dia da importação, não para sempre: passada a
+          // data, o PIX aconteceu — o extrato só lista o que de fato movimentou
+          // a conta. Sem isso, 5 lançamentos de agosto (R$ 2.669,00) ficavam
+          // eternamente como "venceu há N dias" mesmo já pagos, e o plano do mês
+          // os acusaria de não ter saído.
+          quitado: new Date(t.data + 'T00:00:00') <= hoje,
           detalhe: rotuloCategoria(t.categoria),
-          cartao: null
+          cartao: null,
+          chave: `lanc|${t.id}`
         })),
         ...previstas.map(r => ({
           quando: r.data,
@@ -2913,45 +3136,114 @@
           detalhe: r.fixa
             ? `${rotuloCategoria(r.categoria)} · valor fixo nos últimos ${r.nMeses} meses`
             : `${rotuloCategoria(r.categoria)} · média de ${r.nMeses} meses, variou de ${moeda(r.minimo)} a ${moeda(r.maximo)}`,
-          cartao: null
+          cartao: null,
+          chave: `prev|${r.chave}`
         }))
       ].filter(c => c.valor > 0)
        .sort((a, b) => (a.quando || '').localeCompare(b.quando || ''));
 
       const emAberto = compromissos.filter(c => !c.quitado && !c.suspenso);
 
+      // Só o que ainda não aconteceu entra no plano: lançamento já no extrato é
+      // fato, e marcar "vou pagar" nele não decidiria nada.
+      const decidiveis = compromissos.filter(c => !c.quitado);
+      const plano = planoDoMes(mes);
+      const vouPagar = decidiveis.filter(c => decisaoDoItem(mes, c) === 'pagar');
+      const vouAdiar = decidiveis.filter(c => decisaoDoItem(mes, c) !== 'pagar');
+      const somaPagar = vouPagar.reduce((s, c) => s + c.valor, 0);
+      const somaAdiar = vouAdiar.reduce((s, c) => s + c.valor, 0);
+
+      // Contra o que comparar: a Juliane digita, porque a dashboard não sabe
+      // quanto ela vai ter — além do salário entra o que o Hugo passa e o que
+      // circula com a Benetti UP. Sem o número digitado, cai no líquido da
+      // folha, que é o único chão previsível.
+      const disponivel = plano.orcamento != null ? plano.orcamento : (folha.temFolha ? folha.liquido : null);
+      const daOrcamento = plano.orcamento != null;
+      const sobra = disponivel != null ? disponivel - somaPagar : null;
+
+      const conferencia = conferirPlano(mes, compromissos);
+
       if (!compromissos.length) {
         alvo.innerHTML = blocoVazio('Nenhum compromisso neste mês', 'Nem fatura de cartão nem boleto lançado para ' + mes + '.');
       } else {
         alvo.innerHTML = `
+          <div class="plano-cabecalho">
+            <label class="plano-orcamento">
+              <span>Tenho para pagar contas este mês</span>
+              <input type="text" inputmode="decimal" id="painel_orcamento"
+                     value="${daOrcamento ? plano.orcamento.toFixed(2).replace('.', ',') : ''}"
+                     placeholder="${folha.temFolha ? folha.liquido.toFixed(2).replace('.', ',') : '0,00'}"
+                     onchange="definirOrcamento('${mes}', this.value)">
+            </label>
+            <div class="plano-saldo">
+              <div><span>Marcado para pagar</span><b>${moeda(somaPagar)}</b></div>
+              <div><span>Fica para depois</span><b class="adiado">${moeda(somaAdiar)}</b></div>
+              <div><span>${sobra == null ? 'Sobra' : sobra >= 0 ? 'Ainda sobra' : 'Falta'}</span>
+                <b class="${sobra == null ? '' : sobra >= 0 ? 'sobra' : 'falta'}">${sobra == null ? '—' : moeda(Math.abs(sobra))}</b></div>
+            </div>
+          </div>
+          <p class="plano-nota">${daOrcamento
+            ? `Contra os <b>${moeda(disponivel)}</b> que você informou.`
+            : folha.temFolha
+              ? `Sem valor informado, a conta é contra o salário líquido (<b>${moeda(disponivel)}</b>). Se você conta com o que o Hugo passa ou com dinheiro da Benetti UP, escreva o total acima.`
+              : 'Informe acima quanto você tem, para a tela dizer se cabe.'}</p>
+
           <table class="tabela-dados">
-            <thead><tr><th>Vence</th><th>O quê</th><th class="num">Valor</th><th>Situação</th></tr></thead>
+            <thead><tr><th>Vence</th><th>O quê</th><th class="num">Valor</th><th>Situação</th><th>Vou pagar?</th></tr></thead>
             <tbody>
               ${compromissos.map(c => {
                 const d = c.quando ? new Date(c.quando + 'T00:00:00') : null;
                 const dias = d ? Math.round((d - hoje) / 86400000) : null;
-                const situacao = c.suspenso ? '<span class="selo selo-alerta" title="Pagamento parado por decisão sua. A fatura continua sendo cobrada e o saldo cresce com juros.">pagamento parado</span>'
+                const decisao = c.quitado ? null : decisaoDoItem(mes, c);
+                const adiado = decisao === 'adiar';
+                const situacao = c.quitado ? '<span class="selo pago">pago</span>'
                   : c.previsto ? '<span class="selo selo-neutro" title="Esta conta não foi lançada ainda neste mês. O valor é a mediana do que foi pago nos meses anteriores.">previsto</span>'
-                  : c.quitado ? '<span class="selo pago">pago</span>'
                   : dias === null ? '<span class="selo">sem data</span>'
                   : dias < 0 ? `<span class="selo em_aberto_vencido">venceu há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}</span>`
                   : dias === 0 ? '<span class="selo em_aberto_vencido">vence hoje</span>'
                   : dias <= 7 ? `<span class="selo em_aberto">vence em ${dias} dia${dias === 1 ? '' : 's'}</span>`
                   : `<span class="selo">em ${dias} dias</span>`;
-                return `<tr${c.quitado ? ' style="opacity:.55"' : c.suspenso ? ' style="opacity:.6"' : c.previsto ? ' style="opacity:.8;font-style:italic"' : ''}>
+                const escolha = c.quitado
+                  ? '<span class="kpi-sub">já saiu</span>'
+                  : `<div class="plano-escolha">
+                       <button type="button" class="plano-btn${decisao === 'pagar' ? ' ativo-pagar' : ''}"
+                         onclick="marcarItem('${mes}', '${chaveParaAtributo(c.chave)}', 'pagar')">pago</button>
+                       <button type="button" class="plano-btn${adiado ? ' ativo-adiar' : ''}"
+                         onclick="marcarItem('${mes}', '${chaveParaAtributo(c.chave)}', 'adiar')">deixo</button>
+                     </div>`;
+                return `<tr${c.quitado ? ' style="opacity:.55"' : adiado ? ' class="linha-adiada"' : ''}>
                   <td>${c.quando ? c.quando.split('-').reverse().join('/') : '—'}</td>
-                  <td>${c.titulo}<br><span class="kpi-sub">${c.detalhe}</span></td>
-                  <td class="num"${c.quitado || c.suspenso ? ' style="color:var(--text-secondary)"' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
+                  <td>${c.titulo}<br><span class="kpi-sub">${c.detalhe}${c.suspenso && !plano.itens[c.chave] ? ' · pagamento parado' : ''}</span></td>
+                  <td class="num"${c.quitado || adiado ? ' style="color:var(--text-secondary)"' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
                   <td>${situacao}</td>
+                  <td>${escolha}</td>
                 </tr>`;
               }).join('')}
             </tbody>
             <tfoot><tr>
               <td colspan="2">Ainda a pagar (${emAberto.length} de ${compromissos.length})${somaPrevistas > 0 ? ` — inclui ${moeda(somaPrevistas)} previsto` : ''}</td>
               <td class="num">${moeda(emAberto.reduce((s, c) => s + c.valor, 0))}</td>
-              <td></td>
+              <td colspan="2"></td>
             </tr></tfoot>
-          </table>`;
+          </table>
+
+          ${conferencia.temPlano && (conferencia.cumpriu.length || conferencia.furou.length || conferencia.semDado.length) ? `
+          <div class="aviso ${conferencia.furou.length ? 'aviso-atencao' : 'aviso-ok'}" style="margin-top:14px">
+            <b>O que você planejou, e o que saiu de verdade</b><br>
+            ${conferencia.cumpriu.length
+              ? `Saiu como planejado: <b>${conferencia.cumpriu.length} conta(s)</b>, ${moeda(conferencia.cumpriu.reduce((s, c) => s + c.valor, 0))}.`
+              : 'Nada do que estava marcado saiu ainda.'}
+            ${conferencia.furou.length ? `<br>Estava marcado para pagar e <b>não saiu</b>: ${
+              conferencia.furou.map(c => `${c.titulo} (${moeda(c.valor)})`).join(', ')}.` : ''}
+            ${conferencia.semDado.length ? `<br><b>${conferencia.semDado.length} conta(s) não dá para conferir</b> —
+              ${conferencia.extratoFalho
+                ? 'o extrato deste mês está incompleto (nem o crédito do salário aparece nele), então não dá para saber se saiu'
+                : `o extrato importado vai só até ${conferencia.ateOndeSabe.split('-').reverse().join('/')}, e elas vencem depois disso`}:
+              ${conferencia.semDado.map(c => c.titulo).join(', ')}. Importe o extrato fechado do mês para fechar a conta.` : ''}
+            ${conferencia.furou.length
+              ? '<br><span class="kpi-sub">Não é cobrança — é para o mês que vem você marcar sabendo quanto costuma caber de verdade.</span>'
+              : ''}
+          </div>` : ''}`;
       }
 
       // ---------------- BLOCO 3: planejamento do mês ----------------
