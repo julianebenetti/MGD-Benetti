@@ -1,9 +1,9 @@
 {
-  "updated_at": 1788507924,
-  "updated_at_br": "04/09/2026 04:38",
+  "updated_at": 1788513738,
+  "updated_at_br": "04/09/2026 06:15",
   "period_days": 90,
-  "total_orders": 7733,
-  "total_conversions": 7388,
+  "total_orders": 7732,
+  "total_conversions": 7387,
   "orders": [
     {
       "ID do pedido": "2609032WW02E8P",
@@ -8407,7 +8407,7 @@
     },
     {
       "ID do pedido": "260831R1B4CJCP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-30 21:54:41",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "34.02",
@@ -8419,7 +8419,7 @@
       "Comissao total do pedido(R$)": "2.17728",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Acidificante Máscara de  Equilibrio do PH 250g Amend Cosmetics",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23097898010",
       "ID da loja": "1262603742",
       "Nome da loja": "Cosmeticos São Paulo",
@@ -8427,7 +8427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241826081163069",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-30"
     },
     {
@@ -9507,7 +9507,7 @@
     },
     {
       "ID do pedido": "260830Q40SXH58",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-30 13:09:56",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "29.47",
@@ -9519,7 +9519,7 @@
       "Comissao total do pedido(R$)": "6.1887",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -9527,7 +9527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "241794596168716",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-30"
     },
     {
@@ -193303,31 +193303,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "234438187117339",
       "conversionStatus": "COMPLETED",
-      "data": "2026-06-06"
-    },
-    {
-      "ID do pedido": "260606CJDD2903",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-06-06 08:01:35",
-      "Sub_id1": "03Jun26AparadorVs2",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 2 Puff Elegance Luxo Sala Redondo Decoração Quarto Escritório Banqueta Penteadeira Enfeite Natal",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22198474347",
-      "ID da loja": "1206479030",
-      "Nome da loja": "M&M LOJAS",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "234432094122842",
-      "conversionStatus": "CANCELLED",
       "data": "2026-06-06"
     }
   ]
