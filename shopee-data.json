@@ -1,6 +1,6 @@
 {
-  "updated_at": 1788606933,
-  "updated_at_br": "05/09/2026 08:09",
+  "updated_at": 1788610537,
+  "updated_at_br": "05/09/2026 09:09",
   "period_days": 90,
   "total_orders": 7807,
   "total_conversions": 7455,
@@ -15482,7 +15482,7 @@
     },
     {
       "ID do pedido": "260830NPT9F4UW",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-29 23:41:00",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "800.86",
@@ -15494,7 +15494,7 @@
       "Comissao total do pedido(R$)": "32.0344",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Raspador Ralador de Coco Elétrico Braesi Profissional BRC-50 G2 Bivolt 50-60HZ B12844",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23134698397",
       "ID da loja": "315971499",
       "Nome da loja": "Casa Ativa Ltda.",
@@ -15502,7 +15502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241746059174280",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-29"
     },
     {
@@ -18507,7 +18507,7 @@
     },
     {
       "ID do pedido": "260829JYUBBTJT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-28 21:44:40",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "9.8",
@@ -18519,7 +18519,7 @@
       "Comissao total do pedido(R$)": "0.6272",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Batom 24 Horas Da Vovo 3 6 12 Unidades",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58261893429",
       "ID da loja": "1206567563",
       "Nome da loja": "Sun Store Ltda",
@@ -18527,7 +18527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241652679177459",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-28"
     },
     {
@@ -20682,7 +20682,7 @@
     },
     {
       "ID do pedido": "260828GQ07VEY0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-28 00:01:00",
       "Sub_id1": "26Ago26VIPmacaquinhoplussize",
       "Valor de Compra(R$)": "68.48",
@@ -20694,7 +20694,7 @@
       "Comissao total do pedido(R$)": "2.7392",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Escova 5 em 1 Secador, Pente, Modelador, Aumenta volume Profissional",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22098716112",
       "ID da loja": "1553752047",
       "Nome da loja": "Dibea",
@@ -20702,7 +20702,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241574460141299",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-28"
     },
     {
