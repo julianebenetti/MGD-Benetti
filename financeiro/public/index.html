@@ -2957,8 +2957,14 @@
     // extrato de agosto, por exemplo, para em 28/08 e não traz a escola nem a
     // faxina do fim do mês. Acusar aí seria a tela inventando uma dívida.
     function extratoCobreAte() {
+      // Só movimento que já aconteceu. O extrato traz PIX agendado com data
+      // futura — o de 28/10 no arquivo de 05/09 — e contar essa data faria a
+      // dashboard achar que enxerga até outubro: o alerta de extrato parado
+      // nunca mais dispararia, e a conferência do plano julgaria conta que
+      // ainda não teve como sair.
+      const hoje = new Date().toISOString().slice(0, 10);
       const datas = transacoesSemFiltroDeAno()
-        .filter(t => t.origem === 'extrato_itau' && t.data)
+        .filter(t => t.origem === 'extrato_itau' && t.data && t.data <= hoje)
         .map(t => t.data)
         .sort();
       return datas.length ? datas[datas.length - 1] : null;

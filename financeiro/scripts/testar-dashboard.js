@@ -890,6 +890,25 @@ function noEscopo(mv) {
       }
     }
 
+    // PIX agendado com data futura não pode contar como "o extrato enxerga até
+    // aqui". O arquivo de 05/09 traz um agendamento para 28/10 — se essa data
+    // valesse, o alerta de extrato parado nunca mais dispararia e a conferência
+    // do plano julgaria conta que ainda não teve como sair.
+    {
+      const hojeIso = new Date().toISOString().slice(0, 10);
+      const futuros = todosLancamentos.filter(t =>
+        t.origem === 'extrato_itau' && t.data && t.data > hojeIso);
+      const ate = await pagina.evaluate(() => extratoCobreAte());
+      ok('Extrato: data futura de PIX agendado não conta como cobertura',
+         !ate || ate <= hojeIso,
+         `cobre até ${ate}, com ${futuros.length} lançamento(s) de data futura no arquivo`);
+      if (futuros.length) {
+        const maiorFuturo = futuros.map(t => t.data).sort().pop();
+        ok(`Extrato: os ${futuros.length} agendamento(s) até ${maiorFuturo} ficam de fora da cobertura`,
+           ate < maiorFuturo, `cobre até ${ate}`);
+      }
+    }
+
     // O outro lado: fonte em dia não pode gerar alerta. Sem isso o bloco vira
     // papel de parede — sempre aceso, logo nunca lido.
     const semAviso = await pagina.evaluate(() => {

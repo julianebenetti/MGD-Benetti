@@ -91,7 +91,10 @@ const REGRAS = [
     nota: 'As compras já estão lançadas uma a uma pela fatura do 0013.',
   },
   {
-    padrao: /FATURA\s*ITAU|FATURA PAGA ITAU|PGTO MIN ITAU|INT AZUL VISA|CARTAO TUDOAZUL|PAG ENTR PARC/i,
+    // "FATURA PAGA AZUL ITAU IN" (21/08, R$14.270,31) escapava: a regra pedia
+    // "FATURA ITAU" grudado e o "AZUL" no meio furava o padrao, entao o
+    // pagamento da fatura do 3794 caia em nao_classificado.
+    padrao: /FATURA\s*ITAU|FATURA PAGA (\w+\s+)?ITAU|PGTO MIN ITAU|INT AZUL VISA|CARTAO TUDOAZUL|PAG ENTR PARC/i,
     natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Família',
     descricao: 'Pagamento de fatura de cartão',
     nota: 'As compras já estão lançadas uma a uma pela fatura. Contar o pagamento seria contar tudo duas vezes.',
@@ -116,7 +119,10 @@ const REGRAS = [
   // Vale nos dois sentidos: se a conta do outro lado é dela, o dinheiro só muda
   // de lugar tanto na ida quanto na volta.
   {
-    padrao: /PIX (TRANSF|QRS) Juliane/i,
+    // A devolucao de um PIX dela para ela mesma e a mesma transferencia
+    // voltando: "DEV PIX JULIANE FER" (28/08, R$1.300) caia sem regra porque o
+    // padrao so cobria a ida.
+    padrao: /(DEV )?PIX (TRANSF|QRS) Juliane|DEV PIX JULIANE/i,
     natureza: 'transferencia', categoria: 'entre_contas_proprias', pessoa: 'Juliane',
     descricao: 'Transferência entre contas próprias',
     nota: 'Dinheiro que já era dela, mudando de conta. Não é renda nem gasto.',
