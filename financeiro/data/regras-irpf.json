@@ -1,0 +1,163 @@
+{
+  "_nota": "Regras de dedutibilidade do IRPF. A declaração do exercício N cobre o ano-calendário N-1: a de 2026 (entregue entre 23/03 e 29/05/2026) apurou 2025, e os dados de 2026 desta dashboard vão para a declaração de 2027. Os limites abaixo são os vigentes na declaração de 2026; a Receita costuma corrigi-los a cada ano, então confira antes de usar.",
+  "exercicio_de_referencia": 2026,
+  "ano_calendario_de_referencia": 2025,
+  "fontes": [
+    "https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/perguntas-frequentes/imposto-de-renda/dirpf/deducoes",
+    "https://www.gov.br/receitafederal/pt-br/acesso-a-informacao/perguntas-frequentes/imposto-de-renda/dirpf/deducoes/despesas-com-educacao",
+    "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/preenchimento/manual-mir/pagamentos-ou-doacoes/despesas-dedutiveis",
+    "https://www.gov.br/receitafederal/pt-br/assuntos/meu-imposto-de-renda/tabelas/2026",
+    "https://www.gov.br/receitafederal/pt-br/assuntos/noticias/2025/dezembro/receita-federal-orienta-fontes-pagadoras-e-contribuintes-a-calcular-a-reducao-do-imposto-de-renda-a-partir-de-1o-de-janeiro-de-2026"
+  ],
+  "limites": {
+    "dependente": 2275.08,
+    "instrucao_por_pessoa": 3561.5,
+    "desconto_simplificado_percentual": 0.2,
+    "desconto_simplificado_teto": 16754.34,
+    "previdencia_privada_percentual_da_renda": 0.12,
+    "despesas_medicas": null,
+    "pensao_alimenticia_judicial": null
+  },
+  "_nota_tabela_progressiva": "Tabela do IMPOSTO DEVIDO na declaração anual (ano-calendário 2026, vale para a declaração de 2027) — igual à tabela mensal usada para reter na fonte, só que com cada faixa e cada parcela a deduzir multiplicada por 12, que é como a Receita monta a tabela anual. A Lei 15.270/2025 criou um REDUTOR adicional que zera o imposto até R$5.000/mês (R$60.000/ano) e reduz parcialmente até R$7.350/mês (R$88.200/ano) — não implementado aqui porque não se aplica a rendimento anual acima de R$88.200 (o caso da Juliane já passa disso todo mês); se um dia o rendimento anual ficar abaixo desse teto, o cálculo abaixo vai superestimar o imposto devido.",
+  "tabela_progressiva_anual": [
+    { "ate": 29145.60, "aliquota": 0,     "deduzir": 0 },
+    { "ate": 33919.80, "aliquota": 0.075, "deduzir": 2185.92 },
+    { "ate": 45012.60, "aliquota": 0.15,  "deduzir": 4729.92 },
+    { "ate": 55976.16, "aliquota": 0.225, "deduzir": 8105.88 },
+    { "ate": null,      "aliquota": 0.275, "deduzir": 10904.76 }
+  ],
+  "_nota_exclusiva": "PLR e 13º salário têm tributação EXCLUSIVA/DEFINITIVA na fonte, com tabela própria (bem mais generosa que a do salário) — uma vez retido, esse imposto é final: não soma com o rendimento tributável normal, e não gera ajuste (nem a mais nem a menos) na declaração anual. Ficam de fora do cálculo de quanto falta pagar ou vai ser restituído; só entram na declaração como informação.",
+  "tabela_plr_anual": [
+    { "ate": 8214.40,  "aliquota": 0,     "deduzir": 0 },
+    { "ate": 9922.28,  "aliquota": 0.075, "deduzir": 616.08 },
+    { "ate": 13167.00, "aliquota": 0.15,  "deduzir": 1360.35 },
+    { "ate": 16380.38, "aliquota": 0.225, "deduzir": 2347.85 },
+    { "ate": null,      "aliquota": 0.275, "deduzir": 3166.58 }
+  ],
+  "grupos": {
+    "saude": {
+      "rotulo": "Despesas médicas",
+      "limite": null,
+      "observacao": "Sem teto, mas só o valor que você efetivamente pagou. Reembolso do plano não entra. A Receita cruza 100% das despesas médicas com o que médicos, clínicas e planos informam."
+    },
+    "instrucao": {
+      "rotulo": "Instrução",
+      "limite_por_pessoa": 3561.5,
+      "observacao": "Só mensalidade e anuidade de creche, pré-escola, fundamental, médio, superior e ensino técnico/tecnológico. O que passar do limite por pessoa não aproveita."
+    },
+    "previdencia_oficial": {
+      "rotulo": "Previdência oficial (INSS)",
+      "limite": null,
+      "observacao": "Dedutível integralmente. Já vem retido na folha."
+    },
+    "previdencia_privada": {
+      "rotulo": "Previdência complementar",
+      "limite_percentual_da_renda": 0.12,
+      "observacao": "PGBL e entidade fechada (caso do NEOS) deduzem até 12% da renda tributável, e só para quem também contribui ao INSS. VGBL não deduz."
+    },
+    "dependentes": {
+      "rotulo": "Dependentes",
+      "valor_por_dependente": 2275.08,
+      "observacao": "Filho até 21 anos, ou até 24 se cursando ensino superior. Declarar dependente obriga a somar os rendimentos dele à declaração."
+    }
+  },
+  "classificacao": [
+    {
+      "grupo": "saude",
+      "dedutivel": true,
+      "categorias": [
+        "saude"
+      ],
+      "excecoes_nao_dedutiveis": {
+        "padrao": "drogal|drogasil|drogaria|farmacia|farmácia|panvel|pague menos|raia",
+        "motivo": "Medicamento comprado na farmácia não é dedutível. Só entra remédio que faça parte da conta de internação hospitalar."
+      },
+      "nota": "Plano de saúde, odontológico, coparticipação, médicos, dentistas, exames e internações."
+    },
+    {
+      "grupo": "instrucao",
+      "dedutivel": true,
+      "categorias": [
+        "educacao"
+      ],
+      "excecoes_nao_dedutiveis": {
+        "padrao": "papelaria|megapapelaria|material escolar|uniforme|livraria",
+        "motivo": "Material escolar, uniforme e transporte não contam como instrução para a Receita — só mensalidade e anuidade."
+      },
+      "nota": "Mensalidade de creche, pré-escola, fundamental, médio, superior e ensino técnico."
+    },
+    {
+      "grupo": "previdencia_oficial",
+      "dedutivel": true,
+      "categorias": [
+        "inss"
+      ],
+      "nota": "Contribuição retida na folha da Elektro."
+    },
+    {
+      "grupo": "previdencia_privada",
+      "dedutivel": true,
+      "categorias": [
+        "previdencia_privada"
+      ],
+      "nota": "NEOS CD, entidade fechada de previdência complementar da Elektro."
+    },
+    {
+      "grupo": "nao_dedutivel",
+      "dedutivel": false,
+      "categorias": [
+        "educacao_profissional",
+        "esportes",
+        "alimentacao",
+        "alimentacao_fora",
+        "transporte",
+        "viagem",
+        "compras",
+        "compras_diversas",
+        "varejo",
+        "lazer",
+        "lazer_esportes",
+        "cuidados_pessoais",
+        "casa",
+        "moradia",
+        "pet",
+        "assinatura",
+        "ferramentas",
+        "trafego_pago",
+        "seguro",
+        "servicos",
+        "servicos_misc",
+        "hortifruti",
+        "pessoal",
+        "pessoal_misc",
+        "trabalho",
+        "encargos_financeiros",
+        "saude_pessoal",
+        "investimento",
+        "transferencias",
+        "nao_classificado",
+        "entrada",
+        "doacao",
+        "ajuda_familiar"
+      ],
+      "nota": "Curso livre, mentoria, academia, seguro de carro e consumo em geral não deduzem. Doação a igreja também não: a lei só permite as feitas a fundo da criança e do idoso, Rouanet, audiovisual, desporto e PRONAS/PRONON. Despesa da Benetti UP é da empresa, não da pessoa física."
+    },
+    {
+      "grupo": "imposto_pago",
+      "dedutivel": false,
+      "categorias": [
+        "imposto_renda"
+      ],
+      "nota": "Não é dedução: é o imposto já retido na fonte, que entra na declaração como valor pago e abate o que houver a pagar."
+    },
+    {
+      "grupo": "divida",
+      "dedutivel": false,
+      "categorias": [
+        "consignado",
+        "divida_parcelada"
+      ],
+      "nota": "Pagamento de empréstimo não é despesa dedutível. O saldo devedor vai na ficha de Dívidas e Ônus Reais."
+    }
+  ]
+}

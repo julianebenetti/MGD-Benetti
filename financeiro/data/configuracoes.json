@@ -1,0 +1,293 @@
+{
+  "pessoas": [
+    {
+      "id": "juliane",
+      "nome": "Juliane",
+      "cor": "#3b82f6",
+      "icone": "👩"
+    },
+    {
+      "id": "hugo",
+      "nome": "Hugo",
+      "cor": "#8b5cf6",
+      "icone": "👨"
+    },
+    {
+      "id": "valentina",
+      "nome": "Valentina",
+      "cor": "#ec4899",
+      "icone": "👧",
+      "dependente_irpf": true
+    },
+    {
+      "id": "luca",
+      "nome": "Luca",
+      "cor": "#f59e0b",
+      "icone": "👦",
+      "dependente_irpf": true
+    },
+    {
+      "id": "familia",
+      "nome": "Família",
+      "cor": "#10b981",
+      "icone": "👨‍👩‍👧‍👦"
+    },
+    {
+      "id": "filhos",
+      "nome": "Filhos",
+      "cor": "#10b981",
+      "icone": "👧🧒"
+    },
+    {
+      "id": "benetti_up",
+      "nome": "Benetti UP",
+      "cor": "#f59e0b",
+      "icone": "🏢",
+      "tipo": "empresa",
+      "observacao": "Empresa de marketing digital. Despesas dela nao sao gasto pessoal."
+    }
+  ],
+  "tipos_despesa": [
+    {
+      "id": "alimentacao",
+      "nome": "Alimentação",
+      "descricao": "Compras de mercado, restaurantes e alimentação em geral",
+      "cor": "#10b981",
+      "icone": "🍔"
+    },
+    {
+      "id": "transporte",
+      "nome": "Transporte",
+      "descricao": "Gasolina, Uber, ônibus e despesas de locomoção",
+      "cor": "#f59e0b",
+      "icone": "🚗"
+    },
+    {
+      "id": "moradia",
+      "nome": "Moradia",
+      "descricao": "Aluguel, condomínio e despesas da casa",
+      "cor": "#ef4444",
+      "icone": "🏠"
+    },
+    {
+      "id": "utilidades",
+      "nome": "Utilidades",
+      "descricao": "Água, luz, gás, internet e serviços essenciais",
+      "cor": "#3b82f6",
+      "icone": "💡"
+    },
+    {
+      "id": "saude",
+      "nome": "Saúde",
+      "descricao": "Farmácia, médico, dentista e despesas médicas",
+      "cor": "#ec4899",
+      "icone": "⚕️"
+    },
+    {
+      "id": "educacao",
+      "nome": "Educação",
+      "descricao": "Cursos, livros e material educativo",
+      "cor": "#6366f1",
+      "icone": "📚"
+    },
+    {
+      "id": "lazer",
+      "nome": "Lazer",
+      "descricao": "Cinema, streaming, passeios e diversão",
+      "cor": "#a855f7",
+      "icone": "🎬"
+    },
+    {
+      "id": "pessoal",
+      "nome": "Pessoal",
+      "descricao": "Roupas, cabelo, produtos de higiene",
+      "cor": "#14b8a6",
+      "icone": "💅"
+    },
+    {
+      "id": "investimento",
+      "nome": "Investimento",
+      "descricao": "Aportes, compras de ações, aplicações",
+      "cor": "#06b6d4",
+      "icone": "📈"
+    },
+    {
+      "id": "filhos",
+      "nome": "Filhos",
+      "descricao": "Roupas infantil, brinquedos, mesada, produtos infantis, etc",
+      "cor": "#a855f7",
+      "icone": "🧸"
+    },
+    {
+      "id": "contas_servicos",
+      "nome": "Contas/Serviços",
+      "descricao": "Celular, streaming, internet, TV, etc",
+      "cor": "#3b82f6",
+      "icone": "📱"
+    },
+    {
+      "id": "compras_pessoais",
+      "nome": "Compras Pessoais",
+      "descricao": "Roupas, cosméticos, acessórios, higiene pessoal, etc",
+      "cor": "#14b8a6",
+      "icone": "💅"
+    },
+    {
+      "id": "financeiras",
+      "nome": "Financeiras",
+      "descricao": "Juros, tarifas bancárias, multas, etc",
+      "cor": "#8b5cf6",
+      "icone": "🏦"
+    },
+    {
+      "id": "dividas",
+      "nome": "Dívidas",
+      "descricao": "Pagamentos de empréstimo, financiamento, parcelamento, etc",
+      "cor": "#d946ef",
+      "icone": "💳"
+    },
+    {
+      "id": "impostos",
+      "nome": "Impostos",
+      "descricao": "IR, IPTU, IPVA, taxas, contribuições, etc",
+      "cor": "#dc2626",
+      "icone": "📋"
+    },
+    {
+      "id": "pets",
+      "nome": "Pets",
+      "descricao": "Ração, veterinário, banho/tosa, medicamentos, etc",
+      "cor": "#ea580c",
+      "icone": "🐾"
+    },
+    {
+      "id": "casa",
+      "nome": "Casa",
+      "descricao": "Móveis, reparos, decoração, limpeza, etc",
+      "cor": "#92400e",
+      "icone": "🛋️"
+    },
+    {
+      "id": "outros",
+      "nome": "Outros",
+      "descricao": "Despesas diversas sem categoria específica",
+      "cor": "#6b7280",
+      "icone": "❓"
+    }
+  ],
+  "contas_origem": [
+    {
+      "id": "conta_corrente",
+      "nome": "Conta Corrente",
+      "banco": "Banco Principal",
+      "tipo": "corrente",
+      "ativa": true
+    },
+    {
+      "id": "poupanca_main",
+      "nome": "Poupança Principal",
+      "banco": "Banco Principal",
+      "tipo": "poupanca",
+      "ativa": true
+    },
+    {
+      "id": "cartao_credito",
+      "nome": "Cartão de Crédito",
+      "banco": "Banco Principal",
+      "tipo": "cartao_credito",
+      "ativa": true
+    },
+    {
+      "id": "caixa",
+      "nome": "Caixa/Dinheiro",
+      "tipo": "dinheiro",
+      "ativa": true
+    }
+  ],
+  "abas": [
+    {
+      "id": "dashboard",
+      "nome": "Dashboard",
+      "ordem": 1,
+      "ativa": true
+    },
+    {
+      "id": "receitas",
+      "nome": "Receitas",
+      "ordem": 2,
+      "ativa": true
+    },
+    {
+      "id": "despesas",
+      "nome": "Despesas",
+      "ordem": 3,
+      "ativa": true
+    },
+    {
+      "id": "investimentos",
+      "nome": "Investimentos",
+      "ordem": 4,
+      "ativa": true
+    },
+    {
+      "id": "relatorios",
+      "nome": "Relatórios",
+      "ordem": 5,
+      "ativa": true
+    }
+  ],
+  "cartoes": [
+    {
+      "final": "4846",
+      "nome": "Black",
+      "descricao": "Itaú Uniclass Black Mastercard",
+      "cor": "#000000",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    },
+    {
+      "final": "0442",
+      "nome": "Infinite",
+      "descricao": "Itaú Uniclass Infinite Visa",
+      "cor": "#1a1a1a",
+      "pagamento_suspenso": false,
+      "observacao": "Carrega o tráfego pago da Benetti UP e é quitado pela conta da empresa no Nubank, não pela conta pessoal."
+    },
+    {
+      "final": "3794",
+      "nome": "Azul",
+      "descricao": "Azul Itaú Infinite Visa",
+      "cor": "#0066cc",
+      "pagamento_suspenso": false,
+      "observacao": "As faturas grandes são quitadas pela conta da Benetti UP no Nubank, não pela conta pessoal."
+    },
+    {
+      "final": "0013",
+      "nome": "Amazon",
+      "descricao": "Amazon Mastercard Platinum (Bradescard)",
+      "cor": "#ff9900",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    },
+    {
+      "final": "3987",
+      "nome": "Bradesco",
+      "descricao": "Bradesco Visa Platinum sem anuidade",
+      "cor": "#cc092f",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    },
+    {
+      "final": "3711",
+      "nome": "Bradesco II",
+      "descricao": "Bradesco Visa Platinum sem anuidade",
+      "cor": "#cc092f",
+      "pagamento_suspenso": true,
+      "suspenso_desde": "2026-08-31",
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+    }
+  ]
+}

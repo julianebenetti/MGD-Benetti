@@ -1,0 +1,229 @@
+{
+  "pessoas": [
+    {
+      "id": "juliane",
+      "nome": "Juliane",
+      "cor": "#3b82f6",
+      "icone": "👩"
+    },
+    {
+      "id": "hugo",
+      "nome": "Hugo",
+      "cor": "#8b5cf6",
+      "icone": "👨"
+    },
+    {
+      "id": "ambos",
+      "nome": "Ambos",
+      "cor": "#06b6d4",
+      "icone": "👥"
+    },
+    {
+      "id": "valentina",
+      "nome": "Valentina",
+      "cor": "#ec4899",
+      "icone": "👧"
+    },
+    {
+      "id": "luca",
+      "nome": "Luca",
+      "cor": "#f59e0b",
+      "icone": "👦"
+    },
+    {
+      "id": "familia",
+      "nome": "Família",
+      "cor": "#10b981",
+      "icone": "👨‍👩‍👧‍👦"
+    }
+  ],
+  "tipos_despesa": [
+    {
+      "id": "alimentacao",
+      "nome": "Alimentação",
+      "descricao": "Compras de mercado, restaurantes e alimentação em geral",
+      "cor": "#10b981",
+      "icone": "🍔"
+    },
+    {
+      "id": "transporte",
+      "nome": "Transporte",
+      "descricao": "Gasolina, Uber, ônibus e despesas de locomoção",
+      "cor": "#f59e0b",
+      "icone": "🚗"
+    },
+    {
+      "id": "moradia",
+      "nome": "Moradia",
+      "descricao": "Aluguel, condomínio e despesas da casa",
+      "cor": "#ef4444",
+      "icone": "🏠"
+    },
+    {
+      "id": "utilidades",
+      "nome": "Utilidades",
+      "descricao": "Água, luz, gás, internet e serviços essenciais",
+      "cor": "#3b82f6",
+      "icone": "💡"
+    },
+    {
+      "id": "saude",
+      "nome": "Saúde",
+      "descricao": "Farmácia, médico, dentista e despesas médicas",
+      "cor": "#ec4899",
+      "icone": "⚕️"
+    },
+    {
+      "id": "educacao",
+      "nome": "Educação",
+      "descricao": "Cursos, livros e material educativo",
+      "cor": "#6366f1",
+      "icone": "📚"
+    },
+    {
+      "id": "lazer",
+      "nome": "Lazer",
+      "descricao": "Cinema, streaming, passeios e diversão",
+      "cor": "#a855f7",
+      "icone": "🎬"
+    },
+    {
+      "id": "pessoal",
+      "nome": "Pessoal",
+      "descricao": "Roupas, cabelo, produtos de higiene",
+      "cor": "#14b8a6",
+      "icone": "💅"
+    },
+    {
+      "id": "investimento",
+      "nome": "Investimento",
+      "descricao": "Aportes, compras de ações, aplicações",
+      "cor": "#06b6d4",
+      "icone": "📈"
+    },
+    {
+      "id": "filhos",
+      "nome": "Filhos",
+      "descricao": "Roupas infantil, brinquedos, mesada, produtos infantis, etc",
+      "cor": "#a855f7",
+      "icone": "🧸"
+    },
+    {
+      "id": "contas_servicos",
+      "nome": "Contas/Serviços",
+      "descricao": "Celular, streaming, internet, TV, etc",
+      "cor": "#3b82f6",
+      "icone": "📱"
+    },
+    {
+      "id": "compras_pessoais",
+      "nome": "Compras Pessoais",
+      "descricao": "Roupas, cosméticos, acessórios, higiene pessoal, etc",
+      "cor": "#14b8a6",
+      "icone": "💅"
+    },
+    {
+      "id": "financeiras",
+      "nome": "Financeiras",
+      "descricao": "Juros, tarifas bancárias, multas, etc",
+      "cor": "#8b5cf6",
+      "icone": "🏦"
+    },
+    {
+      "id": "dividas",
+      "nome": "Dívidas",
+      "descricao": "Pagamentos de empréstimo, financiamento, parcelamento, etc",
+      "cor": "#d946ef",
+      "icone": "💳"
+    },
+    {
+      "id": "impostos",
+      "nome": "Impostos",
+      "descricao": "IR, IPTU, IPVA, taxas, contribuições, etc",
+      "cor": "#dc2626",
+      "icone": "📋"
+    },
+    {
+      "id": "pets",
+      "nome": "Pets",
+      "descricao": "Ração, veterinário, banho/tosa, medicamentos, etc",
+      "cor": "#ea580c",
+      "icone": "🐾"
+    },
+    {
+      "id": "casa",
+      "nome": "Casa",
+      "descricao": "Móveis, reparos, decoração, limpeza, etc",
+      "cor": "#92400e",
+      "icone": "🛋️"
+    },
+    {
+      "id": "outros",
+      "nome": "Outros",
+      "descricao": "Despesas diversas sem categoria específica",
+      "cor": "#6b7280",
+      "icone": "❓"
+    }
+  ],
+  "contas_origem": [
+    {
+      "id": "conta_corrente",
+      "nome": "Conta Corrente",
+      "banco": "Banco Principal",
+      "tipo": "corrente",
+      "ativa": true
+    },
+    {
+      "id": "poupanca_main",
+      "nome": "Poupança Principal",
+      "banco": "Banco Principal",
+      "tipo": "poupanca",
+      "ativa": true
+    },
+    {
+      "id": "cartao_credito",
+      "nome": "Cartão de Crédito",
+      "banco": "Banco Principal",
+      "tipo": "cartao_credito",
+      "ativa": true
+    },
+    {
+      "id": "caixa",
+      "nome": "Caixa/Dinheiro",
+      "tipo": "dinheiro",
+      "ativa": true
+    }
+  ],
+  "abas": [
+    {
+      "id": "dashboard",
+      "nome": "Dashboard",
+      "ordem": 1,
+      "ativa": true
+    },
+    {
+      "id": "receitas",
+      "nome": "Receitas",
+      "ordem": 2,
+      "ativa": true
+    },
+    {
+      "id": "despesas",
+      "nome": "Despesas",
+      "ordem": 3,
+      "ativa": true
+    },
+    {
+      "id": "investimentos",
+      "nome": "Investimentos",
+      "ordem": 4,
+      "ativa": true
+    },
+    {
+      "id": "relatorios",
+      "nome": "Relatórios",
+      "ordem": 5,
+      "ativa": true
+    }
+  ]
+}

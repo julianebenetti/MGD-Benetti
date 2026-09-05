@@ -1,0 +1,16 @@
+# Configuração por máquina do dash.ps1 (endereço do VPS, pastas locais)
+financeiro/dash.config.json
+
+# Planilhas geradas para revisão de classificação
+financeiro/data/classificacao-para-revisar.xlsx
+financeiro/data/classificar-pendentes.xlsx
+
+node_modules/
+
+# Backups pontuais do financeiro.json, criados antes de cada mutacao grande.
+# O git ja guarda todo estado anterior do arquivo — versionar a copia tambem
+# so engorda o repositorio (14MB em 12 copias) e cada pull no VPS. As copias
+# ja commitadas continuam recuperaveis pelo historico.
+financeiro/data/financeiro-ANTES-*.json
+financeiro/data/financeiro-backup-*.json
+financeiro/data/backups-deploy/

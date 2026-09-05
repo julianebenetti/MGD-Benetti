@@ -1,0 +1,328 @@
+{
+  "versao": 7,
+  "atualizado_em": "2026-08-29",
+  "descricao": "Regras de classificação automática de lançamentos do cartão. Aplicadas na importação e ao rodar scripts/aplicar-regras.js. A primeira regra que casar com a descrição vence, então o que é específico vem antes do que é genérico. 'pessoa' opcional: quando ausente, mantém o portador do cartão. 'valor' opcional: quando presente, a regra só casa se o valor do lançamento for igual (tolerância de 1 centavo) — usado quando duas coisas diferentes compartilham o mesmo texto de descrição e só o valor as distingue.",
+  "principios": [
+    "A pessoa da despesa é quem se beneficia dela, não quem passou o cartão. Supermercado pago no cartão do Hugo é despesa da Família.",
+    "Despesa de um filho fica no nome dele quando for individual (escola, material, atividade). Quando for da casa, fica em Família.",
+    "Combustível e manutenção de veículo são da Família — o carro serve a todos.",
+    "Qualquer posto de combustivel e despesa da Familia, mesmo quando pago no cartao do Hugo.",
+    "A Benetti UP e a empresa de marketing digital da Juliane. Trafego pago e despesa dela, nao da familia. As contas ainda nao estao separadas na pratica, entao a dashboard precisa distinguir o que e pessoal do que e da empresa."
+  ],
+  "regras": [
+    {
+      "padrao": "facebk|facebook|meta pla|meta ads|instagram ads",
+      "categoria": "trafego_pago",
+      "pessoa": "Benetti UP",
+      "nota": "Trafego pago da Benetti UP (Juliane, 22/08)"
+    },
+    {
+      "padrao": "google ?ads|googleads|tiktok ads|pinterest ads|taboola|outbrain",
+      "categoria": "trafego_pago",
+      "pessoa": "Benetti UP",
+      "nota": "Trafego pago da Benetti UP em outras plataformas"
+    },
+    {
+      "padrao": "mundo cores|esc inf mundo",
+      "categoria": "educacao",
+      "pessoa": "Valentina",
+      "nota": "Escola infantil da Valentina (Juliane, 22/08)"
+    },
+    {
+      "padrao": "papelaria",
+      "categoria": "educacao",
+      "pessoa": "Filhos",
+      "nota": "Material escolar dos dois filhos (Juliane, 22/08)"
+    },
+    {
+      "padrao": "omega +campinas|natacao|natação",
+      "categoria": "esportes",
+      "pessoa": "Valentina",
+      "nota": "Natacao da Valentina (Juliane, revisao 22/08)"
+    },
+    {
+      "padrao": "transurc|emdec|bilhete unico|vale transporte",
+      "categoria": "transporte",
+      "pessoa": "Juliane",
+      "nota": "Transporte publico para o trabalho da Juliane (Juliane, revisao 22/08)"
+    },
+    {
+      "padrao": "tokio marine|porto seguro|allianz|sulamerica auto|bradesco seguro|azul seguro|seguro auto",
+      "categoria": "seguro",
+      "pessoa": "Família",
+      "nota": "Seguro do carro (Juliane, revisao 22/08)"
+    },
+    {
+      "padrao": "savegnago|carrefour|pao de acucar|paodeacucar|assai|atacadao|tenda atacado|sonda|dia %|supermercad|hipermercad|mercado municipal",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Supermercado: compra da casa, independente de qual cartão pagou"
+    },
+    {
+      "padrao": "dona terezinha",
+      "categoria": "alimentacao_fora",
+      "pessoa": "Juliane",
+      "nota": "Almoço de trabalho da Juliane, não compra da casa (Juliane, 23/08)"
+    },
+    {
+      "padrao": "marcia de car",
+      "categoria": "alimentacao",
+      "pessoa": "Hugo",
+      "nota": "Varejão/alimentação do Hugo (Juliane, 23/08)"
+    },
+    {
+      "padrao": "zuleika",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Mercado/doces da casa (Juliane, 23/08)"
+    },
+    {
+      "padrao": "discampchoc",
+      "categoria": "alimentacao",
+      "pessoa": "Hugo",
+      "nota": "Supermercado do Hugo (Juliane, 23/08)"
+    },
+    {
+      "padrao": "hortifruti|quitanda|sacolao|feira livre",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Hortifruti e feira: compra da casa"
+    },
+    {
+      "padrao": "editora sesi|sesi ",
+      "categoria": "educacao",
+      "pessoa": "Luca",
+      "nota": "Escola do Luca e material escolar (informado pela Juliane)"
+    },
+    {
+      "padrao": "escola|colegio|esc inf|creche|bercario|berçario|livraria",
+      "categoria": "educacao",
+      "nota": "Escola em geral. Sem 'pessoa': confirmar de qual filho antes de atribuir"
+    },
+    {
+      "padrao": "posto|petrobras|ipiranga|shell |ale combust|combustivel",
+      "categoria": "transporte",
+      "pessoa": "Família",
+      "nota": "Combustivel: o carro serve a familia toda. Vale para qualquer posto, nao so os que tem 'auto' no nome (Juliane, revisao 22/08)"
+    },
+    {
+      "padrao": "pneus|oficina|mecanic|autopecas|auto pecas|estacionament|lava rapido|lava-rapido|detran|ipva|licenciament",
+      "categoria": "transporte",
+      "pessoa": "Família",
+      "nota": "Manutenção, estacionamento e encargos do veículo"
+    },
+    {
+      "padrao": "uber|99 ?app|99 ?tecnolog|99 ?ride|cabify|taxi",
+      "categoria": "transporte",
+      "nota": "Transporte por aplicativo: fica com quem usou"
+    },
+    {
+      "padrao": "dramarina",
+      "categoria": "saude",
+      "pessoa": "Luca",
+      "nota": "Ortodontia do Luca (Juliane, 23/08)"
+    },
+    {
+      "padrao": "drogal|droga ?raia|drogasil|farmacia|pague menos|panvel|laborator|clinica|hospital|consultorio|unimed|odonto|dentista",
+      "categoria": "saude",
+      "nota": "Saúde: fica com quem foi atendido"
+    },
+    {
+      "padrao": "ifd\\*ifood club|ifood club",
+      "categoria": "assinatura",
+      "nota": "iFood Club é assinatura, não pedido avulso (Juliane, 23/08)"
+    },
+    {
+      "padrao": "ifd\\*|ifood|rappi|uber ?eats|delivery|restaurante|pizzaria|lanchonete|hamburgu|padaria|confeitaria|cafe |cafeteria|sorveteria|churrascaria|bar do|espetinho|mc ?donalds|arcos dourados|burger king|kfc|subway|habibs|giraffas|outback|rodizio|bar |boteco",
+      "categoria": "alimentacao_fora",
+      "pessoa": "Família",
+      "nota": "Refeição fora de casa, incluindo lanchonete e rodízio: sai com a família, é gasto da casa (Juliane, 24/08)"
+    },
+    {
+      "padrao": "apple\\.com|netflix|spotify|amazon prime|disney|hbo|max |globoplay|youtube premium|google one|icloud|microsoft|adobe|canva|clube livelo|assinatura",
+      "categoria": "assinatura",
+      "nota": "Assinatura recorrente"
+    },
+    {
+      "padrao": "cpfl|enel|sabesp|comgas|vivo|claro|tim |oi fixo|net |internet|condominio|aluguel|iptu",
+      "categoria": "moradia",
+      "pessoa": "Família",
+      "nota": "Conta fixa da casa"
+    },
+    {
+      "padrao": "azul linhas a",
+      "categoria": "assinatura",
+      "pessoa": "Família",
+      "valor": 37.8,
+      "nota": "Clube Azul: assinatura recorrente de R$37,80/mês, cobrada com o mesmo texto de fundo (\"Azul Linhas Aereas...\") da compra de passagem em si — só o valor exato diferencia uma da outra, por isso essa regra tem 'valor' (Juliane, 24/08)"
+    },
+    {
+      "padrao": "airbnb|booking|hotel|pousada|resort|decolar|latam|gol linhas|azul linhas|cvc|passagem aerea",
+      "categoria": "viagem",
+      "pessoa": "Família",
+      "nota": "Viagem: normalmente da família toda"
+    },
+    {
+      "padrao": "acampamento|monte dos|colonia de ferias|parque|cinema|ingresso|teatro|show ",
+      "categoria": "lazer",
+      "nota": "Lazer e entretenimento"
+    },
+    {
+      "padrao": "decathlon|academia|smartfit|smart fit|crossfit|natacao|futebol|esporte",
+      "categoria": "esportes",
+      "nota": "Esporte e atividade física"
+    },
+    {
+      "padrao": "uniaosocorro",
+      "categoria": "pessoal",
+      "pessoa": "Juliane",
+      "nota": "Roupas — parcelado (Juliane, 23/08)"
+    },
+    {
+      "padrao": "2produtoss",
+      "categoria": "compras_diversas",
+      "pessoa": "Família",
+      "nota": "Roupas — parcelado (Juliane, 23/08)"
+    },
+    {
+      "padrao": "renner|riachuelo|c&a|zara|hering|centauro|netshoes|calcado|sapataria|magalu|magazine luiza|casas bahia|ponto frio|americanas|mercadolivre|mercado livre|shopee|shein|aliexpress|amazon",
+      "categoria": "compras",
+      "nota": "Varejo e e-commerce"
+    },
+    {
+      "padrao": "belezaria|salao|cabeleire|barbearia|manicure|estetica|perfumaria|boticario|natura|avon",
+      "categoria": "cuidados_pessoais",
+      "nota": "Cuidados pessoais"
+    },
+    {
+      "padrao": "petz|cobasi|petshop|pet ?shop|petcamp|selva urbana|veterinar|lollapets|racao|ração",
+      "categoria": "pet",
+      "pessoa": "Família",
+      "nota": "Racao e despesa com os pets"
+    },
+    {
+      "padrao": "kiwify.*mgdmentori",
+      "categoria": "educacao_profissional",
+      "pessoa": "Benetti UP",
+      "nota": "Mentoria de negócio da Benetti UP, parcelada (Juliane, 23/08)"
+    },
+    {
+      "padrao": "kiwify.*afiliad",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Kiwify Afiliados: ferramenta de trabalho da Benetti UP (Juliane, 23/08)"
+    },
+    {
+      "padrao": "kiwify.*instamagic",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "InstaMAGIC: ferramenta de trabalho da Benetti UP (Juliane, 23/08)"
+    },
+    {
+      "padrao": "kiwify|hotmart|udemy|alura|curso |mentoria|treinamento",
+      "categoria": "educacao_profissional",
+      "pessoa": "Benetti UP",
+      "nota": "Curso, mentoria e capacitação profissional são investimento no negócio, não estudo pessoal — toda despesa de educação profissional é da Benetti UP (Juliane, 24/08)"
+    },
+    {
+      "padrao": "maravilhas do lar|casa jannini|leroy|telha norte|c&c|tok stok|mobly|magazine|utilidades domesticas|loja do oleo",
+      "categoria": "casa",
+      "pessoa": "Família",
+      "nota": "Utilidades e itens para a casa"
+    },
+    {
+      "padrao": "^iof (internacional|compra internacional)",
+      "categoria": "encargos_financeiros",
+      "nota": "IOF de compra internacional: despesa financeira, mas a pessoa vem de quem fez a compra (Juliane, 23/08)"
+    },
+    {
+      "padrao": "^estorno (custo de iof|iof)",
+      "categoria": "encargos_financeiros",
+      "nota": "Estorno de IOF, mesma categoria da cobranca (Juliane, 23/08)"
+    },
+    {
+      "padrao": "juros de mora|juros de financiamento|encargos refinanciamento|iof refinanciamento|encargos pix|iof pix|anuidade|^multa$|multa de mora|encargos de atraso|^iof$|rotativo",
+      "categoria": "encargos_financeiros",
+      "pessoa": "Família",
+      "nota": "Custo do credito e do cartao: juros, mora, multa, anuidade, IOF e encargos do refinanciamento. Pagar a menor a fatura financia o saldo, e esse custo e despesa financeira, nao despesa comum (Juliane, 23/08)"
+    },
+    {
+      "padrao": "hostinger|openai|anthropic|netlify|turboscribe",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Ferramentas de trabalho da Benetti UP: hospedagem, IA, deploy e transcricao (Juliane, 23/08)"
+    },
+    {
+      "padrao": "^htm",
+      "categoria": "educacao_profissional",
+      "pessoa": "Benetti UP",
+      "nota": "Descritor de cobranca da Hotmart no cartao (curso/mentoria) — mesma regra ja aplicada a Kiwify/Hotmart (Juliane, 29/08)"
+    },
+    {
+      "padrao": "copycat apps",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Aplicativo de trabalho da Benetti UP (Juliane, 29/08)"
+    },
+    {
+      "padrao": "dental kids",
+      "categoria": "saude",
+      "pessoa": "Valentina",
+      "nota": "Dentista da Valentina (Juliane, 29/08)"
+    },
+    {
+      "padrao": "cinepolis",
+      "categoria": "lazer_esportes",
+      "pessoa": "Família",
+      "nota": "Cinema (Juliane, 29/08)"
+    },
+    {
+      "padrao": "sephora",
+      "categoria": "cuidados_pessoais",
+      "pessoa": "Juliane",
+      "nota": "Juliane, 29/08"
+    },
+    {
+      "padrao": "fft maquiagens",
+      "categoria": "cuidados_pessoais",
+      "pessoa": "Juliane",
+      "nota": "Juliane, 29/08"
+    },
+    {
+      "padrao": "acougue jardim",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Acougue (Juliane, 29/08)"
+    },
+    {
+      "padrao": "rest frangoassado|box 8 barriguda|osiro pasteis|pipocas da sandra|milky moo",
+      "categoria": "alimentacao_fora",
+      "pessoa": "Família",
+      "nota": "Restaurantes e lanches — sai com a familia (Juliane, 29/08)"
+    },
+    {
+      "padrao": "santana e amaral papel",
+      "categoria": "educacao",
+      "pessoa": "Filhos",
+      "nota": "Papelaria — material escolar dos filhos (Juliane, 29/08)"
+    },
+    {
+      "padrao": "casulo",
+      "categoria": "servicos",
+      "pessoa": "Benetti UP",
+      "nota": "Casulo Coworking (Fortaleza) — endereço fiscal mensal, R$89, confirmado com fatura e e-mail de cobrança (Juliane, 30/08)"
+    },
+    {
+      "padrao": "ckt\\*\\*affiliates|cakto pay",
+      "categoria": "ferramentas",
+      "pessoa": "Benetti UP",
+      "nota": "Cakto — plataforma de checkout/afiliados, provavelmente curso ou ferramenta da Benetti UP (Juliane, 30/08)"
+    },
+    {
+      "padrao": "amazon|amz *|amazon\\.com|amazon\\.com\\.br",
+      "categoria": "compras",
+      "pessoa": "Juliane",
+      "nota": "Amazon Marketplace e Amazon BR - compras diversas (adicionado 30/08, Amazon Mastercard)"
+    }
+  ]
+}
