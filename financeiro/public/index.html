@@ -1331,6 +1331,64 @@
       .plano-btn { transition: none; }
     }
 
+
+    /* --- o que falta carregar (topo da dashboard) --- */
+    .alerta-dados {
+      background: var(--bg-secondary);
+      border: 1px solid var(--accent-yellow);
+      border-left: 4px solid var(--accent-yellow);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: hidden;
+    }
+    .alerta-dados.tem-critico {
+      border-color: var(--accent-red);
+      border-left-color: var(--accent-red);
+    }
+    .alerta-dados-cab {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 10px;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .alerta-dados-cab b { font-size: 14px; }
+    .alerta-dados-cab span { font-size: 12.5px; color: var(--text-secondary); }
+    .alerta-dados ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .alerta-dados li {
+      padding: 10px 16px 11px;
+      border-bottom: 1px solid var(--border-color);
+      border-left: 3px solid transparent;
+    }
+    .alerta-dados li:last-child { border-bottom: 0; }
+    .alerta-dados li.critico { border-left-color: var(--accent-red); }
+    .alerta-dados li.atencao { border-left-color: var(--accent-yellow); }
+    .alerta-item-topo {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+    }
+    .alerta-item-topo b { font-size: 13.5px; }
+    .alerta-acao {
+      font-size: 12px;
+      color: var(--accent-blue);
+      white-space: nowrap;
+    }
+    .alerta-item-nota {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+      line-height: 1.45;
+    }
+    .alerta-item-nota i { font-style: normal; color: var(--text-primary); opacity: .85; }
+
   </style>
 </head>
 <body>
@@ -1339,6 +1397,8 @@
       <h1>💰 AfiliDash Financeiro</h1>
       <p class="header-subtitle">Dashboard financeiro para Juliane e Hugo | Atualizado em tempo real</p>
     </header>
+
+    <div id="alerta_dados"></div>
 
     <div class="ambito-seletor">
       <span class="ambito-rotulo">Mostrando</span>
@@ -5059,7 +5119,144 @@
       container.innerHTML = blocoFluxoDeCaixa();
     }
 
+    // ------------------------------------------- dados que faltam carregar
+    //
+    // A dashboard só vale o que vale o arquivo mais velho que ela leu. Extrato
+    // atrasado não erra sozinho: ele faz o mês parecer mais barato do que é, e
+    // faz o fechamento do plano dizer que uma conta não foi paga quando o que
+    // falta é o arquivo. Este bloco diz o que carregar e, principalmente, qual
+    // número fica torto enquanto não carregar.
+    //
+    // Regra que mantém isso útil: só aparece quando há o que fazer. Alerta que
+    // fica sempre na tela vira papel de parede e para de ser lido.
+
+    function diasDesde(iso) {
+      if (!iso) return null;
+      const d = new Date(iso + 'T00:00:00');
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      return Math.round((hoje - d) / 86400000);
+    }
+
+    const DIAS_ATE_EXTRATO_ENVELHECER = 7;
+    // O salário cai no dia 25, então cobrar o holerite antes disso seria cobrar
+    // um arquivo que ainda não existe.
+    const DIA_EM_QUE_O_HOLERITE_JA_SAIU = 26;
+
+    function pendenciasDeDados() {
+      const pend = [];
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+      const mesVig = mesVigente();
+
+      // O caso mais grave não é o extrato velho, é o extrato que veio pela
+      // metade: ele parece completo e cala. A contradição denuncia — mês com
+      // holerite e sem o crédito do salário no extrato perdeu linhas.
+      mesesDisponiveis().filter(m => m !== MES_A_CONFIRMAR && extratoIncompletoNoMes(m)).forEach(m => {
+        pend.push({
+          nivel: 'critico',
+          o_que: `Extrato de ${m} incompleto`,
+          porque: 'o mês tem holerite mas o extrato dele não traz o crédito do salário — faltam linhas no meio do arquivo, não só no fim',
+          efeito: `o gasto de ${m} está subestimado, e o fechamento do plano não consegue dizer se as contas do mês saíram`,
+          acao: `Reexporte o extrato fechado de ${m} e importe de novo`
+        });
+      });
+
+      const ate = extratoCobreAte();
+      const dias = diasDesde(ate);
+      if (dias == null) {
+        pend.push({
+          nivel: 'critico', o_que: 'Nenhum extrato importado',
+          porque: 'sem o extrato não há como saber o que saiu da conta',
+          efeito: 'só o cartão aparece; boleto, débito e PIX ficam invisíveis',
+          acao: 'Importe o extrato da conta corrente'
+        });
+      } else if (dias > DIAS_ATE_EXTRATO_ENVELHECER) {
+        const doMesVigente = transacoesSemFiltroDeAno()
+          .filter(t => t.origem === 'extrato_itau' && t.mes_vencimento === mesVig).length;
+        pend.push({
+          nivel: dias > 20 ? 'critico' : 'atencao',
+          o_que: `Extrato parado há ${dias} dias`,
+          porque: `a última linha importada é de ${ate.split('-').reverse().join('/')}`,
+          efeito: doMesVigente === 0
+            ? `${mesVig} não tem nenhum lançamento de conta — tudo o que a tela mostra do mês é projeção`
+            : `o que saiu da conta depois dessa data não está em lugar nenhum`,
+          acao: 'Importe o extrato atualizado'
+        });
+      }
+
+      // Fatura cujo ciclo seguinte já devia ter chegado.
+      const porCartao = {};
+      faturasDoCartao().forEach(f => {
+        if (!porCartao[f.cartao] || f.vencimento > porCartao[f.cartao].vencimento) porCartao[f.cartao] = f;
+      });
+      Object.values(porCartao)
+        .filter(f => new Date(f.vencimento + 'T00:00:00') < hoje)
+        .sort((a, b) => a.vencimento.localeCompare(b.vencimento))
+        .forEach(f => {
+          pend.push({
+            nivel: 'atencao',
+            o_que: `Fatura do ${nomeDoCartao(f.cartao)} do ciclo seguinte`,
+            porque: `a última importada venceu em ${f.vencimento.split('-').reverse().join('/')} e não há nenhuma depois dela`,
+            efeito: 'as compras do ciclo novo não entram em nenhum total, e o mês parece mais barato do que é',
+            acao: `Baixe a fatura mais recente do ${nomeDoCartao(f.cartao)} e importe`
+          });
+        });
+
+      // Holerite: só cobra depois do dia em que ele existe.
+      const folhaVig = transacoesSemFiltroDeAno()
+        .some(t => t.origem === 'holerite_elektro' && t.mes_vencimento === mesVig && t.natureza === 'receita');
+      if (!folhaVig && hoje.getDate() >= DIA_EM_QUE_O_HOLERITE_JA_SAIU) {
+        pend.push({
+          nivel: 'atencao',
+          o_que: `Holerite de ${mesVig}`,
+          porque: 'o pagamento do dia 25 já saiu e o comprovante ainda não foi importado',
+          efeito: `a entrada de ${mesVig} está sendo projetada pelo mês anterior, não é o valor real`,
+          acao: 'Importe o comprovante de pagamento'
+        });
+      }
+
+      // Fatura com cabeçalho e nenhum lançamento: sabe quanto, não sabe em quê.
+      const semItens = faturasDoCartao().filter(f => (f.cobrado || 0) > 0.05 &&
+        !transacoesSemFiltroDeAno().some(t => t.fatura_origem === `${f.cartao}|${f.mes}`));
+      if (semItens.length) {
+        pend.push({
+          nivel: 'atencao',
+          o_que: `${semItens.length} fatura(s) sem os lançamentos`,
+          porque: `só o total foi cadastrado: ${[...new Set(semItens.map(f => nomeDoCartao(f.cartao)))].join(', ')}`,
+          efeito: 'o valor conta no mês, mas nenhuma compra aparece em Lançamentos nem em Para Onde Vai',
+          acao: 'Envie o arquivo dessas faturas'
+        });
+      }
+
+      return pend;
+    }
+
+    function renderizarAlertaDeDados() {
+      const alvo = document.getElementById('alerta_dados');
+      if (!alvo) return;
+      const pend = pendenciasDeDados();
+      if (!pend.length) { alvo.innerHTML = ''; return; }
+
+      const criticos = pend.filter(p => p.nivel === 'critico').length;
+      alvo.innerHTML = `
+        <div class="alerta-dados ${criticos ? 'tem-critico' : ''}">
+          <div class="alerta-dados-cab">
+            <b>${pend.length} coisa(s) para carregar</b>
+            <span>${criticos
+              ? `${criticos} já ${criticos === 1 ? 'está distorcendo' : 'estão distorcendo'} número na tela`
+              : 'nada distorcido ainda, mas o dado está envelhecendo'}</span>
+          </div>
+          <ul>
+            ${pend.map(p => `
+              <li class="${p.nivel}">
+                <div class="alerta-item-topo"><b>${p.o_que}</b><span class="alerta-acao">${p.acao}</span></div>
+                <div class="alerta-item-nota">${p.porque} — <i>${p.efeito}</i></div>
+              </li>`).join('')}
+          </ul>
+        </div>`;
+    }
+
     function renderizarTodas() {
+      renderizarAlertaDeDados();
       atualizarAvisoAmbito();
       popularFiltros();
 

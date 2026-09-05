@@ -841,6 +841,76 @@ function noEscopo(mv) {
     }
   }
 
+  // --- Alerta do que falta carregar ---
+  {
+    const alerta = await pagina.evaluate(() => {
+      renderizarAlertaDeDados();
+      const el = document.getElementById('alerta_dados');
+      return { txt: el.innerText, itens: el.querySelectorAll('li').length,
+               criticos: el.querySelectorAll('li.critico').length };
+    });
+
+    // Extrato parado: o arquivo mais velho é o que limita toda a dashboard.
+    const ultimaLinha = todosLancamentos
+      .filter(t => t.origem === 'extrato_itau' && t.data).map(t => t.data).sort().pop();
+    const diasParado = Math.round(
+      (new Date().setHours(0, 0, 0, 0) - new Date(ultimaLinha + 'T00:00:00')) / 86400000);
+    if (diasParado > 7) {
+      ok(`Alerta avisa que o extrato está parado há ${diasParado} dias`,
+         new RegExp(`parado há ${diasParado} dias`).test(alerta.txt),
+         alerta.txt.split('\n').slice(0, 4).join(' | '));
+    }
+
+    // Extrato incompleto entra como crítico, não como aviso qualquer: ele já
+    // está distorcendo número, não é só dado envelhecendo.
+    const mesFalho = mesesReais.find(m => {
+      const doMes = todosLancamentos.filter(t => t.mes_vencimento === m);
+      return doMes.some(t => t.origem === 'holerite_elektro' && t.natureza === 'receita')
+          && !doMes.some(t => t.origem === 'extrato_itau' && /Crédito do salário/i.test(t.descricao || ''));
+    });
+    if (mesFalho) {
+      ok(`Alerta marca o extrato incompleto de ${mesFalho} como crítico`,
+         alerta.criticos > 0 && alerta.txt.includes(`Extrato de ${mesFalho} incompleto`),
+         `${alerta.criticos} crítico(s)`);
+    }
+
+    // O holerite só existe a partir do dia 25. Cobrar antes disso seria pedir
+    // um arquivo que ainda não foi emitido — ruído que ensina a ignorar o alerta.
+    const diaDeHoje = new Date().getDate();
+    const temFolhaVigente = todosLancamentos.some(t =>
+      t.origem === 'holerite_elektro' && t.mes_vencimento === mesVigenteNoTeste && t.natureza === 'receita');
+    if (!temFolhaVigente) {
+      if (diaDeHoje < 26) {
+        ok(`Alerta não cobra o holerite antes do dia 25 (hoje é dia ${diaDeHoje})`,
+           !/Holerite de/i.test(alerta.txt),
+           alerta.txt.split('\n').filter(l => /holerite/i.test(l)).join(' | '));
+      } else {
+        ok(`Alerta cobra o holerite depois do dia 25 (hoje é dia ${diaDeHoje})`,
+           /Holerite de/i.test(alerta.txt), '(não apareceu)');
+      }
+    }
+
+    // O outro lado: fonte em dia não pode gerar alerta. Sem isso o bloco vira
+    // papel de parede — sempre aceso, logo nunca lido.
+    const semAviso = await pagina.evaluate(() => {
+      const tx = dadosGlobais.fluxo_mensal.transacoes;
+      const hoje = new Date().toISOString().slice(0, 10);
+      const falso = { id: 'teste_extrato_recente', data: hoje, valor: 1, tipo: 'saida',
+                      natureza: 'despesa', categoria: 'teste', descricao: 'lançamento de teste',
+                      origem: 'extrato_itau', mes_vencimento: mesVigente(), pessoa: 'Juliane',
+                      ambito: 'pessoal', status: 'confirmado' };
+      tx.push(falso);
+      renderizarAlertaDeDados();
+      const txt = document.getElementById('alerta_dados').innerText;
+      tx.splice(tx.indexOf(falso), 1);
+      renderizarAlertaDeDados();
+      return txt;
+    });
+    ok('Extrato em dia deixa de aparecer no alerta',
+       !/parado há/i.test(semAviso),
+       semAviso.split('\n').filter(l => /parado/i.test(l)).join(' | '));
+  }
+
   // O boleto do cartão Amazon no extrato é o pagamento da fatura 0013 — os
   // dois não podem ser somados.
   {

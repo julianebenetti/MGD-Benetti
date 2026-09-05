@@ -370,6 +370,40 @@ Corrigido na leitura (`quitado` deixou de checar o status), não no dado: o
 status era verdadeiro quando foi gravado, e a correção vale para toda importação
 futura sem precisar reescrever nada.
 
+### Alerta do que falta carregar, no topo da dashboard (05/09)
+A Juliane pediu um alerta no topo com o que precisa carregar porque a data já
+virou. A dashboard vale o que vale o arquivo mais velho que ela leu, e nada na
+tela dizia isso — extrato atrasado não erra sozinho, ele faz o mês parecer mais
+barato do que é e faz o fechamento do plano acusar conta que ela pagou.
+
+`pendenciasDeDados()` / `renderizarAlertaDeDados()`, acima das abas para
+aparecer de qualquer uma. Cada item diz três coisas: **o que carregar**, **por
+que a dashboard sabe que falta** e **qual número fica torto enquanto não vier**
+— sem a terceira, o alerta é só uma lista de tarefas.
+
+O que ele checa, e o limiar de cada um:
+
+| Checagem | Dispara quando | Nível |
+|---|---|---|
+| Extrato incompleto | mês tem holerite e o extrato dele não traz o crédito do salário | crítico |
+| Extrato parado | última linha há mais de 7 dias (crítico acima de 20) | atenção |
+| Fatura do ciclo seguinte | a última fatura do cartão já venceu e não há nenhuma depois | atenção |
+| Holerite do mês | **só a partir do dia 26** | atenção |
+| Fatura sem lançamento | cabeçalho com total e nenhuma compra importada | atenção |
+
+**Duas regras que mantêm isso legível:**
+
+1. **Só aparece quando há o que fazer.** Bloco que fica sempre aceso vira papel
+   de parede e para de ser lido. Tem teste para o outro lado: com uma linha de
+   extrato de hoje injetada, o aviso de "parado há N dias" tem de sumir.
+2. **Nunca cobrar arquivo que ainda não existe.** O salário cai no dia 25, então
+   o holerite só é cobrado a partir do dia 26 (`DIA_EM_QUE_O_HOLERITE_JA_SAIU`).
+   Cobrar no dia 3 seria ruído, e ruído ensina a ignorar o alerta inteiro.
+
+Em 05/09 dispara com 3 itens: extrato de Ago/26 incompleto (crítico), extrato
+parado há 8 dias, e a fatura do ciclo seguinte do 0442 (venceu 01/09). O
+holerite corretamente não aparece.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
