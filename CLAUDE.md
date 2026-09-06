@@ -39,3 +39,17 @@
   comissão. Sem dado verificado, o campo fica NULL.
 - Rotina diária `Espião TikTok Shop — Moda Feminina (diário)`, 7h30 (Brasília). Se mudar
   critério de busca no futuro, atualizar o prompt dela também, não só fazer busca manual.
+
+### Dados reais de venda (Kalodata)
+- O TikTok não abre faturamento de outro vendedor, e a API oficial de afiliado só cobre a
+  própria vitrine. Quem tem GMV por loja/produto é o **Kalodata** (estimativa a partir de
+  sinais públicos, **não é dado oficial** — sempre deixar isso claro na tela).
+- Fluxo: a Juliane exporta Lojas e Produtos do Kalodata → larga o arquivo em
+  `dados-kalodata/` → o workflow `.github/workflows/tiktok-sync.yml` roda o
+  `tiktok-sync.py` → grava em `tiktok_lojas` e `tiktok_ranking_produtos`.
+- Cada import é um snapshot por `data_ref` + `periodo`. Nunca sobrescrever histórico:
+  a página mostra só o snapshot mais recente, mas o passado fica pra comparar evolução.
+- `tiktok-sync.py` casa as colunas por apelido (pt-BR e inglês) e aceita `R$ 1.234,56`,
+  `987,4 mil`, `1.2M`. Coluna não reconhecida vai pra `colunas_ignoradas` em
+  `tiktok_importacoes` — é lá que se descobre o que falta mapear. Use `--dry-run` antes.
+- Secrets do GitHub Actions: `SUPABASE_URL` e `SUPABASE_KEY`.
