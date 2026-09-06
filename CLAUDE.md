@@ -89,6 +89,12 @@
   `facebook`, `zalo` e `ins`. O `montar_criador` **não copia nada disso de propósito** —
   é dado pessoal de terceiro que não consentiu, e não faz falta pra decidir o que gravar.
   Fica só o @, que é identidade pública. Se alguém for mexer nesse mapeamento, manter assim.
+- No `creator/rank`, `creator_type` filtra INDEPENDENT no **servidor**, então não se gasta
+  chamada trazendo criador de loja pra descartar depois. `followers_range` e
+  `engagement_rate` (LOW <8%, MEDIUM 8-20%, HIGH >20%) permitem comparar com criador do
+  mesmo tamanho — comparar com quem tem milhões de seguidores não diz nada.
+- Nesse endpoint `category_ids` está **obsoleto**; use `category_id_list`, que é string
+  com os ids separados por vírgula.
 - O criador traz `video_gpm` e `live_gpm` separados, que é a régua pra Juliane comparar o
   próprio desempenho com o dos pares. E `creator_status` separa INDEPENDENT (afiliado
   independente, o par dela) de BELONGED_TO_SELLER (criador da própria loja).

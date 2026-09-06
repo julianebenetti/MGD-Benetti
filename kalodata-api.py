@@ -47,7 +47,7 @@ ENDPOINTS = {
     "produto_detalhe":   ("/tiktok/product/detail",  "confirmado", 100),
     "produto_ranking":   ("/tiktok/product/rank",    "confirmado",  10),
     "criador_detalhe":   ("/tiktok/creator/detail",  "confirmado", 100),
-    "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
+    "criador_ranking":   ("/tiktok/creator/rank",    "confirmado",  10),
     "categoria_detalhe": ("/tiktok/category/detail", "confirmado", 100),
     "categoria_ranking": ("/tiktok/category/rank",   "confirmado",  10),
 }
@@ -497,6 +497,14 @@ def periodo_api(periodo, familia=None):
     return tabela[periodo]
 
 
+def _inteiro(valor):
+    """A API manda seguidores e visualizações como texto em alguns endpoints."""
+    try:
+        return int(float(valor)) if valor is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
 def montar_criador(d, periodo, data_ref):
     """Traduz /tiktok/creator/detail e /rank.
 
@@ -505,11 +513,7 @@ def montar_criador(d, periodo, data_ref):
     o que gravar, e guardar isso num banco é responsabilidade que não vale a pena.
     Fica só o @, que é a identidade pública na plataforma."""
     handle = d.get("creator_handle")
-    seguidores = d.get("creator_followers")
-    try:
-        seguidores = int(seguidores) if seguidores is not None else None
-    except (TypeError, ValueError):
-        seguidores = None
+    seguidores = _inteiro(d.get("creator_followers"))
     return {
         "criador_id":       d.get("creator_id"),
         "arroba":           f"@{handle}" if handle and not str(handle).startswith("@") else handle,
@@ -535,6 +539,10 @@ def montar_criador(d, periodo, data_ref):
         "lojas":            d.get("shop_number"),
         "produtos":         d.get("product_number"),
         "top3_produtos":    [str(x) for x in (d.get("top3_product_ids") or [])] or None,
+        "content_views":    _inteiro(d.get("content_views")),
+        "categorias":       d.get("category_list"),
+        "categorias_nivel3": d.get("ter_category_list"),
+        "crescimento_pct":  d.get("revenue_growth_rate"),
         "ranking":          d.get("rank"),
         "link":             f"https://www.tiktok.com/@{handle}" if handle else None,
         "tipo":             "concorrente",
@@ -564,24 +572,37 @@ def buscar_criador(criador_id, periodo, data_ref, dry_run=False):
 
 def buscar_ranking_criadores(periodo, data_ref, paginas=1, por_pagina=100,
                              ordenar_por="revenue", categorias=None,
-                             so_independentes=False, dry_run=False):
+                             so_independentes=False, dry_run=False,
+                             faixa_seguidores=None, engajamento=None, palavra=None,
+                             loja_id=None, produto_id=None):
+    """O filtro de tipo de criador é do servidor, então não gasta chamada trazendo
+    criador de loja pra descartar depois. faixa_seguidores é o que permite comparar
+    com gente do seu tamanho, em vez de com quem tem milhões."""
     todos = []
     for pagina in range(1, paginas + 1):
         corpo = {"date_range": periodo_api(periodo),
                  "sort_field": {"field": ordenar_por, "type": "DESC"},
-                 "page_size": min(por_pagina, 100), "page_number": pagina}
-        if categorias: corpo["category_ids"] = categorias
+                 "page_size": min(por_pagina, 100), "page_number": pagina,
+                 "need_category": 1, "need_ter_category": 1}
+        # a doc marca category_ids como obsoleto e prefere a lista separada por vírgula
+        if categorias:        corpo["category_id_list"] = ",".join(str(c) for c in categorias)
+        if so_independentes:  corpo["creator_type"] = "INDEPENDENT"
+        if faixa_seguidores:  corpo["followers_range"] = faixa_seguidores
+        if engajamento:       corpo["engagement_rate"] = engajamento
+        if palavra:           corpo["keyword"] = palavra
+        if loja_id:           corpo["shop_id"] = loja_id
+        if produto_id:        corpo["product_id"] = produto_id
+        if pagina == 1:
+            filtros = {k: v for k, v in corpo.items()
+                       if k not in ("date_range", "sort_field", "page_size", "page_number",
+                                    "need_category", "need_ter_category")}
+            print(f"  filtros: {json.dumps(filtros, ensure_ascii=False) if filtros else 'nenhum'}")
         resposta = chamar("criador_ranking", corpo)
         linhas = resposta.get("data") or []
         print(f"  página {pagina}: {len(linhas)} criador(es)")
         todos += [montar_criador(d, periodo, data_ref) for d in linhas]
         if len(linhas) < min(por_pagina, 100):
             break
-
-    if so_independentes:
-        antes = len(todos)
-        todos = [c for c in todos if c.get("status") == "INDEPENDENT"]
-        print(f"  só independentes: {antes} → {len(todos)}")
     for i, c in enumerate(todos, start=1):
         if c.get("ranking") is None:
             c["ranking"] = i
@@ -767,6 +788,7 @@ def main():
     ordenar_por, tipo_loja = "revenue", None
     comissao = faixa_preco = envio = lancados_ha = categoria_id = None
     nivel = dentro_de = criador_id = None
+    faixa_seguidores = engajamento = None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
     so_organico = "--so-organico" in args
@@ -782,6 +804,10 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--seguidores" and i + 1 < len(args):
+            faixa_seguidores = args[i + 1]; i += 2
+        elif args[i] == "--engajamento" and i + 1 < len(args):
+            engajamento = args[i + 1].upper(); i += 2
         elif args[i] == "--criador" and i + 1 < len(args):
             criador_id = args[i + 1]; i += 2
         elif args[i] == "--nivel" and i + 1 < len(args):
@@ -822,7 +848,8 @@ def main():
     elif "--ranking-criadores" in args:
         print(f"Ranking de criadores, período {periodo}, ordenado por {ordenar_por}:")
         buscar_ranking_criadores(periodo, data_ref, paginas, por_pagina, ordenar_por,
-                                 None, "--so-independentes" in args, dry_run)
+                                 None, "--so-independentes" in args, dry_run,
+                                 faixa_seguidores, engajamento, palavra, loja_id, produto_id)
     elif criador_id:
         buscar_criador(criador_id, periodo, data_ref, dry_run)
     elif "--categorias" in args:
@@ -867,6 +894,8 @@ def main():
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
             "  --ranking-criadores           top de criadores; some --so-independentes\n"
+            "  --seguidores 1000-10000       compara com gente do seu tamanho\n"
+            "  --engajamento MEDIUM          LOW (<8%), MEDIUM (8-20%) ou HIGH (>20%)\n"
             "  --criador <id>                detalhe de um criador, com o GPM dele\n"
             "  --categorias --nivel 1        categorias de topo (é onde está moda feminina)\n"
             "  --categorias --dentro-de <id> abre as subcategorias de uma categoria\n"
