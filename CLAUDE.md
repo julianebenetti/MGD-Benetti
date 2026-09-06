@@ -53,6 +53,17 @@
   `987,4 mil`, `1.2M`. Coluna não reconhecida vai pra `colunas_ignoradas` em
   `tiktok_importacoes` — é lá que se descobre o que falta mapear. Use `--dry-run` antes.
 - Secrets do GitHub Actions: `SUPABASE_URL` e `SUPABASE_KEY`.
+- **O Kalodata tem API oficial** (Centro Aberto): `POST https://www.kalodata.com/openapi/v1/…`,
+  JSON, chave secreta no cabeçalho, limite de 100 chamadas a cada 10 segundos, e é **paga por
+  chamada** (a conta tem saldo de créditos). Aceita `region: BR`, `language: pt-BR`,
+  `currency: BRL` e `date_range: last7Day`. O cliente é o `kalodata-api.py`.
+  Endpoints por família: video, produto, loja, criador, categoria e transmissão ao vivo,
+  cada um com detalhe e lista de classificação. Só `/tiktok/video/detail` está confirmado
+  pela documentação; os outros estão marcados A CONFIRMAR no dicionário ENDPOINTS.
+- Nunca fazer uma chamada por produto — sempre usar os endpoints de lista, senão o crédito
+  evapora. `--testar` gasta exatamente 1 chamada.
+- O campo `video_gpm` da API é a receita por mil visualizações já calculada. É o número que
+  substitui a conta manual de quanto vale o alcance.
 - O `tiktok-sync.py` importa três tipos de export e descobre qual é pelas colunas:
   **Ranking de Produto** (`Informações do produto`, `Receita`, `Itens Vendidos`,
   `Taxa de comissão`…), **Marcas e Lojas**, e **Vídeo e Ads** (`Conteúdo de vídeo`,
