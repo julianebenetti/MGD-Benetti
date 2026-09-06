@@ -64,6 +64,14 @@
   dicionário ENDPOINTS.
 - `product/detail` já entrega `video_revenue` e `live_revenue` separados, então o split
   que decide se vale gravar vem pronto da fonte, sem precisar calcular.
+- `commission_rate` vem **em pontos percentuais** (1.0 = 1%), não em fração. A comissão em
+  reais sai de `unit_price` vezes essa taxa.
+- **O `sort_field` do `/product/rank` resolve os dois filtros manuais**: ordenar por
+  `video_revenue` traz quem vende por vídeo em vez de live, e por `commission_rate` traz
+  quem paga melhor. Ordenar por `launch_date` acha produto recém-lançado, antes de saturar.
+  A lista completa está em ORDENACOES_PRODUTO no `kalodata-api.py`.
+- Cuidado: `product_review_count` é **quantidade** de avaliações, não nota. A API de produto
+  não devolve nota.
 - Para filtrar por categoria (`category_ids`) é preciso descobrir o id de "Roupas
   femininas e roupas íntimas femininas". Esse id vem dos endpoints de `category`, que
   ainda não foram documentados aqui.

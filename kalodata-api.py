@@ -45,7 +45,7 @@ ENDPOINTS = {
     "loja_detalhe":      ("/tiktok/shop/detail",     "confirmado", 100),
     "loja_ranking":      ("/tiktok/shop/rank",       "confirmado",  10),
     "produto_detalhe":   ("/tiktok/product/detail",  "confirmado", 100),
-    "produto_ranking":   ("/tiktok/product/rank",    "provável",    10),
+    "produto_ranking":   ("/tiktok/product/rank",    "confirmado",  10),
     "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
     "categoria_ranking": ("/tiktok/category/rank",   "provável",    10),
 }
@@ -344,6 +344,9 @@ def montar_produto(d, periodo, data_ref):
         return None
     receita = d.get("revenue")
     preco_min, preco_max = d.get("min_price"), d.get("max_price")
+    pct = d.get("commission_rate")
+    base = d.get("unit_price") if d.get("unit_price") is not None else preco_min
+    com_reais = round(float(base) * float(pct) / 100, 2) if (base is not None and pct) else None
     return {
         "produto_id":        d.get("product_id"),
         "produto":           d.get("product_name"),
@@ -355,21 +358,78 @@ def montar_produto(d, periodo, data_ref):
         "preco_min":         preco_min,
         "preco_max":         preco_max,
         "preco":             preco_min if preco_min == preco_max else None,
-        "preco_medio":       pega("unit_price", "avg_price"),
+        "preco_medio":       d.get("unit_price"),
+        "comissao_reais":    com_reais,
         "gmv":               receita,
         "receita_video":     d.get("video_revenue"),
         "receita_live":      d.get("live_revenue"),
         "unidades":          pega("sales_volumn", "sales_volume"),
         "criadores":         d.get("creator_number"),
         "videos":            d.get("video_number"),
+        "lives":             d.get("live_number"),
         "crescimento_pct":   d.get("revenue_growth_rate"),
-        "comissao_percentual": pega("commission_rate", "commission"),
-        "avaliacao":         pega("rating", "review_score"),
-        "imagem_url":        d.get("image_url"),
+        # a doc é explícita: commission_rate já vem em pontos percentuais (1.0 = 1%)
+        "comissao_percentual": d.get("commission_rate"),
+        "avaliacoes_qtd":    d.get("product_review_count"),
+        "data_lancamento":   (d.get("launch_date") or "")[:10] or None,
+        "tipo_envio":        d.get("delivery_type"),
+        "receita_cartao":    d.get("showcase_revenue"),
+        "receita_shopping":  d.get("shopping_mall_revenue"),
+        "imagem_url":        pega("master_image_url", "image_url"),
         "periodo":           periodo,
         "data_ref":          data_ref,
         "fonte":             "kalodata",
     }
+
+
+# Campos que o /product/rank aceita ordenar. Os dois que interessam pra ela:
+# video_revenue acha quem vende por vídeo, commission_rate acha quem paga bem.
+ORDENACOES_PRODUTO = {
+    "revenue", "commission_rate", "revenue_growth_rate", "sales_volumn",
+    "unit_price", "launch_date", "live_revenue", "video_revenue",
+    "showcase_revenue", "product_id", "product_name",
+}
+
+
+def buscar_ranking_produtos(periodo, data_ref, paginas=1, por_pagina=100,
+                            ordenar_por="revenue", categorias=None, palavra=None,
+                            loja_id=None, dry_run=False):
+    if ordenar_por not in ORDENACOES_PRODUTO:
+        raise SystemExit("--ordenar-por aceita: " + ", ".join(sorted(ORDENACOES_PRODUTO)))
+    todos = []
+    for pagina in range(1, paginas + 1):
+        corpo = {
+            "date_range": periodo_api(periodo),
+            "sort_field": {"field": ordenar_por, "type": "DESC"},
+            "page_size": min(por_pagina, 100),
+            "page_number": pagina,
+            "need_image": 1,
+        }
+        if categorias: corpo["category_ids"] = categorias
+        if palavra:    corpo["keyword"] = palavra
+        if loja_id:    corpo["shop_id"] = loja_id
+        resposta = chamar("produto_ranking", corpo)
+        linhas = resposta.get("data") or []
+        print(f"  página {pagina}: {len(linhas)} produto(s)")
+        todos += [montar_produto(d, periodo, data_ref) for d in linhas]
+        if len(linhas) < corpo["page_size"]:
+            break
+
+    for i, p in enumerate(todos, start=1):
+        if p.get("ranking") is None:
+            p["ranking"] = i
+    validos = [p for p in todos if p.get("produto_id") and p.get("produto")]
+
+    acima = [p for p in validos if (p.get("comissao_reais") or 0) >= 9]
+    print(f"  {len(validos)} produto(s), {len(acima)} com comissão a partir de R$9")
+    if validos:
+        print(f"  exemplo: {json.dumps(validos[0], ensure_ascii=False)[:280]}")
+    if dry_run:
+        print("  (dry-run: nada foi gravado)")
+        return validos
+    gravar("tiktok_ranking_produtos", validos, "produto_id,periodo,data_ref")
+    print(f"  {len(validos)} linha(s) gravada(s) em tiktok_ranking_produtos.")
+    return validos
 
 
 def buscar_produto(produto_id, periodo, data_ref, dry_run=False):
@@ -457,6 +517,11 @@ def main():
 
     if "--testar" in args:
         testar()
+    elif "--ranking-produtos" in args:
+        print(f"Ranking de produtos, período {periodo}, ordenado por {ordenar_por}, "
+              f"{paginas} chamada(s):")
+        buscar_ranking_produtos(periodo, data_ref, paginas, por_pagina, ordenar_por,
+                                None, palavra, loja_id, dry_run)
     elif "--ranking-lojas" in args:
         print(f"Ranking de lojas, período {periodo}, ordenado por {ordenar_por}, "
               f"{paginas} chamada(s):")
@@ -482,6 +547,9 @@ def main():
             "Nada pra fazer. Opções:\n"
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
+            "  --ranking-produtos            top de produtos do período\n"
+            "  --ordenar-por video_revenue       produtos que vendem por vídeo, não por live\n"
+            "  --ordenar-por commission_rate     produtos que pagam a maior comissão\n"
             "  --ranking-lojas               top de lojas do período\n"
             "  --ordenar-por affiliate_revenue   ordena as lojas por receita de afiliado\n"
             "  --tipo-loja BRAND             só marca própria, ou RETAILER pra varejista\n"
