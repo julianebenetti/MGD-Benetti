@@ -7,7 +7,8 @@ e grava nas mesmas tabelas que o tiktok-sync.py alimenta.
 Uso:
     python kalodata-api.py --testar              # 1 chamada só, confere se a chave funciona
     python kalodata-api.py --video 7404191282148511007
-    python kalodata-api.py --ranking-produtos    # precisa dos parâmetros confirmados (veja abaixo)
+    python kalodata-api.py --ranking-videos --paginas 2
+    python kalodata-api.py --videos-do-produto 1729587769570529799
 
 Variáveis de ambiente:
     KALODATA_KEY     obrigatória — a chave criada em Conta no Centro Aberto do Kalodata
@@ -22,9 +23,9 @@ de uma vez. O --testar gasta exatamente 1 chamada.
 O QUE AINDA PRECISA SER CONFIRMADO NA DOCUMENTAÇÃO:
   1. O nome exato do cabeçalho da chave (a doc diz "secret-key nos cabeçalhos",
      mas não mostra o nome). Ajuste em KALODATA_HEADER ou na variável de ambiente.
-  2. O caminho e os parâmetros dos endpoints de lista de classificação
-     (produtos, lojas, vídeos). Só o /tiktok/video/detail está confirmado pela doc.
-     Os outros estão em ENDPOINTS marcados como A CONFIRMAR.
+  2. Os endpoints marcados como "provável" em ENDPOINTS. Confirmados pela doc:
+     video/detail, video/rank e shop/detail. Os outros seguem o mesmo padrão
+     (/tiktok/<familia>/detail e /tiktok/<familia>/rank), mas não foram vistos.
 """
 import json
 import os
@@ -36,18 +37,17 @@ from datetime import date
 
 BASE = "https://www.kalodata.com/openapi/v1"
 
-# Só o primeiro veio confirmado da documentação que a Juliane mandou.
-# Os demais são o caminho provável, a partir dos nomes do menu lateral —
-# corrija aqui assim que abrir a página de cada um no Centro Aberto.
+# Caminho, situação e limite de taxa (chamadas por 10 segundos), conforme a doc.
+# Os endpoints de /rank são bem mais restritos que os de /detail.
 ENDPOINTS = {
-    "video_detalhe":      ("/tiktok/video/detail",    "confirmado"),
-    "video_ranking":      ("/tiktok/video/list",      "A CONFIRMAR"),
-    "produto_detalhe":    ("/tiktok/product/detail",  "A CONFIRMAR"),
-    "produto_ranking":    ("/tiktok/product/list",    "A CONFIRMAR"),
-    "loja_detalhe":       ("/tiktok/shop/detail",     "A CONFIRMAR"),
-    "loja_ranking":       ("/tiktok/shop/list",       "A CONFIRMAR"),
-    "criador_ranking":    ("/tiktok/creator/list",    "A CONFIRMAR"),
-    "categoria_ranking":  ("/tiktok/category/list",   "A CONFIRMAR"),
+    "video_detalhe":     ("/tiktok/video/detail",    "confirmado", 100),
+    "video_ranking":     ("/tiktok/video/rank",      "confirmado",  10),
+    "loja_detalhe":      ("/tiktok/shop/detail",     "confirmado", 100),
+    "loja_ranking":      ("/tiktok/shop/rank",       "provável",    10),
+    "produto_detalhe":   ("/tiktok/product/detail",  "provável",   100),
+    "produto_ranking":   ("/tiktok/product/rank",    "provável",    10),
+    "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
+    "categoria_ranking": ("/tiktok/category/rank",   "provável",    10),
 }
 
 # Padrões do Brasil, conforme a lista de valores aceitos na documentação
@@ -58,9 +58,9 @@ KALODATA_HEADER = os.environ.get("KALODATA_HEADER", "secret-key")
 SUPABASE_URL    = os.environ.get("SUPABASE_URL", "https://tkxkrbdvcctoajuigvvv.supabase.co")
 SUPABASE_KEY    = os.environ.get("SUPABASE_KEY", "")
 
-# A doc diz 100 chamadas a cada 10 segundos. Fico bem abaixo disso de propósito.
-INTERVALO_MINIMO = 0.15
-_ultima_chamada = 0.0
+# Cada endpoint tem seu limite. Guardo o instante da última chamada por caminho
+# e espero o suficiente pra ficar com folga abaixo do teto.
+_ultima_chamada = {}
 
 
 def chamar(nome_endpoint, corpo):
@@ -69,11 +69,12 @@ def chamar(nome_endpoint, corpo):
     if not KALODATA_KEY:
         raise SystemExit("Falta a variável de ambiente KALODATA_KEY.")
 
-    caminho, situacao = ENDPOINTS[nome_endpoint]
-    espera = INTERVALO_MINIMO - (time.time() - _ultima_chamada)
+    caminho, situacao, teto = ENDPOINTS[nome_endpoint]
+    intervalo = 10.0 / teto * 1.2  # 20% de folga
+    espera = intervalo - (time.time() - _ultima_chamada.get(caminho, 0.0))
     if espera > 0:
         time.sleep(espera)
-    _ultima_chamada = time.time()
+    _ultima_chamada[caminho] = time.time()
 
     payload = json.dumps({**PADRAO, **corpo}).encode()
     req = urllib.request.Request(
@@ -90,9 +91,9 @@ def chamar(nome_endpoint, corpo):
                 f"A API recusou a chave (HTTP {e.code}).\n"
                 f"Cabeçalho usado: {KALODATA_HEADER!r}. Se a doc do Kalodata usar outro nome,\n"
                 f"defina KALODATA_HEADER com o nome certo.\nResposta: {detalhe}")
-        if e.code == 404 and situacao == "A CONFIRMAR":
+        if e.code == 404 and situacao == "provável":
             raise SystemExit(
-                f"O caminho {caminho!r} não existe. Ele estava marcado como A CONFIRMAR.\n"
+                f"O caminho {caminho!r} não existe. Ele estava marcado como provável.\n"
                 f"Abra '{nome_endpoint}' no Centro Aberto do Kalodata e corrija ENDPOINTS "
                 f"no topo deste arquivo.")
         raise SystemExit(f"A API respondeu {e.code}: {detalhe}")
@@ -177,11 +178,82 @@ def buscar_video(video_id, periodo, data_ref, gravar_no_banco=True):
     return linha
 
 
-PERIODOS = {"1d": "lastDay", "7d": "last7Day", "30d": "last30Day",
-            "60d": "last60Day", "90d": "last90Day"}
+def montar_video_rank(d, periodo, data_ref):
+    """Traduz uma linha de /tiktok/video/rank. Tem menos campos que o detail,
+    mas traz crescimento da receita e a fatia de receita vinda de anúncio."""
+    arroba = d.get("belonged_creator_handle")
+    return {
+        "video_id":              d.get("video_id"),
+        "arroba":                f"@{arroba}" if arroba and not str(arroba).startswith("@") else arroba,
+        "criador_id":            d.get("belonged_creator_id"),
+        "gancho":                d.get("video_title"),
+        "receita":               d.get("revenue"),
+        "views":                 d.get("views"),
+        "crescimento_pct":       d.get("revenue_growth_rate"),
+        "ads_roas":              d.get("ads_roas"),
+        "likes":                 d.get("digg_count"),
+        "compartilhamentos":     d.get("share_count"),
+        "comentarios":           d.get("comment_count"),
+        "proporcao_receita_ads": d.get("ad_revenue_ratio"),
+        "proporcao_ads":         d.get("ad_view_ratio"),
+        "data_postagem":         (d.get("creator_debut") or "")[:10] or None,
+        "anuncio":               d.get("ad") == 1,
+        "video_ia":              d.get("ai_video") == 1,
+        "link_video":            f"https://www.tiktok.com/@{arroba}/video/{d.get('video_id')}"
+                                 if arroba and d.get("video_id") else None,
+        "periodo":               periodo,
+        "data_ref":              data_ref,
+        "data_deteccao":         data_ref,
+        "fonte":                 "kalodata",
+    }
+
+
+def buscar_ranking_videos(periodo, data_ref, paginas=1, por_pagina=100,
+                          produto_id=None, loja_id=None, categorias=None,
+                          palavra=None, so_organico=False, dry_run=False):
+    """Puxa o ranking de vídeos. Uma chamada traz até 100 linhas — sempre prefira
+    aumentar por_pagina a fazer várias chamadas."""
+    todos = []
+    for pagina in range(1, paginas + 1):
+        corpo = {
+            "date_range": periodo_api(periodo),
+            "sort_field": {"field": "revenue", "type": "DESC"},
+            "page_size": min(por_pagina, 100),
+            "page_number": pagina,
+        }
+        if produto_id:  corpo["product_id"] = produto_id
+        if loja_id:     corpo["shop_id"] = loja_id
+        if categorias:  corpo["category_ids"] = categorias
+        if palavra:     corpo["keyword"] = palavra
+        resposta = chamar("video_ranking", corpo)
+        linhas = resposta.get("data") or []
+        print(f"  página {pagina}: {len(linhas)} vídeo(s)")
+        todos += [montar_video_rank(d, periodo, data_ref) for d in linhas]
+        if len(linhas) < corpo["page_size"]:
+            break
+
+    if so_organico:
+        antes = len(todos)
+        todos = [v for v in todos if not v["anuncio"]]
+        print(f"  filtrei os impulsionados: {antes} → {len(todos)}")
+
+    com_id = [v for v in todos if v.get("video_id")]
+    print(f"  {len(com_id)} vídeo(s) com id, prontos pra gravar")
+    if com_id:
+        print(f"  exemplo: {json.dumps(com_id[0], ensure_ascii=False)[:260]}")
+    if dry_run:
+        print("  (dry-run: nada foi gravado)")
+        return com_id
+    gravar("tiktok_videos", com_id, "video_id")
+    print(f"  {len(com_id)} linha(s) gravada(s) em tiktok_videos.")
+    return com_id
+
+
+PERIODOS = {"1d": "lastDay", "7d": "last7Day", "30d": "last30Day"}
 
 
 def periodo_api(periodo):
+    # O ranking de vídeos limita a janela a 30 dias, então fico nesse conjunto.
     if periodo not in PERIODOS:
         raise SystemExit(f"--periodo aceita {', '.join(PERIODOS)}.")
     return PERIODOS[periodo]
@@ -205,12 +277,15 @@ def main():
     if not args or "--ajuda" in args or "-h" in args:
         print(__doc__)
         print("Situação dos endpoints:")
-        for nome, (caminho, situacao) in ENDPOINTS.items():
-            print(f"  {nome:20} {caminho:28} {situacao}")
+        for nome, (caminho, situacao, teto) in ENDPOINTS.items():
+            print(f"  {nome:18} {caminho:26} {situacao:11} {teto:>3} chamadas/10s")
         return
 
     periodo, data_ref = "7d", date.today().isoformat()
-    video_id = None
+    video_id = produto_id = loja_id = palavra = None
+    paginas, por_pagina = 1, 100
+    dry_run = "--dry-run" in args
+    so_organico = "--so-organico" in args
     i = 0
     while i < len(args):
         if args[i] == "--periodo" and i + 1 < len(args):
@@ -219,6 +294,16 @@ def main():
             data_ref = args[i + 1]; i += 2
         elif args[i] == "--video" and i + 1 < len(args):
             video_id = args[i + 1]; i += 2
+        elif args[i] == "--videos-do-produto" and i + 1 < len(args):
+            produto_id = args[i + 1]; i += 2
+        elif args[i] == "--videos-da-loja" and i + 1 < len(args):
+            loja_id = args[i + 1]; i += 2
+        elif args[i] == "--palavra" and i + 1 < len(args):
+            palavra = args[i + 1]; i += 2
+        elif args[i] == "--paginas" and i + 1 < len(args):
+            paginas = int(args[i + 1]); i += 2
+        elif args[i] == "--por-pagina" and i + 1 < len(args):
+            por_pagina = int(args[i + 1]); i += 2
         else:
             i += 1
 
@@ -226,11 +311,25 @@ def main():
         testar()
     elif video_id:
         buscar_video(video_id, periodo, data_ref)
+    elif produto_id or loja_id or palavra or "--ranking-videos" in args:
+        alvo = (f"produto {produto_id}" if produto_id else
+                f"loja {loja_id}" if loja_id else
+                f"palavra {palavra!r}" if palavra else "geral")
+        print(f"Ranking de vídeos ({alvo}), período {periodo}, "
+              f"até {paginas * min(por_pagina, 100)} linhas, "
+              f"{paginas} chamada(s):")
+        buscar_ranking_videos(periodo, data_ref, paginas, por_pagina,
+                              produto_id, loja_id, None, palavra, so_organico, dry_run)
     else:
         raise SystemExit(
-            "Nada pra fazer. Use --testar pra conferir a chave, ou --video <id>.\n"
-            "Os endpoints de lista de classificação ainda estão marcados como A CONFIRMAR — "
-            "mande a página deles do Centro Aberto que eu ligo.")
+            "Nada pra fazer. Opções:\n"
+            "  --testar                      confere a chave, gasta 1 chamada\n"
+            "  --ranking-videos              top de vídeos do período\n"
+            "  --videos-do-produto <id>      os vídeos que vendem um produto\n"
+            "  --videos-da-loja <id>         os vídeos que vendem uma loja\n"
+            "  --palavra fashion             busca por palavra-chave\n"
+            "  --video <id>                  detalhe de um vídeo\n"
+            "Junte --so-organico pra descartar os impulsionados, e --dry-run pra não gravar.")
 
 
 if __name__ == "__main__":

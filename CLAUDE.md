@@ -57,9 +57,17 @@
   JSON, chave secreta no cabeçalho, limite de 100 chamadas a cada 10 segundos, e é **paga por
   chamada** (a conta tem saldo de créditos). Aceita `region: BR`, `language: pt-BR`,
   `currency: BRL` e `date_range: last7Day`. O cliente é o `kalodata-api.py`.
-  Endpoints por família: video, produto, loja, criador, categoria e transmissão ao vivo,
-  cada um com detalhe e lista de classificação. Só `/tiktok/video/detail` está confirmado
-  pela documentação; os outros estão marcados A CONFIRMAR no dicionário ENDPOINTS.
+  Padrão dos caminhos: `/tiktok/<familia>/detail` e `/tiktok/<familia>/rank`, para as
+  famílias video, product, shop, creator, category e live. Confirmados na doc:
+  `video/detail`, `video/rank` e `shop/detail`; os demais seguem o padrão mas ainda não
+  foram vistos, e estão marcados como "provável" no dicionário ENDPOINTS.
+- **Limite de taxa é por endpoint**: os `/detail` aceitam 100 chamadas a cada 10 segundos,
+  os `/rank` só 10. O cliente controla isso por caminho, com 20% de folga.
+- O `/tiktok/video/rank` limita a janela a 30 dias e traz até 100 linhas por chamada.
+  Aceita filtrar por `product_id` (é o equivalente à aba Vídeo e Ads da interface),
+  `shop_id`, `creator_id`, `category_ids`, `keyword`, faixa de receita, faixa de
+  seguidores, faixa de ROAS e `is_ai_video`. Ordena por qualquer campo numérico da
+  resposta via `sort_field`.
 - Nunca fazer uma chamada por produto — sempre usar os endpoints de lista, senão o crédito
   evapora. `--testar` gasta exatamente 1 chamada.
 - O campo `video_gpm` da API é a receita por mil visualizações já calculada. É o número que
