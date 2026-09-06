@@ -101,6 +101,13 @@
   resposta via `sort_field`.
 - Nunca fazer uma chamada por produto — sempre usar os endpoints de lista, senão o crédito
   evapora. `--testar` gasta exatamente 1 chamada.
+- **A chave de API do Kalodata é mostrada uma única vez** e gerar outra invalida a anterior
+  na hora. Ela vive só como secret `KALODATA_KEY` no GitHub Actions — nunca no repositório,
+  nunca em print, nunca colada em conversa. Chave que apareceu em print está queimada e
+  precisa ser regerada.
+- A doc não diz o nome do cabeçalho da chave. O `--descobrir-cabecalho` testa os nomes
+  prováveis e identifica o certo: com saldo zerado, um erro de crédito já prova que a
+  autenticação passou, porque a checagem de saldo vem depois da de chave.
 - O campo `video_gpm` da API é a receita por mil visualizações já calculada. É o número que
   substitui a conta manual de quanto vale o alcance.
 - O `tiktok-sync.py` importa três tipos de export e descobre qual é pelas colunas:

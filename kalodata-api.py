@@ -76,21 +76,27 @@ def chamar(nome_endpoint, corpo):
         time.sleep(espera)
     _ultima_chamada[caminho] = time.time()
 
+    return _post(caminho, situacao, corpo, KALODATA_HEADER)
+
+
+def _post(caminho, situacao, corpo, cabecalho, cru=False):
     payload = json.dumps({**PADRAO, **corpo}).encode()
     req = urllib.request.Request(
         BASE + caminho, data=payload, method="POST",
-        headers={"Content-Type": "application/json", KALODATA_HEADER: KALODATA_KEY},
+        headers={"Content-Type": "application/json", cabecalho: KALODATA_KEY},
     )
     try:
         with urllib.request.urlopen(req, timeout=60) as r:
             resposta = json.loads(r.read().decode())
     except urllib.error.HTTPError as e:
         detalhe = e.read().decode()[:500]
+        if cru:
+            return e.code, detalhe
         if e.code in (401, 403):
             raise SystemExit(
                 f"A API recusou a chave (HTTP {e.code}).\n"
-                f"Cabeçalho usado: {KALODATA_HEADER!r}. Se a doc do Kalodata usar outro nome,\n"
-                f"defina KALODATA_HEADER com o nome certo.\nResposta: {detalhe}")
+                f"Cabeçalho usado: {cabecalho!r}. Rode --descobrir-cabecalho pra achar o certo.\n"
+                f"Resposta: {detalhe}")
         if e.code == 404 and situacao == "provável":
             raise SystemExit(
                 f"O caminho {caminho!r} não existe. Ele estava marcado como provável.\n"
@@ -98,6 +104,8 @@ def chamar(nome_endpoint, corpo):
                 f"no topo deste arquivo.")
         raise SystemExit(f"A API respondeu {e.code}: {detalhe}")
 
+    if cru:
+        return 200, resposta
     if not resposta.get("success"):
         raise SystemExit(
             f"A API respondeu success=false.\n"
@@ -479,6 +487,55 @@ def periodo_api(periodo):
     return PERIODOS[periodo]
 
 
+# A doc diz "autenticação de secret-key nos cabeçalhos" mas nunca mostra o nome.
+# Em vez de pedir mais um print, testo os nomes prováveis e vejo qual passa.
+CABECALHOS_CANDIDATOS = [
+    "secret-key", "Secret-Key", "X-Secret-Key", "secretkey",
+    "api-key", "X-API-Key", "apikey", "key", "Key", "Authorization",
+]
+
+# Palavras que indicam que a autenticação PASSOU e o que barrou foi saldo.
+# Nesse caso o cabeçalho está certo, só falta recarregar.
+SINAIS_DE_CREDITO = ("credit", "crédito", "quota", "saldo", "balance",
+                     "insufficient", "recarregar", "recharge", "points")
+
+
+def descobrir_cabecalho():
+    """Testa os nomes prováveis de cabeçalho. Erro de saldo também conta como
+    acerto: significa que a chave foi aceita e só falta crédito."""
+    if not KALODATA_KEY:
+        raise SystemExit("Falta a variável de ambiente KALODATA_KEY.")
+    caminho, situacao, _ = ENDPOINTS["video_detalhe"]
+    corpo = {"region": "US", "language": "en-US", "currency": "USD",
+             "date_range": "last7Day", "video_id": "7404191282148511007",
+             "need_extra": False}
+    print("Testando os nomes prováveis de cabeçalho, 1 chamada cada.\n")
+    for nome in CABECALHOS_CANDIDATOS:
+        time.sleep(0.2)
+        try:
+            status, corpo_resp = _post(caminho, situacao, corpo, nome, cru=True)
+        except Exception as erro:
+            print(f"  {nome:16} erro de rede: {erro}")
+            continue
+        texto = json.dumps(corpo_resp, ensure_ascii=False).lower() if isinstance(
+            corpo_resp, dict) else str(corpo_resp).lower()
+        if status in (401, 403):
+            print(f"  {nome:16} recusado (HTTP {status})")
+        elif status == 200 and isinstance(corpo_resp, dict) and corpo_resp.get("success"):
+            print(f"\n  ✓ É esse: {nome}\n")
+            print(f"Defina KALODATA_HEADER={nome} e pode rodar tudo.")
+            return nome
+        elif any(p in texto for p in SINAIS_DE_CREDITO):
+            print(f"\n  ✓ É esse: {nome}  (a chave passou; o que falta é crédito)\n")
+            print(f"Defina KALODATA_HEADER={nome} e recarregue o saldo no Centro Aberto.")
+            return nome
+        else:
+            print(f"  {nome:16} HTTP {status}: {str(corpo_resp)[:90]}")
+    print("\nNenhum funcionou. Mande um print da página Conta mostrando o exemplo "
+          "de requisição, que ali costuma aparecer o nome do cabeçalho.")
+    return None
+
+
 def testar():
     """Gasta 1 chamada só, com os parâmetros de exemplo da própria documentação."""
     print(f"Base: {BASE}")
@@ -545,7 +602,9 @@ def main():
         else:
             i += 1
 
-    if "--testar" in args:
+    if "--descobrir-cabecalho" in args:
+        descobrir_cabecalho()
+    elif "--testar" in args:
         testar()
     elif "--ranking-produtos" in args:
         print(f"Ranking de produtos, período {periodo}, ordenado por {ordenar_por}, "
@@ -579,6 +638,7 @@ def main():
     else:
         raise SystemExit(
             "Nada pra fazer. Opções:\n"
+            "  --descobrir-cabecalho         acha o nome do cabeçalho da chave sozinho\n"
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
             "  --ranking-produtos            top de produtos do período\n"
