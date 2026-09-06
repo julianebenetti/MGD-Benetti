@@ -508,7 +508,9 @@ def montar_categoria(d, periodo, data_ref):
         "receita_shopping":   d.get("shopping_mall_revenue"),
         "crescimento_pct":    d.get("revenue_growth_rate"),
         "lojas":              d.get("shop_number"),
-        "receita_media_loja": d.get("average_shop_revenue"),
+        "receita_media_loja": (d.get("average_shop_revenue")
+                               if d.get("average_shop_revenue") is not None
+                               else d.get("average_revenue")),
         "concentracao_top3":  d.get("top3_shop_revenue_ratio"),
         "vendas":             d.get("sale"),
         "produtos_ativos":    d.get("active_product_number"),
@@ -520,15 +522,22 @@ def montar_categoria(d, periodo, data_ref):
 
 
 def buscar_categorias(periodo, data_ref, paginas=1, por_pagina=100,
-                      ordenar_por="revenue", dry_run=False):
+                      ordenar_por="revenue", dry_run=False,
+                      nivel=None, dentro_de=None):
     """Lista as categorias. É daqui que sai o category_id de moda feminina,
-    que vira filtro em todos os outros endpoints."""
+    que vira filtro em todos os outros endpoints.
+
+    nivel: 1 = categorias de topo, 2 = médio, 3 = folha.
+    dentro_de: id de uma categoria-mãe, pra abrir as filhas dela."""
     todas = []
     for pagina in range(1, paginas + 1):
-        resposta = chamar("categoria_ranking", {
+        corpo = {
             "date_range": periodo_api(periodo, "categoria"),
             "sort_field": {"field": ordenar_por, "type": "DESC"},
-            "page_size": min(por_pagina, 100), "page_number": pagina})
+            "page_size": min(por_pagina, 100), "page_number": pagina}
+        if nivel:      corpo["category_level"] = int(nivel)
+        if dentro_de:  corpo["category_ids"] = [dentro_de]
+        resposta = chamar("categoria_ranking", corpo)
         linhas = resposta.get("data") or []
         print(f"  página {pagina}: {len(linhas)} categoria(s)")
         todas += [montar_categoria(d, periodo, data_ref) for d in linhas]
@@ -540,7 +549,10 @@ def buscar_categorias(periodo, data_ref, paginas=1, por_pagina=100,
             c["ranking"] = i
     validas = [c for c in todas if c.get("categoria_id")]
 
-    print(f"\n  {len(validas)} categoria(s). As de moda feminina:")
+    print(f"\n  {len(validas)} categoria(s)"
+          + (f", nível {nivel}" if nivel else "")
+          + (f", dentro de {dentro_de}" if dentro_de else "")
+          + ". As de moda feminina:")
     alvos = ("moda", "roupa", "femin", "vestu", "women", "apparel", "fashion",
              "intima", "lingerie", "cal\u00e7ado", "bolsa", "acess")
     achou = False
@@ -651,6 +663,7 @@ def main():
     video_id = produto_id = loja_id = palavra = produto_detalhe_id = None
     ordenar_por, tipo_loja = "revenue", None
     comissao = faixa_preco = envio = lancados_ha = categoria_id = None
+    nivel = dentro_de = None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
     so_organico = "--so-organico" in args
@@ -666,6 +679,10 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--nivel" and i + 1 < len(args):
+            nivel = args[i + 1]; i += 2
+        elif args[i] == "--dentro-de" and i + 1 < len(args):
+            dentro_de = args[i + 1]; i += 2
         elif args[i] == "--categoria" and i + 1 < len(args):
             categoria_id = args[i + 1]; i += 2
         elif args[i] == "--comissao" and i + 1 < len(args):
@@ -699,7 +716,8 @@ def main():
         testar()
     elif "--categorias" in args:
         print(f"Categorias, período {periodo}, {paginas} chamada(s):")
-        buscar_categorias(periodo, data_ref, paginas, por_pagina, ordenar_por, dry_run)
+        buscar_categorias(periodo, data_ref, paginas, por_pagina, ordenar_por, dry_run,
+                          nivel=nivel, dentro_de=dentro_de)
     elif categoria_id:
         buscar_categoria(categoria_id, periodo, data_ref, dry_run)
     elif "--ranking-produtos" in args:
@@ -737,7 +755,8 @@ def main():
             "  --descobrir-cabecalho         acha o nome do cabeçalho da chave sozinho\n"
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
-            "  --categorias                  lista as categorias e destaca as de moda\n"
+            "  --categorias --nivel 1        categorias de topo (é onde está moda feminina)\n"
+            "  --categorias --dentro-de <id> abre as subcategorias de uma categoria\n"
             "  --categoria <id>              detalhe de uma categoria\n"
             "  --ranking-produtos            top de produtos do período\n"
             "  --ordenar-por video_revenue       produtos que vendem por vídeo, não por live\n"
