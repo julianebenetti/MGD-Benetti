@@ -350,8 +350,9 @@ def montar_produto(d, periodo, data_ref):
     return {
         "produto_id":        d.get("product_id"),
         "produto":           d.get("product_name"),
-        "loja_id":           d.get("product_shop_id"),
-        "loja":              d.get("shop_name"),
+        "loja_id":           pega("product_shop_id", "seller_id"),
+        "loja":              pega("seller_name", "shop_name"),
+        "sku_count":         d.get("sku_count"),
         "cat_principal_id":  d.get("pri_cate_id"),
         "cat_secundaria_id": d.get("sec_cate_id"),
         "cat_terciaria_id":  d.get("ter_cate_id"),
@@ -391,9 +392,17 @@ ORDENACOES_PRODUTO = {
 }
 
 
+# A regra de curadoria da Juliane vira filtro da própria API:
+# só produto afiliável, comissão a partir de 15% e ticket que garante os R$9.
+# 15% de R$60 = R$9 cravado, então esse é o piso de preço que fecha a conta.
+CURADORIA = {"is_affiliate": 1, "commission_rate": ">=15", "unit_price_range": "60-1000"}
+
+
 def buscar_ranking_produtos(periodo, data_ref, paginas=1, por_pagina=100,
                             ordenar_por="revenue", categorias=None, palavra=None,
-                            loja_id=None, dry_run=False):
+                            loja_id=None, dry_run=False, curadoria=False,
+                            comissao=None, faixa_preco=None, envio=None,
+                            lancados_ha=None, so_afiliado=False):
     if ordenar_por not in ORDENACOES_PRODUTO:
         raise SystemExit("--ordenar-por aceita: " + ", ".join(sorted(ORDENACOES_PRODUTO)))
     todos = []
@@ -404,10 +413,22 @@ def buscar_ranking_produtos(periodo, data_ref, paginas=1, por_pagina=100,
             "page_size": min(por_pagina, 100),
             "page_number": pagina,
             "need_image": 1,
+            "need_extra": True,   # traz nome do vendedor e quantidade de SKU
         }
-        if categorias: corpo["category_ids"] = categorias
-        if palavra:    corpo["keyword"] = palavra
-        if loja_id:    corpo["shop_id"] = loja_id
+        if curadoria:     corpo.update(CURADORIA)
+        if so_afiliado:   corpo["is_affiliate"] = 1
+        if comissao:      corpo["commission_rate"] = comissao
+        if faixa_preco:   corpo["unit_price_range"] = faixa_preco
+        if envio:         corpo["delivery_type"] = envio
+        if lancados_ha:   corpo["launch_date"] = lancados_ha
+        if categorias:    corpo["category_ids"] = categorias
+        if palavra:       corpo["keyword"] = palavra
+        if loja_id:       corpo["shop_id"] = loja_id
+        if pagina == 1:
+            filtros = {k: v for k, v in corpo.items()
+                       if k not in ("date_range", "sort_field", "page_size",
+                                    "page_number", "need_image", "need_extra")}
+            print(f"  filtros: {json.dumps(filtros, ensure_ascii=False) if filtros else 'nenhum'}")
         resposta = chamar("produto_ranking", corpo)
         linhas = resposta.get("data") or []
         print(f"  página {pagina}: {len(linhas)} produto(s)")
@@ -483,6 +504,7 @@ def main():
     periodo, data_ref = "7d", date.today().isoformat()
     video_id = produto_id = loja_id = palavra = produto_detalhe_id = None
     ordenar_por, tipo_loja = "revenue", None
+    comissao = faixa_preco = envio = lancados_ha = None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
     so_organico = "--so-organico" in args
@@ -498,6 +520,14 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--comissao" and i + 1 < len(args):
+            comissao = args[i + 1]; i += 2
+        elif args[i] == "--faixa-preco" and i + 1 < len(args):
+            faixa_preco = args[i + 1]; i += 2
+        elif args[i] == "--envio" and i + 1 < len(args):
+            envio = args[i + 1]; i += 2
+        elif args[i] == "--lancados-ha" and i + 1 < len(args):
+            lancados_ha = args[i + 1]; i += 2
         elif args[i] == "--produto" and i + 1 < len(args):
             produto_detalhe_id = args[i + 1]; i += 2
         elif args[i] == "--loja" and i + 1 < len(args):
@@ -521,7 +551,11 @@ def main():
         print(f"Ranking de produtos, período {periodo}, ordenado por {ordenar_por}, "
               f"{paginas} chamada(s):")
         buscar_ranking_produtos(periodo, data_ref, paginas, por_pagina, ordenar_por,
-                                None, palavra, loja_id, dry_run)
+                                None, palavra, loja_id, dry_run,
+                                curadoria="--curadoria" in args,
+                                comissao=comissao, faixa_preco=faixa_preco,
+                                envio=envio, lancados_ha=lancados_ha,
+                                so_afiliado="--so-afiliado" in args)
     elif "--ranking-lojas" in args:
         print(f"Ranking de lojas, período {periodo}, ordenado por {ordenar_por}, "
               f"{paginas} chamada(s):")
@@ -550,6 +584,12 @@ def main():
             "  --ranking-produtos            top de produtos do período\n"
             "  --ordenar-por video_revenue       produtos que vendem por vídeo, não por live\n"
             "  --ordenar-por commission_rate     produtos que pagam a maior comissão\n"
+            "  --curadoria                   sua regra pronta: afiliável, 15%+ e ticket R$60+\n"
+            "  --so-afiliado                 só produtos do programa de afiliados\n"
+            "  --comissao \">=20\"             filtro de comissão: 15-35, >=20, <10\n"
+            "  --faixa-preco 60-200          filtro de ticket\n"
+            "  --envio local                 só envio nacional (local) ou global\n"
+            "  --lancados-ha \"<7\"            produto novo: <3, <7, >30 dias\n"
             "  --ranking-lojas               top de lojas do período\n"
             "  --ordenar-por affiliate_revenue   ordena as lojas por receita de afiliado\n"
             "  --tipo-loja BRAND             só marca própria, ou RETAILER pra varejista\n"

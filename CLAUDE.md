@@ -72,6 +72,16 @@
   A lista completa está em ORDENACOES_PRODUTO no `kalodata-api.py`.
 - Cuidado: `product_review_count` é **quantidade** de avaliações, não nota. A API de produto
   não devolve nota.
+- **A regra de curadoria virou filtro de API.** O `/product/rank` aceita `is_affiliate: 1`
+  (só o que dá pra afiliar), `commission_rate: ">=15"` e `unit_price_range: "60-1000"`.
+  Combinados, garantem o piso de R$9: 15% de R$60 dá exatamente R$9. Está na constante
+  CURADORIA do `kalodata-api.py`, ligada pela opção `--curadoria`.
+- Outros filtros úteis do `/product/rank`: `delivery_type: "local"` (envio nacional, chega
+  mais rápido), `launch_date: "<7"` (lançado nos últimos 7 dias, onda subindo — note que
+  como **filtro** ele usa esse formato de dias, e como campo de **ordenação** é data),
+  `is_tts_product`, `video_id` (produtos de um vídeo), `livestream_id` e `need_all`.
+- `need_extra: true` traz `seller_name` e `sku_count`, então o nome da loja só aparece
+  no ranking com essa flag ligada.
 - Para filtrar por categoria (`category_ids`) é preciso descobrir o id de "Roupas
   femininas e roupas íntimas femininas". Esse id vem dos endpoints de `category`, que
   ainda não foram documentados aqui.
