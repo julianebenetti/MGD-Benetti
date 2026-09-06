@@ -43,7 +43,7 @@ ENDPOINTS = {
     "video_detalhe":     ("/tiktok/video/detail",    "confirmado", 100),
     "video_ranking":     ("/tiktok/video/rank",      "confirmado",  10),
     "loja_detalhe":      ("/tiktok/shop/detail",     "confirmado", 100),
-    "loja_ranking":      ("/tiktok/shop/rank",       "provável",    10),
+    "loja_ranking":      ("/tiktok/shop/rank",       "confirmado",  10),
     "produto_detalhe":   ("/tiktok/product/detail",  "provável",   100),
     "produto_ranking":   ("/tiktok/product/rank",    "provável",    10),
     "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
@@ -249,6 +249,87 @@ def buscar_ranking_videos(periodo, data_ref, paginas=1, por_pagina=100,
     return com_id
 
 
+def montar_loja(d, periodo, data_ref):
+    """Traduz uma loja, tanto de /shop/detail quanto de /shop/rank.
+    A doc escreve alguns campos de dois jeitos, então leio os dois."""
+    def pega(*nomes):
+        for n in nomes:
+            if d.get(n) is not None:
+                return d[n]
+        return None
+    return {
+        "loja_id":           d.get("shop_id"),
+        "loja":              d.get("shop_name"),
+        "gmv":               d.get("revenue"),
+        "receita_afiliados": d.get("affiliate_revenue"),
+        "receita_propria":   pega("self_account_revenue", "self_promotion_revenue"),
+        "receita_shopping":  pega("shoppingmall_revenue", "shopping_mall_revenue"),
+        "unidades":          pega("sales_volumn", "sales_volume"),
+        "preco_medio":       d.get("unit_price"),
+        "criadores":         d.get("creator_number"),
+        "produtos_ativos":   pega("product_number", "on_sell_product_count"),
+        "videos":            d.get("video_number"),
+        "lives":             d.get("live_number"),
+        "crescimento_pct":   d.get("revenue_growth_rate"),
+        "tipo_loja":         pega("seller_type", "shop_type"),
+        "top3_produtos":     d.get("top3_product_ids"),
+        "periodo":           periodo,
+        "data_ref":          data_ref,
+        "fonte":             "kalodata",
+    }
+
+
+def buscar_ranking_lojas(periodo, data_ref, paginas=1, por_pagina=100,
+                         ordenar_por="revenue", categorias=None, palavra=None,
+                         tipo_loja=None, faixa_receita=None, dry_run=False):
+    """Ranking de lojas. Ordene por affiliate_revenue pra achar quem já vende
+    com criador, não só quem vende muito."""
+    todas = []
+    for pagina in range(1, paginas + 1):
+        corpo = {
+            "date_range": periodo_api(periodo),
+            "sort_field": {"field": ordenar_por, "type": "DESC"},
+            "page_size": min(por_pagina, 100),
+            "page_number": pagina,
+            "need_category": 1,
+        }
+        if categorias:     corpo["category_ids"] = categorias
+        if palavra:        corpo["keyword"] = palavra
+        if tipo_loja:      corpo["shop_type"] = tipo_loja
+        if faixa_receita:  corpo["revenue_range"] = faixa_receita
+        resposta = chamar("loja_ranking", corpo)
+        linhas = resposta.get("data") or []
+        print(f"  página {pagina}: {len(linhas)} loja(s)")
+        todas += [montar_loja(d, periodo, data_ref) for d in linhas]
+        if len(linhas) < corpo["page_size"]:
+            break
+
+    for i, loja in enumerate(todas, start=1):
+        loja["ranking"] = i
+    com_id = [l for l in todas if l.get("loja_id") and l.get("loja")]
+    print(f"  {len(com_id)} loja(s) pronta(s) pra gravar")
+    if com_id:
+        print(f"  exemplo: {json.dumps(com_id[0], ensure_ascii=False)[:280]}")
+    if dry_run:
+        print("  (dry-run: nada foi gravado)")
+        return com_id
+    gravar("tiktok_lojas", com_id, "loja_id,periodo,data_ref")
+    print(f"  {len(com_id)} linha(s) gravada(s) em tiktok_lojas.")
+    return com_id
+
+
+def buscar_loja(loja_id, periodo, data_ref, dry_run=False):
+    resposta = chamar("loja_detalhe", {"shop_id": loja_id,
+                                       "date_range": periodo_api(periodo),
+                                       "need_extra": False})
+    linha = montar_loja(resposta.get("data") or {}, periodo, data_ref)
+    print(json.dumps(linha, ensure_ascii=False, indent=1))
+    if not dry_run and linha.get("loja_id"):
+        gravar("tiktok_lojas", [linha], "loja_id,periodo,data_ref")
+        print("Gravado em tiktok_lojas.")
+    return linha
+
+
 PERIODOS = {"1d": "lastDay", "7d": "last7Day", "30d": "last30Day"}
 
 
@@ -283,6 +364,7 @@ def main():
 
     periodo, data_ref = "7d", date.today().isoformat()
     video_id = produto_id = loja_id = palavra = None
+    ordenar_por, tipo_loja = "revenue", None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
     so_organico = "--so-organico" in args
@@ -298,6 +380,12 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--loja" and i + 1 < len(args):
+            loja_id = args[i + 1]; i += 2
+        elif args[i] == "--ordenar-por" and i + 1 < len(args):
+            ordenar_por = args[i + 1]; i += 2
+        elif args[i] == "--tipo-loja" and i + 1 < len(args):
+            tipo_loja = args[i + 1]; i += 2
         elif args[i] == "--palavra" and i + 1 < len(args):
             palavra = args[i + 1]; i += 2
         elif args[i] == "--paginas" and i + 1 < len(args):
@@ -309,6 +397,13 @@ def main():
 
     if "--testar" in args:
         testar()
+    elif "--ranking-lojas" in args:
+        print(f"Ranking de lojas, período {periodo}, ordenado por {ordenar_por}, "
+              f"{paginas} chamada(s):")
+        buscar_ranking_lojas(periodo, data_ref, paginas, por_pagina, ordenar_por,
+                             None, palavra, tipo_loja, None, dry_run)
+    elif loja_id and "--videos-da-loja" not in args:
+        buscar_loja(loja_id, periodo, data_ref, dry_run)
     elif video_id:
         buscar_video(video_id, periodo, data_ref)
     elif produto_id or loja_id or palavra or "--ranking-videos" in args:
@@ -325,6 +420,10 @@ def main():
             "Nada pra fazer. Opções:\n"
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
+            "  --ranking-lojas               top de lojas do período\n"
+            "  --ordenar-por affiliate_revenue   ordena as lojas por receita de afiliado\n"
+            "  --tipo-loja BRAND             só marca própria, ou RETAILER pra varejista\n"
+            "  --loja <id>                   detalhe de uma loja\n"
             "  --videos-do-produto <id>      os vídeos que vendem um produto\n"
             "  --videos-da-loja <id>         os vídeos que vendem uma loja\n"
             "  --palavra fashion             busca por palavra-chave\n"

@@ -169,16 +169,18 @@ tr.data-row:hover td { background:var(--bg3); }
         <div id="tk-periodo-filtros" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
       </div>
     </div>
+    <div class="aviso" id="tk-lojas-aviso"></div>
     <div class="tbl-wrap" style="max-height:52vh;">
       <table>
         <thead>
           <tr>
-            <th style="text-align:left;">Loja</th><th>Categoria</th><th>Faturamento</th>
+            <th style="text-align:left;">Loja</th><th>Tipo</th><th>Faturamento</th>
+            <th title="Quanto do faturamento da loja vem de afiliado">Afiliado</th>
             <th>Unidades</th><th>Ticket médio</th><th>Produtos</th><th>Criadores</th>
             <th>Crescimento</th><th>Link</th>
           </tr>
         </thead>
-        <tbody id="tk-lojas-tbody"><tr><td colspan="9" class="empty">Carregando…</td></tr></tbody>
+        <tbody id="tk-lojas-tbody"><tr><td colspan="10" class="empty">Carregando…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -534,6 +536,19 @@ function tkFatiaVideo(r){
   return `<span style="font-family:var(--mono);color:${cor};font-weight:700;" title="${dica}">${pct.toFixed(1).replace('.',',')}%</span>`;
 }
 
+// Loja que fatura com afiliado é loja acostumada a trabalhar com criador.
+// É onde você tem chance de entrar, mesmo sem ser a maior do ranking.
+function tkFatiaAfiliado(l){
+  const total = parseFloat(l.gmv) || 0;
+  if(!total || l.receita_afiliados == null) return '<span style="color:var(--subtle);">—</span>';
+  const pct = (parseFloat(l.receita_afiliados) / total) * 100;
+  const cor = pct >= 40 ? 'var(--green)' : (pct >= 15 ? 'var(--yellow)' : 'var(--red)');
+  const dica = pct >= 40 ? 'Vive de afiliado — porta aberta pra criador'
+             : (pct >= 15 ? 'Trabalha com afiliado, mas não depende disso'
+                          : 'Vende quase tudo sozinha, difícil entrar como afiliada');
+  return `<span style="font-family:var(--mono);color:${cor};font-weight:700;" title="${dica}">${pct.toFixed(0)}%</span>`;
+}
+
 function tkUltimaData(lista){
   return lista.reduce((max, r) => (!max || r.data_ref > max) ? r.data_ref : max, null);
 }
@@ -573,15 +588,20 @@ function tkRenderLojas(){
   const tbody = document.getElementById('tk-lojas-tbody');
   if(!lista.length){
     sub.textContent = '';
-    tbody.innerHTML = `<tr><td colspan="9">${TK_VAZIO_KALODATA}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10">${TK_VAZIO_KALODATA}</td></tr>`;
     return;
   }
   sub.textContent = `${lista.length} loja(s) — últimos ${tkPeriodo}, importado em ${tkData(lista[0].data_ref)} (estimativa Kalodata)`;
+  document.getElementById('tk-lojas-aviso').innerHTML =
+    'A coluna <b>Afiliado</b> é a fatia do faturamento que veio de pedidos de afiliado. '
+    + 'Verde acima de 40% é loja que vive de criador, e é onde você tem chance de entrar. '
+    + 'Vermelho abaixo de 15% é loja que vende sozinha.';
   tbody.innerHTML = lista.map((l, i) => `
     <tr class="data-row">
       <td><span class="badge b-num">#${i+1}</span> <b>${tkEsc(l.loja)}</b></td>
-      <td class="wrap-cell">${tkEsc(l.categoria||'—')}</td>
+      <td class="wrap-cell">${tkEsc(l.tipo_loja || l.categoria || '—')}</td>
       <td style="font-family:var(--mono);font-weight:700;color:var(--green);">${l.gmv != null ? tkReaisCurto(l.gmv) : '—'}</td>
+      <td>${tkFatiaAfiliado(l)}</td>
       <td style="font-family:var(--mono);">${l.unidades != null ? tkNum(l.unidades) : '—'}</td>
       <td style="font-family:var(--mono);">${l.preco_medio != null ? tkReais(l.preco_medio) : '—'}</td>
       <td style="font-family:var(--mono);">${l.produtos_ativos != null ? tkNum(l.produtos_ativos) : '—'}</td>

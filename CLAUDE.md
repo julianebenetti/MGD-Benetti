@@ -63,6 +63,13 @@
   foram vistos, e estão marcados como "provável" no dicionário ENDPOINTS.
 - **Limite de taxa é por endpoint**: os `/detail` aceitam 100 chamadas a cada 10 segundos,
   os `/rank` só 10. O cliente controla isso por caminho, com 20% de folga.
+- **A API separa a receita da loja por canal**: `affiliate_revenue`, `self_account_revenue`
+  e `shoppingmall_revenue`. A fatia de afiliado é o filtro que importa — loja que fatura
+  com afiliado é loja acostumada a trabalhar com criador, e é onde a Juliane consegue
+  entrar. Dá pra ordenar o ranking direto por `affiliate_revenue`. A página mostra isso
+  na coluna "Afiliado" (verde ≥40%, amarelo ≥15%, vermelho abaixo).
+- `shop/detail` ainda traz `top3_product_ids`, `creator_number` (quantos criadores já
+  disputam a loja), `video_number`, `live_number` e `seller_type` (BRAND ou RETAILER).
 - O `/tiktok/video/rank` limita a janela a 30 dias e traz até 100 linhas por chamada.
   Aceita filtrar por `product_id` (é o equivalente à aba Vídeo e Ads da interface),
   `shop_id`, `creator_id`, `category_ids`, `keyword`, faixa de receita, faixa de
