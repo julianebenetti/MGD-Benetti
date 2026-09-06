@@ -65,3 +65,8 @@
 - Comissão do TikTok Shop costuma ser 10% nos campeões de moda feminina, o que em ticket
   de R$20 a R$65 fica **abaixo do piso de R$9**. Filtrar por `Taxa de comissão` e por
   ticket mais alto no Kalodata, senão o ranking vem cheio de produto que não paga.
+- **Referência de conversão** medida no top 8 de vídeos da Calça Pantalona (30/08~05/09):
+  261.830 visualizações geraram 252 vendas, ou seja **0,096%, ~1 venda a cada 1.000 views**,
+  e isso variou pouquíssimo entre vídeos (0,088% a 0,104%). Serve de régua: alcance é o que
+  muda o resultado, não a conversão. Quem decide o quanto sobra é a comissão — a R$5,65 por
+  venda dá ~R$5,44 por 1.000 views; com 20% de comissão o mesmo alcance dobra pra ~R$10,88.

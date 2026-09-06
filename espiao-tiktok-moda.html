@@ -828,8 +828,22 @@ async function tkRemoverProduto(id){
 }
 
 /* ── VÍDEOS VIRAIS ── */
+// Quantas vendas cada 1.000 visualizações trazem. É o número que diz
+// quanto alcance um vídeo precisa ter pra pagar o trabalho.
+function tkConversao(v){
+  if(!v.views || v.itens_vendidos == null) return null;
+  return (v.itens_vendidos / v.views) * 1000;
+}
+
 function tkRenderVideos(){
-  document.getElementById('tk-vid-sub').textContent = `${tkVideos.length} vídeo(s) anotado(s)`;
+  const comDados = tkVideos.filter(v => v.views && v.itens_vendidos != null);
+  const views = comDados.reduce((a,v) => a + Number(v.views), 0);
+  const unid  = comDados.reduce((a,v) => a + Number(v.itens_vendidos), 0);
+  const anuncios = tkVideos.filter(v => v.anuncio).length;
+  document.getElementById('tk-vid-sub').textContent = comDados.length
+    ? `${tkVideos.length} vídeo(s) · ${tkNum(views)} views geraram ${tkNum(unid)} vendas — `
+      + `${(unid/views*1000).toFixed(2).replace('.',',')} vendas por 1.000 views · ${anuncios} com anúncio`
+    : `${tkVideos.length} vídeo(s) anotado(s)`;
   const grid = document.getElementById('tk-vid-grid');
   if(!tkVideos.length){
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1;">
@@ -838,17 +852,26 @@ function tkRenderVideos(){
       É esse arquivo que vira roteiro depois.</div>`;
     return;
   }
-  grid.innerHTML = tkVideos.map(v => `
+  grid.innerHTML = tkVideos.map(v => {
+    const conv = tkConversao(v);
+    return `
     <div class="card">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         ${v.formato ? `<span class="badge b-num">${tkEsc(v.formato)}</span>` : ''}
+        ${v.anuncio ? '<span class="badge b-saturando" title="Teve verba de anúncio — o alcance não foi orgânico">AD</span>' : ''}
         ${v.copiar ? '<span class="badge b-pico">copiar</span>' : ''}
         ${v.views != null ? `<span class="tag">${tkNum(v.views)} views</span>` : ''}
         ${v.duracao_seg ? `<span class="tag">${v.duracao_seg}s</span>` : ''}
       </div>
-      <div class="card-title">${tkEsc(v.arroba||'sem @')}</div>
+      ${(v.receita != null || v.itens_vendidos != null || conv != null) ? `
+      <div class="card-meta" style="font-family:var(--mono);font-size:11.5px;display:flex;gap:12px;flex-wrap:wrap;">
+        ${v.receita != null ? `<span>faturou <b style="color:var(--green);">${tkReaisCurto(v.receita)}</b></span>` : ''}
+        ${v.itens_vendidos != null ? `<span>${tkNum(v.itens_vendidos)} vendas</span>` : ''}
+        ${conv != null ? `<span title="Vendas a cada 1.000 visualizações">${conv.toFixed(2).replace('.',',')}/1k views</span>` : ''}
+      </div>` : ''}
+      <div class="card-title">${tkEsc(v.arroba || v.produto_citado || 'vídeo sem @')}</div>
       ${v.gancho ? `<div class="card-desc" style="font-style:italic;">"${tkEsc(v.gancho)}"</div>` : ''}
-      ${v.produto_citado ? `<div class="card-desc">🛒 ${tkEsc(v.produto_citado)}</div>` : ''}
+      ${v.produto_citado && v.arroba ? `<div class="card-desc">🛒 ${tkEsc(v.produto_citado)}</div>` : ''}
       ${v.por_que_funciona ? `<div class="card-desc" style="border-left:2px solid var(--border);padding-left:8px;"><b>Por que funciona:</b> ${tkEsc(v.por_que_funciona)}</div>` : ''}
       ${v.audio ? `<div class="card-desc">🎵 ${tkEsc(v.audio)}</div>` : ''}
       <div class="card-actions">
@@ -856,7 +879,8 @@ function tkRenderVideos(){
         <button class="act-btn mini" onclick="tkMarcarCopiar(${v.id}, ${v.copiar ? 'false':'true'})">${v.copiar ? '↩︎ Tirar de copiar' : '⭐ Marcar pra copiar'}</button>
         <button class="act-btn mini" onclick="tkRemoverVideo(${v.id})">🗑️</button>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function tkAbrirFormVideo(){
@@ -870,6 +894,11 @@ function tkAbrirFormVideo(){
       <div class="campo"><label>Formato</label><input id="v-formato" placeholder="GRWM, try-on, review…"></div>
       <div class="campo"><label>Views</label><input id="v-views" type="number"></div>
       <div class="campo"><label>Duração (s)</label><input id="v-dur" type="number"></div>
+      <div class="campo"><label>Faturou (R$)</label><input id="v-receita" type="number" step="0.01"></div>
+      <div class="campo"><label>Vendas</label><input id="v-vendas" type="number"></div>
+      <div class="campo"><label>Teve anúncio?</label>
+        <select id="v-ad"><option value="false">não, orgânico</option><option value="true">sim, AD</option></select>
+      </div>
       <div class="campo" style="grid-column:1/-1;"><label>Link do vídeo</label><input id="v-link" placeholder="https://tiktok.com/…"></div>
       <div class="campo" style="grid-column:1/-1;"><label>Gancho (3 primeiros segundos)</label><textarea id="v-gancho" rows="2"></textarea></div>
       <div class="campo" style="grid-column:1/-1;"><label>Por que funciona</label><textarea id="v-porque" rows="2"></textarea></div>
@@ -898,6 +927,9 @@ async function tkSalvarVideo(){
     formato: tkVal('v-formato') || null,
     views: tkIntOrNull('v-views'),
     duracao_seg: tkIntOrNull('v-dur'),
+    receita: tkNumOrNull('v-receita'),
+    itens_vendidos: tkIntOrNull('v-vendas'),
+    anuncio: tkVal('v-ad') === 'true',
     gancho: tkVal('v-gancho') || null,
     por_que_funciona: tkVal('v-porque') || null,
     audio: tkVal('v-audio') || null,
