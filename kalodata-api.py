@@ -44,7 +44,7 @@ ENDPOINTS = {
     "video_ranking":     ("/tiktok/video/rank",      "confirmado",  10),
     "loja_detalhe":      ("/tiktok/shop/detail",     "confirmado", 100),
     "loja_ranking":      ("/tiktok/shop/rank",       "confirmado",  10),
-    "produto_detalhe":   ("/tiktok/product/detail",  "provável",   100),
+    "produto_detalhe":   ("/tiktok/product/detail",  "confirmado", 100),
     "produto_ranking":   ("/tiktok/product/rank",    "provável",    10),
     "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
     "categoria_ranking": ("/tiktok/category/rank",   "provável",    10),
@@ -273,6 +273,9 @@ def montar_loja(d, periodo, data_ref):
         "crescimento_pct":   d.get("revenue_growth_rate"),
         "tipo_loja":         pega("seller_type", "shop_type"),
         "top3_produtos":     d.get("top3_product_ids"),
+        "imagem_url":        d.get("image_url"),
+        "categorias":        d.get("category_list"),
+        "ranking":           d.get("rank"),
         "periodo":           periodo,
         "data_ref":          data_ref,
         "fonte":             "kalodata",
@@ -305,7 +308,8 @@ def buscar_ranking_lojas(periodo, data_ref, paginas=1, por_pagina=100,
             break
 
     for i, loja in enumerate(todas, start=1):
-        loja["ranking"] = i
+        if loja.get("ranking") is None:
+            loja["ranking"] = i
     com_id = [l for l in todas if l.get("loja_id") and l.get("loja")]
     print(f"  {len(com_id)} loja(s) pronta(s) pra gravar")
     if com_id:
@@ -327,6 +331,60 @@ def buscar_loja(loja_id, periodo, data_ref, dry_run=False):
     if not dry_run and linha.get("loja_id"):
         gravar("tiktok_lojas", [linha], "loja_id,periodo,data_ref")
         print("Gravado em tiktok_lojas.")
+    return linha
+
+
+def montar_produto(d, periodo, data_ref):
+    """Traduz /tiktok/product/detail. O ouro aqui é video_revenue x live_revenue:
+    diz na hora se o produto vende por vídeo gravado ou só ao vivo."""
+    def pega(*nomes):
+        for n in nomes:
+            if d.get(n) is not None:
+                return d[n]
+        return None
+    receita = d.get("revenue")
+    preco_min, preco_max = d.get("min_price"), d.get("max_price")
+    return {
+        "produto_id":        d.get("product_id"),
+        "produto":           d.get("product_name"),
+        "loja_id":           d.get("product_shop_id"),
+        "loja":              d.get("shop_name"),
+        "cat_principal_id":  d.get("pri_cate_id"),
+        "cat_secundaria_id": d.get("sec_cate_id"),
+        "cat_terciaria_id":  d.get("ter_cate_id"),
+        "preco_min":         preco_min,
+        "preco_max":         preco_max,
+        "preco":             preco_min if preco_min == preco_max else None,
+        "preco_medio":       pega("unit_price", "avg_price"),
+        "gmv":               receita,
+        "receita_video":     d.get("video_revenue"),
+        "receita_live":      d.get("live_revenue"),
+        "unidades":          pega("sales_volumn", "sales_volume"),
+        "criadores":         d.get("creator_number"),
+        "videos":            d.get("video_number"),
+        "crescimento_pct":   d.get("revenue_growth_rate"),
+        "comissao_percentual": pega("commission_rate", "commission"),
+        "avaliacao":         pega("rating", "review_score"),
+        "imagem_url":        d.get("image_url"),
+        "periodo":           periodo,
+        "data_ref":          data_ref,
+        "fonte":             "kalodata",
+    }
+
+
+def buscar_produto(produto_id, periodo, data_ref, dry_run=False):
+    resposta = chamar("produto_detalhe", {"product_id": produto_id,
+                                          "date_range": periodo_api(periodo),
+                                          "need_image": 1, "need_extra": False})
+    linha = montar_produto(resposta.get("data") or {}, periodo, data_ref)
+    print(json.dumps(linha, ensure_ascii=False, indent=1))
+    if linha.get("gmv") and linha.get("receita_video") is not None:
+        fatia = float(linha["receita_video"]) / float(linha["gmv"]) * 100
+        print(f"\nFatia de vídeo: {fatia:.1f}% da receita "
+              f"({'vale gravar' if fatia >= 30 else 'vende mais ao vivo que por vídeo'})")
+    if not dry_run and linha.get("produto_id") and linha.get("produto"):
+        gravar("tiktok_ranking_produtos", [linha], "produto_id,periodo,data_ref")
+        print("Gravado em tiktok_ranking_produtos.")
     return linha
 
 
@@ -363,7 +421,7 @@ def main():
         return
 
     periodo, data_ref = "7d", date.today().isoformat()
-    video_id = produto_id = loja_id = palavra = None
+    video_id = produto_id = loja_id = palavra = produto_detalhe_id = None
     ordenar_por, tipo_loja = "revenue", None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
@@ -380,6 +438,8 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--produto" and i + 1 < len(args):
+            produto_detalhe_id = args[i + 1]; i += 2
         elif args[i] == "--loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
         elif args[i] == "--ordenar-por" and i + 1 < len(args):
@@ -402,6 +462,8 @@ def main():
               f"{paginas} chamada(s):")
         buscar_ranking_lojas(periodo, data_ref, paginas, por_pagina, ordenar_por,
                              None, palavra, tipo_loja, None, dry_run)
+    elif produto_detalhe_id:
+        buscar_produto(produto_detalhe_id, periodo, data_ref, dry_run)
     elif loja_id and "--videos-da-loja" not in args:
         buscar_loja(loja_id, periodo, data_ref, dry_run)
     elif video_id:
@@ -424,6 +486,7 @@ def main():
             "  --ordenar-por affiliate_revenue   ordena as lojas por receita de afiliado\n"
             "  --tipo-loja BRAND             só marca própria, ou RETAILER pra varejista\n"
             "  --loja <id>                   detalhe de uma loja\n"
+            "  --produto <id>                detalhe de um produto, com o split vídeo x live\n"
             "  --videos-do-produto <id>      os vídeos que vendem um produto\n"
             "  --videos-da-loja <id>         os vídeos que vendem uma loja\n"
             "  --palavra fashion             busca por palavra-chave\n"
