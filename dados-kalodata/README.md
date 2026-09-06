@@ -6,9 +6,16 @@ os números.
 
 ## Como exportar
 
-1. No Kalodata, filtre **moda feminina** e o período de **7 dias**.
-2. Exporte a tela de **Lojas** e a tela de **Produtos** (dois arquivos separados).
-3. Jogue os dois arquivos nesta pasta e faça commit.
+1. No Kalodata, filtre a categoria **Roupas femininas e roupas íntimas femininas** e o
+   período de **Últimos 7 dias**.
+2. Em **Fonte de receita (canal)**, filtre por **Vídeo**. Sem esse filtro o ranking
+   enche de produto que só vende em live, e vídeo gravado não pega esse dinheiro.
+3. Em **Taxa de comissão**, peça no mínimo 15%. Os campeões de moda feminina costumam
+   pagar 10%, o que em ticket de R$20 a R$65 fica abaixo do piso de R$9 por venda.
+4. Exporte a tela de **Produto** e a de **Marcas e Lojas** (dois arquivos separados).
+   Dentro de um produto, a aba **Vídeo e Ads** também tem Exportar — esse arquivo vira
+   a lista de vídeos que já venderam aquele produto.
+5. Jogue os arquivos nesta pasta e faça commit.
 
 Não precisa renomear. O script descobre sozinho se o arquivo é de loja ou de produto
 pelas colunas, e aceita cabeçalho em português ou em inglês.
@@ -20,6 +27,7 @@ export SUPABASE_KEY="a chave do projeto"
 python tiktok-sync.py                          # importa tudo desta pasta
 python tiktok-sync.py arquivo.csv --dry-run    # só mostra o mapeamento, não grava
 python tiktok-sync.py arquivo.csv --periodo 30d --data 2026-09-06
+python tiktok-sync.py videos.csv --produto "Calça Pantalona"   # export de Vídeo e Ads
 ```
 
 O `--dry-run` imprime qual coluna do arquivo virou qual campo do banco, e lista as

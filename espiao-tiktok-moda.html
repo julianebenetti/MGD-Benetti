@@ -189,16 +189,22 @@ tr.data-row:hover td { background:var(--bg3); }
       <span class="section-title">📈 Ranking de produtos</span>
       <span class="section-sub" id="tk-rank-sub"></span>
     </div>
+    <div class="aviso">
+      A coluna <b>Vídeo</b> é a fatia do faturamento que veio de vídeo, e não de live. Abaixo de 10%
+      o produto praticamente só vende ao vivo, então gravar vídeo pra ele rende pouco.
+      <b>Com. R$</b> em vermelho é comissão abaixo do piso de R$9,00.
+    </div>
     <div class="tbl-wrap" style="max-height:52vh;">
       <table>
         <thead>
           <tr>
             <th style="text-align:left;">Produto</th><th>Loja</th><th>Preço</th>
-            <th>Faturamento</th><th>Unidades</th><th>Com. %</th><th>Nota</th>
-            <th>Criadores</th><th>Crescimento</th><th>Ações</th>
+            <th>Faturamento</th><th title="Quanto do faturamento veio de vídeo, e não de live">Vídeo</th>
+            <th>Unidades</th><th>Com. %</th><th>Com. R$</th><th>Nota</th>
+            <th>Crescimento</th><th>Ações</th>
           </tr>
         </thead>
-        <tbody id="tk-rank-tbody"><tr><td colspan="10" class="empty">Carregando…</td></tr></tbody>
+        <tbody id="tk-rank-tbody"><tr><td colspan="11" class="empty">Carregando…</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -507,6 +513,27 @@ function tkCresc(p){
   const cor = v > 0 ? 'var(--green)' : (v < 0 ? 'var(--red)' : 'var(--muted)');
   return `<span style="color:${cor};">${v > 0 ? '+' : ''}${v.toFixed(1).replace('.',',')}%</span>`;
 }
+// Comissão em R$: o Kalodata dá o percentual, o valor sai do preço.
+function tkComissaoRank(r){
+  if(r.comissao_reais != null) return parseFloat(r.comissao_reais);
+  const base = r.preco != null ? parseFloat(r.preco)
+             : (r.preco_medio != null ? parseFloat(r.preco_medio) : null);
+  if(base == null || r.comissao_percentual == null) return null;
+  return +(base * parseFloat(r.comissao_percentual) / 100).toFixed(2);
+}
+
+// A pergunta que decide se vale gravar: esse produto vende por vídeo ou por live?
+function tkFatiaVideo(r){
+  const total = parseFloat(r.gmv) || 0;
+  if(!total || r.receita_video == null) return '<span style="color:var(--subtle);">—</span>';
+  const pct = (parseFloat(r.receita_video) / total) * 100;
+  const cor = pct >= 30 ? 'var(--green)' : (pct >= 10 ? 'var(--yellow)' : 'var(--red)');
+  const dica = pct >= 30 ? 'Vende bem por vídeo'
+             : (pct >= 10 ? 'Vende mais por live que por vídeo'
+                          : 'Quase tudo vem de live — vídeo gravado rende pouco aqui');
+  return `<span style="font-family:var(--mono);color:${cor};font-weight:700;" title="${dica}">${pct.toFixed(1).replace('.',',')}%</span>`;
+}
+
 function tkUltimaData(lista){
   return lista.reduce((max, r) => (!max || r.data_ref > max) ? r.data_ref : max, null);
 }
@@ -570,20 +597,30 @@ function tkRenderRanking(){
   const tbody = document.getElementById('tk-rank-tbody');
   if(!lista.length){
     sub.textContent = '';
-    tbody.innerHTML = `<tr><td colspan="10">${TK_VAZIO_KALODATA}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11">${TK_VAZIO_KALODATA}</td></tr>`;
     return;
   }
   sub.textContent = `${lista.length} produto(s) — últimos ${tkPeriodo}, importado em ${tkData(lista[0].data_ref)} (estimativa Kalodata)`;
-  tbody.innerHTML = lista.map((r, i) => `
+  tbody.innerHTML = lista.map((r, i) => {
+    const com = tkComissaoRank(r);
+    const baixa = com != null && com < TK_COMISSAO_MINIMA;
+    return `
     <tr class="data-row">
-      <td><span class="badge b-num">#${i+1}</span> ${tkEsc(r.produto)}</td>
+      <td>
+        <div><span class="badge b-num">#${i+1}</span> ${tkEsc(r.produto)}</div>
+        ${r.observacoes ? `<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${tkEsc(r.observacoes)}</div>` : ''}
+      </td>
       <td class="wrap-cell">${tkEsc(r.loja||'—')}</td>
-      <td style="font-family:var(--mono);">${r.preco != null ? tkReais(r.preco) : '—'}</td>
+      <td style="font-family:var(--mono);">${r.preco != null ? tkReais(r.preco) : (r.preco_medio != null ? tkReais(r.preco_medio) : '—')}</td>
       <td style="font-family:var(--mono);font-weight:700;color:var(--green);">${r.gmv != null ? tkReaisCurto(r.gmv) : '—'}</td>
+      <td>${tkFatiaVideo(r)}</td>
       <td style="font-family:var(--mono);">${r.unidades != null ? tkNum(r.unidades) : '—'}</td>
       <td style="font-family:var(--mono);">${r.comissao_percentual != null ? Number(r.comissao_percentual).toFixed(1)+'%' : '—'}</td>
+      <td style="font-family:var(--mono);font-weight:700;color:${com == null ? 'var(--muted)' : (baixa ? 'var(--red)' : 'var(--green)')};"
+          ${baixa ? `title="Abaixo do piso de ${tkReais(TK_COMISSAO_MINIMA)}"` : ''}>
+        ${com == null ? '—' : tkReais(com)}${baixa ? ' ⚠️' : ''}
+      </td>
       <td style="font-family:var(--mono);">${r.avaliacao != null ? Number(r.avaliacao).toFixed(1)+'⭐' : '—'}</td>
-      <td style="font-family:var(--mono);">${r.criadores != null ? tkNum(r.criadores) : '—'}</td>
       <td style="font-family:var(--mono);">${tkCresc(r.crescimento_pct)}</td>
       <td style="white-space:nowrap;">
         ${r.link ? `<a href="${tkEsc(r.link)}" target="_blank" rel="noopener" style="color:#2563eb;font-size:11.5px;">abrir ↗</a>` : ''}
@@ -591,18 +628,19 @@ function tkRenderRanking(){
           ? '<span class="tag">no radar</span>'
           : `<button class="act-btn mini" onclick="tkPuxarPraRadar(${r.id})" title="Copiar pro meu radar de produtos">➕ Radar</button>`}
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function tkPuxarPraRadar(id){
   const r = tkRankProdutos.find(x => x.id === id);
   if(!r) return;
-  const comReais = (r.preco != null && r.comissao_percentual != null)
-    ? +(parseFloat(r.preco) * parseFloat(r.comissao_percentual) / 100).toFixed(2) : null;
+  const comReais = tkComissaoRank(r);
   try {
     const [novo] = await tkPost('tiktok_produtos', {
       produto: r.produto, seller: r.loja, categoria: r.categoria,
-      preco_num: r.preco, preco: r.preco != null ? tkReais(r.preco) : null,
+      preco_num: r.preco != null ? r.preco : r.preco_medio,
+      preco: r.preco != null ? tkReais(r.preco) : (r.preco_medio != null ? tkReais(r.preco_medio) : null),
       unidades_vendidas: r.unidades, avaliacao: r.avaliacao,
       comissao_percentual: r.comissao_percentual, comissao_reais: comReais,
       gmv_7d: r.gmv, unidades_7d: r.unidades,

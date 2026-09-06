@@ -53,3 +53,15 @@
   `987,4 mil`, `1.2M`. Coluna não reconhecida vai pra `colunas_ignoradas` em
   `tiktok_importacoes` — é lá que se descobre o que falta mapear. Use `--dry-run` antes.
 - Secrets do GitHub Actions: `SUPABASE_URL` e `SUPABASE_KEY`.
+- O `tiktok-sync.py` importa três tipos de export e descobre qual é pelas colunas:
+  **Ranking de Produto** (`Informações do produto`, `Receita`, `Itens Vendidos`,
+  `Taxa de comissão`…), **Marcas e Lojas**, e **Vídeo e Ads** (`Conteúdo de vídeo`,
+  `Visualizações`, `Data de publicação`) — esse último vai pra `tiktok_videos`, e o
+  script marca `anuncio = true` quando a legenda tem "AD".
+- **A métrica que decide se vale gravar** é o split de receita do produto:
+  `receita_live` / `receita_video` / `receita_cartao`. Produto com quase tudo em live
+  não vende por vídeo gravado, por mais que o GMV total seja alto. A página mostra isso
+  na coluna "Vídeo" (verde ≥30%, amarelo ≥10%, vermelho abaixo disso).
+- Comissão do TikTok Shop costuma ser 10% nos campeões de moda feminina, o que em ticket
+  de R$20 a R$65 fica **abaixo do piso de R$9**. Filtrar por `Taxa de comissão` e por
+  ticket mais alto no Kalodata, senão o ranking vem cheio de produto que não paga.
