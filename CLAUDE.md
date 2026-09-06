@@ -59,8 +59,14 @@
   `currency: BRL` e `date_range: last7Day`. O cliente é o `kalodata-api.py`.
   Padrão dos caminhos: `/tiktok/<familia>/detail` e `/tiktok/<familia>/rank`, para as
   famílias video, product, shop, creator, category e live. Confirmados na doc:
-  `video/detail`, `video/rank` e `shop/detail`; os demais seguem o padrão mas ainda não
-  foram vistos, e estão marcados como "provável" no dicionário ENDPOINTS.
+  `video/detail`, `video/rank`, `shop/detail`, `shop/rank` e `product/detail`; os demais
+  seguem o padrão mas ainda não foram vistos, e estão marcados como "provável" no
+  dicionário ENDPOINTS.
+- `product/detail` já entrega `video_revenue` e `live_revenue` separados, então o split
+  que decide se vale gravar vem pronto da fonte, sem precisar calcular.
+- Para filtrar por categoria (`category_ids`) é preciso descobrir o id de "Roupas
+  femininas e roupas íntimas femininas". Esse id vem dos endpoints de `category`, que
+  ainda não foram documentados aqui.
 - **Limite de taxa é por endpoint**: os `/detail` aceitam 100 chamadas a cada 10 segundos,
   os `/rank` só 10. O cliente controla isso por caminho, com 20% de folga.
 - **A API separa a receita da loja por canal**: `affiliate_revenue`, `self_account_revenue`
