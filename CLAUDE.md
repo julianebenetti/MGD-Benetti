@@ -65,6 +65,10 @@
 - Comissão do TikTok Shop costuma ser 10% nos campeões de moda feminina, o que em ticket
   de R$20 a R$65 fica **abaixo do piso de R$9**. Filtrar por `Taxa de comissão` e por
   ticket mais alto no Kalodata, senão o ranking vem cheio de produto que não paga.
+- **Cauda longa**: nos 8 vídeos que mais faturaram a Calça Pantalona entre 30/08 e 05/09,
+  nenhum foi postado dentro dessa janela — o mais novo tinha 18 dias, o mais velho 66,
+  média de 38. Vídeo de moda continua vendendo por semanas, então a estratégia é acumular
+  volume, não caçar viral. Isso está registrado como tendência no banco.
 - **Referência de conversão** medida no top 8 de vídeos da Calça Pantalona (30/08~05/09):
   261.830 visualizações geraram 252 vendas, ou seja **0,096%, ~1 venda a cada 1.000 views**,
   e isso variou pouquíssimo entre vídeos (0,088% a 0,104%). Serve de régua: alcance é o que
