@@ -46,6 +46,7 @@ ENDPOINTS = {
     "loja_ranking":      ("/tiktok/shop/rank",       "confirmado",  10),
     "produto_detalhe":   ("/tiktok/product/detail",  "confirmado", 100),
     "produto_ranking":   ("/tiktok/product/rank",    "confirmado",  10),
+    "criador_detalhe":   ("/tiktok/creator/detail",  "confirmado", 100),
     "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
     "categoria_detalhe": ("/tiktok/category/detail", "confirmado", 100),
     "categoria_ranking": ("/tiktok/category/rank",   "confirmado",  10),
@@ -496,6 +497,108 @@ def periodo_api(periodo, familia=None):
     return tabela[periodo]
 
 
+def montar_criador(d, periodo, data_ref):
+    """Traduz /tiktok/creator/detail e /rank.
+
+    De propósito, NÃO copio os campos creator_contact_* (email, whatsapp, line,
+    facebook, zalo). São dados pessoais de terceiros, não fazem falta pra decidir
+    o que gravar, e guardar isso num banco é responsabilidade que não vale a pena.
+    Fica só o @, que é a identidade pública na plataforma."""
+    handle = d.get("creator_handle")
+    seguidores = d.get("creator_followers")
+    try:
+        seguidores = int(seguidores) if seguidores is not None else None
+    except (TypeError, ValueError):
+        seguidores = None
+    return {
+        "criador_id":       d.get("creator_id"),
+        "arroba":           f"@{handle}" if handle and not str(handle).startswith("@") else handle,
+        "apelido":          d.get("creator_nickname"),
+        "nome":             d.get("creator_nickname"),
+        "bio":              d.get("creator_bio"),
+        "status":           d.get("creator_status"),
+        "regiao":           d.get("creator_region"),
+        "loja_vinculada":   d.get("creator_belonged_shop_id") or None,
+        "seguidores":       seguidores,
+        "novos_seguidores": d.get("new_followers"),
+        "gmv":              d.get("revenue"),
+        "unidades":         d.get("sales_volumn", d.get("sales_volume")),
+        "preco_medio":      d.get("unit_price"),
+        "receita_video":    d.get("video_revenue"),
+        "receita_live":     d.get("live_revenue"),
+        "video_views":      d.get("video_views"),
+        "live_views":       d.get("live_views"),
+        "video_gpm":        d.get("video_gpm"),
+        "live_gpm":         d.get("live_gpm"),
+        "videos":           d.get("video_number"),
+        "lives":            d.get("live_number"),
+        "lojas":            d.get("shop_number"),
+        "produtos":         d.get("product_number"),
+        "top3_produtos":    [str(x) for x in (d.get("top3_product_ids") or [])] or None,
+        "ranking":          d.get("rank"),
+        "link":             f"https://www.tiktok.com/@{handle}" if handle else None,
+        "tipo":             "concorrente",
+        "periodo":          periodo,
+        "data_ref":         data_ref,
+        "fonte":            "kalodata",
+        "ultima_revisao":   data_ref,
+    }
+
+
+def buscar_criador(criador_id, periodo, data_ref, dry_run=False):
+    resposta = chamar("criador_detalhe", {"creator_id": criador_id,
+                                          "date_range": periodo_api(periodo),
+                                          "need_extra": False})
+    linha = montar_criador(resposta.get("data") or {}, periodo, data_ref)
+    print(json.dumps(linha, ensure_ascii=False, indent=1))
+    if linha.get("video_gpm") is not None:
+        print(f"\nGPM de vídeo: R${float(linha['video_gpm']):.2f} por mil visualizações."
+              + (f"  Em live: R${float(linha['live_gpm']):.2f}."
+                 if linha.get("live_gpm") is not None else ""))
+        print("Compare com o seu: é a mesma régua.")
+    if not dry_run and linha.get("criador_id"):
+        gravar("tiktok_criadores", [linha], "criador_id,periodo,data_ref")
+        print("Gravado em tiktok_criadores.")
+    return linha
+
+
+def buscar_ranking_criadores(periodo, data_ref, paginas=1, por_pagina=100,
+                             ordenar_por="revenue", categorias=None,
+                             so_independentes=False, dry_run=False):
+    todos = []
+    for pagina in range(1, paginas + 1):
+        corpo = {"date_range": periodo_api(periodo),
+                 "sort_field": {"field": ordenar_por, "type": "DESC"},
+                 "page_size": min(por_pagina, 100), "page_number": pagina}
+        if categorias: corpo["category_ids"] = categorias
+        resposta = chamar("criador_ranking", corpo)
+        linhas = resposta.get("data") or []
+        print(f"  página {pagina}: {len(linhas)} criador(es)")
+        todos += [montar_criador(d, periodo, data_ref) for d in linhas]
+        if len(linhas) < min(por_pagina, 100):
+            break
+
+    if so_independentes:
+        antes = len(todos)
+        todos = [c for c in todos if c.get("status") == "INDEPENDENT"]
+        print(f"  só independentes: {antes} → {len(todos)}")
+    for i, c in enumerate(todos, start=1):
+        if c.get("ranking") is None:
+            c["ranking"] = i
+    validos = [c for c in todos if c.get("criador_id") and c.get("arroba")]
+
+    com_gpm = [c for c in validos if c.get("video_gpm") is not None]
+    if com_gpm:
+        media = sum(float(c["video_gpm"]) for c in com_gpm) / len(com_gpm)
+        print(f"  GPM de vídeo médio do grupo: R${media:.2f} por mil visualizações")
+    if dry_run:
+        print("  (dry-run: nada foi gravado)")
+        return validos
+    gravar("tiktok_criadores", validos, "criador_id,periodo,data_ref")
+    print(f"  {len(validos)} linha(s) gravada(s) em tiktok_criadores.")
+    return validos
+
+
 def montar_categoria(d, periodo, data_ref):
     return {
         "categoria_id":       d.get("category_id"),
@@ -663,7 +766,7 @@ def main():
     video_id = produto_id = loja_id = palavra = produto_detalhe_id = None
     ordenar_por, tipo_loja = "revenue", None
     comissao = faixa_preco = envio = lancados_ha = categoria_id = None
-    nivel = dentro_de = None
+    nivel = dentro_de = criador_id = None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
     so_organico = "--so-organico" in args
@@ -679,6 +782,8 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--criador" and i + 1 < len(args):
+            criador_id = args[i + 1]; i += 2
         elif args[i] == "--nivel" and i + 1 < len(args):
             nivel = args[i + 1]; i += 2
         elif args[i] == "--dentro-de" and i + 1 < len(args):
@@ -714,6 +819,12 @@ def main():
         descobrir_cabecalho()
     elif "--testar" in args:
         testar()
+    elif "--ranking-criadores" in args:
+        print(f"Ranking de criadores, período {periodo}, ordenado por {ordenar_por}:")
+        buscar_ranking_criadores(periodo, data_ref, paginas, por_pagina, ordenar_por,
+                                 None, "--so-independentes" in args, dry_run)
+    elif criador_id:
+        buscar_criador(criador_id, periodo, data_ref, dry_run)
     elif "--categorias" in args:
         print(f"Categorias, período {periodo}, {paginas} chamada(s):")
         buscar_categorias(periodo, data_ref, paginas, por_pagina, ordenar_por, dry_run,
@@ -755,6 +866,8 @@ def main():
             "  --descobrir-cabecalho         acha o nome do cabeçalho da chave sozinho\n"
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
+            "  --ranking-criadores           top de criadores; some --so-independentes\n"
+            "  --criador <id>                detalhe de um criador, com o GPM dele\n"
             "  --categorias --nivel 1        categorias de topo (é onde está moda feminina)\n"
             "  --categorias --dentro-de <id> abre as subcategorias de uma categoria\n"
             "  --categoria <id>              detalhe de uma categoria\n"

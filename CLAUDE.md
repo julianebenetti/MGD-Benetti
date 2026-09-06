@@ -85,6 +85,13 @@
 - **Os endpoints de categoria recusam `lastDay`** e intervalos de data naturais. Aceitam só
   last7Day, last30Day, last90Day, last180Day e last365Day. O `periodo_api` trata isso
   separado, senão a chamada falha.
+- **Criador**: o `creator/detail` devolve `creator_contact_email`, `whatsapp`, `line`,
+  `facebook`, `zalo` e `ins`. O `montar_criador` **não copia nada disso de propósito** —
+  é dado pessoal de terceiro que não consentiu, e não faz falta pra decidir o que gravar.
+  Fica só o @, que é identidade pública. Se alguém for mexer nesse mapeamento, manter assim.
+- O criador traz `video_gpm` e `live_gpm` separados, que é a régua pra Juliane comparar o
+  próprio desempenho com o dos pares. E `creator_status` separa INDEPENDENT (afiliado
+  independente, o par dela) de BELONGED_TO_SELLER (criador da própria loja).
 - A categoria é a chave de tudo: o `category_id` de moda feminina vira filtro em produto,
   loja e vídeo. `--categorias` lista todas e destaca as de moda. A resposta ainda traz
   `top3_shop_revenue_ratio`, que é concentração — categoria pouco concentrada é mais fácil
