@@ -82,6 +82,13 @@
   `is_tts_product`, `video_id` (produtos de um vídeo), `livestream_id` e `need_all`.
 - `need_extra: true` traz `seller_name` e `sku_count`, então o nome da loja só aparece
   no ranking com essa flag ligada.
+- **Os endpoints de categoria recusam `lastDay`** e intervalos de data naturais. Aceitam só
+  last7Day, last30Day, last90Day, last180Day e last365Day. O `periodo_api` trata isso
+  separado, senão a chamada falha.
+- A categoria é a chave de tudo: o `category_id` de moda feminina vira filtro em produto,
+  loja e vídeo. `--categorias` lista todas e destaca as de moda. A resposta ainda traz
+  `top3_shop_revenue_ratio`, que é concentração — categoria pouco concentrada é mais fácil
+  de entrar — e o split vídeo x live no nível da categoria inteira.
 - Para filtrar por categoria (`category_ids`) é preciso descobrir o id de "Roupas
   femininas e roupas íntimas femininas". Esse id vem dos endpoints de `category`, que
   ainda não foram documentados aqui.

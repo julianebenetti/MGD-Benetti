@@ -47,7 +47,8 @@ ENDPOINTS = {
     "produto_detalhe":   ("/tiktok/product/detail",  "confirmado", 100),
     "produto_ranking":   ("/tiktok/product/rank",    "confirmado",  10),
     "criador_ranking":   ("/tiktok/creator/rank",    "provável",    10),
-    "categoria_ranking": ("/tiktok/category/rank",   "provável",    10),
+    "categoria_detalhe": ("/tiktok/category/detail", "confirmado", 100),
+    "categoria_ranking": ("/tiktok/category/rank",   "confirmado",  10),
 }
 
 # Padrões do Brasil, conforme a lista de valores aceitos na documentação
@@ -480,11 +481,99 @@ def buscar_produto(produto_id, periodo, data_ref, dry_run=False):
 PERIODOS = {"1d": "lastDay", "7d": "last7Day", "30d": "last30Day"}
 
 
-def periodo_api(periodo):
+# Categoria é o único que recusa lastDay e intervalos naturais.
+PERIODOS_CATEGORIA = {"7d": "last7Day", "30d": "last30Day", "90d": "last90Day",
+                      "180d": "last180Day", "365d": "last365Day"}
+
+
+def periodo_api(periodo, familia=None):
     # O ranking de vídeos limita a janela a 30 dias, então fico nesse conjunto.
-    if periodo not in PERIODOS:
-        raise SystemExit(f"--periodo aceita {', '.join(PERIODOS)}.")
-    return PERIODOS[periodo]
+    tabela = PERIODOS_CATEGORIA if familia == "categoria" else PERIODOS
+    if periodo not in tabela:
+        raise SystemExit(
+            f"--periodo aceita {', '.join(tabela)}"
+            + (" nos endpoints de categoria." if familia == "categoria" else "."))
+    return tabela[periodo]
+
+
+def montar_categoria(d, periodo, data_ref):
+    return {
+        "categoria_id":       d.get("category_id"),
+        "categoria":          d.get("category_name"),
+        "gmv":                d.get("revenue"),
+        "receita_video":      d.get("video_revenue"),
+        "receita_live":       d.get("live_revenue"),
+        "receita_afiliados":  d.get("affiliate_revenue"),
+        "receita_propria":    d.get("self_operate_revenue"),
+        "receita_shopping":   d.get("shopping_mall_revenue"),
+        "crescimento_pct":    d.get("revenue_growth_rate"),
+        "lojas":              d.get("shop_number"),
+        "receita_media_loja": d.get("average_shop_revenue"),
+        "concentracao_top3":  d.get("top3_shop_revenue_ratio"),
+        "vendas":             d.get("sale"),
+        "produtos_ativos":    d.get("active_product_number"),
+        "ranking":            d.get("rank"),
+        "periodo":            periodo,
+        "data_ref":           data_ref,
+        "fonte":              "kalodata",
+    }
+
+
+def buscar_categorias(periodo, data_ref, paginas=1, por_pagina=100,
+                      ordenar_por="revenue", dry_run=False):
+    """Lista as categorias. É daqui que sai o category_id de moda feminina,
+    que vira filtro em todos os outros endpoints."""
+    todas = []
+    for pagina in range(1, paginas + 1):
+        resposta = chamar("categoria_ranking", {
+            "date_range": periodo_api(periodo, "categoria"),
+            "sort_field": {"field": ordenar_por, "type": "DESC"},
+            "page_size": min(por_pagina, 100), "page_number": pagina})
+        linhas = resposta.get("data") or []
+        print(f"  página {pagina}: {len(linhas)} categoria(s)")
+        todas += [montar_categoria(d, periodo, data_ref) for d in linhas]
+        if len(linhas) < min(por_pagina, 100):
+            break
+
+    for i, c in enumerate(todas, start=1):
+        if c.get("ranking") is None:
+            c["ranking"] = i
+    validas = [c for c in todas if c.get("categoria_id")]
+
+    print(f"\n  {len(validas)} categoria(s). As de moda feminina:")
+    alvos = ("moda", "roupa", "femin", "vestu", "women", "apparel", "fashion",
+             "intima", "lingerie", "cal\u00e7ado", "bolsa", "acess")
+    achou = False
+    for c in validas:
+        nome = (c.get("categoria") or "").lower()
+        if any(a in nome for a in alvos):
+            achou = True
+            fatia = (float(c["receita_video"]) / float(c["gmv"]) * 100
+                     if c.get("gmv") and c.get("receita_video") is not None else None)
+            print(f"    id {c['categoria_id']:>10}  {c['categoria']}"
+                  + (f"  ({fatia:.0f}% por vídeo)" if fatia is not None else ""))
+    if not achou:
+        print("    nenhuma bateu com os termos de moda. Lista completa:")
+        for c in validas[:40]:
+            print(f"    id {c['categoria_id']:>10}  {c.get('categoria')}")
+
+    if dry_run:
+        print("  (dry-run: nada foi gravado)")
+        return validas
+    gravar("tiktok_categorias", validas, "categoria_id,periodo,data_ref")
+    print(f"  {len(validas)} linha(s) gravada(s) em tiktok_categorias.")
+    return validas
+
+
+def buscar_categoria(categoria_id, periodo, data_ref, dry_run=False):
+    resposta = chamar("categoria_detalhe", {
+        "category_id": categoria_id, "date_range": periodo_api(periodo, "categoria")})
+    linha = montar_categoria(resposta.get("data") or {}, periodo, data_ref)
+    print(json.dumps(linha, ensure_ascii=False, indent=1))
+    if not dry_run and linha.get("categoria_id"):
+        gravar("tiktok_categorias", [linha], "categoria_id,periodo,data_ref")
+        print("Gravado em tiktok_categorias.")
+    return linha
 
 
 # A doc diz "autenticação de secret-key nos cabeçalhos" mas nunca mostra o nome.
@@ -561,7 +650,7 @@ def main():
     periodo, data_ref = "7d", date.today().isoformat()
     video_id = produto_id = loja_id = palavra = produto_detalhe_id = None
     ordenar_por, tipo_loja = "revenue", None
-    comissao = faixa_preco = envio = lancados_ha = None
+    comissao = faixa_preco = envio = lancados_ha = categoria_id = None
     paginas, por_pagina = 1, 100
     dry_run = "--dry-run" in args
     so_organico = "--so-organico" in args
@@ -577,6 +666,8 @@ def main():
             produto_id = args[i + 1]; i += 2
         elif args[i] == "--videos-da-loja" and i + 1 < len(args):
             loja_id = args[i + 1]; i += 2
+        elif args[i] == "--categoria" and i + 1 < len(args):
+            categoria_id = args[i + 1]; i += 2
         elif args[i] == "--comissao" and i + 1 < len(args):
             comissao = args[i + 1]; i += 2
         elif args[i] == "--faixa-preco" and i + 1 < len(args):
@@ -606,6 +697,11 @@ def main():
         descobrir_cabecalho()
     elif "--testar" in args:
         testar()
+    elif "--categorias" in args:
+        print(f"Categorias, período {periodo}, {paginas} chamada(s):")
+        buscar_categorias(periodo, data_ref, paginas, por_pagina, ordenar_por, dry_run)
+    elif categoria_id:
+        buscar_categoria(categoria_id, periodo, data_ref, dry_run)
     elif "--ranking-produtos" in args:
         print(f"Ranking de produtos, período {periodo}, ordenado por {ordenar_por}, "
               f"{paginas} chamada(s):")
@@ -641,6 +737,8 @@ def main():
             "  --descobrir-cabecalho         acha o nome do cabeçalho da chave sozinho\n"
             "  --testar                      confere a chave, gasta 1 chamada\n"
             "  --ranking-videos              top de vídeos do período\n"
+            "  --categorias                  lista as categorias e destaca as de moda\n"
+            "  --categoria <id>              detalhe de uma categoria\n"
             "  --ranking-produtos            top de produtos do período\n"
             "  --ordenar-por video_revenue       produtos que vendem por vídeo, não por live\n"
             "  --ordenar-por commission_rate     produtos que pagam a maior comissão\n"
