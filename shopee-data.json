@@ -1,9 +1,9 @@
 {
-  "updated_at": 1788760705,
-  "updated_at_br": "07/09/2026 02:52",
+  "updated_at": 1788767815,
+  "updated_at_br": "07/09/2026 04:50",
   "period_days": 90,
-  "total_orders": 7709,
-  "total_conversions": 7365,
+  "total_orders": 7708,
+  "total_conversions": 7364,
   "orders": [
     {
       "ID do pedido": "260906AEFJ6E72",
@@ -192702,31 +192702,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "234698293124954",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-09"
-    },
-    {
-      "ID do pedido": "260609M1SY97YE",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-09 07:25:41",
-      "Sub_id1": "02Jin26SofaRetratilVs1",
-      "Valor de Compra(R$)": "14.49",
-      "Comissao liquida do afiliado(R$)": "0.4347",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "0.4347",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.4347",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit Meias Masculinas Cano Curto Cores Escuras Kit com até 12 Pares",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22493705576",
-      "ID da loja": "1454146461",
-      "Nome da loja": "lojachallis",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "234689140178571",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-09"
     }
