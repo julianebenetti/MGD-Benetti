@@ -1,6 +1,6 @@
 {
-  "updated_at": 1788887544,
-  "updated_at_br": "08/09/2026 14:05",
+  "updated_at": 1788892466,
+  "updated_at_br": "08/09/2026 15:27",
   "period_days": 90,
   "total_orders": 7804,
   "total_conversions": 7451,
@@ -12357,7 +12357,7 @@
     },
     {
       "ID do pedido": "2609034BM3SBKA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-03 15:52:06",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "57.66",
@@ -12369,7 +12369,7 @@
       "Comissao total do pedido(R$)": "4.72812",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Body  Bory Regata Femenino  Basico com Bojo em Ribana prime Canelado Confortavel",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23094213636",
       "ID da loja": "1219303534",
       "Nome da loja": "POLY MODA FEMININA",
@@ -12377,7 +12377,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242149925176105",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-03"
     },
     {
@@ -24007,7 +24007,7 @@
     },
     {
       "ID do pedido": "260830NMW5E85R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-29 23:06:49",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "145.9",
@@ -24019,7 +24019,7 @@
       "Comissao total do pedido(R$)": "9.3376",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit com 2 Calça Jeans Feminino Plus Size Elastano Modelo Curve 48-64",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19899680870",
       "ID da loja": "660613051",
       "Nome da loja": "karha confecções",
@@ -24027,7 +24027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241744008131213",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-29"
     },
     {
@@ -26032,7 +26032,7 @@
     },
     {
       "ID do pedido": "260829M5S1PF45",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-29 09:03:24",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "143.23",
@@ -26044,7 +26044,7 @@
       "Comissao total do pedido(R$)": "7.44796",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Freio Dianteiro Hidráulico Shimano Altus Mt200 Com Parafusos Para Bicicleta Bike Mtb",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "43852755381",
       "ID da loja": "801784100",
       "Nome da loja": "NORT SHOP",
@@ -26052,7 +26052,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241693404126550",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-29"
     },
     {
@@ -27382,7 +27382,7 @@
     },
     {
       "ID do pedido": "260829JQ1K8N93",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-28 19:07:05",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "27.49",
@@ -27394,7 +27394,7 @@
       "Comissao total do pedido(R$)": "1.51195",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 2 ou 1 Pegador de  Silicone e Inox  27cm Com Descanso Higiênico Cozinha Churrasco Restaurante Pinça",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58208270758",
       "ID da loja": "348664984",
       "Nome da loja": "Casa Íntegra - Utilidades",
@@ -27402,12 +27402,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241643225110103",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-28"
     },
     {
       "ID do pedido": "260829JQ1K8N92",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-28 19:07:05",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "17.3",
@@ -27419,7 +27419,7 @@
       "Comissao total do pedido(R$)": "0.692",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Molde para Hambúrguer Portátil Forma 5 peças Base Removível Grande e Pequena",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23898108345",
       "ID da loja": "1418809825",
       "Nome da loja": "ALFA DOMESTICOS",
@@ -27427,7 +27427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241643225110103",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-28"
     },
     {
@@ -32582,7 +32582,7 @@
     },
     {
       "ID do pedido": "260826CTQANWTB",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-26 10:56:57",
       "Sub_id1": "27Jun26MochilaExpansivelVs2",
       "Valor de Compra(R$)": "13.17",
@@ -32594,7 +32594,7 @@
       "Comissao total do pedido(R$)": "0.7902",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "[largeloohb] Relógio De Quartzo Para Carro Eletrônico Luminoso À Prova D'água Motocicleta Painel De Automotivo No",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "42474637648",
       "ID da loja": "589761104",
       "Nome da loja": "largelookmu.br",
@@ -32602,7 +32602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241441017103480",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-26"
     },
     {
