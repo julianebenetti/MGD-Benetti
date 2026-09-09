@@ -1,9 +1,9 @@
 {
-  "updated_at": 1788933340,
-  "updated_at_br": "09/09/2026 02:49",
+  "updated_at": 1788940496,
+  "updated_at_br": "09/09/2026 04:48",
   "period_days": 90,
-  "total_orders": 7757,
-  "total_conversions": 7405,
+  "total_orders": 7756,
+  "total_conversions": 7404,
   "orders": [
     {
       "ID do pedido": "260908FHTBG8UU",
@@ -193902,31 +193902,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234868478120876",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-11"
-    },
-    {
-      "ID do pedido": "260611S3CSJUP4",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-11 07:37:25",
-      "Sub_id1": "07Jun26CobertorMangasVs2",
-      "Valor de Compra(R$)": "5.5",
-      "Comissao liquida do afiliado(R$)": "0.165",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "30.00%",
-      "Comissao Shopee(R$)": "0.165",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.165",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Trava Óculos Antiderrapante Silicone Kit Não Cai Do Rosto Gancho Orelha Haste Conforto",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58200509252",
-      "ID da loja": "1620426618",
-      "Nome da loja": "NEOCOMERCIO",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "234862644178542",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-11"
     }
