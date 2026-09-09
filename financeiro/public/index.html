@@ -3836,6 +3836,10 @@
                 paga_parcial: '<span class="selo selo-erro">paga parcial</span>',
                 fechada: '<span class="selo selo-alerta">a pagar</span>',
                 aberta: '<span class="selo selo-neutro">em aberto</span>',
+                // Fatura quitada trocando a dívida de lugar: sai do cartão e
+                // vira parcela. Não é "paga" no sentido de acabou — o valor
+                // continua a ser pago, só que mais caro e mais adiante.
+                parcelada: '<span class="selo selo-alerta" title="Quitada por parcelamento: virou parcela nos meses seguintes.">parcelada</span>',
               };
               const emAberto = f.em_aberto || 0;
               const ambCartao = ambitoDoCartao(f.cartao);

@@ -1144,8 +1144,32 @@ function noEscopo(mv) {
 
   const totalAberto = faturas.reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
   console.log(`    (em aberto no cartão: ${brl(totalAberto)})`);
+  // Fatura parcelada quita no cartao trocando a divida de lugar: o que sobra
+  // sai do cartao e vira contrato de parcelas. `financiado_em_parcelas` guarda
+  // esse valor — sem ele a identidade abaixo acusaria um saldo em aberto que
+  // nao esta mais no cartao, e ninguem saberia para onde o dinheiro foi.
   ok('Saldo em aberto é a soma do que cada fatura deve',
-     Math.abs(totalAberto - faturas.reduce((s, f) => s + Math.max(0, f.total_fatura - f.pago), 0)) < 0.05);
+     Math.abs(totalAberto - faturas.reduce((s, f) =>
+       s + Math.max(0, f.total_fatura - f.pago - (f.financiado_em_parcelas || 0)), 0)) < 0.05);
+
+  // E o valor financiado tem de estar cadastrado como divida, senao ele some da
+  // tela: sai do cartao e nao aparece em lugar nenhum.
+  {
+    const parceladas = faturas.filter(f => (f.financiado_em_parcelas || 0) > 0.05);
+    parceladas.forEach(f => {
+      const contrato = (dados.dividas || []).find(x =>
+        /parcelamento/i.test(x.nome || '') &&
+        `${x.nome || ''} ${x.observacao || ''}`.includes(f.mes) &&
+        `${x.nome || ''} ${x.observacao || ''}`.includes(f.cartao));
+      ok(`Fatura ${f.cartao} ${f.mes} parcelada tem contrato cadastrado em Dívidas`,
+         !!contrato, `R$ ${f.financiado_em_parcelas} financiados sem contrato correspondente`);
+      if (contrato) {
+        ok(`Contrato do parcelamento ${f.cartao} ${f.mes} custa mais que o financiado (é crédito)`,
+           contrato.montante > f.financiado_em_parcelas,
+           `montante ${contrato.montante} x financiado ${f.financiado_em_parcelas}`);
+      }
+    });
+  }
 
   // O saldo que rola de uma fatura para a outra e a diferenca entre o total
   // cobrado e os lancamentos do periodo — dinheiro velho, nao gasto novo.

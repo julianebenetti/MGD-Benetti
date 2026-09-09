@@ -67242,6 +67242,15 @@
       "parcela_mensal": 545.66,
       "meses_restantes": 1,
       "observacao": "Venceu 15/08/26. Parcela 8 de 8 da matrícula anual — as outras 7 já foram pagas."
+    },
+    {
+      "id": "parcelamento_fatura_0442_set26",
+      "nome": "Parcelamento da fatura do 0442 (Set/26)",
+      "pessoa": "Benetti UP",
+      "montante": 1632.52,
+      "parcela_mensal": 408.13,
+      "meses_restantes": 4,
+      "observacao": "Fatura de R$1.382,94 (venc. 01/09/26) parcelada em 09/09/26: entrada R$131,38 + 4x R$408,13, vencendo 01/10/26 a 01/01/27. Juros 12,4% ao mes (314,63% ao ano), IOF R$12,14, CET 12,91% ao mes e 338,31% ao ano. Desembolso total R$1.763,90 por uma divida de R$1.382,94 — custo de R$380,96. E o credito mais caro de todos os contratos cadastrados. O cartao 0442 e o do trafego pago da Benetti UP e a fatura era 82% gasto da empresa, mas o parcelamento esta no nome da Juliane."
     }
   ],
   "pessoas": [],
@@ -67551,7 +67560,7 @@
       "cartao_descricao": "Itau Uniclass Infinite Visa - final 0442",
       "mes": "Set/26",
       "vencimento": "2026-09-01",
-      "situacao": "fechada",
+      "situacao": "parcelada",
       "lancamentos": 20,
       "compras": 1382.94,
       "estornos": 0,
@@ -67560,9 +67569,11 @@
       "cobrado": 1382.94,
       "total_fatura": 1382.94,
       "saldo_anterior": 0,
-      "pago": 0,
-      "em_aberto": 1382.94,
-      "parceladas": 3
+      "pago": 131.38,
+      "em_aberto": 0,
+      "parceladas": 3,
+      "observacao": "Quitada em 09/09/26 por parcelamento no proprio Itau: entrada de R$131,38 mais 4x R$408,13 vencendo de 01/10/26 a 01/01/27. As compras desta fatura ja estao lancadas uma a uma; as 4 parcelas sao divida, nao consumo novo.",
+      "financiado_em_parcelas": 1251.56
     },
     {
       "cartao": "0442",
@@ -67576,11 +67587,12 @@
       "pagamentos": 0,
       "divida_parcelada": 0,
       "cobrado": 922.29,
-      "total_fatura": 2305.23,
-      "saldo_anterior": 1382.94,
+      "total_fatura": 922.29,
+      "saldo_anterior": 0,
       "pago": 0,
-      "em_aberto": 2305.23,
-      "parceladas": 3
+      "em_aberto": 922.29,
+      "parceladas": 3,
+      "observacao": "O saldo anterior de R$1.382,94 saiu daqui: a fatura de Set/26 foi parcelada em 09/09/26, nao rolou pro rotativo. A parcela de R$408,13 entra quando a fatura real de outubro for importada."
     },
     {
       "cartao": "3711",

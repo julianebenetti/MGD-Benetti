@@ -905,6 +905,43 @@ Na aba **Cartão & Faturas** a parcela continua aparecendo: a fatura cobra ela, 
 tirar faria a soma da tela não bater com o valor a pagar. O `cobrado` do
 cabeçalho também a inclui.
 
+### Fatura parcelada: a dívida muda de lugar, não some (09/09)
+A Juliane parcelou a fatura de Set/26 do 0442 (R$ 1.382,94) direto no app do
+Itaú: entrada de R$ 131,38 em 09/09 e **4x R$ 408,13** vencendo de 01/10/26 a
+01/01/27. Conferido contra o comprovante, linha por linha — saldo a financiar,
+IOF, juros e total batem todos.
+
+**O custo:** desembolso de R$ 1.763,90 por uma dívida de R$ 1.382,94 — R$ 380,96
+de juros e IOF. Juros de **12,4% ao mês (314,63% ao ano)**, **CET 338,31% ao
+ano**. É o crédito mais caro de todos os contratos cadastrados: os três do
+Mercado Pago, que já eram caros, ficam entre 100% e 106% de CET anual.
+
+Três coisas mudaram no dado, e a terceira só apareceu porque um teste quebrou:
+
+1. **A fatura de Set/26 saiu de "em aberto"** — `situacao: 'parcelada'` (selo
+   novo), `pago: 131,38`, `em_aberto: 0`. Deixar em aberto faria o Painel cobrar
+   em setembro um valor que ela já resolveu. O "sai da conta" de Set/26 caiu de
+   R$ 8.845,54 para R$ 7.462,60, exatamente os R$ 1.382,94.
+2. **A fatura de Out/26 perdeu o saldo anterior.** Ela tinha sido importada
+   antes do parcelamento e trazia os R$ 1.382,94 como saldo rolado — o que só
+   valeria se tivesse ido para o rotativo. Zerado, com observação; a parcela de
+   R$ 408,13 entra quando a fatura real de outubro for importada.
+3. **`financiado_em_parcelas` no cabeçalho da fatura.** O teste "saldo em aberto
+   é a soma do que cada fatura deve" quebrou, e estava certo em quebrar: a
+   identidade `em_aberto = total − pago` não fecha numa fatura parcelada, porque
+   o resto **não evaporou, mudou de lugar**. O campo guarda para onde foi
+   (R$ 1.251,56), a identidade virou `total − pago − financiado_em_parcelas`, e
+   dois testes novos exigem que todo valor financiado tenha contrato
+   correspondente em Dívidas e que esse contrato custe mais que o financiado —
+   senão o dinheiro sai do cartão e some da tela.
+
+**Ao registrar um parcelamento de fatura, fazer os três juntos.** Mexer só na
+fatura esconde a dívida; mexer só em Dívidas deixa o cartão cobrando duas vezes.
+
+O contrato ficou com `pessoa: Benetti UP`, seguindo o âmbito dos lançamentos do
+0442 (a fatura era 82% gasto da empresa) — mas o parcelamento está no nome da
+Juliane, e isso está anotado na observação.
+
 ### Fatura paga a menor (rotativo)
 Pagar menos que o total é **tomar crédito**: o saldo rola para a fatura seguinte
 e o banco cobra por carregar. Foram 5 faturas assim em 2026, R$ 15.267,11
