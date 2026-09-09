@@ -449,6 +449,43 @@ Em 05/09 dispara com 3 itens: extrato de Ago/26 incompleto (crítico), extrato
 parado há 8 dias, e a fatura do ciclo seguinte do 0442 (venceu 01/09). O
 holerite corretamente não aparece.
 
+### Alerta de contas a vencer no celular (09/09)
+A Juliane perguntou se dá para receber alerta das contas vencendo no celular.
+Dá: Routine `Contas a vencer — alerta no celular (diário, 7h)`, todo dia às 7h
+de Brasília (`0 10 * * *` em UTC), sessão nova a cada disparo, com push ligado e
+e-mail desligado.
+
+**O alerta não recalcula nada em prosa.** A rotina clona o repositório e roda
+`financeiro/scripts/contas-a-vencer.js --dias 3` — o mesmo cálculo da tabela de
+vencimentos do Painel, em linha de comando, só leitura. Pedir ao modelo que
+some os vencimentos a olho no JSON seria convidar número inventado no lugar mais
+caro possível: uma notificação que ela lê antes de decidir o que pagar.
+
+- **Não lê o VPS.** `financeiro.descontoirresistivel.com.br` é bloqueado pela
+  política de saída do ambiente; a fonte é o repositório, branch
+  `claude/financial-dashboard-pbj1ts` (o `main` não tem a dashboard). O dado vale
+  o último push, e o alerta diz até que data o extrato enxerga.
+- **`AVISAR: SIM|NAO` na segunda linha da saída.** Sem conta na janela, a rotina
+  responde uma linha e para. Alerta que chega todo dia com qualquer coisa vira
+  papel de parede — a mesma regra do bloco de pendências no topo da tela.
+- **"Já venceu e não apareceu no extrato", nunca "você não pagou".** As duas
+  guardas do fechamento do plano valem aqui: mês com extrato incompleto e conta
+  que vence depois da última linha importada não são julgados.
+- **Teste de que as duas visões não divergem**: a suíte roda o script e compara
+  item a item (data, título, valor) com a tabela de vencimentos renderizada. São
+  dois códigos separados lendo o mesmo JSON; divergir faria o alerta prometer um
+  mês diferente do que a tela mostra. Verificado quebrando o script de propósito.
+
+**Bug real achado ao testar isso, em `extratoCobreAte()`:** o extrato traz PIX
+agendado com data futura, e a função filtrava só por `data <= hoje`. Passado o
+dia 8, o agendamento de 08/09 vira passado e o arquivo de 05/09 — cuja última
+linha real é de **04/09** — passava a alegar cobertura até o dia 8. Quatro dias
+de cobertura inventada, e dentro deles o fechamento do plano acusava de não paga
+uma conta (`PAG TIT INT 299`, 06/09) que o extrato nunca teve como mostrar. Quem
+responde "até onde este arquivo enxerga" é a linha que **já movimentou a conta**,
+então o discriminador é `status !== 'agendado'`, não a data. Corrigido nos dois
+lugares (dashboard e script), com 2 testes que falham sem a correção.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
@@ -1299,6 +1336,12 @@ valor na base atual.
   tiver regra.
 - `importar-extrato-itau.js <arquivo.xls>` — lê o extrato da conta corrente.
   Marca como transferência o que outra fonte já lançou, para não contar duas vezes.
+- `contas-a-vencer.js [--dias N] [--hoje AAAA-MM-DD]` — só leitura. O que vence
+  na janela, com as mesmas regras da tabela de vencimentos do Painel (fatura
+  parada e conta paga pela Benetti UP saem à parte, recorrente que falta entra
+  pela mediana marcada como previsão, nada é dado como atrasado onde o extrato
+  não alcança). É o que alimenta o alerta no celular. `--hoje` só serve para
+  testar outra data.
 - `conciliar.js` — só leitura. Audita as três fontes: o que falta, o que está
   contado duas vezes e o que não bate. Rode depois de cada importação.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha

@@ -978,6 +978,73 @@ function noEscopo(mv) {
         ok(`Extrato: os ${futuros.length} agendamento(s) até ${maiorFuturo} ficam de fora da cobertura`,
            ate < maiorFuturo, `cobre até ${ate}`);
       }
+
+      // O caso que escapava: agendado cuja data já passou. Filtrar só por
+      // `data <= hoje` deixava o agendamento virar passado e o arquivo alegar
+      // cobertura que nunca teve — e dentro desses dias a conferência acusava
+      // de não paga uma conta que o extrato não tinha como mostrar. Quem
+      // responde "até onde este arquivo enxerga" é a linha que já movimentou a
+      // conta, então o discriminador é o status, não a data.
+      const reais = todosLancamentos.filter(t =>
+        t.origem === 'extrato_itau' && t.data && t.data <= hojeIso && t.status !== 'agendado');
+      const comAgendado = todosLancamentos.filter(t =>
+        t.origem === 'extrato_itau' && t.data && t.data <= hojeIso);
+      const ultimaReal = reais.map(t => t.data).sort().pop();
+      const ultimaQualquer = comAgendado.map(t => t.data).sort().pop();
+      igual('Extrato: a cobertura é a última linha que de fato movimentou a conta',
+            ate, ultimaReal);
+      if (ultimaQualquer > ultimaReal) {
+        ok(`Extrato: agendado de data já passada (${ultimaQualquer}) não estica a cobertura`,
+           ate !== ultimaQualquer,
+           `cobre até ${ate}; com o agendado iria até ${ultimaQualquer}`);
+      }
+    }
+
+    // O script de linha de comando que alimenta o alerta no celular tem de
+    // dizer exatamente o que a tela diz. São dois códigos separados lendo o
+    // mesmo JSON — se divergirem, o alerta promete um mês diferente do que a
+    // dashboard mostra, e ela deixa de confiar nos dois.
+    {
+      const hojeIso = new Date().toISOString().slice(0, 10);
+      const fimDoMes = new Date(new Date(hojeIso + 'T00:00:00').getFullYear(),
+                                new Date(hojeIso + 'T00:00:00').getMonth() + 1, 0)
+                         .toISOString().slice(0, 10);
+      const dias = Math.round((new Date(fimDoMes) - new Date(hojeIso)) / 86400000);
+      const saida = require('child_process')
+        .execFileSync('node', [path.join(__dirname, 'contas-a-vencer.js'), '--dias', String(dias)],
+                      { encoding: 'utf8' });
+
+      // Só as linhas de item, e só as do mês vigente: a tela mostra um mês por vez.
+      const doScript = saida.split('\n')
+        .map(l => l.match(/^\s{2}(\d{2})\/(\d{2})\/(\d{4})\s+R\$\s([\d.,]+)\s\s(.+?)(?:\s\s\[|$)/))
+        .filter(Boolean)
+        .map(m => ({ data: `${m[3]}-${m[2]}-${m[1]}`, valor: numeroDe('R$ ' + m[4]), titulo: m[5].trim() }))
+        .filter(x => x.data >= hojeIso && x.data <= fimDoMes);
+
+      const daTela = await pagina.evaluate(m => {
+        document.querySelector('[data-tab="painel"]').click();
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        return [...document.getElementById('painel_vencimentos_criticos').querySelectorAll('tbody tr')]
+          .filter(tr => tr.querySelector('.plano-btn'))
+          .map(tr => ({
+            data: tr.cells[0].innerText.trim().split('/').reverse().join('-'),
+            valor: Number(tr.cells[2].innerText.replace(/[^\d,-]/g, '').replace(',', '.')),
+            titulo: tr.cells[1].innerText.split('\n')[0].trim()
+          }));
+      }, mesVigenteNoTeste);
+
+      const chave = x => `${x.data}|${x.titulo}|${x.valor.toFixed(2)}`;
+      const naTela = new Set(daTela.filter(x => x.data >= hojeIso).map(chave));
+      const noScript = new Set(doScript.map(chave));
+      const soNoScript = [...noScript].filter(k => !naTela.has(k));
+      const soNaTela = [...naTela].filter(k => !noScript.has(k));
+
+      ok('Script de alerta e tabela de vencimentos listam exatamente as mesmas contas',
+         doScript.length > 0 && !soNoScript.length && !soNaTela.length,
+         soNoScript.length || soNaTela.length
+           ? `só no script: ${soNoScript.join(' / ') || '—'}; só na tela: ${soNaTela.join(' / ') || '—'}`
+           : `${doScript.length} conta(s) conferidas`);
     }
 
     // O outro lado: fonte em dia não pode gerar alerta. Sem isso o bloco vira

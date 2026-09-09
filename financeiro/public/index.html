@@ -2997,14 +2997,20 @@
     // extrato de agosto, por exemplo, para em 28/08 e não traz a escola nem a
     // faxina do fim do mês. Acusar aí seria a tela inventando uma dívida.
     function extratoCobreAte() {
-      // Só movimento que já aconteceu. O extrato traz PIX agendado com data
-      // futura — o de 28/10 no arquivo de 05/09 — e contar essa data faria a
-      // dashboard achar que enxerga até outubro: o alerta de extrato parado
-      // nunca mais dispararia, e a conferência do plano julgaria conta que
-      // ainda não teve como sair.
+      // Quem diz até onde o arquivo enxerga é a linha que já movimentou a
+      // conta. O extrato traz PIX agendado com data futura — 7 deles, indo até
+      // 28/10 no arquivo de 05/09 — e um agendado só prova que o arquivo é
+      // *anterior* àquela data, nunca que ele cobre até lá.
+      //
+      // Filtrar só por `data <= hoje` não basta: passado o dia 8, o agendado de
+      // 08/09 vira passado e o arquivo de 05/09 (última linha real em 04/09)
+      // passa a alegar cobertura até o dia 8. Foram 4 dias de cobertura
+      // inventada, e dentro deles a conferência acusava de não paga uma conta
+      // que o extrato nunca teve como mostrar. O discriminador é o `status`.
       const hoje = new Date().toISOString().slice(0, 10);
       const datas = transacoesSemFiltroDeAno()
-        .filter(t => t.origem === 'extrato_itau' && t.data && t.data <= hoje)
+        .filter(t => t.origem === 'extrato_itau' && t.data && t.data <= hoje
+                  && t.status !== 'agendado')
         .map(t => t.data)
         .sort();
       return datas.length ? datas[datas.length - 1] : null;
