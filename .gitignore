@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# shopee-video
+shopee-video/__pycache__/
+shopee-video/saida/
+shopee-video/.env
