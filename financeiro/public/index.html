@@ -2852,6 +2852,24 @@
         .sort((a, b) => a.dia - b.dia);
     }
 
+    // Conta recorrente que a Juliane cadastrou à mão, em
+    // `configuracoes.json` → `contas_recorrentes`.
+    //
+    // A projeção pelo histórico só enxerga o que passou pelo extrato pessoal
+    // dela, três meses ou mais. Uma conta paga pela conta da Benetti UP (a
+    // contabilidade da Stima, por exemplo) nunca passa por lá — a dashboard
+    // jamais descobriria sozinha que ela existe, por mais tempo que passasse.
+    // O cadastro é a única forma de essas contas aparecerem.
+    //
+    // `paga_por` diz de qual caixa o dinheiro sai. Quando não é o dela, a conta
+    // aparece na lista de vencimentos (é para isso que existe: lembrar) mas
+    // fica fora de todo total de dinheiro pessoal, pelo mesmo motivo que a
+    // fatura quitada pela empresa já ficava.
+    function contasRecorrentesCadastradas() {
+      return (configuracoesGlobais.contas_recorrentes || [])
+        .filter(c => c.ativa !== false && Number(c.valor) > 0);
+    }
+
     // As recorrentes que faltam num mês: as que o extrato daquele mês ainda não
     // trouxe. Devolve com `previsto: true` para a tela nunca confundir uma
     // projeção com um lançamento real.
@@ -2859,13 +2877,35 @@
       const jaTem = new Set(saidasForaDoCartaoDoMes(mes).map(t => CHAVE_RECORRENTE(t.descricao)));
       const ano = 2000 + parseInt(mes.split('/')[1], 10);
       const iMes = MES_ORDEM.indexOf(mes.split('/')[0]) + 1;
-      return perfilDasRecorrentes()
+      const data = dia => `${ano}-${String(iMes).padStart(2, '0')}-${String(Math.min(Math.max(dia || 15, 1), 28)).padStart(2, '0')}`;
+
+      const doHistorico = perfilDasRecorrentes()
         .filter(r => !jaTem.has(r.chave))
-        .map(r => ({
-          ...r,
+        .map(r => ({ ...r, previsto: true, data: data(r.dia) }));
+
+      // O cadastro não pode duplicar o que já está na tela: nem o lançamento
+      // real do mês, nem a mesma conta já projetada pelo histórico.
+      const jaProjetado = new Set(doHistorico.map(r => r.chave));
+      const cadastradas = contasRecorrentesCadastradas()
+        .map(c => ({
+          chave: CHAVE_RECORRENTE(c.descricao) || ('cad ' + c.id),
+          descricao: c.descricao,
+          categoria: c.categoria,
+          pessoa: c.pessoa,
+          natureza: 'despesa',
+          valor: Number(c.valor),
+          dia: c.dia || 15,
+          nMeses: null,
+          cadastrada: true,
+          forma: c.forma || null,
+          paga_por: c.paga_por || 'juliane',
+          fora_da_conta: (c.paga_por || 'juliane') !== 'juliane',
           previsto: true,
-          data: `${ano}-${String(iMes).padStart(2, '0')}-${String(Math.min(r.dia, 28)).padStart(2, '0')}`
-        }));
+          data: data(c.dia)
+        }))
+        .filter(c => !jaTem.has(c.chave) && !jaProjetado.has(c.chave));
+
+      return [...doHistorico, ...cadastradas].sort((a, b) => (a.data || '').localeCompare(b.data || ''));
     }
 
     // Faturas que vencem no mês. A chave é cartão + mês: filtrar só pelo mês
@@ -3003,7 +3043,10 @@
           // cobrir aquela data — senão o que falta é o arquivo, não o pagamento.
           const virou = saidasForaDoCartaoDoMes(mes)
             .some(t => CHAVE_RECORRENTE(t.descricao) === c.chave.slice(5));
-          if (virou) cumpriu.push(c);
+          // Conta paga por outro caixa não deixa rastro no extrato dela: dizer
+          // que não foi paga seria acusação sem prova nenhuma.
+          if (c.fora_da_conta) semDado.push(c);
+          else if (virou) cumpriu.push(c);
           else if (extratoFalho) semDado.push(c);
           else if (ateOndeSabe && c.quando <= ateOndeSabe) furou.push(c);
           else semDado.push(c);
@@ -3086,7 +3129,11 @@
       // o mês é futuro, ou porque o extrato dele ainda está pela metade.
       // Entram pela mediana do histórico, sempre marcadas como previsão.
       const previstas = recorrentesFaltandoEm(mes);
-      const somaPrevistas = previstas.reduce((s, r) => s + r.valor, 0);
+      // Conta cadastrada que sai da conta da Benetti UP não é saída do caixa
+      // dela: aparece na lista de vencimentos para ser lembrada, mas somar aqui
+      // cobraria da Juliane um boleto que a empresa paga.
+      const somaPrevistas = previstas.filter(r => !r.fora_da_conta).reduce((s, r) => s + r.valor, 0);
+      const somaOutroCaixa = previstas.filter(r => r.fora_da_conta).reduce((s, r) => s + r.valor, 0);
 
       const saidaTotal = obrigacaoCartao + somaSaidasFora + somaPrevistas;
       const saldo = folha.liquido - saidaTotal;
@@ -3199,9 +3246,13 @@
           valor: r.valor,
           quitado: false,
           previsto: true,
-          detalhe: r.fixa
-            ? `${rotuloCategoria(r.categoria)} · valor fixo nos últimos ${r.nMeses} meses`
-            : `${rotuloCategoria(r.categoria)} · média de ${r.nMeses} meses, variou de ${moeda(r.minimo)} a ${moeda(r.maximo)}`,
+          cadastrada: !!r.cadastrada,
+          fora_da_conta: !!r.fora_da_conta,
+          detalhe: r.cadastrada
+            ? `${rotuloCategoria(r.categoria)} · conta cadastrada, todo dia ${r.dia}${r.forma ? ' por ' + r.forma : ''}${r.fora_da_conta ? ' · <b>sai da conta da Benetti UP</b>' : ''}`
+            : r.fixa
+              ? `${rotuloCategoria(r.categoria)} · valor fixo nos últimos ${r.nMeses} meses`
+              : `${rotuloCategoria(r.categoria)} · média de ${r.nMeses} meses, variou de ${moeda(r.minimo)} a ${moeda(r.maximo)}`,
           cartao: null,
           chave: `prev|${r.chave}`
         }))
@@ -3209,6 +3260,9 @@
        .sort((a, b) => (a.quando || '').localeCompare(b.quando || ''));
 
       const emAberto = compromissos.filter(c => !c.quitado && !c.suspenso);
+      // O dinheiro do plano é o dela. O que a empresa paga fica visível na
+      // tabela, e fora de toda soma.
+      const meuDinheiro = c => !c.fora_da_conta;
 
       // Só o que ainda não aconteceu entra no plano: lançamento já no extrato é
       // fato, e marcar "vou pagar" nele não decidiria nada.
@@ -3216,8 +3270,8 @@
       const plano = planoDoMes(mes);
       const vouPagar = decidiveis.filter(c => decisaoDoItem(mes, c) === 'pagar');
       const vouAdiar = decidiveis.filter(c => decisaoDoItem(mes, c) !== 'pagar');
-      const somaPagar = vouPagar.reduce((s, c) => s + c.valor, 0);
-      const somaAdiar = vouAdiar.reduce((s, c) => s + c.valor, 0);
+      const somaPagar = vouPagar.filter(meuDinheiro).reduce((s, c) => s + c.valor, 0);
+      const somaAdiar = vouAdiar.filter(meuDinheiro).reduce((s, c) => s + c.valor, 0);
 
       // Contra o que comparar: a Juliane digita, porque a dashboard não sabe
       // quanto ela vai ter — além do salário entra o que o Hugo passa e o que
@@ -3277,7 +3331,7 @@
                        <button type="button" class="plano-btn${adiado ? ' ativo-adiar' : ''}"
                          onclick="marcarItem('${mes}', '${chaveParaAtributo(c.chave)}', 'adiar')">deixo</button>
                      </div>`;
-                return `<tr${c.quitado ? ' style="opacity:.55"' : adiado ? ' class="linha-adiada"' : ''}>
+                return `<tr${c.fora_da_conta ? ' data-fora-da-conta="1"' : ''}${c.suspenso ? ' data-suspenso="1"' : ''}${c.quitado ? ' style="opacity:.55"' : adiado ? ' class="linha-adiada"' : ''}>
                   <td>${c.quando ? c.quando.split('-').reverse().join('/') : '—'}</td>
                   <td>${c.titulo}<br><span class="kpi-sub">${c.detalhe}${c.suspenso && !plano.itens[c.chave] ? ' · pagamento parado' : ''}</span></td>
                   <td class="num"${c.quitado || adiado ? ' style="color:var(--text-secondary)"' : ' style="color:var(--accent-red);font-weight:600"'}>${moeda(c.valor)}</td>
@@ -3288,10 +3342,18 @@
             </tbody>
             <tfoot><tr>
               <td colspan="2">Ainda a pagar (${emAberto.length} de ${compromissos.length})${somaPrevistas > 0 ? ` — inclui ${moeda(somaPrevistas)} previsto` : ''}</td>
-              <td class="num">${moeda(emAberto.reduce((s, c) => s + c.valor, 0))}</td>
+              <td class="num">${moeda(emAberto.filter(meuDinheiro).reduce((s, c) => s + c.valor, 0))}</td>
               <td colspan="2"></td>
             </tr></tfoot>
           </table>
+
+          ${somaOutroCaixa > 0 ? `
+          <div class="aviso aviso-info" style="margin-top:14px">
+            <b>${moeda(somaOutroCaixa)} sai da conta da Benetti UP</b>, não da sua:
+            ${previstas.filter(r => r.fora_da_conta).map(r => `${r.descricao} (dia ${r.dia})`).join(' · ')}.
+            Está na lista porque é conta que você precisa lembrar de pagar todo mês — mas fica de fora
+            dos totais acima e do &quot;sai da conta&quot;, senão o boleto da empresa apareceria cobrando o seu salário.
+          </div>` : ''}
 
           ${conferencia.temPlano && (conferencia.cumpriu.length || conferencia.furou.length || conferencia.semDado.length) ? `
           <div class="aviso ${conferencia.furou.length ? 'aviso-atencao' : 'aviso-ok'}" style="margin-top:14px">

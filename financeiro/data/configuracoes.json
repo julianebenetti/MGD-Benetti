@@ -289,5 +289,19 @@
       "suspenso_desde": "2026-08-31",
       "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
     }
+  ],
+  "contas_recorrentes": [
+    {
+      "id": "stima_contabilidade",
+      "descricao": "Contabilidade STIMA",
+      "valor": 405.0,
+      "dia": 5,
+      "categoria": "contabilidade",
+      "pessoa": "Benetti UP",
+      "forma": "boleto",
+      "paga_por": "benetti_up",
+      "ativa": true,
+      "observacao": "STIMA CONTABIL S/S, CNPJ 20.284.034/0001-62. Boleto mensal da Benetti UP, venda recorrente no Conta Azul, cobranca chega por e-mail em benettiup@gmail.com. Sai da conta da empresa, nao da conta corrente pessoal — por isso nunca aparece no extrato do Itau e a projecao por historico nunca ia descobrir sozinha. Valor de 09/2026: R$405,00 (em 05/2026 foi R$414,53)."
+    }
   ]
 }

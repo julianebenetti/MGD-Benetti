@@ -751,8 +751,11 @@ function noEscopo(mv) {
     const mudou = await pagina.evaluate(m => {
       const el = document.getElementById('painel_vencimentos_criticos');
       const antes = el.querySelector('.plano-saldo').innerText;
+      // Conta paga pela conta da Benetti UP aparece na lista mas fica fora dos
+      // totais de dinheiro dela — marcar essa não moveria número nenhum, e o
+      // teste é sobre o saldo se mexer.
       const linha = [...el.querySelectorAll('tbody tr')]
-        .find(tr => tr.querySelector('.plano-btn.ativo-pagar'));
+        .find(tr => tr.querySelector('.plano-btn.ativo-pagar') && !tr.dataset.foraDaConta);
       const valor = linha.cells[2].innerText;
       linha.querySelectorAll('.plano-btn')[1].click();
       return { antes, depois: document.getElementById('painel_vencimentos_criticos')
@@ -783,6 +786,74 @@ function noEscopo(mv) {
       renderizarPainel();
     });
     await pagina.waitForTimeout(400);
+  }
+
+  // --- Conta recorrente cadastrada à mão ---
+  //
+  // A projeção pelo histórico só enxerga o que passou pelo extrato pessoal, e
+  // três meses ou mais. A contabilidade da Stima sai da conta da Benetti UP:
+  // aparece uma única vez no extrato dela, em 05/2026. Sem o cadastro em
+  // `configuracoes.json` essa conta nunca existiria na tela, por mais tempo que
+  // passasse — e é justamente a que ela esquece de pagar todo dia 5.
+  {
+    const mes = mesVigenteNoTeste;
+    const cadastro = (config.contas_recorrentes || []).filter(c => c.ativa !== false && c.valor > 0);
+
+    const visto = await pagina.evaluate(m => {
+      document.querySelector('[data-tab="painel"]').click();
+      document.getElementById('painel_mes').value = m;
+      delete dadosGlobais.plano_do_mes;
+      renderizarPainel();
+      const el = document.getElementById('painel_vencimentos_criticos');
+      const previstas = recorrentesFaltandoEm(m);
+      return {
+        texto: el.innerText,
+        chaves: previstas.map(r => r.chave),
+        cadastradas: previstas.filter(r => r.cadastrada).map(r => ({ d: r.descricao, v: r.valor, fora: !!r.fora_da_conta })),
+        foraNaTabela: [...el.querySelectorAll('tbody tr[data-fora-da-conta]')].length,
+        saiDaConta: (document.getElementById('painel_fluxo_3numeros') || document.body).innerText
+      };
+    }, mes);
+
+    ok('Toda conta recorrente cadastrada aparece na lista de vencimentos',
+       cadastro.every(c => visto.texto.includes(c.descricao)),
+       cadastro.map(c => c.descricao).join(', '));
+
+    // O cadastro não pode duplicar o que o histórico já projeta nem o que o
+    // extrato já trouxe: duas linhas da mesma conta somariam duas vezes.
+    ok('Conta cadastrada nunca duplica uma já projetada pelo histórico',
+       new Set(visto.chaves).size === visto.chaves.length,
+       `${visto.chaves.length} previstas, ${new Set(visto.chaves).size} distintas`);
+
+    // O boleto que a empresa paga não pode entrar no dinheiro dela: é o mesmo
+    // princípio que já tirou do Painel a fatura quitada pela Benetti UP.
+    const foraEsperadas = cadastro.filter(c => (c.paga_por || 'juliane') !== 'juliane');
+    igual('Conta paga por outro caixa vem marcada como tal na tabela',
+          visto.foraNaTabela, foraEsperadas.length);
+    if (foraEsperadas.length) {
+      const somas = await pagina.evaluate(m => {
+        const el = document.getElementById('painel_vencimentos_criticos');
+        const linhas = [...el.querySelectorAll('tbody tr')];
+        const valor = tr => Number(tr.cells[2].innerText.replace(/[^\d,-]/g, '').replace(',', '.'));
+        // O rodapé soma o que está em aberto: nem quitado (sem botão) nem com
+        // pagamento parado. Recalculado aqui a partir das próprias linhas.
+        const emAberto = linhas.filter(tr => tr.querySelector('.plano-btn') && !tr.dataset.suspenso);
+        return {
+          rodape: Number((el.querySelector('tfoot .num') || {}).innerText
+                    .replace(/[^\d,-]/g, '').replace(',', '.')),
+          semEmpresa: emAberto.filter(tr => !tr.dataset.foraDaConta).reduce((a, tr) => a + valor(tr), 0),
+          somaFora: emAberto.filter(tr => tr.dataset.foraDaConta).reduce((a, tr) => a + valor(tr), 0)
+        };
+      }, mes);
+
+      // Duas pontas: o rodapé bate com a soma sem o boleto da empresa, e não
+      // bate com ela — só some do total se de fato tiver sido excluído.
+      ok('Rodapé "ainda a pagar" exclui o que a Benetti UP paga',
+         somas.somaFora > 0.01
+           && Math.abs(somas.semEmpresa - somas.rodape) < 0.05
+           && Math.abs(somas.semEmpresa + somas.somaFora - somas.rodape) > 0.05,
+         `sem a empresa ${brl(somas.semEmpresa)} = rodapé ${brl(somas.rodape)}; com ela seria ${brl(somas.semEmpresa + somas.somaFora)}`);
+    }
   }
 
   // A conferência não pode acusar pagamento que a dashboard só não enxerga.

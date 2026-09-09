@@ -258,6 +258,51 @@ futuro ela sumia, e o Painel dava a impressão de que só havia cartão a pagar.
 - Set/26 saiu de "só cartão" para **R$ 6.381,63** de conta recorrente com dia e
   valor aproximado.
 
+### Conta recorrente cadastrada à mão, e a que a empresa paga (09/09)
+A Juliane mandou o print da cobrança da **Stima Contábil** (R$ 405,00, boleto,
+todo dia 5, Conta Azul, em nome da Benetti UP): "todo dia 05 eu tenho que pagar
+essa conta da empresa, sempre esqueço, preciso que você me lembre e coloque nas
+contas a pagar recorrentes".
+
+**A projeção pela mediana nunca ia descobrir essa conta.** Ela exige 3 meses ou
+mais no extrato pessoal, e a Stima aparece **uma única vez** lá (18/05/26,
+R$ 414,53) — normalmente o boleto sai da conta da Benetti UP no Nubank, que não
+está integrada. Conta que existe, que ela sabe que existe, e que a dashboard não
+tinha como aprender por mais tempo que passasse.
+
+- **`configuracoes.json` → `contas_recorrentes[]`**: `id`, `descricao`, `valor`,
+  `dia`, `categoria`, `pessoa`, `forma`, `paga_por`, `ativa`, `observacao`.
+  Fica na configuração, não no código, pelo mesmo motivo que o cadastro dos
+  cartões saiu do `index.html`: valor e dia mudam com o tempo.
+- `contasRecorrentesCadastradas()` alimenta `recorrentesFaltandoEm(mes)` junto
+  com o histórico. **Deduplicação em duas frentes**, por `CHAVE_RECORRENTE`:
+  contra o lançamento real do mês e contra a mesma conta já projetada pelo
+  histórico — duas linhas da mesma conta somariam duas vezes.
+- A linha vem marcada **"conta cadastrada, todo dia N por boleto"**, em vez do
+  "média de N meses" das derivadas do histórico. São origens diferentes e a tela
+  não pode fingir que são a mesma coisa.
+
+**`paga_por` decide de qual caixa o dinheiro sai.** Com `paga_por` diferente de
+`juliane`, a conta:
+- **aparece** na lista de vencimentos — é para isso que ela existe, lembrar;
+- **fica fora** do "sai da conta", do rodapé "ainda a pagar" e dos totais do
+  plano do mês (`meuDinheiro`), com aviso próprio dizendo quanto e qual conta;
+- **nunca é acusada** pelo fechamento do plano: não deixa rastro no extrato
+  pessoal, então dizer que não foi paga seria acusação sem prova nenhuma.
+
+Mesma decisão, e o mesmo motivo, do que já tirava do Painel a fatura que a
+Benetti UP quita: somar aqui cobraria do salário dela um boleto da empresa.
+
+4 testes de regressão, **verificados quebrando o código de propósito** (sem os
+dois filtros, 11 testes falham): toda conta cadastrada aparece na lista, nenhuma
+duplica uma já projetada, a paga por outro caixa vem marcada na tabela
+(`data-fora-da-conta`), e o rodapé bate com a soma sem ela e não bate com ela.
+
+**Lembrete mensal**: Routine `Contabilidade STIMA — boleto da Benetti UP (vence
+dia 5)`, dias 3 e 5 às 8h de Brasília (`0 11 3,5 * *` em UTC), sessão nova a
+cada disparo, com push e e-mail. Não tem conector de Gmail, então não busca o
+boleto — só lembra, e o prompt proíbe inventar valor ou linha digitável.
+
 ### Dívida que existe mas não está sendo paga (31/08)
 Depois de ver que as 3 parcelas do Mercado Pago somam **R$ 3.301,24/mês** contra
 um líquido de R$ 2.834,19, a Juliane decidiu parar de pagar quase tudo por um
