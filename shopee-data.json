@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789019415,
-  "updated_at_br": "10/09/2026 02:43",
+  "updated_at": 1789026947,
+  "updated_at_br": "10/09/2026 04:49",
   "period_days": 90,
-  "total_orders": 7766,
-  "total_conversions": 7415,
+  "total_orders": 7765,
+  "total_conversions": 7414,
   "orders": [
     {
       "ID do pedido": "260909HY3H2DB9",
@@ -17557,7 +17557,7 @@
     },
     {
       "ID do pedido": "2609021D6PB1HR",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-02 11:42:23",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "14.5",
@@ -17569,7 +17569,7 @@
       "Comissao total do pedido(R$)": "0.8845",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Pares de Meias Infantil e Bebê Menino Estampadas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23698573171",
       "ID da loja": "1384073074",
       "Nome da loja": "Moda Monkey Store",
@@ -17577,7 +17577,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242048543136995",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-02"
     },
     {
@@ -31232,7 +31232,7 @@
     },
     {
       "ID do pedido": "260828GH0RFNE3",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-27 22:13:55",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "49.63",
@@ -31244,7 +31244,7 @@
       "Comissao total do pedido(R$)": "1.9852",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tènis Feminino  Academia Corrida Caminhada Dia a Dia Trabalho Super leve confortável Barato.",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "16281841226",
       "ID da loja": "697128533",
       "Nome da loja": "Calce bem story.",
@@ -31252,7 +31252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241568035107029",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-27"
     },
     {
@@ -194127,31 +194127,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "234951446162958",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-12"
-    },
-    {
-      "ID do pedido": "260612UK0RW1PG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-12 07:22:20",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "54.99",
-      "Comissao liquida do afiliado(R$)": "6.0489",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "8.00%",
-      "Comissao Shopee(R$)": "1.6497",
-      "Comissao do vendedor(R$)": "4.3992",
-      "Comissao total do pedido(R$)": "6.0489",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Vestido Longo Assimetrico Feminino em Linho com ziper nas costas Bolsos Laterais funcionais",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58257105108",
-      "ID da loja": "500044566",
-      "Nome da loja": "VALENTY-STYLE",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "234948140146747",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-12"
     }
