@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789112965,
-  "updated_at_br": "11/09/2026 04:42",
+  "updated_at": 1789118696,
+  "updated_at_br": "11/09/2026 06:18",
   "period_days": 90,
   "total_orders": 7831,
   "total_conversions": 7483,
@@ -17132,7 +17132,7 @@
     },
     {
       "ID do pedido": "2609044VUQ9DB4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-03 21:00:34",
       "Sub_id1": "02Set26VEAblocosminecraft",
       "Valor de Compra(R$)": "31.9",
@@ -17144,7 +17144,7 @@
       "Comissao total do pedido(R$)": "2.5201",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Pares de Meia Menino Antiderrapante Infantil Cano Médio 0 até 10 Anos Não Escorrega Escola Dia a Dia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23993330891",
       "ID da loja": "411176335",
       "Nome da loja": "ShopDê Store",
@@ -17152,7 +17152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242168434125443",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-03"
     },
     {
