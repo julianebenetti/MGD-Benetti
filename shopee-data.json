@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789212991,
-  "updated_at_br": "12/09/2026 08:29",
+  "updated_at": 1789216362,
+  "updated_at_br": "12/09/2026 09:26",
   "period_days": 90,
-  "total_orders": 7879,
-  "total_conversions": 7533,
+  "total_orders": 7878,
+  "total_conversions": 7532,
   "orders": [
     {
       "ID do pedido": "260912SJSYV45F",
@@ -196953,31 +196953,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "235141679155809",
       "conversionStatus": "CANCELLED",
-      "data": "2026-06-14"
-    },
-    {
-      "ID do pedido": "26061440UEG9Y4",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-14 12:12:41",
-      "Sub_id1": "11Jun26LeggingLupoMarromVs2",
-      "Valor de Compra(R$)": "28.9",
-      "Comissao liquida do afiliado(R$)": "0.867",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.867",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.867",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit Conjunto de Academia Feminino Calça Legging e Top Nadador Fitness Diversas Cores",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22194275303",
-      "ID da loja": "483938660",
-      "Nome da loja": "BombomMtoBom",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235138360131667",
-      "conversionStatus": "COMPLETED",
       "data": "2026-06-14"
     }
   ]
