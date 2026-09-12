@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789247670,
-  "updated_at_br": "12/09/2026 18:07",
+  "updated_at": 1789253983,
+  "updated_at_br": "12/09/2026 19:53",
   "period_days": 90,
-  "total_orders": 7833,
-  "total_conversions": 7490,
+  "total_orders": 7830,
+  "total_conversions": 7487,
   "orders": [
     {
       "ID do pedido": "260912SJSYV45F",
@@ -6132,7 +6132,7 @@
     },
     {
       "ID do pedido": "260909K2FYT0EK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 12:18:40",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "54.12",
@@ -6144,7 +6144,7 @@
       "Comissao total do pedido(R$)": "3.2472",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT 2 Camisa Gola Polo Alta Qualidade 100% Algodão Camiseta Básica Masculina  Diversas Cores",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58205018164",
       "ID da loja": "1379816444",
       "Nome da loja": "TP Camisetas",
@@ -6152,7 +6152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242655519184240",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -9107,7 +9107,7 @@
     },
     {
       "ID do pedido": "260908F9XHWH24",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-08 00:21:25",
       "Sub_id1": "04Set26VEAmochilaexpansivel",
       "Valor de Compra(R$)": "21.9",
@@ -9119,7 +9119,7 @@
       "Comissao total do pedido(R$)": "1.1388",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Desentupidor de Pias, Ralos, Canos e Caixa de Gordura | Alto Rendimento para Vaso Sanitário",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22799648666",
       "ID da loja": "911176008",
       "Nome da loja": "Gran Vía",
@@ -9127,7 +9127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242526085173755",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-08"
     },
     {
@@ -10482,7 +10482,7 @@
     },
     {
       "ID do pedido": "260907E6QY2FHA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 13:51:24",
       "Sub_id1": "",
       "Valor de Compra(R$)": "49.99",
@@ -10494,7 +10494,7 @@
       "Comissao total do pedido(R$)": "1.9996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Potes Herméticos Sextavados Lançamento. Escolha Seu Kit 1 ao Kit 7.",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "27636006527",
       "ID da loja": "392262515",
       "Nome da loja": "Atual Fato Shop",
@@ -10502,7 +10502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242488283123301",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
@@ -15682,7 +15682,7 @@
     },
     {
       "ID do pedido": "2609069JF0RVET",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 17:37:50",
       "Sub_id1": "04Set26VEAvestidomidifloral",
       "Valor de Compra(R$)": "21.25",
@@ -15694,7 +15694,7 @@
       "Comissao total do pedido(R$)": "0.85",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Bermuda Fitness ou Dia a Dia  Academia Feminina Shorts Feminino Malhar Moda Dudis",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "11268439133",
       "ID da loja": "567896073",
       "Nome da loja": "Moda Dudis",
@@ -15702,7 +15702,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242329069134279",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -16482,7 +16482,7 @@
     },
     {
       "ID do pedido": "2609058YV6BSF0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 12:05:10",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "46.21",
@@ -16494,7 +16494,7 @@
       "Comissao total do pedido(R$)": "1.8484",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "5 Tangas De Renda Plus Size Conforto Tamanhos Grandes Alice",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "41461879111",
       "ID da loja": "1349035091",
       "Nome da loja": "Nanda Lingerie",
@@ -16502,7 +16502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242309110106040",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -19207,7 +19207,7 @@
     },
     {
       "ID do pedido": "2609046G60FCCX",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-04 12:19:00",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "32.95",
@@ -19219,7 +19219,7 @@
       "Comissao total do pedido(R$)": "1.81225",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Blusinha Basica Feminina Manga Curta Blusa Bata Ombro A Ombro Malha Soltinha CANOA VERÃO",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23692231632",
       "ID da loja": "581418045",
       "Nome da loja": "LETÍCIA MODAS ",
@@ -19227,7 +19227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242223540132240",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-04"
     },
     {
@@ -23507,7 +23507,7 @@
     },
     {
       "ID do pedido": "260903294B8HNR",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-02 20:02:10",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "18.94",
@@ -23519,7 +23519,7 @@
       "Comissao total do pedido(R$)": "0.7576",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Capa De Suporte De Telefone De Revestimento Para Motorola Moto G60 G62 G72 G50 G52 G53 G30 G42 G82 G22 G60S Astronauta",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22092438092",
       "ID da loja": "921055599",
       "Nome da loja": "Nice case.br",
@@ -23527,7 +23527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242078529189999",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-02"
     },
     {
@@ -24107,7 +24107,7 @@
     },
     {
       "ID do pedido": "2609021SM992HQ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-02 15:24:44",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "23.15",
@@ -24119,7 +24119,7 @@
       "Comissao total do pedido(R$)": "0.926",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sapatilha Sapatinho De Bebe Recém Nascido Muito Lindas E Fofas De Batizado De Princesa De Bonequinha",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23497687863",
       "ID da loja": "1315138329",
       "Nome da loja": "XXODÓZZINHO CALÇADOS INFANTIS",
@@ -24127,7 +24127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242061884106198",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-02"
     },
     {
@@ -31957,7 +31957,7 @@
     },
     {
       "ID do pedido": "260830P16B83QA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-08-30 02:46:42",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "52.44",
@@ -31969,7 +31969,7 @@
       "Comissao total do pedido(R$)": "2.0976",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 10 Calcinhas 100% Algodão Lisa Tanga Cintura Alta Confortável Forro Algodão Qualidade Premium",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22292687296",
       "ID da loja": "926331543",
       "Nome da loja": "Flay Modas e Variedades",
@@ -31977,7 +31977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241757201114638",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-08-30"
     },
     {
@@ -195753,81 +195753,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235179981172696",
       "conversionStatus": "COMPLETED",
-      "data": "2026-06-14"
-    },
-    {
-      "ID do pedido": "26061553PAFVUH",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-14 22:36:09",
-      "Sub_id1": "01Jun26SegundaPeleVs1",
-      "Valor de Compra(R$)": "102.91",
-      "Comissao liquida do afiliado(R$)": "12.3492",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "3.0873",
-      "Comissao do vendedor(R$)": "9.2619",
-      "Comissao total do pedido(R$)": "12.3492",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Segunda Pele Térmica Flanelado Frio Intenso Preto Proteção Uv+50 Masculino Feminino Unissex",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22698322663",
-      "ID da loja": "1447721952",
-      "Nome da loja": "Inoveecomm",
-      "Quantidade": "2",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "235175769122001",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-14"
-    },
-    {
-      "ID do pedido": "2606154YHE3PMG",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-06-14 21:21:50",
-      "Sub_id1": "11Jun26LeggingLupoVs1",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bota Feminina Bico fino",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "52406654839",
-      "ID da loja": "427084414",
-      "Nome da loja": "Giovana Rios Calçados",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235171310174923",
-      "conversionStatus": "CANCELLED",
-      "data": "2026-06-14"
-    },
-    {
-      "ID do pedido": "2606154YHE3PMF",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-06-14 21:21:50",
-      "Sub_id1": "11Jun26LeggingLupoVs1",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "2025  70d Meias Femininas De Cetim Brilhante Meia Calça Anti Celulite Meias brilhantes ultrafinas",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22593976479",
-      "ID da loja": "1393518003",
-      "Nome da loja": "Utimix Muita",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235171310174923",
-      "conversionStatus": "CANCELLED",
       "data": "2026-06-14"
     }
   ]
