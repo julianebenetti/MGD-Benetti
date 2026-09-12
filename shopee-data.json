@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789191417,
-  "updated_at_br": "12/09/2026 02:30",
+  "updated_at": 1789199095,
+  "updated_at_br": "12/09/2026 04:38",
   "period_days": 90,
   "total_orders": 7809,
   "total_conversions": 7463,
@@ -15107,7 +15107,7 @@
     },
     {
       "ID do pedido": "2609058EJYCJ9K",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 06:55:47",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "11.41",
@@ -15119,7 +15119,7 @@
       "Comissao total do pedido(R$)": "0.96985",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "K-med Lubrificante Íntimo e Gel de Massagem",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "45151579919",
       "ID da loja": "365900725",
       "Nome da loja": "IMAGINE.",
@@ -15127,7 +15127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242290547192613",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
