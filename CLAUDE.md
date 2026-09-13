@@ -626,13 +626,55 @@ Isso precisa ser regra, e não classificação manual: a mesclagem do importador
 substitui todo lançamento de extrato dos meses relidos, então correção feita à
 mão no lançamento some na importação seguinte.
 
-**Anotado na própria regra, para não virar afirmação sem prova:** existe um Pix
-de R$ 15,00 para o mesmo recebedor `55.873` em 05/03 que ela não confirmou. Se
-março for reimportado um dia, ele herda a classificação do doce — conferir antes
-de confiar.
+**Confirmado depois (13/09):** o Pix de R$ 15,00 de 05/03 para o mesmo recebedor
+`55.873` também era doce — *"sempre quando é feito pra esse recebedor é doce"*.
+A ressalva saiu da regra.
 
-Sobraram **2 lançamentos sem regra**, os dois de R$ 20,00: `PIX TRANSF FERNAND`
-(17/08) e `PIX TRANSF INSTITU` (27/08, recorrente todo dia 27).
+**`PIX TRANSF INSTITU` é doação ao Instituto dos Cegos de Campinas**, R$ 20,00
+todo dia 27 desde março. Regra nova, `doacao`/Juliane. Não deduz no IR: a lei só
+permite doação a fundo da criança e do idoso, Rouanet, audiovisual, desporto e
+PRONAS/PRONON. A regra não filtra valor — o Pix de 02/03 veio R$ 40,00 em vez
+dos R$ 20,00 de sempre, e é o mesmo recebedor.
+
+Sobrou **1 lançamento sem regra** nos meses relidos: `PIX TRANSF FERNAND`
+(17/08, R$ 20,00).
+
+### `--reclassificar`: regra nova alcançando o que já está gravado (13/09)
+Regra nova só pega lançamento que passe pelo importador de novo, e a mesclagem
+só substitui os meses dos arquivos informados. Quando a Juliane identifica um Pix
+antigo — a doação ao Instituto dos Cegos, que vinha desde março — o arquivo
+daquele mês muitas vezes não existe mais para reler, e corrigir o lançamento à
+mão não resolve: na próxima importação daquele mês a correção some.
+
+`node scripts/importar-extrato-itau.js --reclassificar [--aplicar]` reaplica as
+regras ao que já está no `financeiro.json`, sem precisar de arquivo nenhum.
+
+- **Só mexe no que está em `nao_classificado`.** Classificação que alguém
+  decidiu e que nenhuma regra cobre não pode ser sobrescrita por este caminho.
+- Imprime o que mudou, de → para, e lista o que continua sem regra.
+- Na primeira rodada tirou **9 lançamentos** de "não classificado": as 6 doações
+  ao Instituto (mar a ago), o doce de R$ 15,00 de março, e **duas vendas de
+  desapego para a Symara que ninguém tinha notado** (R$ 100,00 em 11/06 e
+  08/07, iguais à de setembro).
+
+**Aviso novo na mesclagem, e a regra que ele não impõe.** Classificar à mão é
+legítimo e às vezes é o único caminho certo — o mesmo texto pode significar
+coisas diferentes, como "COLEGIO", que já foi mensalidade e ballet. O problema
+nunca foi a prática, foi o silêncio: essa classificação vive só dentro do
+lançamento e a mesclagem troca todos os do mês relido. Agora o importador conta
+quantas vão se perder e lista as primeiras, para quem está importando decidir o
+que vira regra.
+
+Escrevi antes um teste exigindo que **todo** lançamento de extrato classificado
+viesse de regra. Ele falhou com 61 casos e estava errado em existir: contradizia
+uma decisão já documentada neste arquivo. Trocado pelo aviso, que informa em vez
+de proibir.
+
+**Restam 58 lançamentos de extrato sem regra em 2026** (jan a ago), a maioria Pix
+com nome de pessoa. Dois deles se repetem todo mês e valem pergunta:
+`PIX TRANSF ASSOCIA` (R$ 20,00, todo dia 25) e `PAG TIT INT 299` (valor varia de
+R$ 20,00 a R$ 232,63) — este último é o que o alerta do celular vem acusando
+como vencido.
 
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08

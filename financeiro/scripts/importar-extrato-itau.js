@@ -353,6 +353,17 @@ const REGRAS = [
     descricao: 'Manicure — unha em gel (Vanders)',
     nota: 'Confirmado pela Juliane (29/08).',
   },
+  // Doacao mensal para o Instituto dos Cegos de Campinas, confirmada pela
+  // Juliane (13/09). Cai todo dia 27; o de 02/03 veio R$ 40,00 em vez dos
+  // R$ 20,00 de sempre, e e o mesmo recebedor — por isso a regra nao filtra
+  // valor. Nao deduz no IR: a lei so permite doacao a fundo da crianca e do
+  // idoso, Rouanet, audiovisual, desporto e PRONAS/PRONON.
+  {
+    padrao: /PIX (TRANSF|QRS) INSTITU/i, entrada: false,
+    natureza: 'despesa', categoria: 'doacao', pessoa: 'Juliane',
+    descricao: 'Doação ao Instituto dos Cegos de Campinas',
+    nota: 'Confirmado pela Juliane (13/09). Não dedutível no IRPF.',
+  },
   // Venda de desapego: a Juliane vendeu roupas usadas dos filhos e a Symara
   // pagou por Pix (confirmado 13/09). Entra como receita, mas NAO e rendimento
   // tributavel — venda de bem pessoal usado abaixo do preco de compra nao gera
@@ -374,9 +385,7 @@ const REGRAS = [
     padrao: /PIX (TRANSF|QRS) 55\.873/i, entrada: false,
     natureza: 'despesa', categoria: 'alimentacao', pessoa: 'Juliane',
     descricao: 'Doce comprado de um amigo',
-    nota: 'Confirmado pela Juliane (13/09) para o Pix de R$ 10,00 em 10/09. Existe outro '
-        + 'Pix para o mesmo recebedor em 05/03 (R$ 15,00) que ela não confirmou — se um dia '
-        + 'março for reimportado, ele herda esta classificação; conferir antes de confiar.',
+    nota: 'Confirmado pela Juliane (13/09): todo Pix para este recebedor é doce.',
   },
   {
     padrao: /PIX TRANSF KARINA/i,
@@ -558,6 +567,63 @@ function lerExtratoXls(caminho) {
 
   const emitidoEm = (cabecalho.match(/Atualiza[çc][ãa]o:?\s*\|?\s*(\d{2}\/\d{2}\/\d{4}[^\n|]*)/i) || [])[1] || null;
   return { arquivo: path.basename(caminho), agencia, conta, emitidoEm, itens, saldos: null, periodo: null };
+}
+
+// ---------- reclassificar o que já está gravado ----------
+//
+// Regra nova só alcança lançamento que passe pelo importador de novo, e a
+// mesclagem só substitui os meses dos arquivos informados. Quando a Juliane
+// identifica um Pix antigo — a doação mensal ao Instituto dos Cegos, que vinha
+// desde março — o arquivo daquele mês muitas vezes não existe mais para reler.
+//
+// Corrigir o lançamento à mão não resolve: na próxima importação daquele mês a
+// correção some. Por isso a regra é sempre o lugar certo, e este modo existe
+// para ela alcançar o que já está gravado.
+//
+// Só mexe no que está em `nao_classificado`. Classificação que alguém decidiu e
+// que nenhuma regra cobre não pode ser sobrescrita por este caminho.
+if (process.argv.includes('--reclassificar')) {
+  const base = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8'));
+  const todasT = (base.fluxo_mensal || {}).transacoes || [];
+  const mudancas = [];
+
+  todasT.forEach(t => {
+    if (t.origem !== 'extrato_itau' || t.categoria !== 'nao_classificado') return;
+    const sinal = t.tipo === 'entrada' ? 1 : -1;
+    const r = classificar(t.descricao_original || t.descricao, sinal * t.valor);
+    if (!r) return;
+    mudancas.push({ t, r, antes: `${t.natureza}/${t.categoria}` });
+    t.natureza = r.natureza;
+    t.categoria = r.categoria;
+    t.pessoa = r.pessoa;
+    t.ambito = r.pessoa === 'Benetti UP' ? 'empresa' : 'pessoal';
+    t.descricao = r.descricao;
+    t.classificado_por = 'regra_extrato';
+    t.nota_classificacao = r.nota || null;
+    t.tipo = sinal > 0 ? 'entrada' : 'saida';
+  });
+
+  console.log(`\n=== RECLASSIFICAR ${aplicar ? '(APLICADO)' : '(SIMULAÇÃO)'} ===\n`);
+  if (!mudancas.length) {
+    console.log('Nenhum lançamento em "nao_classificado" casou com alguma regra.\n');
+  } else {
+    console.log(`${mudancas.length} lançamento(s) saem de "nao_classificado":\n`);
+    mudancas.forEach(m => console.log(
+      `   ${m.t.data.split('-').reverse().join('/')}  ${brl(m.t.valor).padStart(11)}  ` +
+      `${m.antes} → ${m.t.natureza}/${m.t.categoria}  ·  ${m.t.descricao}`));
+    const restam = todasT.filter(t => t.origem === 'extrato_itau' && t.categoria === 'nao_classificado');
+    console.log(`\nContinuam sem regra: ${restam.length} lançamento(s).`);
+    restam.forEach(t => console.log(
+      `   ${t.data.split('-').reverse().join('/')}  ${brl(t.valor).padStart(11)}  ${t.descricao_original || t.descricao}`));
+  }
+
+  if (aplicar && mudancas.length) {
+    fs.writeFileSync(ARQUIVO, JSON.stringify(base, null, 2), 'utf8');
+    console.log(`\n✅ Gravado em ${ARQUIVO}\n`);
+  } else {
+    console.log(aplicar ? '' : '\nRode com --aplicar para gravar.\n');
+  }
+  process.exit(0);
 }
 
 // ---------- execução ----------
@@ -788,6 +854,23 @@ const finais = [...preservadas, ...transacoes].sort((a, b) => {
   const ib = MESES.indexOf(b.mes_vencimento.split('/')[0]) + 12 * +b.mes_vencimento.split('/')[1];
   return ia - ib || a.data.localeCompare(b.data);
 });
+
+// Classificar um lançamento à mão é legítimo e às vezes é o único caminho certo
+// (o mesmo texto pode significar coisas diferentes — "COLEGIO" já foi
+// mensalidade e ballet). Mas essa classificação vive só dentro do lançamento, e
+// a mesclagem abaixo troca todos os do mês relido: ela some sem avisar.
+//
+// Avisar é o mínimo. Quem decide se vale virar regra é quem está importando.
+const perdidas = anteriores.filter(t =>
+  t.origem === 'extrato_itau' && mesesLidos.has(t.mes_vencimento)
+  && t.categoria !== 'nao_classificado' && t.classificado_por !== 'regra_extrato');
+if (perdidas.length) {
+  console.log(`\n⚠️  ${perdidas.length} lançamento(s) destes meses estavam classificados à mão, sem regra.`);
+  console.log('   A importação substitui todos, então essa classificação se perde. Vire regra o que for repetir:');
+  perdidas.slice(0, 12).forEach(t => console.log(
+    `   ${t.data.split('-').reverse().join('/')}  ${brl(t.valor).padStart(11)}  ${t.categoria.padEnd(18)} ${t.descricao_original || t.descricao}`));
+  if (perdidas.length > 12) console.log(`   ... e mais ${perdidas.length - 12}.`);
+}
 
 console.log(`\nMesclagem: ${substituidas} lançamentos de extrato substituídos, ${preservadas.length} preservados`);
 console.log(`Total após a mesclagem: ${finais.length} lançamentos`);
