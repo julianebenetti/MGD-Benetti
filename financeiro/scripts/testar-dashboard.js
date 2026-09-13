@@ -870,6 +870,35 @@ function noEscopo(mv) {
     }
   }
 
+  // Dinheiro que entra e não é renda tributável não pode engordar a base do IRPF.
+  // Hoje são dois casos: a restituição do próprio imposto já pago, e a venda de
+  // bem pessoal usado (roupa dos filhos vendida em desapego, abaixo do preço de
+  // compra, não gera ganho de capital).
+  {
+    const naoTributaveis = ['restituicao_irpf', 'venda_usados'];
+    const doAno = todosLancamentos.filter(t =>
+      noEscopo(t.mes_vencimento) && (t.ambito || 'pessoal') === 'pessoal'
+      && t.natureza === 'receita');
+    const isentas = doAno.filter(t => naoTributaveis.includes(t.categoria));
+    const somaIsenta = isentas.reduce((a, t) => a + t.valor, 0);
+
+    const naTela = await pagina.evaluate(() => {
+      document.querySelector('[data-tab="irpf"]').click();
+      return document.getElementById('irpf').innerText;
+    });
+    const rend = numeroDe((naTela.match(/Rendimento tribut[áa]vel[\s\S]{0,120}?(R\$\s*[\d.,]+)/i) || [])[1] || '0');
+
+    const somaTributavel = doAno
+      .filter(t => !naoTributaveis.includes(t.categoria)
+                && !['plr', 'decimo_terceiro'].includes(t.categoria))
+      .reduce((a, t) => a + t.valor, 0);
+
+    ok('IRPF: receita isenta não entra no rendimento tributável',
+       somaIsenta > 0 && Math.abs(rend - somaTributavel) < 0.05
+         && Math.abs(rend - (somaTributavel + somaIsenta)) > 0.05,
+       `tela ${brl(rend)} · tributável ${brl(somaTributavel)} · com as isentas seria ${brl(somaTributavel + somaIsenta)} (${isentas.length} isenta(s), ${brl(somaIsenta)})`);
+  }
+
   // Boleto de cartão no extrato x fatura do mesmo cartão.
   //
   // Enquanto a fatura do 0013 não existia itemizada, o boleto pago era a única

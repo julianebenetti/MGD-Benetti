@@ -267,9 +267,10 @@
       "nome": "Amazon",
       "descricao": "Amazon Mastercard Platinum (Bradescard)",
       "cor": "#ff9900",
-      "pagamento_suspenso": true,
+      "pagamento_suspenso": false,
       "suspenso_desde": "2026-08-31",
-      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo.",
+      "observacao": "Pagamento retomado em 13/09/2026, confirmado pela Juliane. A fatura de Set/26 (R$ 124,68) ja estava marcada \"pago\" no plano do mes e saiu por debito agendado em 15/09."
     },
     {
       "final": "3987",

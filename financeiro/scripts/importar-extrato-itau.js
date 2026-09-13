@@ -353,6 +353,31 @@ const REGRAS = [
     descricao: 'Manicure — unha em gel (Vanders)',
     nota: 'Confirmado pela Juliane (29/08).',
   },
+  // Venda de desapego: a Juliane vendeu roupas usadas dos filhos e a Symara
+  // pagou por Pix (confirmado 13/09). Entra como receita, mas NAO e rendimento
+  // tributavel — venda de bem pessoal usado abaixo do preco de compra nao gera
+  // ganho de capital, e contar aqui inflaria a base do IRPF dela.
+  //
+  // So na entrada: se um dia ela mandar dinheiro PARA a Symara, e outra coisa,
+  // e a regra nao pode carimbar o motivo errado.
+  {
+    padrao: /PIX (TRANSF|QRS) Symara/i, entrada: true,
+    natureza: 'receita', categoria: 'venda_usados', pessoa: 'Juliane',
+    descricao: 'Venda de roupas usadas dos filhos (Symara)',
+    nota: 'Desapego, confirmado pela Juliane (13/09). Não é rendimento tributável.',
+  },
+  // O Itau nao traz nome nesse Pix, so um pedaco do documento do recebedor.
+  // Confirmado pela Juliane (13/09): doce comprado de um amigo. Regra presa ao
+  // identificador e ao sentido de saida — sem nome, e o unico traco estavel que
+  // este lancamento tem.
+  {
+    padrao: /PIX (TRANSF|QRS) 55\.873/i, entrada: false,
+    natureza: 'despesa', categoria: 'alimentacao', pessoa: 'Juliane',
+    descricao: 'Doce comprado de um amigo',
+    nota: 'Confirmado pela Juliane (13/09) para o Pix de R$ 10,00 em 10/09. Existe outro '
+        + 'Pix para o mesmo recebedor em 05/03 (R$ 15,00) que ela não confirmou — se um dia '
+        + 'março for reimportado, ele herda esta classificação; conferir antes de confiar.',
+  },
   {
     padrao: /PIX TRANSF KARINA/i,
     natureza: 'despesa', categoria: 'doacao', pessoa: 'Juliane',

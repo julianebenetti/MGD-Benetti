@@ -543,11 +543,10 @@ definido isso em 23/08, mas `regras-classificacao.json` só vale para a fatura d
 cartão; quando a mesma catraca é paga por Pix, a regra tem de existir no
 importador do extrato também.
 
-**Em aberto, para a Juliane decidir:** o 0013 está marcado
-`pagamento_suspenso` em `configuracoes.json`, mas o extrato mostra **R$ 124,68
-agendados para 15/09**, exatamente o total da fatura de Set/26. Enquanto o flag
-disser que o pagamento está parado, esse valor sai da conta sem aparecer em
-lugar nenhum do Painel.
+**Resolvido em 13/09:** o R$ 124,68 agendado para 15/09 era ela pagando a
+fatura do 0013. O cartão saiu de `pagamento_suspenso` — o pagamento foi
+retomado, confirmado por ela. Em Set/26 isso não mudou número nenhum, porque a
+marca do mês já dizia "pago"; vale do mês seguinte em diante.
 
 ### O plano de setembro estava só no VPS, e dois lugares o ignoravam (13/09)
 Depois do deploy, o `atualizar.sh` devolveu uma edição pendente que estava
@@ -595,6 +594,45 @@ conta ela, e a suíte devolve o plano como estava. Os testes que checavam o valo
 parado passaram a distinguir as duas camadas: onde o alvo é o **default**, a
 expectativa vem do flag permanente (a tela é renderizada com o plano limpo de
 propósito); onde o alvo é o **mês**, vem da marca.
+
+### Quatro lançamentos identificados, e a receita que não é renda (13/09)
+A Juliane respondeu as quatro perguntas que estavam abertas depois da
+importação do extrato de setembro.
+
+- **Cartão Amazon (0013): pagamento retomado.** O R$ 124,68 agendado para 15/09
+  era ela pagando a fatura. `pagamento_suspenso: false` em `configuracoes.json`,
+  com a data e o motivo na `observacao`. Não mudou nenhum número de Set/26 — a
+  marca do mês já dizia "pago" — e vale do mês seguinte em diante.
+- **PIX de R$ 600 para Karina (14/09): mesma ajuda de custo** já confirmada em
+  30/08 para o de R$ 2.500. A regra existente já classificava certo.
+- **PIX de R$ 100 da Symara (08/09): desapego.** Ela vendeu roupas usadas dos
+  filhos e a Symara pagou. Categoria nova **`venda_usados`**.
+- **PIX de R$ 10 (10/09): um doce comprado de um amigo.** `alimentacao`/Juliane.
+
+**`venda_usados` entra como receita e fica fora do rendimento tributável.**
+Venda de bem pessoal usado abaixo do preço de compra não gera ganho de capital,
+então contar aqui inflaria a base do IRPF dela. Somada à lista que já existia:
+`CATEGORIAS_RECEITA_NAO_TRIBUTAVEL = ['restituicao_irpf', 'venda_usados']`.
+Teste novo, verificado tirando a categoria da lista: a tela passa a mostrar
+R$ 90.385,33 de rendimento tributável no lugar de R$ 90.285,33.
+
+**Duas regras novas no importador do extrato, e as duas com o sentido travado.**
+`PIX TRANSF Symara` só casa na **entrada** — se um dia ela mandar dinheiro *para*
+a Symara é outra coisa, e a regra não pode carimbar o motivo errado. O Pix do
+doce não tem nome, só um pedaço do documento do recebedor (`55.873`), então a
+regra fica presa ao identificador e à **saída**.
+
+Isso precisa ser regra, e não classificação manual: a mesclagem do importador
+substitui todo lançamento de extrato dos meses relidos, então correção feita à
+mão no lançamento some na importação seguinte.
+
+**Anotado na própria regra, para não virar afirmação sem prova:** existe um Pix
+de R$ 15,00 para o mesmo recebedor `55.873` em 05/03 que ela não confirmou. Se
+março for reimportado um dia, ele herda a classificação do doce — conferir antes
+de confiar.
+
+Sobraram **2 lançamentos sem regra**, os dois de R$ 20,00: `PIX TRANSF FERNAND`
+(17/08) e `PIX TRANSF INSTITU` (27/08, recorrente todo dia 27).
 
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08

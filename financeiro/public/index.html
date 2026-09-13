@@ -4804,7 +4804,11 @@
     // devolução de imposto que já foi retido do salário — declarar de novo como
     // renda cobraria imposto duas vezes sobre o mesmo dinheiro. Entra no caixa,
     // fica fora da base tributável.
-    const CATEGORIAS_RECEITA_NAO_TRIBUTAVEL = ['restituicao_irpf'];
+    // Entra na conta, mexe no saldo, e não é renda que a Receita tribute:
+    // restituição do próprio IR já pago, e venda de bem pessoal usado (roupa
+    // dos filhos vendida em desapego, abaixo do preço de compra, não gera ganho
+    // de capital). Sem esta lista, as duas inflariam a base do IRPF dela.
+    const CATEGORIAS_RECEITA_NAO_TRIBUTAVEL = ['restituicao_irpf', 'venda_usados'];
 
     function apurarIrpf(regras) {
       // A apuracao e sempre da pessoa fisica: despesa da Benetti UP e da empresa.
