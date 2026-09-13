@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789286589,
-  "updated_at_br": "13/09/2026 04:56",
+  "updated_at": 1789293695,
+  "updated_at_br": "13/09/2026 06:55",
   "period_days": 90,
-  "total_orders": 7815,
-  "total_conversions": 7473,
+  "total_orders": 7814,
+  "total_conversions": 7472,
   "orders": [
     {
       "ID do pedido": "260912SJSYV45F",
@@ -195353,31 +195353,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235221250114328",
       "conversionStatus": "COMPLETED",
-      "data": "2026-06-15"
-    },
-    {
-      "ID do pedido": "26061566C96TFU",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-06-15 08:56:53",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "4.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Vestido longo Plus size verao soltinho casual com alça",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "48305252912",
-      "ID da loja": "981148472",
-      "Nome da loja": "Moda de Saron",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "235213013191169",
-      "conversionStatus": "CANCELLED",
       "data": "2026-06-15"
     }
   ]
