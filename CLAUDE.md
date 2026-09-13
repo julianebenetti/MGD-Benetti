@@ -676,6 +676,48 @@ com nome de pessoa. Dois deles se repetem todo mês e valem pergunta:
 R$ 20,00 a R$ 232,63) — este último é o que o alerta do celular vem acusando
 como vencido.
 
+### Conta recorrente encerrada: o histórico não sabe que algo acabou (13/09)
+A Juliane listou quatro contas e disse: *"pode tirar das próximas contas, não
+vou mais pagar essas despesas"* — **oferta à igreja** (R$ 50, dia 18),
+**manicure** (R$ 100, dia 18), **PIX TRANSF ASSOCIA** (R$ 20, dia 25) e a
+**doação ao Instituto dos Cegos** (R$ 20, dia 27).
+
+`perfilDasRecorrentes()` olha só para trás, e o passado não avisa que algo
+acabou: a oferta apareceu em 8 meses seguidos, então continuaria sendo prometida
+para sempre. **Prometer gasto que não vai existir é o mesmo erro de prometer
+renda que não vem** — só que ao contrário, e faz o mês parecer mais apertado do
+que é.
+
+**`configuracoes.json` → `recorrentes_encerradas[]`**: `chave` (a mesma
+`CHAVE_RECORRENTE`), `descricao`, `encerrada_em`, `motivo`. Fica na configuração
+pelo mesmo motivo dos cartões e das contas cadastradas: "parei de pagar isso" é
+decisão que muda, não pode exigir editar código.
+
+**Isto não é `pagamento_suspenso` nem `em_pagamento: false`, e a diferença
+importa.** Lá a obrigação continua e o saldo cresce, por isso aquelas telas
+mostram o valor à parte com aviso de juros. Aqui não há obrigação nenhuma:
+oferta, manicure, associação e doação simplesmente deixam de acontecer. Por isso
+a linha some do total e **o valor não aparece em lugar nenhum** — mostrar um
+número inventaria uma dívida que não existe.
+
+**O que aparece é o nome.** Uma linha discreta, sem valor, no Painel e no alerta
+do celular: *"Não entram mais na previsão, porque você parou de pagar: ..."*. Sem
+ela a linha sumiria e, daqui a três meses, ninguém lembraria por quê.
+
+**`encerrada_em` não é decoração.** A projeção só para dali para frente; mês
+anterior com extrato incompleto continua podendo projetar o que de fato existia
+naquela época.
+
+Efeito em Set/26: a conta recorrente prevista caiu de R$ 3.270,99 para
+**R$ 3.080,99**, e o "sai da conta" de R$ 9.566,40 para **R$ 9.376,40** — os
+R$ 190,00 exatos das quatro.
+
+3 testes novos, verificados revertendo o filtro (sem ele, 4 falham): as quatro
+saem da lista de vencimentos, **o histórico continua conhecendo as quatro** (o
+que parou foi a projeção, não o dado), e a tela diz o nome de cada uma em vez de
+só sumir com elas. O teste que recalcula o "sai da conta" por fora também
+aprendeu a regra, senão ele passaria a divergir da tela.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

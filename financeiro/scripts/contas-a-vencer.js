@@ -61,6 +61,16 @@ const pagamentoSuspenso = cartao =>
 // adiar (a escola, o condomínio, o IPTU de Set/26) como se fosse esquecimento,
 // e ao mesmo tempo dava como "pagamento parado" as três faturas que ela tinha
 // marcado para pagar.
+// Conta que se repetiu por meses e que a Juliane parou de pagar de vez. O
+// histórico não sabe que algo acabou, então sem isto a mediana continuaria
+// prometendo a oferta da igreja e a manicure para sempre. Não é o mesmo que
+// fatura parada: ali a obrigação continua e o saldo cresce; aqui não há mais
+// obrigação nenhuma, e por isso o valor não aparece em bloco separado.
+const encerradaAntesDe = (chave, data) => {
+  const r = (config.recorrentes_encerradas || []).find(x => x.chave === chave);
+  return !!r && (!r.encerrada_em || data >= r.encerrada_em);
+};
+
 const planoDoMes = mes => (dados.plano_do_mes || {})[mes] || { orcamento: null, itens: {} };
 const decisaoDoItem = (mes, chave, suspensoPorPadrao) =>
   planoDoMes(mes).itens[chave] || (suspensoPorPadrao ? 'adiar' : 'pagar');
@@ -115,7 +125,8 @@ function recorrentesFaltandoEm(mes) {
 
   const doHistorico = perfilDasRecorrentes()
     .filter(r => !jaTem.has(r.chave))
-    .map(r => ({ ...r, previsto: true, data: data(r.dia) }));
+    .map(r => ({ ...r, previsto: true, data: data(r.dia) }))
+    .filter(r => !encerradaAntesDe(r.chave, r.data));
 
   const jaProjetado = new Set(doHistorico.map(r => r.chave));
   const cadastradas = (config.contas_recorrentes || [])
@@ -266,6 +277,13 @@ if (adiadas.length) {
 if (paradas.length) {
   out.push(`Com pagamento parado por decisão dela, ${brl(soma(paradas))} (segue sendo cobrado, o saldo cresce):`);
   paradas.forEach(c => out.push(linha(c)));
+  out.push('');
+}
+
+const encerradas = (config.recorrentes_encerradas || []);
+if (encerradas.length) {
+  out.push('Não entram mais na previsão, porque você parou de pagar: '
+    + encerradas.map(r => r.descricao).join(' · ') + '.');
   out.push('');
 }
 

@@ -483,12 +483,27 @@ function noEscopo(mv) {
     const perfil = {};
     todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraCartao(t)).forEach(t => {
       const k = chaveRec(t.descricao); if (!k) return;
-      (perfil[k] = perfil[k] || { meses: new Set(), valores: [] });
+      (perfil[k] = perfil[k] || { meses: new Set(), valores: [], dias: [] });
       perfil[k].meses.add(t.mes_vencimento); perfil[k].valores.push(t.valor);
+      if (t.data) perfil[k].dias.push(parseInt(t.data.split('-')[2], 10));
     });
     const jaNoMes = new Set(doMes.filter(foraCartao).map(t => chaveRec(t.descricao)));
+
+    // Conta que ela parou de pagar de vez sai da projeção a partir da data do
+    // encerramento. O histórico não sabe que algo acabou — sem isto a mediana
+    // continuaria prometendo a oferta da igreja para sempre.
+    const encerrada = (k, dataIso) => {
+      const r = (config.recorrentes_encerradas || []).find(x => x.chave === k);
+      return !!r && (!r.encerrada_em || dataIso >= r.encerrada_em);
+    };
+    const anoMes = `${2000 + parseInt(mes.split('/')[1], 10)}-${String(MES_ORDEM.indexOf(mes.split('/')[0]) + 1).padStart(2, '0')}`;
+
     const previsto = Object.entries(perfil)
       .filter(([k, v]) => v.meses.size >= 3 && !jaNoMes.has(k) && med(v.valores) > 0)
+      .filter(([k, v]) => {
+        const dia = Math.min(Math.max(Math.round(med(v.dias)) || 15, 1), 28);
+        return !encerrada(k, `${anoMes}-${String(dia).padStart(2, '0')}`);
+      })
       .reduce((s, [, v]) => s + Math.round(med(v.valores) * 100) / 100, 0);
 
     const visto = await pagina.evaluate(m => {
@@ -867,6 +882,44 @@ function noEscopo(mv) {
       ok(`${mes}: o "sai da conta" conta a fatura retomada em vez de ignorá-la`,
          emAberto != null && numeroDe('R$ ' + emAberto) >= soma - 0.02,
          `fatura em aberto na tela: ${emAberto}; retomado: ${brl(soma)}`);
+    }
+  }
+
+  // Conta encerrada sai da previsão e não some em silêncio.
+  //
+  // Duas pontas: cada uma some da lista de vencimentos, e o nome continua dito
+  // na tela. Sem a segunda, a linha desaparecia e ninguém lembraria por quê.
+  {
+    const fim = config.recorrentes_encerradas || [];
+    if (!fim.length) {
+      ok('Nenhuma recorrente encerrada cadastrada (nada a conferir)', true, '');
+    } else {
+      const mes = mesVigenteNoTeste;
+      const tela = await pagina.evaluate(m => {
+        document.querySelector('[data-tab="painel"]').click();
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        const el = document.getElementById('painel_vencimentos_criticos');
+        return {
+          titulos: [...el.querySelectorAll('tbody tr')].map(tr => tr.cells[1].innerText.split('\n')[0].trim()),
+          txt: el.innerText,
+          // Prova que elas apareceriam: o perfil pelo histórico ainda as conhece.
+          noHistorico: perfilDasRecorrentes().map(r => r.chave)
+        };
+      }, mes);
+
+      const aindaListadas = fim.filter(r => tela.titulos.includes(r.descricao));
+      ok(`As ${fim.length} contas encerradas saíram da lista de vencimentos de ${mes}`,
+         !aindaListadas.length, aindaListadas.map(r => r.descricao).join(', '));
+
+      const conhecidas = fim.filter(r => tela.noHistorico.includes(r.chave));
+      ok('O histórico ainda conhece essas contas — o que parou foi a projeção, não o dado',
+         conhecidas.length > 0,
+         `${conhecidas.length} de ${fim.length} ainda têm perfil no histórico`);
+
+      const naoDitas = fim.filter(r => !tela.txt.includes(r.descricao));
+      ok('A tela diz quais contas deixaram de ser previstas, em vez de só sumir com elas',
+         !naoDitas.length, `não aparecem no texto: ${naoDitas.map(r => r.descricao).join(', ')}`);
     }
   }
 

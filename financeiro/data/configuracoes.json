@@ -295,7 +295,7 @@
     {
       "id": "stima_contabilidade",
       "descricao": "Contabilidade STIMA",
-      "valor": 405.0,
+      "valor": 405,
       "dia": 5,
       "categoria": "contabilidade",
       "pessoa": "Benetti UP",
@@ -303,6 +303,33 @@
       "paga_por": "benetti_up",
       "ativa": true,
       "observacao": "STIMA CONTABIL S/S, CNPJ 20.284.034/0001-62. Boleto mensal da Benetti UP, venda recorrente no Conta Azul, cobranca chega por e-mail em benettiup@gmail.com. Sai da conta da empresa, nao da conta corrente pessoal — por isso nunca aparece no extrato do Itau e a projecao por historico nunca ia descobrir sozinha. Valor de 09/2026: R$405,00 (em 05/2026 foi R$414,53)."
+    }
+  ],
+  "recorrentes_encerradas": [
+    {
+      "chave": "oferta à igreja",
+      "descricao": "Oferta à igreja",
+      "encerrada_em": "2026-09-13",
+      "motivo": "A Juliane decidiu parar de pagar (13/09/2026)."
+    },
+    {
+      "chave": "manicure unha em gel vanders",
+      "descricao": "Manicure — unha em gel (Vanders)",
+      "encerrada_em": "2026-09-13",
+      "motivo": "A Juliane decidiu parar de pagar (13/09/2026)."
+    },
+    {
+      "chave": "pix transf associa",
+      "descricao": "PIX TRANSF ASSOCIA (mensal, dia 25)",
+      "encerrada_em": "2026-09-13",
+      "observacao": "Beneficiário não identificado — o Itaú corta a descrição. Encerrada junto com as outras três.",
+      "motivo": "A Juliane decidiu parar de pagar (13/09/2026)."
+    },
+    {
+      "chave": "doação ao instituto dos cegos de campinas",
+      "descricao": "Doação ao Instituto dos Cegos de Campinas",
+      "encerrada_em": "2026-09-13",
+      "motivo": "A Juliane decidiu parar de pagar (13/09/2026)."
     }
   ]
 }

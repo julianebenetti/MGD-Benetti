@@ -2870,6 +2870,30 @@
         .filter(c => c.ativa !== false && Number(c.valor) > 0);
     }
 
+    // Conta que se repetiu por meses e que a Juliane parou de pagar de vez.
+    //
+    // A projeção pela mediana olha só para o histórico, e o histórico não sabe
+    // que algo acabou: a oferta da igreja apareceu em 8 meses seguidos, então
+    // ela continuaria sendo prometida para sempre. Prometer gasto que não vai
+    // existir é o mesmo erro de prometer renda que não vem.
+    //
+    // Isto NÃO é o mesmo que `pagamento_suspenso` do cartão nem
+    // `em_pagamento: false` da dívida. Lá a obrigação continua e o saldo cresce,
+    // por isso o valor aparece à parte na tela. Aqui não há obrigação nenhuma:
+    // oferta, manicure, doação e associação simplesmente deixam de acontecer.
+    // Por isso a linha some do total e o valor não é mostrado em lugar nenhum —
+    // só o nome, para ninguém estranhar a falta depois.
+    //
+    // `encerrada_em` importa: a projeção só para dali para frente. Mês anterior
+    // com extrato incompleto continua podendo projetar o que de fato existia.
+    function recorrentesEncerradas() {
+      return (configuracoesGlobais.recorrentes_encerradas || []).filter(r => r.chave);
+    }
+    function encerradaAntesDe(chave, data) {
+      const r = recorrentesEncerradas().find(x => x.chave === chave);
+      return !!r && (!r.encerrada_em || data >= r.encerrada_em);
+    }
+
     // As recorrentes que faltam num mês: as que o extrato daquele mês ainda não
     // trouxe. Devolve com `previsto: true` para a tela nunca confundir uma
     // projeção com um lançamento real.
@@ -2881,7 +2905,8 @@
 
       const doHistorico = perfilDasRecorrentes()
         .filter(r => !jaTem.has(r.chave))
-        .map(r => ({ ...r, previsto: true, data: data(r.dia) }));
+        .map(r => ({ ...r, previsto: true, data: data(r.dia) }))
+        .filter(r => !encerradaAntesDe(r.chave, r.data));
 
       // O cadastro não pode duplicar o que já está na tela: nem o lançamento
       // real do mês, nem a mesma conta já projetada pelo histórico.
@@ -3363,6 +3388,19 @@
               <td colspan="2"></td>
             </tr></tfoot>
           </table>
+
+          ${(() => {
+            // Conta encerrada não some em silêncio: some do total, e o nome fica
+            // dito. Sem valor, de propósito — não há mais o que pagar, e mostrar
+            // um número aqui inventaria uma obrigação que deixou de existir.
+            const fim = recorrentesEncerradas().filter(r => !r.encerrada_em || r.encerrada_em <= `${2000 + parseInt(mes.split('/')[1], 10)}-12-31`);
+            return fim.length ? `
+          <p class="plano-nota" style="margin-top:10px">
+            Não entram mais na previsão, porque você parou de pagar:
+            <b>${fim.map(r => r.descricao).join(' · ')}</b>.
+            O histórico continua em Lançamentos; o que deixou de existir é a projeção para os meses seguintes.
+          </p>` : '';
+          })()}
 
           ${somaOutroCaixa > 0 ? `
           <div class="aviso aviso-info" style="margin-top:14px">
