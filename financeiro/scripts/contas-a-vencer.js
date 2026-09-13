@@ -53,6 +53,19 @@ const ehPagamentoDeCartaoNoExtrato = t =>
 const pagamentoSuspenso = cartao =>
   (config.cartoes || []).some(c => c.final === cartao && c.pagamento_suspenso);
 
+// O plano do mês é o que a Juliane decidiu para ESTE mês: destas contas, quais
+// cabem no dinheiro que ela tem. Vale mais que o flag permanente do cartão —
+// é assim que ela retoma um cartão num mês sem desfazer a decisão geral.
+//
+// Sem ler isto, o alerta cobrava no celular conta que ela já tinha decidido
+// adiar (a escola, o condomínio, o IPTU de Set/26) como se fosse esquecimento,
+// e ao mesmo tempo dava como "pagamento parado" as três faturas que ela tinha
+// marcado para pagar.
+const planoDoMes = mes => (dados.plano_do_mes || {})[mes] || { orcamento: null, itens: {} };
+const decisaoDoItem = (mes, chave, suspensoPorPadrao) =>
+  planoDoMes(mes).itens[chave] || (suspensoPorPadrao ? 'adiar' : 'pagar');
+const mesDaData = d => `${MES_ORDEM[+d.slice(5, 7) - 1]}/${d.slice(2, 4)}`;
+
 const CHAVE_RECORRENTE = d => String(d || '')
   .toLowerCase().replace(/\d+/g, '').replace(/[^a-zà-ú ]/gi, ' ')
   .replace(/\s+/g, ' ').trim();
@@ -158,7 +171,8 @@ mesesDaJanela().forEach(mes => {
     titulo: `Fatura ${f.cartao_descricao || 'cartão ' + f.cartao}`,
     valor: f.em_aberto > 0 ? f.em_aberto : f.total_fatura,
     quitado: !(f.em_aberto > 0),
-    suspenso: f.em_aberto > 0 && pagamentoSuspenso(f.cartao),
+    suspenso: f.em_aberto > 0
+      && decisaoDoItem(f.mes, `fatura|${f.cartao}|${f.mes}`, pagamentoSuspenso(f.cartao)) !== 'pagar',
     detalhe: f.pago > 0 ? `pago ${brl(f.pago)} de ${brl(f.total_fatura)}` : `total ${brl(f.total_fatura)}`,
     julgavel: true          // a fatura diz sozinha se foi paga: não depende do extrato
   }));
@@ -171,6 +185,7 @@ mesesDaJanela().forEach(mes => {
     // passou e o extrato lista a linha, o dinheiro saiu.
     quitado: t.data <= HOJE,
     detalhe: t.categoria,
+    adiado: decisaoDoItem(mes, `lanc|${t.id}`, false) === 'adiar',
     julgavel: true
   }));
 
@@ -180,6 +195,7 @@ mesesDaJanela().forEach(mes => {
     valor: r.valor,
     quitado: false,
     previsto: true,
+    adiado: decisaoDoItem(mes, `prev|${r.chave}`, false) === 'adiar',
     fora_da_conta: !!r.fora_da_conta,
     detalhe: r.cadastrada
       ? `conta cadastrada, todo dia ${r.dia}${r.forma ? ' por ' + r.forma : ''}`
@@ -198,9 +214,14 @@ const naJanela = compromissos
   .sort((a, b) => a.quando.localeCompare(b.quando));
 
 const dataBr = d => d.split('-').reverse().join('/');
-const atrasadas = naJanela.filter(c => !c.quitado && !c.suspenso && !c.fora_da_conta && c.quando < HOJE && c.julgavel);
-const hoje     = naJanela.filter(c => !c.quitado && !c.suspenso && !c.fora_da_conta && c.quando === HOJE);
-const proximas = naJanela.filter(c => !c.quitado && !c.suspenso && !c.fora_da_conta && c.quando > HOJE);
+// Conta que ela marcou "deixo para depois" não é cobrança nem esquecimento: é
+// decisão tomada. Sai das três listas e vai para um bloco próprio, que existe
+// só para o valor não sumir da tela.
+const cobravel = c => !c.quitado && !c.suspenso && !c.fora_da_conta && !c.adiado;
+const atrasadas = naJanela.filter(c => cobravel(c) && c.quando < HOJE && c.julgavel);
+const hoje     = naJanela.filter(c => cobravel(c) && c.quando === HOJE);
+const proximas = naJanela.filter(c => cobravel(c) && c.quando > HOJE);
+const adiadas  = naJanela.filter(c => !c.quitado && !c.suspenso && !c.fora_da_conta && c.adiado);
 const paradas  = naJanela.filter(c => !c.quitado && c.suspenso);
 const daEmpresa = naJanela.filter(c => !c.quitado && c.fora_da_conta);
 const soma = l => l.reduce((s, c) => s + c.valor, 0);
@@ -235,6 +256,11 @@ if (!precisaAvisar) out.push('Nada a pagar nesta janela.\n');
 if (daEmpresa.length) {
   out.push(`Fora do seu caixa — paga pela Benetti UP, ${brl(soma(daEmpresa))}:`);
   daEmpresa.forEach(c => out.push(linha(c)));
+  out.push('');
+}
+if (adiadas.length) {
+  out.push(`Você decidiu deixar para depois, ${brl(soma(adiadas))} — não é cobrança, é o plano do mês:`);
+  adiadas.forEach(c => out.push(linha(c)));
   out.push('');
 }
 if (paradas.length) {

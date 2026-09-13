@@ -549,6 +549,53 @@ agendados para 15/09**, exatamente o total da fatura de Set/26. Enquanto o flag
 disser que o pagamento está parado, esse valor sai da conta sem aparecer em
 lugar nenhum do Painel.
 
+### O plano de setembro estava só no VPS, e dois lugares o ignoravam (13/09)
+Depois do deploy, o `atualizar.sh` devolveu uma edição pendente que estava
+guardada no VPS: era o **plano de Set/26 que a Juliane marcou na tela em 05/09**
+— orçamento de R$ 3.600, as faturas do **0013, 3711 e 3987 marcadas "pago"**
+(R$ 1.206,99) e treze contas marcadas "deixo" (condomínio, as duas escolas, o
+IPTU, faxina, igreja, manicure, consignado em conta e outras).
+
+Ela existia só no VPS. Trazida para o repositório, porque é decisão dela e
+porque o alerta do celular lê do repositório, não do VPS.
+
+**Isso respondeu sozinho a pergunta que estava em aberto sobre o 0013**: o
+cartão segue com `pagamento_suspenso`, e ela retomou o pagamento *neste mês* —
+que é exatamente o que a marca do mês existe para permitir. Não havia
+contradição no dado, havia código que não lia o plano.
+
+**Dois lugares ignoravam o plano, e os dois mentiam de formas diferentes:**
+
+1. **O Painel discordava de si mesmo.** `cartaoAPagar`/`cartaoSuspenso` liam
+   `pagamentoSuspenso(cartao)` direto, enquanto a tabela de vencimentos logo
+   abaixo já usava `decisaoDoItem`. A tabela dizia que ela vai pagar
+   R$ 1.206,99 de fatura; o bloco de cima dizia que esse dinheiro não sai da
+   conta. Agora os dois passam por `faturaSaiDaConta(f)`, que é `decisaoDoItem`
+   aplicado à fatura. O "sai da conta" de Set/26 foi de R$ 8.359,41 para
+   **R$ 9.566,40**, e o "pagamento parado" de R$ 4.404,55 para **R$ 3.197,56**
+   (só o Black).
+2. **O alerta do celular cobrava decisão já tomada.** `contas-a-vencer.js` não
+   lia `plano_do_mes`: mandava condomínio, escola e IPTU como "já venceu e não
+   apareceu no extrato" — quando ela tinha marcado os três como "deixo" — e ao
+   mesmo tempo listava como "pagamento parado" as três faturas que ela marcou
+   para pagar. Agora o que foi adiado sai das listas de cobrança e vai para um
+   bloco próprio (**"Você decidiu deixar para depois"**), que existe só para o
+   valor não sumir da tela.
+
+**A suíte de testes apagava o plano de verdade do arquivo.** A limpeza do bloco
+do plano fazia `delete dadosGlobais.plano_do_mes` e **gravava no servidor** —
+escrita quando `plano_do_mes` só tinha resíduo de teste. Rodar a suíte apagou o
+plano da Juliane; foi preciso recolocá-lo à mão. Agora a suíte guarda o plano
+original no começo, devolve no lugar de apagar, e **um teste no fim confere que
+o arquivo terminou com o plano que tinha antes**.
+
+Três testes novos, verificados revertendo a correção (sem ela, 2 falham):
+a fatura retomada no mês não aparece como "pagamento parado", o "sai da conta"
+conta ela, e a suíte devolve o plano como estava. Os testes que checavam o valor
+parado passaram a distinguir as duas camadas: onde o alvo é o **default**, a
+expectativa vem do flag permanente (a tela é renderizada com o plano limpo de
+propósito); onde o alvo é o **mês**, vem da marca.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

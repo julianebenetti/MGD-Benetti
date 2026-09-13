@@ -82,7 +82,25 @@ function noEscopo(mv) {
   const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'configuracoes.json'), 'utf8'));
   // Cartão com pagamento suspenso: a fatura continua sendo cobrada, mas o valor
   // não sai da conta, então não pode entrar no que a tela diz que ela tem de pagar.
-  const cartaoParado = f => (config.cartoes || []).some(c => c.final === f && c.pagamento_suspenso);
+  // "Este cartão sai da conta neste mês?" tem duas camadas, e a de cima é a do
+  // mês: o flag `pagamento_suspenso` é a decisão permanente, e a marca do plano
+  // do mês vence sobre ela (é assim que ela retoma um cartão num mês sem
+  // desfazer a decisão geral). Em Set/26 as faturas do 0013, 3711 e 3987 estão
+  // marcadas "pagar" mesmo com os três cartões suspensos — R$ 1.206,99 que
+  // saem da conta de verdade.
+  // O plano do mês é dado da Juliane, não resíduo de teste: guarda a decisão
+  // que ela tomou naquele mês. Vários testes precisam limpá-lo para conferir o
+  // comportamento padrão, e um deles grava no servidor — sem esta cópia, rodar
+  // a suíte apagava o plano de verdade do arquivo. Já apagou uma vez.
+  const planoOriginal = dados.plano_do_mes || null;
+
+  const marcaDoMes = (mes, chave) =>
+    ((dados.plano_do_mes || {})[mes] || { itens: {} }).itens[chave];
+  const cartaoParado = (f, mes) => {
+    const marca = mes && marcaDoMes(mes, `fatura|${f}|${mes}`);
+    if (marca) return marca === 'adiar';
+    return (config.cartoes || []).some(c => c.final === f && c.pagamento_suspenso);
+  };
   const todosLancamentos = dados.fluxo_mensal.transacoes;
   const faturas = dados.faturas_cartao || [];
 
@@ -448,7 +466,7 @@ function noEscopo(mv) {
     const cartaoPago = doMes.filter(t => t.origem === 'extrato_itau' &&
       t.categoria === 'pagamento_fatura' && t.valor > 0).reduce((s, t) => s + t.valor, 0);
     const cartaoAberto = (dados.faturas_cartao || [])
-      .filter(f => f.mes === mes && !cartaoParado(f.cartao))
+      .filter(f => f.mes === mes && !cartaoParado(f.cartao, f.mes))
       .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
     const cartao = cartaoPago + cartaoAberto;
 
@@ -559,7 +577,7 @@ function noEscopo(mv) {
         .reduce((s, t) => s + t.valor, 0) +
         doMes.filter(t => t.origem === 'extrato_itau' && t.categoria === 'pagamento_fatura' && t.valor > 0)
              .reduce((s, t) => s + t.valor, 0) +
-        (dados.faturas_cartao || []).filter(f => f.mes === mesTeste && !cartaoParado(f.cartao))
+        (dados.faturas_cartao || []).filter(f => f.mes === mesTeste && !cartaoParado(f.cartao, f.mes))
           .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
       // Soma tambem a projecao das recorrentes que faltam nesse mes, pela mesma
       // mediana que a tela usa — senao o teste cobraria um numero que a tela
@@ -624,16 +642,19 @@ function noEscopo(mv) {
   // Juliane um pagamento que ela decidiu não fazer — exatamente o tipo de
   // número inflado que fez a dashboard perder a confiança dela antes.
   {
+    // Parado de verdade naquele mês é o que o flag diz E a marca do mês não
+    // retomou: em Set/26 três dos quatro cartões suspensos estão marcados
+    // "pago", e só o Black segue de fora do caixa.
     const parados = (config.cartoes || []).filter(c => c.pagamento_suspenso).map(c => c.final);
     if (parados.length) {
       const mesComParado = (dados.faturas_cartao || [])
-        .filter(f => parados.includes(f.cartao) && (f.em_aberto || 0) > 0.05)
+        .filter(f => cartaoParado(f.cartao, f.mes) && (f.em_aberto || 0) > 0.05)
         .map(f => f.mes)
         .find(m => mesesReais.includes(m));
 
       if (mesComParado) {
         const suspenso = (dados.faturas_cartao || [])
-          .filter(f => f.mes === mesComParado && parados.includes(f.cartao))
+          .filter(f => f.mes === mesComParado && cartaoParado(f.cartao, f.mes))
           .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
 
         const tela = await pagina.evaluate(m => {
@@ -660,7 +681,7 @@ function noEscopo(mv) {
            /bradescard/i.test((t.descricao || '') + ' ' + (t.descricao_original || '')));
         const semParado = doMesP.filter(t => t.origem === 'extrato_itau' &&
             t.categoria === 'pagamento_fatura' && t.valor > 0).reduce((s, t) => s + t.valor, 0)
-          + (dados.faturas_cartao || []).filter(f => f.mes === mesComParado && !cartaoParado(f.cartao))
+          + (dados.faturas_cartao || []).filter(f => f.mes === mesComParado && !cartaoParado(f.cartao, f.mes))
               .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0)
           + doMesP.filter(t => t.origem !== 'holerite_elektro' &&
               !(t.origem || '').startsWith('cartao_credito') && !ehPagCartaoP(t) && t.valor > 0 &&
@@ -739,6 +760,10 @@ function noEscopo(mv) {
 
     // Cartão com pagamento suspenso já entra marcado como "deixo": a Juliane
     // não deve ter de repetir todo mês uma decisão que já tomou.
+    //
+    // Aqui o alvo é o DEFAULT, e a tela acima foi renderizada com o plano do mês
+    // limpo de propósito — então a expectativa vem do flag permanente do cartão,
+    // sem consultar a marca do mês.
     const cartoesParados = (dados.faturas_cartao || [])
       .filter(f => f.mes === mes && cartaoParado(f.cartao) && (f.em_aberto || 0) > 0.05).length;
     igual(`Plano ${mes}: cartão suspenso já entra marcado como "deixo"`,
@@ -777,15 +802,72 @@ function noEscopo(mv) {
     igual(`Plano ${mes}: a sobra é contra o valor informado`, sobraOrc, 9999 - pagarOrc, 0.02);
 
     // definirOrcamento grava no servidor — a limpeza tem de gravar tambem,
-    // senao o teste deixa um orcamento de mentira no arquivo de dados.
-    await pagina.evaluate(async () => {
-      delete dadosGlobais.plano_do_mes;
+    // senao o teste deixa um orcamento de mentira no arquivo de dados. E tem de
+    // DEVOLVER o plano que existia, nao apagar: apagar levava junto a decisao
+    // que a Juliane tinha marcado na tela.
+    await pagina.evaluate(async original => {
+      if (original) dadosGlobais.plano_do_mes = original;
+      else delete dadosGlobais.plano_do_mes;
       await fetch('/api/dados', { method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dadosGlobais) });
       renderizarPainel();
-    });
+    }, planoOriginal);
     await pagina.waitForTimeout(400);
+  }
+
+  // A marca do mês vence sobre o flag permanente do cartão, e os dois blocos do
+  // Painel têm de concordar sobre isso.
+  //
+  // Em Set/26 a Juliane marcou as faturas do 0013, 3711 e 3987 como "pago"
+  // (R$ 1.206,99) mesmo com os três cartões ainda em `pagamento_suspenso`. A
+  // tabela de vencimentos respeitava a marca; o bloco de cima não, e seguia
+  // dizendo que esse dinheiro não sairia da conta dela. Mesma tela, dois
+  // números incompatíveis.
+  {
+    const retomadas = (dados.faturas_cartao || []).filter(f =>
+      (f.em_aberto || 0) > 0.05
+      && marcaDoMes(f.mes, `fatura|${f.cartao}|${f.mes}`) === 'pagar'
+      && (config.cartoes || []).some(c => c.final === f.cartao && c.pagamento_suspenso));
+
+    if (!retomadas.length) {
+      ok('Nenhuma fatura de cartão suspenso foi retomada neste mês (nada a conferir)', true, '');
+    } else {
+      const mes = retomadas[0].mes;
+      const soma = retomadas.filter(f => f.mes === mes).reduce((a, f) => a + f.em_aberto, 0);
+      const tela = await pagina.evaluate(m => {
+        document.querySelector('[data-tab="painel"]').click();
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        const el = document.getElementById('painel_fluxo_3numeros');
+        return { txt: el.innerText, sai: numeroDoPainel(el) };
+      }, mes).catch(() => null);
+
+      const bruto = await pagina.evaluate(m => {
+        document.querySelector('[data-tab="painel"]').click();
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        const el = document.getElementById('painel_fluxo_3numeros');
+        const itens = [...el.querySelectorAll('.fluxo-item')];
+        const alvo = itens.find(i => /Sai da conta/i.test(i.innerText));
+        return { sai: alvo ? alvo.querySelector('.fluxo-valor').innerText : '', txt: el.innerText };
+      }, mes);
+
+      const nomes = retomadas.filter(f => f.mes === mes).map(f => f.cartao);
+      const aindaParado = nomes.filter(c => {
+        const bloco = (bruto.txt.match(/fatura com pagamento parado[\s\S]*?\n/i) || [''])[0];
+        return bloco.includes(c);
+      });
+      ok(`${mes}: fatura retomada no mês (${brl(soma)}) não aparece como "pagamento parado"`,
+         !aindaParado.length, `ainda listados: ${aindaParado.join(', ')}`);
+
+      // O outro lado: o valor tem de estar dentro do "sai da conta", e o
+      // subtítulo do card é quem diz quanto veio de fatura em aberto.
+      const emAberto = (bruto.txt.match(/R\$\s*([\d.,]+) de fatura em aberto/) || [])[1];
+      ok(`${mes}: o "sai da conta" conta a fatura retomada em vez de ignorá-la`,
+         emAberto != null && numeroDe('R$ ' + emAberto) >= soma - 0.02,
+         `fatura em aberto na tela: ${emAberto}; retomado: ${brl(soma)}`);
+    }
   }
 
   // Boleto de cartão no extrato x fatura do mesmo cartão.
@@ -1632,6 +1714,25 @@ function noEscopo(mv) {
 
   // --- Erros de JavaScript ---
   ok('Nenhum erro de JavaScript', errosJs.length === 0, errosJs.slice(0, 5).join(' | '));
+
+  // Garantia final: qualquer teste pode ter limpado o plano em memória, e um
+  // salvamento posterior persistiria essa limpeza. O arquivo tem de terminar a
+  // suíte com o plano que tinha antes dela.
+  await pagina.evaluate(async original => {
+    const atual = JSON.stringify(dadosGlobais.plano_do_mes || null);
+    if (atual === JSON.stringify(original)) return;
+    if (original) dadosGlobais.plano_do_mes = original;
+    else delete dadosGlobais.plano_do_mes;
+    await fetch('/api/dados', { method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dadosGlobais) });
+  }, planoOriginal);
+  await pagina.waitForTimeout(400);
+
+  const planoDepois = JSON.parse(fs.readFileSync(ARQUIVO, 'utf8')).plano_do_mes || null;
+  ok('A suíte devolve o plano do mês como estava — não apaga decisão da Juliane',
+     JSON.stringify(planoDepois) === JSON.stringify(planoOriginal),
+     `antes: ${JSON.stringify(planoOriginal || null).slice(0, 80)} · depois: ${JSON.stringify(planoDepois).slice(0, 80)}`);
 
   await navegador.close();
 

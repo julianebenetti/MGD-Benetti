@@ -68178,5 +68178,29 @@
       "em_aberto": 3197.56,
       "parceladas": 11
     }
-  ]
+  ],
+  "plano_do_mes": {
+    "Set/26": {
+      "orcamento": 3600,
+      "itens": {
+        "fatura|0442|Set/26": "adiar",
+        "prev|empréstimo consignado débito em conta": "adiar",
+        "prev|escola da valentina": "adiar",
+        "prev|prefeitura de campinas": "adiar",
+        "prev|oferta à igreja": "adiar",
+        "prev|manicure unha em gel vanders": "adiar",
+        "prev|pix transf associa": "adiar",
+        "prev|pix transf institu": "adiar",
+        "prev|pix transf isabela": "adiar",
+        "prev|escola do luca": "adiar",
+        "prev|faxina": "adiar",
+        "prev|condomínio": "adiar",
+        "prev|juros e iof do cheque especial": "adiar",
+        "fatura|0013|Set/26": "pagar",
+        "fatura|3711|Set/26": "pagar",
+        "fatura|3987|Set/26": "pagar"
+      },
+      "atualizado_em": "2026-09-05"
+    }
+  }
 }

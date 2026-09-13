@@ -3109,8 +3109,19 @@
       // valor dela não sai da conta enquanto durar a suspensão — entra num
       // número à parte, nunca somada ao que ela tem de pagar no mês.
       const emAbertoDe = f => Math.max(0, f.em_aberto || 0);
-      const cartaoAPagar = faturas.filter(f => !pagamentoSuspenso(f.cartao)).reduce((s, f) => s + emAbertoDe(f), 0);
-      const cartaoSuspenso = faturas.filter(f => pagamentoSuspenso(f.cartao)).reduce((s, f) => s + emAbertoDe(f), 0);
+
+      // Quem decide se a fatura sai da conta neste mês é a marca do mês, não só
+      // o flag permanente do cartão. É a mesma regra que a tabela de vencimentos
+      // já usava (`decisaoDoItem`) — e sem ela os dois blocos do Painel
+      // discordavam: em Set/26 a Juliane marcou as faturas do 0013, 3711 e 3987
+      // como "pago" (R$ 1.206,99), e o bloco de cima continuava dizendo que
+      // esse dinheiro não sairia da conta dela, porque os três cartões seguem
+      // com `pagamento_suspenso`. Retomar um cartão num mês não desfaz a
+      // decisão geral, e é justamente para isso que a marca do mês existe.
+      const faturaSaiDaConta = f =>
+        decisaoDoItem(mes, { chave: `fatura|${f.cartao}|${f.mes}`, suspenso: pagamentoSuspenso(f.cartao) }) === 'pagar';
+      const cartaoAPagar = faturas.filter(faturaSaiDaConta).reduce((s, f) => s + emAbertoDe(f), 0);
+      const cartaoSuspenso = faturas.filter(f => !faturaSaiDaConta(f)).reduce((s, f) => s + emAbertoDe(f), 0);
       const obrigacaoCartao = cartaoJaPago + cartaoAPagar;
       const faturadoNoMes = faturas.reduce((s, f) => s + (f.total_fatura || 0), 0);
 
@@ -3120,7 +3131,7 @@
       // pago da empresa e acusava um rombo que não é dela sozinha.
       let cartaoEmpresa = 0, cartaoPessoal = 0, cartaoSemClassificacao = 0;
       faturas.forEach(f => {
-        if (pagamentoSuspenso(f.cartao)) return;
+        if (!faturaSaiDaConta(f)) return;
         const obrig = Math.max(0, f.em_aberto || 0);
         if (obrig <= 0) return;
         const frac = fracaoEmpresaDaFatura(f);
@@ -3192,7 +3203,7 @@
         ${cartaoSuspenso > 0.05 ? `
         <div class="aviso aviso-atencao">
           <b>${moeda(cartaoSuspenso)} de fatura com pagamento parado</b> neste mês, fora da conta acima:
-          ${faturas.filter(f => pagamentoSuspenso(f.cartao) && emAbertoDe(f) > 0.05)
+          ${faturas.filter(f => !faturaSaiDaConta(f) && emAbertoDe(f) > 0.05)
                    .map(f => `${nomeDoCartao(f.cartao)} ${moeda(emAbertoDe(f))}`).join(' · ')}.
           A fatura continua sendo cobrada e o saldo cresce com juros de rotativo — o que muda é que
           esse valor não sai da sua conta enquanto o pagamento estiver parado.
@@ -3225,7 +3236,7 @@
           titulo: `Fatura ${f.cartao_descricao || 'cartão ' + f.cartao}`,
           valor: f.em_aberto > 0 ? f.em_aberto : f.total_fatura,
           quitado: !(f.em_aberto > 0),
-          suspenso: f.em_aberto > 0 && pagamentoSuspenso(f.cartao),
+          suspenso: f.em_aberto > 0 && !faturaSaiDaConta(f),
           detalhe: f.em_aberto > 0
             ? (f.pago > 0 ? `pago ${moeda(f.pago)} de ${moeda(f.total_fatura)}` : `total ${moeda(f.total_fatura)}`)
             : 'quitada',
