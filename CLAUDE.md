@@ -486,6 +486,69 @@ responde "até onde este arquivo enxerga" é a linha que **já movimentou a cont
 então o discriminador é `status !== 'agendado'`, não a data. Corrigido nos dois
 lugares (dashboard e script), com 2 testes que falham sem a correção.
 
+### Extrato em PDF, e o boleto do Amazon que voltava a ser despesa (13/09)
+A Juliane mandou o extrato do Itaú em **PDF** (período 14/08 a 13/09, emitido
+13/09). Até então o importador só lia o `.xls` do internet banking.
+
+- **`importar-extrato-itau.js` aceita os dois formatos.** O PDF é lido com
+  `pdftotext -layout`; a coluna do movimento é separada da coluna de saldo pela
+  **posição do número na linha**, lida do próprio cabeçalho. Ler o saldo como
+  movimento criaria uma despesa de milhares de reais do nada.
+- **A descrição vem cortada na largura da coluna** (`DA CPFL PTA 1007780` em vez
+  de `DA CPFL PTA 10077803899`). Não atrapalha: as regras casam pelo começo do
+  texto, e `CHAVE_RECORRENTE` já descarta dígitos.
+- **`conferirSaldos()` confere a leitura contra o próprio extrato**: o saldo de
+  cada dia tem de ser o do dia anterior mais os movimentos entre os dois. Com
+  diferença acima de **R$ 1,00 o importador recusa gravar** — valor lido errado
+  não entra em silêncio.
+- **O último saldo do extrato é o "saldo em conta" do topo e já abate o que está
+  agendado**, então o intervalo final é conferido incluindo os agendados. Sem
+  isso, a diferença acusada é do tamanho dos agendamentos.
+- Sobra **R$ 0,05** sem explicação em 13/09, e é do banco: as 64 linhas com data
+  do PDF foram todas lidas (43 movimentos + 21 saldos), e o Itaú não itemiza
+  alguns centavos de rendimento da aplicação automática.
+
+**A conferência de saldo achou um erro de leitura no primeiro teste.** Um
+estorno de **R$ 1.300,00** (`DEV PIX JULIANE FER28/08`) sumia: a quebra de
+página entra como `\f` colado no começo da linha, e exigir o dia no início
+absoluto da linha descartava o lançamento sem avisar. O `\f` virou espaço (não
+foi removido, para as colunas não andarem um caractere).
+
+**Dois extratos do mesmo período não podem ser somados.** Casar linha a linha
+não resolve: o que estava agendado num arquivo aparece no seguinte com outra
+data e outro texto (o PIX da vaga de carro estava em 12/09 no extrato de 05/09 e
+saiu em **14/09** no de 13/09). Quem manda no período que cobre é o **extrato
+mais novo** (`emitidoEm`, lido do "Atualização:" do XLS e do "emitido em:" do
+PDF); o mais antigo só contribui com o que está fora da janela do novo — o
+começo do mês que o novo não alcança e os agendamentos mais distantes que ele
+ainda não lista. Assim os agendados de 15/09, 25/09, 28/09 e 28/10 sobrevivem.
+
+**Bug real, e ele se reintroduzia sozinho a cada importação:** o boleto do cartão
+Amazon liquidado como `PAG TIT INT 237` voltava a ser `despesa`/`compras`. A
+regra criada em 31/08 casa o texto normalizado (`BRADESCARD`, `Cartão Amazon`),
+mas o Itaú também liquida o mesmo boleto pelo código do banco, e essa variação
+caía na regra antiga — escrita quando a fatura do 0013 ainda não existia
+itemizada. **R$ 197,95 apareciam ao mesmo tempo como gasto no extrato e como
+fatura do 0013 a pagar** (R$ 73,27 em Ago/26 e R$ 124,68 em Set/26). Os 9
+valores fora da faixa do condomínio batem um a um com o total de uma fatura do
+0013, então a troca para `transferencia`/`pagamento_fatura` é segura.
+
+Teste de regressão novo, verificado quebrando o dado de propósito: **nenhum
+lançamento de extrato com `natureza: despesa` pode ter o valor exato de uma
+fatura vencendo na mesma semana.** É a forma genérica do erro — vale para
+qualquer cartão, não só o 0013.
+
+Regra nova: **`PIX QRS TRANSURC`** → `transporte`/Juliane. A Juliane já tinha
+definido isso em 23/08, mas `regras-classificacao.json` só vale para a fatura do
+cartão; quando a mesma catraca é paga por Pix, a regra tem de existir no
+importador do extrato também.
+
+**Em aberto, para a Juliane decidir:** o 0013 está marcado
+`pagamento_suspenso` em `configuracoes.json`, mas o extrato mostra **R$ 124,68
+agendados para 15/09**, exatamente o total da fatura de Set/26. Enquanto o flag
+disser que o pagamento está parado, esse valor sai da conta sem aparecer em
+lugar nenhum do Painel.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

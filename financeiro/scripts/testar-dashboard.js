@@ -788,6 +788,32 @@ function noEscopo(mv) {
     await pagina.waitForTimeout(400);
   }
 
+  // Boleto de cartão no extrato x fatura do mesmo cartão.
+  //
+  // Enquanto a fatura do 0013 não existia itemizada, o boleto pago era a única
+  // visão daquele gasto e entrava como despesa. Importadas as 9 faturas, contar
+  // os dois lados passou a somar o mesmo gasto duas vezes — e a regra do
+  // importador ficou para trás, então todo mês reimportado regredia sozinho.
+  // R$ 197,95 estavam duplicados quando isto foi escrito.
+  {
+    const extrato = todosLancamentos.filter(t => t.origem === 'extrato_itau' && t.data);
+    const duplicados = [];
+    (dados.faturas_cartao || []).forEach(f => {
+      const total = Math.round((f.total_fatura || 0) * 100) / 100;
+      if (total <= 0 || !f.vencimento) return;
+      extrato.forEach(t => {
+        if (t.natureza !== 'despesa') return;
+        if (Math.abs(t.valor - total) > 0.005) return;
+        // Perto do vencimento: valor igual num mês qualquer é coincidência,
+        // valor igual na semana do vencimento é o mesmo dinheiro.
+        const dias = Math.abs((new Date(t.data) - new Date(f.vencimento)) / 86400000);
+        if (dias <= 7) duplicados.push(`${t.data} ${brl(t.valor)} ${t.descricao_original || t.descricao} = fatura ${f.cartao} ${f.mes}`);
+      });
+    });
+    ok('Boleto de cartão no extrato nunca entra como despesa junto com a fatura',
+       !duplicados.length, duplicados.join(' / '));
+  }
+
   // --- Conta recorrente cadastrada à mão ---
   //
   // A projeção pelo histórico só enxerga o que passou pelo extrato pessoal, e

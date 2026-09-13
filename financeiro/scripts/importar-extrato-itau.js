@@ -211,18 +211,33 @@ const REGRAS = [
   // Amazon/Bradescard dela — confirmado por 2 comprovantes (R$431,58 venc.
   // 15/01 e R$459,31 venc. 18/02, Juliane, 30/08). Vem depois da regra do
   // condomínio, de propósito: a faixa específica (600-650) vence primeiro,
-  // essa pega o resto. É pagamento de fatura de um 4º cartão que a
-  // dashboard não tem itemizado (só o extrato Itaú vê o boleto sendo pago,
-  // não a compra em si) — registrado como despesa mesmo assim, porque
-  // marcar como "pagamento" (fora dos totais) o tornaria invisível sem
-  // nenhum outro lugar contando esse gasto de verdade.
+  // essa pega o resto.
+  //
+  // Era `despesa`, e a razão era boa enquanto durou: o boleto pago era a única
+  // visão que existia desse cartão, então marcá-lo como pagamento o tornaria
+  // invisível. Essa premissa morreu em 31/08, quando as 9 faturas do 0013
+  // entraram itemizadas — e este arquivo já avisava que, no dia em que isso
+  // acontecesse, os boletos teriam de virar pagamento de fatura.
+  //
+  // Só a regra ficou para trás. A que foi criada naquele dia casa o texto
+  // normalizado ("BRADESCARD", "Cartão Amazon"), e o Itaú também liquida o
+  // mesmo boleto como "PAG TIT INT 237", que caía aqui e voltava a ser
+  // despesa. Resultado: todo mês reimportado regredia, e R$ 197,95 apareciam
+  // ao mesmo tempo como gasto no extrato e como fatura do 0013 a pagar
+  // (73,27 em Ago/26 e 124,68 em Set/26).
+  //
+  // Os 9 valores fora da faixa do condomínio batem um a um com o total de uma
+  // fatura do 0013 — 431,58 · 459,31 · 459,67 · 357,87 · 333,71 · 128,66 ·
+  // 107,68 · 73,27 · 124,68. Não sobra nenhum, então a troca é segura.
+  //
   // Achado por agente de validação (30/08): o Itaú varia a ordem das palavras
   // no mesmo boleto ("INT PAG TIT 237", "PAG TIT BANCO 237") — regex de match
   // exato perdia essas variações. Basta terminar em "237" com "TIT" no meio.
   {
     padrao: /TIT.*\b237$/i,
-    natureza: 'despesa', categoria: 'compras', pessoa: 'Juliane',
-    descricao: 'Cartão Amazon (Bradescard)',
+    natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Juliane',
+    descricao: 'Pagamento da fatura do cartão Amazon (0013)',
+    nota: 'As compras já estão lançadas uma a uma pela fatura do 0013. Contar o boleto também somaria o mesmo gasto duas vezes.',
   },
   {
     padrao: /^PAG TIT INT 001$/i, valorEntre: [500, 600],
@@ -322,6 +337,16 @@ const REGRAS = [
     natureza: 'despesa', categoria: 'lazer_esportes', pessoa: 'Família',
     descricao: 'Cinépolis',
   },
+  // A Juliane ja tinha definido Transurc como transporte dela para o trabalho
+  // (regras-classificacao.json, 23/08). Aquele arquivo so vale para a fatura do
+  // cartao; quando a mesma catraca e paga por Pix no extrato, a regra tem de
+  // existir aqui tambem, senao cai em nao_classificado.
+  {
+    padrao: /PIX (TRANSF|QRS) TRANSURC/i,
+    natureza: 'despesa', categoria: 'transporte', pessoa: 'Juliane',
+    descricao: 'Transurc — transporte para o trabalho',
+    nota: 'Mesma regra que já valia para a fatura do cartão (Juliane, 23/08).',
+  },
   {
     padrao: /PIX TRANSF Vanders/i,
     natureza: 'despesa', categoria: 'cuidados_pessoais', pessoa: 'Juliane',
@@ -392,7 +417,99 @@ function classificar(desc, valor) {
 
 // ---------- leitura ----------
 
+// O extrato chega em dois formatos. O .xls do internet banking traz a descricao
+// inteira; o PDF do app corta a descricao na largura da coluna ("DA CPFL PTA
+// 1007780" no lugar de "DA CPFL PTA 10077803899"). As duas leituras devolvem a
+// mesma forma, e a classificacao nao muda: as regras casam pelo comeco do texto.
 function lerExtrato(caminho) {
+  return /\.pdf$/i.test(caminho) ? lerExtratoPdf(caminho) : lerExtratoXls(caminho);
+}
+
+// ---------- PDF (app / internet banking) ----------
+//
+// O layout tem duas colunas de numero: "valor (R$)", que e o movimento, e
+// "saldo (R$)", que e o saldo do dia. Ler a segunda como se fosse movimento
+// criaria uma despesa de milhares de reais do nada, entao a coluna e decidida
+// pela posicao do numero na linha, lida do proprio cabecalho.
+function lerExtratoPdf(caminho) {
+  const txt = require('child_process')
+    .execFileSync('pdftotext', ['-layout', caminho, '-'], { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+
+  const cab = txt.split('\n').find(l => /valor \(R\$\)/.test(l)) || '';
+  const fimValor = cab.indexOf('valor') + 'valor (R$)'.length;
+  const iniSaldo = cab.indexOf('saldo');
+  // Fronteira no meio das duas colunas: numero que comece depois dela e saldo.
+  const limite = iniSaldo > fimValor ? Math.floor((fimValor + iniSaldo) / 2) : 120;
+
+  const agencia = (txt.match(/ag[êe]ncia:\s*(\d+)/i) || [])[1] || null;
+  const conta = (txt.match(/conta:\s*([\d-]+)/i) || [])[1] || null;
+  const emitidoEm = (txt.match(/emitido em:\s*(\d{2}\/\d{2}\/\d{4})(?:\s+([\d:]+))?/i) || []).slice(1, 3)
+    .filter(Boolean).join(' ') || null;
+  const periodo = txt.match(/per[íi]odo de visualiza[çc][ãa]o:\s*(\d{2}\/\d{2}\/\d{4})\s*at[ée]\s*(\d{2}\/\d{2}\/\d{4})/i);
+
+  const NUM = /-?\d{1,3}(?:\.\d{3})*,\d{2}/g;
+  const itens = [], saldos = [];
+
+  // A quebra de pagina entra como \f colado na primeira linha da pagina
+  // seguinte. Exigir o dia no inicio absoluto da linha fazia esse lancamento
+  // sumir sem avisar — foi assim que um estorno de R$ 1.300,00 ficou de fora
+  // da primeira leitura, e so a conferencia de saldo denunciou. O \f e trocado
+  // por espaco, e nao removido, para as colunas nao andarem um caractere.
+  txt.replace(/\f/g, ' ').split('\n').forEach(linha => {
+    const d = linha.match(/^\s*(\d{2})\/(\d{2})\/(\d{4})\s+\S/);
+    if (!d) return;
+    const data = `${d[3]}-${d[2]}-${d[1]}`;
+    let m, achado = null;
+    NUM.lastIndex = 0;
+    while ((m = NUM.exec(linha)) !== null) achado = { pos: m.index, txt: m[0] };
+    if (!achado) return;
+
+    const descricao = linha.slice(0, achado.pos)
+      .replace(/^\s*\d{2}\/\d{2}\/\d{4}/, '').trim().replace(/\s+/g, ' ');
+    const valor = dinheiro(achado.txt);
+
+    if (achado.pos >= limite || /^SALDO/i.test(descricao)) {
+      // Saldo do dia: nao e movimento, mas e o que permite conferir a leitura.
+      saldos.push({ data, valor });
+      return;
+    }
+    if (valor !== 0) itens.push({ data, descricao: consertarAcento(descricao), valor });
+  });
+
+  return {
+    arquivo: path.basename(caminho), agencia, conta, emitidoEm, saldos,
+    periodo: periodo ? [periodo[1].split('/').reverse().join('-'), periodo[2].split('/').reverse().join('-')] : null,
+    itens,
+  };
+}
+
+// Confere a leitura contra o proprio extrato: o saldo de cada dia tem de ser o
+// saldo do dia anterior mais os movimentos do periodo entre os dois. Um valor
+// lido errado (a virgem decimal no lugar errado, uma coluna trocada) aparece
+// aqui como diferenca, em vez de entrar em silencio na dashboard.
+function conferirSaldos(e) {
+  if (!e.saldos || e.saldos.length < 2) return null;
+  const ordem = [...e.saldos].sort((a, b) => a.data.localeCompare(b.data));
+  const falhas = [];
+  for (let i = 1; i < ordem.length; i++) {
+    const de = ordem[i - 1], ate = ordem[i];
+    // O ultimo saldo do extrato e o "saldo em conta" do topo: o Itau ja abate
+    // nele o que esta agendado para depois da data. Fechar esse intervalo so
+    // com o que ja liquidou acusaria uma diferenca do tamanho dos agendamentos.
+    const ultimo = i === ordem.length - 1;
+    const mov = e.itens
+      .filter(t => t.data > de.data && (ultimo || t.data <= ate.data))
+      .reduce((s, t) => s + t.valor, 0);
+    const esperado = Math.round((de.valor + mov) * 100) / 100;
+    const gap = Math.round((ate.valor - esperado) * 100) / 100;
+    if (Math.abs(gap) > 0.005) falhas.push({ data: ate.data, esperado, lido: ate.valor, gap });
+  }
+  return { dias: ordem.length, falhas, total: falhas.reduce((s, f) => s + Math.abs(f.gap), 0) };
+}
+
+// ---------- XLS (internet banking) ----------
+
+function lerExtratoXls(caminho) {
   const wb = XLSX.readFile(caminho);
   const aba = wb.SheetNames.find(n => /lan[çc]amento/i.test(n)) || wb.SheetNames[0];
   const linhas = XLSX.utils.sheet_to_json(wb.Sheets[aba], { header: 1, raw: false, defval: '' });
@@ -414,7 +531,8 @@ function lerExtrato(caminho) {
     // mas se escapar viraria despesa gigante.
     .filter(x => x.valor !== 0 && !/^SALDO/i.test(x.descricao));
 
-  return { arquivo: path.basename(caminho), agencia, conta, itens };
+  const emitidoEm = (cabecalho.match(/Atualiza[çc][ãa]o:?\s*\|?\s*(\d{2}\/\d{2}\/\d{4}[^\n|]*)/i) || [])[1] || null;
+  return { arquivo: path.basename(caminho), agencia, conta, emitidoEm, itens, saldos: null, periodo: null };
 }
 
 // ---------- execução ----------
@@ -426,6 +544,39 @@ if (!alvos.length) {
 }
 
 const extratos = alvos.map(lerExtrato);
+
+// Dois extratos do mesmo periodo nao podem ser somados: o mesmo PIX apareceria
+// duas vezes. E casar linha a linha nao resolve — o que estava agendado num
+// arquivo pode aparecer no seguinte com outra data e outro texto (o PIX da vaga
+// de carro estava em 12/09 no extrato de 05/09 e saiu em 14/09 no de 13/09).
+//
+// Quem manda no periodo que cobre e o extrato mais novo. O mais antigo so
+// contribui com o que esta fora da janela dele — o comeco do mes que o novo nao
+// alcanca, e os agendamentos mais distantes que o novo ainda nao lista.
+function janelaDe(e) {
+  const datas = e.itens.map(t => t.data).sort();
+  if (!datas.length) return null;
+  const ini = e.periodo ? e.periodo[0] : datas[0];
+  const fim = e.periodo && e.periodo[1] > datas[datas.length - 1] ? e.periodo[1] : datas[datas.length - 1];
+  return [ini < datas[0] ? ini : datas[0], fim];
+}
+const ordemEmissao = e => {
+  const m = String(e.emitidoEm || '').match(/(\d{2})\/(\d{2})\/(\d{4})(?:\D+(\d{2}):(\d{2}))?/);
+  return m ? `${m[3]}-${m[2]}-${m[1]} ${m[4] || '00'}:${m[5] || '00'}` : '';
+};
+
+const superpostos = [];
+extratos.forEach(e => {
+  const maisNovos = extratos.filter(o => o !== e && ordemEmissao(o) > ordemEmissao(e) && janelaDe(o));
+  if (!maisNovos.length) return;
+  const antes = e.itens.length;
+  e.itens = e.itens.filter(t => !maisNovos.some(o => {
+    const [a, b] = janelaDe(o);
+    return t.data >= a && t.data <= b;
+  }));
+  if (antes !== e.itens.length) superpostos.push({ arquivo: e.arquivo, n: antes - e.itens.length });
+});
+
 const todos = extratos.flatMap(e => e.itens);
 
 if (!todos.length) {
@@ -437,8 +588,32 @@ console.log(`\n=== EXTRATO ${aplicar ? '(APLICADO)' : '(SIMULAÇÃO)'} ===\n`);
 extratos.forEach(e => {
   const ds = e.itens.map(x => x.data).sort();
   console.log(`${e.arquivo}`);
-  console.log(`   ag. ${e.agencia || '?'} c/c ${e.conta || '?'} · ${e.itens.length} lançamentos · ${ds[0]} a ${ds[ds.length - 1]}`);
+  console.log(`   ag. ${e.agencia || '?'} c/c ${e.conta || '?'} · ${e.itens.length} lançamentos · ${ds[0] || '—'} a ${ds[ds.length - 1] || '—'}${e.emitidoEm ? ` · emitido ${e.emitidoEm}` : ''}`);
+  const c = conferirSaldos(e);
+  if (c) {
+    console.log(c.falhas.length
+      ? `   ⚠️  saldo do dia não fecha em ${c.falhas.length} de ${c.dias - 1} intervalo(s), ${brl(c.total)} sem explicação`
+      : `   ✓ saldo do dia fecha em todos os ${c.dias - 1} intervalos — a leitura bate com o próprio extrato`);
+    c.falhas.forEach(f => console.log(
+      `      ${f.data.split('-').reverse().join('/')}  extrato diz ${brl(f.lido)}, a soma dá ${brl(f.esperado)}  (${brl(f.gap)})`));
+  }
 });
+// Diferenca grande e erro de leitura, nao detalhe do banco: gravar assim
+// levaria o erro para dentro da dashboard sem ninguem perceber. Centavos de
+// rendimento de aplicacao automatica o proprio extrato nao itemiza.
+const LIMITE_SALDO = 1.00;
+const naoFecham = extratos.map(conferirSaldos).filter(c => c && c.total > LIMITE_SALDO);
+if (naoFecham.length && aplicar) {
+  console.error(`\n❌ Não gravei: o saldo do extrato não fecha com os lançamentos lidos (${brl(naoFecham.reduce((s2, c) => s2 + c.total, 0))}).`);
+  console.error('   Isso quase sempre é linha que a leitura não pegou. Corrija o leitor antes de importar.\n');
+  process.exit(1);
+}
+
+if (superpostos.length) {
+  console.log('');
+  superpostos.forEach(s2 => console.log(
+    `${s2.n} lançamento(s) de ${s2.arquivo} ficaram de fora: período já coberto por um extrato mais novo.`));
+}
 console.log('');
 
 const transacoes = [];
