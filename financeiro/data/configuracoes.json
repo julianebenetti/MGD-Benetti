@@ -202,6 +202,16 @@
       "nome": "Caixa/Dinheiro",
       "tipo": "dinheiro",
       "ativa": true
+    },
+    {
+      "id": "bradesco_cc",
+      "nome": "Conta Corrente Bradesco",
+      "banco": "Bradesco",
+      "agencia": "2389",
+      "conta": "555440-3",
+      "tipo": "corrente",
+      "ativa": true,
+      "observacao": "Quarta conta, movimento baixo. E por ela que sai o debito automatico de alguns cartoes Bradesco (a fatura do 3987 de Ago/26, R$259,49, saiu daqui em 17/08). Quando o saldo nao cobre, o banco empresta pelo limite e cobra IOF + encargo de ~8% ao mes. Extrato importado por scripts/importar-extrato-bradesco-cc.js."
     }
   ],
   "abas": [

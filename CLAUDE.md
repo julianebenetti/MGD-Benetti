@@ -718,6 +718,50 @@ que parou foi a projeção, não o dado), e a tela diz o nome de cada uma em vez
 só sumir com elas. O teste que recalcula o "sai da conta" por fora também
 aprendeu a regra, senão ele passaria a divergir da tela.
 
+### A quarta conta: corrente do Bradesco, e o limite que cobrava em silêncio (14/09)
+A Juliane mandou o extrato de uma conta que a dashboard **não conhecia**:
+**Bradesco, ag. 2389, c/c 555440-3**. Movimento baixíssimo — 6 lançamentos em
+dois meses — mas é por ela que sai o **débito automático de alguns cartões
+Bradesco**, e o saldo não cobria.
+
+O que o extrato conta, em ordem:
+
+| Data | O quê | Valor |
+|---|---|---|
+| 16/07 | saldo de abertura, já devendo | −R$ 4,31 |
+| 04/08 · 05/08 | IOF e encargo do limite | −R$ 0,23 |
+| 17/08 | **débito da fatura do 3987** | −R$ 259,49 |
+| 02/09 · 08/09 | IOF e encargo do limite | −R$ 13,59 |
+| 14/09 | Pix dela mesma, quitando | +R$ 278,00 |
+
+**Os R$ 259,49 batem exatamente com a fatura 3987 de Ago/26**, que já estava
+gravada como paga desde a importação das faturas do Bradesco — a dashboard sabia
+que tinha sido paga, não sabia **de onde**. Entra como
+`transferencia`/`pagamento_fatura`: as compras já estão lançadas uma a uma.
+
+**O que era invisível são os R$ 13,82 de juros e IOF do limite.** Despesa de
+verdade, `encargos_financeiros`, e cara: o encargo saltou de **7,73% para 8,00%
+ao mês** entre agosto e setembro — na casa de 150% ao ano. A conta ficou negativa
+por quase dois meses por causa de uma fatura de R$ 259,49.
+
+`scripts/importar-extrato-bradesco-cc.js`, com a mesma disciplina dos outros:
+
+- **O PDF imprime "Saldo" sem sinal**, e nesta conta o saldo fica negativo quase
+  o tempo todo — cada débito faz o número impresso **subir**. Ler como positivo
+  inverteria a conta inteira. Em vez de supor, o script **tenta os dois sinais
+  para o saldo inicial e fica com o que reproduz todos os saldos impressos**;
+  se nenhum fechar, não grava. Ele descobriu sozinho que a conta começa negativa.
+- A descrição quebra em três linhas (`ENCARGOS LIMITE DE CRED` em cima,
+  `ENCARGO - 08,00%` embaixo, só o número no meio) — remontada das vizinhas,
+  como já era preciso fazer na fatura do Bradesco.
+
+**O teste do boleto duplicado passou a valer para qualquer extrato de conta**
+(`/^extrato_/`), não só o do Itaú. Era a mesma armadilha em outra conta:
+verificado quebrando de propósito, ele acusa `2026-08-17 R$ 259,49 GASTOS CARTAO
+DE CREDITO = fatura 3987 Ago/26`.
+
+A conta entrou em `configuracoes.json` → `contas_origem`, com o que se sabe dela.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
@@ -1574,6 +1618,10 @@ valor na base atual.
   pela mediana marcada como previsão, nada é dado como atrasado onde o extrato
   não alcança). É o que alimenta o alerta no celular. `--hoje` só serve para
   testar outra data.
+- `importar-extrato-bradesco-cc.js <pdf> [...]` — lê o extrato da conta corrente
+  do Bradesco (ag. 2389, c/c 555440-3). Confere a leitura contra o saldo impresso
+  e **descobre o sinal do saldo inicial** em vez de supor; recusa gravar se não
+  fechar.
 - `conciliar.js` — só leitura. Audita as três fontes: o que falta, o que está
   contado duas vezes e o que não bate. Rode depois de cada importação.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha

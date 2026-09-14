@@ -960,7 +960,10 @@ function noEscopo(mv) {
   // importador ficou para trás, então todo mês reimportado regredia sozinho.
   // R$ 197,95 estavam duplicados quando isto foi escrito.
   {
-    const extrato = todosLancamentos.filter(t => t.origem === 'extrato_itau' && t.data);
+    // Qualquer extrato de conta, não só o do Itaú: o débito automático da
+    // fatura do 3987 sai da conta Bradesco, e contar os dois lados dobraria o
+    // mesmo gasto exatamente como dobrava com o boleto do Amazon.
+    const extrato = todosLancamentos.filter(t => /^extrato_/.test(t.origem || '') && t.data);
     const duplicados = [];
     (dados.faturas_cartao || []).forEach(f => {
       const total = Math.round((f.total_fatura || 0) * 100) / 100;
@@ -974,7 +977,7 @@ function noEscopo(mv) {
         if (dias <= 7) duplicados.push(`${t.data} ${brl(t.valor)} ${t.descricao_original || t.descricao} = fatura ${f.cartao} ${f.mes}`);
       });
     });
-    ok('Boleto de cartão no extrato nunca entra como despesa junto com a fatura',
+    ok('Débito/boleto de cartão em conta nunca entra como despesa junto com a fatura',
        !duplicados.length, duplicados.join(' / '));
   }
 
