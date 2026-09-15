@@ -923,6 +923,42 @@ function noEscopo(mv) {
     }
   }
 
+  // Reimportar uma fatura substitui os lançamentos dela, não soma outra leitura.
+  //
+  // A fatura fechada de 15/09 chegou por cima da foto "em aberto" de 30/08 do
+  // mesmo ciclo. O cabeçalho era substituído, os lançamentos não: o 3711 passou
+  // a somar R$ 698,47 numa fatura de R$ 383,57. O teste é a forma genérica —
+  // a soma dos lançamentos de uma fatura nunca pode passar do que ela cobra.
+  {
+    const porFatura = {};
+    todosLancamentos.forEach(t => {
+      if (!t.fatura_origem) return;
+      porFatura[t.fatura_origem] = (porFatura[t.fatura_origem] || 0) + t.valor;
+    });
+    const estouradas = (dados.faturas_cartao || [])
+      .map(f => ({ f, chave: `${f.cartao}|${f.mes}`, soma: Math.round((porFatura[`${f.cartao}|${f.mes}`] || 0) * 100) / 100 }))
+      // `cobrado` é o que a fatura cobra no período; o saldo anterior rola por
+      // fora e não vem linha a linha, então ele é o teto certo para comparar.
+      .filter(x => x.soma > (x.f.cobrado || 0) + 0.02);
+    ok('Lançamentos de uma fatura nunca somam mais do que ela cobra',
+       !estouradas.length,
+       estouradas.map(x => `${x.chave}: lançamentos ${brl(x.soma)} contra cobrado ${brl(x.f.cobrado || 0)}`).join(' / '));
+  }
+
+  // Nenhuma fatura com total cadastrado pode ficar sem lançamento nenhum depois
+  // de uma reimportação. Foi o estrago de uma purga feita na ordem errada:
+  // 9 faturas do 0013 e do 3987 ficaram com o cabeçalho e zero compra.
+  {
+    const comLanc = new Set(todosLancamentos.filter(t => t.fatura_origem).map(t => t.fatura_origem));
+    const importadas = new Set(todosLancamentos
+      .filter(t => t.origem === 'cartao_credito_bradesco' && t.fatura_origem)
+      .map(t => t.fatura_origem.split('|')[0]));
+    const vazias = (dados.faturas_cartao || []).filter(f =>
+      importadas.has(f.cartao) && (f.total_fatura || 0) > 0 && !comLanc.has(`${f.cartao}|${f.mes}`));
+    ok('Nenhuma fatura já importada ficou sem lançamento depois de reimportar',
+       !vazias.length, vazias.map(f => `${f.cartao} ${f.mes}`).join(', '));
+  }
+
   // Dinheiro que entra e não é renda tributável não pode engordar a base do IRPF.
   // Hoje são dois casos: a restituição do próprio imposto já pago, e a venda de
   // bem pessoal usado (roupa dos filhos vendida em desapego, abaixo do preço de

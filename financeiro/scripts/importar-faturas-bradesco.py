@@ -60,7 +60,19 @@ def main():
         abertos = []
     for b in abertos:
         b['aberta'] = True
-    fechadas = fechadas + abertos
+
+    # O extrato "EM ABERTO" e uma foto do ciclo enquanto ele ainda enche. Quando
+    # a fatura fechada do MESMO ciclo chega, ela manda: traz as compras do fim do
+    # periodo que a foto nao tinha e o total definitivo. Sem esta regra, a foto
+    # de 30/08 continuaria valendo sobre a fatura de 15/09 e o mes ficaria
+    # R$ 188,66 mais barato do que e.
+    jaFechadas = {(f['cartao'], f['mes']) for f in fechadas}
+    superados = [b for b in abertos if (b['cartao'], b['mes']) in jaFechadas]
+    for b in superados:
+        print(f"  {b['cartao']} {b['mes']}: extrato em aberto descartado — "
+              f"a fatura fechada do mesmo ciclo chegou (R$ {b['total_declarado']:.2f} → "
+              f"{[f['total_declarado'] for f in fechadas if (f['cartao'], f['mes']) == (b['cartao'], b['mes'])][0]})")
+    fechadas = fechadas + [b for b in abertos if (b['cartao'], b['mes']) not in jaFechadas]
 
     ruins = [f for f in fechadas if not f['confere']]
     if ruins:
@@ -72,6 +84,25 @@ def main():
 
     dados = json.load(open(ARQ, encoding='utf-8'))
     tx = dados['fluxo_mensal']['transacoes']
+
+    # O cabecalho da fatura ja era substituido; os lancamentos dela nao eram.
+    # Reimportar uma fatura ja gravada somava as duas leituras: quando a fatura
+    # fechada de 15/09 chegou por cima da foto em aberto de 30/08, o 3711 passou
+    # a somar R$ 698,47 numa fatura de R$ 383,57.
+    #
+    # Mesmo principio do importador do extrato: o que e relido e substituido,
+    # nao acrescentado. So as faturas desta rodada — as outras ficam intactas.
+    #
+    # A purga vem ANTES de montar `existentes`, e a ordem e o proprio bug: com
+    # os antigos ainda na lista, todo id repetido era tratado como "ja existe",
+    # o lancamento novo nao chegava a ser gerado, e a purga apagava o antigo sem
+    # repor. Ficaram 9 faturas com zero lancamento.
+    relidas = {f"{f['cartao']}|{f['mes']}" for f in fechadas}
+    antes = len(tx)
+    tx = [t for t in tx if t.get('fatura_origem') not in relidas]
+    if antes != len(tx):
+        print(f'{antes - len(tx)} lancamento(s) da leitura anterior destas faturas serao substituidos')
+
     existentes = {t.get('id') for t in tx}
 
     novos, cabecalhos = [], {}

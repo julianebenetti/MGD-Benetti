@@ -762,6 +762,68 @@ DE CREDITO = fatura 3987 Ago/26`.
 
 A conta entrou em `configuracoes.json` → `contas_origem`, com o que se sabe dela.
 
+### Uma fatura, dois cartões — e a reimportação que somava em vez de substituir (15/09)
+A Juliane mandou a **fatura fechada do Bradesco de 15/09**, e ela corrigiu um
+número que estava R$ 188,66 barato demais.
+
+O que estava gravado vinha do **extrato "EM ABERTO" de 30/08**: uma foto do
+ciclo enquanto ele ainda enchia. A fatura fechada do mesmo ciclo traz as compras
+do fim do período (31/08 e 01/09) e o total definitivo.
+
+| | antes (foto de 30/08) | agora (fatura de 15/09) |
+|---|---|---|
+| 3987 Set/26 | R$ 767,41 · 22 lançamentos | **R$ 887,40 · 25** |
+| 3711 Set/26 | R$ 314,90 · 5 lançamentos | **R$ 383,57 · 6** |
+
+**O documento é um só e cobra dois cartões**: o do titular (3987) e o adicional
+(3711), cada um com seu bloco e seu subtotal, somando o total da fatura de
+R$ 1.270,97. O leitor lia tudo como um cartão só e jogava a compra do adicional
+na conta do titular. Agora `ler-faturas-bradesco.py` devolve **uma fatura por
+cartão cobrado**, e ganhou uma segunda conferência: **a soma dos subtotais tem
+de dar o total impresso** — é o que garante que nenhum bloco ficou de fora.
+
+Três detalhes de leitura que só apareceram com este PDF:
+
+- **`Saldo anterior......... R$ 259,49`** — o resumo preenche o espaço com
+  pontos até o valor, e a regex só aceitava espaço. Sem achar o saldo, a
+  identidade da fatura não fechava e o importador recusava um PDF perfeito.
+- **`Número do Cartão 4532 XXXX XXXX 3987` é cabeçalho de página**, não início
+  de bloco. Casar nele abria um bloco vazio antes do primeiro cartão.
+- **O pagamento da fatura passada vem impresso antes do primeiro marcador**, o
+  que abre um bloco implícito do mesmo cartão. Blocos do mesmo número são
+  juntados no fim.
+
+**O subtotal impresso do titular já inclui o saldo anterior**: 259,49 + 627,91 =
+887,40. Então a identidade de sempre (`total = saldo anterior + soma dos
+lançamentos`) vale por cartão, e o saldo anterior fica com o cartão que carregava
+a dívida — o bloco que traz o pagamento. Ratear entre os dois seria inventar um
+número que a fatura não diz.
+
+**Dois bugs de verdade no importador, e o segundo eu mesmo criei:**
+
+1. **A reimportação somava as duas leituras.** O cabeçalho da fatura já era
+   substituído; os lançamentos não. Com a fatura fechada chegando por cima da
+   foto em aberto, o 3711 passou a somar **R$ 698,47 numa fatura de R$ 383,57**.
+   Corrigido com a mesma regra do importador do extrato: o que é relido é
+   substituído, não acrescentado.
+2. **A purga na ordem errada esvaziou 9 faturas.** Na primeira tentativa ela
+   rodava no fim, depois de `existentes` já ter sido montado — então todo id
+   repetido era tratado como "já existe", o lançamento novo não chegava a ser
+   gerado, e a purga apagava o antigo sem repor. O 0013 inteiro e três faturas do
+   3987 ficaram com cabeçalho e **zero compra**. A purga passou para antes de
+   `existentes`, que é onde a ordem faz sentido.
+
+E **o extrato em aberto é descartado quando a fatura fechada do mesmo ciclo
+chega** — com aviso dizendo de qual valor para qual. Sem isso, a foto de 30/08
+continuaria mandando sobre a fatura de 15/09.
+
+2 testes novos, verificados quebrando o dado dos dois jeitos (5 testes falham em
+cada): a soma dos lançamentos de uma fatura nunca passa do que ela cobra, e
+nenhuma fatura já importada fica sem lançamento depois de reimportar. São as
+formas genéricas dos dois erros.
+
+Efeito em Set/26: o "sai da conta" foi de R$ 9.376,40 para **R$ 9.578,65**.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
