@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789429776,
-  "updated_at_br": "14/09/2026 20:42",
+  "updated_at": 1789435097,
+  "updated_at_br": "14/09/2026 22:11",
   "period_days": 90,
-  "total_orders": 7864,
-  "total_conversions": 7518,
+  "total_orders": 7861,
+  "total_conversions": 7515,
   "orders": [
     {
       "ID do pedido": "2609141H9Y9C3C",
@@ -2882,7 +2882,7 @@
     },
     {
       "ID do pedido": "260913U5K1UJ5B",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-12 17:35:22",
       "Sub_id1": "04Set26VIPmacaquinhoplus",
       "Valor de Compra(R$)": "29.85",
@@ -2894,7 +2894,7 @@
       "Comissao total do pedido(R$)": "1.7313",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "OralGos Pacote de Escova de Dentes Super Macia,Nano Cerdas de Super Densidade+6 cores,Capa Protetora",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22899193666",
       "ID da loja": "1577747933",
       "Nome da loja": "Toya Corp",
@@ -2902,7 +2902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242933721134471",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-12"
     },
     {
@@ -4732,7 +4732,7 @@
     },
     {
       "ID do pedido": "260911R7YWJU2D",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 13:40:22",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "132.9",
@@ -4744,7 +4744,7 @@
       "Comissao total do pedido(R$)": "5.316",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Escova Rotativa Mondial ERB-11-KR Red Vermelho BIVOLT",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21565834367",
       "ID da loja": "445820015",
       "Nome da loja": "MIGARO",
@@ -4752,7 +4752,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242833221128492",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -4807,7 +4807,7 @@
     },
     {
       "ID do pedido": "260911R5ABMVDN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 12:52:31",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "41.89",
@@ -4819,7 +4819,7 @@
       "Comissao total do pedido(R$)": "2.55529",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Pijama Cirúrgico Feminino Scrub Oxford Acinturado Uniforme Hospitalar",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22399544079",
       "ID da loja": "1843601048",
       "Nome da loja": "Closet Club",
@@ -4827,7 +4827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242830350193710",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -6807,7 +6807,7 @@
     },
     {
       "ID do pedido": "260910MHSPR9GE",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 02:25:11",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "40.64",
@@ -6819,7 +6819,7 @@
       "Comissao total do pedido(R$)": "3.048",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tênis Infantil Casual Escolar Envio Rápido",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "54505641752",
       "ID da loja": "303419140",
       "Nome da loja": "Momy Calçados ✅",
@@ -6827,7 +6827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242706311103124",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -6882,7 +6882,7 @@
     },
     {
       "ID do pedido": "260910MHDW5YBK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 02:18:35",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "26.81",
@@ -6894,7 +6894,7 @@
       "Comissao total do pedido(R$)": "1.6086",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Depilador elétrico com navalha dupla cuidado e delicadeza  com sua pele, Recarregável com Tecnologia avançada  Indolor.",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58260068677",
       "ID da loja": "1298353671",
       "Nome da loja": "Loong store",
@@ -6902,7 +6902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242705915192557",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -8957,7 +8957,7 @@
     },
     {
       "ID do pedido": "260910KFU7NFPB",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 16:17:35",
       "Sub_id1": "04Set26VEAprincipiaacne",
       "Valor de Compra(R$)": "59.99",
@@ -8969,7 +8969,7 @@
       "Comissao total do pedido(R$)": "3.5994",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Wide Leg Cargo Colors Jeans",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23992669449",
       "ID da loja": "320344027",
       "Nome da loja": "Mayak Modas",
@@ -8977,7 +8977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242669855174320",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -18582,7 +18582,7 @@
     },
     {
       "ID do pedido": "2609069XSHHA95",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 21:18:27",
       "Sub_id1": "04Set26VIPmacaquinhoplus",
       "Valor de Compra(R$)": "51.34",
@@ -18594,7 +18594,7 @@
       "Comissao total do pedido(R$)": "9.2412",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Macaquinho Saia Plus Size Feminino Elegante Decote Bobo & Amarração Lateral",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "46464714769",
       "ID da loja": "972022966",
       "Nome da loja": "FashionWear",
@@ -18602,7 +18602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "242342307158471",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -20407,7 +20407,7 @@
     },
     {
       "ID do pedido": "2609058EJYCJ9M",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 06:55:47",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "27.29",
@@ -20419,7 +20419,7 @@
       "Comissao total do pedido(R$)": "2.31965",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Adoçante Açurquinha Dietético em Pó | 100g  | Amor da Terra",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "54357581272",
       "ID da loja": "1371973455",
       "Nome da loja": "Bio Equilibrium",
@@ -20427,7 +20427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242290547192613",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -20532,7 +20532,7 @@
     },
     {
       "ID do pedido": "2609058EJYCJ9F",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 06:55:47",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "24.55",
@@ -20544,7 +20544,7 @@
       "Comissao total do pedido(R$)": "1.2766",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sabonete Íntimo Combate Candidíase De Repetição Coceiras Irritações Barbatimão Melaleuca Hamamelis",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22399168196",
       "ID da loja": "1621673281",
       "Nome da loja": "Charme De Mulher Store",
@@ -20552,7 +20552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242290547192613",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -196528,81 +196528,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235359042173148",
       "conversionStatus": "CANCELLED",
-      "data": "2026-06-17"
-    },
-    {
-      "ID do pedido": "260617ACW4HSA5",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-17 01:04:20",
-      "Sub_id1": "07Abr26VestidoFloralC3",
-      "Valor de Compra(R$)": "37.99",
-      "Comissao liquida do afiliado(R$)": "1.1397",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "1.1397",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.1397",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Vibrador Feminino Vibracoes Consolo Ponto G Vagina Clitoris",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19951156468",
-      "ID da loja": "802381200",
-      "Nome da loja": "Loja Intimacy",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235357460148097",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-17"
-    },
-    {
-      "ID do pedido": "260617AAHSPFGM",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-17 00:22:13",
-      "Sub_id1": "02Jun26TShirtMasculinsVs2",
-      "Valor de Compra(R$)": "58.9",
-      "Comissao liquida do afiliado(R$)": "10.602",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "15.00%",
-      "Comissao Shopee(R$)": "1.767",
-      "Comissao do vendedor(R$)": "8.835",
-      "Comissao total do pedido(R$)": "10.602",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Camiseta Oversized Brasil Copa T-shirt Hexa Futebol Copa do Mundo 2026 Gola Redonda",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58209852482",
-      "ID da loja": "1167060112",
-      "Nome da loja": "Skin.privat",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "235354932176998",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-17"
-    },
-    {
-      "ID do pedido": "260617A9M0XF4U",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-17 00:05:33",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "36.9",
-      "Comissao liquida do afiliado(R$)": "4.428",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "1.107",
-      "Comissao do vendedor(R$)": "3.321",
-      "Comissao total do pedido(R$)": "4.428",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Segunda Pele Térmica Flanelado Frio Intenso Preto Proteção Uv+50 Masculino Feminino Unissex",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22698322663",
-      "ID da loja": "1447721952",
-      "Nome da loja": "Inoveecomm",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "235353933140377",
-      "conversionStatus": "COMPLETED",
       "data": "2026-06-17"
     }
   ]
