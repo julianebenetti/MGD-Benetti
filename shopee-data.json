@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789452297,
-  "updated_at_br": "15/09/2026 02:58",
+  "updated_at": 1789460792,
+  "updated_at_br": "15/09/2026 05:19",
   "period_days": 90,
-  "total_orders": 7855,
-  "total_conversions": 7510,
+  "total_orders": 7854,
+  "total_conversions": 7509,
   "orders": [
     {
       "ID do pedido": "2609141H9Y9C3C",
@@ -6507,7 +6507,7 @@
     },
     {
       "ID do pedido": "260910NG9E2DKU",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 11:30:52",
       "Sub_id1": "04Set26VIPmochilaexpansivel",
       "Valor de Compra(R$)": "76.9",
@@ -6519,7 +6519,7 @@
       "Comissao total do pedido(R$)": "15.38",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Mochila Mala Viagem De Bordo Executiva MALETA Expansível Até 45l Boa Presentes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23494919037",
       "ID da loja": "1643020166",
       "Nome da loja": "DASÁRABIA",
@@ -6527,7 +6527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "242739051120740",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -196352,31 +196352,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "235389847156842",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-17"
-    },
-    {
-      "ID do pedido": "260617B20SA711",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-17 07:22:11",
-      "Sub_id1": "11Jun26LeggingLupoVs2",
-      "Valor de Compra(R$)": "42.06",
-      "Comissao liquida do afiliado(R$)": "2.5236",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "15.00%",
-      "Comissao Shopee(R$)": "2.5236",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.5236",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Percabonato de sódio 3 kg , 4kg e 5kg 100% puro e granulado Tira Manchas Sem Cloro, Roupas Brancas e Coloridas",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22399506575",
-      "ID da loja": "853868216",
-      "Nome da loja": "santoswellington",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235380131158754",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-17"
     }
