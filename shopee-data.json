@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789546823,
-  "updated_at_br": "16/09/2026 05:13",
+  "updated_at": 1789551852,
+  "updated_at_br": "16/09/2026 06:37",
   "period_days": 90,
-  "total_orders": 7862,
-  "total_conversions": 7519,
+  "total_orders": 7861,
+  "total_conversions": 7518,
   "orders": [
     {
       "ID do pedido": "26091541FK53HP",
@@ -196527,31 +196527,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "235475734196645",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-18"
-    },
-    {
-      "ID do pedido": "260618DQT00VA1",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-18 08:57:26",
-      "Sub_id1": "17Jun26VestidoFloralC3Copia1",
-      "Valor de Compra(R$)": "79.83",
-      "Comissao liquida do afiliado(R$)": "2.3949",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "2.3949",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.3949",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Shorts Saia Jeans Cintura Alta Modelador 100% Algodão Jorts Feminino Tendência Moda Gringa",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21198316548",
-      "ID da loja": "1293271124",
-      "Nome da loja": "Olhares Store",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235472245109865",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-18"
     }
