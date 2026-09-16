@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789521278,
-  "updated_at_br": "15/09/2026 22:07",
+  "updated_at": 1789538110,
+  "updated_at_br": "16/09/2026 02:48",
   "period_days": 90,
-  "total_orders": 7864,
-  "total_conversions": 7521,
+  "total_orders": 7862,
+  "total_conversions": 7519,
   "orders": [
     {
       "ID do pedido": "26091541FK53HP",
@@ -6157,7 +6157,7 @@
     },
     {
       "ID do pedido": "260911RD9XBNN7",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 15:15:27",
       "Sub_id1": "19Ago26VIPcalcinhaalgodao45a54",
       "Valor de Compra(R$)": "89.99",
@@ -6169,7 +6169,7 @@
       "Comissao total do pedido(R$)": "4.67948",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Jaqueta Casaco Suede Forrada Pelúcia Pelinho Teddy Qualidade Premium",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22596325165",
       "ID da loja": "546512904",
       "Nome da loja": "Moda e Malha Feminina",
@@ -6177,7 +6177,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242838926199441",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -8282,7 +8282,7 @@
     },
     {
       "ID do pedido": "260910N72DPDB9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 08:45:52",
       "Sub_id1": "02Set26BicicletaSpinningVs2",
       "Valor de Compra(R$)": "49.99",
@@ -8294,7 +8294,7 @@
       "Comissao total do pedido(R$)": "1.9996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Cabelo Micro Zizi Braid Pacotão 400g Miojinho Trancinha Marca FASHION YOU",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23698048082",
       "ID da loja": "1411915646",
       "Nome da loja": "BEAUTY STAR HAIR",
@@ -8302,7 +8302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242729152178607",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -8557,7 +8557,7 @@
     },
     {
       "ID do pedido": "260910MHDW5YBJ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 02:18:35",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "38.35",
@@ -8569,7 +8569,7 @@
       "Comissao total do pedido(R$)": "2.7612",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 2 Sutiãs ALTA SUSTENTAÇÃO Sem Bojo PLUS SIZE Reforçado Alça Grossa Com Regulagem Feminino",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "25997943602",
       "ID da loja": "487444734",
       "Nome da loja": "BellaFlorOficial",
@@ -8577,7 +8577,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242705915192557",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -10082,7 +10082,7 @@
     },
     {
       "ID do pedido": "260910KVA1R3DT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 20:00:38",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "15.81",
@@ -10094,7 +10094,7 @@
       "Comissao total do pedido(R$)": "1.18575",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapa Buraco Do Som Automotivo Tampa 1 Din Universal Preto",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21530526774",
       "ID da loja": "364909731",
       "Nome da loja": "MUTPARTS",
@@ -10102,7 +10102,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242683237188920",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -12057,7 +12057,7 @@
     },
     {
       "ID do pedido": "260909HY3H2DB9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 01:45:20",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "30.47",
@@ -12069,7 +12069,7 @@
       "Comissao total do pedido(R$)": "6.3987",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -12077,7 +12077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "242617520115137",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -13557,7 +13557,7 @@
     },
     {
       "ID do pedido": "260908GNM97SPN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-08 13:23:05",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "13.99",
@@ -13569,7 +13569,7 @@
       "Comissao total do pedido(R$)": "0.5596",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Faixa Com Velcro Para Fixar Perucas Front Laces Wigs  Modelo Novo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22196769589",
       "ID da loja": "739221282",
       "Nome da loja": "Atacadão de Cabelos",
@@ -13577,7 +13577,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242572985173623",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-08"
     },
     {
@@ -16582,7 +16582,7 @@
     },
     {
       "ID do pedido": "260907D17ADQ21",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 02:39:56",
       "Sub_id1": "04Set26VIPmacaquinhoplus",
       "Valor de Compra(R$)": "17.99",
@@ -16594,7 +16594,7 @@
       "Comissao total do pedido(R$)": "1.2593",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "PAINEL REDONDO NO TECIDO 50X50CM NA PROMOÇÃO.",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58202639602",
       "ID da loja": "661659144",
       "Nome da loja": "movimento play",
@@ -16602,7 +16602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242447996155774",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
@@ -196553,56 +196553,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235472245109865",
       "conversionStatus": "COMPLETED",
-      "data": "2026-06-18"
-    },
-    {
-      "ID do pedido": "260618D0BXYV2H",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-18 01:57:59",
-      "Sub_id1": "17Jun26PoltronaDoPapaiVs2",
-      "Valor de Compra(R$)": "18.99",
-      "Comissao liquida do afiliado(R$)": "1.1394",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "20.00%",
-      "Comissao Shopee(R$)": "1.1394",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.1394",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Placa Pix Display Mesa Balcão - PIX, WI-FI e INSTAGRAM - MODERNO",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22296671784",
-      "ID da loja": "709776108",
-      "Nome da loja": "Bordados e Corte a Laser",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235447078197910",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-18"
-    },
-    {
-      "ID do pedido": "260618CY6RQJ95",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-06-18 01:37:10",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "6.00%",
-      "Taxa de comissao do vendedor do item": "9.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Conjunto Segunda Pele Térmica Flanelado Frio Intenso Preto Proteção Uv+50 Masculino Feminino Unissex",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22698322663",
-      "ID da loja": "1447721952",
-      "Nome da loja": "Inoveecomm",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "235445830126330",
-      "conversionStatus": "CANCELLED",
       "data": "2026-06-18"
     }
   ]
