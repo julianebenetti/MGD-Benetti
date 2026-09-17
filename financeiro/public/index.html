@@ -2823,6 +2823,18 @@
     // Perfil de cada conta que se repete: quanto costuma custar e em que dia
     // costuma cair. Só entra o que apareceu em pelo menos 3 meses distintos —
     // abaixo disso não há repetição que sustente uma previsão.
+    //
+    // Decisão da Juliane (17/09): **só entra na previsão o que ela informou ou
+    // o que é reconhecidamente gasto de rotina.** Repetir-se três vezes não
+    // basta. Um lançamento em `nao_classificado` é, por definição, aquele que a
+    // dashboard NÃO sabe o que é — prometer que ele volta todo mês é palpite
+    // com cara de conta a pagar. Foi assim que "PAG TIT INT 299" virou uma
+    // cobrança mensal de um boleto que ninguém identificou.
+    //
+    // Conta de rotina que ainda não tem três meses de histórico continua tendo
+    // caminho: `contas_recorrentes[]`, que é ela informando.
+    const PROJETAVEL = t => t.categoria && t.categoria !== 'nao_classificado';
+
     function perfilDasRecorrentes() {
       const porChave = {};
       transacoesSemFiltroDeAno()
@@ -2830,6 +2842,7 @@
                   && t.origem !== 'holerite_elektro'
                   && !veioDoCartao(t)
                   && t.valor > 0
+                  && PROJETAVEL(t)
                   && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
         .forEach(t => {
           const k = CHAVE_RECORRENTE(t.descricao);
@@ -2898,6 +2911,35 @@
     function encerradaAntesDe(chave, data) {
       const r = recorrentesEncerradas().find(x => x.chave === chave);
       return !!r && (!r.encerrada_em || data >= r.encerrada_em);
+    }
+
+    // O que se repete todo mês mas a dashboard não sabe o que é. Não entra na
+    // previsão (ver PROJETAVEL), e por isso mesmo precisa ser dito: é a lista do
+    // que vale a pena identificar, porque no dia em que ganhar categoria passa a
+    // contar sozinho. Sem valor, de propósito — o número seria o palpite que a
+    // regra acabou de recusar.
+    function recorrentesSemIdentificacao() {
+      const porChave = {};
+      transacoesSemFiltroDeAno()
+        .filter(t => mesNoEscopo(t.mes_vencimento)
+                  && t.origem !== 'holerite_elektro'
+                  && !veioDoCartao(t)
+                  && t.valor > 0
+                  && !PROJETAVEL(t)
+                  && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+        .forEach(t => {
+          const k = CHAVE_RECORRENTE(t.descricao);
+          if (!k) return;
+          (porChave[k] = porChave[k] || { descricao: t.descricao, meses: {} });
+          porChave[k].meses[t.mes_vencimento] = true;
+        });
+      // Conta que ela já declarou encerrada tem bloco próprio: aparecer nos
+      // dois lugares é ruído sobre a mesma linha.
+      const fim = new Set(recorrentesEncerradas().map(r => r.chave));
+      return Object.entries(porChave)
+        .filter(([k, v]) => Object.keys(v.meses).length >= 3 && !fim.has(k))
+        .map(([, v]) => ({ descricao: v.descricao, nMeses: Object.keys(v.meses).length }))
+        .sort((a, b) => b.nMeses - a.nMeses);
     }
 
     // As recorrentes que faltam num mês: as que o extrato daquele mês ainda não
@@ -3405,6 +3447,17 @@
             Não entram mais na previsão, porque você parou de pagar:
             <b>${fim.map(r => r.descricao).join(' · ')}</b>.
             O histórico continua em Lançamentos; o que deixou de existir é a projeção para os meses seguintes.
+          </p>` : '';
+          })()}
+
+          ${(() => {
+            const sem = recorrentesSemIdentificacao();
+            return sem.length ? `
+          <p class="plano-nota" style="margin-top:10px">
+            Não entram na previsão, porque a dashboard não sabe o que são:
+            <b>${sem.map(r => `${r.descricao} (${r.nMeses} meses)`).join(' · ')}</b>.
+            Só entra na previsão o que você informa ou o que dá para reconhecer como gasto de rotina —
+            é só dizer o que é que passa a contar.
           </p>` : '';
           })()}
 

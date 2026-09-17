@@ -95,11 +95,17 @@ const saidasForaDoCartaoDoMes = mes => transacoes
             && !ehPagamentoDeCartaoNoExtrato(t) && t.valor > 0
             && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
 
+// Só entra na previsão o que a Juliane informou ou o que é reconhecidamente
+// gasto de rotina (decisão dela, 17/09). Lançamento em `nao_classificado` é
+// justamente o que a dashboard não sabe o que é — projetar isso é palpite com
+// cara de conta a pagar.
+const PROJETAVEL = t => t.categoria && t.categoria !== 'nao_classificado';
+
 function perfilDasRecorrentes() {
   const porChave = {};
   transacoes
     .filter(t => noEscopo(t.mes_vencimento) && t.origem !== 'holerite_elektro'
-              && !veioDoCartao(t) && t.valor > 0
+              && !veioDoCartao(t) && t.valor > 0 && PROJETAVEL(t)
               && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
     .forEach(t => {
       const k = CHAVE_RECORRENTE(t.descricao);
@@ -288,6 +294,32 @@ if (encerradas.length) {
   out.push('Não entram mais na previsão, porque você parou de pagar: '
     + encerradas.map(r => r.descricao).join(' · ') + '.');
   out.push('');
+}
+
+// O que se repete mas ninguém identificou fica de fora da previsão, e por isso
+// mesmo é dito pelo nome: é a lista do que vale a pena identificar.
+{
+  const porChave = {};
+  transacoes
+    .filter(t => noEscopo(t.mes_vencimento) && t.origem !== 'holerite_elektro'
+              && !veioDoCartao(t) && t.valor > 0 && !PROJETAVEL(t)
+              && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+    .forEach(t => {
+      const k = CHAVE_RECORRENTE(t.descricao);
+      if (!k) return;
+      (porChave[k] = porChave[k] || { descricao: t.descricao, meses: new Set() });
+      porChave[k].meses.add(t.mes_vencimento);
+    });
+  // Conta que ela já disse que acabou sai daqui: ela tem bloco próprio logo
+  // acima, e aparecer nos dois lugares é ruído sobre a mesma linha.
+  const fim = new Set((config.recorrentes_encerradas || []).map(r => r.chave));
+  const sem = Object.entries(porChave)
+    .filter(([k, v]) => v.meses.size >= 3 && !fim.has(k)).map(([, v]) => v);
+  if (sem.length) {
+    out.push('Não entram na previsão, porque não sabemos o que são: '
+      + sem.map(v => `${v.descricao} (${v.meses.size} meses)`).join(' · ') + '.');
+    out.push('');
+  }
 }
 
 // A idade do dado importa mais que o número: alerta apoiado em extrato velho

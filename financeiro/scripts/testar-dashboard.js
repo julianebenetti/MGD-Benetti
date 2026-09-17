@@ -480,8 +480,10 @@ function noEscopo(mv) {
     const foraCartao = t => t.origem !== 'holerite_elektro' &&
       !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && t.valor > 0 &&
       (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
+    // Só se projeta o que a dashboard sabe o que é — ver PROJETAVEL no index.
+    const projetavel = t => t.categoria && t.categoria !== 'nao_classificado';
     const perfil = {};
-    todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraCartao(t)).forEach(t => {
+    todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraCartao(t) && projetavel(t)).forEach(t => {
       const k = chaveRec(t.descricao); if (!k) return;
       (perfil[k] = perfil[k] || { meses: new Set(), valores: [], dias: [] });
       perfil[k].meses.add(t.mes_vencimento); perfil[k].valores.push(t.valor);
@@ -603,6 +605,7 @@ function noEscopo(mv) {
                           return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
       const foraR = t => t.origem !== 'holerite_elektro' &&
         !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && t.valor > 0 &&
+        t.categoria && t.categoria !== 'nao_classificado' &&
         (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
       const perfR = {};
       todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraR(t)).forEach(t => {
@@ -1015,6 +1018,45 @@ function noEscopo(mv) {
     });
     ok('Débito/boleto de cartão em conta nunca entra como despesa junto com a fatura',
        !duplicados.length, duplicados.join(' / '));
+  }
+
+  // --- Só se projeta o que a dashboard sabe o que é ---
+  //
+  // Decisão da Juliane (17/09): só entra na previsão o que ela informou ou o que
+  // é reconhecidamente gasto de rotina. Repetir-se três vezes não basta —
+  // "PAG TIT INT 299" apareceu em 4 meses e virou uma cobrança mensal de um
+  // boleto que ninguém identificou. O valor não some da tela: vai para uma linha
+  // sem número, que é a lista do que vale a pena identificar.
+  {
+    const mes = mesVigenteNoTeste;
+    const visto = await pagina.evaluate(m => {
+      document.querySelector('[data-tab="painel"]').click();
+      document.getElementById('painel_mes').value = m;
+      renderizarPainel();
+      return {
+        previstas: recorrentesFaltandoEm(m).map(r => ({ d: r.descricao, c: r.categoria })),
+        semId: recorrentesSemIdentificacao().map(r => r.descricao),
+        texto: document.getElementById('painel_vencimentos_criticos').innerText
+      };
+    }, mes);
+
+    const naoClassificada = visto.previstas.filter(r => !r.c || r.c === 'nao_classificado');
+    ok('Nenhuma recorrente sem classificação entra na previsão',
+       naoClassificada.length === 0,
+       naoClassificada.length ? naoClassificada.map(r => r.d).join(' · ')
+                              : `${visto.previstas.length} previstas, todas com categoria`);
+
+    // O oposto: o que ficou de fora não pode sumir em silêncio, senão daqui a
+    // três meses ninguém lembra que existe algo por identificar.
+    ok('O que ficou de fora por falta de identificação aparece pelo nome',
+       visto.semId.every(d => visto.texto.includes(d)),
+       visto.semId.length ? visto.semId.join(' · ') : 'nada por identificar');
+
+    // E aparece sem valor: mostrar um número seria justamente o palpite que a
+    // regra acabou de recusar.
+    const nota = (visto.texto.match(/Não entram na previsão[^\n]*/) || [''])[0];
+    ok('A linha do que não foi identificado não mostra valor em reais',
+       !visto.semId.length || !/R\$/.test(nota), nota || '(sem linha)');
   }
 
   // --- A chave da recorrente não pode fundir contas diferentes ---

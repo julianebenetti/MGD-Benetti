@@ -883,6 +883,47 @@ meses continuar sendo prometida é o mesmo erro de prometer renda que não vem.
 de recência resolveria sozinho os casos como este — mas mexeria em toda conta
 projetada, então precisa ser decidido com ela antes.
 
+### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
+Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
+como recorrente o que eu informar ou as despesas que você entende que são gastos
+de rotina"*.
+
+Isso resolve a causa, não o sintoma. O critério até aqui era puramente
+estatístico — **repetiu-se em 3 meses, vira conta a pagar** — e estatística não
+sabe o que é conta. `PAG TIT INT 299` apareceu em 4 meses e virou cobrança
+mensal de um boleto que ninguém identificou; `PIX TRANSF Isabela` (3 meses,
+R$ 10 a R$ 40) virou outra. Nenhum dos dois é conta: são Pix que se repetiram.
+
+**`PROJETAVEL(t)` = o lançamento tem categoria e ela não é `nao_classificado`.**
+Lançamento em `nao_classificado` é, por definição, o que a dashboard **não sabe
+o que é** — projetá-lo é palpite com cara de conta a pagar, no lugar mais caro
+possível: o número que ela usa para decidir o que pagar no mês. Aplicado em
+`perfilDasRecorrentes()` nos três lugares que têm cópia da regra (dashboard,
+`contas-a-vencer.js`, e os dois recálculos independentes da suíte).
+
+**Conta de rotina sem 3 meses de histórico não fica órfã**: o caminho é
+`contas_recorrentes[]`, que é exatamente "ela informando" — foi assim que a
+Stima entrou.
+
+**O valor sai do total, o nome não sai da tela.** Linha nova, sem número, no
+Painel e no alerta do celular: *"Não entram na previsão, porque a dashboard não
+sabe o que são: PAG TIT INT 299 (4 meses) · PIX TRANSF Isabela08/01 (3 meses)"*.
+Ela é útil nos dois sentidos — impede a conta de sumir em silêncio e é a lista
+do que vale a pena identificar, porque **no dia em que ganhar categoria, passa a
+contar sozinho**. Sem valor de propósito: mostrar um número seria exatamente o
+palpite que a regra acabou de recusar. Conta já declarada em
+`recorrentes_encerradas` não aparece aqui — tem bloco próprio, e estar nos dois
+é ruído sobre a mesma linha.
+
+3 testes novos, **verificados revertendo o filtro** (sem ele, 4 falham e o novo
+nomeia os dois culpados): nenhuma recorrente sem classificação entra na
+previsão, o que ficou de fora aparece pelo nome, e essa linha não mostra valor
+em reais.
+
+Efeito: o "já venceu" de setembro caiu para **R$ 1.395,65** (só as três faturas
+de 15/09, todas fato), e o "sai da conta" de Set/26 de R$ 9.513,20 para
+**R$ 9.433,20**.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
