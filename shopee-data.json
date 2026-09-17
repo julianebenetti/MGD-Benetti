@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789624872,
-  "updated_at_br": "17/09/2026 02:54",
+  "updated_at": 1789633588,
+  "updated_at_br": "17/09/2026 05:19",
   "period_days": 90,
   "total_orders": 7872,
   "total_conversions": 7525,
@@ -19132,7 +19132,7 @@
     },
     {
       "ID do pedido": "260907CVRSWV20",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 01:20:15",
       "Sub_id1": "04Set26VIPpatinsV2",
       "Valor de Compra(R$)": "19.48",
@@ -19144,7 +19144,7 @@
       "Comissao total do pedido(R$)": "1.3636",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Cloreto de Potássio Granulado 00-00-60 KCl Adubo Potássico para Plantas, Flores, Frutas e Hortaliças",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22594886916",
       "ID da loja": "764906840",
       "Nome da loja": "Agro Nakawara",
@@ -19152,7 +19152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242443214130966",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
