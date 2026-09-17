@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789671668,
-  "updated_at_br": "17/09/2026 15:54",
+  "updated_at": 1789675573,
+  "updated_at_br": "17/09/2026 16:59",
   "period_days": 90,
-  "total_orders": 7898,
-  "total_conversions": 7558,
+  "total_orders": 7897,
+  "total_conversions": 7557,
   "orders": [
     {
       "ID do pedido": "260917929N027V",
@@ -757,27 +757,27 @@
     },
     {
       "ID do pedido": "2609178AUG30RY",
-      "Status do Pedido": "UNPAID",
+      "Status do Pedido": "CANCELLED",
       "Horario do pedido": "2026-09-16 19:35:38",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
-      "Valor de Compra(R$)": "53.97",
-      "Comissao liquida do afiliado(R$)": "10.76702",
+      "Valor de Compra(R$)": "0",
+      "Comissao liquida do afiliado(R$)": "0",
       "Taxa de comissao Shopee do item": "8.00%",
       "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "4.3176",
-      "Comissao do vendedor(R$)": "7.0161",
-      "Comissao total do pedido(R$)": "11.3337",
+      "Comissao Shopee(R$)": "0",
+      "Comissao do vendedor(R$)": "0",
+      "Comissao total do pedido(R$)": "0",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "UNPAID",
+      "Status do item do afiliado": "CANCELLED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
-      "Quantidade": "1",
+      "Quantidade": "0",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "243286538178453",
-      "conversionStatus": "UNPAID",
+      "conversionStatus": "CANCELLED",
       "data": "2026-09-16"
     },
     {
@@ -7332,7 +7332,7 @@
     },
     {
       "ID do pedido": "26091307FSCMB2",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-13 14:14:06",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "29.84",
@@ -7344,7 +7344,7 @@
       "Comissao total do pedido(R$)": "6.2664",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -7352,7 +7352,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "243008046133040",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-13"
     },
     {
@@ -7582,7 +7582,7 @@
     },
     {
       "ID do pedido": "260913W1F2HWBN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-13 11:26:52",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "27.4",
@@ -7594,7 +7594,7 @@
       "Comissao total do pedido(R$)": "2.329",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Maçanetas Taco de Golf Par - Alta Qualidade, Super Resistente, Universal Interna e Externa",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21098315238",
       "ID da loja": "971082330",
       "Nome da loja": "Home_Ferragens",
@@ -7602,7 +7602,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242998012153995",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-13"
     },
     {
@@ -8482,7 +8482,7 @@
     },
     {
       "ID do pedido": "260913U80UXCTS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-12 18:18:52",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "59.6",
@@ -8494,7 +8494,7 @@
       "Comissao total do pedido(R$)": "5.4236",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tênis Feminino Esportivo Caminhada Academia Corrida",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21933586351",
       "ID da loja": "455825776",
       "Nome da loja": "R4_CALÇADOS",
@@ -8502,7 +8502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242936332177954",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-12"
     },
     {
@@ -9857,7 +9857,7 @@
     },
     {
       "ID do pedido": "260912RWR3DPG0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 20:09:42",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "58.53",
@@ -9869,7 +9869,7 @@
       "Comissao total do pedido(R$)": "3.04356",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sandália Papete Gorgurão Menino Infantil Estiloso Confortável do 22 ao 33",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22893909036",
       "ID da loja": "1520693517",
       "Nome da loja": "Fe Kids Calçados",
@@ -9877,7 +9877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242856581136350",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -10932,7 +10932,7 @@
     },
     {
       "ID do pedido": "260911QU7VUUAF",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 09:52:10",
       "Sub_id1": "04Set26VEAmochilaexpansivel",
       "Valor de Compra(R$)": "43.99",
@@ -10944,7 +10944,7 @@
       "Comissao total do pedido(R$)": "2.55142",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mochila CHL Bolsa Reforçada Notebook Impermeavel Material Premium Colorido Excecultivo 888",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23598800750",
       "ID da loja": "1360752092",
       "Nome da loja": "XING TU BOLSA",
@@ -10952,7 +10952,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242819530164855",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -11407,7 +11407,7 @@
     },
     {
       "ID do pedido": "260911PHTQPTT7",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 21:31:06",
       "Sub_id1": "17Jul26CalcaJogger",
       "Valor de Compra(R$)": "111.19",
@@ -11419,7 +11419,7 @@
       "Comissao total do pedido(R$)": "4.4476",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Colchão Casal Inflável VG Plus Azul-marinho Com Bomba Manual PVC 191x137x22cm",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58265545052",
       "ID da loja": "1546499346",
       "Nome da loja": "Universoutilidadesuni",
@@ -11427,7 +11427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242775065130324",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -18757,7 +18757,7 @@
     },
     {
       "ID do pedido": "260908F19N938E",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 21:46:34",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "29.98",
@@ -18769,7 +18769,7 @@
       "Comissao total do pedido(R$)": "1.6489",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 10/5 Calcinhas 100% Algodao Basica dia a dia Conforto Calcinhas Lisas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19199547689",
       "ID da loja": "877673864",
       "Nome da loja": "Essencial-Lingerie",
@@ -18777,7 +18777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242516794122034",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
@@ -24882,7 +24882,7 @@
     },
     {
       "ID do pedido": "2609069JKY3J0N",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 17:40:35",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "16.95",
@@ -24894,7 +24894,7 @@
       "Comissao total do pedido(R$)": "0.678",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Painel Protector Solar Carro | Quebrador de Sol UV + Guarda Sol Universal",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22594704910",
       "ID da loja": "1345899619",
       "Nome da loja": "YOULIFEEE",
@@ -24902,7 +24902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242329235151085",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -197427,31 +197427,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235598707103337",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-19"
-    },
-    {
-      "ID do pedido": "260620HBBT1KXT",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-19 19:25:23",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "10.99",
-      "Comissao liquida do afiliado(R$)": "0.3297",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "5.00%",
-      "Comissao Shopee(R$)": "0.3297",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.3297",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "kit 3 Canetas Corretiva 7ml Corretivos em Caneta  Masterprint",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18999207433",
-      "ID da loja": "761647073",
-      "Nome da loja": "Papel fotografico e Papelaria",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235596323127133",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-19"
     }
