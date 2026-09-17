@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789633588,
-  "updated_at_br": "17/09/2026 05:19",
+  "updated_at": 1789638785,
+  "updated_at_br": "17/09/2026 06:46",
   "period_days": 90,
-  "total_orders": 7872,
-  "total_conversions": 7525,
+  "total_orders": 7871,
+  "total_conversions": 7524,
   "orders": [
     {
       "ID do pedido": "2609166J217QUT",
@@ -196777,31 +196777,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "235564982162737",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-19"
-    },
-    {
-      "ID do pedido": "260619GAEJ7C6N",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-19 09:36:23",
-      "Sub_id1": "18Jun26SegundaPeleVs1",
-      "Valor de Compra(R$)": "142.49",
-      "Comissao liquida do afiliado(R$)": "4.2747",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "4.2747",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "4.2747",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Jaqueta Puffer Feminina peluciada Cotele cor Bege | Casaco de Frio Confortável Peluciada | Capuz Removível",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58262094443",
-      "ID da loja": "1573514716",
-      "Nome da loja": "PARIS MODAS BRAS",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235560982113820",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-19"
     }
