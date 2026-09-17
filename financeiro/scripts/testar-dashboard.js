@@ -473,8 +473,8 @@ function noEscopo(mv) {
     // Conta recorrente que ainda não apareceu no mês entra pela mediana do
     // histórico. Recalculado aqui de forma independente da tela: se a regra
     // mudar de um lado só, o teste acusa.
-    const chaveRec = x => String(x || '').toLowerCase().replace(/\d+/g, '')
-      .replace(/[^a-zà-ú ]/gi, ' ').replace(/\s+/g, ' ').trim();
+    const chaveRec = x => String(x || '').toLowerCase().replace(/\d{2}\/\d{2}\s*$/, ' ')
+      .replace(/[^a-zà-ú0-9 ]/gi, ' ').replace(/\s+/g, ' ').trim();
     const med = v => { if (!v.length) return 0; const o=[...v].sort((a,b)=>a-b), i=Math.floor(o.length/2);
                        return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
     const foraCartao = t => t.origem !== 'holerite_elektro' &&
@@ -597,8 +597,8 @@ function noEscopo(mv) {
       // Soma tambem a projecao das recorrentes que faltam nesse mes, pela mesma
       // mediana que a tela usa — senao o teste cobraria um numero que a tela
       // nunca mostrou e falharia por outro motivo que nao o consignado.
-      const chaveR = x => String(x || '').toLowerCase().replace(/\d+/g, '')
-        .replace(/[^a-zà-ú ]/gi, ' ').replace(/\s+/g, ' ').trim();
+      const chaveR = x => String(x || '').toLowerCase().replace(/\d{2}\/\d{2}\s*$/, ' ')
+        .replace(/[^a-zà-ú0-9 ]/gi, ' ').replace(/\s+/g, ' ').trim();
       const medR = v => { if (!v.length) return 0; const o=[...v].sort((a,b)=>a-b), i=Math.floor(o.length/2);
                           return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
       const foraR = t => t.origem !== 'holerite_elektro' &&
@@ -1015,6 +1015,36 @@ function noEscopo(mv) {
     });
     ok('Débito/boleto de cartão em conta nunca entra como despesa junto com a fatura',
        !duplicados.length, duplicados.join(' / '));
+  }
+
+  // --- A chave da recorrente não pode fundir contas diferentes ---
+  //
+  // A chave descarta a data que o Itaú cola no fim da descrição, e por um tempo
+  // descartou todo dígito junto. Com isso "PAG TIT INT 299", "PAG TIT INT 364" e
+  // "PAG TIT INT 001" — beneficiários diferentes, liquidados por bancos
+  // diferentes — viravam um perfil só: a projeção saía com o nome de um e a
+  // mediana de outro (R$ 134,00 com o rótulo do 299, quando o 299 nunca foi
+  // cobrado nesse valor). A forma genérica do erro: duas descrições que o
+  // extrato distingue não podem cair na mesma chave.
+  {
+    const descricoes = [...new Set(todosLancamentos
+      .filter(t => (t.origem || '').startsWith('extrato_'))
+      .map(t => t.descricao).filter(Boolean))];
+
+    const chaves = await pagina.evaluate(ds => ds.map(CHAVE_RECORRENTE), descricoes);
+    const porChave = {};
+    descricoes.forEach((d, i) => (porChave[chaves[i]] = porChave[chaves[i]] || []).push(d));
+
+    // Descrições que só diferem pela data colada no fim SÃO a mesma conta e
+    // devem mesmo cair juntas; o que não pode é o resto do texto divergir.
+    const semData = d => d.toLowerCase().replace(/\d{2}\/\d{2}\s*$/, '').trim();
+    const fundidas = Object.entries(porChave)
+      .filter(([k, ds]) => k && new Set(ds.map(semData)).size > 1)
+      .map(([k, ds]) => `${k} <- ${[...new Set(ds.map(semData))].join(' | ')}`);
+
+    ok('Contas diferentes nunca caem na mesma chave de recorrente',
+       fundidas.length === 0,
+       fundidas.length ? fundidas.join(' ;; ') : `${descricoes.length} descrições, nenhuma fusão`);
   }
 
   // --- Conta recorrente cadastrada à mão ---

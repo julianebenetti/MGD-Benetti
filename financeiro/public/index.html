@@ -2801,10 +2801,16 @@
     // A mediana é usada de propósito no lugar da média: uma conta de luz de
     // verão ou uma van cobrada em dobro num mês puxariam a média para cima e
     // fariam a projeção prometer um gasto que não é o típico.
+    // A chave descarta a data que o Itaú cola no fim da descrição
+    // ("PIX TRANSF ASSOCIA25/01"), que muda todo mês e quebraria o
+    // agrupamento — mas **preserva os outros dígitos**. Descartar todo dígito
+    // fundia num só perfil os boletos "PAG TIT INT 299", "PAG TIT INT 364" e
+    // "PAG TIT INT 001", que são beneficiários diferentes liquidados por
+    // bancos diferentes: a projeção saía com o nome de um e o valor de outro.
     const CHAVE_RECORRENTE = d => String(d || '')
       .toLowerCase()
-      .replace(/\d+/g, '')
-      .replace(/[^a-zà-ú ]/gi, ' ')
+      .replace(/\d{2}\/\d{2}\s*$/, ' ')
+      .replace(/[^a-zà-ú0-9 ]/gi, ' ')
       .replace(/\s+/g, ' ')
       .trim();
 

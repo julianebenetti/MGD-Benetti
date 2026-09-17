@@ -76,8 +76,11 @@ const decisaoDoItem = (mes, chave, suspensoPorPadrao) =>
   planoDoMes(mes).itens[chave] || (suspensoPorPadrao ? 'adiar' : 'pagar');
 const mesDaData = d => `${MES_ORDEM[+d.slice(5, 7) - 1]}/${d.slice(2, 4)}`;
 
+// Descarta a data que o Itaú cola no fim da descrição ("PIX TRANSF
+// ASSOCIA25/01"), mas preserva os outros dígitos: sem isso, "PAG TIT INT 299",
+// "PAG TIT INT 364" e "PAG TIT INT 001" viravam um perfil só.
 const CHAVE_RECORRENTE = d => String(d || '')
-  .toLowerCase().replace(/\d+/g, '').replace(/[^a-zà-ú ]/gi, ' ')
+  .toLowerCase().replace(/\d{2}\/\d{2}\s*$/, ' ').replace(/[^a-zà-ú0-9 ]/gi, ' ')
   .replace(/\s+/g, ' ').trim();
 
 const mediana = v => {

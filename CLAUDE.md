@@ -824,6 +824,65 @@ formas genéricas dos dois erros.
 
 Efeito em Set/26: o "sai da conta" foi de R$ 9.376,40 para **R$ 9.578,65**.
 
+### A chave da recorrente fundia boletos diferentes num só (17/09)
+A Juliane cobrou o alerta: *"não existe nenhum título de 134,00, nem nada pago
+em 06/09"*. Ela estava certa, e o erro era meu: **nunca existiu um boleto de
+R$ 134,00 com o nome "PAG TIT INT 299"** — aquela linha era a fusão de três
+boletos distintos.
+
+`CHAVE_RECORRENTE` descartava **todo dígito** da descrição. Isso existe por um
+motivo real: o Itaú cola a data no fim do texto (`PIX TRANSF ASSOCIA25/01`), e
+sem descartá-la a mesma conta viraria uma chave nova todo mês. Só que o código
+depois de `PAG TIT INT` **é dado, não ruído** — é o banco de liquidação, e este
+arquivo já documentava que beneficiários diferentes usam códigos diferentes.
+Descartando os dígitos, `PAG TIT INT 299`, `PAG TIT INT 364` e `PAG TIT INT 001`
+viravam o perfil único `pag tit int`, com 9 lançamentos de 4 meses:
+
+- a **mediana** dos 9 dava **R$ 134,00** — que é o valor do **364**, não do 299;
+- o **rótulo** vinha do `exemplo`, o primeiro do grupo, que era o **299**;
+- o **dia** vinha da mediana dos dias dos três, dando **06**.
+
+Ou seja: nome de um boleto, valor de outro, dia de nenhum. A tela prometia todo
+mês uma conta que não existe em lugar nenhum. Era um número inventado com
+aparência de fato — exatamente o que a "regra de ouro dos dados" existe para
+impedir, só que por um caminho que ela não previa.
+
+A chave agora descarta **só a data colada no fim** (`\d{2}/\d{2}$`) e preserva o
+resto dos dígitos. Corrigido nos três lugares que têm cópia própria da regra:
+`public/index.html`, `scripts/contas-a-vencer.js` e a que o
+`testar-dashboard.js` recalcula por fora.
+
+Efeito: o 299 passou a projetar **R$ 68,55 no dia 5** (mediana só dele), o 364
+caiu abaixo do piso de 3 meses e sumiu da projeção, e o "já venceu" de setembro
+foi de R$ 1.529,65 para **R$ 1.464,20**.
+
+Teste novo, na forma genérica do erro e **verificado revertendo a correção**
+(sem ela, 4 testes falham e o novo nomeia as duas fusões): **duas descrições que
+o extrato distingue não podem cair na mesma chave** — comparando o texto sem a
+data, e sem caixa, para que variações como `PIX TRANSF Isabela` x
+`PIX TRANSF ISABELA` continuem sendo a mesma conta de propósito.
+
+**O que os três boletos são continua sem resposta**, e agora dá para perguntar
+direito, um de cada vez:
+
+| Código | Quando | Quanto |
+|---|---|---|
+| **299** | 05/02, 05/03, 06/04, 05/05 | R$ 232,63 · 20,00 · 78,80 · 58,29 — **R$ 389,72** |
+| **364** | 30/03, 28/04 | R$ 134,00 · 134,00 — **R$ 268,00** |
+| **001** (fora da faixa da escola) | 02/03, 31/03, 30/04 | R$ 139,40 · 139,40 · 154,73 — **R$ 433,53** |
+
+**Os três pararam de aparecer, e o extrato cobre esse período inteiro** (jun,
+jul e ago vão até o último dia do mês). O 299 não aparece desde 05/05. Isso é
+forte indício de que acabaram — mas "acabou" é decisão dela, não dedução minha:
+enquanto ela não confirmar, o 299 segue sendo projetado, e o caminho de tirá-lo
+é `recorrentes_encerradas[]`, não apagar dado.
+
+**Fica a pergunta de desenho, ainda em aberto:** conta que não aparece há 4
+meses continuar sendo prometida é o mesmo erro de prometer renda que não vem.
+`perfilDasRecorrentes()` só olha para trás e não tem noção de "parou". Um piso
+de recência resolveria sozinho os casos como este — mas mexeria em toda conta
+projetada, então precisa ser decidido com ela antes.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
