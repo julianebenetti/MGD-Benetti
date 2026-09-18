@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789710491,
-  "updated_at_br": "18/09/2026 02:41",
+  "updated_at": 1789718541,
+  "updated_at_br": "18/09/2026 04:55",
   "period_days": 90,
-  "total_orders": 7869,
-  "total_conversions": 7530,
+  "total_orders": 7868,
+  "total_conversions": 7529,
   "orders": [
     {
       "ID do pedido": "260917929N027V",
@@ -196702,31 +196702,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235649198101782",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-20"
-    },
-    {
-      "ID do pedido": "260620JEX1QKEF",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-20 06:01:56",
-      "Sub_id1": "18Jun26SegundaPeleVs1",
-      "Valor de Compra(R$)": "69.9",
-      "Comissao liquida do afiliado(R$)": "2.097",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "20.00%",
-      "Comissao Shopee(R$)": "2.097",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.097",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Body Manga Longa Brasil Core Bandeira Do Brasil Look Copa do Mundo Outono Inverno",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "53010747977",
-      "ID da loja": "931190558",
-      "Nome da loja": "RAVEUP - Moda festa e praia",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235634516136736",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-20"
     }
