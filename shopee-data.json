@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789852781,
-  "updated_at_br": "19/09/2026 18:13",
+  "updated_at": 1789858229,
+  "updated_at_br": "19/09/2026 19:43",
   "period_days": 90,
-  "total_orders": 7852,
-  "total_conversions": 7516,
+  "total_orders": 7851,
+  "total_conversions": 7515,
   "orders": [
     {
       "ID do pedido": "260919E43M62GQ",
@@ -1782,7 +1782,7 @@
     },
     {
       "ID do pedido": "260917AD2N138Q",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-17 15:20:45",
       "Sub_id1": "04Set26VIPmacaquinhoplus",
       "Valor de Compra(R$)": "54.99",
@@ -1794,7 +1794,7 @@
       "Comissao total do pedido(R$)": "2.1996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Macaquinho Plus Size Shorts Saia Elegante Curto Decote V Soltinho e Modela o Corpo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58265177898",
       "ID da loja": "1895576046",
       "Nome da loja": "ZionStore ",
@@ -1802,7 +1802,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243357645192709",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-17"
     },
     {
@@ -2932,7 +2932,7 @@
     },
     {
       "ID do pedido": "260917898M5EWG",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-16 19:07:11",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "28.25",
@@ -2944,7 +2944,7 @@
       "Comissao total do pedido(R$)": "1.13",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 4 Top Fitness Miusa Sport Academia Treino Suplex Alta Sustentação Metad",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58210372406",
       "ID da loja": "1218539457",
       "Nome da loja": "D. S. A. E-COMMERCE",
@@ -2952,12 +2952,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243284831165639",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-16"
     },
     {
       "ID do pedido": "260917898M5EWF",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-16 19:07:11",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "46.99",
@@ -2969,7 +2969,7 @@
       "Comissao total do pedido(R$)": "1.8796",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 5 Camisetas Academia Dry Fit  Feminina Fitness Treino Corrida Caminhada Sortidos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23395160034",
       "ID da loja": "666515043",
       "Nome da loja": "Diva Fashion ",
@@ -2977,7 +2977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243284831165639",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-16"
     },
     {
@@ -3157,7 +3157,7 @@
     },
     {
       "ID do pedido": "260917843UA4JS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-16 17:35:02",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "46.72",
@@ -3169,7 +3169,7 @@
       "Comissao total do pedido(R$)": "4.39168",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 4 Blusas MANGA LONGA MENINO Lisas inverno Cores Sortidas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58210777332",
       "ID da loja": "1633765168",
       "Nome da loja": "Levibi Modas",
@@ -3177,7 +3177,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243279302188886",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-16"
     },
     {
@@ -3882,7 +3882,7 @@
     },
     {
       "ID do pedido": "2609166DCPC4G4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-16 01:15:44",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "30.47",
@@ -3894,7 +3894,7 @@
       "Comissao total do pedido(R$)": "6.3987",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -3902,7 +3902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "243220543193378",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-16"
     },
     {
@@ -4557,7 +4557,7 @@
     },
     {
       "ID do pedido": "26091664DHMG3U",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-15 22:35:08",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "38.28",
@@ -4569,7 +4569,7 @@
       "Comissao total do pedido(R$)": "2.6796",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mochila Reforçada Casal Feminina Escolar Grande Capacidade Mochila De Coreana Promocao",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "20197497479",
       "ID da loja": "476198790",
       "Nome da loja": "GlobeOficialBR",
@@ -4577,7 +4577,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243210908101487",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-15"
     },
     {
@@ -5332,7 +5332,7 @@
     },
     {
       "ID do pedido": "2609165G04BQFT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-15 16:29:44",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "36.9",
@@ -5344,7 +5344,7 @@
       "Comissao total do pedido(R$)": "2.3616",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Cuscuzeira 3 em 1 Alumínio com Leiteira Panela a Vapor Cabo Antitérmico",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22594851231",
       "ID da loja": "1602473148",
       "Nome da loja": "Shopping Da Utilidade ",
@@ -5352,7 +5352,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243188983136324",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-15"
     },
     {
@@ -7257,7 +7257,7 @@
     },
     {
       "ID do pedido": "26091531S8VMVP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-14 17:10:01",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "179.35",
@@ -7269,7 +7269,7 @@
       "Comissao total do pedido(R$)": "9.86425",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Chinelo Olympikus Pós Corre Masculino Original Confortavel",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "51405993691",
       "ID da loja": "1178125772",
       "Nome da loja": "Cabana Magazine®",
@@ -7277,7 +7277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243105001146235",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-14"
     },
     {
@@ -7907,7 +7907,7 @@
     },
     {
       "ID do pedido": "2609141FVE3VRV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-14 02:17:00",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "43.3",
@@ -7919,7 +7919,7 @@
       "Comissao total do pedido(R$)": "1.732",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Par Amortecedor Porta Malas Tampa Traseira Fiesta Hatch 2002 á 2013 Envio Rapido",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58202741959",
       "ID da loja": "219143709",
       "Nome da loja": "Andrade Peças Automotivas",
@@ -7927,7 +7927,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243051420195335",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-14"
     },
     {
@@ -12707,7 +12707,7 @@
     },
     {
       "ID do pedido": "260911R4UPC9RW",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 12:44:18",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "23.89",
@@ -12719,7 +12719,7 @@
       "Comissao total do pedido(R$)": "0.9556",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 10 Panos de Prato Estampados Algodão Copa Cozinha Alta Absorção",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21951159935",
       "ID da loja": "438062523",
       "Nome da loja": "L2 Store",
@@ -12727,7 +12727,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242829858120982",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -24907,7 +24907,7 @@
     },
     {
       "ID do pedido": "260906BPGB9FBF",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-06 13:55:28",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "52.99",
@@ -24919,7 +24919,7 @@
       "Comissao total do pedido(R$)": "2.75548",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sapatilha Feminina Adulta Leve e Confortável Para Academia Caminhada e Uso Diário",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58250338628",
       "ID da loja": "1463446724",
       "Nome da loja": "TXG OFICIAL",
@@ -24927,7 +24927,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242402128153906",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-06"
     },
     {
@@ -27207,7 +27207,7 @@
     },
     {
       "ID do pedido": "2609059BH8FAGM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 15:33:48",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "28.9",
@@ -27219,7 +27219,7 @@
       "Comissao total do pedido(R$)": "1.156",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Capa Banco Phoenix Gold Shineray Modelo Original",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "7280036319",
       "ID da loja": "381846858",
       "Nome da loja": "MULTI SHOPPING FAB VENDA ACESSORIOS",
@@ -27227,7 +27227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242321628128785",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -196277,31 +196277,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235782275151781",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-21"
-    },
-    {
-      "ID do pedido": "260622PKJE3HS2",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-21 21:35:35",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "13.95",
-      "Comissao liquida do afiliado(R$)": "0.4185",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.4185",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.4185",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "PARTY Protetor , À Prova De Choque Com Capa De Controle Remoto De Cordão , Silicone Para TCL RC923A/RC813A",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "54310880865",
-      "ID da loja": "431658820",
-      "Nome da loja": "party.br",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235776934118897",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-21"
     }
