@@ -1,9 +1,9 @@
 {
-  "updated_at": 1789826868,
-  "updated_at_br": "19/09/2026 11:01",
+  "updated_at": 1789835015,
+  "updated_at_br": "19/09/2026 13:16",
   "period_days": 90,
-  "total_orders": 7871,
-  "total_conversions": 7532,
+  "total_orders": 7870,
+  "total_conversions": 7531,
   "orders": [
     {
       "ID do pedido": "260919E43M62GQ",
@@ -6457,7 +6457,7 @@
     },
     {
       "ID do pedido": "2609153TF8WFYK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-15 00:31:49",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "52.97",
@@ -6469,7 +6469,7 @@
       "Comissao total do pedido(R$)": "11.1237",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -6477,7 +6477,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "243131508178674",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-15"
     },
     {
@@ -6732,7 +6732,7 @@
     },
     {
       "ID do pedido": "2609153PM92300",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-14 23:23:03",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "30.47",
@@ -6744,7 +6744,7 @@
       "Comissao total do pedido(R$)": "6.3987",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -6752,7 +6752,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "243127382124684",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-14"
     },
     {
@@ -15382,7 +15382,7 @@
     },
     {
       "ID do pedido": "260910MA5N5DJW",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-10 00:08:42",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "36.8",
@@ -15394,7 +15394,7 @@
       "Comissao total do pedido(R$)": "2.9808",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Babuche Feminina EVA Estilosa com Corrente e Pingentes Leve Confortável Antiderrapante para Uso Casual",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58216962484",
       "ID da loja": "1818552967",
       "Nome da loja": "Chinelos Brasil ",
@@ -15402,7 +15402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242698122153402",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-10"
     },
     {
@@ -17607,7 +17607,7 @@
     },
     {
       "ID do pedido": "260909K27VCG7T",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 12:14:08",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "227.9",
@@ -17619,7 +17619,7 @@
       "Comissao total do pedido(R$)": "19.8273",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Fruteira Organizadora Multiuso Microondas 4 Andares de Chão Com Rodinha Cozinha",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22694851126",
       "ID da loja": "335840320",
       "Nome da loja": "E-BUYBYE",
@@ -17627,7 +17627,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242655247165237",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -17932,7 +17932,7 @@
     },
     {
       "ID do pedido": "260909JU2X8X5W",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 10:06:06",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "33.5",
@@ -17944,7 +17944,7 @@
       "Comissao total do pedido(R$)": "2.01",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "200 Unidades Botinha Plástica Descartável - Cód. A2",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19942160507",
       "ID da loja": "596462005",
       "Nome da loja": "NL DISTRIBUIDORA 2022",
@@ -17952,7 +17952,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242647565170286",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -18207,7 +18207,7 @@
     },
     {
       "ID do pedido": "260909J3DYV127",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-09 03:02:46",
       "Sub_id1": "04Set26VIPmacaquinhoplus",
       "Valor de Compra(R$)": "29.95",
@@ -18219,7 +18219,7 @@
       "Comissao total do pedido(R$)": "1.797",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camiseta Feminina P ao Plus size  basica lisa blusa 100% algodão",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58260336491",
       "ID da loja": "1177527244",
       "Nome da loja": "Dress Shop",
@@ -18227,7 +18227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242622166146088",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-09"
     },
     {
@@ -19382,7 +19382,7 @@
     },
     {
       "ID do pedido": "260908GXC7YS5U",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-08 15:59:39",
       "Sub_id1": "04Set26VEAvestidomidifloral",
       "Valor de Compra(R$)": "13.99",
@@ -19394,7 +19394,7 @@
       "Comissao total do pedido(R$)": "0.5596",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Caneta De Reparo De Pintura De Carro À Prova D'água Transparente Removedor De Arranhões Cores Variadas Carpei",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58211064385",
       "ID da loja": "684159964",
       "Nome da loja": "FuAcessórios",
@@ -19402,7 +19402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242582379100779",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-08"
     },
     {
@@ -20982,7 +20982,7 @@
     },
     {
       "ID do pedido": "260908F0B8GM4U",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 21:29:35",
       "Sub_id1": "04Set26VEAvestidomidifloral",
       "Valor de Compra(R$)": "36.99",
@@ -20994,7 +20994,7 @@
       "Comissao total do pedido(R$)": "5.9184",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Tesoura De Cozinha Inox Forte Para Carne Ossos E Frango",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58210113310",
       "ID da loja": "1569158262",
       "Nome da loja": "Qiang Variedades",
@@ -21002,7 +21002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "242515774107305",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
@@ -23207,7 +23207,7 @@
     },
     {
       "ID do pedido": "260907CSC1XJRE",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 00:19:26",
       "Sub_id1": "04Set26VEAsutiainfantilV2",
       "Valor de Compra(R$)": "34.45",
@@ -23219,7 +23219,7 @@
       "Comissao total do pedido(R$)": "2.72155",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 5 Top Infantil Juvenil Teen Menina Algodão Sutia Sem Bojo Alça Ajustavel Básico Usar Uniforme",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22695017676",
       "ID da loja": "1616182506",
       "Nome da loja": "DBL LINGERIE",
@@ -23227,7 +23227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242439565116225",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
@@ -196753,31 +196753,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "235760543138207",
       "conversionStatus": "CANCELLED",
-      "data": "2026-06-21"
-    },
-    {
-      "ID do pedido": "260621NV37UJ4K",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-21 14:35:29",
-      "Sub_id1": "18Jun26SegundaPeleObjVendasVs1",
-      "Valor de Compra(R$)": "144.38",
-      "Comissao liquida do afiliado(R$)": "4.3314",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "4.3314",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "4.3314",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Travesseiro Reconfortante Fawn Infantil Ajuda Para Dormir De Bebê Com Palma Automática Acalmar Ninar",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22095026854",
-      "ID da loja": "455770917",
-      "Nome da loja": "JB VARIEDADES E CIA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "235751728181379",
-      "conversionStatus": "COMPLETED",
       "data": "2026-06-21"
     }
   ]
