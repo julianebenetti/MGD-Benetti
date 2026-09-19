@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789818902,
-  "updated_at_br": "19/09/2026 08:48",
+  "updated_at": 1789822177,
+  "updated_at_br": "19/09/2026 09:42",
   "period_days": 90,
   "total_orders": 7879,
   "total_conversions": 7540,
@@ -12807,7 +12807,7 @@
     },
     {
       "ID do pedido": "260911QYWYKC34",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-11 11:16:06",
       "Sub_id1": "04Set26VEAvestidomidifloral",
       "Valor de Compra(R$)": "21.97",
@@ -12819,7 +12819,7 @@
       "Comissao total do pedido(R$)": "0.8788",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Óculos De Grau Perto Leitura Feminino Novo Modelo Da Moda",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18998149934",
       "ID da loja": "1373481133",
       "Nome da loja": "OculoShopp",
@@ -12827,7 +12827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242824566191294",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-11"
     },
     {
@@ -20507,7 +20507,7 @@
     },
     {
       "ID do pedido": "260908F9GKJ0DN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-08 00:13:37",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "38.89",
@@ -20519,7 +20519,7 @@
       "Comissao total do pedido(R$)": "2.48896",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Par Joelheira Ortopédica Ajustável Proteção Patelar Menisco Tensor Alívio Dor Esportes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22093232371",
       "ID da loja": "986409526",
       "Nome da loja": "GlobalTradeBrasil",
@@ -20527,7 +20527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242525617136452",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-08"
     },
     {
@@ -21782,7 +21782,7 @@
     },
     {
       "ID do pedido": "260907E7QD7M0H",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 14:08:59",
       "Sub_id1": "17Jul26CheiroRicoContaNew",
       "Valor de Compra(R$)": "39.99",
@@ -21794,7 +21794,7 @@
       "Comissao total do pedido(R$)": "1.5996",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vestido Longo Feminino Costa Nua Midi Inverno Elegante de Festa Plus Size Praia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "54711820700",
       "ID da loja": "1330105172",
       "Nome da loja": "GRA JEANS OFICIAL",
@@ -21802,7 +21802,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242489338161512",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
@@ -25382,7 +25382,7 @@
     },
     {
       "ID do pedido": "260906BETKAEY6",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-06 11:38:03",
       "Sub_id1": "04Set26VEAsutiainfantilV2",
       "Valor de Compra(R$)": "34.9",
@@ -25394,7 +25394,7 @@
       "Comissao total do pedido(R$)": "1.396",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 6/5/3 Calcinhas Infantil Boxer Para Meninas Tecido Poliéster Cores Sortidas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22098958689",
       "ID da loja": "414480643",
       "Nome da loja": "Mariah  Intimus",
@@ -25402,7 +25402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242393882187741",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-06"
     },
     {
@@ -27107,7 +27107,7 @@
     },
     {
       "ID do pedido": "2609069EBNYGF0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 16:24:23",
       "Sub_id1": "02Set26VEAtopajustavelbrancoV2",
       "Valor de Compra(R$)": "11.99",
@@ -27119,7 +27119,7 @@
       "Comissao total do pedido(R$)": "0.8393",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Óleo essencial feminino para partes intimas com essencia melaleuca",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58264263418",
       "ID da loja": "509839753",
       "Nome da loja": "D&D ESTILO",
@@ -27127,7 +27127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242324662188068",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
@@ -27157,7 +27157,7 @@
     },
     {
       "ID do pedido": "2609069EBNYGEX",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-05 16:24:23",
       "Sub_id1": "02Set26VEAtopajustavelbrancoV2",
       "Valor de Compra(R$)": "14.9",
@@ -27169,7 +27169,7 @@
       "Comissao total do pedido(R$)": "1.937",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Desodorante Íntimo Cheirosa Bio Instinto",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23236007839",
       "ID da loja": "652219812",
       "Nome da loja": "MIX FLORA DISTRIBUIDORA",
@@ -27177,7 +27177,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "242324662188068",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-05"
     },
     {
