@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789804341,
-  "updated_at_br": "19/09/2026 04:45",
+  "updated_at": 1789809256,
+  "updated_at_br": "19/09/2026 06:07",
   "period_days": 90,
   "total_orders": 7843,
   "total_conversions": 7507,
@@ -9507,7 +9507,7 @@
     },
     {
       "ID do pedido": "260913U994BVBY",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-12 18:41:23",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "15.99",
@@ -9519,7 +9519,7 @@
       "Comissao total do pedido(R$)": "0.6396",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Balança De Mão Digital Portátil P Bolsa Mala Peixe de Até 50kg CD08",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22394059940",
       "ID da loja": "397082154",
       "Nome da loja": "Kaymon",
@@ -9527,7 +9527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242937683181952",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-12"
     },
     {
