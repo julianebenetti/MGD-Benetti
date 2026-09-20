@@ -60,7 +60,43 @@ def inspecionar(caminho):
         largura, altura = int(achado.group(1)), int(achado.group(2))
     if duracao is None:
         raise RuntimeError(f"Nao consegui ler o video: {caminho}")
-    return {"duracao": duracao, "largura": largura, "altura": altura}
+    return {
+        "duracao": duracao,
+        "largura": largura,
+        "altura": altura,
+        "tem_audio": "Audio:" in saida,
+        "tamanho_mb": round(os.path.getsize(caminho) / 1e6, 2)
+        if os.path.exists(caminho) else None,
+    }
+
+
+def conferir(caminho, specs):
+    """Compara o arquivo final com o que a Shopee Video espera."""
+    info = inspecionar(caminho)
+    problemas = []
+    if (info["largura"], info["altura"]) != (specs["largura"], specs["altura"]):
+        problemas.append(
+            f"resolucao {info['largura']}x{info['altura']}, esperado "
+            f"{specs['largura']}x{specs['altura']}"
+        )
+    if info["duracao"] < specs["duracao_min"]:
+        problemas.append(
+            f"video com {info['duracao']:.1f}s, abaixo do minimo de "
+            f"{specs['duracao_min']}s"
+        )
+    if info["duracao"] > specs["duracao_max"]:
+        problemas.append(
+            f"video com {info['duracao']:.1f}s, acima do maximo de "
+            f"{specs['duracao_max']}s"
+        )
+    if info["tamanho_mb"] and info["tamanho_mb"] > specs["tamanho_max_mb"]:
+        problemas.append(
+            f"arquivo com {info['tamanho_mb']} MB, acima de "
+            f"{specs['tamanho_max_mb']} MB"
+        )
+    if not info["tem_audio"]:
+        problemas.append("video sem faixa de audio")
+    return {"info": info, "problemas": problemas, "ok": not problemas}
 
 
 def detectar_outro(caminho, duracao, janela=6.0, limiar=0.35):
@@ -135,12 +171,15 @@ def _filtro_marca(marca, texto, posicao):
 
 def preparar(entrada, saida, marca=None, texto_marca="@julianebenetti",
              posicao="inferior-direito", modo="desfoque",
-             cortar_fim=None, auto_outro=True):
+             cortar_fim=None, auto_outro=True, realce=None,
+             largura_marca=None):
     """
     Gera o video pronto para postar.
 
     cortar_fim: segundos fixos a remover do final. Quando None e auto_outro
     esta ligado, a deteccao de cena decide sozinha; sem deteccao, corta 3 s.
+    largura_marca: redimensiona o PNG da marca. None mantem o tamanho do
+    arquivo, que e o caso do PNG gerado pela identidade.
     """
     info = inspecionar(entrada)
     duracao = info["duracao"]
@@ -160,14 +199,26 @@ def preparar(entrada, saida, marca=None, texto_marca="@julianebenetti",
     enquadra = _filtro_enquadramento(modo)
     desenho, overlay_marca = _filtro_marca(marca, texto_marca, posicao)
 
+    ajuste = ""
+    if realce and realce.get("realce", True):
+        ajuste = (
+            f",eq=contrast={realce.get('contraste', 1.06)}"
+            f":saturation={realce.get('saturacao', 1.12)}"
+            f":brightness={realce.get('brilho', 0.01)}"
+        )
+
     entradas = ["-i", entrada]
     if overlay_marca:
         entradas += ["-i", marca]
-        cadeia = f"[0:v]{enquadra}[v];[1:v]scale=260:-1[marca];{overlay_marca}"
+        escala = f"scale={int(largura_marca)}:-1" if largura_marca else "null"
+        cadeia = (f"[0:v]{enquadra}{ajuste}[v];"
+                  f"[1:v]{escala}[marca];{overlay_marca}")
     else:
-        cadeia = f"[0:v]{enquadra},{desenho}"
+        cadeia = f"[0:v]{enquadra}{ajuste},{desenho}"
 
     args = [*entradas, "-filter_complex", cadeia]
+    if (realce and realce.get("normalizar_audio", True) and info["tem_audio"]):
+        args += ["-af", "loudnorm=I=-14:TP=-1.5:LRA=11"]
     if fim:
         args += ["-t", f"{fim:.2f}"]
     args += [
@@ -187,4 +238,5 @@ def preparar(entrada, saida, marca=None, texto_marca="@julianebenetti",
         "corte_final": origem_corte,
         "enquadramento": modo,
         "marca": marca or texto_marca,
+        "realce": bool(ajuste),
     }

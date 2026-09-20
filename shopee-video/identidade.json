@@ -1,0 +1,38 @@
+{
+  "handle": "@julianebenetti",
+  "cor_principal": "#a855f7",
+  "cor_secundaria": "#7c3aed",
+  "cor_texto": "#ffffff",
+  "fonte": null,
+  "logo": null,
+  "marca": {
+    "posicao": "inferior-direito",
+    "tamanho": 44,
+    "opacidade": 0.85,
+    "fundo": true,
+    "largura_logo": 200
+  },
+  "capa": {
+    "modelo": "faixa",
+    "selo": "ACHADINHO",
+    "mostrar_preco": true,
+    "mostrar_nota": true,
+    "titulo_palavras": 6,
+    "titulo_linhas": 2,
+    "escurecer": 0.55
+  },
+  "video": {
+    "realce": true,
+    "contraste": 1.06,
+    "saturacao": 1.12,
+    "brilho": 0.01,
+    "normalizar_audio": true
+  },
+  "specs": {
+    "largura": 1080,
+    "altura": 1920,
+    "duracao_min": 10,
+    "duracao_max": 60,
+    "tamanho_max_mb": 100
+  }
+}

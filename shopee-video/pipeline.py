@@ -15,12 +15,15 @@ import argparse
 import json
 import os
 import re
+import shutil
 import sys
 import unicodedata
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import capa as capa_mod  # noqa: E402
+import identidade as identidade_mod  # noqa: E402
 import legenda  # noqa: E402
 import shopee_api  # noqa: E402
 import video as video_mod  # noqa: E402
@@ -36,9 +39,71 @@ def apelido(texto, limite=40):
     return base[:limite] or "produto"
 
 
+def ajustar_identidade(ident, opcoes):
+    """Aplica na identidade o que veio pela linha de comando."""
+    if opcoes.texto_marca:
+        ident["handle"] = opcoes.texto_marca
+    if opcoes.posicao:
+        ident["marca"]["posicao"] = opcoes.posicao
+    if opcoes.modelo_capa:
+        ident["capa"]["modelo"] = opcoes.modelo_capa
+    if opcoes.selo is not None:
+        ident["capa"]["selo"] = opcoes.selo
+    if opcoes.logo:
+        ident["logo"] = opcoes.logo
+    if opcoes.sem_realce:
+        ident["video"]["realce"] = False
+    return ident
+
+
+def fazer_capa(caminho_video, origem, destino, produto, ident, opcoes,
+               limite_duracao=None):
+    """
+    Escolhe o quadro, monta a capa e embute como poster do mp4.
+
+    O quadro sai do video de origem, nao do tratado, para a marca d'agua
+    nao aparecer duas vezes na arte.
+    """
+    pasta_quadros = os.path.join(destino, "_quadros")
+    os.makedirs(pasta_quadros, exist_ok=True)
+
+    if opcoes.capa_em is not None:
+        quadro = os.path.join(pasta_quadros, "escolhido.png")
+        video_mod._rodar(["-ss", f"{opcoes.capa_em:.2f}", "-i", origem,
+                          "-frames:v", "1", "-q:v", "2", quadro])
+        if not os.path.exists(quadro):
+            raise RuntimeError(f"Nao ha quadro em {opcoes.capa_em}s.")
+        escolhido = {"arquivo": quadro, "momento": opcoes.capa_em, "nota": None}
+    else:
+        escolhido = capa_mod.escolher_quadro(origem, pasta_quadros,
+                                            limite_duracao=limite_duracao)
+
+    caminho_capa = capa_mod.montar_capa(
+        escolhido["arquivo"], os.path.join(destino, "capa.jpg"), produto, ident
+    )
+
+    embutida = True
+    try:
+        temporario = os.path.join(destino, "_com_capa.mp4")
+        capa_mod.embutir_capa(caminho_video, caminho_capa, temporario)
+        os.replace(temporario, caminho_video)
+    except Exception:
+        embutida = False
+
+    shutil.rmtree(pasta_quadros, ignore_errors=True)
+    return {
+        "arquivo": caminho_capa,
+        "momento": round(escolhido["momento"], 2),
+        "escolha": "manual" if opcoes.capa_em is not None else "automatica",
+        "modelo": ident["capa"]["modelo"],
+        "embutida_no_mp4": embutida,
+    }
+
+
 def processar(caminho_video, link, opcoes):
     """Roda um video de ponta a ponta e devolve o resumo do que foi gerado."""
     produto, curto, avisos = None, link, []
+    ident = ajustar_identidade(identidade_mod.carregar(opcoes.identidade), opcoes)
 
     try:
         produto = shopee_api.buscar_produto(link)
@@ -72,16 +137,39 @@ def processar(caminho_video, link, opcoes):
     )
     os.makedirs(destino, exist_ok=True)
 
+    # marca d'agua: PNG da Juliane ou um gerado agora a partir da identidade
+    if opcoes.marca:
+        marca_png, largura_marca = opcoes.marca, opcoes.largura_marca or 300
+    else:
+        marca_png = capa_mod.marca_dagua(ident, os.path.join(destino, "marca.png"))
+        largura_marca = opcoes.largura_marca
+
+    caminho_final = os.path.join(destino, "video.mp4")
     relatorio_video = video_mod.preparar(
         caminho_video,
-        os.path.join(destino, "video.mp4"),
-        marca=opcoes.marca,
-        texto_marca=opcoes.texto_marca,
-        posicao=opcoes.posicao,
+        caminho_final,
+        marca=marca_png,
+        texto_marca=ident["handle"],
+        posicao=ident["marca"]["posicao"],
         modo=opcoes.modo,
         cortar_fim=opcoes.cortar_fim,
         auto_outro=not opcoes.sem_auto_outro,
+        realce=ident["video"],
+        largura_marca=largura_marca,
     )
+
+    relatorio_capa = None
+    if not opcoes.sem_capa:
+        try:
+            relatorio_capa = fazer_capa(
+                caminho_final, caminho_video, destino, produto, ident, opcoes,
+                limite_duracao=relatorio_video["duracao_final"],
+            )
+        except Exception as erro:
+            avisos.append(f"Nao consegui montar a capa: {erro}")
+
+    conferencia = video_mod.conferir(caminho_final, ident["specs"])
+    avisos.extend(f"Conferencia do video: {p}" for p in conferencia["problemas"])
 
     with open(os.path.join(destino, "legenda.txt"), "w") as arq:
         arq.write(texto["texto"] + "\n")
@@ -93,10 +181,18 @@ def processar(caminho_video, link, opcoes):
         "link_afiliado": curto,
         "legenda": texto,
         "video": relatorio_video,
+        "capa": relatorio_capa,
+        "conferencia_video": conferencia,
+        "identidade": {
+            "handle": ident["handle"],
+            "cor_principal": ident["cor_principal"],
+            "modelo_capa": ident["capa"]["modelo"],
+        },
         "avisos": avisos,
         "falta_fazer_na_mao": [
             f"Favoritar o produto na Shopee: {link}",
             "Subir o video no Shopee Video e salvar como rascunho",
+            "Usar capa.jpg como capa do post",
             "Colar a legenda de legenda.txt e anexar o link do produto",
         ],
     }
@@ -143,6 +239,13 @@ def imprimir(resumo):
         print(f"💰 comissao R$ {comissao:.2f} ({resumo['produto'].get('comissao_pct')}%)")
     print(f"🎬 {resumo['video']['duracao_original']}s → "
           f"{resumo['video']['duracao_final']}s (corte: {resumo['video']['corte_final']})")
+    conferencia = resumo["conferencia_video"]["info"]
+    print(f"📐 {conferencia['largura']}x{conferencia['altura']} · "
+          f"{conferencia['tamanho_mb']} MB · "
+          f"marca d'agua {resumo['video']['marca']}")
+    if resumo.get("capa"):
+        print(f"🖼️  capa {resumo['capa']['modelo']} do segundo "
+              f"{resumo['capa']['momento']} ({resumo['capa']['escolha']})")
     print(f"🔗 {resumo['link_afiliado']}")
     print("-" * 58)
     print(resumo["legenda"]["texto"])
@@ -163,10 +266,21 @@ def main():
     p.add_argument("--video", help="arquivo de video local")
     p.add_argument("--link", help="link do produto na Shopee")
     p.add_argument("--nome", help="nome do produto, quando a API nao responde")
-    p.add_argument("--marca", help="PNG da marca d'agua")
-    p.add_argument("--texto-marca", default="@julianebenetti",
-                   help="marca d'agua em texto, quando nao ha PNG")
-    p.add_argument("--posicao", default="inferior-direito",
+    p.add_argument("--identidade", help="outro identidade.json")
+    p.add_argument("--marca", help="PNG da marca d'agua, no lugar do gerado")
+    p.add_argument("--largura-marca", type=int,
+                   help="largura da marca d'agua em px")
+    p.add_argument("--logo", help="PNG do logo usado na capa e na marca")
+    p.add_argument("--sem-capa", action="store_true", help="nao gerar capa")
+    p.add_argument("--modelo-capa", choices=["faixa", "minimo", "cartao"],
+                   help="layout da capa")
+    p.add_argument("--selo", help='texto do selo da capa, "" tira o selo')
+    p.add_argument("--capa-em", type=float,
+                   help="segundo do video a usar como capa, em vez da escolha automatica")
+    p.add_argument("--sem-realce", action="store_true",
+                   help="nao ajustar contraste, saturacao e volume")
+    p.add_argument("--texto-marca", help="sobrescreve o @ da identidade")
+    p.add_argument("--posicao",
                    choices=["inferior-direito", "inferior-esquerdo",
                             "superior-direito", "superior-esquerdo"])
     p.add_argument("--modo", default="desfoque", choices=["desfoque", "cover", "pad"],
