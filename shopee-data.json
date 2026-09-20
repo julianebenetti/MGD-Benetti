@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789884078,
-  "updated_at_br": "20/09/2026 02:54",
+  "updated_at": 1789892410,
+  "updated_at_br": "20/09/2026 05:13",
   "period_days": 90,
   "total_orders": 7829,
   "total_conversions": 7493,
@@ -19882,7 +19882,7 @@
     },
     {
       "ID do pedido": "260908GD7NR1K0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-08 10:52:52",
       "Sub_id1": "Grupo08",
       "Valor de Compra(R$)": "24.9",
@@ -19894,7 +19894,7 @@
       "Comissao total do pedido(R$)": "5.976",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Hibisco + Cavalinha Suplemento Diurético Retenção de Líquido e Queima de Gordura",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "54656294977",
       "ID da loja": "1482104455",
       "Nome da loja": "Wellness Hub",
@@ -19902,7 +19902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "242563972142252",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-08"
     },
     {
