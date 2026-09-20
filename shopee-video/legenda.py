@@ -228,10 +228,26 @@ def _numero(valor):
     return f"{valor}"
 
 
-def montar(produto, link, extras=None):
+FECHOS_COM_LINK = (
+    "Corre no link abaixo 👇",
+    "Aproveita pelo link aqui 👇",
+    "Garante o seu clicando abaixo 👇",
+)
+
+# No Shopee Video o produto entra pelo botao "Adicionar Produto", entao a
+# chamada aponta para a etiqueta do post, nao para um link colado.
+FECHOS_SEM_LINK = (
+    "Toca no produto marcado 👇",
+    "Produto fixado aqui embaixo 👇",
+    "Clica na etiqueta abaixo 👇",
+)
+
+
+def montar(produto, link, extras=None, com_link=True):
     """
     produto: dict com nome, preco, nota, vendas, categoria (opcionais).
     link: link de afiliado ja encurtado.
+    com_link: False monta a versao do Shopee Video, sem link colado.
     Retorna dict com descricao, hashtags, seo, texto_final.
     """
     nome = produto.get("nome", "")
@@ -281,28 +297,25 @@ def montar(produto, link, extras=None):
         banco.gastar("sai", "por")
         linhas.append(f"Sai por R$ {preco}.")
 
-    for fecho in (("Corre", "no", "abaixo"), ("Aproveita", "no", "abaixo"),
-                  ("Garante", "pelo", "aqui")):
-        if banco.livre(*fecho, "link"):
-            banco.gastar(*fecho, "link")
-            linhas.append(f"{fecho[0]} {fecho[1]} link {fecho[2]} 👇")
+    for fecho in (FECHOS_COM_LINK if com_link else FECHOS_SEM_LINK):
+        if banco.livre(fecho):
+            banco.gastar(fecho)
+            linhas.append(fecho)
             break
 
     hashtags = banco.pegar(pool_tags, 5)
     seo = banco.pegar(pool_seo, 10)
 
     descricao = "\n".join(linhas)
-    texto = "\n".join([
-        descricao,
-        "",
-        f"🔗 {link}",
-        "",
-        " ".join(f"#{h}" for h in hashtags),
-        "",
-        " · ".join(seo),
-    ])
+    blocos = [descricao]
+    if com_link:
+        blocos.append(f"🔗 {link}")
+    blocos.append(" ".join(f"#{h}" for h in hashtags))
+    blocos.append(" · ".join(seo))
+    texto = "\n\n".join(blocos)
     return {
         "categoria": categoria,
+        "com_link": com_link,
         "descricao": descricao,
         "hashtags": hashtags,
         "seo": seo,

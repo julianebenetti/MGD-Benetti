@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import capa as capa_mod  # noqa: E402
 import identidade as identidade_mod  # noqa: E402
 import legenda  # noqa: E402
+import roteiro as roteiro_mod  # noqa: E402
 import shopee_api  # noqa: E402
 import video as video_mod  # noqa: E402
 
@@ -129,7 +130,10 @@ def processar(caminho_video, link, opcoes):
     except Exception as erro:
         avisos.append(f"Nao consegui encurtar o link de afiliado: {erro}")
 
-    texto = legenda.montar(produto, curto)
+    # duas versoes: a do Shopee Video, onde o produto entra pela etiqueta,
+    # e a com link colado, que serve para TikTok e Instagram.
+    texto = legenda.montar(produto, curto, com_link=False)
+    texto_com_link = legenda.montar(produto, curto, com_link=True)
 
     destino = os.path.join(
         opcoes.saida,
@@ -171,8 +175,10 @@ def processar(caminho_video, link, opcoes):
     conferencia = video_mod.conferir(caminho_final, ident["specs"])
     avisos.extend(f"Conferencia do video: {p}" for p in conferencia["problemas"])
 
-    with open(os.path.join(destino, "legenda.txt"), "w") as arq:
+    with open(os.path.join(destino, "legenda-shopee-video.txt"), "w") as arq:
         arq.write(texto["texto"] + "\n")
+    with open(os.path.join(destino, "legenda.txt"), "w") as arq:
+        arq.write(texto_com_link["texto"] + "\n")
 
     resumo = {
         "pasta": destino,
@@ -180,6 +186,7 @@ def processar(caminho_video, link, opcoes):
         "link_original": link,
         "link_afiliado": curto,
         "legenda": texto,
+        "legenda_com_link": texto_com_link,
         "video": relatorio_video,
         "capa": relatorio_capa,
         "conferencia_video": conferencia,
@@ -189,16 +196,78 @@ def processar(caminho_video, link, opcoes):
             "modelo_capa": ident["capa"]["modelo"],
         },
         "avisos": avisos,
-        "falta_fazer_na_mao": [
-            f"Favoritar o produto na Shopee: {link}",
-            "Subir o video no Shopee Video e salvar como rascunho",
-            "Usar capa.jpg como capa do post",
-            "Colar a legenda de legenda.txt e anexar o link do produto",
-        ],
     }
+    if opcoes.entregar_telegram:
+        try:
+            import telegram_grupo
+
+            telegram_grupo.enviar_video(caminho_final, texto["texto"])
+            resumo["entregue_no_telegram"] = True
+        except Exception as erro:
+            avisos.append(f"Nao consegui devolver o video no Telegram: {erro}")
+
+    guia = roteiro_mod.montar(resumo)
+    resumo["roteiro"] = guia["passos"]
+    resumo["termo_busca"] = guia["termo_busca"]
+    with open(os.path.join(destino, "roteiro.txt"), "w") as arq:
+        arq.write(guia["texto"])
+
     with open(os.path.join(destino, "info.json"), "w") as arq:
         json.dump(resumo, arq, indent=2, ensure_ascii=False)
+    indexar(resumo, opcoes.saida)
     return resumo
+
+
+APP = "app-postagens.html"
+
+
+def publicar_app(pasta_saida):
+    """Deixa o app de postagens ao lado do posts.json, para abrir no celular."""
+    origem = os.path.join(os.path.dirname(os.path.abspath(__file__)), APP)
+    if os.path.exists(origem):
+        shutil.copy2(origem, os.path.join(pasta_saida, APP))
+
+
+def indexar(resumo, pasta_saida):
+    """Mantem posts.json, que e o que o app de postagens le."""
+    publicar_app(pasta_saida)
+    caminho = os.path.join(pasta_saida, "posts.json")
+    posts = []
+    if os.path.exists(caminho):
+        try:
+            with open(caminho, encoding="utf-8") as arq:
+                posts = json.load(arq)
+        except (ValueError, OSError):
+            posts = []
+
+    pasta = os.path.basename(resumo["pasta"])
+    produto = resumo.get("produto") or {}
+    registro = {
+        "id": pasta,
+        "criado_em": datetime.now().isoformat(timespec="seconds"),
+        "pasta": pasta,
+        "produto": {
+            "nome": produto.get("nome"),
+            "loja": produto.get("loja"),
+            "preco": produto.get("preco"),
+            "nota": produto.get("nota"),
+            "comissao_reais": produto.get("comissao_reais"),
+        },
+        "termo_busca": resumo.get("termo_busca"),
+        "link_original": resumo.get("link_original"),
+        "link_afiliado": resumo.get("link_afiliado"),
+        "video": f"{pasta}/video.mp4",
+        "capa": f"{pasta}/capa.jpg" if resumo.get("capa") else None,
+        "legenda": resumo["legenda"]["texto"],
+        "legenda_com_link": resumo["legenda_com_link"]["texto"],
+        "roteiro": resumo.get("roteiro", []),
+        "avisos": resumo.get("avisos", []),
+    }
+    posts = [p for p in posts if p.get("id") != registro["id"]]
+    posts.insert(0, registro)
+    with open(caminho, "w", encoding="utf-8") as arq:
+        json.dump(posts, arq, indent=2, ensure_ascii=False)
+    return caminho
 
 
 def do_telegram(opcoes):
@@ -255,7 +324,10 @@ def imprimir(resumo):
           else f"❌ repetidas: {repetidas}")
     for aviso in resumo["avisos"]:
         print(f"⚠️  {aviso}")
-    print("👉 falta na mao: " + " | ".join(resumo["falta_fazer_na_mao"]))
+    print("👉 no app: " + " → ".join(
+        p["titulo"] for p in resumo.get("roteiro", []) if p["etapa"] == "app"
+    ))
+    print(f"   roteiro completo em {resumo['pasta']}/roteiro.txt")
 
 
 def main():
@@ -289,6 +361,8 @@ def main():
                    help="segundos fixos a cortar do final")
     p.add_argument("--sem-auto-outro", action="store_true",
                    help="nao tentar detectar o cartao final do CapCut")
+    p.add_argument("--entregar-telegram", action="store_true",
+                   help="devolve o video tratado e a legenda no chat do Telegram")
     p.add_argument("--sub-id", default="shopee_video",
                    help="sub_id de rastreio do link")
     p.add_argument("--limite", type=int, help="maximo de videos por rodada")

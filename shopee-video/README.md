@@ -18,14 +18,47 @@ Entrega uma pasta por video, pronta para subir.
 | Descricao + 5 hashtags + 10 palavras de SEO | gerador proprio, sem repetir nenhuma palavra |
 | Link de afiliado | `generateShortLink` da Affiliate API, com sub_id de rastreio |
 
-## O que continua na mao
+## O fluxo, na ordem do app
 
-A Shopee nao abre API para isso, entao dois passos ficam com voce, com tudo
-ja pronto na pasta de saida:
+O roteiro segue exatamente a sequencia do aplicativo. Os quatro primeiros
+itens ja saem prontos; os demais sao os passos do app, com os dados do post
+preenchidos.
 
-1. **Favoritar o produto** — o link original fica no `info.json` e na tela.
-2. **Subir no Shopee Video e salvar como rascunho** — video em `video.mp4`,
-   capa em `capa.jpg`, texto em `legenda.txt`.
+**Ja pronto pela Lia:** video tratado · capa montada · legenda escrita ·
+produto identificado.
+
+**No app da Shopee:**
+
+1. Salvar o video na galeria (ele chega pelo Telegram)
+2. Abrir o aplicativo da Shopee
+3. Acessar o produto que vai divulgar
+4. Favoritar o produto, que e o que o faz aparecer em Adicionar Produto
+5. Entrar na area de video
+6. Selecionar um video da galeria
+7. Escolher o video
+8. Adicionar legenda
+9. Ativar as opcoes do conteudo
+10. Tocar em Adicionar Produto
+11. Localizar o produto na lista, com o termo de busca que o roteiro sugere
+12. Tocar em Adicionar
+13. Conferir as informacoes do produto
+14. Tocar em Feito
+15. Voltar para a tela de publicacao
+16. Postar, ou salvar o rascunho para validar antes
+
+Cada post sai com esse roteiro em `roteiro.txt` e no app de postagens, com
+caixinha para marcar o que ja foi feito.
+
+## App de postagens
+
+`app-postagens.html` e a fila no celular. Ele le o `posts.json` que o
+pipeline gera e mostra, para cada post: a capa, o botao de baixar o video,
+o botao de copiar a legenda, o link do produto e os passos do app em forma
+de checklist. O que voce marca fica salvo no proprio aparelho.
+
+O arquivo e copiado para a pasta de saida a cada rodada, entao basta servir
+essa pasta no VPS e abrir o endereco no celular. Da para adicionar a tela de
+inicio como os outros apps.
 
 ## Instalacao
 
@@ -39,8 +72,8 @@ set -a; source .env; set +a
 ## Uso
 
 ```bash
-# rodada normal: tudo que apareceu de novo no grupo
-python3 pipeline.py --telegram
+# rodada normal: tudo que apareceu de novo no grupo, com o video de volta no chat
+python3 pipeline.py --telegram --entregar-telegram
 
 # um video especifico, sem passar pelo Telegram
 python3 pipeline.py --video flow.mp4 --link "https://shopee.com.br/...-i.123.456"
@@ -49,13 +82,23 @@ python3 pipeline.py --video flow.mp4 --link "https://shopee.com.br/...-i.123.456
 Saida:
 
 ```
-saida/2026-09-20_vestido-longo-feminino/
-├── video.mp4       9:16, sem o final do CapCut, realcado, com marca d'agua e capa embutida
-├── capa.jpg        1080x1920, pronta para usar como capa do post
-├── marca.png       a marca d'agua daquele video
-├── legenda.txt     descricao + link + hashtags + SEO
-└── info.json       produto, comissao, conferencia da resolucao, o que falta fazer
+saida/
+├── app-postagens.html          a fila para abrir no celular
+├── posts.json                  o que o app le
+└── 2026-09-20_vestido-longo-feminino/
+    ├── video.mp4               9:16, sem o final do CapCut, realcado, com marca e capa
+    ├── capa.jpg                1080x1920, pronta para usar como capa do post
+    ├── marca.png               a marca d'agua daquele video
+    ├── legenda-shopee-video.txt  a que voce cola no app, sem link colado
+    ├── legenda.txt             a versao com link, para TikTok e Instagram
+    ├── roteiro.txt             o passo a passo com os dados deste post
+    └── info.json               produto, comissao, conferencia da resolucao
 ```
+
+Sao duas legendas de proposito. No Shopee Video o produto entra pela
+etiqueta do botao Adicionar Produto, entao a chamada aponta para ela e nao
+para um link colado. A versao com link fica para as outras redes. As duas
+passam pela mesma regra de nao repetir palavra.
 
 ## Personalizacao
 
@@ -98,6 +141,7 @@ especifico. A arte ainda entra embutida no mp4 como poster.
 | `--sem-realce` | mantem cor e volume originais |
 | `--nome "..."` | nome do produto quando a API nao responde |
 | `--limite 5` | processa so os 5 primeiros da rodada |
+| `--entregar-telegram` | devolve o video tratado e a legenda no chat, para salvar na galeria |
 
 ## A regra de nao repetir palavra
 

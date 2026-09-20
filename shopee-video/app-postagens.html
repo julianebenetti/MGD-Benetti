@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shopee Video">
+<meta name="theme-color" content="#7c3aed">
+<title>Postagens Shopee Video</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0f13;--surface:#1a1a22;--surface2:#22222e;
+  --border:#2e2e3e;--accent:#a855f7;--accent2:#7c3aed;
+  --green:#22c55e;--amber:#f59e0b;--text:#e8e8f0;--muted:#6b6b85;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;padding:max(env(safe-area-inset-top),18px) 16px
+  calc(env(safe-area-inset-bottom,20px) + 40px)}
+
+.topo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.topo h1{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.topo p{font-size:11px;color:var(--muted);margin-top:2px}
+.voltar{background:var(--surface);border:1.5px solid var(--border);color:var(--text);
+  border-radius:10px;padding:7px 11px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;flex-shrink:0}
+
+.filtros{display:flex;gap:8px;margin-bottom:14px}
+.filtro{flex:1;padding:8px;border-radius:10px;border:1.5px solid var(--border);
+  background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit}
+.filtro.ativo{border-color:var(--accent);color:var(--accent);background:#1e1228}
+
+.card{display:flex;gap:12px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:14px;padding:12px;margin-bottom:10px;cursor:pointer;align-items:center}
+.card:active{border-color:var(--accent)}
+.card img{width:58px;height:103px;object-fit:cover;border-radius:8px;flex-shrink:0;
+  background:var(--surface2)}
+.card .sem-capa{width:58px;height:103px;border-radius:8px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.card h3{font-size:14px;font-weight:600;line-height:1.3;margin-bottom:5px}
+.card .meta{font-size:11px;color:var(--muted);line-height:1.6}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;
+  font-weight:700;margin-top:6px}
+.pill.pendente{background:#2a1f0d;color:var(--amber)}
+.pill.feito{background:#16201a;color:var(--green)}
+
+.barra{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:7px}
+.barra i{display:block;height:100%;background:var(--accent);border-radius:3px;
+  transition:width .2s}
+
+.capa-grande{width:132px;border-radius:12px;display:block;float:left;margin:0 12px 10px 0}
+.acoes{clear:none}
+.acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.acao{padding:12px 10px;border-radius:12px;border:none;background:var(--accent2);
+  color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  text-align:center;text-decoration:none;display:block}
+.acao.secundaria{background:var(--surface);border:1.5px solid var(--border);color:var(--text)}
+.acao.larga{grid-column:1 / -1}
+
+.secao{clear:both;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.8px;
+  text-transform:uppercase;margin:18px 0 8px}
+.passo{display:flex;gap:11px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:12px;padding:11px 12px;margin-bottom:7px;cursor:pointer}
+.passo.pronto{background:#16201a;border-color:#1f3a28;cursor:default}
+.passo.marcado{background:#1a1626;border-color:var(--accent2)}
+.caixa{width:22px;height:22px;border-radius:7px;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;margin-top:1px}
+.passo.pronto .caixa{background:var(--green);border-color:var(--green)}
+.passo.marcado .caixa{background:var(--accent2);border-color:var(--accent2)}
+.passo b{font-size:13.5px;font-weight:600;display:block;line-height:1.35}
+.passo.marcado b,.passo.pronto b{opacity:.6;text-decoration:line-through}
+.passo span{font-size:11.5px;color:var(--muted);display:block;margin-top:3px;
+  line-height:1.5;word-break:break-word}
+
+.legenda-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+  padding:13px;font-size:13px;line-height:1.65;white-space:pre-wrap;margin-bottom:8px}
+.aviso{clear:both;background:#2a1f0d;border:1.5px solid #4a3a16;border-radius:10px;padding:10px 12px;
+  font-size:12px;color:#fcd34d;margin-bottom:7px;line-height:1.5}
+.vazio{text-align:center;color:var(--muted);font-size:13px;padding:50px 20px;line-height:1.7}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;background:var(--accent2);
+  color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:600;
+  opacity:0;transition:opacity .2s;pointer-events:none;z-index:9}
+.toast.ver{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <button class="voltar" id="btnVoltar" hidden>←</button>
+  <div style="flex:1">
+    <h1 id="titulo">Postagens Shopee Video</h1>
+    <p id="subtitulo">carregando…</p>
+  </div>
+</div>
+
+<div id="tela"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CHAVE = "shopee_video_postagens_v1";
+let posts = [], marcados = carregar(), aberto = null, filtro = "pendentes";
+
+function carregar(){ try { return JSON.parse(localStorage.getItem(CHAVE)) || {}; }
+  catch { return {}; } }
+function salvar(){ try { localStorage.setItem(CHAVE, JSON.stringify(marcados)); }
+  catch {} }
+
+function passosApp(post){ return (post.roteiro || []).filter(p => p.etapa === "app"); }
+function feitos(post){ return (marcados[post.id] || []).length; }
+function total(post){ return passosApp(post).length; }
+function concluido(post){ return total(post) > 0 && feitos(post) >= total(post); }
+
+function aviso(texto){
+  const t = document.getElementById("toast");
+  t.textContent = texto; t.classList.add("ver");
+  setTimeout(() => t.classList.remove("ver"), 1600);
+}
+
+function copiar(texto, rotulo){
+  const fim = () => aviso(rotulo + " copiada");
+  if (navigator.clipboard) { navigator.clipboard.writeText(texto).then(fim, fallback); }
+  else fallback();
+  function fallback(){
+    const area = document.createElement("textarea");
+    area.value = texto; document.body.appendChild(area); area.select();
+    try { document.execCommand("copy"); fim(); } catch { aviso("copie na mao"); }
+    area.remove();
+  }
+}
+
+function lista(){
+  aberto = null;
+  document.getElementById("btnVoltar").hidden = true;
+  document.getElementById("titulo").textContent = "Postagens Shopee Video";
+
+  const pendentes = posts.filter(p => !concluido(p));
+  const prontos = posts.filter(p => concluido(p));
+  document.getElementById("subtitulo").textContent =
+    pendentes.length + " para postar · " + prontos.length + " no ar";
+
+  const mostrar = filtro === "pendentes" ? pendentes : prontos;
+  const tela = document.getElementById("tela");
+  tela.innerHTML = "";
+
+  const filtros = document.createElement("div");
+  filtros.className = "filtros";
+  [["pendentes", "Para postar (" + pendentes.length + ")"],
+   ["prontos", "Postados (" + prontos.length + ")"]].forEach(([chave, rotulo]) => {
+    const botao = document.createElement("button");
+    botao.className = "filtro" + (filtro === chave ? " ativo" : "");
+    botao.textContent = rotulo;
+    botao.onclick = () => { filtro = chave; lista(); };
+    filtros.appendChild(botao);
+  });
+  tela.appendChild(filtros);
+
+  if (!mostrar.length){
+    const vazio = document.createElement("div");
+    vazio.className = "vazio";
+    vazio.textContent = filtro === "pendentes"
+      ? "Nada na fila. A Lia avisa quando chegar vídeo novo no grupo."
+      : "Nenhum post concluído ainda.";
+    tela.appendChild(vazio);
+    return;
+  }
+
+  mostrar.forEach(post => {
+    const card = document.createElement("div");
+    card.className = "card";
+    const arte = post.capa
+      ? '<img src="' + post.capa + '" alt="">'
+      : '<div class="sem-capa">🎬</div>';
+    const produto = post.produto || {};
+    const linhas = [];
+    if (produto.preco) linhas.push("R$ " + produto.preco);
+    if (produto.nota) linhas.push("nota " + produto.nota);
+    if (produto.comissao_reais) linhas.push("comissão R$ " + produto.comissao_reais);
+    const pronto = concluido(post);
+    card.innerHTML = arte +
+      '<div style="flex:1;min-width:0">' +
+        "<h3>" + (produto.nome || post.id) + "</h3>" +
+        '<div class="meta">' + (linhas.join(" · ") || "sem dados do produto") + "</div>" +
+        '<div class="barra"><i style="width:' +
+          (total(post) ? Math.round(feitos(post) / total(post) * 100) : 0) + '%"></i></div>' +
+        '<span class="pill ' + (pronto ? "feito" : "pendente") + '">' +
+          (pronto ? "postado" : feitos(post) + "/" + total(post) + " no app") +
+        "</span>" +
+      "</div>";
+    card.onclick = () => detalhe(post);
+    tela.appendChild(card);
+  });
+}
+
+function detalhe(post){
+  aberto = post;
+  const voltar = document.getElementById("btnVoltar");
+  voltar.hidden = false; voltar.onclick = lista;
+  const produto = post.produto || {};
+  document.getElementById("titulo").textContent = produto.nome || post.id;
+  document.getElementById("subtitulo").textContent =
+    feitos(post) + " de " + total(post) + " passos no app";
+
+  const tela = document.getElementById("tela");
+  tela.innerHTML = "";
+
+  if (post.capa){
+    const arte = document.createElement("img");
+    arte.className = "capa-grande"; arte.src = post.capa; arte.alt = "capa do post";
+    tela.appendChild(arte);
+  }
+
+  const acoes = document.createElement("div");
+  acoes.className = "acoes";
+  acoes.innerHTML =
+    '<a class="acao" href="' + post.video + '" download>⬇ Baixar vídeo</a>' +
+    '<button class="acao" id="copiarLegenda">📋 Copiar legenda</button>' +
+    (post.link_original
+      ? '<a class="acao secundaria larga" href="' + post.link_original +
+        '" target="_blank" rel="noopener">🛍️ Abrir produto na Shopee</a>' : "");
+  tela.appendChild(acoes);
+  const botaoCopiar = document.getElementById("copiarLegenda");
+  if (botaoCopiar) botaoCopiar.onclick = () => copiar(post.legenda, "Legenda");
+
+  (post.avisos || []).forEach(texto => {
+    const bloco = document.createElement("div");
+    bloco.className = "aviso"; bloco.textContent = "⚠️ " + texto;
+    tela.appendChild(bloco);
+  });
+
+  const prontos = (post.roteiro || []).filter(p => p.etapa === "preparo");
+  if (prontos.length){
+    tela.appendChild(secao("Já pronto pela Lia"));
+    prontos.forEach(passo => {
+      const item = document.createElement("div");
+      item.className = "passo pronto";
+      item.innerHTML = '<div class="caixa">✓</div><div><b>' + passo.titulo + "</b>" +
+        (passo.detalhe ? "<span>" + passo.detalhe + "</span>" : "") + "</div>";
+      tela.appendChild(item);
+    });
+  }
+
+  tela.appendChild(secao("No app da Shopee"));
+  passosApp(post).forEach((passo, indice) => {
+    const feito = (marcados[post.id] || []).includes(indice);
+    const item = document.createElement("div");
+    item.className = "passo" + (feito ? " marcado" : "");
+    item.innerHTML = '<div class="caixa">' + (feito ? "✓" : "") + "</div><div><b>" +
+      passo.titulo + "</b>" +
+      (passo.detalhe ? "<span>" + passo.detalhe + "</span>" : "") + "</div>";
+    item.onclick = () => {
+      const atuais = marcados[post.id] || [];
+      marcados[post.id] = feito ? atuais.filter(i => i !== indice)
+                                : atuais.concat(indice);
+      salvar(); detalhe(post);
+    };
+    tela.appendChild(item);
+  });
+
+  tela.appendChild(secao("Legenda do Shopee Video"));
+  const caixa = document.createElement("div");
+  caixa.className = "legenda-box"; caixa.textContent = post.legenda;
+  tela.appendChild(caixa);
+
+  if (post.legenda_com_link){
+    tela.appendChild(secao("Versão com link, para TikTok e Instagram"));
+    const outra = document.createElement("div");
+    outra.className = "legenda-box"; outra.textContent = post.legenda_com_link;
+    tela.appendChild(outra);
+    const botao = document.createElement("button");
+    botao.className = "acao secundaria"; botao.style.width = "100%";
+    botao.textContent = "📋 Copiar versão com link";
+    botao.onclick = () => copiar(post.legenda_com_link, "Versão com link");
+    tela.appendChild(botao);
+  }
+
+  const reiniciar = document.createElement("button");
+  reiniciar.className = "acao secundaria";
+  reiniciar.style.cssText = "width:100%;margin-top:18px";
+  reiniciar.textContent = "Desmarcar todos os passos";
+  reiniciar.onclick = () => { marcados[post.id] = []; salvar(); detalhe(post); };
+  tela.appendChild(reiniciar);
+
+  window.scrollTo(0, 0);
+}
+
+function secao(texto){
+  const titulo = document.createElement("div");
+  titulo.className = "secao"; titulo.textContent = texto;
+  return titulo;
+}
+
+fetch("posts.json", {cache: "no-store"})
+  .then(resposta => resposta.ok ? resposta.json() : Promise.reject(resposta.status))
+  .then(dados => { posts = dados; lista(); })
+  .catch(() => {
+    document.getElementById("subtitulo").textContent = "sem posts.json";
+    document.getElementById("tela").innerHTML =
+      '<div class="vazio">Não achei o posts.json nesta pasta.<br>' +
+      "Rode o pipeline para gerar a fila de postagens.</div>";
+  });
+</script>
+</body>
+</html>

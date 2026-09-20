@@ -124,3 +124,55 @@ def baixar(par, destino):
                 break
             saida.write(pedaco)
     return destino
+
+
+def _multipart(campos, arquivo):
+    """Monta o corpo multipart na mao, para nao depender de biblioteca."""
+    limite = "----lia" + os.urandom(8).hex()
+    partes = []
+    for chave, valor in campos.items():
+        partes.append(
+            f"--{limite}\r\nContent-Disposition: form-data; name=\"{chave}\"\r\n\r\n"
+            f"{valor}\r\n".encode()
+        )
+    if arquivo:
+        nome_campo, caminho = arquivo
+        with open(caminho, "rb") as arq:
+            conteudo = arq.read()
+        partes.append(
+            f"--{limite}\r\nContent-Disposition: form-data; "
+            f"name=\"{nome_campo}\"; filename=\"{os.path.basename(caminho)}\"\r\n"
+            f"Content-Type: application/octet-stream\r\n\r\n".encode()
+        )
+        partes.append(conteudo + b"\r\n")
+    partes.append(f"--{limite}--\r\n".encode())
+    return b"".join(partes), f"multipart/form-data; boundary={limite}"
+
+
+def enviar_video(caminho, legenda_texto, chat_id=None, capa=None):
+    """
+    Devolve o video tratado para o chat, para a Juliane salvar na galeria.
+
+    A legenda vai numa mensagem separada, porque texto de legenda de video
+    no Telegram nao da para copiar inteiro com um toque so.
+    """
+    alvo = chat_id or os.environ.get("TELEGRAM_GRUPO_ID")
+    if not alvo:
+        raise RuntimeError("Sem TELEGRAM_GRUPO_ID para entregar o video.")
+
+    campos = {"chat_id": str(alvo), "supports_streaming": "true"}
+    if capa and os.path.exists(capa):
+        campos["caption"] = "🎬 pronto para postar"
+    corpo, tipo = _multipart(campos, ("video", caminho))
+    req = urllib.request.Request(
+        API.format(token=_token(), metodo="sendVideo"),
+        data=corpo, headers={"Content-Type": tipo}, method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=300) as resposta:
+        dados = json.loads(resposta.read())
+    if not dados.get("ok"):
+        raise RuntimeError(f"Telegram recusou o envio do video: {dados}")
+
+    chamar("sendMessage", chat_id=str(alvo), text=legenda_texto,
+           disable_web_page_preview="true")
+    return dados["result"]["message_id"]
