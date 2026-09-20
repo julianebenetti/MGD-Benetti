@@ -5,3 +5,6 @@ __pycache__/
 shopee-video/__pycache__/
 shopee-video/saida/
 shopee-video/.env
+
+shopee-video/demo/
+shopee-video/evidencias/
