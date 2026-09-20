@@ -1,11 +1,89 @@
 # Comece aqui
 
-Tres etapas, uma de cada vez. Faca so a **Etapa 1** agora. Ela nao precisa
-de chave, nem de celular, nem de Telegram, e leva uns dois minutos.
+Escolha por onde rodar:
+
+- **So com o tablet Android, sem notebook** → va para a [Etapa 1-T](#etapa-1-t--tudo-dentro-do-tablet).
+  E o caminho mais curto, e o unico que automatiza o app de verdade.
+- **No VPS da Hostinger** → comece pela Etapa 1 abaixo. O VPS trata os
+  videos sozinho todo dia, mas nao consegue tocar na tela do tablet.
+
+O ideal, no fim, e os dois: o VPS preparando os videos e o tablet postando.
 
 ---
 
-## Etapa 1 — ver o fluxo funcionando
+## Etapa 1-T — tudo dentro do tablet
+
+O tablet faz tudo: corta o video, monta a capa, escreve a legenda e depois
+opera o app da Shopee sozinho. Precisa de Android 11 ou mais novo.
+
+### 1. Instalar o Termux
+
+Baixe pelo **F-Droid**, nao pela Play Store. A versao da Play Store esta
+parada ha anos e nao instala os pacotes certos.
+
+- F-Droid: `https://f-droid.org/packages/com.termux/`
+
+### 2. Colar isto no Termux
+
+```bash
+pkg install -y git
+cd ~
+git clone -b claude/shopee-video-posts-4j236o https://github.com/julianebenetti/MGD-Benetti.git
+cd MGD-Benetti/shopee-video
+bash instalar-termux.sh
+```
+
+Demora uns minutos na primeira vez. No meio ele pede acesso ao
+armazenamento: toque em **Permitir**.
+
+**O que voce deve ver no fim:** a lista com `capa.jpg`, `video.mp4`,
+`legenda-shopee-video.txt` e `roteiro.txt`, e a legenda na tela com a frase
+"nenhuma palavra repetida".
+
+Para ver a capa e o video na galeria:
+
+```bash
+cp demo/saida/*/capa.jpg demo/saida/*/video.mp4 ~/storage/movies/
+```
+
+### 3. Ligar o adb do tablet nele mesmo
+
+E o que permite a automacao tocar na tela.
+
+```bash
+bash conectar-adb.sh
+```
+
+O script conduz o pareamento. Antes de rodar, deixe pronto no tablet:
+Ajustes → Sobre o tablet → sete toques em "Numero da versao", depois
+Ajustes → Sistema → Opcoes do desenvolvedor → ligar a **Depuracao sem fio**.
+
+Atencao a um detalhe que confunde todo mundo: sao **dois enderecos
+diferentes**. O do pareamento aparece na janelinha do codigo de 6 digitos.
+O da conexao aparece na tela principal da depuracao sem fio. O script pede
+um de cada vez.
+
+### 4. Rodar a automacao
+
+```bash
+termux-wake-lock
+python3 automacao_android.py --post demo/saida/*/info.json --confirmar
+```
+
+O `--confirmar` pausa antes de cada passo, entao da para acompanhar e parar
+no meio. Ele para no rascunho, nao posta sozinho.
+
+Enquanto roda, **nao toque na tela**. Quem esta tocando e o script, e um
+toque seu no meio atrapalha.
+
+**Se ele parar dizendo que nao achou um botao:** e o esperado na primeira
+vez, porque eu nao tenho um tablet aqui para conferir os nomes reais dos
+botoes. Ele salva um print em `evidencias/` e lista os textos que estavam na
+tela. Me mande isso que eu acerto o mapa.
+
+---
+
+## Etapa 1 — ver o fluxo funcionando (no VPS)
 
 Abra o terminal do seu VPS pelo painel da Hostinger e cole isto, uma linha
 de cada vez:
@@ -78,9 +156,10 @@ no chat para voce salvar na galeria.
 
 ---
 
-## Etapa 3 — automatizar o app do celular
+## Etapa 3 — automatizar o app pelo notebook
 
-So depois que a Etapa 2 funcionar.
+Este caminho e para quando voce estiver com o notebook. Rodando tudo no
+tablet, a Etapa 1-T ja cobre isso.
 
 No celular: ative as **Opcoes do desenvolvedor**, ligue a **Depuracao USB**,
 conecte o cabo no computador e aceite o aviso que aparece na tela.
@@ -119,8 +198,9 @@ na tela. Me mande essa saida e o print, que eu acerto o mapa dos botoes.
 
 | Etapa | Precisa de | Prova que |
 |---|---|---|
-| 1 | nada | o corte, a capa e a legenda funcionam |
+| 1-T | so o tablet, com Termux | tudo junto, do corte ate o app |
+| 1 | so o VPS | o corte, a capa e a legenda funcionam |
 | 2 | chaves da Shopee e do Telegram | os dados reais e a entrega chegam |
-| 3 | celular com depuracao USB | o app e operado sozinho |
+| 3 | notebook com o cabo | o app e operado a partir do computador |
 
-Faca a Etapa 1 e me diga o que apareceu.
+Sem notebook agora, faca a **Etapa 1-T** e me diga o que apareceu.

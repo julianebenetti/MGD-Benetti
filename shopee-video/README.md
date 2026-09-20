@@ -62,7 +62,18 @@ python3 automacao_android.py --post saida/2026-09-20_vestido/info.json --confirm
 
 Por padrao ele para no rascunho. `--postar` publica de verdade.
 
-### Preparar o celular, uma vez so
+### Rodar tudo dentro do tablet, sem computador
+
+Com Android 11 ou mais novo o aparelho liga o adb nele mesmo, entao o
+tablet trata o video e opera o app sozinho. Instale o Termux pelo F-Droid e
+rode `bash instalar-termux.sh`, depois `bash conectar-adb.sh` para o
+pareamento. O passo a passo detalhado esta em COMECE-AQUI.md.
+
+Duas coisas importantes nesse modo: ligue o `termux-wake-lock` antes, para
+o Termux nao dormir quando o app da Shopee vier para a frente, e nao toque
+na tela enquanto a automacao roda.
+
+### Preparar o celular pelo computador, uma vez so
 
 1. Ative **Opcoes do desenvolvedor** e a **Depuracao USB**.
 2. Ligue o cabo e aceite o aviso de depuracao que aparece na tela.

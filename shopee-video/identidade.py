@@ -11,9 +11,17 @@ import os
 PASTA = os.path.dirname(os.path.abspath(__file__))
 ARQUIVO = os.path.join(PASTA, "identidade.json")
 
+# Inclui os caminhos do Android e do Termux, para o caso de tudo rodar no
+# proprio tablet. Roboto existe em qualquer Android.
 FONTES_CANDIDATAS = [
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+    os.path.join(os.environ.get("PREFIX", "/nao-existe"),
+                 "share/fonts/TTF/DejaVuSans-Bold.ttf"),
+    "/data/data/com.termux/files/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",
+    "/system/fonts/Roboto-Bold.ttf",
+    "/system/fonts/RobotoStatic-Bold.ttf",
+    "/system/fonts/DroidSans-Bold.ttf",
     "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
 ]
 

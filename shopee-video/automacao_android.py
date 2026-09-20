@@ -140,6 +140,19 @@ class Dispositivo:
             raise RuntimeError(f"adb {' '.join(args[:2])} falhou: {erro}")
         return resultado.stdout if binario else resultado.stdout.decode("utf-8", "ignore")
 
+    def conectar(self, endereco):
+        """Liga em um aparelho por Wi-Fi, inclusive o proprio tablet."""
+        if self.simular:
+            return endereco
+        saida = self._executar(["connect", endereco])
+        if "connected" not in saida.lower():
+            raise RuntimeError(
+                f"Nao consegui conectar em {endereco}: {saida.strip()}\n"
+                "  O endereco muda toda vez que a depuracao sem fio e religada."
+            )
+        self.serial = endereco
+        return endereco
+
     def conferir(self):
         """Confirma que tem um aparelho conectado e autorizado."""
         saida = self._executar(["devices"])
@@ -490,6 +503,8 @@ def main():
     p.add_argument("--postar", action="store_true",
                    help="posta de verdade; sem isso salva rascunho")
     p.add_argument("--serial", help="serial do aparelho, se houver mais de um")
+    p.add_argument("--conectar",
+                   help="endereco ip:porta da depuracao sem fio, para ligar antes")
     p.add_argument("--adb", default="adb", help="caminho do adb")
     p.add_argument("--mapa", help="outro mapa-telas.json")
     p.add_argument("--evidencias", default="evidencias",
@@ -505,6 +520,8 @@ def main():
     if opcoes.simular:
         print("   modo simulacao: nada e tocado no celular")
     else:
+        if opcoes.conectar:
+            print(f"   ligando em {dispositivo.conectar(opcoes.conectar)}")
         print(f"   aparelhos: {', '.join(dispositivo.conferir())}")
         if not dispositivo.tem_teclado_adb():
             print("   ⚠️  sem ADBKeyBoard: a legenda vai sem acento e sem emoji")
