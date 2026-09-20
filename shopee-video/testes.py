@@ -4,6 +4,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import automacao_android as android
 import capa
 import identidade
 import legenda
@@ -128,6 +129,65 @@ with Image.open(marca) as arte:
     else:
         print(f"❌ marca d'agua saiu {arte.mode} {arte.size}")
         falhas += 1
+
+
+# ── automacao do app ─────────────────────────────────────────────
+TELA_EDITOR = """<?xml version='1.0' encoding='UTF-8'?>
+<hierarchy>
+  <node class="android.widget.TextView" text="Adicionar legenda"
+        resource-id="com.shopee.br:id/caption_edit" bounds="[40,300][1040,420]"/>
+  <node class="android.widget.EditText" text=""
+        resource-id="com.shopee.br:id/content_edit" bounds="[40,300][1040,420]"/>
+  <node class="android.widget.Button" text="Adicionar Produto" clickable="true"
+        bounds="[40,900][1040,1010]"/>
+  <node class="android.widget.Button" text="Concluído" clickable="true"
+        bounds="[700,1800][1040,1900]"/>
+</hierarchy>"""
+
+tela = android.Tela(TELA_EDITOR)
+mapa = android.carregar_mapa()
+
+alvo = tela.achar(mapa["adicionar_produto"]["texto"])
+if alvo and alvo.centro == (540, 955):
+    print(f"✅ achou o botao Adicionar Produto em {alvo.centro}")
+else:
+    print(f"❌ nao localizou o Adicionar Produto: {alvo}")
+    falhas += 1
+
+# o mapa tem "Concluido" sem acento e a tela mostra "Concluído"
+if tela.achar(mapa["feito"]["texto"]):
+    print("✅ acento nao atrapalha a busca do botao Feito")
+else:
+    print("❌ a busca falhou por causa do acento")
+    falhas += 1
+
+# o campo de legenda tem que ser o EditText, nao o rotulo
+campo = tela.achar(mapa["legenda"]["texto"], mapa["legenda"]["id"], editavel=True)
+if campo and campo.editavel:
+    print("✅ pegou o campo de digitar, nao o rotulo")
+else:
+    print(f"❌ pegou o elemento errado para a legenda: {campo}")
+    falhas += 1
+
+GALERIA = """<?xml version='1.0' encoding='UTF-8'?>
+<hierarchy>
+  <node class="android.widget.TextView" text="Galeria" bounds="[0,0][300,100]"/>
+  <node class="android.widget.ImageView" clickable="true" bounds="[20,400][360,740]"/>
+  <node class="android.widget.ImageView" clickable="true" bounds="[380,400][720,740]"/>
+  <node class="android.widget.ImageView" clickable="true" bounds="[20,760][360,1100]"/>
+</hierarchy>"""
+primeiro = android.primeiro_da_galeria(android.Tela(GALERIA))
+if primeiro and primeiro.caixa == [20, 400, 360, 740]:
+    print("✅ escolhe a primeira miniatura da galeria, que e o video mais novo")
+else:
+    print(f"❌ escolheu a miniatura errada: {primeiro}")
+    falhas += 1
+
+if android.sem_acento("Concluído") == "concluido":
+    print("✅ normalizacao de acento")
+else:
+    print("❌ normalizacao de acento")
+    falhas += 1
 
 print(f"\n{'tudo certo' if not falhas else str(falhas) + ' falha(s)'}")
 sys.exit(1 if falhas else 0)

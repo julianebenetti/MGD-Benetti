@@ -1,0 +1,42 @@
+{
+  "_ajuda": "Textos que a automacao procura em cada tela do app da Shopee. Se o app mudar um rotulo, acrescente o novo aqui, sem mexer no codigo.",
+  "favoritar": {
+    "desc": ["Favoritar", "Favorito", "Adicionar aos favoritos", "Curtir"],
+    "id": ["like", "favorite", "collect"]
+  },
+  "area_video": {
+    "texto": ["Criar video", "Criar vídeo", "Shopee Video", "Video", "Vídeo", "Criar"]
+  },
+  "galeria": {
+    "texto": ["Galeria", "Álbum", "Album", "Selecionar video", "Selecionar vídeo",
+              "Carregar", "Upload"]
+  },
+  "proximo": {
+    "texto": ["Proximo", "Próximo", "Avancar", "Avançar", "Continuar"]
+  },
+  "legenda": {
+    "texto": ["Adicionar legenda", "Escreva uma legenda", "Legenda", "Descricao",
+              "Descrição", "Diga algo"],
+    "id": ["caption", "desc", "content_edit"]
+  },
+  "adicionar_produto": {
+    "texto": ["Adicionar Produto", "Adicionar produto", "Adicionar produtos",
+              "Marcar produto", "Produtos"]
+  },
+  "busca_produto": {
+    "texto": ["Pesquisar", "Buscar", "Procurar"],
+    "id": ["search", "search_bar", "search_input"]
+  },
+  "botao_adicionar": {
+    "texto": ["Adicionar", "Add"]
+  },
+  "feito": {
+    "texto": ["Feito", "Concluido", "Concluído", "Concluir", "OK"]
+  },
+  "postar": {
+    "texto": ["Postar", "Publicar"]
+  },
+  "rascunho": {
+    "texto": ["Rascunho", "Salvar rascunho", "Salvar como rascunho", "Salvar"]
+  }
+}

@@ -49,6 +49,44 @@ produto identificado.
 Cada post sai com esse roteiro em `roteiro.txt` e no app de postagens, com
 caixinha para marcar o que ja foi feito.
 
+## Automacao do app (ADB)
+
+`automacao_android.py` executa os passos dentro do app da Shopee. Ele roda
+no computador e comanda o celular por ADB, procurando cada botao pelo texto
+que aparece na tela.
+
+```bash
+python3 automacao_android.py --post saida/2026-09-20_vestido/info.json --simular
+python3 automacao_android.py --post saida/2026-09-20_vestido/info.json --confirmar
+```
+
+Por padrao ele para no rascunho. `--postar` publica de verdade.
+
+### Preparar o celular, uma vez so
+
+1. Ative **Opcoes do desenvolvedor** e a **Depuracao USB**.
+2. Ligue o cabo e aceite o aviso de depuracao que aparece na tela.
+3. No computador, instale o ADB (`sudo apt install adb`) e confira com
+   `adb devices`, que deve listar o aparelho como `device`.
+4. Instale o **ADBKeyBoard** no celular. Sem ele o Android so aceita ASCII,
+   entao a legenda perde acento e emoji.
+
+### Calibracao
+
+Os rotulos que o script procura estao em `mapa-telas.json`, um por tela. Se
+o app mudar um texto, a automacao para, salva um print em `evidencias/` e
+lista o que estava visivel. Basta acrescentar o rotulo novo no arquivo.
+
+Rode a primeira vez com `--confirmar`, que pausa antes de cada passo. Assim
+da para acompanhar e parar no meio sem estrago.
+
+### O que ele decide sozinho
+
+Na galeria as miniaturas nao tem texto, entao ele pega a primeira, que e o
+video recem-enviado, e salva um print para voce conferir. Se preferir
+escolher na mao, toque no video e rode com `--continuar`, que ele segue da
+legenda em diante.
+
 ## App de postagens
 
 `app-postagens.html` e a fila no celular. Ele le o `posts.json` que o
@@ -142,6 +180,16 @@ especifico. A arte ainda entra embutida no mp4 como poster.
 | `--nome "..."` | nome do produto quando a API nao responde |
 | `--limite 5` | processa so os 5 primeiros da rodada |
 | `--entregar-telegram` | devolve o video tratado e a legenda no chat, para salvar na galeria |
+
+E na automacao do app:
+
+| Opcao | Para que |
+|---|---|
+| `--simular` | mostra o plano sem tocar no celular |
+| `--confirmar` | pausa antes de cada passo |
+| `--continuar` | segue do editor, com o video ja escolhido na tela |
+| `--postar` | publica em vez de salvar rascunho |
+| `--serial` | escolhe o aparelho, se houver mais de um |
 
 ## A regra de nao repetir palavra
 
