@@ -1022,6 +1022,55 @@ Primeiros números da empresa pela conta dela (jul–set/26): receita
 **R$ 18.615,28**, despesa operacional **R$ 3.770,86**. Transferência fica fora
 dos dois, de propósito — é dinheiro que a outra ponta já lança.
 
+### O Black também foi refinanciado, em junho — e o contrato nunca foi cadastrado (21/09)
+A Juliane perguntou se tinha negociado a fatura do Black, quando e como. Tinha:
+**26/06/2026**, e o dado fecha sozinho.
+
+| | |
+|---|---|
+| Fatura de Jun/26 | R$ 5.801,78 |
+| Entrada paga no dia (`Pagamento Parcelamento Fatura`) | −R$ 551,17 |
+| Saldo refinanciado | **R$ 5.250,61** ← é exatamente o `saldo_anterior` da fatura de Jul/26 |
+| IOF (`Iof Refinanciamento De Fatura`) | + R$ 54,88 |
+| Valor financiado (`Credito Por Parcelamento`) | **R$ 5.305,49** ← bate ao centavo |
+| Parcelas | 4 × R$ 1.769,36, venc. Jul a Out/26 |
+
+**Custo: R$ 1.826,83 por uma dívida de R$ 5.250,61** — CET de ~13,1% ao mês,
+**~338,7% ao ano**. É a mesma taxa do parcelamento do 0442 (338,31%), o que é
+uma boa checagem cruzada: mesmo produto, mesma taxa, lidos de fontes diferentes.
+
+**O que aconteceu depois é o que importa hoje:** só a **1ª parcela** foi de fato
+paga (a fatura de julho foi paga em parte, R$ 2.335,89 de R$ 6.917,01). A 2ª e a
+3ª foram **cobradas** dentro das faturas de Ago/26 (R$ 10.667,16) e Set/26, que
+seguem em aberto. E em 18/08 o Itaú cobrou **Multa R$ 136,67 + Juros de Mora
+R$ 20,50 + Encargos Refinanciamento R$ 632,37 = R$ 789,54** num mês só, pelo
+atraso da parcela.
+
+**O contrato nunca foi cadastrado em Dívidas.** O parcelamento do 0442 (09/09)
+foi registrado com os três passos que este arquivo manda fazer juntos; o do Black
+(junho) só existia como lançamento. Corrigido —
+`refin_fatura_4846_jun26`, `em_pagamento: false` (a parcela vem dentro da fatura
+do Black, cujo pagamento está parado).
+
+**O saldo cadastrado é só a 4ª parcela (R$ 1.769,36), e isso é de propósito.**
+Aqui está a diferença entre este caso e o do 0442, que vale para o próximo:
+
+- No **0442** o parcelamento aconteceu e **nenhuma parcela tinha sido cobrada
+  ainda** — o dinheiro sairia do cartão e sumiria da tela. Por isso
+  `financiado_em_parcelas` no cabeçalho e o contrato inteiro em Dívidas.
+- No **Black**, 3 das 4 parcelas **já foram cobradas** e estão visíveis como
+  lançamentos dentro de faturas em aberto. Nada está sumindo. Cadastrar o
+  contrato inteiro (R$ 7.077,44) somaria ao saldo do cartão um dinheiro que já
+  está lá dentro — **dupla contagem**. Por isso o `financiado_em_parcelas` da
+  fatura de Jun/26 **não** foi preenchido retroativamente: ele existe para
+  impedir dinheiro de evaporar, e aqui não há evaporação.
+
+**Pendência que a dashboard não resolve sozinha:** a fatura de **Set/26 do Black
+está com `saldo_anterior: 0`** apesar de a de Ago/26 (R$ 10.667,16) não ter sido
+paga — é uma foto de ciclo em aberto, não a fatura fechada. O saldo real do Black
+é maior do que a tela mostra, e só a fatura fechada de outubro resolve (ela traz
+também a 4ª parcela do refinanciamento).
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

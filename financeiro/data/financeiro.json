@@ -68386,6 +68386,18 @@
       "parcela_mensal": 408.13,
       "meses_restantes": 4,
       "observacao": "Fatura de R$1.382,94 (venc. 01/09/26) parcelada em 09/09/26: entrada R$131,38 + 4x R$408,13, vencendo 01/10/26 a 01/01/27. Juros 12,4% ao mes (314,63% ao ano), IOF R$12,14, CET 12,91% ao mes e 338,31% ao ano. Desembolso total R$1.763,90 por uma divida de R$1.382,94 — custo de R$380,96. E o credito mais caro de todos os contratos cadastrados. O cartao 0442 e o do trafego pago da Benetti UP e a fatura era 82% gasto da empresa, mas o parcelamento esta no nome da Juliane."
+    },
+    {
+      "id": "refin_fatura_4846_jun26",
+      "nome": "Parcelamento da fatura do Black 4846 (Jun/26)",
+      "pessoa": "Juliane",
+      "montante": 1769.36,
+      "parcela_mensal": 1769.36,
+      "meses_restantes": 1,
+      "em_pagamento": false,
+      "suspensa_desde": "2026-08-26",
+      "motivo_suspensao": "A parcela vem cobrada dentro da fatura do Black, e o pagamento do cartao esta parado por decisao dela (31/08).",
+      "observacao": "Refinanciamento da fatura de 26/06/2026. Fatura de R$5.801,78, entrada de R$551,17 paga no dia, saldo de R$5.250,61 + IOF de R$54,88 = R$5.305,49 financiados em 4x R$1.769,36 (venc. Jul a Out/26). Desembolso de R$7.132,32 por uma divida de R$5.250,61: R$1.826,83 de custo, CET ~13,1% ao mes / ~338,7% ao ano — a mesma taxa do parcelamento do 0442. So a 1a parcela foi efetivamente paga (a fatura de julho foi paga em parte); as parcelas 2 e 3 ja foram COBRADAS e estao dentro das faturas de Ago/26 e Set/26, que seguem em aberto. Por isso o saldo aqui e so a 4a parcela, ainda nao cobrada: somar as tres ja lancadas contaria o mesmo dinheiro duas vezes. A 4a entra quando a fatura de Out/26 do Black for importada."
     }
   ],
   "pessoas": [],
