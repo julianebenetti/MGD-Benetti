@@ -347,6 +347,16 @@ const REGRAS = [
     descricao: 'Transurc — transporte para o trabalho',
     nota: 'Mesma regra que já valia para a fatura do cartão (Juliane, 23/08).',
   },
+  // Mesmo caso do Transurc: "Tokio Marine -> seguro do carro / Familia" ja era
+  // decisao dela (23/08), mas so existia em regras-classificacao.json, que vale
+  // para a fatura. Quando o seguro e pago por boleto no extrato, a regra precisa
+  // existir aqui tambem.
+  {
+    padrao: /(PAG BOLETO )?TOKIO MARINE/i,
+    natureza: 'despesa', categoria: 'seguro', pessoa: 'Família',
+    descricao: 'Seguro do carro (Tokio Marine)',
+    nota: 'Mesma regra que já valia para a fatura do cartão (Juliane, 23/08).',
+  },
   {
     padrao: /PIX TRANSF Vanders/i,
     natureza: 'despesa', categoria: 'cuidados_pessoais', pessoa: 'Juliane',
@@ -636,6 +646,14 @@ if (!alvos.length) {
 
 const extratos = alvos.map(lerExtrato);
 
+// A conferência de saldo tem de ser feita sobre o arquivo COMO FOI LIDO.
+// Logo abaixo, o extrato mais antigo perde os lançamentos que o mais novo já
+// cobre — conferir depois disso compara os saldos impressos contra uma fração
+// dos movimentos, e o arquivo acusa erro de leitura que não existe. Pior: a
+// guarda que recusa gravar deixaria de distinguir leitura errada de corte
+// legítimo, e um extrato perfeito seria recusado.
+extratos.forEach(e => { e.conferencia = conferirSaldos(e); });
+
 // Dois extratos do mesmo periodo nao podem ser somados: o mesmo PIX apareceria
 // duas vezes. E casar linha a linha nao resolve — o que estava agendado num
 // arquivo pode aparecer no seguinte com outra data e outro texto (o PIX da vaga
@@ -680,7 +698,7 @@ extratos.forEach(e => {
   const ds = e.itens.map(x => x.data).sort();
   console.log(`${e.arquivo}`);
   console.log(`   ag. ${e.agencia || '?'} c/c ${e.conta || '?'} · ${e.itens.length} lançamentos · ${ds[0] || '—'} a ${ds[ds.length - 1] || '—'}${e.emitidoEm ? ` · emitido ${e.emitidoEm}` : ''}`);
-  const c = conferirSaldos(e);
+  const c = e.conferencia;
   if (c) {
     console.log(c.falhas.length
       ? `   ⚠️  saldo do dia não fecha em ${c.falhas.length} de ${c.dias - 1} intervalo(s), ${brl(c.total)} sem explicação`
@@ -693,7 +711,7 @@ extratos.forEach(e => {
 // levaria o erro para dentro da dashboard sem ninguem perceber. Centavos de
 // rendimento de aplicacao automatica o proprio extrato nao itemiza.
 const LIMITE_SALDO = 1.00;
-const naoFecham = extratos.map(conferirSaldos).filter(c => c && c.total > LIMITE_SALDO);
+const naoFecham = extratos.map(e => e.conferencia).filter(c => c && c.total > LIMITE_SALDO);
 if (naoFecham.length && aplicar) {
   console.error(`\n❌ Não gravei: o saldo do extrato não fecha com os lançamentos lidos (${brl(naoFecham.reduce((s2, c) => s2 + c.total, 0))}).`);
   console.error('   Isso quase sempre é linha que a leitura não pegou. Corrija o leitor antes de importar.\n');
