@@ -148,16 +148,31 @@ agendado quase nunca rodaria; e o macro leria só o *número* de vídeos com
 problema — pegar a lista item a item exigiria rolar e abrir vídeo por vídeo,
 o que quebra a cada atualização do app.
 
-**Caminho em avaliação — versão web do painel.** Se a tela existir em
-`affiliate.tiktok.com` (ou no Seller Center), um robô com o cookie de sessão
-dela lê a lista inteira e manda no Telegram, rodando no GitHub Actions sem
-depender de aparelho ligado.
+**Caminho escolhido — versão web do painel.** A tela existe no navegador, em
+`https://business.tiktokshop.com/us/creator?from=portal_v4` (TikTok Shop →
+Vídeos → Gerenciar → Links de produtos ocultos → Ver detalhes → Vincular).
+Um robô com o cookie de sessão dela pode ler a lista inteira e mandar no
+Telegram, rodando no GitHub Actions sem depender de aparelho ligado.
 
-Pra descobrir, use `ferramentas/inspecionar-painel-tiktok.js`: é um trecho
-read-only pra colar no console do navegador, que lista o que existe na tela.
-Ele não clica nem envia nada — só lê o DOM e imprime.
+Esse painel é um SPA: monta a tela chamando uma API interna. Ler a API é bem
+mais robusto do que raspar o DOM. Duas ferramentas de navegador ajudam a
+descobrir isso (ambas read-only, nada sai do navegador dela):
 
-Se a tela existir, o que falta montar é:
+| Ferramenta | Pra que |
+|---|---|
+| `ferramentas/inspecionar-painel-tiktok.js` | Lista os textos e links da tela — confirma que a tela é a certa |
+| `ferramentas/capturar-api-tiktok.js` | Escuta as chamadas da página e devolve o endpoint + a **estrutura** da resposta |
+
+O capturador foi feito pra não vazar dado pessoal: guarda os nomes dos campos
+e o tipo de cada um, e só preserva o valor de campos de status
+(`status`, `reason`, `sold_out`, `stock`…), que são os que revelam como o
+TikTok marca "esgotado". Valores de parâmetros da URL saem mascarados.
+Testes: `cd ferramentas && node teste-ferramentas.mjs`.
+
+Com o endpoint e a estrutura em mãos, falta montar:
 1. tabela `tiktok_videos_quebrados` (link do vídeo, produto, motivo, detectado_em, resolvido_em);
-2. robô com o cookie guardado como secret, rodando no Actions;
+2. robô que chama a API com o cookie guardado como secret, rodando no Actions;
 3. alerta no Telegram com a lista, reaproveitando o formato de `texto_alerta`.
+
+O cookie de sessão vence de tempos em tempos — ela precisará renová-lo. É o
+custo real desse caminho, e ainda assim é o menor de todos.

@@ -10,9 +10,8 @@
    sua conta. Dá pra ler o código inteiro abaixo — são 25 linhas.
 
    COMO USAR
-   1. Abra affiliate.tiktok.com (ou seller-br.tiktok.com), logada.
-   2. Navegue até a área de Vídeos / Conteúdo e aplique o filtro de
-      links ocultos, se existir.
+   1. Abra https://business.tiktokshop.com/us/creator?from=portal_v4 logada.
+   2. Navegue: Vídeos → Gerenciar → "Links de produtos ocultos".
    3. Aperte F12 → aba "Console".
    4. Cole tudo isso e aperte Enter.
    5. Mande pra mim o que aparecer (print serve).

@@ -47,5 +47,10 @@
 - Detalhes de instalação: `VALIDADOR-TIKTOK.md`.
 - Automação no tablet Android (MacroDroid/Tasker) foi **descartada**: o tablet dela
   fica guardado e bloqueado, e o macro leria só a quantidade, não a lista de vídeos.
-  Em avaliação: versão web do painel em affiliate.tiktok.com, lida por robô com
-  cookie de sessão. Ferramenta de diagnóstico: `ferramentas/inspecionar-painel-tiktok.js`.
+  Caminho escolhido: **versão web do painel**, que existe em
+  `https://business.tiktokshop.com/us/creator?from=portal_v4`, lida por robô com
+  cookie de sessão no Actions. O painel é SPA — preferir chamar a API interna a
+  raspar o DOM. Ferramentas de descoberta em `ferramentas/` (read-only, rodar
+  `cd ferramentas && node teste-ferramentas.mjs`). O capturador de API é
+  deliberadamente cego a dado pessoal: guarda só estrutura, nomes de campo e
+  valores de status — manter assim.
