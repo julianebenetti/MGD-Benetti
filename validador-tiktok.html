@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validador de Estoque — TikTok Shop</title>
+<style>
+:root {
+  --bg:        #f5f4f0;
+  --bg2:       #ffffff;
+  --bg3:       #eeedea;
+  --border:    #e0ddd6;
+  --text:      #1a1916;
+  --muted:     #8a877e;
+  --subtle:    #b8b5ae;
+  --green:     #166534;
+  --green-bg:  #dcfce7;
+  --green-bdr: #86efac;
+  --red:       #991b1b;
+  --red-bg:    #fee2e2;
+  --red-bdr:   #fca5a5;
+  --yellow:    #92400e;
+  --yellow-bg: #fef3c7;
+  --blue:      #1e40af;
+  --blue-bg:   #dbeafe;
+  --font:      -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono:      'SF Mono', 'Fira Code', monospace;
+  --r:         8px;
+}
+body.ad-dark {
+  --bg:        #14161a;
+  --bg2:       #1b1e23;
+  --bg3:       #22262c;
+  --border:    #2c3138;
+  --text:      #e8e9eb;
+  --muted:     #9297a1;
+  --subtle:    #5c6169;
+  --green:     #4ade80;
+  --green-bg:  #11331f;
+  --green-bdr: #1f5c3a;
+  --red:       #f87171;
+  --red-bg:    #3a1518;
+  --red-bdr:   #5c2328;
+  --yellow:    #fbbf24;
+  --yellow-bg: #3a2e0f;
+  --blue:      #60a5fa;
+  --blue-bg:   #16233d;
+}
+body.ad-dark table td, body.ad-dark table th { color:var(--text); }
+body.ad-dark ::-webkit-scrollbar { width:10px; height:10px; }
+body.ad-dark ::-webkit-scrollbar-track { background:var(--bg2); }
+body.ad-dark ::-webkit-scrollbar-thumb { background:var(--border); border-radius:6px; }
+body.ad-dark input, body.ad-dark select, body.ad-dark textarea { background:var(--bg2); color:var(--text); border-color:var(--border); }
+* { margin:0; padding:0; box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:14px; min-height:100vh; }
+
+.top { background:var(--bg2); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:100; }
+.top-title { font-size:16px; font-weight:700; letter-spacing:-.3px; }
+.top-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+.top-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.page { padding:20px 28px; }
+
+.act-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 13px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg2); color:var(--muted); font-size:12px; font-weight:500; cursor:pointer; font-family:var(--font); white-space:nowrap; }
+.act-btn:hover { border-color:#2563eb; color:#2563eb; background:var(--blue-bg); }
+.act-btn:disabled { opacity:.5; cursor:default; }
+.act-btn.primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+.act-btn.primary:hover { background:#1d4ed8; color:#fff; }
+
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:20px; }
+.kpi { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; }
+.kpi-label { font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; }
+.kpi-val { font-size:20px; font-weight:700; letter-spacing:-.5px; line-height:1; }
+.kpi-val.pos { color:var(--green); }
+.kpi-val.neg { color:var(--red); }
+.kpi-val.warn { color:var(--yellow); }
+.kpi-sub { font-size:10px; color:var(--subtle); margin-top:5px; }
+
+.section { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:20px; }
+.section-head { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.section-title { font-size:13px; font-weight:700; letter-spacing:.2px; display:inline-block; background:#2d2b27; color:#f0efec; padding:5px 12px; border-radius:6px; }
+.section-sub { font-size:11px; color:var(--muted); }
+.filter-btn { padding:4px 10px; font-size:11px; border:1px solid var(--border); border-radius:20px; background:transparent; color:var(--muted); cursor:pointer; font-family:var(--font); }
+.filter-btn.on { background:#2563eb; color:#fff; border-color:#2563eb; }
+.search-box { padding:5px 10px; font-size:12px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg); color:var(--text); font-family:var(--font); outline:none; }
+.search-box:focus { border-color:#2563eb; }
+
+/* ── AVISO ── */
+.aviso { border-radius:var(--r); padding:11px 14px; font-size:12px; margin-bottom:16px; display:none; line-height:1.5; }
+.aviso.on { display:block; }
+.aviso.warn { background:var(--yellow-bg); border:1px solid var(--yellow); color:var(--yellow); }
+.aviso.err  { background:var(--red-bg); border:1px solid var(--red-bdr); color:var(--red); }
+.aviso.ok   { background:var(--green-bg); border:1px solid var(--green-bdr); color:var(--green); }
+
+/* ── FORM ── */
+.form-grid { padding:14px 16px; display:grid; grid-template-columns:1.2fr 2fr 1fr auto; gap:10px; align-items:end; }
+.campo { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.campo label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; font-weight:600; }
+.campo input { padding:7px 10px; font-size:12px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg); color:var(--text); font-family:var(--font); outline:none; width:100%; }
+.campo input:focus { border-color:#2563eb; }
+
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { padding:7px 8px; text-align:left; font-size:10px; font-weight:700; color:#f0efec; text-transform:uppercase; letter-spacing:.3px; border-bottom:1px solid var(--border); white-space:nowrap; background:#2d2b27; }
+td { padding:8px; text-align:left; border-bottom:1px solid var(--border); color:var(--text); font-size:12px; vertical-align:top; }
+td.nome { max-width:240px; white-space:normal; word-break:break-word; font-weight:600; }
+td.motivo { max-width:280px; white-space:normal; word-break:break-word; color:var(--muted); font-size:11px; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--bg3); }
+
+.badge { display:inline-block; padding:3px 8px; border-radius:20px; font-size:10px; font-weight:700; white-space:nowrap; text-transform:uppercase; letter-spacing:.3px; }
+.b-ok    { background:var(--green-bg); color:var(--green); border:1px solid var(--green-bdr); }
+.b-esg   { background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-bdr); }
+.b-susp  { background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow); }
+.b-none  { background:var(--bg3);      color:var(--muted); border:1px solid var(--border); }
+.link-prod { color:#2563eb; text-decoration:none; font-size:11px; }
+.link-prod:hover { text-decoration:underline; }
+.vazio { text-align:center; padding:28px; color:var(--muted); font-size:12px; }
+
+@media (max-width:760px) {
+  .top { padding:12px 14px; }
+  .page { padding:12px; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); gap:8px; }
+  .kpi-val { font-size:18px; }
+  .form-grid { grid-template-columns:1fr; }
+  .section-head { flex-direction:column; align-items:flex-start; }
+}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <div class="top-title">📦 Validador de Estoque — TikTok Shop</div>
+    <div class="top-sub">Avisa quando um produto que você postou esgotou — checagem automática a cada 2h</div>
+  </div>
+  <div class="top-right">
+    <button class="act-btn" onclick="ttvCarregar()">⟳ Atualizar</button>
+    <button id="btn-dark-mode" onclick="toggleDarkMode()" title="Alternar modo claro/escuro"
+      style="font-size:11px;padding:5px 10px;border:1px solid var(--border);border-radius:20px;background:var(--bg2);color:var(--muted);cursor:pointer;">🌙 Modo escuro</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="aviso" id="ttv-aviso"></div>
+
+  <div class="kpi-grid" id="ttv-stats">
+    <div class="kpi"><div class="kpi-label">Carregando</div><div class="kpi-val">—</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">➕ Vigiar um produto novo</span>
+      <span class="section-sub">Cole o link que você usa no TikTok — o afiliado curtinho também serve</span>
+    </div>
+    <div class="form-grid">
+      <div class="campo">
+        <label for="ttv-nome">Produto</label>
+        <input id="ttv-nome" placeholder="Ex: Calça wide leg bege">
+      </div>
+      <div class="campo">
+        <label for="ttv-link">Link do produto</label>
+        <input id="ttv-link" placeholder="https://vt.tiktok.com/… ou shop.tiktok.com/view/product/…">
+      </div>
+      <div class="campo">
+        <label for="ttv-onde">Onde postei (opcional)</label>
+        <input id="ttv-onde" placeholder="Ex: vídeo de 18/09 + bio">
+      </div>
+      <div class="campo">
+        <label>&nbsp;</label>
+        <button class="act-btn primary" id="ttv-add" onclick="ttvAdicionar()">Começar a vigiar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <span class="section-title">Produtos vigiados</span>
+      <span class="section-sub" id="ttv-contagem"></span>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-left:auto;">
+        <button class="filter-btn on" data-f="ativos"     onclick="ttvFiltrar('ativos')">Vigiando</button>
+        <button class="filter-btn"    data-f="problema"   onclick="ttvFiltrar('problema')">🔴 Com problema</button>
+        <button class="filter-btn"    data-f="disponivel" onclick="ttvFiltrar('disponivel')">🟢 Disponíveis</button>
+        <button class="filter-btn"    data-f="semleitura" onclick="ttvFiltrar('semleitura')">⚪ Sem leitura</button>
+        <button class="filter-btn"    data-f="arquivados" onclick="ttvFiltrar('arquivados')">Arquivados</button>
+        <input class="search-box" id="ttv-busca" placeholder="Filtrar por nome…" oninput="ttvRender()" style="width:160px;">
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Situação</th>
+            <th>Desde</th>
+            <th>Última checagem</th>
+            <th>Como o robô concluiu</th>
+            <th>Onde postei</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ttv-tbody">
+          <tr><td colspan="7" class="vazio">Carregando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Namespace "ttv*" — mesmo Supabase da AfiliDash ──────────────
+const TTV_URL = "https://tkxkrbdvcctoajuigvvv.supabase.co";
+const TTV_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreGtyYmR2Y2N0b2FqdWlndnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NzY2NzUsImV4cCI6MjA5OTQ1MjY3NX0.-szTE2wYYr9DNTLiff6zmLpbP6UOL1l9SFpvc-29Njs";
+const TTV_CONFIRMACOES = 2;   // precisa bater com CONFIRMACOES no tiktok-estoque-sync.py
+
+let ttvLinhas = [], ttvFiltro = "ativos";
+
+async function ttvFetch(path, opcoes = {}) {
+  const res = await fetch(`${TTV_URL}/rest/v1/${path}`, {
+    ...opcoes,
+    headers: {
+      apikey: TTV_KEY,
+      Authorization: `Bearer ${TTV_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: opcoes.method && opcoes.method !== 'GET' ? 'return=minimal' : '',
+      ...(opcoes.headers || {})
+    }
+  });
+  if (!res.ok) throw new Error(`${res.status} — ${await res.text()}`);
+  return res.status === 204 ? null : res.json().catch(() => null);
+}
+
+function ttvEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function ttvQuandoTexto(iso) {
+  if (!iso) return '—';
+  const min = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (min < 1)    return 'agora';
+  if (min < 60)   return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24)     return `há ${h}h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? 'ontem' : `há ${d} dias`;
+}
+
+function ttvAviso(tipo, html) {
+  const el = document.getElementById('ttv-aviso');
+  el.className = `aviso on ${tipo}`;
+  el.innerHTML = html;
+}
+function ttvLimparAviso() { document.getElementById('ttv-aviso').className = 'aviso'; }
+
+// ── Situação mostrada na tela ───────────────────────────────────
+// O robô grava o status bruto assim que lê. Só tratamos como confirmado
+// depois de TTV_CONFIRMACOES leituras seguidas — antes disso é "suspeita".
+function ttvSituacao(l) {
+  const conf = l.confirmacoes || 0;
+  if (l.status === 'esgotado' || l.status === 'removido') {
+    const confirmado = conf >= TTV_CONFIRMACOES;
+    if (!confirmado)
+      return { classe:'b-susp', texto:`⚠ suspeita (${conf}/${TTV_CONFIRMACOES})`, grupo:'problema',
+               ajuda:'Leu esgotado uma vez só. Confirmo na próxima rodada antes de te avisar.' };
+    return l.status === 'removido'
+      ? { classe:'b-esg', texto:'🚫 saiu do ar', grupo:'problema', ajuda:'O link não existe mais.' }
+      : { classe:'b-esg', texto:'🔴 esgotado',  grupo:'problema', ajuda:'Confirmado em duas checagens.' };
+  }
+  if (l.status === 'disponivel')
+    return { classe:'b-ok', texto:'🟢 disponível', grupo:'disponivel', ajuda:'' };
+  if (l.status === 'erro')
+    return { classe:'b-none', texto:'⚠ erro', grupo:'semleitura', ajuda:'Falha de rede na checagem.' };
+  return { classe:'b-none', texto:'⚪ sem leitura', grupo:'semleitura',
+           ajuda:'O TikTok não entregou a página. Nenhum alerta é disparado nesse caso.' };
+}
+
+// Problema primeiro, depois sem leitura, disponível por último — o que precisa
+// de ação fica no topo da tela.
+const TTV_PESO = { problema: 0, semleitura: 1, disponivel: 2 };
+
+function ttvRender() {
+  const busca = (document.getElementById('ttv-busca').value || '').toLowerCase();
+  const lista = ttvLinhas.filter(l => {
+    if (busca && !(l.produto || '').toLowerCase().includes(busca)) return false;
+    if (ttvFiltro === 'arquivados') return !l.ativo;
+    if (!l.ativo) return false;
+    if (ttvFiltro === 'ativos') return true;
+    return ttvSituacao(l).grupo === ttvFiltro;
+  }).sort((a, b) => {
+    const pa = TTV_PESO[ttvSituacao(a).grupo], pb = TTV_PESO[ttvSituacao(b).grupo];
+    return pa !== pb ? pa - pb : (a.produto || '').localeCompare(b.produto || '', 'pt-BR');
+  });
+
+  document.getElementById('ttv-contagem').textContent =
+    `${lista.length} de ${ttvLinhas.filter(l => l.ativo).length} vigiados`;
+
+  const tbody = document.getElementById('ttv-tbody');
+  if (!lista.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="vazio">${
+      ttvLinhas.length ? 'Nenhum produto neste filtro.'
+                       : 'Nenhum produto vigiado ainda — cadastre o primeiro aí em cima. ☝️'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(l => {
+    const s = ttvSituacao(l);
+    const bruto = l.link_resolvido || l.link || '';
+    const link = /^https?:\/\//i.test(bruto) ? bruto : '';   // nunca renderiza javascript:
+    const desde = (s.grupo === 'problema' && l.esgotado_desde) ? ttvQuandoTexto(l.esgotado_desde) : '—';
+    const fila = l.recheck_solicitado
+      ? '<span style="font-size:10px;color:var(--muted);">na fila ⏳</span>'
+      : `<button class="act-btn" onclick="ttvRecheck(${l.id})">Checar já</button>`;
+    return `<tr>
+      <td class="nome">${ttvEsc(l.produto)}
+        ${link ? `<br><a class="link-prod" href="${ttvEsc(link)}" target="_blank" rel="noopener">abrir no TikTok ↗</a>` : ''}
+      </td>
+      <td><span class="badge ${s.classe}" title="${ttvEsc(s.ajuda)}">${s.texto}</span></td>
+      <td>${desde}</td>
+      <td>${ttvQuandoTexto(l.ultima_verificacao)}</td>
+      <td class="motivo">${ttvEsc(l.detalhe || '—')}</td>
+      <td class="motivo">${ttvEsc(l.onde_postei || '—')}</td>
+      <td style="white-space:nowrap;">${fila}
+        <button class="act-btn" onclick="ttvArquivar(${l.id}, ${l.ativo ? 'false' : 'true'})">
+          ${l.ativo ? 'Arquivar' : 'Reativar'}</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function ttvRenderStats() {
+  const ativos = ttvLinhas.filter(l => l.ativo);
+  const cont = { problema:0, disponivel:0, semleitura:0, suspeita:0 };
+  ativos.forEach(l => {
+    const s = ttvSituacao(l);
+    cont[s.grupo]++;
+    if (s.texto.startsWith('⚠ suspeita')) cont.suspeita++;
+  });
+  const ultima = ativos.map(l => l.ultima_verificacao).filter(Boolean).sort().pop();
+
+  document.getElementById('ttv-stats').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Vigiados</div>
+      <div class="kpi-val">${ativos.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Disponíveis</div>
+      <div class="kpi-val pos">${cont.disponivel}</div></div>
+    <div class="kpi"><div class="kpi-label">Esgotados / fora do ar</div>
+      <div class="kpi-val ${cont.problema ? 'neg' : ''}">${cont.problema}</div>
+      <div class="kpi-sub">${cont.suspeita ? `${cont.suspeita} ainda em confirmação` : 'confirmados em 2 checagens'}</div></div>
+    <div class="kpi"><div class="kpi-label">Sem leitura</div>
+      <div class="kpi-val ${cont.semleitura ? 'warn' : ''}">${cont.semleitura}</div>
+      <div class="kpi-sub">o TikTok barrou a leitura</div></div>
+    <div class="kpi"><div class="kpi-label">Última checagem</div>
+      <div class="kpi-val" style="font-size:16px;">${ttvQuandoTexto(ultima)}</div>
+      <div class="kpi-sub">o robô roda de 2 em 2 horas</div></div>
+  `;
+
+  // Robô parado? Avisa, porque "tudo verde" com robô parado engana.
+  const horas = ultima ? (Date.now() - new Date(ultima)) / 3600000 : null;
+  // Produto cadastrado agora ainda não deu tempo de ser checado — isso é normal,
+  // não é robô quebrado.
+  const maisAntigo = ativos.map(l => l.created_at).filter(Boolean).sort()[0];
+  const esperandoPrimeira = !ultima && maisAntigo &&
+                            (Date.now() - new Date(maisAntigo)) / 3600000 < 3;
+
+  if (ativos.length && esperandoPrimeira) {
+    ttvAviso('warn', '⏳ Aguardando a primeira checagem do robô — ele roda de 2 em 2 horas. '
+                   + 'Pra não esperar: GitHub → Actions → <code>Validador de Estoque TikTok</code> → Run workflow.');
+  } else if (ativos.length && (horas === null || horas > 5)) {
+    ttvAviso('warn', `⚠️ <b>O robô não checa nada ${horas === null ? 'ainda' : `há ${Math.floor(horas)}h`}.</b>
+      Os status abaixo podem estar velhos. Confira se o workflow
+      <code>Validador de Estoque TikTok</code> está rodando no GitHub Actions.`);
+  } else if (cont.problema) {
+    ttvAviso('err', `🔴 <b>${cont.problema} produto(s) com problema.</b> Tira o link do ar ou troca o produto no vídeo.`);
+  } else if (ativos.length) {
+    ttvAviso('ok', `✅ Tudo disponível na última checagem.`);
+  } else {
+    ttvLimparAviso();
+  }
+}
+
+async function ttvCarregar() {
+  try {
+    ttvLinhas = await ttvFetch('tiktok_estoque_monitor?select=*&order=ativo.desc,status.asc,produto.asc');
+    ttvRenderStats();
+    ttvRender();
+  } catch (err) {
+    document.getElementById('ttv-tbody').innerHTML =
+      `<tr><td colspan="7" class="vazio" style="color:var(--red);">Erro ao carregar: ${ttvEsc(err.message)}</td></tr>`;
+  }
+}
+
+function ttvFiltrar(f) {
+  ttvFiltro = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('on', b.dataset.f === f));
+  ttvRender();
+}
+
+async function ttvAdicionar() {
+  const nome = document.getElementById('ttv-nome').value.trim();
+  const link = document.getElementById('ttv-link').value.trim();
+  const onde = document.getElementById('ttv-onde').value.trim();
+  if (!nome || !link)  return ttvAviso('warn', '⚠️ Preencha pelo menos o nome do produto e o link.');
+  if (!/^https?:\/\//i.test(link)) return ttvAviso('warn', '⚠️ O link precisa começar com https://');
+
+  const btn = document.getElementById('ttv-add');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  try {
+    await ttvFetch('tiktok_estoque_monitor', {
+      method: 'POST',
+      body: JSON.stringify({
+        produto: nome, link, onde_postei: onde || null,
+        plataforma: 'tiktok_shop', recheck_solicitado: true
+      })
+    });
+    document.getElementById('ttv-nome').value = '';
+    document.getElementById('ttv-link').value = '';
+    document.getElementById('ttv-onde').value = '';
+    await ttvCarregar();
+    ttvAviso('ok', `✅ <b>${ttvEsc(nome)}</b> entrou na vigilância. O robô checa na próxima rodada.`);
+  } catch (err) {
+    ttvAviso('err', `❌ Não consegui salvar: ${ttvEsc(err.message)}`);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Começar a vigiar';
+  }
+}
+
+async function ttvRecheck(id) {
+  try {
+    await ttvFetch(`tiktok_estoque_monitor?id=eq.${id}`, {
+      method: 'PATCH', body: JSON.stringify({ recheck_solicitado: true })
+    });
+    await ttvCarregar();
+    ttvAviso('ok', '✅ Entrou na fila — o robô checa esse primeiro na próxima rodada. '
+                 + 'Pra não esperar, rode o workflow na mão lá no GitHub Actions.');
+  } catch (err) {
+    ttvAviso('err', `❌ ${ttvEsc(err.message)}`);
+  }
+}
+
+async function ttvArquivar(id, ativo) {
+  try {
+    await ttvFetch(`tiktok_estoque_monitor?id=eq.${id}`, {
+      method: 'PATCH', body: JSON.stringify({ ativo })
+    });
+    await ttvCarregar();
+  } catch (err) {
+    ttvAviso('err', `❌ ${ttvEsc(err.message)}`);
+  }
+}
+
+// ── Modo escuro (mesma chave usada no AfiliDash) ────────────────
+function toggleDarkMode(forcarEstado) {
+  const btn = document.getElementById('btn-dark-mode');
+  if (!btn) return;
+  const ativo = forcarEstado !== undefined ? forcarEstado : !document.body.classList.contains('ad-dark');
+  document.body.classList.toggle('ad-dark', ativo);
+  btn.textContent = ativo ? '☀️ Modo claro' : '🌙 Modo escuro';
+  localStorage.setItem('ad_dark_mode', ativo ? '1' : '0');
+}
+if (localStorage.getItem('ad_dark_mode') === '1') toggleDarkMode(true);
+
+document.getElementById('ttv-link').addEventListener('keydown', e => { if (e.key === 'Enter') ttvAdicionar(); });
+ttvCarregar();
+setInterval(ttvCarregar, 120000);   // reflete o robô sem precisar dar F5
+</script>
+
+</body>
+</html>

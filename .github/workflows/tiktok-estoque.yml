@@ -1,0 +1,53 @@
+name: Validador de Estoque TikTok
+
+on:
+  schedule:
+    # De 2 em 2 horas. Se quiser de hora em hora, troque por '0 * * * *' —
+    # mas confira os minutos de Actions disponíveis se o repositório for privado.
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Testar um link específico (deixe vazio para rodar a checagem normal)'
+        required: false
+        type: string
+
+jobs:
+  checar-estoque:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache do navegador headless
+        id: cache-playwright
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-v1
+
+      - name: Instalar Playwright (fallback quando o TikTok bloqueia o acesso simples)
+        run: |
+          pip install --quiet playwright
+          python -m playwright install chromium --with-deps
+
+      - name: Rodar validador de estoque
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Via env (e não interpolado no shell) pra não abrir brecha de injeção de comando.
+          URL_TESTE: ${{ inputs.url }}
+        run: |
+          if [ -n "$URL_TESTE" ]; then
+            python tiktok-estoque-sync.py --url "$URL_TESTE"
+          else
+            python tiktok-estoque-sync.py
+          fi
