@@ -135,10 +135,29 @@ python3 teste-tiktok-estoque.py     # robô de estoque
 Se mudar `CONFIRMACOES` no robô, mude também `TTV_CONFIRMACOES` no
 `validador-tiktok.html`.
 
-## Possível melhoria futura
+## Próximo passo em aberto — ler o painel do TikTok direto
 
-Se aquela tela de “Links de produtos ocultos” existir também no navegador
-(Affiliate Creator Center / Seller Center), dá pra um robô logado ler a lista
-exata de vídeos com problema e mandar isso no Telegram — em vez de um lembrete
-genérico. Precisaria guardar o cookie de sessão como secret e renovar de tempos
-em tempos. Vale conferir primeiro se a tela existe no desktop.
+O painel do app é o único lugar que enxerga **todos** os vídeos com link
+quebrado, inclusive os produtos que nunca foram cadastrados aqui. Ler ele
+automaticamente é o que fecharia o buraco de vez.
+
+**Caminho descartado — automação no tablet Android.** Daria pra fazer com
+MacroDroid ou Tasker + AutoInput (serviço de Acessibilidade). Dois problemas
+mataram a ideia: o tablet da Juliane fica guardado e bloqueado, então um macro
+agendado quase nunca rodaria; e o macro leria só o *número* de vídeos com
+problema — pegar a lista item a item exigiria rolar e abrir vídeo por vídeo,
+o que quebra a cada atualização do app.
+
+**Caminho em avaliação — versão web do painel.** Se a tela existir em
+`affiliate.tiktok.com` (ou no Seller Center), um robô com o cookie de sessão
+dela lê a lista inteira e manda no Telegram, rodando no GitHub Actions sem
+depender de aparelho ligado.
+
+Pra descobrir, use `ferramentas/inspecionar-painel-tiktok.js`: é um trecho
+read-only pra colar no console do navegador, que lista o que existe na tela.
+Ele não clica nem envia nada — só lê o DOM e imprime.
+
+Se a tela existir, o que falta montar é:
+1. tabela `tiktok_videos_quebrados` (link do vídeo, produto, motivo, detectado_em, resolvido_em);
+2. robô com o cookie guardado como secret, rodando no Actions;
+3. alerta no Telegram com a lista, reaproveitando o formato de `texto_alerta`.

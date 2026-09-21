@@ -45,3 +45,7 @@
   `CONFIRMACOES` (robô) igual a `TTV_CONFIRMACOES` (página), e a contagem de dias
   sempre no fuso de Brasília nos dois lados.
 - Detalhes de instalação: `VALIDADOR-TIKTOK.md`.
+- Automação no tablet Android (MacroDroid/Tasker) foi **descartada**: o tablet dela
+  fica guardado e bloqueado, e o macro leria só a quantidade, não a lista de vídeos.
+  Em avaliação: versão web do painel em affiliate.tiktok.com, lida por robô com
+  cookie de sessão. Ferramenta de diagnóstico: `ferramentas/inspecionar-painel-tiktok.js`.
