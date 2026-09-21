@@ -200,6 +200,38 @@ const porCompra = {};
 tx.filter(t => t.origem === 'cartao_credito_itau' && t.eh_parcelada)
   .forEach(t => { (porCompra[chaveDaCompra(t)] = porCompra[chaveDaCompra(t)] || []).push(t); });
 
+// **O PDF corta a descrição na largura da coluna**, e o XLSX não.
+// "Parcela De Refinanciamento" vira "PARCELA DE REF"; "Parc Fatura Seg" vira
+// "PARC FATURA SE". Como a descrição entra na chave, a parcela lida do PDF
+// ganhava um grupo próprio e a mesma compra virava duas — a numeração aparecia
+// com buraco e a previsão de quitação saía errada.
+//
+// O mesmo cartão, na mesma data de compra, com o mesmo número de parcelas, e
+// com um texto que é começo do outro: é a mesma compra. O teste de prefixo é o
+// que impede fundir duas compras de verdade que só coincidam em data e prazo.
+{
+  const mesmaCompra = (a, b) => {
+    const [x, y] = [a.toLowerCase(), b.toLowerCase()];
+    return x.startsWith(y) || y.startsWith(x);
+  };
+  const chaves = Object.keys(porCompra);
+  chaves.forEach(k => {
+    if (!porCompra[k]) return;
+    const base = porCompra[k][0];
+    chaves.forEach(o => {
+      if (o === k || !porCompra[o] || !porCompra[k]) return;
+      const outro = porCompra[o][0];
+      if (outro.cartao_final === base.cartao_final
+       && outro.data === base.data
+       && outro.parcela_total === base.parcela_total
+       && mesmaCompra(base.descricao, outro.descricao)) {
+        porCompra[k].push(...porCompra[o]);
+        delete porCompra[o];
+      }
+    });
+  });
+}
+
 Object.values(porCompra).forEach(parcelas => {
   parcelas.sort((a, b) => a.parcela_numero - b.parcela_numero);
   const idCompra = parcelas.map(p => p.id_compra).find(Boolean) || `compra_${parcelas[0].id}`;

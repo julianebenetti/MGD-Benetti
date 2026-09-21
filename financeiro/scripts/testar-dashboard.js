@@ -1028,6 +1028,39 @@ function noEscopo(mv) {
        !duplicados.length, duplicados.join(' / '));
   }
 
+  // --- Parcela da mesma compra não pode ficar em duas compras ---
+  //
+  // O PDF da fatura corta a descrição na largura da coluna e o XLSX não:
+  // "Parcela De Refinanciamento" vira "PARCELA DE REF". Como a descrição entra
+  // na chave que agrupa as parcelas, a lida do PDF ganhava `id_compra` próprio —
+  // a mesma compra virava duas, a numeração aparecia com buraco e a previsão de
+  // quitação saía errada.
+  //
+  // Os testes de numeração não pegavam isso: cada grupo, sozinho, é sequencial.
+  // A forma genérica do erro é esta: mesmo cartão, mesma data de compra, mesmo
+  // número de parcelas e descrições em que uma é começo da outra = uma compra só.
+  {
+    const parceladas = todosLancamentos.filter(t => t.eh_parcelada && t.parcela_total > 1);
+    const prefixo = (a, b) => {
+      const [x, y] = [String(a).toLowerCase(), String(b).toLowerCase()];
+      return x.startsWith(y) || y.startsWith(x);
+    };
+    const partidas = [];
+    parceladas.forEach(a => parceladas.forEach(b => {
+      if (a === b) return;
+      if (a.cartao_final !== b.cartao_final || a.data !== b.data) return;
+      if (a.parcela_total !== b.parcela_total) return;
+      if (!prefixo(a.descricao, b.descricao)) return;
+      if (a.id_compra && b.id_compra && a.id_compra !== b.id_compra) {
+        const marca = `${a.cartao_final} ${a.data} ${a.parcela_numero}/${a.parcela_total} "${a.descricao}" x ${b.parcela_numero}/${b.parcela_total} "${b.descricao}"`;
+        if (!partidas.includes(marca)) partidas.push(marca);
+      }
+    }));
+    ok('Parcelas da mesma compra ficam na mesma compra, mesmo com a descrição cortada',
+       partidas.length === 0,
+       partidas.length ? partidas.slice(0, 4).join(' ;; ') : `${parceladas.length} parcelas, nenhuma compra partida`);
+  }
+
   // --- A conta da Benetti UP é outro caixa ---
   //
   // A conta PJ do Nubank entrou como fonte em 21/09. As despesas dela (DAS,

@@ -1071,6 +1071,53 @@ paga — é uma foto de ciclo em aberto, não a fatura fechada. O saldo real do 
 é maior do que a tela mostra, e só a fatura fechada de outubro resolve (ela traz
 também a 4ª parcela do refinanciamento).
 
+### Quatro faturas parceladas, não uma — e a descrição cortada que partia a compra (21/09)
+A Juliane perguntou: *"eu parcelei a fatura de junho, foi isso, né? As próximas
+faturas eu também parcelei? Ou eu te mandei um print da tela?"*. Duas perguntas
+diferentes — o que aconteceu, e **de onde o dado veio**. As duas importam.
+
+**Foram quatro parcelamentos, em três cartões:**
+
+| Cartão | Quando | Financiado | Parcelas | Entrada | Custo |
+|---|---|---|---|---|---|
+| **4846 Black** | 26/06/2026 | R$ 5.305,49 | 4× R$ 1.769,36 | R$ 551,17 | R$ 1.771,95 |
+| **3794 Azul** | 01/07/2026 | R$ 11.417,46 | 4× R$ 3.880,96 | — | R$ 4.106,38 |
+| **3794 Azul** | 31/07/2026 | R$ 1.678,29 | 4× R$ 534,21 | R$ 8.000,00 | R$ 458,55 |
+| **0442 Infinite** | 09/09/2026 | R$ 1.251,56 | 4× R$ 408,13 | R$ 131,38 | R$ 380,96 |
+
+No Black foi **só a de junho**: julho, agosto e setembro não foram parceladas —
+ficaram em aberto, que é outra coisa e mais cara.
+
+**A procedência é diferente em cada caso, e isso nunca tinha sido dito:**
+só o **0442** veio de um comprovante que ela mandou (09/09, conferido linha por
+linha). Os **três outros** eu li da própria fatura — o Itaú imprime
+`Credito Por Parcelamento` e `Parcela De Refinanciamento` como lançamentos. Ou
+seja: **ela nunca confirmou os três**, e eles entraram na base sem passar por
+ela. Não é erro — a fatura é fonte primária —, mas a tela nunca disse de onde
+cada número veio, e a pergunta dela mostra que essa distinção faz falta.
+
+**Defeito de verdade, achado ao responder isso, e eu mesmo tinha acabado de
+introduzir metade dele:** o PDF da fatura **corta a descrição na largura da
+coluna** e o XLSX não. `Parcela De Refinanciamento` vira `PARCELA DE REF`,
+`Parc Fatura Seg` vira `PARC FATURA SE`. Como a descrição entra na chave que
+agrupa as parcelas, a parcela lida do PDF ganhava `id_compra` próprio: **a mesma
+compra virava duas**, a numeração aparecia com buraco e a previsão de quitação
+saía errada.
+
+**E o teste que eu escrevi para isso achou o mesmo defeito, já existente, no
+Bradesco** — `importar-faturas-bradesco.py` fazia `id_compra = 'compra_' + id`,
+um por lançamento, sem nunca ligar as parcelas entre faturas. As 2/4, 3/4 e 4/4
+do mesmo aparelho comprado em 19/11 eram três compras distintas. **34 parcelas
+religadas.**
+
+Por que nenhum teste pegava: os de numeração checam **dentro** de cada grupo, e
+um grupo com uma parcela só é trivialmente sequencial. A forma genérica do erro
+é outra, e é essa que virou teste: **mesmo cartão, mesma data de compra, mesmo
+número de parcelas e descrições em que uma é começo da outra = uma compra só.**
+O teste de prefixo é o que impede fundir duas compras de verdade que apenas
+coincidam em data e prazo. Verificado revertendo a correção: sem ela, 4 testes
+falham.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

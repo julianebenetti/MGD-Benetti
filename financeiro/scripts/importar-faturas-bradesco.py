@@ -231,7 +231,58 @@ def main():
     # leem a lista na ordem em que ela esta gravada.
     dados['faturas_cartao'] = sorted(outras + list(cabecalhos.values()),
                                      key=lambda f: (f.get('cartao', ''), f.get('vencimento', '')))
-    dados['fluxo_mensal']['transacoes'] = tx + novos
+    todas = tx + novos
+
+    # Liga as parcelas da MESMA compra.
+    #
+    # Ate aqui cada lancamento parcelado ganhava um id_compra proprio ('compra_'
+    # + id), entao a parcela 2/4 e a 3/4 do mesmo aparelho compradas em 19/11
+    # viravam duas compras diferentes: a numeracao de cada grupo fica sequencial
+    # sozinha, e por isso os testes de sequencia nunca acusaram — mas a tela
+    # mostra duas compras onde ha uma, e a previsao de quitacao sai errada.
+    #
+    # Mesma regra dos outros importadores: mesmo cartao, mesma data de compra,
+    # mesmo numero de parcelas, e um texto que e comeco do outro (a fatura as
+    # vezes corta a descricao). O teste de prefixo impede fundir duas compras
+    # de verdade que so coincidam em data e prazo.
+    grupos = {}
+    for t in todas:
+        if t.get('origem') != 'cartao_credito_bradesco' or not t.get('eh_parcelada'):
+            continue
+        grupos.setdefault((t.get('cartao_final'), t.get('data'), t.get('parcela_total')), []).append(t)
+
+    religadas = 0
+    for parcelas in grupos.values():
+        familias = []
+        for t in parcelas:
+            d = (t.get('descricao') or '').lower()
+            for f in familias:
+                base = (f[0].get('descricao') or '').lower()
+                if d.startswith(base) or base.startswith(d):
+                    f.append(t)
+                    break
+            else:
+                familias.append([t])
+        for f in familias:
+            if len(f) < 2:
+                continue
+            f.sort(key=lambda x: x.get('parcela_numero') or 0)
+            id_compra = f[0].get('id_compra') or ('compra_' + str(f[0].get('id')))
+            completa = len(f) == f[0].get('parcela_total')
+            total = (round(sum(x['valor'] for x in f), 2) if completa
+                     else round(f[0]['valor'] * f[0]['parcela_total'], 2))
+            for x in f:
+                if x.get('id_compra') != id_compra:
+                    religadas += 1
+                x['id_compra'] = id_compra
+                x['valor_total_compra'] = total
+                x['valor_total_exato'] = completa
+                x['parcelas_no_periodo'] = len(f)
+
+    if religadas:
+        print(f'{religadas} parcela(s) religadas a compra a que pertencem.')
+
+    dados['fluxo_mensal']['transacoes'] = todas
     json.dump(dados, open(ARQ, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
     print(f'\nGRAVADO em {ARQ}')
     return 0
