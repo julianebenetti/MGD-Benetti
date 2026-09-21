@@ -1,7 +1,7 @@
 
 ==========================================================================
   PARCELAMENTOS DE FATURA — COMPILADO PARA O ITAÚ
-  gerado em 21/09/2026, 20:35:20
+  gerado em 21/09/2026, 20:53:40
 ==========================================================================
 
 --------------------------------------------------------------------------
@@ -72,7 +72,28 @@
       (é o que ainda dá para cancelar antes de ser lançado)
 
 --------------------------------------------------------------------------
-4. Infinite (final 0442) — parcelado em 09/09/2026
+4. Black (final 4846) — parcelado em 05/09/2026
+   NÃO RECONHECIDO — ela não se recorda de ter autorizado
+   PARC AUTOMATIC / CREDITO PARC AUTOMATICO na fatura de Set/26 do Black. O proprio nome do lancamento diz 'automatico'. Ela NAO se recorda de ter autorizado (21/09/2026).
+
+   Fatura parcelada: provavelmente Ago/26, vencimento 26/08/2026, total R$ 10.667,16
+      ⚠ entrada + dívida (R$ 9.481,45) NÃO fecha com o total dessa fatura —
+        ou só parte dela foi parcelada, ou falta a fatura certa. Pedir o extrato ao Itaú.
+   Dívida refinanciada .......... R$ 9.481,45
+   IOF do refinanciamento ....... R$ 219,37
+   Valor financiado ............. R$ 9.700,82
+   Parcelas ..................... 12x R$ 1.734,19 = R$ 20.810,28
+   Desembolso total ............. R$ 20.810,28
+   CUSTO (juros + IOF) .......... R$ 11.328,83
+   Taxa efetiva ................. 14.80% ao mês  ·  423.93% ao ano
+
+   Parcelas já cobradas:
+      1/12  R$ 1.734,19  na fatura de Set/26
+   Parcelas ainda NÃO cobradas: 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 de 12  —  R$ 19.076,09
+      (é o que ainda dá para cancelar antes de ser lançado)
+
+--------------------------------------------------------------------------
+5. Infinite (final 0442) — parcelado em 09/09/2026
    RECONHECIDO por ela
    Veio de comprovante que ela mandou em 09/09/2026, conferido linha por linha.
 
@@ -97,24 +118,28 @@ ENCARGOS COBRADOS DEPOIS (multa, mora e encargos de refinanciamento)
    18/08/2026  Black (final 4846)                                R$ 136,67  Multa
    18/08/2026  Black (final 4846)                                 R$ 20,50  Juros De Mora
    18/08/2026  Black (final 4846)                                R$ 632,37  Encargos Refinanciamento
-                                                                  R$ 791,87  total
+   28/09/2026  Black (final 4846)                                 R$ 31,64  Juros de mora
+   28/09/2026  Black (final 4846)                                R$ 121,72  Multa por atraso
+                                                                  R$ 945,23  total
 
 ==========================================================================
   RESUMO
 ==========================================================================
-   Parcelamentos encontrados .................... 4
-   Dívida total refinanciada ................... R$ 19.580,80
-   Custo total (juros + IOF) ................... R$ 6.789,84
-   Custo dos que ela NÃO reconhece ............. R$ 4.582,05
-   Parcelas não reconhecidas ainda a cobrar .... R$ 4.949,38
+   Parcelamentos encontrados .................... 5
+   Dívida total refinanciada ................... R$ 29.062,25
+   Custo total (juros + IOF) ................... R$ 18.118,67
+   Custo dos que ela NÃO reconhece ............. R$ 15.910,88
+   Parcelas não reconhecidas ainda a cobrar .... R$ 24.025,47
 
 --------------------------------------------------------------------------
 O QUE FALTA PARA O COMPILADO FICAR COMPLETO
    · as parcelas 4 do parcelamento de 26/06/2026 (Black (final 4846)) ainda não apareceram em nenhuma fatura importada
    · as parcelas 4 do parcelamento de 01/07/2026 (Azul (final 3794)) ainda não apareceram em nenhuma fatura importada
    · as parcelas 3, 4 do parcelamento de 31/07/2026 (Azul (final 3794)) ainda não apareceram em nenhuma fatura importada
+   · as parcelas 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 do parcelamento de 05/09/2026 (Black (final 4846)) ainda não apareceram em nenhuma fatura importada
    · as parcelas 1, 2, 3, 4 do parcelamento de 09/09/2026 (Infinite (final 0442)) ainda não apareceram em nenhuma fatura importada
    · a fatura parcelada em 01/07/2026 do Azul (final 3794) não pôde ser identificada com certeza — entrada + dívida não fecha com nenhuma fatura importada
+   · a fatura parcelada em 05/09/2026 do Black (final 4846) não pôde ser identificada com certeza — entrada + dívida não fecha com nenhuma fatura importada
 
 --------------------------------------------------------------------------
 O QUE PEDIR AO ITAÚ, PARA CADA PARCELAMENTO

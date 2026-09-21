@@ -48,8 +48,8 @@ const nomeCartao = c => {
 // O Itaú usa nomes diferentes para o mesmo mecanismo. "Seguro" em
 // "Parc Fatura Seg" é o nome do produto de parcelamento de fatura, não uma
 // apólice — isso já estava documentado e vale repetir na peça.
-const CREDITO  = /^(credito por parcelamento|cred parc fat)/i;
-const PARCELA  = /^(parcela de ref|parc fatura se)/i;
+const CREDITO  = /^(credito por parcelamento|cred parc fat|credito parc automatic)/i;
+const PARCELA  = /^(parcela de ref|parc fatura se|parc automatic)/i;
 const ENTRADA  = /^pagamento parcelamento fatura/i;
 const IOF      = /^iof refinanciamento/i;
 const ENCARGO  = /^encargos refinanciamento/i;

@@ -1183,6 +1183,84 @@ ele ter atrasado.
 importa: só o 0442 veio de comprovante que ela mandou; os outros três foram lidos
 das próprias faturas e **nunca tinham sido confirmados por ela**.
 
+### "PARC AUTOMATIC": o parcelamento automático apareceu no dado (21/09)
+A Juliane mandou as faturas de **Ago/26 e Set/26 do Black**, e a de setembro tem
+o lançamento que dá nome ao problema:
+
+```
+05/09   PARC AUTOMATIC 01/12                    1.734,19
+05/09   CREDITO PARC AUTOMATICO                -9.700,82
+05/09   IOF REFINANCIAMENTO DE                    219,37
+```
+
+**R$ 9.481,45 de dívida + R$ 219,37 de IOF, em 12× R$ 1.734,19.** Desembolso de
+**R$ 20.810,28** — custo de **R$ 11.328,83**, mais que a própria dívida. Taxa
+efetiva de **14,80% ao mês, 423,93% ao ano**: o crédito mais caro de todos os
+cinco parcelamentos, e o único em 12 parcelas. **R$ 19.076,09 ainda não foram
+cobrados** — é o que dá para cancelar.
+
+O nome do lançamento é literalmente "automático". A fatura ainda traz, à parte,
+"Parcelamento de fatura · Contratação em 26/06/2026 - Parcela 3/4", confirmando
+pelo próprio banco o parcelamento que ela reconhece.
+
+**Quatro defeitos reais no leitor de PDF, e os dois primeiros escondiam dinheiro:**
+
+1. **A identidade do resumo estava errada desde que foi escrita.** Eu usava
+   `anterior + pagamento + financiado + atuais = total`. **O saldo financiado
+   não é uma parcela a mais: ele É `anterior + pagamento`** — somá-lo de novo
+   conta a dívida velha duas vezes. Passou na primeira fatura só porque lá o
+   saldo financiado era zero. A identidade certa é
+   **`saldo financiado + lançamentos atuais + encargos = total`**, e o saldo
+   financiado ganhou conferência própria.
+2. **O corte de coluna da página 2 vinha da página 1.** Só a página 1 tem a
+   linha de cabeçalho com dois "DATA"; as outras herdavam o corte dela, o texto
+   da direita entrava colado na linha da esquerda e o lançamento deixava de
+   casar. **R$ 3.875,81 sumiam de uma fatura só — incluindo o parcelamento
+   automático inteiro.** Agora, sem cabeçalho, a página descobre a **calha**: a
+   faixa vertical em branco entre as duas tabelas, aceita a 98% (exigir 100%
+   falha por causa de uma descrição longa que a atravessa).
+3. **O corte era na borda esquerda da calha**, e um valor que encostava nela
+   perdia o último dígito — `1.734,19` virava `1.734,1` e o lançamento sumia
+   inteiro. O corte é o **fim** da calha: onde a coluna direita começa, que é o
+   mesmo que o segundo "DATA" devolve.
+4. **Os encargos do mês não eram lidos.** Juros do rotativo, mora, multa e IOF
+   de financiamento têm seção própria e **ficam de fora** do "Total dos
+   lançamentos atuais", mas entram no total a pagar: R$ 848,60 numa fatura e
+   R$ 818,31 na outra ficariam invisíveis. Agora viram lançamento
+   `encargos_financeiros`, com conferência contra o subtotal impresso.
+
+**Duas armadilhas na seção de encargos**, e a segunda só apareceu porque a
+primeira foi corrigida: ela **não termina sozinha** (depois vêm "Simulação de
+compras", "Limite de crédito", tudo com número), e quando todos os encargos são
+zero o Itaú **nem imprime o subtotal**, então não há onde parar. Resultado da
+primeira versão: R$ 152 mil de "encargo" numa fatura que não tinha nenhum. Duas
+guardas: a seção fecha no próprio subtotal, e **só vira encargo o que tem rótulo
+conhecido**. Mais uma terceira: ler encargo sem que a fatura imprima o subtotal
+**recusa a fatura** — não há contra o que conferir.
+
+**O PDF de Ago/26 vem com a camada de texto degradada** — o `pdftotext` injeta
+espaço dentro de palavras e números (`Lan çamen tos`, `10.66 7,16`, `28/ 07`,
+`Car tã o`). O conserto (juntar espaço entre dígitos, e procurar rótulo num
+texto sem espaço, lendo o valor do texto original para não colar o número da
+coluna vizinha) recuperou o cabeçalho inteiro, que **fecha**: total
+R$ 10.667,16, anterior R$ 6.917,01, pagamento R$ 2.252,37 em 04/08, saldo
+financiado R$ 4.664,64, lançamentos R$ 5.184,21, encargos R$ 818,31.
+
+**Mas a itemização não fecha — faltam R$ 627,07 — e por isso a fatura foi
+recusada.** Está certo recusar: é peça de reclamação contra o banco, e um
+número inventado ali custa mais caro do que a lacuna. `-raw` não resolve
+(recupera as palavras mas funde as duas colunas na mesma linha). **Pedir essa
+fatura em XLS**, ou um PDF baixado de novo.
+
+**O que as duas faturas corrigiram no dado gravado:** a de Set/26 do Black
+estava com **R$ 3.197,56** (foto de ciclo em aberto) e é **R$ 6.284,18**; e as
+faturas de Ago e Set constavam como **não pagas**, quando houve pagamento de
+**R$ 2.252,37 em 04/08** e **R$ 1.066,72 em 04/09**.
+
+Passa a haver **5 parcelamentos**: R$ 29.062,25 de dívida refinanciada,
+**R$ 18.118,67 de custo**, dos quais **R$ 15.910,88 nos quatro que ela não
+reconhece**, e **R$ 24.025,47 de parcelas não reconhecidas ainda não cobradas**.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

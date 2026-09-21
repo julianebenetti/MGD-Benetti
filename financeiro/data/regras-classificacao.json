@@ -335,6 +335,12 @@
       "categoria": "encargos_financeiros",
       "pessoa": "Família",
       "nota": "Mensalidade da anuidade diferenciada e a redução que a acompanha: custo do cartão, não consumo (mesma regra da anuidade)."
+    },
+    {
+      "padrao": "^(multa por atraso|iof de financiamento|juros do rotativo|juros de mora|multa contratual de atraso|juros de mora de atraso)",
+      "categoria": "encargos_financeiros",
+      "pessoa": "Família",
+      "nota": "Rótulos da secao 'Encargos cobrados nesta fatura' do PDF do Itau. Mesma natureza dos encargos ja cadastrados (Juliane, 23/08) — so os textos do PDF diferem dos do XLSX."
     }
   ]
 }

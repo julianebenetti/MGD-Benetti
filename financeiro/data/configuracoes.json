@@ -383,6 +383,13 @@
       "data": "2026-09-09",
       "autorizado": true,
       "observacao": "Veio de comprovante que ela mandou em 09/09/2026, conferido linha por linha."
+    },
+    {
+      "id": "4846_2026-09-05",
+      "cartao": "4846",
+      "data": "2026-09-05",
+      "autorizado": null,
+      "observacao": "PARC AUTOMATIC / CREDITO PARC AUTOMATICO na fatura de Set/26 do Black. O proprio nome do lancamento diz 'automatico'. Ela NAO se recorda de ter autorizado (21/09/2026)."
     }
   ]
 }
