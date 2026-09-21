@@ -1,6 +1,6 @@
 {
-  "updated_at": 1789970858,
-  "updated_at_br": "21/09/2026 03:01",
+  "updated_at": 1789979855,
+  "updated_at_br": "21/09/2026 05:31",
   "period_days": 90,
   "total_orders": 7803,
   "total_conversions": 7464,
@@ -23382,7 +23382,7 @@
     },
     {
       "ID do pedido": "260907DV1UW4J4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-07 10:40:05",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "25.28",
@@ -23394,7 +23394,7 @@
       "Comissao total do pedido(R$)": "2.1488",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Rodo de Limpeza Mágico Articulável 35cm e 50cm com Cabo de 1,20m Multiuso para Piso, Vidro e Azulejo",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "46712462593",
       "ID da loja": "1217646176",
       "Nome da loja": "Buy Utilidades Brasil",
@@ -23402,7 +23402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242476804198132",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-07"
     },
     {
