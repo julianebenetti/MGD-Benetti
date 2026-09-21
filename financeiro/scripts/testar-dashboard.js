@@ -125,8 +125,13 @@ function noEscopo(mv) {
     totalGeral: somar(todas),
     escopoLinhas: escopo.length,
     escopoTotal: somar(escopo),
-    compras: somar(escopo.filter(t => t.valor > 0)),
-    estornos: somar(escopo.filter(t => t.valor < 0)),
+    // Separado por NATUREZA, não por sinal — que é o que a tela faz, e é o que
+    // significa alguma coisa. Enquanto todo estorno era negativo, os dois
+    // critérios davam o mesmo número; o cancelamento de um parcelamento trouxe
+    // o primeiro estorno POSITIVO (`Canc Credito Parc Cp`), e aí separar por
+    // sinal passaria a contá-lo como compra.
+    compras: somar(escopo.filter(t => t.natureza === 'despesa' && t.valor > 0)),
+    estornos: somar(escopo.filter(t => t.natureza === 'estorno')),
     porMes: {},
     porFatura: {},
     porPessoa: {},
@@ -401,7 +406,23 @@ function noEscopo(mv) {
 
   const estornos = todas.filter(t => t.natureza === 'estorno');
   console.log(`    (${estornos.length} estornos, ${brl(somar(estornos))})`);
-  igual('Estornos batem com os valores negativos', estornos.length, todas.filter(t => t.valor < 0).length);
+  // Todo estorno abate, então é negativo — **com uma exceção real**: o
+  // cancelamento de um parcelamento de fatura. O lançamento que CRIA o
+  // parcelamento é um crédito (negativo, natureza `divida_parcelada`), então o
+  // estorno que o desfaz é positivo. Foi o que apareceu quando o Itaú cancelou
+  // o "Parc Automatico" em 21/09: `Canc Credito Parc Cp` +R$ 9.700,82.
+  const CANCELA_CREDITO = /^canc\s+credito\s+parc/i;
+  const estornoPositivoEsperado = estornos.filter(t => t.valor > 0 && CANCELA_CREDITO.test(t.descricao || ''));
+  const estornoPositivoEstranho = estornos.filter(t => t.valor > 0 && !CANCELA_CREDITO.test(t.descricao || ''));
+
+  ok('Estorno positivo só existe para cancelar crédito de parcelamento',
+     estornoPositivoEstranho.length === 0,
+     estornoPositivoEstranho.map(t => `${t.descricao} ${brl(t.valor)}`).join(' | ')
+       || `${estornoPositivoEsperado.length} cancelamento(s) de crédito, o resto todo negativo`);
+
+  igual('Estornos batem com os valores negativos',
+        estornos.length - estornoPositivoEsperado.length,
+        todas.filter(t => t.valor < 0).length);
   ok('Todo valor negativo está marcado como estorno',
      todas.filter(t => t.valor < 0).every(t => t.natureza === 'estorno'));
   ok('Nenhum estorno tem valor positivo sem prefixo de cancelamento',
@@ -1579,7 +1600,8 @@ function noEscopo(mv) {
   });
 
   const totalPorCategoriaRotulo = {};
-  escopo.filter(t => t.valor > 0).forEach(t => {
+  // Mesmo critério da tela: gasto é `despesa` positiva, não qualquer positivo.
+  escopo.filter(t => t.natureza === 'despesa' && t.valor > 0).forEach(t => {
     const rot = (t.categoria || 'Sem categoria').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     totalPorCategoriaRotulo[rot] = (totalPorCategoriaRotulo[rot] || 0) + t.valor;
   });
@@ -1825,7 +1847,23 @@ function noEscopo(mv) {
                t.parcela_total || '', t.mes_vencimento].join('|');
     porContratoMes[k] = (porContratoMes[k] || 0) + 1;
   });
-  const repetidas = Object.entries(porContratoMes).filter(([, n]) => n > 1);
+  // Exceção real: quando o banco CANCELA um parcelamento, ele antecipa todas as
+  // parcelas restantes para a fatura do cancelamento e estorna as mesmas
+  // parcelas ali. As 11 parcelas do "Parc Automatico" aparecem juntas em Out/26
+  // porque foram canceladas juntas — e somam zero com os estornos ao lado.
+  // Isso não é duplicação: é a reversão, e ela tem de caber no dado.
+  const canceladoNoMes = {};
+  todosLancamentos.filter(t => /^canc\s+parc\s+de\s+ref/i.test(t.descricao || ''))
+    .forEach(t => {
+      const k = [t.cartao_final || '', t.parcela_total || '', t.mes_vencimento].join('|');
+      canceladoNoMes[k] = (canceladoNoMes[k] || 0) + 1;
+    });
+
+  const repetidas = Object.entries(porContratoMes).filter(([k, n]) => {
+    if (n <= 1) return false;
+    const [, cartao, , total, mes] = k.split('|');
+    return (canceladoNoMes[[cartao, total, mes].join('|')] || 0) < n;
+  });
   ok('Nenhum contrato com duas parcelas no mesmo mês', repetidas.length === 0,
      repetidas.slice(0, 3).map(([k, n]) => `${k.split('|')[2]} ${k.split('|')[4]}: ${n}x`).join(' | '));
 

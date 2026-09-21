@@ -53,6 +53,13 @@ const PARCELA  = /^(parcela de ref|parc fatura se|parc automatic)/i;
 const ENTRADA  = /^pagamento parcelamento fatura/i;
 const IOF      = /^iof refinanciamento/i;
 const ENCARGO  = /^encargos refinanciamento/i;
+// O cancelamento do parcelamento: o Itaú estorna o crédito que o criou e todas
+// as parcelas, de uma vez, com estes nomes. Um parcelamento revertido não pode
+// ser reportado como ativo — e, do outro lado, o que foi cancelado é prova de
+// que existiu.
+const CANC_CRED = /^canc credito parc/i;
+const CANC_PARC = /^canc parc de ref/i;
+const ESTORNO_IOF = /^estorno iof/i;
 const PUNICAO  = /^(multa|juros de mora)/i;
 
 // Taxa efetiva a partir das próprias parcelas: a que iguala o valor financiado
@@ -142,6 +149,33 @@ faturas.filter(f => (f.financiado_em_parcelas || 0) > 0.05).forEach(f => {
   });
 });
 
+// Casa cada parcelamento com o seu cancelamento, se houver. O par é feito pelo
+// VALOR do crédito (o estorno tem exatamente o mesmo), não pela data: o
+// cancelamento acontece meses depois e numa fatura diferente.
+lista.forEach(p => {
+  const canc = tx.filter(t => t.cartao_final === p.cartao && CANC_CRED.test(t.descricao || '')
+    && Math.abs(Math.abs(t.valor) - p.financiado) < 0.02);
+  if (!canc.length) return;
+  const parcelasCanceladas = tx.filter(t => t.cartao_final === p.cartao
+    && CANC_PARC.test(t.descricao || '') && Math.abs(Math.abs(t.valor) - p.pmt) < 0.02);
+  const iofDevolvido = tx.filter(t => t.cartao_final === p.cartao
+    && ESTORNO_IOF.test(t.descricao || '') && Math.abs(Math.abs(t.valor) - p.iof) < 0.02);
+  p.cancelamento = {
+    data: canc[0].data,
+    mes: canc[0].mes_vencimento,
+    credito: Math.abs(canc[0].valor),
+    parcelas: parcelasCanceladas.length,
+    valorParcelas: Math.round(parcelasCanceladas.reduce((s2, t) => s2 + Math.abs(t.valor), 0) * 100) / 100,
+    iof: Math.round(iofDevolvido.reduce((s2, t) => s2 + Math.abs(t.valor), 0) * 100) / 100,
+  };
+  const c = p.cancelamento;
+  // Só é reversão INTEGRAL se as três pontas voltaram: o crédito, todas as
+  // parcelas e o IOF. Parcial é outra coisa, e a peça não pode confundir.
+  c.integral = c.parcelas === p.n
+            && Math.abs(c.valorParcelas - p.pmt * p.n) < 0.02
+            && Math.abs(c.iof - p.iof) < 0.02;
+});
+
 lista.sort((a, b) => a.data.localeCompare(b.data));
 
 // ---------------------------------------------------------------- relatório
@@ -151,7 +185,7 @@ console.log('  PARCELAMENTOS DE FATURA — COMPILADO PARA O ITAÚ');
 console.log('  gerado em ' + new Date().toLocaleString('pt-BR'));
 console.log('='.repeat(74));
 
-let totFin = 0, totCusto = 0, totNaoRec = 0, totCancelavel = 0;
+let totFin = 0, totCusto = 0, totNaoRec = 0, totCancelavel = 0, totRevertido = 0;
 
 lista.forEach((p, k) => {
   const selo = p.autorizado === true ? 'RECONHECIDO por ela'
@@ -200,6 +234,16 @@ lista.forEach((p, k) => {
     console.log(`   Taxa efetiva ................. ${(p.taxa * 100).toFixed(2)}% ao mês  ·  ${((Math.pow(1 + p.taxa, 12) - 1) * 100).toFixed(2)}% ao ano`);
   }
 
+  if (p.cancelamento) {
+    const c = p.cancelamento;
+    console.log('');
+    console.log(`   >>> CANCELADO pelo Itaú em ${br(c.data)} (fatura de ${c.mes})`);
+    console.log(`       crédito estornado ${brl(c.credito)} · ${c.parcelas} parcela(s) canceladas ${brl(c.valorParcelas)}${c.iof ? ` · IOF devolvido ${brl(c.iof)}` : ''}`);
+    console.log(c.integral
+      ? '       ✓ reversão INTEGRAL — as três pontas voltaram, o custo deste parcelamento foi zerado'
+      : '       ⚠ reversão PARCIAL — confira o que ficou, o custo NÃO foi todo devolvido');
+  }
+
   console.log('\n   Parcelas já cobradas:');
   p.parcelas.forEach(x => console.log(`      ${x.parcela_numero}/${x.parcela_total}  ${brl(x.valor)}  na fatura de ${x.mes_vencimento}`));
   if (p.faltam.length) {
@@ -209,9 +253,14 @@ lista.forEach((p, k) => {
     console.log('   Todas as parcelas já foram cobradas.');
   }
 
+  const revertido = p.cancelamento && p.cancelamento.integral;
   totFin += p.dividaReal;
-  totCusto += p.custo;
-  if (p.autorizado !== true) { totNaoRec += p.custo; totCancelavel += p.pmt * p.faltam.length; }
+  if (!revertido) {
+    totCusto += p.custo;
+    if (p.autorizado !== true) { totNaoRec += p.custo; totCancelavel += p.pmt * p.faltam.length; }
+  } else {
+    totRevertido += p.custo;
+  }
 });
 
 // Encargos que vieram atrás do parcelamento — pedaço separado da conta, porque
@@ -233,6 +282,11 @@ console.log(`   Dívida total refinanciada ................... ${brl(totFin)}`);
 console.log(`   Custo total (juros + IOF) ................... ${brl(totCusto)}`);
 console.log(`   Custo dos que ela NÃO reconhece ............. ${brl(totNaoRec)}`);
 console.log(`   Parcelas não reconhecidas ainda a cobrar .... ${brl(totCancelavel)}`);
+if (totRevertido) {
+  console.log(`   Já revertido pelo próprio Itaú .............. ${brl(totRevertido)}`);
+  console.log('      (custo de parcelamento cancelado integralmente — nada a pedir aqui,');
+  console.log('       mas a cobrança existiu e vale citar na reclamação)');
+}
 
 // O que o compilado NÃO sabe, dito em vez de omitido.
 const buracos = [];

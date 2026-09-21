@@ -1261,6 +1261,73 @@ Passa a haver **5 parcelamentos**: R$ 29.062,25 de dívida refinanciada,
 **R$ 18.118,67 de custo**, dos quais **R$ 15.910,88 nos quatro que ela não
 reconhece**, e **R$ 24.025,47 de parcelas não reconhecidas ainda não cobradas**.
 
+### As 4 faturas do Black em XLSX: o Itaú cancelou o parcelamento automático (21/09)
+A Juliane mandou as faturas do Black (4846) de **jul, ago, set e out/26 em
+XLSX** — formato nativo, que o importador já lia. Três resultados, em ordem de
+importância.
+
+**1. As três já gravadas BATERAM.** `conferir-fatura.js` respondeu "já gravada,
+e o conteúdo bate" para jul, ago e set — o que **confirma por fonte
+independente** a leitura do PDF feita horas antes, inclusive a de agosto que o
+leitor tinha recusado por faltar R$ 627,07 na itemização. A recusa foi prudente,
+não paranoia: o cabeçalho que eu tinha recuperado estava certo, e agora a
+itemização veio do arquivo certo.
+
+**2. Em 21/09 o próprio Itaú CANCELOU o parcelamento automático**, integralmente.
+A fatura de Out/26 traz:
+
+```
+04/09   Parc Automatico 2/12 ... 12/12     +19.076,09   (antecipa as 11 restantes)
+21/09   Canc Credito Parc Cp               + 9.700,82   (estorna o crédito que o criou)
+21/09   Canc Parc De Ref Cp  1/12 ... 12/12 −20.810,28  (cancela as 12 parcelas)
+21/09   Estorno Iof                        −   219,37
+```
+
+Soma das três pontas com o que foi lançado em Set/26: **exatamente zero**. O
+principal, as 12 parcelas e o IOF voltaram todos. **R$ 11.328,83 de custo
+revertidos** sem que ela pedisse — a cobrança existiu e vale citar na
+reclamação, mas não há o que estornar aqui.
+
+Para o compilado saber disso, `parcelamentos-de-fatura.js` passou a casar cada
+parcelamento com o seu cancelamento **pelo valor do crédito**, não pela data (o
+cancelamento vem meses depois, em outra fatura). E só chama de **reversão
+integral** quando as **três pontas** voltaram — crédito, todas as parcelas e o
+IOF. Parcial é outra coisa, e numa peça de reclamação confundir as duas seria
+grave.
+
+**3. Quatro defeitos que só apareceram porque o dado novo os expôs**, e três
+deles estavam na tela, não no importador:
+
+- **`Parc Automatico` caía como `despesa`.** A regex de dívida parcelada não
+  conhecia esse nome, então as 12 parcelas entravam como consumo e inflavam o
+  mês em **R$ 20.810,28** de gasto que não existe — as compras que geraram a
+  dívida já foram contadas uma a uma.
+- **O primeiro estorno POSITIVO da base.** `Canc Credito Parc Cp` é +R$ 9.700,82
+  porque desfaz um crédito (negativo). Enquanto todo estorno era negativo,
+  "separar por sinal" e "separar por natureza" davam o mesmo número. Passaram a
+  divergir, e **duas visões de Para Onde Vai somavam esse estorno como se fosse
+  compra** — `filter(t => t.valor > 0)` em vez de `natureza === 'despesa' &&
+  valor > 0`. Corrigido nas duas (eram bases separadas; consertar uma não
+  consertava a outra) e também nos recálculos da suíte, que tinham o mesmo
+  critério frouxo.
+- **O teste "estorno bate com os negativos" quebrou com razão**, e afrouxá-lo
+  seria errado. Virou uma afirmação mais forte e verdadeira: **estorno positivo
+  só existe para cancelar crédito de parcelamento** — qualquer outro é erro.
+- **O teste "nenhum contrato com duas parcelas no mesmo mês" também quebrou com
+  razão**: as 11 parcelas antecipadas caem juntas em Out/26. Não é duplicação, é
+  a reversão. A exceção é explícita e estreita — só vale para parcela que tem
+  cancelamento correspondente no **mesmo mês**, e elas somam zero com ele.
+
+**O 0442 e o 3794 continuam sem confirmação dela**, e o compilado diz o que
+falta: as parcelas do 3794 que ainda não foram cobradas, as 4 do 0442, e a
+fatura que o parcelamento de 01/07 quitou (a aritmética não fecha com nenhuma
+importada).
+
+Números atuais: **5 parcelamentos**, R$ 29.062,25 de dívida refinanciada,
+**R$ 6.789,84 de custo ainda vivo** (dos quais R$ 4.582,05 nos não
+reconhecidos), **R$ 4.949,38 de parcelas não reconhecidas ainda não cobradas**,
+e **R$ 11.328,83 já revertidos pelo próprio banco**.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

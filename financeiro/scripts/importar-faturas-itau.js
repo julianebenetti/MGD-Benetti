@@ -284,7 +284,11 @@ function carregarClassificacaoAtual() {
 // "Cred Parc Fat Seguro" sao as duas pontas do mesmo parcelamento. Exigir o nome
 // por extenso deixou R$ 11.417,46 de credito entrarem como estorno comum, e
 // agosto fechou com consumo negativo.
-const DIVIDA_PARCELADA = /^(parc\s+fat|cred\s+parc\s+fat|parcela\s+de\s+refinanciamento|credito\s+(por|de)\s+parcelamento)/i;
+// "Parc Automatico" / "Credito Parc Automatico" é o parcelamento automático da
+// fatura — mesmo mecanismo dos outros, nome diferente. Sem entrar aqui, as 12
+// parcelas viravam `despesa` e inflavam o mês em R$ 20.810,28 de consumo que
+// não existe: as compras que geraram a dívida já foram contadas uma a uma.
+const DIVIDA_PARCELADA = /^(parc\s+fat|parc\s+automatic|cred\s+parc\s+fat|parcela\s+de\s+refinanciamento|credito\s+(por|de|parc)\s*\w*\s*parcelament|credito\s+parc\s+automatic)/i;
 
 function classificarNatureza(item) {
   if (/^pagamento/i.test(item.descricao)) return 'pagamento';

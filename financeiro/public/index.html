@@ -3642,7 +3642,12 @@
       const pessoa = selPessoa.value;
       const eixo = document.getElementById('pov_eixo').value;
 
-      let base = transacoes.filter(t => t.valor > 0);
+      // "Para onde vai" é o gasto, então a base é `despesa` positiva — não
+      // "qualquer valor positivo". Enquanto todo estorno era negativo, o filtro
+      // por sinal bastava; o cancelamento de um parcelamento trouxe o primeiro
+      // estorno POSITIVO (`Canc Credito Parc Cp`, +R$ 9.700,82), e ele passou a
+      // aparecer aqui como se fosse compra.
+      let base = transacoes.filter(t => t.natureza === 'despesa' && t.valor > 0);
       if (mes) base = base.filter(t => t.mes_vencimento === mes);
       if (pessoa) base = base.filter(t => t.pessoa === pessoa);
 
@@ -3730,7 +3735,10 @@
 
     // Matriz categoria × mês, em ordem alfabética de categoria
     function renderizarMatrizCategoriaMes(pessoa) {
-      const transacoes = todasTransacoes().filter(t => t.valor > 0);
+      // Mesma regra da outra visão de Para Onde Vai: gasto é `despesa` positiva.
+      // Filtrar só por sinal deixava passar o estorno POSITIVO que cancela um
+      // crédito de parcelamento (+R$ 9.700,82), somando-o como se fosse compra.
+      const transacoes = todasTransacoes().filter(t => t.natureza === 'despesa' && t.valor > 0);
       const base = pessoa ? transacoes.filter(t => t.pessoa === pessoa) : transacoes;
 
       // Colunas do mais recente para o mais antigo: a fatura que interessa
