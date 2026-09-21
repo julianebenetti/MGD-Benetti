@@ -1118,6 +1118,71 @@ O teste de prefixo é o que impede fundir duas compras de verdade que apenas
 coincidam em data e prazo. Verificado revertendo a correção: sem ela, 4 testes
 falham.
 
+### Parcelamento de fatura não autorizado: compilado para o Itaú (21/09)
+A Juliane relatou: *"o Itaú está parcelando automaticamente as minhas faturas e
+isso não foi autorizado por mim"*. Ela **reconhece o de 26/06 no Black** — o
+primeiro, feito por ela — e **não se recorda** dos posteriores. Vai mandar as
+faturas que faltam e pediu um compilado para pedir cancelamento e ressarcimento.
+
+Isso muda a natureza do trabalho: deixa de ser registro contábil e passa a ser
+**peça de reclamação**. Daí as regras deste bloco.
+
+**O que ela sabe mora na configuração, não no código nem no relatório.**
+`configuracoes.json` → `parcelamentos_fatura[]`, com `autorizado: true | false |
+null`. O script **não decide** o que foi autorizado: `null` é "ela não se
+recorda", e é diferente de `false`. Deduzir autorização a partir do documento
+seria inventar o fato central da reclamação.
+
+**`scripts/parcelamentos-de-fatura.js`** (só leitura) reúne, por evento:
+a fatura parcelada, a entrada, a dívida refinanciada, o IOF, as parcelas, o
+custo, a **taxa efetiva calculada das próprias parcelas** (não copiada), quais
+parcelas já foram cobradas e em qual fatura, e quais ainda vêm — que é o que dá
+para cancelar antes de ser lançado.
+
+**A fatura é identificada pela aritmética, não pela data.** Se
+`entrada + dívida refinanciada` dá o total de uma fatura ao centavo, é aquela — e
+isso de quebra **prova que a fatura inteira foi parcelada**. Foi assim que o
+parcelamento de 31/07 se revelou da fatura de **Ago/26** (venc. 03/08), não da
+de julho: R$ 8.000,00 + R$ 1.661,17 = R$ 9.661,17, exato. Quando não fecha, o
+relatório **diz que não fecha** em vez de escolher a mais próxima em silêncio —
+a força da prova é diferente, e a peça tem de dizer qual das duas tem.
+
+Os quatro, em ordem:
+
+| Cartão | Data | Dívida | Parcelas | Custo | Taxa | Reconhecido? |
+|---|---|---|---|---|---|---|
+| Black 4846 | 26/06 | R$ 5.250,61 | 4× 1.769,36 | R$ 1.826,83 | 338,67% a.a. | **sim** |
+| Azul 3794 | 01/07 | R$ 11.417,46 | 4× 3.880,96 | R$ 4.106,38 | **358,56% a.a.** | não |
+| Azul 3794 | 31/07 | R$ 1.661,17 | 4× 534,21 | R$ 475,67 | 245,80% a.a. | não |
+| Infinite 0442 | 09/09 | R$ 1.251,56 | 4× 408,13 | R$ 380,96 | 271,09% a.a. | sim (comprovante) |
+
+**R$ 6.789,84 de custo total**, dos quais **R$ 4.582,05 nos dois que ela não
+reconhece**, e **R$ 4.949,38 de parcelas não reconhecidas ainda não cobradas** —
+esse último é o número que importa para o pedido de cancelamento, porque ainda
+não virou cobrança.
+
+Mais **R$ 791,87** de multa, mora e encargos de refinanciamento cobrados depois.
+Ficam em bloco separado de propósito: não são o preço do crédito, são o preço de
+ele ter atrasado.
+
+**Dois cuidados que valem para a próxima vez:**
+
+1. **O compilado não pode se contradizer.** A primeira versão listava como
+   "fatura faltando" duas faturas que ela mesma tinha acabado de identificar pela
+   aritmética — a checagem de pendência ainda exigia vencimento igual à data do
+   parcelamento. Num relatório que vai para o banco, isso destrói a credibilidade
+   do resto.
+2. **Parcelamento sem lançamento nenhum também conta.** O do 0442 ainda não teve
+   parcela cobrada (a fatura de outubro não chegou), então não existe
+   `Credito Por Parcelamento` para achar. Ele entra pelo `financiado_em_parcelas`
+   da fatura + o contrato em Dívidas. Sem isso o compilado diria "3
+   parcelamentos" havendo 4 — e num pedido de ressarcimento, faltar um é pior que
+   errar um valor.
+
+**A procedência de cada número está na peça**, porque ela perguntou e a distinção
+importa: só o 0442 veio de comprovante que ela mandou; os outros três foram lidos
+das próprias faturas e **nunca tinham sido confirmados por ela**.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

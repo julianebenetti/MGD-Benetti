@@ -354,5 +354,35 @@
       "encerrada_em": "2026-09-13",
       "motivo": "A Juliane decidiu parar de pagar (13/09/2026)."
     }
+  ],
+  "parcelamentos_fatura": [
+    {
+      "id": "4846_2026-06-26",
+      "cartao": "4846",
+      "data": "2026-06-26",
+      "autorizado": true,
+      "observacao": "A Juliane confirma: foi ela quem parcelou, e foi o primeiro (21/09/2026)."
+    },
+    {
+      "id": "3794_2026-07-01",
+      "cartao": "3794",
+      "data": "2026-07-01",
+      "autorizado": null,
+      "observacao": "Ela NAO se recorda de ter autorizado (21/09/2026). Lido da propria fatura, nunca confirmado por ela."
+    },
+    {
+      "id": "3794_2026-07-31",
+      "cartao": "3794",
+      "data": "2026-07-31",
+      "autorizado": null,
+      "observacao": "Ela NAO se recorda de ter autorizado (21/09/2026). Lido da propria fatura, nunca confirmado por ela."
+    },
+    {
+      "id": "0442_2026-09-09",
+      "cartao": "0442",
+      "data": "2026-09-09",
+      "autorizado": true,
+      "observacao": "Veio de comprovante que ela mandou em 09/09/2026, conferido linha por linha."
+    }
   ]
 }
