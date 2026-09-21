@@ -1,0 +1,42 @@
+name: Lembrete Links TikTok
+
+on:
+  schedule:
+    # 12:00 UTC = 9h da manhã em Brasília. Pra mudar o horário, lembre que o
+    # cron do GitHub é sempre em UTC: some 3 horas ao horário de Brasília.
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      forcar:
+        description: 'Enviar mesmo se a revisão de hoje já foi feita'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  lembrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Mandar o lembrete
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          PAGINA_VALIDADOR_URL: ${{ secrets.PAGINA_VALIDADOR_URL }}
+          FORCAR: ${{ inputs.forcar }}
+        run: |
+          if [ "$FORCAR" = "true" ]; then
+            python tiktok-lembrete.py --forcar
+          else
+            python tiktok-lembrete.py
+          fi

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Validador de Estoque — TikTok Shop</title>
+<title>Links do TikTok — Revisão e Estoque</title>
 <style>
 :root {
   --bg:        #f5f4f0;
@@ -117,6 +117,23 @@ tr:hover td { background:var(--bg3); }
 .link-prod:hover { text-decoration:underline; }
 .vazio { text-align:center; padding:28px; color:var(--muted); font-size:12px; }
 
+/* ── REVISÃO DOS LINKS OCULTOS ── */
+.revisao { padding:16px; display:grid; grid-template-columns:1.15fr 1fr; gap:22px; }
+.passos { margin:0 0 0 17px; padding:0; font-size:12.5px; line-height:1.85; color:var(--text); }
+.passos li { padding-left:3px; }
+.passos b { font-weight:700; }
+.passos i { color:var(--red); font-style:normal; background:var(--red-bg); padding:1px 5px; border-radius:4px; }
+.registro { border-left:1px solid var(--border); padding-left:22px; display:flex; flex-direction:column; gap:10px; }
+.registro .campo { flex-direction:column; }
+.historico { margin-top:4px; border-top:1px solid var(--border); padding-top:10px; }
+.historico-titulo { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; font-weight:600; margin-bottom:7px; }
+.historico-item { font-size:11.5px; color:var(--muted); padding:3px 0; display:flex; gap:8px; }
+.historico-item b { color:var(--text); font-weight:600; min-width:74px; }
+@media (max-width:760px) {
+  .revisao { grid-template-columns:1fr; gap:16px; }
+  .registro { border-left:none; border-top:1px solid var(--border); padding-left:0; padding-top:16px; }
+}
+
 @media (max-width:760px) {
   .top { padding:12px 14px; }
   .page { padding:12px; }
@@ -131,8 +148,8 @@ tr:hover td { background:var(--bg3); }
 
 <div class="top">
   <div>
-    <div class="top-title">📦 Validador de Estoque — TikTok Shop</div>
-    <div class="top-sub">Avisa quando um produto que você postou esgotou — checagem automática a cada 2h</div>
+    <div class="top-title">🔗 Links do TikTok</div>
+    <div class="top-sub">Rotina de revisão dos links ocultos + vigia de estoque dos produtos</div>
   </div>
   <div class="top-right">
     <button class="act-btn" onclick="ttvCarregar()">⟳ Atualizar</button>
@@ -151,8 +168,43 @@ tr:hover td { background:var(--bg3); }
 
   <div class="section">
     <div class="section-head">
+      <span class="section-title">🔗 Revisão dos links ocultos</span>
+      <span class="section-sub">Quem detecta é o próprio TikTok — aqui fica a rotina de conferir, trocar e registrar</span>
+    </div>
+    <div class="revisao">
+      <ol class="passos">
+        <li>Abra o <b>TikTok</b> e vá para a área do seu perfil.</li>
+        <li>Na parte de baixo, toque em <b>Vídeos</b> — o ícone de vídeo com a estrelinha.</li>
+        <li>No topo, entre as opções Criar / Gerenciar / Inspire-se, toque em <b>Gerenciar</b>.</li>
+        <li>Nos filtros, selecione <b>“Links de produtos ocultos”</b>.</li>
+        <li>Procure o aviso vermelho <i>1 links do produto precisam de atenção</i> — o motivo aparece logo abaixo (produto esgotado ou removido).</li>
+        <li>Toque em <b>Vincular</b> e troque pelo produto novo. Repita em cada vídeo da lista.</li>
+      </ol>
+      <div class="registro">
+        <div class="campo">
+          <label for="ttv-corrigidos">Vídeos corrigidos (opcional)</label>
+          <input id="ttv-corrigidos" type="number" min="0" step="1" placeholder="Ex: 10">
+        </div>
+        <div class="campo">
+          <label for="ttv-obs">Observação (opcional)</label>
+          <input id="ttv-obs" placeholder="Ex: 3 esgotados, 1 removido">
+        </div>
+        <button class="act-btn primary" id="ttv-revisar" onclick="ttvRegistrarRevisao()">
+          ✅ Marcar revisão de hoje
+        </button>
+        <div style="font-size:10.5px; color:var(--subtle); line-height:1.5;">
+          Enquanto não houver revisão do dia, o lembrete chega no Telegram às 9h.
+          Marcando aqui, ele fica quieto.
+        </div>
+        <div class="historico" id="ttv-historico"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
       <span class="section-title">➕ Vigiar um produto novo</span>
-      <span class="section-sub">Cole o link que você usa no TikTok — o afiliado curtinho também serve</span>
+      <span class="section-sub">Opcional — o robô que checa a página pública do produto. Roda só quando você manda.</span>
     </div>
     <div class="form-grid">
       <div class="campo">
@@ -215,7 +267,7 @@ const TTV_URL = "https://tkxkrbdvcctoajuigvvv.supabase.co";
 const TTV_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreGtyYmR2Y2N0b2FqdWlndnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NzY2NzUsImV4cCI6MjA5OTQ1MjY3NX0.-szTE2wYYr9DNTLiff6zmLpbP6UOL1l9SFpvc-29Njs";
 const TTV_CONFIRMACOES = 2;   // precisa bater com CONFIRMACOES no tiktok-estoque-sync.py
 
-let ttvLinhas = [], ttvFiltro = "ativos";
+let ttvLinhas = [], ttvRevisoes = [], ttvFiltro = "ativos";
 
 async function ttvFetch(path, opcoes = {}) {
   const res = await fetch(`${TTV_URL}/rest/v1/${path}`, {
@@ -330,6 +382,34 @@ function ttvRender() {
   }).join('');
 }
 
+// ── Dias desde a última revisão dos links ocultos ───────────────
+function ttvDiasDesdeRevisao() {
+  if (!ttvRevisoes.length) return null;
+  const ultima = new Date(ttvRevisoes[0].revisado_em);
+  // Compara por DIA no fuso de Brasília — igual ao tiktok-lembrete.py.
+  const dia = d => new Date(d.getTime() - 3 * 3600000).toISOString().slice(0, 10);
+  const ms = new Date(dia(new Date())) - new Date(dia(ultima));
+  return Math.round(ms / 86400000);
+}
+
+function ttvRenderHistorico() {
+  const el = document.getElementById('ttv-historico');
+  if (!ttvRevisoes.length) {
+    el.innerHTML = '<div class="historico-titulo">Revisões anteriores</div>'
+                 + '<div class="historico-item">Nenhuma registrada ainda.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="historico-titulo">Últimas revisões</div>' +
+    ttvRevisoes.slice(0, 5).map(r => {
+      const d = new Date(r.revisado_em);
+      const data = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const qtd = (r.videos_corrigidos ?? null) !== null ? `${r.videos_corrigidos} vídeo(s)` : 'revisado';
+      return `<div class="historico-item"><b>${data} ${hora}</b>
+                <span>${qtd}${r.observacao ? ' — ' + ttvEsc(r.observacao) : ''}</span></div>`;
+    }).join('');
+}
+
 function ttvRenderStats() {
   const ativos = ttvLinhas.filter(l => l.ativo);
   const cont = { problema:0, disponivel:0, semleitura:0, suspeita:0 };
@@ -338,52 +418,83 @@ function ttvRenderStats() {
     cont[s.grupo]++;
     if (s.texto.startsWith('⚠ suspeita')) cont.suspeita++;
   });
-  const ultima = ativos.map(l => l.ultima_verificacao).filter(Boolean).sort().pop();
+  const ultimaChecagem = ativos.map(l => l.ultima_verificacao).filter(Boolean).sort().pop();
+
+  const dias = ttvDiasDesdeRevisao();
+  const classeDias = dias === null ? 'neg' : dias === 0 ? 'pos' : dias <= 2 ? 'warn' : 'neg';
+  const textoDias  = dias === null ? 'nunca' : dias === 0 ? 'hoje' : dias === 1 ? 'ontem' : `há ${dias} dias`;
+
+  // Contagens dos últimos 30 dias.
+  const limite = Date.now() - 30 * 86400000;
+  const recentes = ttvRevisoes.filter(r => new Date(r.revisado_em).getTime() >= limite);
+  const corrigidos = recentes.reduce((a, r) => a + (r.videos_corrigidos || 0), 0);
 
   document.getElementById('ttv-stats').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Vigiados</div>
-      <div class="kpi-val">${ativos.length}</div></div>
-    <div class="kpi"><div class="kpi-label">Disponíveis</div>
-      <div class="kpi-val pos">${cont.disponivel}</div></div>
-    <div class="kpi"><div class="kpi-label">Esgotados / fora do ar</div>
+    <div class="kpi"><div class="kpi-label">Última revisão</div>
+      <div class="kpi-val ${classeDias}" style="font-size:17px;">${textoDias}</div>
+      <div class="kpi-sub">lembrete diário às 9h</div></div>
+    <div class="kpi"><div class="kpi-label">Revisões (30 dias)</div>
+      <div class="kpi-val">${recentes.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Vídeos corrigidos (30 dias)</div>
+      <div class="kpi-val ${corrigidos ? 'pos' : ''}">${corrigidos}</div>
+      <div class="kpi-sub">links trocados no TikTok</div></div>
+    <div class="kpi"><div class="kpi-label">Produtos vigiados</div>
+      <div class="kpi-val">${ativos.length}</div>
+      <div class="kpi-sub">${ultimaChecagem ? 'checado ' + ttvQuandoTexto(ultimaChecagem) : 'robô opcional, desligado'}</div></div>
+    <div class="kpi"><div class="kpi-label">Confirmados esgotados</div>
       <div class="kpi-val ${cont.problema ? 'neg' : ''}">${cont.problema}</div>
-      <div class="kpi-sub">${cont.suspeita ? `${cont.suspeita} ainda em confirmação` : 'confirmados em 2 checagens'}</div></div>
-    <div class="kpi"><div class="kpi-label">Sem leitura</div>
-      <div class="kpi-val ${cont.semleitura ? 'warn' : ''}">${cont.semleitura}</div>
-      <div class="kpi-sub">o TikTok barrou a leitura</div></div>
-    <div class="kpi"><div class="kpi-label">Última checagem</div>
-      <div class="kpi-val" style="font-size:16px;">${ttvQuandoTexto(ultima)}</div>
-      <div class="kpi-sub">o robô roda de 2 em 2 horas</div></div>
+      <div class="kpi-sub">pelo robô da página pública</div></div>
   `;
 
-  // Robô parado? Avisa, porque "tudo verde" com robô parado engana.
-  const horas = ultima ? (Date.now() - new Date(ultima)) / 3600000 : null;
-  // Produto cadastrado agora ainda não deu tempo de ser checado — isso é normal,
-  // não é robô quebrado.
-  const maisAntigo = ativos.map(l => l.created_at).filter(Boolean).sort()[0];
-  const esperandoPrimeira = !ultima && maisAntigo &&
-                            (Date.now() - new Date(maisAntigo)) / 3600000 < 3;
-
-  if (ativos.length && esperandoPrimeira) {
-    ttvAviso('warn', '⏳ Aguardando a primeira checagem do robô — ele roda de 2 em 2 horas. '
-                   + 'Pra não esperar: GitHub → Actions → <code>Validador de Estoque TikTok</code> → Run workflow.');
-  } else if (ativos.length && (horas === null || horas > 5)) {
-    ttvAviso('warn', `⚠️ <b>O robô não checa nada ${horas === null ? 'ainda' : `há ${Math.floor(horas)}h`}.</b>
-      Os status abaixo podem estar velhos. Confira se o workflow
-      <code>Validador de Estoque TikTok</code> está rodando no GitHub Actions.`);
+  if (dias === null) {
+    ttvAviso('warn', '👋 <b>Primeira vez por aqui.</b> Segue o passo a passo abaixo no TikTok e, '
+                   + 'quando terminar, clica em <b>Marcar revisão de hoje</b>. '
+                   + 'A partir daí o lembrete diário passa a fazer sentido.');
+  } else if (dias >= 4) {
+    ttvAviso('err', `🔴 <b>Faz ${dias} dias desde a última revisão.</b> `
+                  + 'Provavelmente tem vídeo no ar mandando gente pra link que não vende.');
+  } else if (dias >= 1) {
+    ttvAviso('warn', `⏳ Última revisão ${dias === 1 ? 'ontem' : 'há ' + dias + ' dias'}. `
+                   + 'Vale dar uma olhada nos links ocultos.');
   } else if (cont.problema) {
-    ttvAviso('err', `🔴 <b>${cont.problema} produto(s) com problema.</b> Tira o link do ar ou troca o produto no vídeo.`);
-  } else if (ativos.length) {
-    ttvAviso('ok', `✅ Tudo disponível na última checagem.`);
+    ttvAviso('err', `🔴 Revisado hoje, mas o robô ainda marca <b>${cont.problema} produto(s)</b> como esgotado.`);
   } else {
-    ttvLimparAviso();
+    ttvAviso('ok', '✅ Revisado hoje. Nada pendente.');
+  }
+}
+
+async function ttvRegistrarRevisao() {
+  const btn = document.getElementById('ttv-revisar');
+  const campoQtd = document.getElementById('ttv-corrigidos');
+  const campoObs = document.getElementById('ttv-obs');
+  const qtd = campoQtd.value.trim();
+  btn.disabled = true; btn.textContent = 'Salvando…';
+  try {
+    await ttvFetch('tiktok_revisoes', {
+      method: 'POST',
+      body: JSON.stringify({
+        videos_corrigidos: qtd === '' ? null : Math.max(0, parseInt(qtd, 10) || 0),
+        observacao: campoObs.value.trim() || null
+      })
+    });
+    campoQtd.value = ''; campoObs.value = '';
+    await ttvCarregar();
+    ttvAviso('ok', '✅ Revisão registrada. O lembrete de hoje não vai te incomodar.');
+  } catch (err) {
+    ttvAviso('err', `❌ Não consegui registrar: ${ttvEsc(err.message)}`);
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ Marcar revisão de hoje';
   }
 }
 
 async function ttvCarregar() {
   try {
-    ttvLinhas = await ttvFetch('tiktok_estoque_monitor?select=*&order=ativo.desc,status.asc,produto.asc');
+    [ttvLinhas, ttvRevisoes] = await Promise.all([
+      ttvFetch('tiktok_estoque_monitor?select=*&order=ativo.desc,produto.asc'),
+      ttvFetch('tiktok_revisoes?select=*&order=revisado_em.desc&limit=30')
+    ]);
     ttvRenderStats();
+    ttvRenderHistorico();
     ttvRender();
   } catch (err) {
     document.getElementById('ttv-tbody').innerHTML =

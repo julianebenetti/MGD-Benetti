@@ -1,38 +1,57 @@
-# Validador de Estoque — TikTok Shop
+# Links do TikTok — revisão e estoque
 
-Avisa no Telegram quando um produto que você está divulgando no TikTok esgota
-ou sai do ar, pra você não continuar mandando tráfego pra link morto.
+## O problema real
 
-## Como funciona
+O TikTok **já detecta sozinho** quando um produto vinculado a um vídeo esgota ou
+é removido. No app:
 
-```
-  você cadastra o link         robô roda de 2 em 2h            se esgotou
-  na página do validador  ──►  no GitHub Actions:        ──►   manda alerta
-         │                     abre a página do produto        no Telegram
-         │                     e lê o estoque                        │
-         ▼                             │                             ▼
-   Supabase (tiktok_estoque_monitor) ◄──┘                    você tira o link
-         │                                                       do ar
-         └──► a página mostra o status de cada produto
-```
+> TikTok → **Vídeos** → **Gerenciar** → filtro **“Links de produtos ocultos”**
 
-A página **não** consegue checar o TikTok sozinha: o navegador bloqueia leitura
-de outro site (CORS) e o TikTok bloqueia acesso automatizado. Por isso quem
-checa é o robô, e a página só mostra o resultado.
+Lá aparece o aviso vermelho *“1 links do produto precisam de atenção”*, o motivo
+(esgotado ou removido) e o botão **Vincular** pra trocar o produto.
 
-## Arquivos
+O TikTok só não **avisa**. A Juliane precisa lembrar de entrar lá. É esse o
+buraco que este projeto tapa — e, de quebra, aquele painel é melhor do que
+qualquer robô externo, porque ele sabe **qual vídeo** está afetado.
+
+## As duas peças
+
+### 1. Lembrete diário (é o principal)
+
+Todo dia às 9h da manhã chega uma mensagem no Telegram com o caminho do app
+escrito, pra não precisar lembrar de nada.
+
+Ele não é burro: lê a tabela `tiktok_revisoes` e **fica calado se a revisão do
+dia já foi feita**. Se estiver há 4 dias ou mais sem revisar, a mensagem muda de
+tom. É o que impede o lembrete de virar paisagem.
 
 | Arquivo | O que é |
 |---|---|
-| `validador-tiktok.html` | A página. Cadastra links e mostra o status. Publicar no VPS. |
-| `tiktok-estoque-sync.py` | O robô que checa os produtos. |
-| `.github/workflows/tiktok-estoque.yml` | Agenda o robô de 2 em 2 horas. |
-| `teste-tiktok-estoque.py` | Testes da lógica de detecção. Rode depois de mexer no robô. |
+| `tiktok-lembrete.py` | Monta e envia a mensagem |
+| `.github/workflows/tiktok-lembrete.yml` | Dispara todo dia às 12:00 UTC (9h de Brasília) |
+| `validador-tiktok.html` | Página com o passo a passo e o botão de marcar a revisão |
+| `teste-tiktok-lembrete.py` | Testes do texto e da contagem de dias |
 
-Tabelas no Supabase: `tiktok_estoque_monitor` (o que vigiar + último status) e
-`tiktok_estoque_log` (histórico de cada checagem). Já estão criadas.
+### 2. Vigia de estoque por produto (opcional, desligado)
 
-## Instalação — 3 passos
+Um robô que abre a página pública do produto e lê se esgotou. Serve como reforço
+e funciona pra produto que ainda nem foi postado — mas **não sabe dizer qual
+vídeo** está afetado, e não foi calibrado contra uma página real do TikTok Shop.
+
+Está com o agendamento **desligado**. Roda só na mão: Actions → *Validador de
+Estoque TikTok* → Run workflow. Pra religar o automático, descomente as linhas
+de `schedule` em `.github/workflows/tiktok-estoque.yml`.
+
+| Arquivo | O que é |
+|---|---|
+| `tiktok-estoque-sync.py` | O robô de checagem |
+| `.github/workflows/tiktok-estoque.yml` | Agendamento (desligado) |
+| `teste-tiktok-estoque.py` | 18 testes da detecção |
+
+Tabelas no Supabase (já criadas): `tiktok_revisoes`, `tiktok_estoque_monitor`,
+`tiktok_estoque_log`.
+
+## Instalação
 
 ### 1. Criar o bot do Telegram (uns 2 minutos)
 
@@ -43,96 +62,61 @@ Tabelas no Supabase: `tiktok_estoque_monitor` (o que vigiar + último status) e
 
 ### 2. Cadastrar os secrets no GitHub
 
-Em **Settings → Secrets and variables → Actions → New repository secret**:
+**Settings → Secrets and variables → Actions → New repository secret**:
 
-| Secret | Valor |
-|---|---|
-| `TELEGRAM_BOT_TOKEN` | o token do BotFather |
-| `TELEGRAM_CHAT_ID` | o número do @userinfobot |
-| `SUPABASE_URL` | `https://tkxkrbdvcctoajuigvvv.supabase.co` |
-| `SUPABASE_KEY` | a chave anon (a mesma que já está nas páginas) ou a service_role |
-
-Sem os dois primeiros o robô roda igual e marca tudo no painel — só não manda
-mensagem. `SUPABASE_URL` e `SUPABASE_KEY` também são opcionais: o script já vem
-com o projeto certo por padrão.
+| Secret | Valor | Obrigatório |
+|---|---|---|
+| `TELEGRAM_BOT_TOKEN` | o token do BotFather | sim |
+| `TELEGRAM_CHAT_ID` | o número do @userinfobot | sim |
+| `PAGINA_VALIDADOR_URL` | endereço da página no VPS | não — põe o link clicável na mensagem |
+| `SUPABASE_URL` / `SUPABASE_KEY` | projeto e chave | não — já vem o certo por padrão |
 
 ### 3. Publicar a página no VPS
 
 Sobe `validador-tiktok.html` pro mesmo VPS da Hostinger onde está a AfiliDash,
-do mesmo jeito que o `garimpo-shopee.html`.
+igual ao `garimpo-shopee.html`.
 
-## Usando
+### 4. Testar sem esperar até amanhã
 
-1. Abre a página, cola o **nome** e o **link** do produto (o link curto de
-   afiliado, `vt.tiktok.com/...`, funciona — o robô segue o redirecionamento).
-2. Preenche "onde postei" se quiser — isso aparece no alerta do Telegram, pra
-   você saber qual vídeo precisa mexer.
-3. Pronto. O robô checa na próxima rodada.
-
-Botão **"Checar já"** põe o produto na frente da fila da próxima rodada. Pra
-checar na hora mesmo: GitHub → Actions → *Validador de Estoque TikTok* →
-**Run workflow**.
-
-### O que cada situação quer dizer
-
-| Situação | Significado |
-|---|---|
-| 🟢 disponível | Achou sinal claro de que dá pra comprar. |
-| ⚠ suspeita (1/2) | Leu "esgotado" **uma vez**. Ainda não te avisei — confirmo na próxima rodada. |
-| 🔴 esgotado | Confirmado em duas checagens seguidas. Alerta enviado. |
-| 🚫 saiu do ar | O link não existe mais (404) ou joga pra outra página. |
-| ⚪ sem leitura | O TikTok não entregou a página (bloqueio/captcha). **Nunca dispara alerta.** |
-
-A regra das duas confirmações existe pra você não receber alerta falso por uma
-leitura ruim. Se um produto voltar ao estoque depois de confirmado como
-esgotado, o robô também te avisa.
-
-## Calibração (importante)
-
-Não consegui testar o robô contra uma página real do TikTok Shop — o ambiente
-onde ele foi escrito não tem acesso de saída pro TikTok. A lógica de detecção
-está testada contra páginas sintéticas (`teste-tiktok-estoque.py`, 18 casos),
-mas o TikTok pode escrever "esgotado" de um jeito que ainda não está na lista.
-
-**Faça isso com o primeiro produto que você cadastrar:**
+Actions → *Lembrete Links TikTok* → **Run workflow** (marque `forcar` se você já
+registrou a revisão de hoje). Ou, na sua máquina:
 
 ```bash
-python3 tiktok-estoque-sync.py --url "https://vt.tiktok.com/SEU-LINK/"
+TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... python3 tiktok-lembrete.py --teste
 ```
 
-Ele imprime o diagnóstico completo e salva o HTML lido em `/tmp`. Se der
-`indefinido`, abre esse HTML, procura como a página escreve que o produto
-acabou, e acrescenta a frase na lista `FRASES_ESGOTADO` (ou o campo JSON em
-`RE_JSON_ESGOTADO_FORTE`) lá no topo do script.
+`--teste` mostra o texto sem enviar.
 
-Vale testar com **um produto disponível e um esgotado**, pra confirmar que ele
-distingue os dois.
+## O dia a dia
 
-## Se aparecer muito "sem leitura"
+1. Chega o lembrete às 9h.
+2. Abre o TikTok e segue o caminho (também está escrito na página, se esquecer).
+3. Troca o produto nos vídeos com aviso vermelho.
+4. Volta na página e clica em **Marcar revisão de hoje** — pode anotar quantos
+   vídeos corrigiu. Isso silencia o lembrete de hoje e alimenta o histórico.
 
-Significa que o TikTok está barrando o robô — o IP do GitHub Actions é de
-datacenter e às vezes cai no captcha. Nessa situação nenhum alerta falso é
-disparado, mas você também não é avisada de nada. Opções, da mais simples pra
-mais trabalhosa:
+A página mostra há quantos dias foi a última revisão, quantas revisões e quantos
+vídeos você corrigiu nos últimos 30 dias.
 
-1. **Rodar no VPS** em vez do Actions. O IP da Hostinger costuma passar mais
-   fácil. Basta um cron:
-   `0 */2 * * * cd /caminho/do/repo && /usr/bin/python3 tiktok-estoque-sync.py >> /var/log/tiktok-estoque.log 2>&1`
-   (o robô já usa o Playwright quando ele está instalado; sem ele, funciona só
-   com a leitura simples).
-2. **Usar um serviço de proxy de scraping** (ScraperAPI, ScrapingBee e afins).
-3. **Pedir acesso à API oficial** do TikTok Shop Partner Center. É o caminho
-   100% confiável, mas depende de aprovação deles.
+## Mudar o horário do lembrete
 
-## Mexendo no robô
+No `.github/workflows/tiktok-lembrete.yml`, o cron é **sempre em UTC**: some 3
+horas ao horário de Brasília. 9h BRT = `0 12 * * *`; 20h BRT = `0 23 * * *`.
 
-Depois de qualquer alteração, roda os testes:
+## Depois de mexer no código
 
 ```bash
-python3 teste-tiktok-estoque.py
+python3 teste-tiktok-lembrete.py    # lembrete
+python3 teste-tiktok-estoque.py     # robô de estoque
 ```
 
-Variáveis de ambiente que dá pra ajustar: `CONFIRMACOES` (padrão 2),
-`TIMEOUT` (25s), `MAX_POR_RODADA` (60 produtos por rodada).
-Se mudar `CONFIRMACOES`, mude também `TTV_CONFIRMACOES` no
-`validador-tiktok.html` pra página continuar contando igual.
+Se mudar `CONFIRMACOES` no robô, mude também `TTV_CONFIRMACOES` no
+`validador-tiktok.html`.
+
+## Possível melhoria futura
+
+Se aquela tela de “Links de produtos ocultos” existir também no navegador
+(Affiliate Creator Center / Seller Center), dá pra um robô logado ler a lista
+exata de vídeos com problema e mandar isso no Telegram — em vez de um lembrete
+genérico. Precisaria guardar o cookie de sessão como secret e renovar de tempos
+em tempos. Vale conferir primeiro se a tela existe no desktop.

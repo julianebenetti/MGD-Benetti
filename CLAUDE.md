@@ -24,15 +24,21 @@
   houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
   a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
 
-## Validador de Estoque do TikTok Shop
-- `validador-tiktok.html` é a página onde a Juliane cadastra os links de produto que
-  ela divulga no TikTok; precisa ser publicada no mesmo VPS da AfiliDash.
-- Quem checa o estoque é o robô `tiktok-estoque-sync.py`, agendado de 2 em 2 horas
-  pelo workflow `.github/workflows/tiktok-estoque.yml`. A página **não** checa nada
-  sozinha (CORS + bloqueio do TikTok) — ela só lê o resultado no Supabase.
-- Tabelas: `tiktok_estoque_monitor` (o que vigiar + último status) e `tiktok_estoque_log`.
-- Alerta de esgotamento vai pro Telegram, e só depois de **duas** leituras seguidas
-  dando esgotado. Status `indefinido` (TikTok barrou a leitura) nunca dispara alerta.
-- Ao mexer na detecção, rodar `python3 teste-tiktok-estoque.py` e manter
-  `CONFIRMACOES` (robô) igual a `TTV_CONFIRMACOES` (página).
-- Detalhes de instalação e calibração: `VALIDADOR-TIKTOK.md`.
+## Links do TikTok — revisão e estoque
+- O **TikTok já detecta sozinho** produto esgotado/removido vinculado a vídeo:
+  app → Vídeos → Gerenciar → filtro "Links de produtos ocultos" → botão Vincular.
+  Ele só não avisa. Esse painel é melhor que qualquer robô externo porque diz
+  **qual vídeo** está afetado — não substituir isso por scraping.
+- Peça principal: **lembrete diário** (`tiktok-lembrete.py` +
+  `.github/workflows/tiktok-lembrete.yml`, 9h de Brasília). Ele lê `tiktok_revisoes`
+  e não envia nada se a revisão do dia já foi registrada.
+- `validador-tiktok.html` (publicar no VPS junto com a AfiliDash): passo a passo do
+  app, botão "Marcar revisão de hoje" e histórico das revisões.
+- Peça secundária, **desligada**: `tiktok-estoque-sync.py` checa a página pública do
+  produto. Roda só por workflow_dispatch. Nunca foi calibrado contra página real do
+  TikTok Shop; se for religar, calibrar antes com `--url`.
+- Tabelas: `tiktok_revisoes`, `tiktok_estoque_monitor`, `tiktok_estoque_log`.
+- Ao mexer: rodar `teste-tiktok-lembrete.py` e `teste-tiktok-estoque.py`. Manter
+  `CONFIRMACOES` (robô) igual a `TTV_CONFIRMACOES` (página), e a contagem de dias
+  sempre no fuso de Brasília nos dois lados.
+- Detalhes de instalação: `VALIDADOR-TIKTOK.md`.
