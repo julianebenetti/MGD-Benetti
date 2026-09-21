@@ -89,10 +89,15 @@ const mediana = v => {
   return o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2;
 };
 
+// A conta PJ da Benetti UP é outro caixa: as saídas dela não saem da conta da
+// Juliane. Mesmo princípio da fatura que a empresa quita.
+const ORIGENS_DE_OUTRO_CAIXA = ['extrato_nubank_pj'];
+const saiDoCaixaDela = t => !ORIGENS_DE_OUTRO_CAIXA.includes(t.origem);
+
 const saidasForaDoCartaoDoMes = mes => transacoes
   .filter(t => noEscopo(t.mes_vencimento) && t.mes_vencimento === mes
             && t.origem !== 'holerite_elektro' && !veioDoCartao(t)
-            && !ehPagamentoDeCartaoNoExtrato(t) && t.valor > 0
+            && !ehPagamentoDeCartaoNoExtrato(t) && saiDoCaixaDela(t) && t.valor > 0
             && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
 
 // Só entra na previsão o que a Juliane informou ou o que é reconhecidamente
@@ -105,7 +110,7 @@ function perfilDasRecorrentes() {
   const porChave = {};
   transacoes
     .filter(t => noEscopo(t.mes_vencimento) && t.origem !== 'holerite_elektro'
-              && !veioDoCartao(t) && t.valor > 0 && PROJETAVEL(t)
+              && !veioDoCartao(t) && saiDoCaixaDela(t) && t.valor > 0 && PROJETAVEL(t)
               && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
     .forEach(t => {
       const k = CHAVE_RECORRENTE(t.descricao);
@@ -302,7 +307,7 @@ if (encerradas.length) {
   const porChave = {};
   transacoes
     .filter(t => noEscopo(t.mes_vencimento) && t.origem !== 'holerite_elektro'
-              && !veioDoCartao(t) && t.valor > 0 && !PROJETAVEL(t)
+              && !veioDoCartao(t) && saiDoCaixaDela(t) && t.valor > 0 && !PROJETAVEL(t)
               && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
     .forEach(t => {
       const k = CHAVE_RECORRENTE(t.descricao);

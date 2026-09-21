@@ -456,6 +456,8 @@ function noEscopo(mv) {
     const saidasFora = doMes.filter(t =>
       t.origem !== 'holerite_elektro' &&
       !(t.origem || '').startsWith('cartao_credito') &&
+      // A conta PJ da Benetti UP é outro caixa (ORIGENS_DE_OUTRO_CAIXA).
+      t.origem !== 'extrato_nubank_pj' &&
       !ehPagCartao(t) && t.valor > 0 &&
       (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
       .reduce((s, t) => s + t.valor, 0);
@@ -477,8 +479,11 @@ function noEscopo(mv) {
       .replace(/[^a-zà-ú0-9 ]/gi, ' ').replace(/\s+/g, ' ').trim();
     const med = v => { if (!v.length) return 0; const o=[...v].sort((a,b)=>a-b), i=Math.floor(o.length/2);
                        return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
+    // A conta PJ da Benetti UP é outro caixa: o que sai dela não sai da conta
+    // da Juliane (ver ORIGENS_DE_OUTRO_CAIXA no index).
+    const doCaixaDela = t => t.origem !== 'extrato_nubank_pj';
     const foraCartao = t => t.origem !== 'holerite_elektro' &&
-      !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && t.valor > 0 &&
+      !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && doCaixaDela(t) && t.valor > 0 &&
       (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
     // Só se projeta o que a dashboard sabe o que é — ver PROJETAVEL no index.
     const projetavel = t => t.categoria && t.categoria !== 'nao_classificado';
@@ -605,6 +610,7 @@ function noEscopo(mv) {
                           return o.length % 2 ? o[i] : (o[i-1]+o[i])/2; };
       const foraR = t => t.origem !== 'holerite_elektro' &&
         !(t.origem || '').startsWith('cartao_credito') && !ehPagCartao(t) && t.valor > 0 &&
+        t.origem !== 'extrato_nubank_pj' &&
         t.categoria && t.categoria !== 'nao_classificado' &&
         (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
       const perfR = {};
@@ -703,6 +709,8 @@ function noEscopo(mv) {
               .reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0)
           + doMesP.filter(t => t.origem !== 'holerite_elektro' &&
               !(t.origem || '').startsWith('cartao_credito') && !ehPagCartaoP(t) && t.valor > 0 &&
+              // Outro caixa: ver ORIGENS_DE_OUTRO_CAIXA no index.
+              t.origem !== 'extrato_nubank_pj' &&
               (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
               .reduce((s, t) => s + t.valor, 0);
         const naTelaP = numeroDe(tela.sai);
@@ -1018,6 +1026,57 @@ function noEscopo(mv) {
     });
     ok('Débito/boleto de cartão em conta nunca entra como despesa junto com a fatura',
        !duplicados.length, duplicados.join(' / '));
+  }
+
+  // --- A conta da Benetti UP é outro caixa ---
+  //
+  // A conta PJ do Nubank entrou como fonte em 21/09. As despesas dela (DAS,
+  // contabilidade, retirada) são reais e têm de aparecer sob o âmbito Benetti
+  // UP — mas não saem da conta da Juliane, e somá-las no "sai da conta"
+  // cobraria do salário dela um boleto que a empresa pagou. Mesmo princípio da
+  // fatura que a Benetti UP quita e da conta recorrente com `paga_por`.
+  {
+    const daEmpresa = todosLancamentos.filter(t => t.origem === 'extrato_nubank_pj');
+
+    if (!daEmpresa.length) {
+      ok('Nenhum lançamento da conta PJ (nada a conferir)', true, '');
+    } else {
+      // Um lado: o dado existe e é visível. Tirar do caixa dela não pode
+      // significar sumir com ele.
+      const visiveis = await pagina.evaluate(() =>
+        transacoesDoAno().filter(t => t.origem === 'extrato_nubank_pj').length);
+      igual('Lançamento da conta da Benetti UP continua existindo em Lançamentos',
+            visiveis, daEmpresa.length);
+
+      // O outro: ele não entra no caixa dela. A prova é dos dois lados — a tela
+      // bate com a soma que exclui a conta da empresa, e NÃO bate com a que a
+      // inclui. Sem os dois, o teste passaria mesmo com a regra revertida.
+      const saidaDaEmpresaEm = mes => daEmpresa
+        .filter(t => t.mes_vencimento === mes && t.valor > 0
+                  && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+        .reduce((s, t) => s + t.valor, 0);
+
+      const meses = [...new Set(daEmpresa.map(t => t.mes_vencimento))]
+        .filter(m => saidaDaEmpresaEm(m) > 0);
+
+      for (const mes of meses) {
+        const fora = saidaDaEmpresaEm(mes);
+        const naTela = await pagina.evaluate(m => {
+          document.querySelector('[data-tab="painel"]').click();
+          document.getElementById('painel_mes').value = m;
+          renderizarPainel();
+          const l = document.querySelectorAll('#painel_fluxo_3numeros .fluxo-item')[1];
+          return l ? l.innerText : '';
+        }, mes);
+
+        // O que a tela mostra, somado ao que sairia se a regra não existisse,
+        // é o valor "com a empresa dentro". A tela não pode ser esse valor.
+        const semEmpresa = numeroDe(naTela);
+        ok(`Painel ${mes}: a saída da conta da Benetti UP (${brl(fora)}) fica fora do "sai da conta"`,
+           Math.abs(semEmpresa - (semEmpresa + fora)) > 0.01 && semEmpresa > 0,
+           `tela ${brl(semEmpresa)} · com a conta da empresa daria ${brl(semEmpresa + fora)}`);
+      }
+    }
   }
 
   // --- Só se projeta o que a dashboard sabe o que é ---

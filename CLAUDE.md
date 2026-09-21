@@ -924,6 +924,104 @@ Efeito: o "já venceu" de setembro caiu para **R$ 1.395,65** (só as três fatur
 de 15/09, todas fato), e o "sai da conta" de Set/26 de R$ 9.513,20 para
 **R$ 9.433,20**.
 
+### A fatura do Itaú em PDF, e a conferência que rodava tarde demais (21/09)
+A Juliane passou a mandar a fatura pelo **PDF do app**, e só existia leitura do
+XLSX do internet banking. `conferir-fatura.js` respondia "não é fatura", e o
+3794 de Out/26 seguia gravado com **R$ 4.904,34 e 7 lançamentos** — a foto de um
+ciclo ainda em aberto. A fatura fechada diz **R$ 15.128,18 com 28**.
+
+`ler-fatura-itau-pdf.js`, com as duas disciplinas de sempre:
+
+- **A coluna sai do próprio documento.** O PDF imprime duas tabelas lado a lado
+  na mesma linha de texto; a linha de cabeçalho que traz **dois "DATA"** diz
+  onde a segunda começa. Medir a olho numa linha de compra qualquer daria certo
+  até a primeira fatura com outro desenho.
+- **Desembaralhar é página por página.** Concatenar a esquerda do documento
+  inteiro e só então a direita parece equivalente e não é: a seção aberta no fim
+  da coluna direita da página 1 continua na esquerda da página 2, e com as
+  páginas embaralhadas a continuação herda a seção errada — foi o que jogou a
+  "Redução Mensalidade" de produtos e serviços para dentro de compras.
+- **Duas conferências, e sem elas nada é devolvido:** a soma dos lançamentos
+  tem de dar o `Total dos lançamentos atuais` impresso, e o resumo tem de fechar
+  consigo mesmo (`anterior + pagamento + financiado + atuais = total`). A fatura
+  de 01/10 fecha ao centavo, seção por seção.
+- **"Compras parceladas - próximas faturas" fica de fora**: é parcela que ainda
+  vai ser cobrada, e somá-la dobraria a fatura.
+- **O repasse de IOF é a única linha de valor sem data** — sem tratá-la à parte,
+  faltavam exatamente R$ 13,31 e a fatura não fechava.
+
+`importar-fatura-itau-pdf.js` grava com a disciplina aprendida no Bradesco (o
+relido é substituído; a purga vem antes do índice de ids) e **religa as parcelas
+da mesma compra pela chave de `chaveDaCompra`** — sem isso a parcela 4/12 lida
+do PDF vira uma compra própria e a numeração aparece com buraco.
+
+**Bug real no importador do extrato, achado nesta importação:** `conferirSaldos()`
+rodava **depois** do corte de sobreposição. O extrato mais antigo é podado das
+linhas que o mais novo já cobre, então ele era conferido com os saldos impressos
+contra uma fração dos movimentos: **14 de 20 intervalos "não fechavam"**, e a
+guarda que recusa gravar teria barrado um arquivo perfeito. Pior: a guarda
+deixava de distinguir leitura errada de corte legítimo. A conferência passou a
+ser feita **sobre o arquivo como foi lido**, e voltou ao resíduo conhecido de
+R$ 0,05.
+
+Regra nova: **Tokio Marine** no extrato → `seguro`/Família. Mesmo caso do
+Transurc — já era decisão dela (23/08), mas só existia em
+`regras-classificacao.json`, que vale para a fatura.
+
+### A conta da Benetti UP entrou, e ela é outro caixa (21/09)
+Eu disse à Juliane que a Benetti UP não estava integrada, e ela corrigiu: *"a
+Benetti up já está na Dashboard, como uma leitura separada, acredito que já
+carreguei vários dados dela aqui"*. **Ela estava certa, e eu estava impreciso
+de um jeito que importa.**
+
+O que já existia: a Benetti UP como **leitura separada** — o seletor do topo, a
+pessoa cadastrada, o campo `ambito` em **456 lançamentos de 2026, R$ 195.979**.
+O que faltava era a **conta bancária**: todos esses 456 entraram pelo cartão
+pessoal (439) e pelo extrato do Itaú (17), ou seja, só o que vaza para o lado
+dela. O efeito era uma empresa que só aparecia **gastando** — R$ 173 mil de
+tráfego pago e **nenhuma entrada**, porque a receita das processadoras (SHPP,
+depois Maree) cai na conta PJ do Nubank, que não era lida.
+
+E ela já tinha mandado esse extrato, em 30/08. Naquela vez ele foi analisado
+direto do PDF e o resultado virou texto neste arquivo — **nunca virou dado**. A
+memória dela estava certa: o arquivo passou e não deixou rastro.
+
+`importar-extrato-nubank-pj.js` (ag. 0001, c/c 977727920-1). O risco desta
+fonte é contar duas vezes, e é maior que em qualquer outra: quase todo movimento
+grande tem a outra ponta já lançada.
+
+| Movimento | Como entra | Por quê |
+|---|---|---|
+| Pix para o Itaú Holding | `transferencia`/`pagamento_fatura` | as compras já estão na fatura do 0442/3794, uma a uma |
+| Empresa → Juliane | `despesa`/`pro_labore` | o extrato pessoal já lança a entrada como receita dela; marcar transferência dos dois lados daria ao consolidado uma receita que não existe |
+| Juliane → empresa | `transferencia`/`aporte_na_empresa` | é capital, não venda — chamar de receita inventaria faturamento feito do bolso dela |
+| Maree / SHPP | `receita`/`vendas` | **a receita de verdade da empresa**, que nunca tinha existido na base |
+
+E a conferência de sempre: o saldo impresso tem de ser reproduzido pelos
+movimentos lidos, dia a dia e no total. Fecha nos 12 movimentos.
+
+**A consequência que quase passou batido: o Painel não filtra por âmbito.** Sem
+mais nada, as saídas da empresa (DAS, contabilidade, retirada) entrariam no
+"sai da conta" — **R$ 632,67 em Set/26, R$ 3.059,19 em Ago/26** cobrados do
+salário da Juliane por um boleto que a empresa pagou. `ORIGENS_DE_OUTRO_CAIXA` /
+`saiDoCaixaDela(t)`: a conta PJ sai do "sai da conta", da projeção de recorrente
+e da lista do que falta identificar — **e continua inteira em Lançamentos, Para
+Onde Vai e Fluxo de Caixa sob o âmbito Benetti UP.** É a mesma decisão, e o
+mesmo motivo, que já tirava do Painel a fatura quitada pela Benetti UP e a conta
+recorrente com `paga_por` diferente de `juliane`. O discriminador é a **conta de
+onde o dinheiro saiu**, que é o que `origem` diz.
+
+**Escrevi antes um teste que não testava nada** — a asserção era
+`Math.abs(naTela − naTela) < 0.01`, sempre verdadeira. Refeito com prova dos
+dois lados: a tela bate com a soma que exclui a conta da empresa e **não** bate
+com a que a inclui, mais um teste de que o lançamento continua existindo em
+Lançamentos (tirar do caixa dela não pode significar sumir com ele). Verificado
+revertendo o filtro: sem ele, **6 testes falham**.
+
+Primeiros números da empresa pela conta dela (jul–set/26): receita
+**R$ 18.615,28**, despesa operacional **R$ 3.770,86**. Transferência fica fora
+dos dois, de propósito — é dinheiro que a outra ponta já lança.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

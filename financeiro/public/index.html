@@ -2779,11 +2779,27 @@
     // automático e PIX do extrato, mais parcela de empréstimo debitada em
     // conta. Exclui a folha (já abatida no líquido) e transferência/pagamento
     // de fatura (as compras já estão contadas na própria fatura do cartão).
+    // O caixa da Benetti UP é outro caixa.
+    //
+    // A conta PJ do Nubank entrou como fonte em 21/09, e com ela as saídas da
+    // empresa: DAS, contabilidade, retirada. São despesas de verdade e têm de
+    // aparecer em Lançamentos, em Para Onde Vai e no Fluxo de Caixa sob o
+    // âmbito Benetti UP — mas **não saem da conta dela**. Somá-las no "sai da
+    // conta" cobraria do salário da Juliane um boleto que a empresa pagou.
+    //
+    // É a mesma decisão, e o mesmo motivo, que já tirava do Painel a fatura
+    // quitada pela Benetti UP e a conta recorrente com `paga_por` diferente de
+    // `juliane`. O discriminador aqui é a CONTA de onde o dinheiro saiu, que é
+    // o que `origem` diz.
+    const ORIGENS_DE_OUTRO_CAIXA = ['extrato_nubank_pj'];
+    const saiDoCaixaDela = t => !ORIGENS_DE_OUTRO_CAIXA.includes(t.origem);
+
     function saidasForaDoCartaoDoMes(mes) {
       return lancamentosDeCaixa(mes)
         .filter(t => t.origem !== 'holerite_elektro'
                   && !veioDoCartao(t)
                   && !ehPagamentoDeCartaoNoExtrato(t)
+                  && saiDoCaixaDela(t)
                   && t.valor > 0
                   && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
     }
@@ -2841,6 +2857,7 @@
         .filter(t => mesNoEscopo(t.mes_vencimento)
                   && t.origem !== 'holerite_elektro'
                   && !veioDoCartao(t)
+                  && saiDoCaixaDela(t)
                   && t.valor > 0
                   && PROJETAVEL(t)
                   && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
@@ -2924,6 +2941,7 @@
         .filter(t => mesNoEscopo(t.mes_vencimento)
                   && t.origem !== 'holerite_elektro'
                   && !veioDoCartao(t)
+                  && saiDoCaixaDela(t)
                   && t.valor > 0
                   && !PROJETAVEL(t)
                   && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
