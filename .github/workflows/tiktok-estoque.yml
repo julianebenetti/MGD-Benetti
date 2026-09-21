@@ -1,14 +1,13 @@
 name: Validador de Estoque TikTok
 
-# DESLIGADO por enquanto. O caminho escolhido foi o lembrete diário
-# (tiktok-lembrete.yml), já que o próprio TikTok detecta o esgotamento e ainda
-# diz qual vídeo está afetado — coisa que este robô não consegue saber.
-# Este aqui checa a página pública do produto e continua disponível pra rodar
-# na mão (Actions → Run workflow). Pra religar o automático, é só descomentar
-# as duas linhas de schedule abaixo.
+# É este robô que manda o alerta COM o link do produto e do vídeo, porque ele
+# checa os links que a Juliane cadastrou na página. O lembrete diário
+# (tiktok-lembrete.yml) continua existindo pra cobrir o que não foi cadastrado.
 on:
-  # schedule:
-  #   - cron: '0 */2 * * *'
+  schedule:
+    # De 2 em 2 horas. Pra checar de hora em hora, troque por '0 * * * *' —
+    # mas confira os minutos de Actions disponíveis se o repositório for privado.
+    - cron: '0 */2 * * *'
   workflow_dispatch:
     inputs:
       url:

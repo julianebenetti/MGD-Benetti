@@ -16,40 +16,59 @@ qualquer robô externo, porque ele sabe **qual vídeo** está afetado.
 
 ## As duas peças
 
-### 1. Lembrete diário (é o principal)
+### 1. Alerta com o link (é o que resolve na hora)
 
-Todo dia às 9h da manhã chega uma mensagem no Telegram com o caminho do app
-escrito, pra não precisar lembrar de nada.
+Você cadastra na página o **link do produto** e o **link do vídeo** onde ele está
+vinculado. De 2 em 2 horas o robô checa esses produtos e, quando um esgota,
+chega no Telegram:
 
-Ele não é burro: lê a tabela `tiktok_revisoes` e **fica calado se a revisão do
-dia já foi feita**. Se estiver há 4 dias ou mais sem revisar, a mensagem muda de
-tom. É o que impede o lembrete de virar paisagem.
+```
+🔴 PRODUTO ESGOTADO
 
-| Arquivo | O que é |
-|---|---|
-| `tiktok-lembrete.py` | Monta e envia a mensagem |
-| `.github/workflows/tiktok-lembrete.yml` | Dispara todo dia às 12:00 UTC (9h de Brasília) |
-| `validador-tiktok.html` | Página com o passo a passo e o botão de marcar a revisão |
-| `teste-tiktok-lembrete.py` | Testes do texto e da contagem de dias |
+Calça wide leg bege
+O TikTok Shop está mostrando esse produto como esgotado.
 
-### 2. Vigia de estoque por produto (opcional, desligado)
+🎬 Trocar neste vídeo:
+https://www.tiktok.com/@julianebenetti/video/7412345678901234567
+📍 vídeo de 18/09
 
-Um robô que abre a página pública do produto e lê se esgotou. Serve como reforço
-e funciona pra produto que ainda nem foi postado — mas **não sabe dizer qual
-vídeo** está afetado, e não foi calibrado contra uma página real do TikTok Shop.
+🛒 Produto que quebrou:
+https://shop.tiktok.com/view/product/1729419574822508544
 
-Está com o agendamento **desligado**. Roda só na mão: Actions → *Validador de
-Estoque TikTok* → Run workflow. Pra religar o automático, descomente as linhas
-de `schedule` em `.github/workflows/tiktok-estoque.yml`.
+🔎 Como detectei: JSON-LD availability=OutOfStock
+```
+
+Toca no link do vídeo e já troca o produto. Se você não cadastrar o link do
+vídeo, o alerta ensina o caminho no app no lugar dele.
+
+**O limite:** ele só sabe dos produtos que você cadastrar. Ele não descobre
+sozinho o que você postou — isso só existe dentro da sua conta logada do TikTok.
 
 | Arquivo | O que é |
 |---|---|
 | `tiktok-estoque-sync.py` | O robô de checagem |
-| `.github/workflows/tiktok-estoque.yml` | Agendamento (desligado) |
-| `teste-tiktok-estoque.py` | 18 testes da detecção |
+| `.github/workflows/tiktok-estoque.yml` | Roda de 2 em 2 horas |
+| `validador-tiktok.html` | Cadastro dos links e painel de status |
+| `teste-tiktok-estoque.py` | Testes da detecção e do texto do alerta |
 
-Tabelas no Supabase (já criadas): `tiktok_revisoes`, `tiktok_estoque_monitor`,
-`tiktok_estoque_log`.
+### 2. Lembrete diário (a rede de segurança)
+
+Cobre o que ficou de fora do cadastro. Todo dia às 9h chega o empurrão pra você
+abrir o painel do TikTok, que é quem enxerga **todos** os vídeos com link
+quebrado — inclusive os que você nunca cadastrou.
+
+Ele fica calado se a revisão do dia já foi registrada na página, e muda de tom a
+partir de 4 dias sem revisão. Quando o robô já confirmou algum produto esgotado,
+o lembrete lista esses produtos com os links junto.
+
+| Arquivo | O que é |
+|---|---|
+| `tiktok-lembrete.py` | Monta e envia a mensagem |
+| `.github/workflows/tiktok-lembrete.yml` | Todo dia às 12:00 UTC (9h de Brasília) |
+| `teste-tiktok-lembrete.py` | Testes do texto e da contagem de dias |
+
+Tabelas no Supabase (já criadas): `tiktok_estoque_monitor`, `tiktok_estoque_log`,
+`tiktok_revisoes`.
 
 ## Instalação
 
@@ -89,10 +108,13 @@ TELEGRAM_BOT_TOKEN=... TELEGRAM_CHAT_ID=... python3 tiktok-lembrete.py --teste
 
 ## O dia a dia
 
-1. Chega o lembrete às 9h.
-2. Abre o TikTok e segue o caminho (também está escrito na página, se esquecer).
-3. Troca o produto nos vídeos com aviso vermelho.
-4. Volta na página e clica em **Marcar revisão de hoje** — pode anotar quantos
+0. **Cada produto que você for divulgar, cadastre na página** — nome, link do
+   produto e link do vídeo. É isso que faz o alerta chegar com link.
+1. Se algum esgotar, chega o alerta com os dois links. Toca e troca.
+2. Uma vez por dia chega o lembrete às 9h (rede de segurança).
+3. Abre o TikTok e segue o caminho (também está escrito na página, se esquecer).
+4. Troca o produto nos vídeos com aviso vermelho.
+5. Volta na página e clica em **Marcar revisão de hoje** — pode anotar quantos
    vídeos corrigiu. Isso silencia o lembrete de hoje e alimenta o histórico.
 
 A página mostra há quantos dias foi a última revisão, quantas revisões e quantos

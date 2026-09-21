@@ -93,7 +93,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); font-si
 .aviso.ok   { background:var(--green-bg); border:1px solid var(--green-bdr); color:var(--green); }
 
 /* ── FORM ── */
-.form-grid { padding:14px 16px; display:grid; grid-template-columns:1.2fr 2fr 1fr auto; gap:10px; align-items:end; }
+.form-grid { padding:14px 16px; display:grid; grid-template-columns:1.1fr 1.7fr 1.7fr 1fr auto; gap:10px; align-items:end; }
 .campo { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .campo label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; font-weight:600; }
 .campo input { padding:7px 10px; font-size:12px; border:1px solid var(--border); border-radius:var(--r); background:var(--bg); color:var(--text); font-family:var(--font); outline:none; width:100%; }
@@ -204,7 +204,7 @@ tr:hover td { background:var(--bg3); }
   <div class="section">
     <div class="section-head">
       <span class="section-title">➕ Vigiar um produto novo</span>
-      <span class="section-sub">Opcional — o robô que checa a página pública do produto. Roda só quando você manda.</span>
+      <span class="section-sub">Cole o link do produto <b>e</b> o do vídeo — assim o alerta te leva direto pro vídeo que precisa de troca</span>
     </div>
     <div class="form-grid">
       <div class="campo">
@@ -216,8 +216,12 @@ tr:hover td { background:var(--bg3); }
         <input id="ttv-link" placeholder="https://vt.tiktok.com/… ou shop.tiktok.com/view/product/…">
       </div>
       <div class="campo">
-        <label for="ttv-onde">Onde postei (opcional)</label>
-        <input id="ttv-onde" placeholder="Ex: vídeo de 18/09 + bio">
+        <label for="ttv-video">Link do vídeo (opcional)</label>
+        <input id="ttv-video" placeholder="https://www.tiktok.com/@voce/video/…">
+      </div>
+      <div class="campo">
+        <label for="ttv-onde">Apelido do vídeo (opcional)</label>
+        <input id="ttv-onde" placeholder="Ex: vídeo de 18/09">
       </div>
       <div class="campo">
         <label>&nbsp;</label>
@@ -361,13 +365,17 @@ function ttvRender() {
     const s = ttvSituacao(l);
     const bruto = l.link_resolvido || l.link || '';
     const link = /^https?:\/\//i.test(bruto) ? bruto : '';   // nunca renderiza javascript:
+    const bv = l.link_video || '';
+    const video = /^https?:\/\//i.test(bv) ? bv : '';
     const desde = (s.grupo === 'problema' && l.esgotado_desde) ? ttvQuandoTexto(l.esgotado_desde) : '—';
     const fila = l.recheck_solicitado
       ? '<span style="font-size:10px;color:var(--muted);">na fila ⏳</span>'
       : `<button class="act-btn" onclick="ttvRecheck(${l.id})">Checar já</button>`;
     return `<tr>
       <td class="nome">${ttvEsc(l.produto)}
-        ${link ? `<br><a class="link-prod" href="${ttvEsc(link)}" target="_blank" rel="noopener">abrir no TikTok ↗</a>` : ''}
+        ${link ? `<br><a class="link-prod" href="${ttvEsc(link)}" target="_blank" rel="noopener">🛒 produto ↗</a>` : ''}
+        ${video ? `<br><a class="link-prod" href="${ttvEsc(video)}" target="_blank" rel="noopener">🎬 vídeo ↗</a>`
+                : '<br><span style="font-size:10px;color:var(--subtle);">sem link de vídeo</span>'}
       </td>
       <td><span class="badge ${s.classe}" title="${ttvEsc(s.ajuda)}">${s.texto}</span></td>
       <td>${desde}</td>
@@ -512,6 +520,7 @@ async function ttvAdicionar() {
   const nome = document.getElementById('ttv-nome').value.trim();
   const link = document.getElementById('ttv-link').value.trim();
   const onde = document.getElementById('ttv-onde').value.trim();
+  const video = document.getElementById('ttv-video').value.trim();
   if (!nome || !link)  return ttvAviso('warn', '⚠️ Preencha pelo menos o nome do produto e o link.');
   if (!/^https?:\/\//i.test(link)) return ttvAviso('warn', '⚠️ O link precisa começar com https://');
 
@@ -522,12 +531,14 @@ async function ttvAdicionar() {
       method: 'POST',
       body: JSON.stringify({
         produto: nome, link, onde_postei: onde || null,
+        link_video: video || null,
         plataforma: 'tiktok_shop', recheck_solicitado: true
       })
     });
     document.getElementById('ttv-nome').value = '';
     document.getElementById('ttv-link').value = '';
     document.getElementById('ttv-onde').value = '';
+    document.getElementById('ttv-video').value = '';
     await ttvCarregar();
     ttvAviso('ok', `✅ <b>${ttvEsc(nome)}</b> entrou na vigilância. O robô checa na próxima rodada.`);
   } catch (err) {

@@ -85,7 +85,8 @@ def produtos_com_problema():
     """Reforço: produtos que o robô da página pública já confirmou como esgotados.
     Se o robô estiver desligado a lista simplesmente vem vazia."""
     try:
-        return sb_get("tiktok_estoque_monitor?select=produto,status,onde_postei"
+        return sb_get("tiktok_estoque_monitor?select=produto,status,onde_postei,"
+                      "link,link_resolvido,link_video"
                       "&ativo=eq.true&confirmacoes=gte.2"
                       "&status=in.(esgotado,removido)&limit=10")
     except Exception:
@@ -114,11 +115,19 @@ def montar_mensagem(dias, extras):
            "Leva uns 2 minutos e evita vídeo no ar mandando gente pra link que não vende.")
 
     if extras:
-        nomes = "\n".join(
-            f"• {e['produto']}" + (f" — {e['onde_postei']}" if e.get("onde_postei") else "")
-            for e in extras
-        )
-        msg += f"\n\n🔴 <b>O validador também já confirmou esgotado:</b>\n{nomes}"
+        blocos = []
+        for e in extras:
+            rotulo = "saiu do ar" if e.get("status") == "removido" else "esgotado"
+            b = [f"• <b>{e['produto']}</b> — {rotulo}"]
+            if e.get("onde_postei"):
+                b.append(f"  📍 {e['onde_postei']}")
+            if e.get("link_video"):
+                b.append(f"  🎬 trocar no vídeo: {e['link_video']}")
+            alvo = e.get("link_resolvido") or e.get("link")
+            if alvo:
+                b.append(f"  🛒 produto: {alvo}")
+            blocos.append("\n".join(b))
+        msg += "\n\n🔴 <b>Estes o validador já confirmou:</b>\n" + "\n\n".join(blocos)
 
     if PAGINA_URL:
         msg += f"\n\n✅ Depois de revisar, marque aqui: {PAGINA_URL}"

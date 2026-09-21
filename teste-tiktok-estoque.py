@@ -105,5 +105,31 @@ for i, bruto in enumerate(sequencia):
     if a:
         linha["alerta_enviado_em"] = tts.agora_iso()
 
+print("\n── Texto do alerta (tem que dar pra agir direto dele) ──")
+alerta_casos = [
+    ("com link de vídeo",
+     {"produto":"Calça wide leg","link":"https://vt.tiktok.com/Z/","link_resolvido":"https://shop.tiktok.com/view/product/1",
+      "link_video":"https://www.tiktok.com/@ela/video/7","onde_postei":"vídeo de 18/09"},
+     {"status":"esgotado","detalhe":"availability=OutOfStock"},
+     ["Calça wide leg", "https://www.tiktok.com/@ela/video/7",
+      "https://shop.tiktok.com/view/product/1", "vídeo de 18/09", "ESGOTADO"]),
+    ("sem link de vídeo, cai no caminho do app",
+     {"produto":"Bolsa tote","link":"https://vt.tiktok.com/Y/"},
+     {"status":"removido","detalhe":"HTTP 404"},
+     ["Bolsa tote", "Links de produtos ocultos", "SAIU DO AR", "https://vt.tiktok.com/Y/"]),
+]
+for nome, linha, res, esperados in alerta_casos:
+    msg = tts.texto_alerta(linha, res)
+    faltando = [e for e in esperados if e not in msg]
+    ok = not faltando
+    falhas += 0 if ok else 1
+    print(f"{'✅' if ok else '❌'} alerta {nome}" + (f" — faltou: {faltando}" if faltando else ""))
+
+# O link é o ponto do alerta: se o produto tem link cadastrado, ele TEM que sair.
+msg = tts.texto_alerta({"produto":"X","link":"https://vt.tiktok.com/ABC/"}, {"status":"esgotado","detalhe":"t"})
+ok = "https://vt.tiktok.com/ABC/" in msg
+falhas += 0 if ok else 1
+print(f"{'✅' if ok else '❌'} alerta sempre carrega o link do produto")
+
 print(f"\n{'🎉 Todos os casos passaram' if not falhas else f'❌ {falhas} caso(s) falharam'}")
 sys.exit(1 if falhas else 0)

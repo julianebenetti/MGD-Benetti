@@ -94,8 +94,9 @@ def sb(metodo, path, body=None):
 
 def carregar_monitorados(limite):
     """Ativos primeiro os que a Juliane pediu recheck, depois os mais antigos."""
-    campos = ("id,produto,link,link_resolvido,product_id,status,confirmacoes,"
-              "esgotado_desde,alerta_enviado_em,ultima_verificacao,recheck_solicitado,ativo")
+    campos = ("id,produto,link,link_resolvido,link_video,onde_postei,product_id,status,"
+              "confirmacoes,esgotado_desde,alerta_enviado_em,ultima_verificacao,"
+              "recheck_solicitado,ativo")
     linhas = sb("GET", f"tiktok_estoque_monitor?select={campos}"
                        f"&ativo=eq.true&order=recheck_solicitado.desc,"
                        f"ultima_verificacao.asc.nullsfirst&limit={limite}")
@@ -521,19 +522,32 @@ def aplicar_regra(linha, res):
 
 
 def texto_alerta(linha, res):
-    nome = html_mod.escape(linha.get("produto") or "produto sem nome")
-    link = linha.get("link_resolvido") or linha.get("link") or ""
+    """Alerta pronto pra ação: primeiro o vídeo que ela precisa corrigir,
+    depois o produto que quebrou."""
+    nome  = html_mod.escape(linha.get("produto") or "produto sem nome")
+    prod  = linha.get("link_resolvido") or linha.get("link") or ""
+    video = linha.get("link_video") or ""
+
     if res["status"] == "removido":
-        titulo = "🚫 <b>PRODUTO SAIU DO AR</b>"
-        corpo = "O link não existe mais no TikTok Shop."
+        titulo, corpo = "🚫 <b>PRODUTO SAIU DO AR</b>", "O link não existe mais no TikTok Shop."
     else:
-        titulo = "🔴 <b>PRODUTO ESGOTADO</b>"
-        corpo = "O TikTok Shop está mostrando esse produto como esgotado."
-    onde = linha.get("onde_postei")
-    extra = f"\n📍 Postado em: {html_mod.escape(onde)}" if onde else ""
-    return (f"{titulo}\n\n<b>{nome}</b>\n{corpo}{extra}\n"
-            f"🔎 Como detectei: {html_mod.escape(res.get('detalhe') or '—')}\n\n"
-            f"👉 Tira o link do ar ou troca o produto.\n{html_mod.escape(link)}")
+        titulo, corpo = "🔴 <b>PRODUTO ESGOTADO</b>", "O TikTok Shop está mostrando esse produto como esgotado."
+
+    partes = [titulo, "", f"<b>{nome}</b>", corpo, ""]
+
+    if video:
+        partes += ["🎬 <b>Trocar neste vídeo:</b>", html_mod.escape(video)]
+    else:
+        partes += ["🎬 <b>Onde trocar:</b>",
+                   "TikTok → Vídeos → Gerenciar → “Links de produtos ocultos” → Vincular"]
+    if linha.get("onde_postei"):
+        partes.append(f"📍 {html_mod.escape(linha['onde_postei'])}")
+
+    if prod:
+        partes += ["", "🛒 <b>Produto que quebrou:</b>", html_mod.escape(prod)]
+
+    partes += ["", f"🔎 Como detectei: {html_mod.escape(res.get('detalhe') or '—')}"]
+    return "\n".join(partes)
 
 
 def texto_volta(linha):

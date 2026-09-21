@@ -29,14 +29,17 @@
   app → Vídeos → Gerenciar → filtro "Links de produtos ocultos" → botão Vincular.
   Ele só não avisa. Esse painel é melhor que qualquer robô externo porque diz
   **qual vídeo** está afetado — não substituir isso por scraping.
-- Peça principal: **lembrete diário** (`tiktok-lembrete.py` +
-  `.github/workflows/tiktok-lembrete.yml`, 9h de Brasília). Ele lê `tiktok_revisoes`
-  e não envia nada se a revisão do dia já foi registrada.
+- Peça 1 — **alerta com link** (`tiktok-estoque-sync.py`, de 2 em 2h): checa os
+  produtos que a Juliane cadastrou e manda no Telegram o link do vídeo + o link do
+  produto que quebrou, pra ela trocar direto. Só enxerga o que foi cadastrado.
+- Peça 2 — **lembrete diário** (`tiktok-lembrete.py`, 9h de Brasília): rede de
+  segurança pro que não foi cadastrado. Lê `tiktok_revisoes` e não envia nada se a
+  revisão do dia já foi registrada.
 - `validador-tiktok.html` (publicar no VPS junto com a AfiliDash): passo a passo do
   app, botão "Marcar revisão de hoje" e histórico das revisões.
-- Peça secundária, **desligada**: `tiktok-estoque-sync.py` checa a página pública do
-  produto. Roda só por workflow_dispatch. Nunca foi calibrado contra página real do
-  TikTok Shop; se for religar, calibrar antes com `--url`.
+- O robô de estoque **nunca foi calibrado contra uma página real** do TikTok Shop.
+  Calibrar com `python3 tiktok-estoque-sync.py --url "<link>"` e ajustar
+  `FRASES_ESGOTADO` / `RE_JSON_ESGOTADO_FORTE` conforme o HTML real.
 - Tabelas: `tiktok_revisoes`, `tiktok_estoque_monitor`, `tiktok_estoque_log`.
 - Ao mexer: rodar `teste-tiktok-lembrete.py` e `teste-tiktok-estoque.py`. Manter
   `CONFIRMACOES` (robô) igual a `TTV_CONFIRMACOES` (página), e a contagem de dias
