@@ -1459,6 +1459,75 @@ todas as faturas. Suíte em **466 testes**.
 O scraper da suíte lia a tabela por posição de coluna e precisou ser atualizado
 junto — 3 colunas novas deslocam todas as seguintes.
 
+### O CSV da conta, e três faturas que apareciam em aberto já estando pagas (22/09)
+A Juliane mandou três arquivos: o **extrato da conta corrente Bradesco em CSV**
+(formato novo), o **extrato "EM ABERTO" do 0013** puxado em 22/09, e a **fatura
+fechada de 15/09** — esta já estava gravada e o leitor respondeu "confere" nos
+dois cartões, sem dado novo. Os outros dois corrigiram R$ 1.395,65 de dívida
+que a tela cobrava sem existir.
+
+**O CSV é fonte melhor que o PDF**, e `importar-extrato-bradesco-cc.js` passou a
+ler os dois: crédito e débito têm coluna própria (no PDF o sinal sai da
+*posição* do número na linha) e o arquivo **declara o período que cobre**. O
+saldo continua sem sinal, e a descoberta do sinal inicial segue sendo o que
+revela a verdade: a conta estava em **−R$ 277,62** em 11/09 e fechou em
+**+R$ 0,41** em 15/09.
+
+**Defeito real que o CSV expôs: a mesclagem apagava o que estava fora da janela
+do arquivo.** Ela substituía o **mês inteiro** de `extrato_bradesco_cc`, e este
+CSV cobre só 13 a 22/09 — o IOF de 02/09 e o encargo de 08/09 (R$ 13,59, que
+vieram do PDF) sumiriam sem ninguém notar. Agora cada arquivo diz o intervalo
+que cobre e só dentro dele o gravado é trocado.
+
+**Pix recebido sem nome só vira transferência própria se a outra ponta
+existir.** O CSV escreve apenas `PIX RECEBIDO`, sem remetente — e carimbar todo
+Pix recebido como dinheiro dela mudando de conta esconderia receita de verdade
+no dia em que outra pessoa lhe mandar dinheiro. A prova vem do outro lado: uma
+saída de mesmo valor, no mesmo dia, em conta dela já importada. Os dois Pix
+(R$ 278,00 em 14/09 e **R$ 1.271,00 em 15/09**) têm a contrapartida no extrato
+do Itaú. Sem essa prova o lançamento fica `nao_classificado`, para ela dizer.
+
+**Três faturas estavam em aberto e já tinham sido pagas:**
+
+| Fatura | Quanto | Como se sabe |
+|---|---|---|
+| 3987 Set/26 | R$ 887,40 | débito automático de **R$ 1.270,97** em 15/09 na conta corrente, que é exatamente 887,40 + 383,57 |
+| 3711 Set/26 | R$ 383,57 | o mesmo débito — as duas são cobradas no mesmo documento |
+| 0013 Set/26 | R$ 124,68 | `PAGAMENTO RECEBIDO - OBRI` de 15/09 no extrato do ciclo seguinte |
+
+**Dois defeitos no leitor do extrato em aberto, e o primeiro mentia em
+silêncio:**
+
+1. **O mês do ciclo estava fixo no código** (`'Set/26'`, `'2026-09-15'`), de
+   quando os arquivos eram de 30/08. Certo naquele dia, e errado em **qualquer
+   extrato tirado depois de um vencimento** — este é de 22/09 e o ciclo aberto
+   vence 15/10. Gravaria uma foto de ciclo aberto por cima da fatura fechada do
+   mês anterior. Agora `ciclo_em_aberto()` lê a data do próprio extrato: o ciclo
+   é o que vence no próximo dia 15 **depois** dela, e a escolha é impressa.
+2. **O app imprime dois totais que discordam.** `Total para JULIANE BENETTI`
+   diz **R$ 261,48** e `Total da Fatura em Real` diz **R$ 193,08** — e são os
+   R$ 193,08 que a itemização reproduz ao centavo. Nos extratos de 30/08 os dois
+   batiam, então a divergência é do documento, não da leitura (261,48 = 2×
+   compras − pagamento, que não é conta de nada; parece defeito do próprio app).
+   Fica com o total que a itemização prova, **avisando na saída** — e só quando
+   há **um** cartão no documento: com vários, o subtotal por cartão é a única
+   forma de saber quanto é de quem.
+
+**Terceiro defeito, achado ao consertar o segundo:** a dedução do saldo anterior
+pegava a fatura **mais recente** do cartão na base, não a última que venceu
+**antes** daquele ciclo. Com o `financeiro.json` inteiro em mãos (fallback novo,
+porque o `/tmp` só tem o que a última leitura produziu), a fatura do próprio
+ciclo já podia estar gravada e o bloco nunca fecharia.
+
+Fatura nova: **0013 Out/26, R$ 193,08**, vence 15/10, com os 8 lançamentos.
+
+Efeito: o "em aberto no cartão" caiu de R$ 31.734,81 para **R$ 30.532,24**.
+Suíte em **470 testes**, `conciliar.js` íntegro.
+
+**A fatura oferece parcelamento a 12,50% a.m. / 310,98% a.a. (CET 13,05% a.m.,
+335,85% a.a.)** — mesma faixa dos parcelamentos do Itaú. Está registrado aqui
+porque é a oferta que aparece impressa todo mês.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
