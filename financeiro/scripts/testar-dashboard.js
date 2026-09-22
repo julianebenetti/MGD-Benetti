@@ -1286,6 +1286,13 @@ function noEscopo(mv) {
         chaves: previstas.map(r => r.chave),
         cadastradas: previstas.filter(r => r.cadastrada).map(r => ({ d: r.descricao, v: r.valor, fora: !!r.fora_da_conta })),
         foraNaTabela: [...el.querySelectorAll('tbody tr[data-fora-da-conta]')].length,
+        // Linhas de outro caixa que ainda estão a pagar (têm os botões do
+        // plano) e as que já foram pagas por ele (sem botão).
+        foraEmAberto: [...el.querySelectorAll('tbody tr[data-fora-da-conta]')]
+          .filter(tr => tr.querySelector('.plano-btn')).length,
+        foraQuitadas: [...el.querySelectorAll('tbody tr[data-fora-da-conta]')]
+          .filter(tr => !tr.querySelector('.plano-btn')).length,
+        previstasFora: previstas.filter(r => r.fora_da_conta).length,
         saiDaConta: (document.getElementById('painel_fluxo_3numeros') || document.body).innerText
       };
     }, mes);
@@ -1302,10 +1309,19 @@ function noEscopo(mv) {
 
     // O boleto que a empresa paga não pode entrar no dinheiro dela: é o mesmo
     // princípio que já tirou do Painel a fatura quitada pela Benetti UP.
+    // A tabela marca duas coisas com `data-fora-da-conta`: a conta cadastrada
+    // que **vai** ser paga por outro caixa, e a que **já foi** — esta última
+    // passou a aparecer como quitada em vez de sumir da lista, depois que a
+    // Juliane notou contas pagas ainda pedindo pagamento. O total marcado tem
+    // de ser exatamente a soma das duas, senão alguma escapou da marcação.
     const foraEsperadas = cadastro.filter(c => (c.paga_por || 'juliane') !== 'juliane');
     igual('Conta paga por outro caixa vem marcada como tal na tabela',
-          visto.foraNaTabela, foraEsperadas.length);
-    if (foraEsperadas.length) {
+          visto.foraNaTabela, visto.previstasFora + visto.foraQuitadas);
+    ok('Toda conta cadastrada de outro caixa que ainda não foi paga está marcada',
+       visto.previstasFora <= foraEsperadas.length,
+       `${visto.previstasFora} previstas de outro caixa, ${foraEsperadas.length} cadastradas assim`);
+
+    if (visto.foraEmAberto) {
       const somas = await pagina.evaluate(m => {
         const el = document.getElementById('painel_vencimentos_criticos');
         const linhas = [...el.querySelectorAll('tbody tr')];
@@ -1328,6 +1344,11 @@ function noEscopo(mv) {
            && Math.abs(somas.semEmpresa - somas.rodape) < 0.05
            && Math.abs(somas.semEmpresa + somas.somaFora - somas.rodape) > 0.05,
          `sem a empresa ${brl(somas.semEmpresa)} = rodapé ${brl(somas.rodape)}; com ela seria ${brl(somas.semEmpresa + somas.somaFora)}`);
+    } else {
+      // Sem nenhuma conta de outro caixa **em aberto** no mês, a prova dos dois
+      // lados não tem o que comparar — dizer isso é melhor que passar vazio.
+      ok(`Nenhuma conta de outro caixa em aberto em ${mes} — nada a excluir do rodapé`,
+         true, `${visto.foraQuitadas} já paga(s) pela Benetti UP neste mês`);
     }
   }
 

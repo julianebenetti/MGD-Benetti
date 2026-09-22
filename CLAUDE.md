@@ -1572,6 +1572,45 @@ hoje e importar. O bloco de pendências do topo não avisou porque o limiar é d
 7 dias e o atraso era de 4 — e baixar o limiar transformaria o aviso em papel de
 parede. A informação agora está onde ela é lida: na linha da própria conta.
 
+### "Te mandei o extrato do Nubank e do Bradesco, verifique em todos" (22/09)
+Eu tinha respondido olhando **só o extrato do Itaú**. A Juliane corrigiu — e
+estava certa: existem quatro contas, e duas delas ela já tinha mandado. Olhando
+as três, **uma das contas em aberto estava paga de verdade**.
+
+- **Contabilidade STIMA, Set/26, R$ 405,00: paga em 18/09** pela conta da
+  Benetti UP no Nubank. A tela continuava listando como a pagar, e o alerta do
+  celular continuava mandando pagar — quatro dias depois de paga.
+- **DAS do MEI (R$ 87,05, dia 20) e DAS-Simples Nacional (R$ 227,67, pago em
+  21/09 pelo Nubank) são tributos diferentes**, não duplicata: em Ago/26 os dois
+  foram pagos no mesmo dia, de contas diferentes, com valores diferentes (R$
+  87,05 pelo Itaú, R$ 473,30 pelo Nubank). O do MEI segue sem prova — o extrato
+  do Itaú para em 18/09.
+- Condomínio, as duas escolas e o IPTU **não aparecem em nenhuma das três
+  contas**. O extrato do Itaú alcança as datas deles e não traz o pagamento.
+
+**O defeito: `saiDoCaixaDela` estava sendo usado para duas perguntas
+diferentes.** Ele tira a conta PJ dos **totais** — certo, o dinheiro não saiu do
+salário dela. Mas estava tirando também da **deduplicação**, e aí a projeção
+prometia de novo uma conta já quitada. *Quem entra no total* e *o que prova que
+a conta foi paga* são perguntas distintas: `jaLancadaNoMes(mes)` olha todas as
+contas, `saidasForaDoCartaoDoMes(mes)` continua olhando só a dela.
+
+Corrigido nos **dois** lugares que têm cópia da regra — a dashboard e o
+`contas-a-vencer.js`, que alimenta o alerta do celular. O do alerta era o pior
+dos dois: chega no telefone dela antes de decidir o que pagar.
+
+**A conta que o outro caixa pagou não some da lista — aparece quitada**, com o
+selo "pago pela conta da Benetti UP". Sumir em silêncio é o espelho do mesmo
+problema: a linha existe para lembrar, e ela precisa ver que fechou. Sai dos
+totais do mesmo jeito.
+
+2 testes ajustados e 2 novos. Os dois que quebraram estavam **certos em
+quebrar**: contavam as linhas marcadas `data-fora-da-conta` supondo que só
+houvesse previstas, e agora há também as quitadas. O que exigia "o rodapé não
+soma o boleto da empresa" passou a dizer explicitamente quando **não há** conta
+de outro caixa em aberto no mês, em vez de passar vazio. Suíte em **476 testes**;
+a correção do alerta verificada revertendo-a (sem ela, a STIMA volta a aparecer).
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

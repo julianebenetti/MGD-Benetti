@@ -3024,8 +3024,38 @@
     // As recorrentes que faltam num mês: as que o extrato daquele mês ainda não
     // trouxe. Devolve com `previsto: true` para a tela nunca confundir uma
     // projeção com um lançamento real.
+    // **Conta paga por outro caixa continua sendo prova de que foi paga.**
+    //
+    // `saiDoCaixaDela` tira a conta PJ da Benetti UP dos totais — e isso está
+    // certo: o dinheiro não saiu do salário dela. Mas ela também estava fora da
+    // *deduplicação*, e aí a projeção prometia de novo uma conta já quitada: a
+    // Contabilidade STIMA de Set/26 saiu do Nubank da empresa em 18/09 e a tela
+    // continuava listando os R$ 405,00 como a pagar. Quem entra nos totais e
+    // quem prova pagamento são perguntas diferentes.
+    function jaLancadaNoMes(mes) {
+      return new Set(lancamentosDeCaixa(mes)
+        .filter(t => t.origem !== 'holerite_elektro'
+                  && !veioDoCartao(t)
+                  && !ehPagamentoDeCartaoNoExtrato(t)
+                  && t.valor > 0
+                  && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+        .map(t => CHAVE_RECORRENTE(t.descricao)));
+    }
+
+    // O que o outro caixa pagou neste mês. Mesmo filtro das saídas dela, menos
+    // o `saiDoCaixaDela` — é justamente o complemento.
+    function pagasPorOutroCaixaNoMes(mes) {
+      return lancamentosDeCaixa(mes)
+        .filter(t => t.origem !== 'holerite_elektro'
+                  && !veioDoCartao(t)
+                  && !ehPagamentoDeCartaoNoExtrato(t)
+                  && !saiDoCaixaDela(t)
+                  && t.valor > 0
+                  && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
+    }
+
     function recorrentesFaltandoEm(mes) {
-      const jaTem = new Set(saidasForaDoCartaoDoMes(mes).map(t => CHAVE_RECORRENTE(t.descricao)));
+      const jaTem = jaLancadaNoMes(mes);
       const ano = 2000 + parseInt(mes.split('/')[1], 10);
       const iMes = MES_ORDEM.indexOf(mes.split('/')[0]) + 1;
       const data = dia => `${ano}-${String(iMes).padStart(2, '0')}-${String(Math.min(Math.max(dia || 15, 1), 28)).padStart(2, '0')}`;
@@ -3400,6 +3430,21 @@
             : 'quitada',
           cartao: f.cartao,
           chave: `fatura|${f.cartao}|${f.mes}`
+        })),
+        // Conta que o outro caixa pagou entra como **quitada**, marcada como
+        // fora da conta dela. Ela sai dos totais (o dinheiro não veio do
+        // salário), mas não pode simplesmente sumir da lista: a linha existe
+        // para lembrar de pagar, e desaparecer sem dizer que foi paga é o
+        // mesmo tipo de silêncio que a fez desconfiar da tela.
+        ...pagasPorOutroCaixaNoMes(mes).map(t => ({
+          quando: t.data,
+          titulo: t.descricao,
+          valor: t.valor,
+          quitado: true,
+          fora_da_conta: true,
+          detalhe: `${rotuloCategoria(t.categoria)} · <b>pago pela conta da Benetti UP</b>`,
+          cartao: null,
+          chave: `lanc|${t.id}`
         })),
         ...saidasFora.map(t => ({
           quando: t.data,

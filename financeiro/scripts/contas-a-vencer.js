@@ -100,6 +100,18 @@ const saidasForaDoCartaoDoMes = mes => transacoes
             && !ehPagamentoDeCartaoNoExtrato(t) && saiDoCaixaDela(t) && t.valor > 0
             && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'));
 
+// **Conta paga por outro caixa continua sendo prova de que foi paga.** O mesmo
+// filtro acima, sem o `saiDoCaixaDela`: a conta PJ da Benetti UP fica fora dos
+// totais porque o dinheiro não saiu do salário dela, mas quem quita a conta
+// quita de qualquer jeito. Sem isso o alerta do celular mandava pagar a
+// Contabilidade STIMA de Set/26 quatro dias depois de a empresa já ter pago.
+const jaLancadaNoMes = mes => new Set(transacoes
+  .filter(t => noEscopo(t.mes_vencimento) && t.mes_vencimento === mes
+            && t.origem !== 'holerite_elektro' && !veioDoCartao(t)
+            && !ehPagamentoDeCartaoNoExtrato(t) && t.valor > 0
+            && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+  .map(t => CHAVE_RECORRENTE(t.descricao)));
+
 // Só entra na previsão o que a Juliane informou ou o que é reconhecidamente
 // gasto de rotina (decisão dela, 17/09). Lançamento em `nao_classificado` é
 // justamente o que a dashboard não sabe o que é — projetar isso é palpite com
@@ -132,7 +144,7 @@ function perfilDasRecorrentes() {
 }
 
 function recorrentesFaltandoEm(mes) {
-  const jaTem = new Set(saidasForaDoCartaoDoMes(mes).map(t => CHAVE_RECORRENTE(t.descricao)));
+  const jaTem = jaLancadaNoMes(mes);
   const ano = 2000 + parseInt(mes.split('/')[1], 10);
   const iMes = MES_ORDEM.indexOf(mes.split('/')[0]) + 1;
   const data = dia => `${ano}-${String(iMes).padStart(2, '0')}-${String(Math.min(Math.max(dia || 15, 1), 28)).padStart(2, '0')}`;
