@@ -2485,6 +2485,38 @@
       return dadosGlobais.faturas_cartao || [];
     }
 
+    // Do que a fatura do mês é feita: consumo, taxa e parcela.
+    //
+    // "Do período" sozinho não responde a pergunta que a Juliane faz — quanto
+    // disso foi compra e quanto o banco cobrou para carregar a dívida. As três
+    // partes são coisas diferentes e só uma é gasto novo:
+    //
+    //   consumo   compra de verdade, já líquida do estorno dela
+    //   taxas     juros do rotativo, mora, multa, IOF, anuidade e encargo de
+    //             refinanciamento — `encargos_financeiros`, e líquido também:
+    //             estorno de anuidade e de IOF entram negativos, que é o que
+    //             de fato ficou cobrado
+    //   parcelas  `divida_parcelada` — parcela de fatura refinanciada. NÃO é
+    //             consumo novo: as compras que geraram a dívida já foram
+    //             contadas na fatura em que aconteceram. Aparece porque a
+    //             fatura cobra, e tirar faria a soma não bater.
+    //
+    // Pagamento fica de fora: quita a fatura anterior, não compõe esta.
+    // As três somam exatamente o `cobrado` do cabeçalho — é o que o teste exige.
+    function composicaoDaFatura(f) {
+      const linhas = transacoesSemFiltroDeAno()
+        .filter(t => t.fatura_origem === `${f.cartao}|${f.mes}`);
+      let consumo = 0, taxas = 0, parcelas = 0;
+      linhas.forEach(t => {
+        if (t.natureza === 'pagamento') return;
+        if (t.natureza === 'divida_parcelada') parcelas += t.valor;
+        else if (t.categoria === 'encargos_financeiros') taxas += t.valor;
+        else consumo += t.valor;
+      });
+      const r = v => Math.round(v * 100) / 100;
+      return { consumo: r(consumo), taxas: r(taxas), parcelas: r(parcelas), linhas: linhas.length };
+    }
+
     // Saldo em aberto de uma fatura que **não** rolou para a seguinte.
     //
     // Fatura não quitada não desaparece: o que sobra vira o `saldo_anterior` da
@@ -4035,6 +4067,17 @@
             ? cartaoKpi('Em aberto no cartão', moeda(aberto), 'faturas não quitadas', 'var(--accent-red)')
             : cartaoKpi('Pago nas faturas', moeda(Math.abs(pagamentosDeFatura().reduce((s, t) => s + t.valor, 0))), 'quitação, não é gasto');
         })() +
+        (() => {
+          // O que o cartão custou só por existir e por atrasar — separado do
+          // consumo de propósito: é o único número da aba que ela consegue
+          // baixar sem deixar de comprar nada.
+          const taxas = faturas.reduce((s, f) => s + composicaoDaFatura(f).taxas, 0);
+          return taxas > 0.05
+            ? cartaoKpi('Juros e taxas', moeda(taxas),
+                'juros, mora, multa, IOF, anuidade e encargo de refinanciamento',
+                'var(--accent-red)')
+            : cartaoKpi('Juros e taxas', 'nenhuma cobrada', 'nas faturas importadas');
+        })() +
         cartaoKpi('Média por fatura', moeda(media), `cartão pessoal, ${recentes.length} faturas pagas`) +
         cartaoKpi('Compras parceladas', String(parcelamentos.length), `${parcelamentos.reduce((s, c) => s + c.totalParcelas, 0)} parcelas`) +
         (abertas.parcelas
@@ -4051,7 +4094,10 @@
           <thead>
             <tr>
               <th>Cartão</th><th>Fatura</th><th>Vencimento</th><th>Situação</th><th class="num">Lanç.</th>
-              <th class="num">Do período</th><th class="num">Saldo anterior</th>
+              <th class="num" title="Compra de verdade no período, já líquida dos estornos.">Consumo</th>
+              <th class="num" title="Juros do rotativo, mora, multa, IOF, anuidade e encargo de refinanciamento. Líquido: estorno de taxa entra negativo.">Taxas</th>
+              <th class="num" title="Parcela de fatura refinanciada cobrada nesta fatura. Não é consumo novo — as compras já foram contadas na fatura em que aconteceram.">Parcelas</th>
+              <th class="num" title="Consumo + taxas + parcelas.">Do período</th><th class="num">Saldo anterior</th>
               <th class="num">Total da fatura</th><th class="num">Em aberto</th><th>Conferência</th>
             </tr>
           </thead>
@@ -4060,6 +4106,7 @@
               const m = f.mes;
               const doMes = transacoes.filter(t => t.mes_vencimento === m && (t.cartao_final || '4846') === f.cartao);
               const carregado = totalDaFatura(f);
+              const comp = composicaoDaFatura(f);
               const dif = carregado - f.cobrado;
               const ok = Math.abs(dif) < 0.05;
               const selos = {
@@ -4082,6 +4129,12 @@
                   <td>${f.vencimento.split('-').reverse().join('/')}</td>
                   <td>${selos[f.situacao] || f.situacao}</td>
                   <td class="num">${doMes.length}</td>
+                  <td class="num clicavel" onclick="irParaLancamentos({ mes_venc: '${m}' }, consumoDaFatura('${f.cartao}', '${m}'))">${moeda(comp.consumo)}</td>
+                  <td class="num${Math.abs(comp.taxas) > 0.05 ? ' clicavel' : ''}"
+                      ${comp.taxas > 0.05 ? 'style="color:var(--accent-red);font-weight:600"' : ''}
+                      ${Math.abs(comp.taxas) > 0.05 ? `onclick="irParaLancamentos({ mes_venc: '${m}' }, taxasDaFatura('${f.cartao}', '${m}'))"` : ''}
+                      >${Math.abs(comp.taxas) > 0.05 ? moeda(comp.taxas) : '—'}</td>
+                  <td class="num">${Math.abs(comp.parcelas) > 0.05 ? moeda(comp.parcelas) : '—'}</td>
                   <td class="num">${moeda(carregado)}</td>
                   <td class="num" ${f.saldo_anterior > 0.05 ? 'style="color:var(--accent-red)"' : ''}>${Math.abs(f.saldo_anterior) > 0.05 ? moeda(f.saldo_anterior) : '—'}</td>
                   <td class="num">${moeda(f.total_fatura)}</td>
@@ -5846,6 +5899,21 @@
     }
     function apenasPositivo(t) {
       return t.valor > 0;
+    }
+
+    // Lançamentos não tem select de cartão, e filtrar só por mês traria a
+    // fatura dos outros cartões e as linhas do extrato do mesmo mês — o clique
+    // mostraria mais do que o número que o originou. `fatura_origem` é
+    // exatamente o recorte que compôs a célula.
+    function consumoDaFatura(cartao, mes) {
+      const chave = `${cartao}|${mes}`;
+      return t => t.fatura_origem === chave
+        && t.natureza !== 'pagamento' && t.natureza !== 'divida_parcelada'
+        && t.categoria !== 'encargos_financeiros';
+    }
+    function taxasDaFatura(cartao, mes) {
+      const chave = `${cartao}|${mes}`;
+      return t => t.fatura_origem === chave && t.categoria === 'encargos_financeiros';
     }
 
     // O Imposto de Renda e sempre pessoal (apurarIrpf ignora o seletor do

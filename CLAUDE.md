@@ -1412,6 +1412,53 @@ foto de ciclo aberto de outubro ainda não reflete — e **R$ 1.600,43 de multa,
 mora e encargos de refinanciamento** cobrados em 18/08 e 19/09, que são o preço
 do atraso, não do crédito.
 
+### Consumo, taxa e parcela: a aba Cartões separando as três (22/09)
+A Juliane pediu: *"acrescente na aba cartões uma coluna pra mostrar o que é
+juros e multa, as taxas sabe, pra eu saber quanto foi consumo do cartão e
+quanto é taxas"*. A coluna "Do período" existia desde sempre e não respondia
+isso — ela junta tudo.
+
+`composicaoDaFatura(f)` quebra a fatura em **três**, não duas, porque são três
+coisas com significados diferentes:
+
+| | O que é | É gasto novo? |
+|---|---|---|
+| **Consumo** | compra de verdade, líquida do estorno dela | sim |
+| **Taxas** | juros do rotativo, mora, multa, IOF, anuidade, encargo de refinanciamento (`encargos_financeiros`) | sim, mas não foi escolha de compra |
+| **Parcelas** | `divida_parcelada` — parcela de fatura refinanciada | **não**: as compras já foram contadas na fatura em que aconteceram |
+
+Fazer só "consumo x taxas" daria errado: sobraria a parcela de refinanciamento
+sem lugar, e ela é grande (R$ 6.197,27 negativos numa fatura do Black). As três
+somam exatamente o `cobrado` do cabeçalho — **é essa identidade que protege o
+recorte**, e é ela que vira teste: se não fechar, alguma natureza caiu na coluna
+errada e a tela estaria chamando de consumo um dinheiro que foi juro.
+
+- **Taxa é líquida também.** Estorno de anuidade e de IOF entram negativos —
+  R$ −219,37 em Out/26 do Black, o IOF devolvido do parcelamento cancelado. É
+  o que ficou cobrado de verdade, não o que foi lançado.
+- **KPI novo, "Juros e taxas": R$ 1.832,01 em 2026** nas faturas importadas,
+  R$ 1.721,29 só no Black. É o único número da aba que ela consegue baixar sem
+  deixar de comprar nada.
+- **Fatura sem taxa mostra "—", nunca R$ 0,00** — com teste próprio.
+- **O clique usa `fatura_origem`, não o mês.** Lançamentos não tem select de
+  cartão; filtrar por mês traria a fatura dos outros cartões e as linhas do
+  extrato, e o clique mostraria mais do que o número que o originou — a regra
+  de "explodir valor" deste arquivo. `consumoDaFatura()` / `taxasDaFatura()`
+  são predicados presos a `cartao|mes`.
+
+**O que não entra aqui:** juros do cheque especial do Itaú e encargo do limite
+do Bradesco também são `encargos_financeiros`, mas vêm do extrato, não de
+fatura. Esta aba é de cartão; o custo do limite aparece em Para Onde Vai.
+
+Testes novos por fatura (identidade, consumo exibido, taxa exibida ou "—"),
+mais **um que exige que exista fatura com taxa** — sem isso as asserções de
+valor nunca rodariam e o bloco passaria sem provar nada. **Verificado tirando
+o ramo de taxa do código**: a taxa vai para consumo e as duas colunas falham em
+todas as faturas. Suíte em **466 testes**.
+
+O scraper da suíte lia a tabela por posição de coluna e precisou ser atualizado
+junto — 3 colunas novas deslocam todas as seguintes.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

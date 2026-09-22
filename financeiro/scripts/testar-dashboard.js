@@ -1635,9 +1635,10 @@ function noEscopo(mv) {
   const cartao = await pagina.evaluate(() => {
     const linhas = [...document.querySelectorAll('#cartao_faturas tbody tr')].map(tr => {
       const td = [...tr.querySelectorAll('td')].map(x => x.textContent.trim());
-      // Cartão | Fatura | Vencimento | Situação | Lanç. | Do período | Saldo anterior | Total da fatura | Em aberto | Conferência
-      return { cartao: td[0].replace(/\D/g, ''), mes: td[1], situacao: td[3], n: td[4], doPeriodo: td[5],
-               saldoAnterior: td[6], totalFatura: td[7], emAberto: td[8], conferencia: td[9] };
+      // Cartão | Fatura | Vencimento | Situação | Lanç. | Consumo | Taxas | Parcelas | Do período | Saldo anterior | Total da fatura | Em aberto | Conferência
+      return { cartao: td[0].replace(/\D/g, ''), mes: td[1], situacao: td[3], n: td[4],
+               consumo: td[5], taxas: td[6], parcelas: td[7], doPeriodo: td[8],
+               saldoAnterior: td[9], totalFatura: td[10], emAberto: td[11], conferencia: td[12] };
     });
     const parc = [...document.querySelectorAll('#cartao_parcelas tbody tr')].length;
     const kpis = [...document.querySelectorAll('#cartao_kpis .kpi-card')].map(c => c.querySelector('.kpi-value').textContent.trim());
@@ -1681,6 +1682,64 @@ function noEscopo(mv) {
   igual('Seletor "Pessoal" soma só o gasto da casa', ambitoNaTela.pessoal, porAmbito.pessoal);
   igual('Seletor "Benetti UP" soma só o gasto da empresa', ambitoNaTela.empresa, porAmbito.empresa);
   igual('Seletor "Tudo" soma os dois', ambitoNaTela.tudo, porAmbito.pessoal + porAmbito.empresa);
+
+  // Consumo x taxas x parcelas: a pergunta é "quanto foi compra e quanto o
+  // banco cobrou para carregar a dívida". Recalculado aqui por fora, direto do
+  // JSON, e conferido contra a tela célula a célula.
+  //
+  // A identidade é o que protege o recorte: se as três não somarem o "Do
+  // período" da própria linha, alguma natureza caiu na coluna errada — e a
+  // tela estaria dizendo que foi consumo um dinheiro que foi juro, ou o
+  // contrário.
+  {
+    const porFatura = {};
+    (dados.fluxo_mensal.transacoes || []).forEach(t => {
+      if (!t.fatura_origem) return;
+      (porFatura[t.fatura_origem] = porFatura[t.fatura_origem] || []).push(t);
+    });
+    let semTaxa = 0;
+    faturas.forEach(f => {
+      const linha = cartao.linhas.find(l => l.mes === f.mes && l.cartao === f.cartao);
+      if (!linha) return;
+      let consumo = 0, taxas = 0, parcelas = 0;
+      (porFatura[`${f.cartao}|${f.mes}`] || []).forEach(t => {
+        if (t.natureza === 'pagamento') return;
+        if (t.natureza === 'divida_parcelada') parcelas += t.valor;
+        else if (t.categoria === 'encargos_financeiros') taxas += t.valor;
+        else consumo += t.valor;
+      });
+      const r = v => Math.round(v * 100) / 100;
+      [consumo, taxas, parcelas] = [r(consumo), r(taxas), r(parcelas)];
+
+      ok(`${f.cartao} ${f.mes}: consumo + taxas + parcelas = do período`,
+         Math.abs(consumo + taxas + parcelas - f.cobrado) < 0.05,
+         `${brl(consumo)} + ${brl(taxas)} + ${brl(parcelas)} = ${brl(consumo + taxas + parcelas)}, cobrado ${brl(f.cobrado)}`);
+
+      igual(`${f.cartao} ${f.mes} exibe ${brl(consumo)} de consumo`, numeroDe(linha.consumo), consumo);
+      if (Math.abs(taxas) > 0.05) {
+        igual(`${f.cartao} ${f.mes} exibe ${brl(taxas)} de taxas`, numeroDe(linha.taxas), taxas);
+      } else {
+        semTaxa++;
+        ok(`${f.cartao} ${f.mes} sem taxa não mostra R$ 0,00`, linha.taxas === '—', `mostrou "${linha.taxas}"`);
+      }
+    });
+
+    // Sem nenhuma fatura com taxa, as asserções de valor acima nunca rodam e o
+    // bloco passaria sem provar nada.
+    const comTaxa = faturas.length - semTaxa;
+    ok('Existe fatura com taxa para este bloco ter o que conferir', comTaxa > 0,
+       `${comTaxa} de ${faturas.length} faturas com taxa`);
+
+    const totalTaxas = faturas.reduce((acc, f) => acc + Math.round(
+      (porFatura[`${f.cartao}|${f.mes}`] || [])
+        .filter(t => t.natureza !== 'pagamento' && t.natureza !== 'divida_parcelada'
+                  && t.categoria === 'encargos_financeiros')
+        .reduce((x, t) => x + t.valor, 0) * 100) / 100, 0);
+    const kpiTaxas = cartao.kpis.map(numeroDe).find(v => v !== null && Math.abs(v - totalTaxas) < 0.05);
+    ok('Cartão: KPI "Juros e taxas" bate com a soma das faturas',
+       kpiTaxas !== undefined, `esperado ${brl(totalTaxas)}; KPIs na tela: ${cartao.kpis.join(' | ')}`);
+    console.log(`    (juros e taxas no ano: ${brl(totalTaxas)})`);
+  }
 
   console.log('\n▸ SITUAÇÃO DAS FATURAS\n');
   faturas.forEach(f => {
