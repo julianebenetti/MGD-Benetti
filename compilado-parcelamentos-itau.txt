@@ -1,7 +1,7 @@
 
 ==========================================================================
   PARCELAMENTOS DE FATURA — COMPILADO PARA O ITAÚ
-  gerado em 21/09/2026, 22:01:39
+  gerado em 21/09/2026, 22:17:35
 ==========================================================================
 
 --------------------------------------------------------------------------
@@ -29,8 +29,8 @@
 
 --------------------------------------------------------------------------
 2. Azul (final 3794) — parcelado em 01/07/2026
-   NÃO RECONHECIDO — ela não se recorda de ter autorizado
-   Ela NAO se recorda de ter autorizado (21/09/2026). Lido da propria fatura, nunca confirmado por ela.
+   RECONHECIDO por ela
+   Confirmado pela Juliane em 21/09/2026: 'os parcelamentos do cartao azul estao corretos, eu estou reparcelando mesmo, porque nao posso ficar com esse cartao inativo'. Decisao dela, nao cobranca indevida — o 3794 carrega o trafego pago da Benetti UP.
 
    Fatura parcelada: provavelmente Jul/26, vencimento 01/07/2026, total R$ 13.373,35
       ⚠ entrada + dívida (R$ 11.417,46) NÃO fecha com o total dessa fatura —
@@ -51,8 +51,8 @@
 
 --------------------------------------------------------------------------
 3. Azul (final 3794) — parcelado em 31/07/2026
-   NÃO RECONHECIDO — ela não se recorda de ter autorizado
-   Ela NAO se recorda de ter autorizado (21/09/2026). Lido da propria fatura, nunca confirmado por ela.
+   RECONHECIDO por ela
+   Confirmado pela Juliane em 21/09/2026: 'os parcelamentos do cartao azul estao corretos, eu estou reparcelando mesmo, porque nao posso ficar com esse cartao inativo'. Decisao dela, nao cobranca indevida — o 3794 carrega o trafego pago da Benetti UP.
 
    Fatura parcelada: Ago/26, vencimento 03/08/2026, total R$ 9.661,17
       ✓ a fatura INTEIRA foi parcelada — entrada + dívida dá o total dela, ao centavo
@@ -73,7 +73,8 @@
 
 --------------------------------------------------------------------------
 4. Black (final 4846) — parcelado em 04/09/2026
-   NÃO RECONHECIDO — ela não se recorda de ter autorizado
+   NEGADO por ela
+   PARC AUTOMATIC / CREDITO PARC AUTOMATICO. O proprio nome do lancamento diz 'automatico'. A Juliane nao reconhece (21/09/2026). O Itau CANCELOU integralmente em 21/09/2026 — credito, as 12 parcelas e o IOF, tudo revertido, soma zero.
 
    Fatura parcelada: provavelmente Ago/26, vencimento 26/08/2026, total R$ 10.667,16
       ⚠ entrada + dívida (R$ 9.481,45) NÃO fecha com o total dessa fatura —
@@ -142,8 +143,8 @@ ENCARGOS COBRADOS DEPOIS (multa, mora e encargos de refinanciamento)
    Parcelamentos encontrados .................... 5
    Dívida total refinanciada ................... R$ 29.062,25
    Custo total (juros + IOF) ................... R$ 6.789,84
-   Custo dos que ela NÃO reconhece ............. R$ 4.582,05
-   Parcelas não reconhecidas ainda a cobrar .... R$ 4.949,38
+   Custo dos que ela NÃO reconhece ............. R$ 0,00
+   Parcelas não reconhecidas ainda a cobrar .... R$ 0,00
    Já revertido pelo próprio Itaú .............. R$ 11.328,83
       (custo de parcelamento cancelado integralmente — nada a pedir aqui,
        mas a cobrança existiu e vale citar na reclamação)

@@ -100,6 +100,9 @@ function ehFatura(caminho) {
 //   fechada       ja fechou e ainda nao venceu
 //   aberta        ainda acumulando lancamentos; o valor nao e final
 const SITUACOES = [
+  // "Fatura Nao Paga" vem antes de proposito: o rotulo traz a palavra "Paga"
+  // e, lido fora de ordem, uma fatura em aberto passaria por quitada.
+  [/Fatura\s+N[\u00e3a]o\s+Paga/i, 'nao_paga'],
   [/Fatura\s+Paga\s+Parcial/i, 'paga_parcial'],
   [/Fatura\s+Paga/i, 'paga'],
   [/Fatura\s+Fechada/i, 'fechada'],
@@ -147,9 +150,20 @@ function lerFatura(caminho) {
   // Fechada ou aberta:    R$ T                               -> so o total, nada pago
   const valores = celulas.flatMap(c => (String(c).match(/R\$\s*[\d.,]+/g) || []).map(dinheiro));
   const totalFatura = valores.length ? valores[valores.length - 1] : 0;
-  const pago = situacao === 'aberta' || situacao === 'fechada'
-    ? 0
-    : (valores.length > 1 ? valores[0] : totalFatura);
+  //
+  // **So o rotulo "Fatura Paga", sozinho na linha, quer dizer quitada.** Onde
+  // aparece "Voce pagou R$ P de R$ T" existem dois valores e o primeiro e o que
+  // foi pago. Qualquer outro rotulo sem essa frase nao afirma pagamento nenhum,
+  // e supor que houve esconde divida — que e o erro caro. Era o que acontecia
+  // com "Fatura Nao Paga": caia em 'desconhecida' e, sem a frase, o importador
+  // marcava a fatura inteira como paga.
+  const pago = valores.length > 1 ? valores[0] : (situacao === 'paga' ? totalFatura : 0);
+
+  // "Fatura Nao Paga" com pagamento parcial registrado e paga_parcial; sem
+  // nenhum, e fatura fechada esperando pagamento. As duas a tela sabe mostrar —
+  // 'nao_paga' apareceria crua, como 'desconhecida' aparecia.
+  const situacaoFinal = situacao !== 'nao_paga' ? situacao
+    : (pago > 0.05 ? 'paga_parcial' : 'fechada');
 
   const itens = linhas
     .filter(l => ehLinhaDeData(l[1]))
@@ -164,7 +178,7 @@ function lerFatura(caminho) {
       finalCartao: String(l[9]).trim().replace(/\*/g, ''),
     }));
 
-  return { arquivo: path.basename(caminho), aba, mesVencimento, vencimento, situacao, descricaoCartao, finalCartao, totalFatura, pago, itens };
+  return { arquivo: path.basename(caminho), aba, mesVencimento, vencimento, situacao: situacaoFinal, descricaoCartao, finalCartao, totalFatura, pago, itens };
 }
 
 // ---------- a mesma fatura lida duas vezes ----------
@@ -384,6 +398,7 @@ let seq = 0;
 
 faturas.forEach(f => {
   let compras = 0, pagamentos = 0, estornos = 0, divida = 0, nParceladas = 0;
+  const linhasDePagamento = [];
 
   f.itens.forEach(item => {
     const natureza = classificarNatureza(item);
@@ -391,7 +406,7 @@ faturas.forEach(f => {
     const herdado = classificacao[normalizar(item.descricao)] || {};
     const regra = aplicarRegra(item.descricao, item.valor, regras);
 
-    if (natureza === 'pagamento') pagamentos += item.valor;
+    if (natureza === 'pagamento') { pagamentos += item.valor; linhasDePagamento.push(item.descricao); }
     else if (natureza === 'estorno') estornos += item.valor;
     else if (natureza === 'divida_parcelada') divida += item.valor;
     else compras += item.valor;
@@ -459,6 +474,9 @@ faturas.forEach(f => {
     compras: Math.round(compras * 100) / 100,
     estornos: Math.round(estornos * 100) / 100,
     pagamentos: Math.round(pagamentos * 100) / 100,
+    // As linhas de pagamento desta fatura quitam a ANTERIOR — e o Itaú as nomeia.
+    // É por elas que se sabe quanto entrou e a que título.
+    linhas_de_pagamento: linhasDePagamento,
     // Parcela da fatura renegociada: cobrada nesta fatura, mas nao e consumo
     divida_parcelada: Math.round(divida * 100) / 100,
     // Lancamentos do proprio periodo
@@ -471,6 +489,118 @@ faturas.forEach(f => {
     parceladas: nParceladas,
   });
 });
+
+// ---------- quanto foi REALMENTE pago em cada fatura ----------
+//
+// O XLSX escreve só um rótulo: "Fatura Paga - Agosto/2026". Sem valor. O
+// importador traduzia isso como "paga integralmente" — e está errado, como as
+// faturas do Black provaram: agosto está rotulada "Paga" e recebeu **R$
+// 1.066,72** de R$ 10.667,16; os outros R$ 9.600,44 rolaram para setembro.
+// Julho, também rotulada "Paga", recebeu R$ 2.252,37 de R$ 6.917,01. O rótulo
+// quer dizer "esta fatura já não é a atual", não "foi quitada".
+//
+// Quem sabe quanto foi pago é a fatura SEGUINTE: o que ela traz como saldo
+// anterior é exatamente o que não foi pago. A identidade
+//
+//     pago desta = total desta − saldo anterior da seguinte
+//
+// é conferível, e é ela que manda aqui. Onde não existe a fatura seguinte
+// (a mais recente de cada cartão), o rótulo continua valendo — não há outra
+// fonte — e o resumo diz que esse número veio do rótulo.
+{
+  const porCartao = {};
+  resumo.forEach(r => (porCartao[r.cartao] = porCartao[r.cartao] || []).push(r));
+  const corrigidas = [], aConferir = [], quitadasPorParcelamento = [], semAcordo = [];
+
+  Object.values(porCartao).forEach(fs => {
+    fs.sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)));
+    fs.forEach((r, i) => {
+      const seguinte = fs[i + 1];
+      if (!seguinte) { r.pago_fonte = 'rótulo da fatura (não há fatura seguinte para conferir)'; return; }
+      const pagoReal = Math.round((r.total_fatura - (seguinte.saldo_anterior || 0)) * 100) / 100;
+      if (pagoReal < -0.05) return;                    // saldo negativo: crédito, não pagamento
+      if (Math.abs(pagoReal - r.pago) <= 0.05) {
+        r.pago_fonte = 'saldo anterior da fatura seguinte';
+        return;
+      }
+
+      // **Fatura quitada por parcelamento não ficou em aberto.** O saldo que
+      // rola para a seguinte é, nesse caso, a dívida refinanciada — ela virou
+      // parcela e as parcelas são cobradas uma a uma nas faturas seguintes.
+      // Baixar o `pago` aqui abriria, no cartão, um buraco do tamanho da dívida
+      // que já está sendo cobrada do outro lado: dupla contagem.
+      //
+      // O Itaú nomeia a linha: quem quita por parcelamento aparece como
+      // "Pagamento Parcelamento Fatura", não como "Pagamento Debito Minimo".
+      // É documento, não aritmética — e a aritmética aqui não distingue os dois
+      // casos, porque os dois deixam saldo na fatura seguinte.
+      const porParcelamento = (seguinte.linhas_de_pagamento || [])
+        .some(d => /parcelamento/i.test(d));
+      if (porParcelamento) {
+        quitadasPorParcelamento.push({ cartao: r.cartao, mes: r.mes, rotulo: r.pago, seguinte: pagoReal });
+        return;
+      }
+
+      // **A fatura seguinte tem de concordar consigo mesma.** O saldo anterior
+      // dela é uma dedução (total − lançamentos do período); as linhas de
+      // pagamento são o que o banco imprimiu. Onde as duas leituras divergem,
+      // uma delas está errada e não dá para saber qual — então nada é corrigido
+      // e a divergência aparece.
+      const pagoImpresso = Math.round(Math.abs(seguinte.pagamentos || 0) * 100) / 100;
+      if (Math.abs(pagoImpresso - pagoReal) > 0.05) {
+        semAcordo.push({ cartao: r.cartao, mes: r.mes, porSaldo: pagoReal, porLinha: pagoImpresso });
+        return;
+      }
+
+      // **Só corrige para BAIXO.** Rótulo dizendo "paga" onde a seguinte prova
+      // que sobrou saldo é erro certo, e esconde dívida — essa é a correção que
+      // importa. Já o caminho contrário (a seguinte trazer MENOS saldo do que o
+      // rótulo sugeria) não prova pagamento: crédito, estorno e cancelamento de
+      // parcelamento também reduzem o saldo que rola, e numa fatura que sequer
+      // venceu isso é quase sempre o caso. Marcar como "pago" o que pode ser
+      // crédito inventaria um pagamento — então fica anotado para conferir.
+      if (pagoReal < r.pago) {
+        corrigidas.push({ cartao: r.cartao, mes: r.mes, de: r.pago, para: pagoReal, situacao: r.situacao });
+        r.pago = pagoReal;
+        r.pago_fonte = 'saldo anterior da fatura seguinte';
+        r.em_aberto = Math.round((r.total_fatura - pagoReal) * 100) / 100;
+        if (r.em_aberto > 0.05 && r.situacao === 'paga') r.situacao = 'paga_parcial';
+      } else {
+        // O número que fica é o do rótulo, então é isso que `pago_fonte` tem de
+        // dizer — anotar "saldo anterior da fatura seguinte" aqui daria ao valor
+        // uma procedência que ele não tem.
+        r.pago_fonte = 'rótulo da fatura (a seguinte sugere mais, ver aviso)';
+        aConferir.push({ cartao: r.cartao, mes: r.mes, rotulo: r.pago, seguinte: pagoReal });
+      }
+    });
+  });
+
+  if (quitadasPorParcelamento.length) {
+    console.log(`\n${quitadasPorParcelamento.length} fatura(s) quitada(s) por parcelamento — pagamento mantido como está:`);
+    quitadasPorParcelamento.forEach(c => console.log(
+      `   ${c.cartao} ${c.mes}: o saldo que rolou (R$ ${(c.rotulo - c.seguinte).toFixed(2)}) virou parcela, não ficou em aberto`));
+  }
+
+  if (semAcordo.length) {
+    console.log(`\n${semAcordo.length} fatura(s) em que as duas leituras do pagamento divergem — nada corrigido:`);
+    semAcordo.forEach(c => console.log(
+      `   ${c.cartao} ${c.mes}: pelo saldo da seguinte R$ ${c.porSaldo.toFixed(2)}, pela linha de pagamento dela R$ ${c.porLinha.toFixed(2)}`));
+  }
+
+  if (aConferir.length) {
+    console.log(`\n${aConferir.length} fatura(s) em que a seguinte traz MENOS saldo do que o rótulo sugere —`);
+    console.log('   não corrigido, porque crédito e cancelamento também reduzem saldo:');
+    aConferir.forEach(c => console.log(
+      `   ${c.cartao} ${c.mes}: rótulo indica R$ ${c.rotulo.toFixed(2)} pago, a seguinte sugeriria R$ ${c.seguinte.toFixed(2)}`));
+  }
+
+  if (corrigidas.length) {
+    console.log(`\nPagamento corrigido pela fatura seguinte em ${corrigidas.length} fatura(s):`);
+    corrigidas.forEach(c => console.log(
+      `   ${c.cartao} ${c.mes}: rótulo dizia R$ ${c.de.toFixed(2)} pago, a fatura seguinte prova R$ ${c.para.toFixed(2)}` +
+      (c.situacao === 'paga' ? '  (estava marcada "paga")' : '')));
+  }
+}
 
 // ---------- ambito: pessoal ou empresa ----------
 

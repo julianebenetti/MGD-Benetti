@@ -1328,6 +1328,90 @@ Números atuais: **5 parcelamentos**, R$ 29.062,25 de dívida refinanciada,
 reconhecidos), **R$ 4.949,38 de parcelas não reconhecidas ainda não cobradas**,
 e **R$ 11.328,83 já revertidos pelo próprio banco**.
 
+### "Fatura Paga" não quer dizer quitada — e o saldo que rola contado 3 vezes (22/09)
+A Juliane perguntou: *"os parcelamentos do cartão azul estão corretos, eu estou
+reparcelando mesmo... mas no Black ficou algum parcelamento pra trás?"*.
+Responder isso exigiu olhar o Black inteiro, e o que apareceu não foi
+parcelamento pendente — foi **dívida escondida por um rótulo**.
+
+**Os dois parcelamentos do 3794 são dela.** `autorizado: true` nos dois, com a
+frase dela na `observacao`. O compilado para o banco mudou de figura: com o
+automático do Black cancelado pelo próprio Itaú e o Azul reconhecido, o custo
+"não reconhecido" caiu de R$ 15.910,88 para **R$ 0,00**. A peça continua
+existindo como registro do que foi cobrado, não como pedido.
+
+**No Black não ficou parcelamento nenhum para trás:** o refinanciamento de
+26/06 fechou as 4 parcelas (Jul, Ago, Set e **Out/26**), e o `PARC AUTOMATIC`
+de 04/09 foi cancelado integralmente em 21/09. O contrato
+`refin_fatura_4846_jun26` foi **encerrado** (`montante: 0`): com a 4ª parcela
+já cobrada, as quatro estão visíveis dentro das faturas, e manter saldo no
+contrato contaria o mesmo dinheiro duas vezes. Era exatamente o que a
+`observacao` dele já mandava fazer no dia em que a fatura de outubro chegasse.
+
+**O rótulo do XLSX mentia, e o importador acreditava.** O cabeçalho escreve só
+`"Fatura Paga - Agosto/2026"`, sem valor, e o importador traduzia isso como
+`pago = total`. As faturas do Black provam o contrário:
+
+| Fatura | rótulo dizia | foi pago de verdade | rolou |
+|---|---|---|---|
+| Jul/26 | R$ 6.917,01 | **R$ 2.252,37** | R$ 4.664,64 |
+| Ago/26 | R$ 10.667,16 | **R$ 1.066,72** | R$ 9.600,44 |
+
+"Fatura Paga" quer dizer **"esta já não é a atual"**, não "foi quitada".
+
+- **Quem sabe quanto foi pago é a fatura seguinte**: `pago desta = total desta −
+  saldo anterior da seguinte`. Confere ao centavo com o `Pagamento Debito
+  Minimo` impresso dentro dela — duas leituras independentes do mesmo fato.
+- **Só corrige para baixo.** O caminho contrário (a seguinte trazer menos saldo
+  do que o rótulo sugeria) não prova pagamento: crédito, estorno e cancelamento
+  de parcelamento também reduzem saldo. Fica anotado para conferir.
+- **Três guardas, e uma delas evita um erro caro:** fatura quitada **por
+  parcelamento** não ficou em aberto — o saldo que rola é a dívida refinanciada,
+  que já é cobrada em parcelas do outro lado. O Itaú nomeia a linha
+  (`Pagamento Parcelamento Fatura`, não `Pagamento Debito Minimo`), e é por esse
+  nome que a correção se abstém. Sem isso a fatura de **Jun/26** abriria um
+  buraco de R$ 5.250,61 que já está dentro das parcelas. É documento, não
+  aritmética: as duas situações deixam saldo na fatura seguinte.
+- A segunda guarda exige que as **duas leituras concordem**; a terceira, que
+  `pago_fonte` diga de onde o número veio — e ele só diz "saldo anterior da
+  seguinte" quando foi de lá mesmo.
+- **`"Fatura Não Paga"` não tinha regra**, caía em `desconhecida` e aparecia
+  cru na tela. Pior: sem a frase "Você pagou", `pago` virava o total — uma
+  fatura literalmente rotulada "não paga" entrava como quitada. Agora **só o
+  rótulo `Fatura Paga` sozinho na linha significa quitada**; qualquer outro sem
+  a frase não afirma pagamento nenhum. Set/26 do Black virou `paga_parcial`,
+  R$ 1.953,56 de R$ 6.284,18.
+
+**O segundo bug só ficou visível porque o primeiro foi corrigido.** Fatura não
+quitada não desaparece: o que sobra vira o `saldo_anterior` da seguinte e é
+cobrado de novo, dentro do total dela. A aba Cartões somava o `em_aberto` de
+**todas** as faturas do ano — e assim contava a mesma dívida uma vez por mês em
+que ela rolou. No Black: R$ 4.664,64 + R$ 9.600,44 + R$ 4.330,62 + R$ 11.911,63
+= **R$ 30.507,33** para uma dívida que é o saldo da última fatura. Enquanto
+julho e agosto apareciam quitadas, a soma dava certo **por acidente**.
+
+`emAbertoQueNaoRolou(f)` desconta o que a fatura seguinte já carregou — o
+**mínimo** entre os dois, não o valor cheio: se a seguinte trouxe menos, a
+diferença ainda é dívida e continua aparecendo em vez de sumir. O KPI "Em
+aberto no cartão" foi de R$ 47.953,45 para **R$ 31.734,81**, e o aviso passou a
+dizer, linha a linha, quanto já rolou — mais uma frase explicando que o total
+não soma linha a linha de propósito.
+
+**O Painel não estava errado**: ele já olhava só as faturas do mês selecionado,
+onde não há o que rolar. O erro vivia nos dois totais do ano.
+
+5 testes novos, **verificados revertendo a correção** (sem ela o primeiro
+falha): o KPI bate com a soma que desconta o que rolou e não com a ingênua,
+**existe saldo rolado para o teste ter o que provar** (senão as duas somas
+seriam iguais e ele passaria sozinho, sem testar nada), e cada saldo dito
+"rolado" reaparece mesmo como saldo anterior da fatura seguinte.
+
+**O que sobrou em aberto no Black, e é isso que ela tem para resolver:**
+R$ 11.911,63 na fatura de Out/26 (vence 26/10) mais R$ 2.377,06 de Set/26 que a
+foto de ciclo aberto de outubro ainda não reflete — e **R$ 1.600,43 de multa,
+mora e encargos de refinanciamento** cobrados em 18/08 e 19/09, que são o preço
+do atraso, não do crédito.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses

@@ -2485,6 +2485,35 @@
       return dadosGlobais.faturas_cartao || [];
     }
 
+    // Saldo em aberto de uma fatura que **não** rolou para a seguinte.
+    //
+    // Fatura não quitada não desaparece: o que sobra vira o `saldo_anterior` da
+    // fatura seguinte e é cobrado de novo, dentro do total dela. Então somar o
+    // `em_aberto` de todas as faturas de um cartão conta a mesma dívida uma vez
+    // por mês em que ela rolou. No Black isso dava R$ 30.507,33 — Jul (4.664,64)
+    // + Ago (9.600,44) + Set (4.330,62) + Out (11.911,63) — quando cada um dos
+    // três primeiros é, literalmente, o saldo anterior do seguinte.
+    //
+    // Isso só ficou visível quando o importador parou de acreditar no rótulo
+    // "Fatura Paga" do XLSX: enquanto julho e agosto apareciam como quitadas, a
+    // soma dava certo por acidente.
+    //
+    // O que resta é o que a fatura seguinte **não** carregou. Descontar o
+    // mínimo entre os dois (e não o valor cheio) é o lado seguro: se a seguinte
+    // trouxe menos do que esta deixou em aberto, a diferença ainda é dívida de
+    // alguém e continua aparecendo, em vez de sumir em silêncio.
+    function emAbertoQueNaoRolou(f) {
+      const aberto = Math.max(0, f.em_aberto || 0);
+      if (aberto <= 0.05) return 0;
+      const seguinte = faturasDoCartao()
+        .filter(o => o.cartao === f.cartao && String(o.vencimento) > String(f.vencimento))
+        .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)))[0];
+      if (!seguinte) return aberto;
+      const rolou = Math.min(aberto, Math.max(0, seguinte.saldo_anterior || 0));
+      const resto = Math.round((aberto - rolou) * 100) / 100;
+      return resto > 0.05 ? resto : 0;
+    }
+
     // De quem é o cartão, lido dos próprios lançamentos dentro das faturas dele
     // — não do número. A regra antiga era `cartao !== '4846'`, que carimbava
     // como Benetti UP qualquer cartão que não fosse o Black: o Amazon (0013) e
@@ -4001,7 +4030,7 @@
       kpis.innerHTML =
         cartaoKpi('Faturas carregadas', String(faturas.length), `${cartoes.length} cartões · ${comValor[0]} a ${comValor[comValor.length - 1]}`) +
         (() => {
-          const aberto = faturasDoCartao().reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
+          const aberto = faturasDoCartao().reduce((s, f) => s + emAbertoQueNaoRolou(f), 0);
           return aberto > 0.05
             ? cartaoKpi('Em aberto no cartão', moeda(aberto), 'faturas não quitadas', 'var(--accent-red)')
             : cartaoKpi('Pago nas faturas', moeda(Math.abs(pagamentosDeFatura().reduce((s, t) => s + t.valor, 0))), 'quitação, não é gasto');
@@ -4071,13 +4100,19 @@
 
           const abertas = fs.filter(f => f.em_aberto > 0.05);
           if (abertas.length) {
-            const total = abertas.reduce((s, f) => s + f.em_aberto, 0);
+            const total = abertas.reduce((s, f) => s + emAbertoQueNaoRolou(f), 0);
+            const rolaram = abertas.filter(f => emAbertoQueNaoRolou(f) < f.em_aberto - 0.05);
             avisos.push(`<div class="aviso aviso-atencao">
               <b>${moeda(total)} em aberto no cartão.</b><br>
               ${abertas.map(f => {
                 const rotulo = { paga_parcial: 'paga só em parte', fechada: 'fechada, ainda não paga', aberta: 'ainda em aberto' }[f.situacao] || f.situacao;
-                return `${f.mes} — ${rotulo}: ${moeda(f.em_aberto)} de ${moeda(f.total_fatura)}`;
+                const naoRolou = emAbertoQueNaoRolou(f);
+                const sufixo = naoRolou < f.em_aberto - 0.05
+                  ? ` <span class="kpi-sub">(${naoRolou > 0.05 ? `${moeda(f.em_aberto - naoRolou)} já` : 'já'} rolou para a fatura seguinte${naoRolou > 0.05 ? `, ${moeda(naoRolou)} não` : ''})</span>`
+                  : '';
+                return `${f.mes} — ${rotulo}: ${moeda(f.em_aberto)} de ${moeda(f.total_fatura)}${sufixo}`;
               }).join('<br>')}
+              ${rolaram.length ? '<br><span class="kpi-sub">O total acima não soma linha a linha de propósito: saldo que rolou é cobrado de novo dentro da fatura seguinte, e somar os dois contaria a mesma dívida duas vezes.</span>' : ''}
             </div>`);
           }
 

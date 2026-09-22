@@ -367,15 +367,15 @@
       "id": "3794_2026-07-01",
       "cartao": "3794",
       "data": "2026-07-01",
-      "autorizado": null,
-      "observacao": "Ela NAO se recorda de ter autorizado (21/09/2026). Lido da propria fatura, nunca confirmado por ela."
+      "autorizado": true,
+      "observacao": "Confirmado pela Juliane em 21/09/2026: 'os parcelamentos do cartao azul estao corretos, eu estou reparcelando mesmo, porque nao posso ficar com esse cartao inativo'. Decisao dela, nao cobranca indevida — o 3794 carrega o trafego pago da Benetti UP."
     },
     {
       "id": "3794_2026-07-31",
       "cartao": "3794",
       "data": "2026-07-31",
-      "autorizado": null,
-      "observacao": "Ela NAO se recorda de ter autorizado (21/09/2026). Lido da propria fatura, nunca confirmado por ela."
+      "autorizado": true,
+      "observacao": "Confirmado pela Juliane em 21/09/2026: 'os parcelamentos do cartao azul estao corretos, eu estou reparcelando mesmo, porque nao posso ficar com esse cartao inativo'. Decisao dela, nao cobranca indevida — o 3794 carrega o trafego pago da Benetti UP."
     },
     {
       "id": "0442_2026-09-09",
@@ -385,11 +385,11 @@
       "observacao": "Veio de comprovante que ela mandou em 09/09/2026, conferido linha por linha."
     },
     {
-      "id": "4846_2026-09-05",
+      "id": "4846_2026-09-04",
       "cartao": "4846",
-      "data": "2026-09-05",
-      "autorizado": null,
-      "observacao": "PARC AUTOMATIC / CREDITO PARC AUTOMATICO na fatura de Set/26 do Black. O proprio nome do lancamento diz 'automatico'. Ela NAO se recorda de ter autorizado (21/09/2026)."
+      "data": "2026-09-04",
+      "autorizado": false,
+      "observacao": "PARC AUTOMATIC / CREDITO PARC AUTOMATICO. O proprio nome do lancamento diz 'automatico'. A Juliane nao reconhece (21/09/2026). O Itau CANCELOU integralmente em 21/09/2026 — credito, as 12 parcelas e o IOF, tudo revertido, soma zero."
     }
   ]
 }

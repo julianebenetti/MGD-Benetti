@@ -1697,6 +1697,54 @@ function noEscopo(mv) {
 
   const totalAberto = faturas.reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0);
   console.log(`    (em aberto no cartão: ${brl(totalAberto)})`);
+
+  // Saldo que rolou não pode ser contado duas vezes.
+  //
+  // Fatura não quitada reaparece inteira dentro da seguinte, como
+  // `saldo_anterior`. Somar o `em_aberto` de todas as faturas de um cartão conta
+  // a mesma dívida uma vez por mês em que ela rolou — no Black, R$ 30.507,33 por
+  // uma dívida que é o saldo da última fatura. Enquanto o importador acreditava
+  // no rótulo "Fatura Paga" do XLSX, julho e agosto apareciam quitadas e a soma
+  // ingênua dava certo por acidente.
+  //
+  // Recalculado aqui por fora, com a mesma regra da tela, e provado dos dois
+  // lados: o KPI bate com a soma que desconta o que rolou e NÃO bate com a
+  // soma ingênua.
+  {
+    const naoRolou = f => {
+      const aberto = Math.max(0, f.em_aberto || 0);
+      if (aberto <= 0.05) return 0;
+      const seg = faturas
+        .filter(o => o.cartao === f.cartao && String(o.vencimento) > String(f.vencimento))
+        .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)))[0];
+      if (!seg) return aberto;
+      const resto = Math.round((aberto - Math.min(aberto, Math.max(0, seg.saldo_anterior || 0))) * 100) / 100;
+      return resto > 0.05 ? resto : 0;
+    };
+    const semRolagem = faturas.reduce((s, f) => s + naoRolou(f), 0);
+    const kpiAberto = cartao.kpis.map(numeroDe).find(v => v !== null && Math.abs(v - semRolagem) < 0.05
+                                                        || v !== null && Math.abs(v - totalAberto) < 0.05);
+    const rolaram = faturas.filter(f => naoRolou(f) < Math.max(0, f.em_aberto || 0) - 0.05);
+
+    ok('Cartão: o "em aberto" não soma o saldo que rolou para a fatura seguinte',
+       kpiAberto !== undefined && Math.abs(kpiAberto - semRolagem) < 0.05,
+       `na tela ${brl(kpiAberto)}; sem o que rolou ${brl(semRolagem)}; somando tudo ${brl(totalAberto)}`);
+
+    // O outro lado da prova: se nada tivesse rolado as duas somas seriam iguais
+    // e o teste acima passaria sozinho, sem testar nada.
+    ok('Existe saldo rolado para este teste ter o que provar',
+       rolaram.length > 0 && Math.abs(totalAberto - semRolagem) > 0.05,
+       `${rolaram.length} fatura(s) rolaram; diferença ${brl(totalAberto - semRolagem)}`);
+
+    rolaram.forEach(f => {
+      const seg = faturas
+        .filter(o => o.cartao === f.cartao && String(o.vencimento) > String(f.vencimento))
+        .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)))[0];
+      ok(`${f.cartao} ${f.mes}: o que rolou reaparece como saldo anterior de ${seg.mes}`,
+         Math.max(0, seg.saldo_anterior || 0) > 0.05,
+         `em aberto ${brl(f.em_aberto)}, saldo anterior da seguinte ${brl(seg.saldo_anterior)}`);
+    });
+  }
   // Fatura parcelada quita no cartao trocando a divida de lugar: o que sobra
   // sai do cartao e vira contrato de parcelas. `financiado_em_parcelas` guarda
   // esse valor — sem ele a identidade abaixo acusaria um saldo em aberto que
