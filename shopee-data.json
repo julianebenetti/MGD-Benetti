@@ -1,6 +1,6 @@
 {
-  "updated_at": 1790065071,
-  "updated_at_br": "22/09/2026 05:11",
+  "updated_at": 1790070098,
+  "updated_at_br": "22/09/2026 06:35",
   "period_days": 90,
   "total_orders": 7738,
   "total_conversions": 7399,
@@ -4257,7 +4257,7 @@
     },
     {
       "ID do pedido": "2609178K4ACDC4",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-16 22:03:44",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "13.5",
@@ -4269,7 +4269,7 @@
       "Comissao total do pedido(R$)": "0.8235",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Escova Para Grelha Cerdas de Aço Original Line Limpa Grelha de Churrasqueira Com Raspador",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18797522967",
       "ID da loja": "1070348055",
       "Nome da loja": "AquiUtil888",
@@ -4277,7 +4277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243295424116014",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-16"
     },
     {
@@ -10632,7 +10632,7 @@
     },
     {
       "ID do pedido": "2609140FE42QWN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-13 16:36:21",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "61.86",
@@ -10644,7 +10644,7 @@
       "Comissao total do pedido(R$)": "5.5556",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camiseta Masculina Premium 100% Algodão fio 30.1 Dourartti Exclusividade Conforto Qualidade P ao XG",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22498899762",
       "ID da loja": "344236675",
       "Nome da loja": "Dourartti Store",
@@ -10652,12 +10652,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243016580172021",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-13"
     },
     {
       "ID do pedido": "2609140FE42QWN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-13 16:36:21",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "77.03",
@@ -10669,7 +10669,7 @@
       "Comissao total do pedido(R$)": "5.5556",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camiseta Masculina Diamante Premium de Presença Dourartti | Acabamento superior",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58202320211",
       "ID da loja": "344236675",
       "Nome da loja": "Dourartti Store",
@@ -10677,7 +10677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243016580172021",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-13"
     },
     {
@@ -25032,7 +25032,7 @@
     },
     {
       "ID do pedido": "260907CHPCTNWE",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-06 22:02:03",
       "Sub_id1": "26Ago26VEAtopajustavel",
       "Valor de Compra(R$)": "54.44",
@@ -25044,7 +25044,7 @@
       "Comissao total do pedido(R$)": "3.8108",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 2 Relógios Masculinos de Quartzo Elegante Design Simples para Negócios e Uso Diário Casual",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58262742837",
       "ID da loja": "1060511679",
       "Nome da loja": "Jóias Com Estrelas ",
@@ -25052,7 +25052,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "242431322128322",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-06"
     },
     {
