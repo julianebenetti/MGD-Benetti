@@ -3148,6 +3148,12 @@
     // "não pagou" tudo o que ela pagou depois da última linha do arquivo — o
     // extrato de agosto, por exemplo, para em 28/08 e não traz a escola nem a
     // faxina do fim do mês. Acusar aí seria a tela inventando uma dívida.
+    // Até onde o extrato importado enxerga, e as contas já vencidas que ficam
+    // além disso. Preenchidos ao montar a tabela de vencimentos e lidos logo
+    // abaixo dela — a nota só existe quando há o que dizer.
+    let ateOndeOExtratoVe = null;
+    const semProvaNoExtrato = [];
+
     function extratoCobreAte() {
       // Quem diz até onde o arquivo enxerga é a linha que já movimentou a
       // conta. O extrato traz PIX agendado com data futura — 7 deles, indo até
@@ -3477,15 +3483,42 @@
               ? `Sem valor informado, a conta é contra o salário líquido (<b>${moeda(disponivel)}</b>). Se você conta com o que o Hugo passa ou com dinheiro da Benetti UP, escreva o total acima.`
               : 'Informe acima quanto você tem, para a tela dizer se cabe.'}</p>
 
+          ${(() => { ateOndeOExtratoVe = extratoCobreAte(); return ''; })()}
           <table class="tabela-dados">
             <thead><tr><th>Vence</th><th>O quê</th><th class="num">Valor</th><th>Situação</th><th>Vou pagar?</th></tr></thead>
             <tbody>
+              ${(() => { semProvaNoExtrato.length = 0; return ''; })()}
               ${compromissos.map(c => {
                 const d = c.quando ? new Date(c.quando + 'T00:00:00') : null;
                 const dias = d ? Math.round((d - hoje) / 86400000) : null;
                 const decisao = c.quitado ? null : decisaoDoItem(mes, c);
                 const adiado = decisao === 'adiar';
+                // **Conta prevista que já venceu tem dois significados bem
+                // diferentes, e a tela dizia "previsto" nos dois.**
+                //
+                // Se o extrato importado alcança o dia do vencimento, ela
+                // realmente não apareceu lá. Se não alcança — e o de 22/09 ia só
+                // até 18/09 —, a dashboard **não tem como saber**: a conta pode
+                // estar paga há dias. Foi o que a Juliane viu ("já paguei
+                // algumas contas e ainda aparece em aberto").
+                //
+                // A mesma guarda que impede o fechamento do plano de acusar
+                // errado (`extratoCobreAte`), agora dita a linha da tabela — e
+                // pelo mesmo motivo: nunca dizer "você não pagou" onde a única
+                // coisa que se sabe é que falta arquivo.
+                //
+                // Conta paga por outro caixa (a Benetti UP) nunca entra nessa
+                // conversa: ela não deixa rastro no extrato pessoal, então
+                // "não apareceu no extrato" seria acusação sem prova nenhuma —
+                // a mesma regra que já protege o fechamento do plano.
+                const julgavelPeloExtrato = c.previsto && !c.fora_da_conta
+                  && c.quando && dias !== null && dias < 0;
+                const foraDoAlcance = julgavelPeloExtrato
+                  && (!ateOndeOExtratoVe || c.quando > ateOndeOExtratoVe);
+                if (foraDoAlcance) semProvaNoExtrato.push(c);
                 const situacao = c.quitado ? '<span class="selo pago">pago</span>'
+                  : foraDoAlcance ? `<span class="selo selo-alerta" title="Venceu em ${c.quando.split('-').reverse().join('/')}, e o extrato importado só enxerga até ${ateOndeOExtratoVe ? ateOndeOExtratoVe.split('-').reverse().join('/') : '—'}. Se você pagou depois dessa data, a dashboard ainda não tem como ver.">não dá para conferir</span>`
+                  : julgavelPeloExtrato ? `<span class="selo selo-neutro" title="Venceu em ${c.quando.split('-').reverse().join('/')} e o extrato, que já cobre essa data, não traz o pagamento. O valor é a mediana dos meses anteriores.">previsto · não apareceu no extrato</span>`
                   : c.previsto ? '<span class="selo selo-neutro" title="Esta conta não foi lançada ainda neste mês. O valor é a mediana do que foi pago nos meses anteriores.">previsto</span>'
                   : dias === null ? '<span class="selo">sem data</span>'
                   : dias < 0 ? `<span class="selo em_aberto_vencido">venceu há ${Math.abs(dias)} dia${Math.abs(dias) === 1 ? '' : 's'}</span>`
@@ -3515,6 +3548,15 @@
               <td colspan="2"></td>
             </tr></tfoot>
           </table>
+
+          ${semProvaNoExtrato.length ? `
+          <p class="plano-nota" style="margin-top:10px">
+            <b>${semProvaNoExtrato.length} conta(s) já venceram e o extrato importado não alcança a data delas</b>
+            (ele vai até <b>${ateOndeOExtratoVe ? ateOndeOExtratoVe.split('-').reverse().join('/') : '—'}</b>):
+            ${semProvaNoExtrato.map(c => c.titulo).join(' · ')}.
+            Se você já pagou, elas só saem daqui quando o extrato novo for importado —
+            a dashboard não inventa pagamento que não viu.
+          </p>` : ''}
 
           ${(() => {
             // Conta encerrada não some em silêncio: some do total, e o nome fica

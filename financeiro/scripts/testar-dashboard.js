@@ -919,6 +919,67 @@ function noEscopo(mv) {
 
   // Conta encerrada sai da previsão e não some em silêncio.
   //
+  // Conta prevista que já venceu: "não apareceu no extrato" x "não dá para
+  // conferir". A Juliane viu contas que já tinha pago continuarem na lista e
+  // perguntou por quê — e a resposta era que o extrato importado parava antes
+  // da data delas. Dizer "previsto" nos dois casos escondia essa diferença.
+  {
+    const mes = mesVigenteNoTeste;
+    const tela = await pagina.evaluate(m => {
+      document.querySelector('[data-tab="painel"]').click();
+      document.getElementById('painel_mes').value = m;
+      renderizarPainel();
+      const el = document.getElementById('painel_vencimentos_criticos');
+      return {
+        linhas: [...el.querySelectorAll('tbody tr')].map(tr => ({
+          quando: tr.cells[0].innerText.trim(),
+          titulo: tr.cells[1].innerText.split('\n')[0].trim(),
+          situacao: tr.cells[3].innerText.trim(),
+          fora: tr.getAttribute('data-fora-da-conta') === '1',
+        })),
+        cobreAte: extratoCobreAte(),
+        txt: el.innerText,
+      };
+    }, mes);
+
+    const iso = br => br.split('/').reverse().join('-');
+    const hojeISO = new Date().toISOString().slice(0, 10);
+    const vencidasPrevistas = tela.linhas.filter(l =>
+      /previsto|não dá para conferir/i.test(l.situacao)
+      && /^\d{2}\/\d{2}\/\d{4}$/.test(l.quando) && iso(l.quando) < hojeISO);
+
+    const alemDoExtrato = vencidasPrevistas.filter(l => !l.fora && iso(l.quando) > (tela.cobreAte || '0000'));
+    const dentroDoExtrato = vencidasPrevistas.filter(l => !l.fora && iso(l.quando) <= (tela.cobreAte || '0000'));
+
+    ok('Conta vencida além do alcance do extrato não é dada como não paga',
+       alemDoExtrato.every(l => /não dá para conferir/i.test(l.situacao)),
+       alemDoExtrato.filter(l => !/não dá para conferir/i.test(l.situacao))
+         .map(l => `${l.quando} ${l.titulo}: "${l.situacao}"`).join(' · '));
+
+    ok('Conta vencida que o extrato alcança diz que não apareceu lá',
+       dentroDoExtrato.every(l => /não apareceu no extrato/i.test(l.situacao)),
+       dentroDoExtrato.filter(l => !/não apareceu no extrato/i.test(l.situacao))
+         .map(l => `${l.quando} ${l.titulo}: "${l.situacao}"`).join(' · '));
+
+    // **Conta paga por outro caixa nunca entra nessa conversa.** A Stima sai da
+    // conta da Benetti UP e não deixa rastro no extrato pessoal: dizer que não
+    // apareceu lá seria acusação sem prova nenhuma.
+    const foraAcusadas = tela.linhas.filter(l => l.fora && /não apareceu no extrato|não dá para conferir/i.test(l.situacao));
+    ok('Conta paga por outro caixa não é acusada de não ter aparecido no extrato',
+       !foraAcusadas.length,
+       foraAcusadas.map(l => `${l.titulo}: "${l.situacao}"`).join(' · '));
+
+    // Sem nenhuma conta vencida e prevista, os testes acima passam vazios.
+    ok('Existe conta vencida e prevista para este bloco ter o que provar',
+       vencidasPrevistas.length > 0, `${vencidasPrevistas.length} encontradas`);
+
+    if (alemDoExtrato.length) {
+      ok('A tela diz até onde o extrato enxerga quando há conta fora do alcance',
+         tela.txt.includes(tela.cobreAte.split('-').reverse().join('/')),
+         `esperava a data ${tela.cobreAte} citada na nota abaixo da tabela`);
+    }
+  }
+
   // Duas pontas: cada uma some da lista de vencimentos, e o nome continua dito
   // na tela. Sem a segunda, a linha desaparecia e ninguém lembraria por quê.
   {

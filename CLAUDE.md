@@ -1528,6 +1528,50 @@ Suíte em **470 testes**, `conciliar.js` íntegro.
 335,85% a.a.)** — mesma faixa dos parcelamentos do Itaú. Está registrado aqui
 porque é a oferta que aparece impressa todo mês.
 
+### "Já paguei e continua aparecendo em aberto" — previsto x não dá para conferir (22/09)
+A Juliane disse: *"percebi que já paguei algumas contas mas ainda aparece em
+aberto no painel"*. Conferido antes de mexer: **o extrato do Itaú importado vai
+só até 18/09** (última linha que de fato movimentou a conta) e o dia é 22/09.
+Tudo que ela pagou nesses quatro dias é invisível para a dashboard. Nenhuma das
+contas em questão aparece como paga no arquivo, e nenhuma está lançada duas
+vezes — não havia erro de dado, havia arquivo velho.
+
+**Mas a tela escondia a diferença, e essa parte era erro meu.** Conta prevista
+que já venceu tem dois significados que a tabela de vencimentos dizia com a
+mesma palavra, "previsto":
+
+| | O que quer dizer | Como aparece agora |
+|---|---|---|
+| O extrato **alcança** a data e não traz o pagamento | ela realmente não apareceu lá | **previsto · não apareceu no extrato** |
+| O extrato **não alcança** a data | a dashboard não tem como saber — pode estar paga | **não dá para conferir** |
+
+É a mesma guarda que já impedia o fechamento do plano de acusar errado
+(`extratoCobreAte`), agora ditando a linha da tabela, e pelo mesmo motivo:
+**nunca dizer "você não pagou" onde a única coisa que se sabe é que falta
+arquivo.** Abaixo da tabela, uma nota diz quantas contas estão nessa situação e
+até que dia o extrato enxerga — só quando existe alguma.
+
+**Conta paga por outro caixa nunca entra nessa conversa.** A primeira versão
+carimbou a **Contabilidade STIMA** com "não apareceu no extrato" — e ela sai da
+conta da Benetti UP, não deixa rastro no extrato pessoal por definição. Era
+exatamente a acusação sem prova que este arquivo já proibia para o fechamento do
+plano. `fora_da_conta` sai do julgamento.
+
+Em Set/26: **4 contas** passaram a "previsto · não apareceu no extrato"
+(condomínio, as duas escolas, IPTU — todas marcadas "deixo" por ela no plano) e
+**1** a "não dá para conferir" (DAS do MEI, vence 20/09).
+
+4 testes novos, **verificados revertendo a correção** (sem ela o primeiro
+falha): conta vencida além do alcance não é dada como não paga, conta vencida
+dentro do alcance diz que não apareceu, conta de outro caixa não é acusada, e
+**existe conta vencida e prevista para o bloco ter o que provar** — sem esse
+último os três primeiros passariam vazios. Suíte em **475 testes**.
+
+**O que resolve de verdade é o arquivo novo**: exportar o extrato do Itaú até
+hoje e importar. O bloco de pendências do topo não avisou porque o limiar é de
+7 dias e o atraso era de 4 — e baixar o limiar transformaria o aviso em papel de
+parede. A informação agora está onde ela é lida: na linha da própria conta.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
