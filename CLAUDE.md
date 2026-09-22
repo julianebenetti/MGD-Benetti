@@ -1611,6 +1611,38 @@ soma o boleto da empresa" passou a dizer explicitamente quando **não há** cont
 de outro caixa em aberto no mês, em vez de passar vazio. Suíte em **476 testes**;
 a correção do alerta verificada revertendo-a (sem ela, a STIMA volta a aparecer).
 
+### O extrato até 22/09 chegou, e fechou a conta de setembro (22/09)
+O arquivo veio com nome `itau_extrato_082026`, mas o período impresso é
+**23/08 a 22/09**, emitido às 20:53 de 22/09 — é o extrato do dia, que era o que
+faltava. **Fecha nos 18 intervalos de saldo**, sem resíduo. O de 13/09 e o de
+05/09 foram podados pela regra de sobreposição (28 e 37 linhas descartadas) e
+só contribuíram com os agendados mais distantes.
+
+**O que ele resolveu:**
+
+- **DAS do MEI: pago em 21/09**, R$ 87,05 — era o único item em "não dá para
+  conferir". Confirma também que ele é mesmo outro tributo, pago três dias
+  depois do DAS-Simples da empresa (R$ 227,67, Nubank, 21/09) e de conta
+  diferente.
+- **Claro de 21/09**, R$ 74,90 — segunda cobrança da operadora no mês, além dos
+  R$ 149,80 de 08/09.
+- **Cenira (R$ 646), locker (R$ 223) e van do Luca (R$ 480) deixaram de ser
+  projeção**: estão no extrato como Pix agendado para 25 e 28/09, com valor
+  exato. "Vence em 3 dias" em vez de "previsto".
+- Com o extrato alcançando hoje, **"não dá para conferir" sumiu da tela** — a
+  guarda funcionou e depois se apagou sozinha, que é o comportamento certo.
+
+**O que ele confirmou, e não era o que se esperava:** condomínio, as duas
+escolas e o IPTU **não estão no extrato**, agora que ele cobre o mês inteiro.
+Não é lacuna de arquivo — é o plano dela, que marcou os quatro como "deixo".
+
+**O que ele revelou:** a conta fechou 22/09 em **−R$ 1.061,35**, usando o limite.
+Em 2026 o cheque especial já custou **R$ 781,05** em juros e IOF (R$ 233,75 só
+em 26/05). E os R$ 1.349,00 de Pix agendado para 25 e 28/09 entram antes de o
+salário compensar.
+
+`conciliar.js` íntegro, suíte em **475 testes**.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
