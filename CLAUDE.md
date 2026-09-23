@@ -1331,6 +1331,63 @@ setembro. Ficou projetada, marcada "previsto", porque desligá-la é
 
 Suíte em **514 testes**, `conciliar.js` íntegro.
 
+### O boleto da Valentina: o valor que ela pagava era desconto, não mensalidade (23/09)
+Pedi os boletos da Valentina para tirar dois números do chute, e o de agosto
+respondeu muito mais do que a pergunta: **o que a dashboard chamava de
+mensalidade nunca foi a mensalidade.**
+
+```
+(=) Valor do Documento                        1.361,00
+Após 10/08/26 multa de              R$ 27,22
+e mora diária de                    R$  0,46
+Até o dia 10/08/2026, cobrar R$ 1.171,10
+```
+
+**O R$ 1.171,10 é desconto de pontualidade e vale só até o vencimento.** Passado
+o dia 10/08, volta a valer o valor do documento, R$ 1.361,00, e é sobre ele que
+correm os encargos.
+
+**A prova de qual é a base está no próprio papel, e ela não depende de
+interpretar a frase:** a multa impressa de R$ 27,22 é **exatamente 2% de
+1.361,00**. Sobre o preço com desconto daria R$ 23,42 e não bateria. A mora de
+R$ 0,46/dia é 1% ao mês sobre a mesma base. Duas linhas independentes apontando
+para o mesmo número.
+
+Em 24/09 (45 dias de atraso): **1.361,00 + 27,22 + 20,70 = R$ 1.408,92**.
+Agosto passou de R$ 1.171,10 para isso — **R$ 189,90 de desconto perdido mais
+R$ 47,92 de multa e mora**, e a mora segue correndo R$ 0,46/dia. O desconto
+perdido é quatro vezes o que os encargos cobraram: **atrasar aqui custa caro
+muito antes de o juro aparecer**.
+
+**O estrago maior não é agosto, é a projeção.** `perfilDasRecorrentes()` tira a
+mediana dos **pagamentos realizados** — e todos eles são preços **com desconto**.
+Então a projeção desta conta prevê o preço de quem paga em dia e é usada para
+planejar o mês de quem está atrasando. É prometer gasto menor do que o que vai
+chegar, que é a forma espelhada do erro que este arquivo já documenta duas vezes
+(`PAG TIT INT`, Claro). Efeito imediato no plano de Out/26:
+
+| | antes | agora |
+|---|---|---|
+| Valentina agosto | R$ 1.171,10 | **R$ 1.408,92** (boleto) |
+| Valentina setembro | R$ 1.086,60 (mediana) | **R$ 1.394,66** (estimado: mesmo valor de documento, 14 dias de mora) |
+| Valentina outubro (linha prevista) | R$ 1.086,60 | **+ R$ 84,50** no orçamento, para chegar ao preço em dia documentado de R$ 1.171,10 |
+
+Orçamento de **R$ 13.280,48 para R$ 13.910,86**, e a falta a cobrir com o caixa
+da Benetti UP para **R$ 9.303,83**.
+
+**A de setembro e a de outubro continuam sendo estimativa, e estão declaradas
+como tal** — supor que o valor do documento não muda é razoável, mas as
+mensalidades dela variaram de R$ 1.076,10 a R$ 1.249,10 no ano (já em preço com
+desconto). **Só os boletos resolvem.** Pelo mesmo motivo, a de setembro
+continua fora da aba Dívidas: sem documento, gravar estimativa como saldo seria
+o número inventado com cara de fato que a regra de ouro proíbe.
+
+**Fica a pergunta de desenho, agora com um caso concreto:** a projeção pela
+mediana não sabe distinguir "preço se pagar em dia" de "preço que vai ser
+cobrado". Enquanto ela estiver atrasando, toda conta com desconto de
+pontualidade vai ser projetada barata demais. Não dá para corrigir sozinho —
+depende de saber quais contas têm desconto, e só o boleto diz.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos
