@@ -883,6 +883,79 @@ meses continuar sendo prometida é o mesmo erro de prometer renda que não vem.
 de recência resolveria sozinho os casos como este — mas mexeria em toda conta
 projetada, então precisa ser decidido com ela antes.
 
+### Duas contas com o mesmo nome: a regra de classificação apagava a distinção (23/09)
+A Juliane cobrou: *"tem contas que você não tá considerando, que aconteceu em
+setembro e são recorrentes: 08/09/2026 Claro — telefone e internet R$ 149,80 /
+14/09/2026 Aluguel da vaga de carro R$ 200,00"*. A vaga já estava certa. A Claro
+não: ela paga **duas** contas da operadora todo mês desde janeiro e a tela
+prometia **uma**.
+
+`DA CLARO BL/IT 12778020` (internet, dia 5, ~R$ 144,80) e `DA CLARO CELULAR
+21175` (celular, dia 20, ~R$ 74,00) são duas linhas distintas do extrato — e a
+regra de classificação reescreve as duas como **"Claro — telefone e internet"**.
+Como `CHAVE_RECORRENTE` sai da descrição **já reescrita**, as duas caíam no
+mesmo perfil: a mediana era a do celular e a projeção mostrava R$ 74,90 onde
+existem R$ 218,76.
+
+**É o mesmo erro do `PAG TIT INT` por outro caminho.** Lá a chave apagava os
+dígitos que distinguiam os boletos; aqui a regra apaga a distinção **antes** de
+a chave ver. O mesmo aconteceu com o cheque especial do Itaú (`IOF` e
+`JUROS LIMITE DA CONTA` viram os dois "Juros e IOF do cheque especial") e com o
+limite do Bradesco.
+
+**A chave em si não muda, e isso é a restrição do problema.**
+`recorrentes_encerradas[].chave` e `plano_do_mes[].itens` guardam chaves
+derivadas do texto reescrito — mexer na chave ressuscitaria as quatro contas que
+ela mandou encerrar e apagaria as decisões de setembro. O que muda é que uma
+família com mais de uma linha de banco vira **mais de um perfil**, com sufixo
+estável (`claro telefone e internet#da claro celular 2`). Família com uma linha
+só — a esmagadora maioria — mantém a chave idêntica.
+
+`agruparPorLinhaDeBanco()` separa pela descrição **original do banco**
+(`descricao_original`), com duas fusões que existem para não inventar conta nova:
+
+1. **Prefixo** — o PDF corta a descrição na largura da coluna, e
+   `DA CLARO CELULAR 21175` aparece também como `DA CLARO CELULAR 2`. Uma sendo
+   começo da outra, é a mesma conta.
+2. **Meses disjuntos** — `DA CLARO BL/IT` aparece de jan a jul e `DA CLARO S.A.`
+   só a partir de set, nunca no mesmo mês: é a mesma conta renomeada pelo banco.
+   Duas contas de verdade **convivem** todo mês, e é isso que as distingue.
+
+**A correção ficou pela metade na primeira tentativa, e a metade que faltava
+acusava a Juliane de não pagar.** O perfil passou a usar a chave com sufixo, mas
+`jaLancadaNoMes()` continuou procurando a chave sem sufixo — as duas não casavam
+e o alerta do celular listou as duas contas da Claro e o IOF de setembro como
+*"já venceu e não apareceu no extrato"*, estando as três no extrato. Quem
+responde *"esta linha e aquela são a mesma conta?"* é a identidade da linha no
+banco, e ela não depende de a conta ser projetável nem de que caixa saiu — por
+isso `indiceDeChavesRecorrentes()` é montado sobre **todos** os lançamentos de
+caixa e serve às duas perguntas. Corrigido nos três lugares que têm cópia da
+regra (`public/index.html`, `scripts/contas-a-vencer.js` e o recálculo
+independente da suíte).
+
+**Teste novo, na forma genérica do erro, e ele tem um par.** O teste que já
+existia (*"duas descrições que o extrato distingue não podem cair na mesma
+chave"*) compara `descricao` — o texto **já reescrito** — então era cego
+justamente para este caso. O novo diz: **duas linhas de banco que aparecem no
+MESMO mês são duas contas e não podem dividir uma chave**. O mesmo mês é o que
+prova que não é renomeação: uma conta só não é cobrada duas vezes no mesmo mês
+por linhas diferentes. O par é o de sempre — **tem de existir família separada
+em mais de uma linha**, senão o primeiro passaria vazio para sempre e a Claro
+voltaria a ser uma conta só sem ninguém notar.
+
+**Verificado quebrando o código de propósito**: sem a separação, **9 testes
+falham** e o novo nomeia os culpados um a um (Claro em 8 meses, cheque especial
+em 4, limite do Bradesco em 2). Suíte em **477 testes**, `conciliar.js` íntegro.
+
+Efeito na previsão: a Claro deixou de ser R$ 74,90 e passou a ser **R$ 144,80 no
+dia 5 + R$ 73,96 no dia 20**; o cheque especial, **R$ 27,31 no dia 3 + R$ 67,81
+no dia 26**.
+
+**Fica em aberto, e vale perguntar a ela:** `DA CLARO BL/IT` (jan–jul) e
+`DA CLARO S.A.` (set) estão sendo tratadas como a mesma conta pela regra dos
+meses disjuntos. É o mais provável — o banco renomeou —, mas é dedução, não
+fato.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos

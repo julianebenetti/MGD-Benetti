@@ -105,12 +105,15 @@ const saidasForaDoCartaoDoMes = mes => transacoes
 // totais porque o dinheiro não saiu do salário dela, mas quem quita a conta
 // quita de qualquer jeito. Sem isso o alerta do celular mandava pagar a
 // Contabilidade STIMA de Set/26 quatro dias depois de a empresa já ter pago.
-const jaLancadaNoMes = mes => new Set(transacoes
-  .filter(t => noEscopo(t.mes_vencimento) && t.mes_vencimento === mes
-            && t.origem !== 'holerite_elektro' && !veioDoCartao(t)
-            && !ehPagamentoDeCartaoNoExtrato(t) && t.valor > 0
-            && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
-  .map(t => CHAVE_RECORRENTE(t.descricao)));
+const jaLancadaNoMes = mes => {
+  const idx = indiceDeChavesRecorrentes();
+  return new Set(transacoes
+    .filter(t => noEscopo(t.mes_vencimento) && t.mes_vencimento === mes
+              && t.origem !== 'holerite_elektro' && !veioDoCartao(t)
+              && !ehPagamentoDeCartaoNoExtrato(t) && t.valor > 0
+              && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+    .map(t => idx.get(t) || CHAVE_RECORRENTE(t.descricao)));
+};
 
 // Só entra na previsão o que a Juliane informou ou o que é reconhecidamente
 // gasto de rotina (decisão dela, 17/09). Lançamento em `nao_classificado` é
@@ -118,21 +121,109 @@ const jaLancadaNoMes = mes => new Set(transacoes
 // cara de conta a pagar.
 const PROJETAVEL = t => t.categoria && t.categoria !== 'nao_classificado';
 
-function perfilDasRecorrentes() {
+// **Uma chave pode esconder duas contas diferentes.**
+//
+// A regra de classificação reescreve a descrição: `DA CLARO BL/IT 12778020`
+// (internet, dia 5, ~R$ 144,80) e `DA CLARO CELULAR 21175` (celular, dia 20,
+// R$ 74,90) viram as duas "Claro — telefone e internet". Como a chave da
+// recorrente sai da descrição JÁ reescrita, as duas caíam no mesmo perfil e a
+// projeção mostrava **uma** conta de R$ 74,90 onde existem duas, R$ 219,70.
+// A Juliane viu e cobrou: "tem contas que você não tá considerando".
+//
+// É o mesmo erro do `PAG TIT INT` por outro caminho — lá a chave apagava os
+// dígitos, aqui a regra apaga a distinção antes de a chave ver.
+//
+// A chave em si NÃO muda: `recorrentes_encerradas` e `plano_do_mes` guardam
+// chaves derivadas do texto reescrito, e mexer nelas ressuscitaria conta que
+// ela mandou encerrar. O que muda é que uma família com mais de uma linha de
+// banco vira mais de um perfil, com sufixo estável.
+//
+// Duas fusões, nessa ordem, para não inventar conta nova:
+//
+// 1. **Prefixo.** O PDF corta a descrição na largura da coluna
+//    (`DA CLARO CELULAR 21175` vira `DA CLARO CELULAR 2`). Uma sendo começo
+//    da outra, é a mesma conta.
+// 2. **Meses disjuntos.** `DA CLARO BL/IT` aparece de jan a jul e
+//    `DA CLARO S.A.` só em set — nunca no mesmo mês. Conta que nunca coexiste
+//    com a outra é a mesma, renomeada pelo banco. Duas contas de verdade
+//    aparecem juntas (a internet e o celular convivem todo mês).
+function agruparPorLinhaDeBanco(itens) {
+    const norm = t => String(t.descricao_original || t.descricao || '')
+      .toLowerCase().replace(/\d{2}\/\d{2}\s*$/, ' ')
+      .replace(/[^a-zà-ú0-9 ]/gi, ' ').replace(/\s+/g, ' ').trim();
+
+    const subs = [];
+    itens.forEach(t => {
+      const n = norm(t);
+      let alvo = subs.find(s => s.nome.startsWith(n) || n.startsWith(s.nome));
+      if (!alvo) subs.push(alvo = { nome: n, itens: [], meses: new Set() });
+      if (n.length < alvo.nome.length) alvo.nome = n;   // fica com o mais curto
+      alvo.itens.push(t);
+      alvo.meses.add(t.mes_vencimento);
+    });
+
+    for (let i = 0; i < subs.length; i++) {
+      for (let j = i + 1; j < subs.length; j++) {
+        const juntos = [...subs[i].meses].some(m => subs[j].meses.has(m));
+        if (juntos) continue;
+        subs[i].itens.push(...subs[j].itens);
+        subs[j].meses.forEach(m => subs[i].meses.add(m));
+        subs.splice(j--, 1);
+      }
+    }
+    return subs;
+}
+
+// A chave de cada lançamento, já com o subgrupo resolvido. O índice é montado
+// sobre TODOS os lançamentos de caixa, não só os projetáveis: quem responde
+// "esta linha e aquela são a mesma conta?" é a identidade da linha no banco,
+// que não depende de a conta ser projetável ou de que caixa ela saiu.
+//
+// Sem isso a correção ficaria pela metade: o perfil passaria a ter a chave
+// `claro...#da claro celular`, a deduplicação continuaria procurando
+// `claro telefone e internet`, as duas não casariam e o alerta cobraria uma
+// conta que está no extrato.
+function indiceDeChavesRecorrentes() {
   const porChave = {};
+  transacoes
+    .filter(t => t.origem !== 'holerite_elektro' && !veioDoCartao(t) && t.valor > 0
+              && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
+    .forEach(t => {
+      const k = CHAVE_RECORRENTE(t.descricao);
+      if (k) (porChave[k] = porChave[k] || []).push(t);
+    });
+  const mapa = new Map();
+  Object.entries(porChave).forEach(([k, itens]) => {
+    const subs = agruparPorLinhaDeBanco(itens);
+    subs.forEach(sub => {
+      const chave = subs.length === 1 ? k : `${k}#${sub.nome}`;
+      sub.itens.forEach(t => mapa.set(t, chave));
+    });
+  });
+  return mapa;
+}
+
+function perfilDasRecorrentes() {
+  const perfis = {};
+  const idx = indiceDeChavesRecorrentes();
   transacoes
     .filter(t => noEscopo(t.mes_vencimento) && t.origem !== 'holerite_elektro'
               && !veioDoCartao(t) && saiDoCaixaDela(t) && t.valor > 0 && PROJETAVEL(t)
               && (t.natureza === 'despesa' || t.natureza === 'divida_parcelada'))
     .forEach(t => {
-      const k = CHAVE_RECORRENTE(t.descricao);
-      if (!k) return;
-      (porChave[k] = porChave[k] || { exemplo: t, meses: {}, valores: [], dias: [] });
-      porChave[k].meses[t.mes_vencimento] = true;
-      porChave[k].valores.push(t.valor);
-      if (t.data) porChave[k].dias.push(parseInt(t.data.split('-')[2], 10));
+      // Uma família com uma linha de banco só mantém a chave exatamente como
+      // era — é o caso de quase todas, e é o que preserva `plano_do_mes` e
+      // `recorrentes_encerradas`. Só a família com mais de uma ganha sufixo.
+      const chave = idx.get(t) || CHAVE_RECORRENTE(t.descricao);
+      if (!chave) return;
+      const v = perfis[chave] = perfis[chave]
+        || { exemplo: t, meses: {}, valores: [], dias: [] };
+      v.meses[t.mes_vencimento] = true;
+      v.valores.push(t.valor);
+      if (t.data) v.dias.push(parseInt(t.data.split('-')[2], 10));
     });
-  return Object.entries(porChave)
+
+  return Object.entries(perfis)
     .map(([k, v]) => ({
       chave: k, descricao: v.exemplo.descricao, categoria: v.exemplo.categoria,
       nMeses: Object.keys(v.meses).length,

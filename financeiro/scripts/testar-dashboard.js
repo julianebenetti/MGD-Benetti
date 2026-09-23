@@ -508,14 +508,57 @@ function noEscopo(mv) {
       (t.natureza === 'despesa' || t.natureza === 'divida_parcelada');
     // Só se projeta o que a dashboard sabe o que é — ver PROJETAVEL no index.
     const projetavel = t => t.categoria && t.categoria !== 'nao_classificado';
+    // A regra de classificação reescreve a descrição, e duas linhas de banco
+    // diferentes podem virar o mesmo texto: `DA CLARO BL/IT` (internet, dia 5)
+    // e `DA CLARO CELULAR` (dia 20) viram as duas "Claro — telefone e
+    // internet". A chave sai do texto reescrito, então as duas caíam num perfil
+    // só e a tela prometia uma conta onde existem duas. Uma família com mais de
+    // uma linha de banco vira mais de um perfil, com sufixo estável — e o
+    // índice é montado sobre TODOS os lançamentos de caixa, porque a mesma
+    // chave tem de servir para projetar e para provar que já foi paga.
+    const linhaDeBanco = t => String(t.descricao_original || t.descricao || '')
+      .toLowerCase().replace(/\d{2}\/\d{2}\s*$/, ' ')
+      .replace(/[^a-zà-ú0-9 ]/gi, ' ').replace(/\s+/g, ' ').trim();
+    const familias = {};
+    todosLancamentos.filter(t => t.origem !== 'holerite_elektro' &&
+      !(t.origem || '').startsWith('cartao_credito') && t.valor > 0 &&
+      (t.natureza === 'despesa' || t.natureza === 'divida_parcelada')).forEach(t => {
+      const k = chaveRec(t.descricao); if (!k) return;
+      (familias[k] = familias[k] || []).push(t);
+    });
+    const subChave = new Map();
+    Object.entries(familias).forEach(([k, itens]) => {
+      const subs = [];
+      itens.forEach(t => {
+        const n = linhaDeBanco(t);
+        // Prefixo: o PDF corta a descrição na largura da coluna, então a mesma
+        // linha aparece com dois comprimentos.
+        let alvo = subs.find(g => g.nome.startsWith(n) || n.startsWith(g.nome));
+        if (!alvo) subs.push(alvo = { nome: n, itens: [], meses: new Set() });
+        if (n.length < alvo.nome.length) alvo.nome = n;
+        alvo.itens.push(t); alvo.meses.add(t.mes_vencimento);
+      });
+      // Meses disjuntos: conta que nunca coexiste com a outra é a mesma,
+      // renomeada pelo banco. Duas contas de verdade convivem todo mês.
+      for (let i = 0; i < subs.length; i++) for (let j = i + 1; j < subs.length; j++) {
+        if ([...subs[i].meses].some(m => subs[j].meses.has(m))) continue;
+        subs[i].itens.push(...subs[j].itens);
+        subs[j].meses.forEach(m => subs[i].meses.add(m));
+        subs.splice(j--, 1);
+      }
+      subs.forEach(g => g.itens.forEach(t =>
+        subChave.set(t, subs.length === 1 ? k : `${k}#${g.nome}`)));
+    });
+    const chaveDe = t => subChave.get(t) || chaveRec(t.descricao);
+
     const perfil = {};
     todosLancamentos.filter(t => noEscopo(t.mes_vencimento) && foraCartao(t) && projetavel(t)).forEach(t => {
-      const k = chaveRec(t.descricao); if (!k) return;
+      const k = chaveDe(t); if (!k) return;
       (perfil[k] = perfil[k] || { meses: new Set(), valores: [], dias: [] });
       perfil[k].meses.add(t.mes_vencimento); perfil[k].valores.push(t.valor);
       if (t.data) perfil[k].dias.push(parseInt(t.data.split('-')[2], 10));
     });
-    const jaNoMes = new Set(doMes.filter(foraCartao).map(t => chaveRec(t.descricao)));
+    const jaNoMes = new Set(doMes.filter(foraCartao).map(chaveDe));
 
     // Conta que ela parou de pagar de vez sai da projeção a partir da data do
     // encerramento. O histórico não sabe que algo acabou — sem isto a mediana
@@ -1261,6 +1304,58 @@ function noEscopo(mv) {
     ok('Contas diferentes nunca caem na mesma chave de recorrente',
        fundidas.length === 0,
        fundidas.length ? fundidas.join(' ;; ') : `${descricoes.length} descrições, nenhuma fusão`);
+  }
+
+  // --- E a regra de classificação não pode desfazer essa distinção ---
+  //
+  // O teste acima compara `descricao`, que é o texto JÁ reescrito pela regra de
+  // classificação — e é exatamente aí que ele tinha um ponto cego. `DA CLARO
+  // BL/IT 12778020` (internet, dia 5, ~R$ 144,80) e `DA CLARO CELULAR 21175`
+  // (celular, dia 20, ~R$ 74,00) viram as duas "Claro — telefone e internet":
+  // idênticas para aquele teste, e mesmo assim duas contas que a Juliane paga
+  // todo mês. A projeção mostrava uma só, e ela cobrou: "tem contas que você
+  // não tá considerando".
+  //
+  // A forma genérica do erro é esta: **duas linhas de banco que aparecem no
+  // MESMO mês são duas contas, e não podem compartilhar uma chave de
+  // recorrente.** O mesmo mês é o que prova que não é a mesma conta renomeada —
+  // uma conta só não é cobrada duas vezes no mesmo mês por linhas diferentes.
+  // A tolerância de prefixo fica porque o PDF corta a descrição na largura da
+  // coluna, e aí a mesma linha aparece com dois comprimentos.
+  {
+    const linhas = await pagina.evaluate(() => {
+      const idx = indiceDeChavesRecorrentes();
+      const norm = t => String(t.descricao_original || t.descricao || '')
+        .toLowerCase().replace(/\d{2}\/\d{2}\s*$/, ' ')
+        .replace(/[^a-zà-ú0-9 ]/gi, ' ').replace(/\s+/g, ' ').trim();
+      const fora = [];
+      idx.forEach((chave, t) => fora.push({ chave, mes: t.mes_vencimento, original: norm(t) }));
+      return fora;
+    });
+
+    const porChaveMes = {};
+    linhas.forEach(l => {
+      const k = `${l.chave} @ ${l.mes}`;
+      (porChaveMes[k] = porChaveMes[k] || new Set()).add(l.original);
+    });
+
+    const compativel = ds => ds.every(a => ds.every(b => a.startsWith(b) || b.startsWith(a)));
+    const fundidasNoMes = Object.entries(porChaveMes)
+      .filter(([, set]) => set.size > 1 && !compativel([...set]))
+      .map(([k, set]) => `${k} <- ${[...set].join(' | ')}`);
+
+    ok('Duas linhas de banco do mesmo mês nunca dividem a mesma chave',
+       fundidasNoMes.length === 0,
+       fundidasNoMes.length ? fundidasNoMes.join(' ;; ')
+                            : `${Object.keys(porChaveMes).length} pares chave+mês, nenhuma fusão`);
+
+    // O outro lado: o teste só tem o que provar se existir alguma família com
+    // mais de uma linha de banco. Sem isso ele passaria vazio para sempre, e a
+    // Claro voltaria a ser uma conta só sem ninguém notar.
+    const comSufixo = [...new Set(linhas.map(l => l.chave))].filter(k => k.includes('#'));
+    ok('Existe família de recorrente separada em mais de uma linha de banco',
+       comSufixo.length > 0,
+       comSufixo.length ? comSufixo.join(' · ') : 'nenhuma — o teste acima não prova nada');
   }
 
   // --- Conta recorrente cadastrada à mão ---
