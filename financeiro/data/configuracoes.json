@@ -274,8 +274,8 @@
       "nome": "Infinite",
       "descricao": "Itaú Uniclass Infinite Visa",
       "cor": "#1a1a1a",
-      "pagamento_suspenso": true,
-      "observacao": "Pagamento parado por decisao dela em 23/09/2026: 'nao vou pagar a conta do black, nem o infinite 0442'. ATENCAO: a 1a parcela do parcelamento de 09/09 (R$ 408,13, venc. 01/10) e cobrada dentro desta fatura e NAO esta no snapshot de R$ 922,29 (ciclo ainda aberto) — a fatura fechada de outubro deve vir por volta de R$ 1.330,42."
+      "pagamento_suspenso": false,
+      "observacao": "Pagamento retomado em 23/09/2026: \"e o cartao do infinite de 900,00 + ou -\". ATENCAO: a fatura gravada de Out/26 e R$ 922,29, mas e foto de ciclo aberto e NAO inclui a 1a parcela do parcelamento de 09/09 (4x R$ 408,13, a 1a vencendo 01/10). A fatura fechada deve vir por volta de R$ 1.330,42."
     },
     {
       "final": "3794",
@@ -404,13 +404,5 @@
       "motivo": "\"o empréstimo da minha mãe sempre será pago\" (Juliane, 23/09/2026). A Cenira tomou o crédito no nome dela para emprestar à filha — atrasar aqui nao cobra juros de banco, cobra da mae. Entra sempre como \"pago\" no plano do mes e nunca e proposto para adiar."
     }
   ],
-  "recorrentes_adiadas": [
-    {
-      "chave": "escola do luca",
-      "descricao": "Escola do Luca",
-      "adiada_desde": "2026-10-01",
-      "acertar_em": "Dez/26",
-      "motivo": "\"a escola do Luca vou acertar em dezembro, até lá fica em aberto\" (Juliane, 23/09/2026). Diferente de recorrentes_encerradas: a obrigacao CONTINUA e acumula — o valor nao pode sumir da tela, so sai do \"sai da conta\" dos meses adiados e reaparece somado no mes do acerto."
-    }
-  ]
+  "recorrentes_adiadas": []
 }

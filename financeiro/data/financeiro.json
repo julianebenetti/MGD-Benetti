@@ -73224,7 +73224,7 @@
       "atualizado_em": "2026-09-05"
     },
     "Out/26": {
-      "orcamento": 7809.69,
+      "orcamento": 11533.33,
       "itens": {
         "prev|empréstimo consignado débito em conta": "pagar",
         "prev|juros e iof do cheque especial#iof": "pagar",
@@ -73244,14 +73244,14 @@
         "prev|seguro do itaú": "pagar",
         "prev|van escolar do luca": "pagar",
         "fatura|3794|Out/26": "adiar",
-        "fatura|0442|Out/26": "adiar",
+        "fatura|0442|Out/26": "pagar",
         "fatura|4846|Out/26": "adiar",
         "prev|prefeitura de campinas": "adiar",
         "prev|faxina": "adiar",
-        "prev|escola do luca": "adiar"
+        "prev|escola do luca": "pagar"
       },
-      "atualizado_em": "2026-09-23T22:43:33",
-      "observacao": "Decisoes da Juliane em 23/09/2026: paga as escolas e o condominio, usa o dinheiro do cartao Azul (3794) e deixa a fatura do Azul sem pagar. Locker e faxina/IPTU seguiram o padrao de setembro — nao foram ditos. O orcamento pressupoe trazer ~R$ 3.202,66 do caixa da Benetti UP, porque salario + saldo dao R$ 4.607,03."
+      "atualizado_em": "2026-09-23T22:55:04",
+      "observacao": "Decisoes da Juliane em 23/09/2026. Ela paga em outubro: as 2 faturas da escola do Luca, as 2 da Valentina e os 2 meses de condominio (a de setembro ficou em aberto e sera quitada agora), mais a fatura do Infinite 0442. O adiamento da escola do Luca ate dezembro foi CANCELADO por ela. O cartao Azul 3794 segue sem pagar, e o dinheiro dele cobre estas contas. ATENCAO 1: o plano_do_mes tem uma linha por conta por mes, entao a 2a via de setembro (condominio R$ 623,43 + Valentina R$ 1.086,60 + Luca R$ 545,66 = R$ 2.255,69) NAO aparece como linha propria na tela — esta somada aqui no orcamento. Set/26 continua marcado \"deixo\", que e o que de fato aconteceu naquele mes; mudar aquilo faria o fechamento de setembro dizer que ela pagou, e o extrato prova que nao. ATENCAO 2: o Infinite esta orcado em R$ 922,29, que e a foto do ciclo aberto. A fatura fechada deve trazer tambem a 1a parcela do parcelamento de 09/09 (R$ 408,13), indo a ~R$ 1.330,42. O orcamento pressupoe trazer ~R$ 6.926,30 do caixa da Benetti UP: salario + saldo dao R$ 4.607,03."
     }
   }
 }

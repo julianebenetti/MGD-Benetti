@@ -1482,70 +1482,80 @@ function noEscopo(mv) {
 
   // --- Conta adiada com data para acertar ---
   //
-  // A Juliane decidiu (23/09): "a escola do Luca vou acertar em dezembro, até
-  // lá fica em aberto". Isso é o **oposto** de `recorrentes_encerradas`: lá a
-  // obrigação deixa de existir e mostrar um valor inventaria uma dívida; aqui a
-  // obrigação continua e **acumula**, e esconder o valor é que seria mentira.
+  // A Juliane criou este tipo em 23/09 ("a escola do Luca vou acertar em
+  // dezembro") e o cancelou uma hora depois ("vou pagar as 2 faturas da escola
+  // do Luca"). O mecanismo continua valendo, e o teste **não pode depender de
+  // existir uma conta adiada hoje** — senão ele vira verde vazio no dia em que
+  // ela paga a última, e o adiamento quebra sem ninguém notar.
   //
-  // Por isso o teste tem dois lados: nos meses adiados o valor sai do total mas
-  // o nome fica na tela; no mês do acerto ele volta **somado**.
+  // Por isso a conta adiada é **injetada na configuração em memória**, só para
+  // este bloco, e devolvida no fim. Nada é gravado no servidor: essa é a mesma
+  // armadilha que já apagou o plano de verdade da Juliane uma vez.
   {
-    const adiadas = (config.recorrentes_adiadas || []).filter(r => r.chave && r.acertar_em);
-    ok('Existe conta adiada cadastrada para o bloco ter o que provar',
-       adiadas.length > 0,
-       adiadas.length ? adiadas.map(r => `${r.descricao} → ${r.acertar_em}`).join(' · ')
-                      : 'nenhuma — os testes abaixo não provam nada');
-
-    for (const r of adiadas) {
-      const ordemMes = m => {
-        const [nome, ano] = String(m).split('/');
-        return (2000 + parseInt(ano, 10)) * 12 + MES_ORDEM.indexOf(nome);
+    const ALVO = 'faxina';           // conta projetada de verdade, com histórico
+    const ACERTO = 'Dez/26';
+    const injetado = await pagina.evaluate(({ chave, acertar }) => {
+      const original = configuracoesGlobais.recorrentes_adiadas;
+      configuracoesGlobais.recorrentes_adiadas = [{
+        chave, descricao: 'INJETADO PELO TESTE',
+        adiada_desde: '2026-10-01', acertar_em: acertar
+      }];
+      const achar = (m) => (recorrentesFaltandoEm(m) || []).find(x => x.chave === chave);
+      const naTela = (m) => {
+        document.querySelector('[data-tab="painel"]').click();
+        document.getElementById('painel_mes').value = m;
+        renderizarPainel();
+        return document.getElementById('painel_vencimentos_criticos').innerText;
       };
-      const ini = new Date(r.adiada_desde + 'T00:00:00');
-      const nMeses = ordemMes(r.acertar_em) - (ini.getFullYear() * 12 + ini.getMonth()) + 1;
-      // Um mês adiado (o primeiro) e o mês do acerto.
-      const mesAdiado = `${MES_ORDEM[ini.getMonth()]}/${String(ini.getFullYear()).slice(2)}`;
+      const out = achar('Out/26'), nov = achar('Nov/26'), dez = achar(acertar);
+      const texto = naTela('Out/26');
+      configuracoesGlobais.recorrentes_adiadas = original;   // devolve
+      renderizarPainel();
+      return {
+        out: out && { valor: out.valor, adiada: !!out.adiada, ate: out.acertar_em,
+                      descricao: out.descricao },
+        nov: nov && { adiada: !!nov.adiada },
+        dez: dez && { valor: dez.valor, acerto: !!dez.acerto, meses: dez.meses_acumulados },
+        texto,
+        devolvido: JSON.stringify(configuracoesGlobais.recorrentes_adiadas) === JSON.stringify(original)
+      };
+    }, { chave: ALVO, acertar: ACERTO });
 
-      const visto = await pagina.evaluate(({ chave, mAdiado, mAcerto }) => {
-        const achar = (m) => (recorrentesFaltandoEm(m) || []).find(x => x.chave === chave);
-        const naTela = (m) => {
-          document.querySelector('[data-tab="painel"]').click();
-          document.getElementById('painel_mes').value = m;
-          renderizarPainel();
-          return document.getElementById('painel_vencimentos_criticos').innerText;
-        };
-        const a = achar(mAdiado), b = achar(mAcerto);
-        return {
-          adiado: a && { valor: a.valor, adiada: !!a.adiada, acertar_em: a.acertar_em },
-          acerto: b && { valor: b.valor, acerto: !!b.acerto, meses: b.meses_acumulados },
-          textoAdiado: naTela(mAdiado)
-        };
-      }, { chave: r.chave, mAdiado: mesAdiado, mAcerto: r.acertar_em });
+    // Sem isso, todas as asserções abaixo passariam vazias.
+    ok('A conta adiada injetada existe na projeção do mês',
+       !!(injetado.out && injetado.out.valor > 0), JSON.stringify(injetado.out));
 
-      ok(`${mesAdiado}: "${r.descricao}" está marcada como adiada`,
-         !!(visto.adiado && visto.adiado.adiada && visto.adiado.acertar_em === r.acertar_em),
-         JSON.stringify(visto.adiado));
+    ok('Out/26: a conta injetada está marcada como adiada até o mês do acerto',
+       !!(injetado.out && injetado.out.adiada && injetado.out.ate === ACERTO),
+       JSON.stringify(injetado.out));
 
-      // O nome não some: conta adiada que desaparece da tela vira conta
-      // esquecida, e a dívida continua correndo.
-      ok(`${mesAdiado}: o nome da conta adiada continua na tela`,
-         visto.textoAdiado.includes(r.descricao), r.descricao);
+    ok('Nov/26: o adiamento continua valendo até o mês do acerto',
+       !!(injetado.nov && injetado.nov.adiada), JSON.stringify(injetado.nov));
 
-      // E o valor aparece — aqui, ao contrário da encerrada, mostrar o número
-      // é obrigatório: a obrigação existe.
-      ok(`${mesAdiado}: a tela diz quanto está adiado e até quando`,
-         /adiado com data para acertar/i.test(visto.textoAdiado)
-           && visto.textoAdiado.includes(r.acertar_em),
-         visto.textoAdiado.split('\n').find(l => /adiado com data/i.test(l)) || '(sem linha)');
+    // O nome não some: conta adiada que desaparece da tela vira conta esquecida,
+    // e a obrigação continua correndo. O nome exibido é o do lançamento, não o
+    // do cadastro — o cadastro só diz QUE está adiada, não como ela se chama.
+    ok('O nome da conta adiada continua na tela',
+       !!(injetado.out && injetado.texto.includes(injetado.out.descricao)),
+       injetado.out ? injetado.out.descricao : '(sem conta)');
 
-      ok(`${r.acertar_em}: a conta volta somada, ${nMeses} meses acumulados`,
-         !!(visto.acerto && visto.acerto.acerto && visto.acerto.meses === nMeses),
-         JSON.stringify(visto.acerto));
+    // E o valor aparece — aqui, ao contrário da encerrada, mostrar o número é
+    // obrigatório: a obrigação existe e acumula.
+    ok('A tela diz quanto está adiado e até quando',
+       /adiado com data para acertar/i.test(injetado.texto) && injetado.texto.includes(ACERTO),
+       (injetado.texto.split('\n').find(l => /adiado com data/i.test(l)) || '(sem linha)'));
 
-      igual(`${r.acertar_em}: o acerto vale ${nMeses}x a parcela`,
-            visto.acerto ? visto.acerto.valor : 0,
-            Math.round((visto.adiado ? visto.adiado.valor : 0) * nMeses * 100) / 100, 0.02);
-    }
+    ok(`${ACERTO}: a conta volta somada, 3 meses acumulados`,
+       !!(injetado.dez && injetado.dez.acerto && injetado.dez.meses === 3),
+       JSON.stringify(injetado.dez));
+
+    igual(`${ACERTO}: o acerto vale 3x a parcela`,
+          injetado.dez ? injetado.dez.valor : 0,
+          Math.round((injetado.out ? injetado.out.valor : 0) * 3 * 100) / 100, 0.02);
+
+    // A suíte não pode deixar resíduo na configuração da Juliane.
+    ok('O teste devolve a configuração de conta adiada como estava',
+       injetado.devolvido === true, String(injetado.devolvido));
   }
 
   // --- Compromisso que ela declarou que nunca adia ---

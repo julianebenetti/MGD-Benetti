@@ -1202,6 +1202,53 @@ pago da Benetti UP (R$ 173 mil em 2026): sem limite nele, a fonte de receita da
 empresa é a primeira coisa a parar. Registrado como consequência, não como
 objeção — a decisão é dela.
 
+### O plano virou acerto de dois meses, e o teste que dependia de dado vivo (23/09)
+Uma hora depois de gravar o plano, a Juliane reviu: *"eu vou pagar as 2 faturas
+da escola do luca + as 2 da valentina os 2 meses do condomínio e o cartão do
+infinite de 900,00 + ou -"*. Ou seja: ela vai **quitar setembro junto com
+outubro** nas três contas que tinha deixado, e retomar o Infinite.
+
+Três coisas mudaram no dado:
+
+- **O adiamento da escola do Luca foi cancelado** — `recorrentes_adiadas` ficou
+  vazio. O tipo criado há uma hora sobreviveu menos que uma conversa, e isso é
+  normal: configuração guarda decisão viva, não histórico. A história fica aqui.
+- **0442 Infinite voltou a `pagamento_suspenso: false`.**
+- **`plano_do_mes['Out/26']` subiu de R$ 7.809,69 para R$ 11.533,33.**
+
+**O limite do desenho apareceu, e está escrito na `observacao` em vez de
+escondido:** `plano_do_mes` tem **uma linha por conta por mês**, então a segunda
+via — o condomínio, a Valentina e o Luca **de setembro**, R$ 2.255,69 — não tem
+onde aparecer como linha. Ela está somada no `orcamento`, com a explicação.
+
+**E Set/26 continua marcado "deixo", de propósito.** Mudar para "pago" faria o
+fechamento de setembro dizer que ela pagou naquele mês, e o extrato de 22/09
+prova que não. O que aconteceu em setembro não muda porque outubro vai consertar.
+
+**Achado ao conferir o número dela:** ela disse "o cartão do infinite de 900,00
++ ou −", e a fatura gravada diz R$ 922,29 — mas essa é **foto de ciclo aberto** e
+**não inclui a 1ª parcela do parcelamento de 09/09** (4× R$ 408,13, a primeira
+vencendo 01/10). A fatura fechada deve vir por volta de **R$ 1.330,42**. Anotado
+na `observacao` do cartão e na do plano, porque o valor que ela tem na cabeça
+está R$ 408 abaixo do que o cartão vai cobrar.
+
+**A conta agora:** disponível R$ 4.607,03, plano R$ 11.533,33 — precisa de
+**R$ 6.926,30** do caixa da Benetti UP, ou **R$ 7.334,43** se a parcela entrar.
+
+**O teste de conta adiada dependia de ela ter uma conta adiada, e isso estava
+errado.** Quando `recorrentes_adiadas` esvaziou, o guarda *"existe conta adiada
+para o bloco ter o que provar"* falhou — e **nada estava quebrado**. Um teste que
+fica vermelho porque a usuária pagou uma conta é um alarme falso; um que fica
+verde vazio no mesmo caso é pior. Os dois são o mesmo defeito: o teste amarrado
+a dado vivo em vez de ao mecanismo.
+
+Agora o bloco **injeta uma conta adiada na configuração em memória**, roda as
+asserções e devolve a configuração — com um teste próprio de que devolveu, e
+**nada é gravado no servidor**, que é a armadilha que já apagou o plano de
+verdade dela uma vez. O adiamento passa a ser testado mesmo quando ela não tem
+nenhum. Verificado desligando `adiamentoDe`: **3 testes falham**. Suíte em
+**514 testes**, `conciliar.js` íntegro.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos
