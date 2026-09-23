@@ -34,7 +34,12 @@ REGRAS = [
     (r'AUTO POSTO|POSTO ',                         'despesa',  'transporte',           'Família'),
     (r'SAVEGNAGO|TENDA ATACADO|ATACAD|SUPERMERC|MINIMERCAD|MERCEARIA|HORTIFRUT',
                                                    'despesa',  'alimentacao',          'Família'),
-    (r'PHARMAC|DROGA|FARMAC',                      'despesa',  'saude',                'Família'),
+    (r'PHARMAC|DROGA|FARMAC|RD SAUDE|DROGASIL|RAIA', 'despesa','saude',               'Família'),
+    # Hospital e clinica seguem a mesma pessoa que farmacia ja seguia: quem se
+    # beneficia nao esta escrito no lancamento, e Familia e o padrao ja usado
+    # para saude nesta fonte. A Juliane corrige se for de uma pessoa so.
+    (r'HOSPITAL|CLINICA|LABORATORIO',              'despesa',  'saude',                'Família'),
+    (r'PADARIA|PANIFIC|CONFEITARIA',               'despesa',  'alimentacao',          'Família'),
     (r'CREPES|MC ?DONALD|KFC|RESTAURANT|LANCH|PARMEGGIO|PIZZA|BURGER',
                                                    'despesa',  'alimentacao_fora',     'Família'),
     (r'SEGURO SUPERPROTEGIDO',                     'despesa',  'seguro',               'Juliane'),
@@ -198,9 +203,17 @@ def main():
             if seguinte and abs(seguinte['pagamentos'] - c['total_fatura']) < 0.02:
                 c['pago'] = c['total_fatura']; c['em_aberto'] = 0.0; c['situacao'] = 'paga'
             elif seguinte:
-                c['pago'] = seguinte['pagamentos']
-                c['em_aberto'] = round(c['total_fatura'] - seguinte['pagamentos'], 2)
-                c['situacao'] = 'paga_parcial' if seguinte['pagamentos'] > 0 else 'fechada'
+                # **Um pagamento nunca quita mais do que a fatura que ele paga.**
+                # O documento do Bradesco cobra dois cartoes e imprime o debito
+                # inteiro dentro do bloco de UM deles: o de 15/09 e R$ 1.270,97,
+                # que e 887,40 do 3987 mais 383,57 do 3711. Casando o valor cheio
+                # contra o total do proprio cartao, o 3987 de Set/26 ficava com
+                # em_aberto de -R$ 383,57 — divida negativa, que nao existe.
+                pago = min(seguinte['pagamentos'], c['total_fatura'])
+                c['pago'] = round(pago, 2)
+                c['em_aberto'] = round(c['total_fatura'] - pago, 2)
+                c['situacao'] = ('paga' if c['em_aberto'] < 0.02
+                                 else 'paga_parcial' if pago > 0 else 'fechada')
             elif c.get('aberta'):
                 c['pago'] = 0.0; c['em_aberto'] = c['total_fatura']; c['situacao'] = 'aberta'
             else:

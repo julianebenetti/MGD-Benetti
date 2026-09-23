@@ -174,8 +174,14 @@ function noEscopo(mv) {
   }
   igual('Gasto no cartão bate com o cobrado, fora a dívida parcelada',
         gastoNoCartao, Math.round((cobradoTotal - dividaTotal) * 100) / 100);
-  ok('Cada fatura tem ao menos um pagamento registrado', pagamentos.length >= faturas.length,
-     `${pagamentos.length} pagamentos para ${faturas.length} faturas`);
+  // Fatura marcada `sem_itemizacao` nao tem lancamento nenhum de proposito —
+  // e o cabecalho de um ciclo cujo total se conhece e cujo extrato ainda nao
+  // chegou. Ela nao pode ser cobrada por nao ter pagamento lancado.
+  const faturasItemizadas = faturas.filter(f => !f.sem_itemizacao);
+  ok('Cada fatura tem ao menos um pagamento registrado', pagamentos.length >= faturasItemizadas.length,
+     `${pagamentos.length} pagamentos para ${faturasItemizadas.length} faturas itemizadas` +
+     (faturas.length !== faturasItemizadas.length
+        ? ` (${faturas.length - faturasItemizadas.length} sem itemização, fora da conta)` : ''));
   ok('Todo pagamento tem valor negativo', pagamentos.every(t => t.valor < 0));
   igual('Compras menos estornos fecha com o total', ref.compras + ref.estornos, ref.escopoTotal);
 
@@ -1090,9 +1096,29 @@ function noEscopo(mv) {
       .filter(t => t.origem === 'cartao_credito_bradesco' && t.fatura_origem)
       .map(t => t.fatura_origem.split('|')[0]));
     const vazias = (dados.faturas_cartao || []).filter(f =>
-      importadas.has(f.cartao) && (f.total_fatura || 0) > 0 && !comLanc.has(`${f.cartao}|${f.mes}`));
+      importadas.has(f.cartao) && (f.total_fatura || 0) > 0 && !f.sem_itemizacao
+      && !comLanc.has(`${f.cartao}|${f.mes}`));
     ok('Nenhuma fatura já importada ficou sem lançamento depois de reimportar',
        !vazias.length, vazias.map(f => `${f.cartao} ${f.mes}`).join(', '));
+
+    // **A marca não pode virar a forma de calar este teste.** Ela existe para
+    // o cabeçalho cujo total a Juliane informou sem que exista arquivo — o
+    // 3711 de Out/26, cujo bloco não aparece em nenhum screenshot. Numa fatura
+    // que TEM lançamento, a marca seria mentira, e pior: esconderia de novo o
+    // estrago da purga na ordem errada, que é o que o teste acima vigia.
+    const marcadasComLanc = (dados.faturas_cartao || [])
+      .filter(f => f.sem_itemizacao && comLanc.has(`${f.cartao}|${f.mes}`));
+    ok('Fatura marcada "sem itemização" não tem lançamento nenhum',
+       !marcadasComLanc.length,
+       marcadasComLanc.length ? marcadasComLanc.map(f => `${f.cartao} ${f.mes}`).join(', ')
+         : `${(dados.faturas_cartao || []).filter(f => f.sem_itemizacao).length} marcada(s), nenhuma com lançamento`);
+
+    // E a marca tem de dizer de onde veio o número: fatura sem arquivo é a
+    // única coisa desta base cujo total não pode ser conferido contra nada.
+    const semProcedencia = (dados.faturas_cartao || [])
+      .filter(f => f.sem_itemizacao && !f.total_fonte);
+    ok('Fatura sem itemização declara de onde veio o total',
+       !semProcedencia.length, semProcedencia.map(f => `${f.cartao} ${f.mes}`).join(', '));
   }
 
   // Dinheiro que entra e não é renda tributável não pode engordar a base do IRPF.

@@ -956,6 +956,81 @@ no dia 26**.
 meses disjuntos. É o mais provável — o banco renomeou —, mas é dedução, não
 fato.
 
+### O Visa do Bradesco em aberto, lido de screenshot e provado pela aritmética (23/09)
+A Juliane cobrou: *"não achei a fatura do visa do bradesco que já está em quase
+3k"*. Não estava mesmo — o último ciclo gravado dos dois Visa era o de **Set/26**
+(R$ 887,40 + R$ 383,57, pagos por débito em 15/09). O ciclo que vence **15/10**
+nunca chegou: o arquivo que ela subiu em 22/09 (`BradescoCartoes...`) traz **só o
+cartão Amazon**, e o `Bradesco_Fatura-...195158.pdf` é a fatura **fechada de
+15/09**, que já estava gravada.
+
+Depois ela mandou **screenshots** do `Bradesco_ExtratoFaturaAberta-22-09-2026.pdf`
+— o arquivo em si nunca subiu.
+
+**Ler número de screenshot só vale se o próprio documento provar a leitura.** Os
+47 lançamentos do 3987 transcritos das imagens somam **R$ 2.080,36**, que é
+exatamente o `Total para: JULIANE F BENETTI` impresso, e a identidade da fatura
+Bradesco fecha (`saldo anterior 1.270,97 + pagamento −1.270,97 + compras`). De
+quebra, a aritmética resolveu uma dúvida da própria imagem: o
+`SAVEGNAGO 39,07` que aparece **duas vezes** no screenshot é a emenda da
+rolagem, não uma compra repetida — com ele a soma estoura em exatamente R$ 39,07.
+
+- **O `SALDO ANTERIOR` impresso é campo de cabeçalho, não lançamento.** Ele já
+  aparece como linha no extrato do app; contá-lo nos dois lugares dobraria a
+  dívida rolada.
+- O 3987 de Out/26 entrou **completo e itemizado**, pelo caminho normal
+  (`/tmp/bradesco-abertos.json` + `importar-faturas-bradesco.py`, que recusa
+  gravar o que não fecha).
+
+**Defeito real que a reimportação expôs: um pagamento quitava mais do que a
+fatura que ele paga.** O documento do Bradesco cobra dois cartões e imprime o
+débito inteiro dentro do bloco de **um** deles — os R$ 1.270,97 de 15/09 são
+887,40 do 3987 mais 383,57 do 3711. A regra casava `pagamentos` da fatura
+seguinte contra o total do **mesmo** cartão, então o 3987 de Set/26 ficava com
+`em_aberto` de **−R$ 383,57**: dívida negativa, que não existe. Agora
+`pago = min(pagamento, total da fatura)` — um pagamento nunca quita mais do que
+a fatura que está pagando.
+
+**O 3711 ficou como cabeçalho sem lançamento, de propósito e marcado.** O bloco
+dele começa no fim da página 3 e não aparece em screenshot nenhum; o valor
+(**R$ 144,24**) veio **dela**, não de arquivo. Campos novos:
+`sem_itemizacao: true` e `total_fonte` dizendo a procedência. É o mesmo estado
+já documentado em 31/08 ("a dashboard sabe *quanto*, não sabe *em quê*"), só que
+agora declarado no dado em vez de implícito.
+
+**Dois testes existentes quebraram, e estavam certos em quebrar** — foram
+escritos para pegar fatura que ficou vazia por acidente (a purga na ordem errada
+de 15/09). Passaram a **dispensar** a fatura marcada, e a marca ganhou dois
+guardas próprios para não virar a forma de calá-los:
+
+1. **Fatura marcada "sem itemização" não pode ter lançamento nenhum** — na que
+   tem, a marca seria mentira e esconderia de novo o estrago que o teste vigia.
+2. **Ela tem de declarar de onde veio o total** (`total_fonte`) — é o único
+   número desta base que não pode ser conferido contra nada.
+
+Verificado pondo a marca numa fatura com lançamento: os dois falham. Suíte em
+**493 testes**, `conciliar.js` íntegro.
+
+**A conta não fechou com o que ela disse, e isso fica registrado em aberto:**
+2.080,36 + 144,24 = **R$ 2.224,60** (R$ 2.417,68 com o Amazon), não "quase 3k".
+Pode ser o defeito já conhecido do app, que imprime dois totais que discordam
+(30/08 e 22/09), ou outro número que ela viu. Só o PDF resolve.
+
+**E os dois Visa continuam marcados `pagamento_suspenso` desde 31/08, o que
+provavelmente não é mais verdade:** as faturas de Set/26 dos dois foram pagas
+**por débito automático** em 15/09. Débito automático é diferente do Black: sai
+sozinho, marcado ou não. Enquanto o flag estiver ligado, a dashboard deixa
+R$ 2.224,60 fora do "sai da conta" de outubro. Decisão dela, como foi com o
+0013 — perguntado, não mudado por dedução.
+
+Regras novas no importador do Bradesco, no nível da categoria (a pessoa segue o
+padrão que farmácia já usava nesta fonte): `RD SAUDE|DROGASIL|RAIA` e
+`HOSPITAL|CLINICA|LABORATORIO` → `saude`/Família; `PADARIA|PANIFIC|CONFEITARIA`
+→ `alimentacao`/Família. Sobraram **12 lançamentos, R$ 384,61** sem
+classificação, à espera dela: AdeiltonJose, Elas Belezaria II, Gisele Finardi
+Gondim, M S P Comercio de Alim (2), Maravilhas do Lar, Parque Dom Pedro (2),
+Via Colinas (2), Vila Mimosa (2).
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos
