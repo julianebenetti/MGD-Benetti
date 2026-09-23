@@ -1289,18 +1289,45 @@ concordam nas 7 parcelas pagas. **Antes de dizer que falta um pagamento,
 procurar pelo valor e pela data, não só pelo texto** — a mesma fonte grava a
 mesma conta com nomes diferentes em meses diferentes.
 
-**Duas coisas ficaram em aberto na `observacao` do plano, porque são dela:**
+**Ela respondeu a pergunta da Valentina na hora: *"da Valentina falta agosto e
+setembro"*.** Então *"as 2 da valentina"* são as duas em aberto, como no Luca, e
+o orçamento contava **uma**. O plano foi de R$ 12.109,38 para **R$ 13.280,48**, e
+a falta a cobrir com o caixa da Benetti UP para **R$ 8.673,45**.
 
-1. **A escola da Valentina tem agosto E setembro sem pagamento** no extrato (e
-   junho também, mais antigo e sem explicação), mas o orçamento conta **um** mês,
-   R$ 1.086,60. *"As 2 da valentina"* pode ser agosto+setembro — e aí faltam
-   ~R$ 1.086. Sem o boleto dela não há valor corrigido para gravar, e inventar um
-   seria exatamente o que a regra de ouro proíbe.
-2. **A linha prevista da escola do Luca em outubro (R$ 545,66) pode não
-   existir.** A projeção pela mediana só olha para trás; o carnê mostra 7 pagas e
-   2 em aberto e não dá para ver se há parcela depois de setembro. Ficou
-   projetada, marcada "previsto", porque desligá-la é `recorrentes_encerradas[]`
-   — decisão dela, não dedução minha.
+**E o "junho sem explicação" da Valentina era o mesmo erro de consulta, de
+novo.** Existe pagamento em **10/06, R$ 1.964,10, descrição `Escola Mundo
+Cores`** — dois meses depois de eu ter aprendido a lição no `Sesi` do Luca, no
+mesmo dia, procurando pela mesma conta. A escola aparece no extrato com quatro
+nomes diferentes ao longo do ano (`Mensalidade Mundo das Cores`, `Escola da
+Valentina`, `Escola Mundo Cores`, `Esc Inf Mundo Cores`). **Filtro por descrição
+não responde "esta conta foi paga?" nesta base** — o que responde é valor e data.
+
+**O orçamento ficou declarado como PISO, não teto, e isso está na `observacao`
+em vez de implícito.** Duas das quatro contas de segunda via são estimativa:
+
+| | Valor no orçamento | De onde vem |
+|---|---|---|
+| Luca ago + set | R$ 1.121,71 | **boleto real**, carnê do SESI |
+| Condomínio set | R$ 623,43 | valor fixo nos 8 meses |
+| Valentina ago | R$ 1.171,10 | boleto original, **sem** a multa de R$ 27,22 + mora que corre desde 10/08 |
+| Valentina set | R$ 1.086,60 | **mediana do histórico** — não existe boleto dela na base |
+
+A mensalidade da Valentina variou de R$ 1.076,10 a R$ 1.249,10 no ano, então a
+mediana é chute educado, não fato. **Os boletos dela resolvem os dois números** —
+e a conta do Luca mostra o tamanho do efeito: vieram R$ 30,39 acima do nominal.
+
+**Não criei dívida para a Valentina de setembro, e a assimetria é de propósito:**
+o Luca ganhou `escola_luca_set_2026` porque o carnê provou valor e vencimento; da
+Valentina de setembro não há documento nenhum, e gravar a mediana como saldo de
+dívida seria exatamente o número inventado com cara de fato que a regra de ouro
+proíbe. Ela entra no orçamento — onde está declarada como estimativa — e não na
+aba Dívidas.
+
+**Fica uma coisa em aberto, e é dela:** a linha prevista da escola do Luca em
+outubro (R$ 545,66) pode não existir. A projeção pela mediana só olha para trás; o
+carnê mostra 7 pagas e 2 em aberto e não dá para ver se há parcela depois de
+setembro. Ficou projetada, marcada "previsto", porque desligá-la é
+`recorrentes_encerradas[]` — decisão dela, não dedução minha.
 
 Suíte em **514 testes**, `conciliar.js` íntegro.
 
