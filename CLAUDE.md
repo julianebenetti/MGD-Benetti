@@ -1249,6 +1249,61 @@ verdade dela uma vez. O adiamento passa a ser testado mesmo quando ela não tem
 nenhum. Verificado desligando `adiamentoDe`: **3 testes falham**. Suíte em
 **514 testes**, `conciliar.js` íntegro.
 
+### O carnê do SESI: dois boletos, não um — e o "8/8" que eu tinha inventado (23/09)
+A Juliane mandou o print da Secretaria Virtual do SESI (aluno Luca Pietro
+Benetti, CE 299 Valinhos, RM 7014) logo depois de dizer que ia pagar *"as 2
+faturas da escola do luca"*. O documento corrigiu três coisas, e **duas delas
+eram erro meu, não dado faltando**.
+
+| | orçado por mim | o que o carnê diz |
+|---|---|---|
+| Boletos em aberto | 1 (setembro) | **2** — R$ 558,03 + R$ 563,68 |
+| Valor | 2 × R$ 545,66 = R$ 1.091,32 | **R$ 1.121,71** |
+| Vencimento | ao longo de outubro | **24/09/2026** |
+
+- **O orçamento de Out/26 estava R$ 576,05 barato**: R$ 545,66 porque eu contei
+  **um** mês em aberto e são **dois** (agosto e setembro), mais R$ 30,39 de multa
+  e mora. O `orcamento` foi de R$ 11.533,33 para **R$ 12.109,38**, e a falta a
+  cobrir com o caixa da Benetti UP de R$ 6.926,30 para **R$ 7.502,35**.
+- **Os dois vencem amanhã, 24/09** — o dinheiro sai em **setembro**, não em
+  outubro, se ela pagar na data. O plano continua gravado em Out/26 porque é lá
+  que ela tomou a decisão, mas a `observacao` diz isso em vez de deixar
+  implícito.
+- **A dívida de agosto estava com o valor nominal** (R$ 545,66) e com uma
+  afirmação minha que o carnê desmente: *"parcela 8 de 8 da matrícula anual"*.
+  Se fossem 8 parcelas com 7 pagas, haveria **um** boleto aberto; há dois, então
+  o carnê tem pelo menos 9. Corrigida para R$ 563,68, e criada
+  `escola_luca_set_2026` (R$ 558,03) — é a mesma decisão já documentada em 28/08
+  de tratar conta fixa em atraso como dívida.
+- **Qual boleto é de qual mês é dedução, e está marcado como tal.** Os dois vêm
+  rotulados "Parcela 1" com o mesmo vencimento e nossos números consecutivos
+  (1600259603/04). O que separa: `545,66 + 2% de multa + mora` dá R$ 563,68 com
+  40 dias de atraso (agosto) e R$ 558,03 com 9 (setembro). A aritmética fecha nos
+  dois, mas o papel não diz — então a `observacao` diz que é dedução.
+
+**O "buraco de julho" era da minha consulta, não do dado.** Procurei por
+descrição `Escola do Luca` e não achei julho, o que quase virou uma pergunta
+acusando o extrato de estar incompleto. O lançamento existe: **20/07, R$ 557,47,
+descrição `Sesi`** — paga com 5 dias de atraso e correção. O carnê e a dashboard
+concordam nas 7 parcelas pagas. **Antes de dizer que falta um pagamento,
+procurar pelo valor e pela data, não só pelo texto** — a mesma fonte grava a
+mesma conta com nomes diferentes em meses diferentes.
+
+**Duas coisas ficaram em aberto na `observacao` do plano, porque são dela:**
+
+1. **A escola da Valentina tem agosto E setembro sem pagamento** no extrato (e
+   junho também, mais antigo e sem explicação), mas o orçamento conta **um** mês,
+   R$ 1.086,60. *"As 2 da valentina"* pode ser agosto+setembro — e aí faltam
+   ~R$ 1.086. Sem o boleto dela não há valor corrigido para gravar, e inventar um
+   seria exatamente o que a regra de ouro proíbe.
+2. **A linha prevista da escola do Luca em outubro (R$ 545,66) pode não
+   existir.** A projeção pela mediana só olha para trás; o carnê mostra 7 pagas e
+   2 em aberto e não dá para ver se há parcela depois de setembro. Ficou
+   projetada, marcada "previsto", porque desligá-la é `recorrentes_encerradas[]`
+   — decisão dela, não dedução minha.
+
+Suíte em **514 testes**, `conciliar.js` íntegro.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos

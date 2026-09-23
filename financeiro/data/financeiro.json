@@ -72328,12 +72328,21 @@
     },
     {
       "id": "escola_luca_ago_2026",
-      "nome": "Escola Luca (SESI) — parcela 8/8",
+      "nome": "Escola Luca (SESI) — mensalidade de agosto (2a via)",
       "pessoa": "Luca",
-      "montante": 545.66,
-      "parcela_mensal": 545.66,
+      "montante": 563.68,
+      "parcela_mensal": 563.68,
       "meses_restantes": 1,
-      "observacao": "Venceu 15/08/26. Parcela 8 de 8 da matrícula anual — as outras 7 já foram pagas."
+      "observacao": "Venceu 15/08/26 e foi reemitido com vencimento 24/09/2026, nosso numero 1600259604 ou 1600259603 (o carne nao diz qual boleto e de qual mes; este e o de R$ 563,68). Valor = R$ 545,66 nominal + multa de 2% + mora, que e a conta que os dois boletos reproduzem. A observacao anterior dizia \"parcela 8 de 8 da matricula anual\" — isso era suposicao minha e esta ERRADA: o carne mostra 7 parcelas pagas e DUAS em aberto, ou seja tem pelo menos 9. Carne da Secretaria Virtual do SESI (print enviado por ela em 23/09/2026), aluno Luca Pietro Benetti, CE 299 Valinhos, RM 7014."
+    },
+    {
+      "id": "escola_luca_set_2026",
+      "nome": "Escola Luca (SESI) — mensalidade de setembro (2a via)",
+      "pessoa": "Luca",
+      "montante": 558.03,
+      "parcela_mensal": 558.03,
+      "meses_restantes": 1,
+      "observacao": "Venceu 15/09/26 e foi reemitido com vencimento 24/09/2026 (o outro dos dois nossos numeros 1600259603/1600259604; este e o de R$ 558,03). Valor = R$ 545,66 nominal + multa de 2% + mora de 9 dias. Que o de R$ 563,68 seja agosto e o de R$ 558,03 setembro e DEDUCAO pela aritmetica da multa e da mora, nao esta escrito no carne: os dois aparecem rotulados \"Parcela 1\" com o mesmo vencimento. Carne da Secretaria Virtual do SESI (print enviado por ela em 23/09/2026), aluno Luca Pietro Benetti, CE 299 Valinhos, RM 7014."
     },
     {
       "id": "parcelamento_fatura_0442_set26",
@@ -73224,7 +73233,7 @@
       "atualizado_em": "2026-09-05"
     },
     "Out/26": {
-      "orcamento": 11533.33,
+      "orcamento": 12109.38,
       "itens": {
         "prev|empréstimo consignado débito em conta": "pagar",
         "prev|juros e iof do cheque especial#iof": "pagar",
@@ -73250,8 +73259,8 @@
         "prev|faxina": "adiar",
         "prev|escola do luca": "pagar"
       },
-      "atualizado_em": "2026-09-23T22:55:04",
-      "observacao": "Decisoes da Juliane em 23/09/2026. Ela paga em outubro: as 2 faturas da escola do Luca, as 2 da Valentina e os 2 meses de condominio (a de setembro ficou em aberto e sera quitada agora), mais a fatura do Infinite 0442. O adiamento da escola do Luca ate dezembro foi CANCELADO por ela. O cartao Azul 3794 segue sem pagar, e o dinheiro dele cobre estas contas. ATENCAO 1: o plano_do_mes tem uma linha por conta por mes, entao a 2a via de setembro (condominio R$ 623,43 + Valentina R$ 1.086,60 + Luca R$ 545,66 = R$ 2.255,69) NAO aparece como linha propria na tela — esta somada aqui no orcamento. Set/26 continua marcado \"deixo\", que e o que de fato aconteceu naquele mes; mudar aquilo faria o fechamento de setembro dizer que ela pagou, e o extrato prova que nao. ATENCAO 2: o Infinite esta orcado em R$ 922,29, que e a foto do ciclo aberto. A fatura fechada deve trazer tambem a 1a parcela do parcelamento de 09/09 (R$ 408,13), indo a ~R$ 1.330,42. O orcamento pressupoe trazer ~R$ 6.926,30 do caixa da Benetti UP: salario + saldo dao R$ 4.607,03."
+      "atualizado_em": "2026-09-23T23:19:02",
+      "observacao": "Decisoes da Juliane em 23/09/2026. Ela paga: as 2 faturas em aberto da escola do Luca, as 2 da Valentina, os 2 meses de condominio (a de setembro ficou em aberto e sera quitada agora) e a fatura do Infinite 0442. O adiamento da escola do Luca ate dezembro foi CANCELADO por ela. O cartao Azul 3794 segue sem pagar, e o dinheiro dele cobre estas contas.\n\nORCAMENTO: R$ 12.109,38. O plano_do_mes tem uma linha por conta por mes, entao a 2a via de setembro e de agosto NAO aparece como linha propria na tela — esta somada aqui no orcamento: condominio de setembro R$ 623,43 + Valentina R$ 1.086,60 + os 2 boletos do Luca R$ 1.121,71 = R$ 2.831,74. Set/26 continua marcado \"deixo\", que e o que de fato aconteceu naquele mes; mudar aquilo faria o fechamento de setembro dizer que ela pagou, e o extrato prova que nao.\n\nCORRECAO DE 23/09 (carne do SESI): os 2 boletos do Luca sao R$ 558,03 + R$ 563,68 = R$ 1.121,71, e nao 2x R$ 545,66 = R$ 1.091,32 como eu havia orcado. Sao R$ 30,39 de multa e mora, mais R$ 545,66 que faltava porque eu tinha contado UM mes em aberto e sao DOIS (agosto e setembro). Total R$ 576,05 a mais que na versao anterior deste plano. E os dois vencem 24/09/2026 — amanha, ou seja o dinheiro sai em SETEMBRO, nao em outubro, se ela pagar na data.\n\nDUAS COISAS EM ABERTO, que dependem dela: (1) a escola da Valentina tem AGOSTO e SETEMBRO sem pagamento no extrato (e junho tambem, mais antigo e sem explicacao), mas o orcamento conta so UM mes, R$ 1.086,60 — \"as 2 da valentina\" pode ser agosto+setembro, e nesse caso falta cerca de R$ 1.086 aqui. Sem o boleto dela nao da para saber o valor corrigido. (2) a linha prevista \"escola do luca\" de outubro (R$ 545,66, pela mediana do historico) pode nao existir: o carne mostra 7 pagas + 2 em aberto e nao da para ver se ha parcela depois de setembro.\n\nATENCAO: o Infinite esta orcado em R$ 922,29, que e a foto do ciclo aberto. A fatura fechada deve trazer tambem a 1a parcela do parcelamento de 09/09 (R$ 408,13), indo a ~R$ 1.330,42. O orcamento pressupoe trazer ~R$ 7.502,35 do caixa da Benetti UP: salario + saldo dao R$ 4.607,03."
     }
   }
 }
