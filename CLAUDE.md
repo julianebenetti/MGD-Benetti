@@ -1031,6 +1031,74 @@ classificação, à espera dela: AdeiltonJose, Elas Belezaria II, Gisele Finardi
 Gondim, M S P Comercio de Alim (2), Maravilhas do Lar, Parque Dom Pedro (2),
 Via Colinas (2), Vila Mimosa (2).
 
+### O 3711 é cartão virtual: ler por número, cobrar junto (23/09)
+A Juliane corrigiu: *"os 2 cartões do bradesco que você está considerando
+separados, eles fazem parte da mesma fatura, só a numeração do cartão que mudou
+num determinado período"*. **A primeira metade estava certa e a segunda não
+era o que o dado mostrava** — e dizer isso antes de mexer valeu a pena, porque
+ela respondeu o que faltava: *"foi o cartão virtual que eu gerei e estou
+usando, o 3711"*.
+
+O que o dado dizia contra a renumeração:
+
+| | Lançamentos | Período |
+|---|---|---|
+| **3987** | 87 | 01/06 a 20/09, contínuo |
+| **3711** | 6 | 08/08 a 30/08 apenas |
+
+Renumeração faz o número antigo parar. O 3987 não parou: os dois têm compra
+nos **mesmos dias** (08/08 e 15/08), e os 6 lançamentos do 3711 são todos
+compra online (Mercado Livre, Shopee, Mercado Pago, TikTok Shop) — o padrão de
+cartão virtual, confirmado por ela.
+
+**Onde ela estava certa é o que importava: é uma fatura só.** Um documento, um
+vencimento, um débito — os R$ 1.270,97 de 15/09 quitaram os dois blocos. E essa
+era a causa-raiz do bug corrigido horas antes: o pagamento inteiro casado
+contra o total de **um** dos dois deixava o 3987 de Set/26 com `em_aberto` de
+−R$ 383,57.
+
+**Ler por número, cobrar junto** — e as duas metades têm motivo próprio:
+
+- **A leitura continua separada** porque a fatura imprime um subtotal por
+  bloco, e é só por ele que se sabe de quem é cada compra. Ler os dois como um
+  cartão só foi exatamente o erro de 15/09, que jogou a compra de um na conta
+  do outro.
+- **A cobrança é uma só** porque é uma só. `faturasDeCobranca()` agrupa por
+  cartão de cobrança + mês e soma total, pago e em aberto; o Painel e o
+  `contas-a-vencer.js` passaram a trabalhar sobre a fatura **como ela é
+  cobrada**. Set/26 e Out/26 deixaram de mostrar duas linhas: Out/26 é
+  **R$ 2.224,60** numa linha só, rotulada "(com o virtual 3711)".
+
+**`configuracoes.json` → `cartoes[].agrupa_cobranca_com`**, como toda decisão
+que muda com o tempo. `virtual: true` e a `observacao` guardam o que ela disse
+e quando.
+
+**A marca do mês não foi reescrita.** `plano_do_mes` de Set/26 guarda
+`fatura|3711|Set/26` e `fatura|3987|Set/26`, gravadas por ela em 05/09, quando
+eram duas. Trocar a chave apagaria decisão dela — a mesma razão pela qual
+`CHAVE_RECORRENTE` não pode mudar. `decisaoDaFatura()` consulta a chave do
+grupo e, na falta dela, **a marca antiga de qualquer número cobrado naquela
+fatura**.
+
+`fracaoEmpresaDaFatura()` passou a ler `f.cartoes` em vez de `f.cartao`: com um
+número só, as compras do virtual ficariam de fora e a fração sairia da parte
+errada da fatura.
+
+10 testes novos, **verificados quebrando o código de propósito** (com
+`faturasDeCobranca` devolvendo a lista intacta, 5 falham): o virtual não
+aparece como fatura própria, a fatura cobrada reúne os dois números, e o valor
+é a soma exata dos dois blocos — juntar a cobrança não pode perder nem dobrar
+dinheiro. Mais o par de sempre, **tem de existir cartão virtual cadastrado e
+mês em que os dois têm fatura**, senão os outros passariam vazios e o
+agrupamento sumiria sem ninguém notar. Suíte em **503 testes**, `conciliar.js`
+íntegro.
+
+**Continua em aberto, e é decisão dela:** os dois seguem com
+`pagamento_suspenso` desde 31/08, mas a fatura de Set/26 foi paga por **débito
+automático** em 15/09. Débito automático sai sozinho, marcado ou não — enquanto
+o flag estiver ligado, a dashboard deixa R$ 2.224,60 fora do "sai da conta" de
+outubro e o dinheiro sai mesmo assim.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos

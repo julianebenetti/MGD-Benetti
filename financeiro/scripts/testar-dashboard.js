@@ -1384,6 +1384,75 @@ function noEscopo(mv) {
        comSufixo.length ? comSufixo.join(' · ') : 'nenhuma — o teste acima não prova nada');
   }
 
+  // --- Cartão virtual: uma fatura, uma cobrança ---
+  //
+  // O 3711 é o cartão virtual que a Juliane gerou no app do Bradesco para
+  // comprar online (confirmado por ela em 23/09). Ele roda junto com o 3987 —
+  // os dois têm compra nos MESMOS dias, 08/08 e 15/08 — e o banco cobra os
+  // dois no mesmo documento: um vencimento, um débito (os R$ 1.270,97 de 15/09
+  // quitaram os dois blocos).
+  //
+  // Mostrar duas faturas pedia dois pagamentos onde existe um, e foi a causa de
+  // um erro real: o pagamento casado contra o total de um dos dois deixou o
+  // 3987 de Set/26 com em_aberto de −R$ 383,57.
+  {
+    const virtuais = (config.cartoes || []).filter(c => c.agrupa_cobranca_com);
+
+    // Sem cartão virtual cadastrado, os testes abaixo passariam vazios para
+    // sempre e o agrupamento poderia sumir sem ninguém notar.
+    ok('Existe cartão virtual cadastrado para o agrupamento ter o que provar',
+       virtuais.length > 0,
+       virtuais.length ? virtuais.map(c => `${c.final} → ${c.agrupa_cobranca_com}`).join(' · ')
+                       : 'nenhum — os testes de cobrança agrupada não provam nada');
+
+    for (const v of virtuais) {
+      const fisico = v.agrupa_cobranca_com;
+      // Meses em que os dois números têm fatura: são esses que provam a junção.
+      const meses = [...new Set((dados.faturas_cartao || [])
+        .filter(f => f.cartao === v.final)
+        .map(f => f.mes))]
+        .filter(m => (dados.faturas_cartao || []).some(f => f.cartao === fisico && f.mes === m));
+
+      ok(`Cartão virtual ${v.final} e o físico ${fisico} têm fatura no mesmo mês`,
+         meses.length > 0, meses.join(', ') || 'nenhum mês em comum');
+
+      for (const mes of meses) {
+        const partes = (dados.faturas_cartao || [])
+          .filter(f => f.mes === mes && (f.cartao === v.final || f.cartao === fisico));
+        const somaAberto = Math.round(partes.reduce((s, f) => s + Math.max(0, f.em_aberto || 0), 0) * 100) / 100;
+        const somaTotal  = Math.round(partes.reduce((s, f) => s + (f.total_fatura || 0), 0) * 100) / 100;
+
+        const visto = await pagina.evaluate(({ m, fis }) => {
+          const agrupadas = faturasDeCobranca(faturasQueVencemEm(m));
+          const g = agrupadas.find(f => f.cartao === fis);
+          return {
+            // Quantas linhas de fatura o mês tem para esses dois números.
+            linhas: agrupadas.filter(f => f.cartao === fis).length,
+            // O virtual não pode sobreviver como fatura própria.
+            soltas: agrupadas.filter(f => f.cartao !== fis && (f.cartoes || []).length === 1
+                                          && f.cartao !== fis).map(f => f.cartao),
+            cartoes: g ? (g.cartoes || []) : [],
+            aberto: g ? Math.round(g.em_aberto * 100) / 100 : null,
+            total: g ? Math.round(g.total_fatura * 100) / 100 : null
+          };
+        }, { m: mes, fis: fisico });
+
+        ok(`${mes}: o virtual ${v.final} não aparece como fatura própria`,
+           visto.linhas === 1 && !visto.soltas.includes(v.final),
+           `${visto.linhas} linha(s) para o ${fisico}, soltas: ${visto.soltas.join(',') || 'nenhuma'}`);
+
+        ok(`${mes}: a fatura cobrada reúne os dois números`,
+           visto.cartoes.includes(v.final) && visto.cartoes.includes(fisico),
+           visto.cartoes.join(' + ') || 'nenhum');
+
+        // O valor tem de ser a soma dos dois blocos: juntar a cobrança não pode
+        // perder nem dobrar dinheiro.
+        igual(`${mes}: a fatura cobrada soma os dois blocos (em aberto)`, visto.aberto, somaAberto, 0.02);
+        igual(`${mes}: a fatura cobrada soma os dois blocos (total)`, visto.total, somaTotal, 0.02);
+      }
+    }
+  }
+
   // --- Conta recorrente cadastrada à mão ---
   //
   // A projeção pelo histórico só enxerga o que passou pelo extrato pessoal, e

@@ -306,12 +306,15 @@
     },
     {
       "final": "3711",
-      "nome": "Bradesco II",
+      "nome": "Bradesco virtual",
       "descricao": "Bradesco Visa Platinum sem anuidade",
       "cor": "#cc092f",
       "pagamento_suspenso": true,
       "suspenso_desde": "2026-08-31",
-      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo.",
+      "virtual": true,
+      "observacao": "Cartao virtual gerado pela Juliane no app do Bradesco para compra online, confirmado por ela em 23/09/2026. Roda junto com o 3987 (os dois tem compra nos mesmos dias) e e cobrado no MESMO documento, com um vencimento e um debito so. A leitura continua por numero, porque a fatura imprime um subtotal por bloco; o que se junta e a cobranca.",
+      "agrupa_cobranca_com": "3987"
     }
   ],
   "contas_recorrentes": [

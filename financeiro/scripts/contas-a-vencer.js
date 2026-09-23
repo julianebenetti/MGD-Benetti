@@ -53,6 +53,54 @@ const ehPagamentoDeCartaoNoExtrato = t =>
 const pagamentoSuspenso = cartao =>
   (config.cartoes || []).some(c => c.final === cartao && c.pagamento_suspenso);
 
+// **Cartão virtual é cobrado na fatura do cartão que o gerou.** O 3711 é o
+// virtual que a Juliane gerou no app do Bradesco para comprar online; ele roda
+// junto com o 3987 e o banco cobra os dois no MESMO documento, com um
+// vencimento e um débito. Mandar duas linhas para o celular pediria dois
+// pagamentos onde existe um. A leitura continua por número — é o subtotal de
+// cada bloco que diz de quem é a compra —, o que se junta é a cobrança.
+const cartaoDeCobranca = cartao =>
+  ((config.cartoes || []).find(c => c.final === cartao) || {}).agrupa_cobranca_com || cartao;
+
+const faturasDeCobranca = lista => {
+  const grupos = new Map();
+  lista.forEach(f => {
+    const cart = cartaoDeCobranca(f.cartao);
+    const chave = `${cart}|${f.mes}`;
+    let g = grupos.get(chave);
+    if (!g) {
+      g = { ...f, cartao: cart, cartoes: [],
+            total_fatura: 0, pago: 0, em_aberto: 0 };
+      grupos.set(chave, g);
+    }
+    g.cartoes.push(f.cartao);
+    g.total_fatura += f.total_fatura || 0;
+    g.pago         += f.pago || 0;
+    g.em_aberto    += Math.max(0, f.em_aberto || 0);
+    if (f.vencimento && (!g.vencimento || f.vencimento < g.vencimento)) g.vencimento = f.vencimento;
+  });
+  return [...grupos.values()].map(g => {
+    if (g.cartoes.length > 1) {
+      const virtuais = g.cartoes.filter(c => c !== g.cartao);
+      const desc = ((config.cartoes || []).find(c => c.final === g.cartao) || {}).descricao || ('cartão ' + g.cartao);
+      g.cartao_descricao = `${desc} (com o virtual ${virtuais.join(', ')})`;
+    }
+    return g;
+  });
+};
+
+// A marca do mês foi gravada por NÚMERO antes de as duas virarem uma cobrança
+// só. Reescrever a chave apagaria decisão dela, então a marca antiga de
+// qualquer número cobrado nesta fatura continua valendo.
+const decisaoDaFatura = f => {
+  const itens = planoDoMes(f.mes).itens || {};
+  const chaves = [`fatura|${f.cartao}|${f.mes}`,
+                  ...(f.cartoes || []).map(c => `fatura|${c}|${f.mes}`)];
+  const marcada = chaves.find(k => itens[k]);
+  if (marcada) return itens[marcada];
+  return pagamentoSuspenso(f.cartao) ? 'adiar' : 'pagar';
+};
+
 // O plano do mês é o que a Juliane decidiu para ESTE mês: destas contas, quais
 // cabem no dinheiro que ela tem. Vale mais que o flag permanente do cartão —
 // é assim que ela retoma um cartão num mês sem desfazer a decisão geral.
@@ -292,15 +340,14 @@ const ateOndeSabe = extratoCobreAte();
 const compromissos = [];
 
 mesesDaJanela().forEach(mes => {
-  faturas.filter(f => f.mes === mes).forEach(f => compromissos.push({
+  faturasDeCobranca(faturas.filter(f => f.mes === mes)).forEach(f => compromissos.push({
     quando: f.vencimento,
     // Mesmo rótulo da tabela de vencimentos, para o alerta e a tela nomearem
     // a mesma fatura do mesmo jeito.
     titulo: `Fatura ${f.cartao_descricao || 'cartão ' + f.cartao}`,
     valor: f.em_aberto > 0 ? f.em_aberto : f.total_fatura,
     quitado: !(f.em_aberto > 0),
-    suspenso: f.em_aberto > 0
-      && decisaoDoItem(f.mes, `fatura|${f.cartao}|${f.mes}`, pagamentoSuspenso(f.cartao)) !== 'pagar',
+    suspenso: f.em_aberto > 0 && decisaoDaFatura(f) !== 'pagar',
     detalhe: f.pago > 0 ? `pago ${brl(f.pago)} de ${brl(f.total_fatura)}` : `total ${brl(f.total_fatura)}`,
     julgavel: true          // a fatura diz sozinha se foi paga: não depende do extrato
   }));

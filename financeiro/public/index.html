@@ -2112,6 +2112,60 @@
       return cartao ? cartao.descricao : numero;
     }
 
+    // **Cartão virtual é cobrado na fatura do cartão que o gerou.**
+    //
+    // A Juliane gerou o 3711 no app do Bradesco para comprar online e usa os
+    // dois ao mesmo tempo — o 3987 nunca parou (01/06 a 20/09, com compra nos
+    // MESMOS dias do 3711, 08/08 e 15/08). O banco cobra os dois no mesmo
+    // documento: um vencimento, um débito. Os R$ 1.270,97 de 15/09 quitaram os
+    // dois blocos de uma vez.
+    //
+    // Tratar como duas faturas mostrava duas contas a pagar onde existe uma, e
+    // foi a causa de um erro real: o pagamento inteiro casado contra o total de
+    // um dos dois deixava o 3987 de Set/26 com `em_aberto` de −R$ 383,57.
+    //
+    // **A leitura continua por número.** O documento imprime um subtotal por
+    // bloco, e é só por ele que se sabe de quem é cada compra — ler os dois
+    // como um cartão só foi exatamente o erro de 15/09, que jogou a compra de
+    // um na conta do outro. O que se junta aqui é a **cobrança**.
+    function cartaoDeCobranca(numero) {
+      const c = cadastroDoCartao(numero);
+      return (c && c.agrupa_cobranca_com) || numero;
+    }
+
+    // Junta, por cartão de cobrança + mês, as faturas que o banco cobra num
+    // documento só. Devolve a fatura como ela é cobrada, guardando em `cartoes`
+    // os números que ela reúne — quem precisa da origem de cada compra usa
+    // esse campo em vez de supor um cartão só.
+    function faturasDeCobranca(lista) {
+      const grupos = new Map();
+      lista.forEach(f => {
+        const cart = cartaoDeCobranca(f.cartao);
+        const chave = `${cart}|${f.mes}`;
+        let g = grupos.get(chave);
+        if (!g) {
+          g = { ...f, cartao: cart, cartoes: [], partes: [],
+                total_fatura: 0, pago: 0, em_aberto: 0, cobrado: 0 };
+          grupos.set(chave, g);
+        }
+        g.cartoes.push(f.cartao);
+        g.partes.push(f);
+        g.total_fatura += f.total_fatura || 0;
+        g.pago         += f.pago || 0;
+        g.em_aberto    += Math.max(0, f.em_aberto || 0);
+        g.cobrado      += f.cobrado || 0;
+        if (f.vencimento && (!g.vencimento || f.vencimento < g.vencimento)) g.vencimento = f.vencimento;
+        if (f.sem_itemizacao) g.sem_itemizacao = true;
+      });
+      return [...grupos.values()].map(g => {
+        if (g.cartoes.length > 1) {
+          const virtuais = g.cartoes.filter(c => c !== g.cartao);
+          g.cartao_descricao = `${descricaoCartao(g.cartao)} (com o virtual ${virtuais.join(', ')})`;
+        }
+        return g;
+      });
+    }
+
     // Configuração de abas
     const abasDisponibles = [
       { id: 'painel', nome: '🏠 Painel', visivel: true, ordem: 0 },
@@ -2755,8 +2809,12 @@
     // dentro dela. Devolve null quando a fatura não tem item importado — aí não
     // dá para dizer de quem é, e a tela avisa em vez de chutar.
     function fracaoEmpresaDaFatura(f) {
+      // Uma fatura pode cobrar mais de um número (cartão virtual). Olhar só
+      // `f.cartao` deixaria de fora as compras do virtual e a fração sairia da
+      // parte errada da fatura.
+      const origens = new Set((f.cartoes || [f.cartao]).map(c => `${c}|${f.mes}`));
       const itens = transacoesSemFiltroDeAno()
-        .filter(t => t.fatura_origem === `${f.cartao}|${f.mes}` && t.natureza === 'despesa' && t.valor > 0);
+        .filter(t => origens.has(t.fatura_origem) && t.natureza === 'despesa' && t.valor > 0);
       const total = itens.reduce((s, t) => s + t.valor, 0);
       if (!itens.length || total <= 0) return null;
       const empresa = itens.filter(t => (t.ambito || 'pessoal') === 'empresa')
@@ -3376,7 +3434,7 @@
       // Painel acusava. Agora a saída do cartão tem duas partes honestas:
       //   já saiu  — o pagamento de fatura que o extrato registra de fato;
       //   a pagar  — o que ainda está em aberto nas faturas que vencem no mês.
-      const faturas = faturasQueVencemEm(mes);
+      const faturas = faturasDeCobranca(faturasQueVencemEm(mes));
       const pagamentosNoExtrato = lancamentosDeCaixa(mes)
         .filter(t => t.origem === 'extrato_itau' && t.categoria === 'pagamento_fatura' && t.valor > 0);
       const cartaoJaPago = pagamentosNoExtrato.reduce((s, t) => s + t.valor, 0);
@@ -3394,8 +3452,20 @@
       // esse dinheiro não sairia da conta dela, porque os três cartões seguem
       // com `pagamento_suspenso`. Retomar um cartão num mês não desfaz a
       // decisão geral, e é justamente para isso que a marca do mês existe.
-      const faturaSaiDaConta = f =>
-        decisaoDoItem(mes, { chave: `fatura|${f.cartao}|${f.mes}`, suspenso: pagamentoSuspenso(f.cartao) }) === 'pagar';
+      // A marca do mês foi gravada por NÚMERO antes de as duas virarem uma
+      // cobrança só (Set/26 tem `fatura|3711|Set/26` e `fatura|3987|Set/26`).
+      // Reescrever a chave apagaria decisão dela, então a marca antiga de
+      // qualquer número cobrado nesta fatura continua valendo — é a mesma
+      // razão pela qual `CHAVE_RECORRENTE` não pode mudar.
+      const decisaoDaFatura = f => {
+        const itens = planoDoMes(mes).itens || {};
+        const chaves = [`fatura|${f.cartao}|${f.mes}`,
+                        ...(f.cartoes || []).map(c => `fatura|${c}|${f.mes}`)];
+        const marcada = chaves.find(k => itens[k]);
+        if (marcada) return itens[marcada];
+        return pagamentoSuspenso(f.cartao) ? 'adiar' : 'pagar';
+      };
+      const faturaSaiDaConta = f => decisaoDaFatura(f) === 'pagar';
       const cartaoAPagar = faturas.filter(faturaSaiDaConta).reduce((s, f) => s + emAbertoDe(f), 0);
       const cartaoSuspenso = faturas.filter(f => !faturaSaiDaConta(f)).reduce((s, f) => s + emAbertoDe(f), 0);
       const obrigacaoCartao = cartaoJaPago + cartaoAPagar;
