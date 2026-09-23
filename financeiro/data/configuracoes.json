@@ -282,8 +282,8 @@
       "nome": "Azul",
       "descricao": "Azul Itaú Infinite Visa",
       "cor": "#0066cc",
-      "pagamento_suspenso": false,
-      "observacao": "As faturas grandes são quitadas pela conta da Benetti UP no Nubank, não pela conta pessoal."
+      "pagamento_suspenso": true,
+      "observacao": "As faturas grandes são quitadas pela conta da Benetti UP no Nubank, não pela conta pessoal. Pagamento parado por decisao dela em 23/09/2026: \"vou usar o dinheiro do cartao azul e vou deixar o cartao da azul sem pagar\". O dinheiro que quitaria esta fatura (conta da Benetti UP no Nubank) vai cobrir conta pessoal de outubro. A fatura continua sendo cobrada e o saldo cresce no rotativo."
     },
     {
       "final": "0013",

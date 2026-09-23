@@ -1162,6 +1162,46 @@ adiado ao mesmo tempo. Mais os dois pares de sempre — **tem de existir conta
 adiada e compromisso fixo cadastrados**, senão os outros passariam vazios.
 Suíte em **512 testes**, `conciliar.js` íntegro.
 
+### O plano de Out/26, e o dinheiro do Azul cobrindo conta pessoal (23/09)
+*"eu decidi que vou pagar as escolas e o condomínio, vou usar o dinheiro do
+cartão azul e vou deixar o cartão da azul sem pagar"*. Primeiro plano gravado
+para um mês inteiro antes de ele começar.
+
+**O 3794 Azul virou `pagamento_suspenso: true`** — não por atraso, por escolha:
+o dinheiro que quitaria a fatura (R$ 15.128,18, conta da Benetti UP no Nubank)
+vai cobrir conta pessoal. É o inverso do fluxo já documentado em 30/08, quando
+empréstimo pessoal do Mercado Pago pagou fatura da empresa. O dinheiro circula
+nos dois sentidos, e esta é mais uma volta.
+
+**`plano_do_mes['Out/26']`**: 23 itens, orçamento R$ 7.809,69 — R$ 6.155,54 de
+conta de casa e utilidade, mais as duas faturas que ela paga (Visa Bradesco por
+débito automático e Amazon). Fora: as três faturas paradas (R$ 27.962,10), o
+IPTU, a faxina e a escola do Luca.
+
+**A aritmética que o plano assume, e que precisa estar escrita:** salário de
+25/09 + 25/10 menos o saldo negativo dão **R$ 4.607,03**. O plano custa
+R$ 7.809,69. Ele só fecha trazendo **~R$ 3.202,66 do caixa da Benetti UP** — e
+é por isso que o `orcamento` foi gravado como o custo do plano, com a
+`observacao` dizendo de onde vem a diferença. Sem essa nota, o número pareceria
+dinheiro que ela tem.
+
+**Duas suposições marcadas como tal na `observacao`:** locker (mantido) e
+faxina/IPTU (deixados, como em setembro) — ela não falou dos três, e seguir o
+padrão do mês anterior é diferente de ela ter decidido.
+
+**E uma contradição de 20 minutos, que não foi resolvida por dedução:** às 23h
+ela disse *"a escola do Luca vou acertar em dezembro"*; em seguida, *"vou pagar
+as escolas"*, no plural. O adiamento do Luca foi **mantido** — é a instrução
+mais específica e mais recente sobre aquela conta — e a pergunta foi devolvida
+a ela em vez de escolhida em silêncio. O plural pode ser modo de falar.
+
+**O que isso custa, dito na hora:** a fatura do Azul no rotativo a 11–14% ao mês
+é da ordem de **R$ 1.700 a R$ 2.100 por mês** sobre R$ 15.128,18 — o crédito
+mais caro de tudo que está aberto. E o 3794 é o cartão que carrega o tráfego
+pago da Benetti UP (R$ 173 mil em 2026): sem limite nele, a fonte de receita da
+empresa é a primeira coisa a parar. Registrado como consequência, não como
+objeção — a decisão é dela.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos

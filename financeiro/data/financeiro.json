@@ -73222,6 +73222,36 @@
         "fatura|3987|Set/26": "pagar"
       },
       "atualizado_em": "2026-09-05"
+    },
+    "Out/26": {
+      "orcamento": 7809.69,
+      "itens": {
+        "prev|empréstimo consignado débito em conta": "pagar",
+        "prev|juros e iof do cheque especial#iof": "pagar",
+        "prev|claro telefone e internet#da claro bl it 12778020": "pagar",
+        "prev|condomínio": "pagar",
+        "prev|escola da valentina": "pagar",
+        "prev|aluguel da vaga de carro": "pagar",
+        "fatura|3987|Out/26": "pagar",
+        "fatura|0013|Out/26": "pagar",
+        "prev|sanasa água": "pagar",
+        "prev|cpfl energia elétrica": "pagar",
+        "prev|claro telefone e internet#da claro celular 2": "pagar",
+        "prev|das do mei": "pagar",
+        "prev|locker de guarda móveis": "pagar",
+        "prev|pagamento do empréstimo da mãe cenira": "pagar",
+        "prev|juros e iof do cheque especial#juros limite da conta": "pagar",
+        "prev|seguro do itaú": "pagar",
+        "prev|van escolar do luca": "pagar",
+        "fatura|3794|Out/26": "adiar",
+        "fatura|0442|Out/26": "adiar",
+        "fatura|4846|Out/26": "adiar",
+        "prev|prefeitura de campinas": "adiar",
+        "prev|faxina": "adiar",
+        "prev|escola do luca": "adiar"
+      },
+      "atualizado_em": "2026-09-23T22:43:33",
+      "observacao": "Decisoes da Juliane em 23/09/2026: paga as escolas e o condominio, usa o dinheiro do cartao Azul (3794) e deixa a fatura do Azul sem pagar. Locker e faxina/IPTU seguiram o padrao de setembro — nao foram ditos. O orcamento pressupoe trazer ~R$ 3.202,66 do caixa da Benetti UP, porque salario + saldo dao R$ 4.607,03."
     }
   }
 }
