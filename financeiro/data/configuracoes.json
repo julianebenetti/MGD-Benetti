@@ -274,8 +274,8 @@
       "nome": "Infinite",
       "descricao": "Itaú Uniclass Infinite Visa",
       "cor": "#1a1a1a",
-      "pagamento_suspenso": false,
-      "observacao": "Carrega o tráfego pago da Benetti UP e é quitado pela conta da empresa no Nubank, não pela conta pessoal."
+      "pagamento_suspenso": true,
+      "observacao": "Pagamento parado por decisao dela em 23/09/2026: 'nao vou pagar a conta do black, nem o infinite 0442'. ATENCAO: a 1a parcela do parcelamento de 09/09 (R$ 408,13, venc. 01/10) e cobrada dentro desta fatura e NAO esta no snapshot de R$ 922,29 (ciclo ainda aberto) — a fatura fechada de outubro deve vir por volta de R$ 1.330,42."
     },
     {
       "final": "3794",
