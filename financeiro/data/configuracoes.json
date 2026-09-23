@@ -300,20 +300,21 @@
       "nome": "Bradesco",
       "descricao": "Bradesco Visa Platinum sem anuidade",
       "cor": "#cc092f",
-      "pagamento_suspenso": true,
+      "pagamento_suspenso": false,
       "suspenso_desde": "2026-08-31",
-      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo."
+      "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo.",
+      "observacao": "Pagamento retomado em 23/09/2026, confirmado pela Juliane. A fatura sai por DEBITO AUTOMATICO da conta corrente Bradesco (ag. 2389, c/c 555440-3) todo dia 15 — sai sozinha, marcada ou nao, entao mante-la como \"pagamento parado\" escondia do planejamento um dinheiro que ia sair de qualquer jeito."
     },
     {
       "final": "3711",
       "nome": "Bradesco virtual",
       "descricao": "Bradesco Visa Platinum sem anuidade",
       "cor": "#cc092f",
-      "pagamento_suspenso": true,
+      "pagamento_suspenso": false,
       "suspenso_desde": "2026-08-31",
       "motivo_suspensao": "Juliane decidiu em 31/08/26 parar de pagar as faturas dos cartões pessoais por um tempo.",
       "virtual": true,
-      "observacao": "Cartao virtual gerado pela Juliane no app do Bradesco para compra online, confirmado por ela em 23/09/2026. Roda junto com o 3987 (os dois tem compra nos mesmos dias) e e cobrado no MESMO documento, com um vencimento e um debito so. A leitura continua por numero, porque a fatura imprime um subtotal por bloco; o que se junta e a cobranca.",
+      "observacao": "Cartao virtual gerado pela Juliane no app do Bradesco para compra online, confirmado por ela em 23/09/2026. Roda junto com o 3987 (os dois tem compra nos mesmos dias) e e cobrado no MESMO documento, com um vencimento e um debito so. A leitura continua por numero, porque a fatura imprime um subtotal por bloco; o que se junta e a cobranca. Pagamento retomado em 23/09/2026, confirmado pela Juliane. A fatura sai por DEBITO AUTOMATICO da conta corrente Bradesco (ag. 2389, c/c 555440-3) todo dia 15 — sai sozinha, marcada ou nao, entao mante-la como \"pagamento parado\" escondia do planejamento um dinheiro que ia sair de qualquer jeito.",
       "agrupa_cobranca_com": "3987"
     }
   ],
@@ -393,6 +394,23 @@
       "data": "2026-09-04",
       "autorizado": false,
       "observacao": "PARC AUTOMATIC / CREDITO PARC AUTOMATICO. O proprio nome do lancamento diz 'automatico'. A Juliane nao reconhece (21/09/2026). O Itau CANCELOU integralmente em 21/09/2026 — credito, as 12 parcelas e o IOF, tudo revertido, soma zero."
+    }
+  ],
+  "compromissos_inadiaveis": [
+    {
+      "chave": "pagamento do empréstimo da mãe cenira",
+      "descricao": "Pagamento do empréstimo da mãe (Cenira)",
+      "definido_em": "2026-09-23",
+      "motivo": "\"o empréstimo da minha mãe sempre será pago\" (Juliane, 23/09/2026). A Cenira tomou o crédito no nome dela para emprestar à filha — atrasar aqui nao cobra juros de banco, cobra da mae. Entra sempre como \"pago\" no plano do mes e nunca e proposto para adiar."
+    }
+  ],
+  "recorrentes_adiadas": [
+    {
+      "chave": "escola do luca",
+      "descricao": "Escola do Luca",
+      "adiada_desde": "2026-10-01",
+      "acertar_em": "Dez/26",
+      "motivo": "\"a escola do Luca vou acertar em dezembro, até lá fica em aberto\" (Juliane, 23/09/2026). Diferente de recorrentes_encerradas: a obrigacao CONTINUA e acumula — o valor nao pode sumir da tela, so sai do \"sai da conta\" dos meses adiados e reaparece somado no mes do acerto."
     }
   ]
 }

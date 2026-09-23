@@ -1099,6 +1099,69 @@ automático** em 15/09. Débito automático sai sozinho, marcado ou não — enq
 o flag estiver ligado, a dashboard deixa R$ 2.224,60 fora do "sai da conta" de
 outubro e o dinheiro sai mesmo assim.
 
+### Três decisões dela, e duas eram tipos que a dashboard não sabia guardar (23/09)
+Depois de ver a conta de outubro — R$ 4.607,03 disponível contra R$ 9.482,10 de
+compromisso, falta de R$ 4.875,07 — a Juliane decidiu três coisas. A primeira
+era só configuração; as outras duas exigiram conceitos novos.
+
+**1. Visa do Bradesco: pagamento retomado.** `pagamento_suspenso: false` no 3987
+e no 3711. O motivo é o que importa para a próxima vez: **a fatura sai por
+débito automático**, e débito automático é diferente do Black — sai sozinho,
+marcado ou não. Manter o flag ligado escondia do planejamento R$ 2.224,60 que
+ia sair de qualquer jeito. (E a conta corrente Bradesco tinha R$ 0,41: em
+setembro ela cobriu com um Pix de R$ 1.271,00 no próprio dia 15.)
+
+**2. Compromisso que ela nunca adia.** *"o empréstimo da minha mãe sempre será
+pago"*. A Cenira tomou o crédito no próprio nome para emprestar à filha —
+atrasar aqui não cobra juros de banco, cobra da mãe. `configuracoes.json` →
+**`compromissos_inadiaveis[]`** (`chave`, `descricao`, `definido_em`, `motivo`).
+
+**Isso não muda soma nenhuma**, e é de propósito: conta recorrente já entra como
+"pago" por padrão. Existe para a decisão ficar **onde é lida** — a linha vem
+marcada "compromisso fixo, você não adia" no Painel e no alerta — e para nenhuma
+proposta de corte futura voltar a listá-la. Eu tinha acabado de propor adiar
+justamente essa conta.
+
+**3. Conta adiada com data para acertar.** *"a escola do Luca vou acertar em
+dezembro, até lá fica em aberto"*. **`recorrentes_adiadas[]`**: `chave`,
+`descricao`, `adiada_desde`, `acertar_em`, `motivo`.
+
+**É o oposto de `recorrentes_encerradas`, e confundir as duas custa caro nos
+dois sentidos.** Lá a obrigação deixa de existir, então mostrar um valor
+inventaria uma dívida — por isso aquele bloco mostra só o nome. **Aqui a
+obrigação continua e acumula**, então esconder o valor é que seria mentira.
+Também não é `pagamento_suspenso` nem `em_pagamento: false`, que não têm data de
+fim: aqui existe mês marcado, e é ele que decide até quando a linha sai da conta.
+
+O comportamento tem duas metades, e o teste também:
+
+- **Nos meses adiados** a linha sai do "sai da conta" (`somaPrevistas` e
+  `meuDinheiro` a excluem, como já faziam com a conta paga por outro caixa),
+  **nunca é acusada** de "não apareceu no extrato", e aparece na tela com valor
+  e com a data do acerto.
+- **No mês do acerto ela volta somada.** `mesesNoAcerto()` conta do mês em que o
+  adiamento começou até o do acerto, inclusive: Out + Nov + Dez = **3 ×
+  R$ 545,66 = R$ 1.636,98** em Dez/26. Prometer uma parcela só em dezembro
+  seria o mesmo erro de prometer gasto que não existe, ao contrário.
+
+`adiada_desde: 2026-10-01` não é decoração: **Set/26 continua como estava**, sem
+adiamento, porque a decisão é de 23/09 e setembro já tinha sido marcado "deixo"
+por outro motivo. Se a escola de setembro também entrar no acerto de dezembro, o
+número passa a R$ 2.182,64 — mas isso é dela dizer, não dedução minha.
+
+Implementado nos três lugares que têm cópia da regra (`public/index.html`,
+`scripts/contas-a-vencer.js` e o recálculo independente da suíte, que **falhou
+com razão** na primeira rodada: R$ 23.741,28 contra R$ 23.195,62 da tela,
+exatamente os R$ 545,66).
+
+9 testes novos, **verificados desligando `adiamentoDe` de propósito** (3 falham,
+incluindo o recálculo do "sai da conta"): a conta adiada é marcada como tal, o
+nome continua na tela, a tela diz quanto e até quando, ela volta somada no mês
+do acerto valendo N× a parcela, e o compromisso fixo vem marcado e nunca é
+adiado ao mesmo tempo. Mais os dois pares de sempre — **tem de existir conta
+adiada e compromisso fixo cadastrados**, senão os outros passariam vazios.
+Suíte em **512 testes**, `conciliar.js` íntegro.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos

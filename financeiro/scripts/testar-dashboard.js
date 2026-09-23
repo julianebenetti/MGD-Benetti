@@ -575,13 +575,40 @@ function noEscopo(mv) {
     };
     const anoMes = `${2000 + parseInt(mes.split('/')[1], 10)}-${String(MES_ORDEM.indexOf(mes.split('/')[0]) + 1).padStart(2, '0')}`;
 
+    // Conta adiada com data marcada para acertar sai do total dos meses adiados
+    // — o dinheiro não vai sair desta conta — e volta somada no mês do acerto.
+    // Não é o mesmo que encerrada: lá a obrigação acaba e o valor some de vez.
+    const ordemMes = m => {
+      if (!m) return -1;
+      const [nome, ano] = String(m).split('/');
+      return (2000 + parseInt(ano, 10)) * 12 + MES_ORDEM.indexOf(nome);
+    };
+    const adiada = (k, dataIso) => {
+      const r = (config.recorrentes_adiadas || []).find(x => x.chave === k);
+      if (!r) return null;
+      if (r.adiada_desde && dataIso < r.adiada_desde) return null;
+      if (r.acertar_em && ordemMes(mes) >= ordemMes(r.acertar_em)) return null;
+      return r;
+    };
+    const mesesDoAcerto = r => {
+      const ini = new Date(r.adiada_desde + 'T00:00:00');
+      return Math.max(1, ordemMes(r.acertar_em) - (ini.getFullYear() * 12 + ini.getMonth()) + 1);
+    };
+
     const previsto = Object.entries(perfil)
       .filter(([k, v]) => v.meses.size >= 3 && !jaNoMes.has(k) && med(v.valores) > 0)
       .filter(([k, v]) => {
         const dia = Math.min(Math.max(Math.round(med(v.dias)) || 15, 1), 28);
         return !encerrada(k, `${anoMes}-${String(dia).padStart(2, '0')}`);
       })
-      .reduce((s, [, v]) => s + Math.round(med(v.valores) * 100) / 100, 0);
+      .reduce((s, [k, v]) => {
+        const dia = Math.min(Math.max(Math.round(med(v.dias)) || 15, 1), 28);
+        const valor = Math.round(med(v.valores) * 100) / 100;
+        if (adiada(k, `${anoMes}-${String(dia).padStart(2, '0')}`)) return s;   // sai do total
+        const acerto = (config.recorrentes_adiadas || [])
+          .find(x => x.chave === k && ordemMes(x.acertar_em) === ordemMes(mes));
+        return s + (acerto ? Math.round(valor * mesesDoAcerto(acerto) * 100) / 100 : valor);
+      }, 0);
 
     const visto = await pagina.evaluate(m => {
       document.querySelector('[data-tab="painel"]').click();
@@ -1450,6 +1477,102 @@ function noEscopo(mv) {
         igual(`${mes}: a fatura cobrada soma os dois blocos (em aberto)`, visto.aberto, somaAberto, 0.02);
         igual(`${mes}: a fatura cobrada soma os dois blocos (total)`, visto.total, somaTotal, 0.02);
       }
+    }
+  }
+
+  // --- Conta adiada com data para acertar ---
+  //
+  // A Juliane decidiu (23/09): "a escola do Luca vou acertar em dezembro, até
+  // lá fica em aberto". Isso é o **oposto** de `recorrentes_encerradas`: lá a
+  // obrigação deixa de existir e mostrar um valor inventaria uma dívida; aqui a
+  // obrigação continua e **acumula**, e esconder o valor é que seria mentira.
+  //
+  // Por isso o teste tem dois lados: nos meses adiados o valor sai do total mas
+  // o nome fica na tela; no mês do acerto ele volta **somado**.
+  {
+    const adiadas = (config.recorrentes_adiadas || []).filter(r => r.chave && r.acertar_em);
+    ok('Existe conta adiada cadastrada para o bloco ter o que provar',
+       adiadas.length > 0,
+       adiadas.length ? adiadas.map(r => `${r.descricao} → ${r.acertar_em}`).join(' · ')
+                      : 'nenhuma — os testes abaixo não provam nada');
+
+    for (const r of adiadas) {
+      const ordemMes = m => {
+        const [nome, ano] = String(m).split('/');
+        return (2000 + parseInt(ano, 10)) * 12 + MES_ORDEM.indexOf(nome);
+      };
+      const ini = new Date(r.adiada_desde + 'T00:00:00');
+      const nMeses = ordemMes(r.acertar_em) - (ini.getFullYear() * 12 + ini.getMonth()) + 1;
+      // Um mês adiado (o primeiro) e o mês do acerto.
+      const mesAdiado = `${MES_ORDEM[ini.getMonth()]}/${String(ini.getFullYear()).slice(2)}`;
+
+      const visto = await pagina.evaluate(({ chave, mAdiado, mAcerto }) => {
+        const achar = (m) => (recorrentesFaltandoEm(m) || []).find(x => x.chave === chave);
+        const naTela = (m) => {
+          document.querySelector('[data-tab="painel"]').click();
+          document.getElementById('painel_mes').value = m;
+          renderizarPainel();
+          return document.getElementById('painel_vencimentos_criticos').innerText;
+        };
+        const a = achar(mAdiado), b = achar(mAcerto);
+        return {
+          adiado: a && { valor: a.valor, adiada: !!a.adiada, acertar_em: a.acertar_em },
+          acerto: b && { valor: b.valor, acerto: !!b.acerto, meses: b.meses_acumulados },
+          textoAdiado: naTela(mAdiado)
+        };
+      }, { chave: r.chave, mAdiado: mesAdiado, mAcerto: r.acertar_em });
+
+      ok(`${mesAdiado}: "${r.descricao}" está marcada como adiada`,
+         !!(visto.adiado && visto.adiado.adiada && visto.adiado.acertar_em === r.acertar_em),
+         JSON.stringify(visto.adiado));
+
+      // O nome não some: conta adiada que desaparece da tela vira conta
+      // esquecida, e a dívida continua correndo.
+      ok(`${mesAdiado}: o nome da conta adiada continua na tela`,
+         visto.textoAdiado.includes(r.descricao), r.descricao);
+
+      // E o valor aparece — aqui, ao contrário da encerrada, mostrar o número
+      // é obrigatório: a obrigação existe.
+      ok(`${mesAdiado}: a tela diz quanto está adiado e até quando`,
+         /adiado com data para acertar/i.test(visto.textoAdiado)
+           && visto.textoAdiado.includes(r.acertar_em),
+         visto.textoAdiado.split('\n').find(l => /adiado com data/i.test(l)) || '(sem linha)');
+
+      ok(`${r.acertar_em}: a conta volta somada, ${nMeses} meses acumulados`,
+         !!(visto.acerto && visto.acerto.acerto && visto.acerto.meses === nMeses),
+         JSON.stringify(visto.acerto));
+
+      igual(`${r.acertar_em}: o acerto vale ${nMeses}x a parcela`,
+            visto.acerto ? visto.acerto.valor : 0,
+            Math.round((visto.adiado ? visto.adiado.valor : 0) * nMeses * 100) / 100, 0.02);
+    }
+  }
+
+  // --- Compromisso que ela declarou que nunca adia ---
+  //
+  // "o empréstimo da minha mãe sempre será pago" (23/09). A Cenira tomou o
+  // crédito no próprio nome para emprestar à filha: atrasar aqui não cobra
+  // juros de banco, cobra da mãe. Não muda soma nenhuma — conta recorrente já
+  // entra como "pago" por padrão —, existe para a decisão ficar onde é lida.
+  {
+    const fixos = (config.compromissos_inadiaveis || []).filter(c => c.chave);
+    ok('Existe compromisso inadiável cadastrado para o bloco ter o que provar',
+       fixos.length > 0,
+       fixos.length ? fixos.map(c => c.descricao).join(' · ') : 'nenhum');
+
+    for (const c of fixos) {
+      const visto = await pagina.evaluate(({ chave, m }) => {
+        const r = (recorrentesFaltandoEm(m) || []).find(x => x.chave === chave);
+        return r && { inadiavel: !!r.inadiavel, adiada: !!r.adiada, detalhe: r.descricao };
+      }, { chave: c.chave, m: 'Out/26' });
+
+      ok(`"${c.descricao}" vem marcada como compromisso fixo`,
+         !!(visto && visto.inadiavel), JSON.stringify(visto));
+
+      // A marca não pode conviver com adiamento: as duas dizem coisas opostas
+      // sobre a mesma linha.
+      ok(`"${c.descricao}" nunca é adiada ao mesmo tempo`,
+         !!(visto && !visto.adiada), JSON.stringify(visto));
     }
   }
 

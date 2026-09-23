@@ -282,6 +282,32 @@ function perfilDasRecorrentes() {
     .filter(r => r.nMeses >= 3 && r.valor > 0);
 }
 
+// **Conta adiada não é conta encerrada.** Lá a obrigação deixa de existir e o
+// valor não pode aparecer; aqui ela continua e acumula, e tem data marcada para
+// acertar. Sai do que é cobrado nos meses adiados e volta somada no mês do
+// acerto. (Juliane, 23/09: "a escola do Luca vou acertar em dezembro".)
+const ordemDoMesNome = m => {
+  if (!m) return -1;
+  const [nome, ano] = String(m).split('/');
+  return (2000 + parseInt(ano, 10)) * 12 + MES_ORDEM.indexOf(nome);
+};
+const recorrentesAdiadas = () => (config.recorrentes_adiadas || []).filter(r => r.chave);
+const adiamentoDe = (chave, mes, data) => {
+  const r = recorrentesAdiadas().find(x => x.chave === chave);
+  if (!r) return null;
+  if (r.adiada_desde && data && data < r.adiada_desde) return null;
+  if (r.acertar_em && ordemDoMesNome(mes) >= ordemDoMesNome(r.acertar_em)) return null;
+  return r;
+};
+const mesesNoAcerto = r => {
+  if (!r || !r.adiada_desde || !r.acertar_em) return 1;
+  const ini = new Date(r.adiada_desde + 'T00:00:00');
+  return Math.max(1, ordemDoMesNome(r.acertar_em) - (ini.getFullYear() * 12 + ini.getMonth()) + 1);
+};
+// Compromisso que ela declarou que nunca adia. Não muda soma nenhuma — existe
+// para a decisão ficar onde é lida.
+const inadiavel = chave => (config.compromissos_inadiaveis || []).some(x => x.chave === chave);
+
 function recorrentesFaltandoEm(mes) {
   const jaTem = jaLancadaNoMes(mes);
   const ano = 2000 + parseInt(mes.split('/')[1], 10);
@@ -305,7 +331,18 @@ function recorrentesFaltandoEm(mes) {
     }))
     .filter(c => !jaTem.has(c.chave) && !jaProjetado.has(c.chave));
 
-  return [...doHistorico, ...cadastradas];
+  return [...doHistorico, ...cadastradas].map(r => {
+    const acerto = recorrentesAdiadas().find(x => x.chave === r.chave
+                                               && ordemDoMesNome(x.acertar_em) === ordemDoMesNome(mes));
+    if (acerto) {
+      const n = mesesNoAcerto(acerto);
+      return { ...r, acerto: true, meses_acumulados: n, acertar_em: acerto.acertar_em,
+               valor: Math.round(r.valor * n * 100) / 100, inadiavel: inadiavel(r.chave) };
+    }
+    const adiada = adiamentoDe(r.chave, mes, r.data);
+    return { ...r, adiada: !!adiada, acertar_em: adiada ? adiada.acertar_em : null,
+             inadiavel: inadiavel(r.chave) };
+  });
 }
 
 // Até onde o extrato importado enxerga, e em que meses ele está furado. Sem
@@ -372,14 +409,24 @@ mesesDaJanela().forEach(mes => {
     previsto: true,
     adiado: decisaoDoItem(mes, `prev|${r.chave}`, false) === 'adiar',
     fora_da_conta: !!r.fora_da_conta,
-    detalhe: r.cadastrada
-      ? `conta cadastrada, todo dia ${r.dia}${r.forma ? ' por ' + r.forma : ''}`
-      : r.minimo === r.maximo
-        ? `valor fixo nos últimos ${r.nMeses} meses`
-        : `mediana de ${r.nMeses} meses, variou de ${brl(r.minimo)} a ${brl(r.maximo)}`,
+    adiada: !!r.adiada,
+    acertar_em: r.acertar_em || null,
+    acerto: !!r.acerto,
+    inadiavel: !!r.inadiavel,
+    detalhe: r.adiada
+      ? `adiada — você vai acertar em ${r.acertar_em}`
+      : r.acerto
+        ? `acerto de ${r.meses_acumulados} meses acumulados`
+        : r.inadiavel
+          ? `compromisso fixo, você não adia`
+          : r.cadastrada
+            ? `conta cadastrada, todo dia ${r.dia}${r.forma ? ' por ' + r.forma : ''}`
+            : r.minimo === r.maximo
+              ? `valor fixo nos últimos ${r.nMeses} meses`
+              : `mediana de ${r.nMeses} meses, variou de ${brl(r.minimo)} a ${brl(r.maximo)}`,
     // Previsão de conta paga por outro caixa, ou de mês com extrato furado ou
     // ainda não alcançado, não pode ser chamada de atraso.
-    julgavel: !r.fora_da_conta && !extratoIncompletoNoMes(mes)
+    julgavel: !r.fora_da_conta && !r.adiada && !extratoIncompletoNoMes(mes)
               && !!ateOndeSabe && r.data <= ateOndeSabe
   }));
 });
@@ -392,7 +439,8 @@ const dataBr = d => d.split('-').reverse().join('/');
 // Conta que ela marcou "deixo para depois" não é cobrança nem esquecimento: é
 // decisão tomada. Sai das três listas e vai para um bloco próprio, que existe
 // só para o valor não sumir da tela.
-const cobravel = c => !c.quitado && !c.suspenso && !c.fora_da_conta && !c.adiado;
+const cobravel = c => !c.quitado && !c.suspenso && !c.fora_da_conta && !c.adiado && !c.adiada;
+const comAcertoMarcado = naJanela.filter(c => !c.quitado && c.adiada);
 const atrasadas = naJanela.filter(c => cobravel(c) && c.quando < HOJE && c.julgavel);
 const hoje     = naJanela.filter(c => cobravel(c) && c.quando === HOJE);
 const proximas = naJanela.filter(c => cobravel(c) && c.quando > HOJE);
@@ -433,6 +481,14 @@ if (daEmpresa.length) {
   daEmpresa.forEach(c => out.push(linha(c)));
   out.push('');
 }
+// Conta adiada com data marcada para acertar sai da cobrança, mas o valor não
+// pode sumir: a obrigação continua e acumula até o mês do acerto.
+if (comAcertoMarcado.length) {
+  out.push(`Adiado com data para acertar, ${brl(soma(comAcertoMarcado))} — a cobrança continua e o total volta somado:`);
+  comAcertoMarcado.forEach(c => out.push(linha(c)));
+  out.push('');
+}
+
 if (adiadas.length) {
   out.push(`Você decidiu deixar para depois, ${brl(soma(adiadas))} — não é cobrança, é o plano do mês:`);
   adiadas.forEach(c => out.push(linha(c)));

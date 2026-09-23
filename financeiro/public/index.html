@@ -3136,6 +3136,56 @@
       return !!r && (!r.encerrada_em || data >= r.encerrada_em);
     }
 
+    // **Conta adiada não é conta encerrada, e confundir as duas custa caro.**
+    //
+    // A Juliane decidiu (23/09): *"a escola do Luca vou acertar em dezembro,
+    // até lá fica em aberto"*. Isso é o oposto de `recorrentes_encerradas`, onde
+    // a obrigação deixa de existir e por isso o valor não pode aparecer em lugar
+    // nenhum (mostrar um número inventaria uma dívida). Aqui a obrigação
+    // **continua e acumula**: esconder o valor é que seria mentira.
+    //
+    // Também não é `pagamento_suspenso` nem `em_pagamento: false`, que são
+    // decisões sem data de fim. Aqui existe data marcada para acertar, e é ela
+    // que diz até quando a linha sai do "sai da conta" e em que mês o valor
+    // acumulado volta inteiro.
+    const ordemDoMesNome = m => {
+      if (!m) return -1;
+      const [nome, ano] = String(m).split('/');
+      return (2000 + parseInt(ano, 10)) * 12 + MES_ORDEM.indexOf(nome);
+    };
+
+    function recorrentesAdiadas() {
+      return (configuracoesGlobais.recorrentes_adiadas || []).filter(r => r.chave);
+    }
+
+    // O adiamento vale de `adiada_desde` até o mês do acerto, sem incluí-lo —
+    // no mês do acerto a conta volta, somada.
+    function adiamentoDe(chave, mes, data) {
+      const r = recorrentesAdiadas().find(x => x.chave === chave);
+      if (!r) return null;
+      if (r.adiada_desde && data && data < r.adiada_desde) return null;
+      if (r.acertar_em && ordemDoMesNome(mes) >= ordemDoMesNome(r.acertar_em)) return null;
+      return r;
+    }
+
+    // Quantos meses de uma conta adiada caem no acerto: do mês em que o
+    // adiamento começou até o mês do acerto, inclusive. É o que a tela mostra
+    // em vez de uma parcela só — prometer R$ 545,66 em dezembro quando são três
+    // meses seria o mesmo erro de prometer gasto que não existe, ao contrário.
+    function mesesNoAcerto(r) {
+      if (!r || !r.adiada_desde || !r.acertar_em) return 1;
+      const ini = new Date(r.adiada_desde + 'T00:00:00');
+      const desde = (ini.getFullYear()) * 12 + ini.getMonth();
+      return Math.max(1, ordemDoMesNome(r.acertar_em) - desde + 1);
+    }
+
+    // Compromisso que a Juliane declarou que nunca adia. Não muda soma nenhuma
+    // (conta recorrente já entra como "pago" por padrão) — existe para a decisão
+    // ficar onde é lida, e para nenhuma proposta de corte voltar a listá-la.
+    function inadiavel(chave) {
+      return (configuracoesGlobais.compromissos_inadiaveis || []).some(x => x.chave === chave);
+    }
+
     // O que se repete todo mês mas a dashboard não sabe o que é. Não entra na
     // previsão (ver PROJETAVEL), e por isso mesmo precisa ser dito: é a lista do
     // que vale a pena identificar, porque no dia em que ganhar categoria passa a
@@ -3233,7 +3283,21 @@
         }))
         .filter(c => !jaTem.has(c.chave) && !jaProjetado.has(c.chave));
 
-      return [...doHistorico, ...cadastradas].sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+      return [...doHistorico, ...cadastradas]
+        .map(r => {
+          const adiada = adiamentoDe(r.chave, mes, r.data);
+          const acerto = recorrentesAdiadas().find(x => x.chave === r.chave
+                                                    && ordemDoMesNome(x.acertar_em) === ordemDoMesNome(mes));
+          if (acerto) {
+            const n = mesesNoAcerto(acerto);
+            return { ...r, acerto: true, meses_acumulados: n,
+                     valor: Math.round(r.valor * n * 100) / 100,
+                     acertar_em: acerto.acertar_em, inadiavel: inadiavel(r.chave) };
+          }
+          return { ...r, adiada: !!adiada, acertar_em: adiada ? adiada.acertar_em : null,
+                   inadiavel: inadiavel(r.chave) };
+        })
+        .sort((a, b) => (a.data || '').localeCompare(b.data || ''));
     }
 
     // Faturas que vencem no mês. A chave é cartão + mês: filtrar só pelo mês
@@ -3385,7 +3449,7 @@
             .some(t => CHAVE_RECORRENTE(t.descricao) === c.chave.slice(5));
           // Conta paga por outro caixa não deixa rastro no extrato dela: dizer
           // que não foi paga seria acusação sem prova nenhuma.
-          if (c.fora_da_conta) semDado.push(c);
+          if (c.fora_da_conta || c.adiada) semDado.push(c);
           else if (virou) cumpriu.push(c);
           else if (extratoFalho) semDado.push(c);
           else if (ateOndeSabe && c.quando <= ateOndeSabe) furou.push(c);
@@ -3495,7 +3559,12 @@
       // Conta cadastrada que sai da conta da Benetti UP não é saída do caixa
       // dela: aparece na lista de vencimentos para ser lembrada, mas somar aqui
       // cobraria da Juliane um boleto que a empresa paga.
-      const somaPrevistas = previstas.filter(r => !r.fora_da_conta).reduce((s, r) => s + r.valor, 0);
+      // Conta adiada com data para acertar sai do total do mês igual à paga por
+      // outro caixa: o dinheiro não vai sair desta conta neste mês. A diferença
+      // é que ela **volta somada** no mês do acerto, e o aviso abaixo diz quanto.
+      const somaPrevistas = previstas.filter(r => !r.fora_da_conta && !r.adiada)
+                                     .reduce((s, r) => s + r.valor, 0);
+      const somaAdiadas = previstas.filter(r => r.adiada).reduce((s, r) => s + r.valor, 0);
       const somaOutroCaixa = previstas.filter(r => r.fora_da_conta).reduce((s, r) => s + r.valor, 0);
 
       const saidaTotal = obrigacaoCartao + somaSaidasFora + somaPrevistas;
@@ -3626,11 +3695,22 @@
           previsto: true,
           cadastrada: !!r.cadastrada,
           fora_da_conta: !!r.fora_da_conta,
-          detalhe: r.cadastrada
-            ? `${rotuloCategoria(r.categoria)} · conta cadastrada, todo dia ${r.dia}${r.forma ? ' por ' + r.forma : ''}${r.fora_da_conta ? ' · <b>sai da conta da Benetti UP</b>' : ''}`
-            : r.fixa
-              ? `${rotuloCategoria(r.categoria)} · valor fixo nos últimos ${r.nMeses} meses`
-              : `${rotuloCategoria(r.categoria)} · média de ${r.nMeses} meses, variou de ${moeda(r.minimo)} a ${moeda(r.maximo)}`,
+          adiada: !!r.adiada,
+          acertar_em: r.acertar_em || null,
+          acerto: !!r.acerto,
+          meses_acumulados: r.meses_acumulados || null,
+          inadiavel: !!r.inadiavel,
+          detalhe: r.adiada
+            ? `${rotuloCategoria(r.categoria)} · <b>adiada — você vai acertar em ${r.acertar_em}</b>`
+            : r.acerto
+              ? `${rotuloCategoria(r.categoria)} · <b>acerto de ${r.meses_acumulados} meses acumulados</b>`
+              : r.inadiavel
+                ? `${rotuloCategoria(r.categoria)} · <b>compromisso fixo, você não adia</b>`
+                : r.cadastrada
+                  ? `${rotuloCategoria(r.categoria)} · conta cadastrada, todo dia ${r.dia}${r.forma ? ' por ' + r.forma : ''}${r.fora_da_conta ? ' · <b>sai da conta da Benetti UP</b>' : ''}`
+                  : r.fixa
+                    ? `${rotuloCategoria(r.categoria)} · valor fixo nos últimos ${r.nMeses} meses`
+                    : `${rotuloCategoria(r.categoria)} · média de ${r.nMeses} meses, variou de ${moeda(r.minimo)} a ${moeda(r.maximo)}`,
           cartao: null,
           chave: `prev|${r.chave}`
         }))
@@ -3640,7 +3720,7 @@
       const emAberto = compromissos.filter(c => !c.quitado && !c.suspenso);
       // O dinheiro do plano é o dela. O que a empresa paga fica visível na
       // tabela, e fora de toda soma.
-      const meuDinheiro = c => !c.fora_da_conta;
+      const meuDinheiro = c => !c.fora_da_conta && !c.adiada;
 
       // Só o que ainda não aconteceu entra no plano: lançamento já no extrato é
       // fato, e marcar "vou pagar" nele não decidiria nada.
@@ -3714,7 +3794,7 @@
                 // conversa: ela não deixa rastro no extrato pessoal, então
                 // "não apareceu no extrato" seria acusação sem prova nenhuma —
                 // a mesma regra que já protege o fechamento do plano.
-                const julgavelPeloExtrato = c.previsto && !c.fora_da_conta
+                const julgavelPeloExtrato = c.previsto && !c.fora_da_conta && !c.adiada
                   && c.quando && dias !== null && dias < 0;
                 const foraDoAlcance = julgavelPeloExtrato
                   && (!ateOndeOExtratoVe || c.quando > ateOndeOExtratoVe);
@@ -3759,6 +3839,14 @@
             ${semProvaNoExtrato.map(c => c.titulo).join(' · ')}.
             Se você já pagou, elas só saem daqui quando o extrato novo for importado —
             a dashboard não inventa pagamento que não viu.
+          </p>` : ''}
+
+          ${somaAdiadas > 0.005 ? `
+          <p class="plano-nota" style="margin-top:10px">
+            <b>${moeda(somaAdiadas)} adiado com data para acertar</b>, fora do total acima:
+            ${previstas.filter(r => r.adiada).map(r => `${r.descricao} — você vai acertar em <b>${r.acertar_em}</b>`).join(' · ')}.
+            O valor sai da conta deste mês, não da sua dívida: a cobrança continua e o
+            total aparece somado no mês do acerto.
           </p>` : ''}
 
           ${(() => {
