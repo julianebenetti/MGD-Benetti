@@ -75,9 +75,21 @@ function compararPlano(aTela, aRepo) {
       // mais recente — e o stash guarda justamente uma foto do PASSADO, tirada
       // antes do `git pull`. Sem este teste o script desfaz decisao nova com
       // decisao velha, em silencio, que e o erro que ele existe para impedir.
+      // Comparar texto de data so responde quando os dois lados tem a mesma
+      // precisao. A tela gravava so o dia (`slice(0,10)`) e os scripts gravam
+      // dia+hora, entao "2026-09-23" < "2026-09-23T23:57:44" ordena como mais
+      // velho sendo que a verdade e "mesmo dia, hora desconhecida". Dizer
+      // "a tela e mais velha" ali seria afirmar o que nao se sabe — e o mes
+      // seria recusado pelo motivo errado, com a pessoa achando que esta
+      // provado.
       const ta = a.atualizado_em || null, tb = b.atualizado_em || null;
-      const quemEMaisNovo = (!ta || !tb) ? 'nao_da_para_saber'
-        : ta > tb ? 'tela' : ta < tb ? 'repo' : 'empate';
+      const dia = t => t ? String(t).slice(0, 10) : null;
+      const temHora = t => t && String(t).length > 10;
+      let quemEMaisNovo;
+      if (!ta || !tb) quemEMaisNovo = 'nao_da_para_saber';
+      else if (dia(ta) !== dia(tb)) quemEMaisNovo = dia(ta) > dia(tb) ? 'tela' : 'repo';
+      else if (!temHora(ta) || !temHora(tb)) quemEMaisNovo = 'mesmo_dia_sem_hora';
+      else quemEMaisNovo = ta > tb ? 'tela' : ta < tb ? 'repo' : 'empate';
       achados.push({ mes, tipo: 'diverge', a, b, itens, orcDifere, obsDifere, ta, tb, quemEMaisNovo });
     }
   }
@@ -181,6 +193,11 @@ function main() {
       console.log('     ⚠ A TELA ESTÁ MAIS VELHA QUE O REPO. O stash é uma foto tirada antes do');
       console.log('       `git pull`, então ela pode ser decisão já superada. Este mês NÃO é');
       console.log('       trazido — para trazer assim mesmo: --plano-da-tela ' + p.mes);
+    } else if (p.quemEMaisNovo === 'mesmo_dia_sem_hora') {
+      console.log('     ⚠ MESMO DIA, e um dos lados não diz a hora — NÃO dá para saber qual é');
+      console.log('       mais novo. Não é chute a favor de ninguém: o mês NÃO é trazido.');
+      console.log('       Quem decide aqui é você, pelo conteúdo. Para trazer a tela mesmo');
+      console.log('       assim: --plano-da-tela ' + p.mes);
     } else if (p.quemEMaisNovo === 'nao_da_para_saber') {
       console.log('     ⚠ Um dos lados não diz quando foi marcado. Sem saber qual é mais novo,');
       console.log('       este mês NÃO é trazido — para trazer assim mesmo: --plano-da-tela ' + p.mes);
@@ -277,7 +294,9 @@ function main() {
   console.log('\n▸ O QUE SERIA GRAVADO EM ' + ARQ_REPO + '\n');
   console.log(`  ${mudouPlano} mês(es) de plano vindos da tela`);
   for (const p of recusados) {
-    const motivo = p.quemEMaisNovo === 'repo' ? 'a tela é mais velha' : 'não dá para saber qual é mais novo';
+    const motivo = p.quemEMaisNovo === 'repo' ? 'a tela é mais velha'
+      : p.quemEMaisNovo === 'mesmo_dia_sem_hora' ? 'mesmo dia e a tela não diz a hora — não dá para provar a ordem'
+      : 'não dá para saber qual é mais novo';
     console.log(`  ${p.mes}: NÃO trazido — ${motivo} (tela ${p.ta || '?'} · repo ${p.tb || '?'})`);
     console.log(`     para trazer assim mesmo: --plano-da-tela ${p.mes}`);
   }

@@ -1441,8 +1441,32 @@ Agora o mês só é trazido quando o da tela é maior que o do repo; senão é
 assim exige `--plano-da-tela <mes>` escrito à mão. Sem `atualizado_em` de um dos
 lados, também recusa — não dá para saber, e não saber não é permissão.
 
-Verificado nos três caminhos: tela mais velha recusa, `--plano-da-tela` força,
-tela mais nova traz normalmente sem encostar no resto do mês.
+**E na execução seguinte o próprio script mentiu, de um jeito discreto.** Ele
+respondeu *"A TELA ESTÁ MAIS VELHA QUE O REPO"* comparando `2026-09-23` com
+`2026-09-23T23:57:44`. Ordena como mais velho, e a conclusão até estava certa —
+mas **a afirmação não estava provada**: é o mesmo dia, e a tela não diz a hora.
+
+A causa é que os dois lados gravavam com precisão diferente: a tela fazia
+`toISOString().slice(0, 10)` e os scripts, `slice(0, 19)`. Comparar texto de
+data só responde quando a precisão é a mesma.
+
+Dois consertos, e o primeiro é o que importa para o futuro:
+
+1. **A tela passou a gravar `slice(0, 19)`**, com hora. É o campo que decide
+   quem manda num merge; gravá-lo sem hora torna a pergunta indecidível
+   exatamente no dia em que ela é feita — porque um conflito destes quase sempre
+   acontece no mesmo dia da edição.
+2. **Mesmo dia com um dos lados sem hora virou uma resposta própria**,
+   `mesmo_dia_sem_hora`, que recusa o mês dizendo *"não dá para provar a ordem"*
+   em vez de *"a tela é mais velha"*. As duas recusam igual; o que muda é a
+   pessoa saber se aquilo foi demonstrado ou não. **Num arquivo que existe para
+   não perder decisão, dizer "não sei" é um resultado, e fingir que sabe é o
+   defeito.**
+
+Verificado nos quatro caminhos: dia anterior recusa por ser velha, **mesmo dia
+sem hora recusa por não dar para saber**, dia seguinte traz, mesmo dia com hora
+maior traz. `--plano-da-tela <mes>` força em qualquer caso, sem encostar no
+resto do mês.
 
 **A regra que define o script: ele carrega só o que sabe carregar, e grita o
 resto.** Diferença em campo que não é decisão (valor, data, parcela, natureza)

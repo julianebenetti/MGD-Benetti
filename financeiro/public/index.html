@@ -3360,7 +3360,7 @@
       dadosGlobais.plano_do_mes = dadosGlobais.plano_do_mes || {};
       const plano = dadosGlobais.plano_do_mes[mes] || { orcamento: null, itens: {} };
       plano.itens[chave] = decisao;
-      plano.atualizado_em = new Date().toISOString().slice(0, 10);
+      plano.atualizado_em = new Date().toISOString().slice(0, 19);  // com hora: e o que decide qual lado e mais novo num merge (comparar-dados.js)
       dadosGlobais.plano_do_mes[mes] = plano;
       // Redesenha na hora e salva depois: o salvamento é uma ida ao servidor, e
       // esperar por ela faria o botão parecer que não respondeu ao clique.
@@ -3373,7 +3373,7 @@
       const plano = dadosGlobais.plano_do_mes[mes] || { orcamento: null, itens: {} };
       const n = parseFloat(String(valor).replace(/\./g, '').replace(',', '.'));
       plano.orcamento = isNaN(n) || n <= 0 ? null : n;
-      plano.atualizado_em = new Date().toISOString().slice(0, 10);
+      plano.atualizado_em = new Date().toISOString().slice(0, 19);  // com hora: e o que decide qual lado e mais novo num merge (comparar-dados.js)
       dadosGlobais.plano_do_mes[mes] = plano;
       renderizarPainel();
       salvarDadosAutomatico();
