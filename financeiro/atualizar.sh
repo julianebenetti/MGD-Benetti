@@ -49,8 +49,20 @@ devolver_stash() {
     if ! git stash pop; then
       echo
       echo "→ ATENÇÃO: a edição não voltou sozinha (conflito no merge)."
-      echo "  Ela continua guardada — rode 'git stash list' e 'git stash show -p'"
-      echo "  pra ver o que é, e resolva com cuidado antes de mexer em mais nada."
+      echo "  Ela continua guardada, nada foi descartado."
+      echo
+      echo "  Se o conflito for em financeiro/data/financeiro.json, NÃO resolva à"
+      echo "  mão: são 2 MB numa linha só. Os dois lados não são versões rivais do"
+      echo "  mesmo texto — a tela manda no plano do mês e na classificação, o"
+      echo "  repositório manda no que veio de documento. Junta assim:"
+      echo
+      echo "    git restore --staged --worktree financeiro/data/financeiro.json"
+      echo "    git show 'stash@{0}:financeiro/data/financeiro.json' > /tmp/da-tela.json"
+      echo "    node financeiro/scripts/comparar-dados.js /tmp/da-tela.json financeiro/data/financeiro.json"
+      echo
+      echo "  O comparador só lê. Ele mostra o que difere e grita o que não sabe"
+      echo "  trazer. Depois de conferir, repita com --trazer-decisoes --aplicar,"
+      echo "  reinicie o PM2, e só então 'git stash drop'."
       return 1
     fi
   fi

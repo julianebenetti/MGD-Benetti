@@ -1388,6 +1388,62 @@ cobrado". Enquanto ela estiver atrasando, toda conta com desconto de
 pontualidade vai ser projetada barata demais. Não dá para corrigir sozinho —
 depende de saber quais contas têm desconto, e só o boleto diz.
 
+### O `stash pop` deu conflito no `financeiro.json`, e resolver à mão não era opção (24/09)
+O `deploy` rodou e **funcionou** — a dashboard subiu com tudo (2304 lançamentos,
+PM2 reiniciado, health ok). O que falhou foi a última etapa: devolver a edição
+pendente que o `atualizar.sh` tinha guardado antes do `git pull`. Os dois lados
+mexeram em `financeiro/data/financeiro.json` — ela marcando coisa na tela do VPS,
+eu importando o carnê do SESI e o boleto da Valentina aqui — e o `git stash pop`
+parou com conflito.
+
+**O script fez a coisa certa**, exatamente como foi desenhado em 29/08: parou,
+não descartou nada, manteve o stash e avisou. O problema é o conselho que ele
+dava a seguir — *"resolva com cuidado"* — porque **`financeiro.json` tem 2 MB
+numa linha só**, e marcador de conflito no meio disso não é coisa que se resolva
+lendo.
+
+**A percepção que destrava:** os dois arquivos não são versões rivais do mesmo
+texto. São duas fontes de verdade sobre coisas **diferentes**.
+
+| Manda | No quê | Por quê |
+|---|---|---|
+| **A tela** | `plano_do_mes`, e `categoria`/`pessoa`/`ambito`/`fixa_variavel`/`nota_classificacao`/`observacao` do lançamento | é decisão de quem olhou; nenhum importador sabe melhor |
+| **O repositório** | fatura, extrato, dívida, holerite — tudo que veio de documento | a tela nunca soube desses números |
+
+Juntar é escolher **campo a campo**, não linha a linha. É por isso que o `git`
+não tem como resolver sozinho: ele compara texto, e a informação que decide está
+no significado do campo.
+
+**`scripts/comparar-dados.js`**, só leitura por padrão:
+
+```
+node scripts/comparar-dados.js <da-tela.json> <do-repo.json>
+node scripts/comparar-dados.js <da-tela.json> <do-repo.json> --trazer-decisoes --aplicar
+```
+
+O arquivo da tela sai do stash **sem aplicar o stash**:
+`git show 'stash@{0}:financeiro/data/financeiro.json' > /tmp/da-tela.json`.
+
+**A regra que define o script: ele carrega só o que sabe carregar, e grita o
+resto.** Diferença em campo que não é decisão (valor, data, parcela, natureza)
+**nunca** é trazida — aparece numa lista própria, agrupada por campo, com o
+aviso de que precisa de decisão humana. Lançamento que existe só na tela também
+não é criado, e é contado na saída. **Merge que resolve em silêncio é pior que
+conflito**, porque ninguém fica sabendo o que sumiu; o conflito pelo menos para
+a máquina.
+
+E grava cópia do anterior em `.antes-do-merge` antes de escrever.
+
+**Verificado num caso montado de propósito** (tela com plano alterado, um item
+desmarcado, uma categoria trocada, um valor trocado e um lançamento novo): o
+plano e a categoria vêm, o valor **não** vem e é denunciado, o lançamento só da
+tela **não** é criado e é contado, e `data/financeiro.json` não foi tocado em
+nenhum momento do teste.
+
+**O `atualizar.sh` passou a imprimir o caminho inteiro** quando o conflito é
+nesse arquivo, em vez de só dizer "resolva com cuidado" — a mensagem de erro é
+lida exatamente no momento em que ninguém lembra o que fazer.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos
@@ -3008,6 +3064,11 @@ valor na base atual.
   do Bradesco (ag. 2389, c/c 555440-3). Confere a leitura contra o saldo impresso
   e **descobre o sinal do saldo inicial** em vez de supor; recusa gravar se não
   fechar.
+- `comparar-dados.js <da-tela.json> <do-repo.json> [--trazer-decisoes] [--aplicar]`
+  — compara dois `financeiro.json` e traz de volta a decisão da tela (plano do
+  mês e classificação) sem perder o que foi importado. É o caminho quando o
+  `git stash pop` do `atualizar.sh` dá conflito nesse arquivo. Diferença em
+  campo que não é decisão nunca é trazida em silêncio: aparece na saída.
 - `conciliar.js` — só leitura. Audita as três fontes: o que falta, o que está
   contado duas vezes e o que não bate. Rode depois de cada importação.
 - `classificar.js aplicar|exportar|importar` — aplica as regras, gera planilha
