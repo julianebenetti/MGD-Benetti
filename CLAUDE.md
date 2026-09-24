@@ -1424,6 +1424,26 @@ node scripts/comparar-dados.js <da-tela.json> <do-repo.json> --trazer-decisoes -
 O arquivo da tela sai do stash **sem aplicar o stash**:
 `git show 'stash@{0}:financeiro/data/financeiro.json' > /tmp/da-tela.json`.
 
+**Na primeira vez que rodou de verdade, o script estava errado — e o erro era
+grave.** O relatório mostrou o plano de Out/26 da tela marcando **"adiar"** no
+Infinite, no condomínio e nas duas escolas: exatamente as quatro contas que ela
+tinha acabado de decidir pagar. Aplicar teria desfeito a decisão de ontem com
+uma foto de antes de ontem.
+
+**A regra "a tela manda no plano" tem uma condição que eu não tinha escrito: só
+vale se a tela for mais nova.** E o stash é, por definição, uma foto tirada
+**antes** do `git pull` — ele guarda o passado. Supor que o passado é a versão
+boa é o mesmo erro do script, ao contrário.
+
+`atualizado_em` já existia no `plano_do_mes` e é exatamente quem responde isso.
+Agora o mês só é trazido quando o da tela é maior que o do repo; senão é
+**recusado com o motivo impresso** e as duas datas lado a lado, e trazer mesmo
+assim exige `--plano-da-tela <mes>` escrito à mão. Sem `atualizado_em` de um dos
+lados, também recusa — não dá para saber, e não saber não é permissão.
+
+Verificado nos três caminhos: tela mais velha recusa, `--plano-da-tela` força,
+tela mais nova traz normalmente sem encostar no resto do mês.
+
 **A regra que define o script: ele carrega só o que sabe carregar, e grita o
 resto.** Diferença em campo que não é decisão (valor, data, parcela, natureza)
 **nunca** é trazida — aparece numa lista própria, agrupada por campo, com o

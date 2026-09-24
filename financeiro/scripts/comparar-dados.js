@@ -21,6 +21,14 @@
  *
  * Sem --aplicar, só conta o que faria.
  *
+ * "A tela manda" tem uma condição que a primeira versão deste script esqueceu:
+ * **só vale se a tela for mais nova.** O stash é uma foto tirada ANTES do `git
+ * pull`, então ele pode guardar decisão já superada — na primeira vez que este
+ * script rodou de verdade, a tela marcava "adiar" nas quatro contas que ela
+ * tinha acabado de decidir pagar. Por isso o plano do mês só é trazido quando
+ * `atualizado_em` da tela é maior que o do repo; senão o mês é recusado e o
+ * motivo é impresso, e trazer exige `--plano-da-tela <mes>` explícito.
+ *
  * REGRA DO SCRIPT: ele carrega só o que sabe carregar, e **grita** o que não
  * sabe. Diferença que ele não traz aparece na saída, sempre. Merge que resolve
  * em silêncio é pior do que conflito, porque ninguém fica sabendo o que sumiu.
@@ -63,7 +71,14 @@ function compararPlano(aTela, aRepo) {
     const orcDifere = Number(a.orcamento) !== Number(b.orcamento);
     const obsDifere = (a.observacao || '') !== (b.observacao || '');
     if (itens.length || orcDifere || obsDifere) {
-      achados.push({ mes, tipo: 'diverge', a, b, itens, orcDifere, obsDifere });
+      // Quem e mais novo decide. "A tela manda" so vale se a tela for a versao
+      // mais recente — e o stash guarda justamente uma foto do PASSADO, tirada
+      // antes do `git pull`. Sem este teste o script desfaz decisao nova com
+      // decisao velha, em silencio, que e o erro que ele existe para impedir.
+      const ta = a.atualizado_em || null, tb = b.atualizado_em || null;
+      const quemEMaisNovo = (!ta || !tb) ? 'nao_da_para_saber'
+        : ta > tb ? 'tela' : ta < tb ? 'repo' : 'empate';
+      achados.push({ mes, tipo: 'diverge', a, b, itens, orcDifere, obsDifere, ta, tb, quemEMaisNovo });
     }
   }
   return achados;
@@ -125,7 +140,9 @@ function main() {
   const args = process.argv.slice(2);
   const aplicar = args.includes('--aplicar');
   const trazer = args.includes('--trazer-decisoes');
-  const arquivos = args.filter(a => !a.startsWith('--'));
+  // `--plano-da-tela Out/26` traz um valor junto; ele nao e nome de arquivo.
+  const arquivos = args.filter((a, i) =>
+    !a.startsWith('--') && args[i - 1] !== '--plano-da-tela');
 
   if (arquivos.length !== 2) {
     console.error('uso: node scripts/comparar-dados.js <da-tela.json> <do-repo.json> [--trazer-decisoes] [--aplicar]');
@@ -159,6 +176,15 @@ function main() {
       continue;
     }
     console.log(`  ${p.mes}:`);
+    console.log(`     marcado na tela em ${p.ta || '(não diz)'}   ·   no repo em ${p.tb || '(não diz)'}`);
+    if (p.quemEMaisNovo === 'repo') {
+      console.log('     ⚠ A TELA ESTÁ MAIS VELHA QUE O REPO. O stash é uma foto tirada antes do');
+      console.log('       `git pull`, então ela pode ser decisão já superada. Este mês NÃO é');
+      console.log('       trazido — para trazer assim mesmo: --plano-da-tela ' + p.mes);
+    } else if (p.quemEMaisNovo === 'nao_da_para_saber') {
+      console.log('     ⚠ Um dos lados não diz quando foi marcado. Sem saber qual é mais novo,');
+      console.log('       este mês NÃO é trazido — para trazer assim mesmo: --plano-da-tela ' + p.mes);
+    }
     if (p.orcDifere) console.log(`     orçamento  tela ${moeda(p.a.orcamento)}  x  repo ${moeda(p.b.orcamento)}`);
     if (p.obsDifere) console.log('     observação difere');
     for (const it of p.itens) {
@@ -223,12 +249,21 @@ function main() {
   const destino = JSON.parse(JSON.stringify(repo));
   let mudouPlano = 0, mudouCampo = 0;
 
+  const forcados = new Set();
+  for (let i = 0; i < process.argv.length; i++) {
+    if (process.argv[i] === '--plano-da-tela' && process.argv[i + 1]) forcados.add(process.argv[i + 1]);
+  }
+  const recusados = [];
   destino.plano_do_mes = destino.plano_do_mes || {};
-  for (const mes of Object.keys(tela.plano_do_mes || {})) {
-    if (!igual(tela.plano_do_mes[mes], destino.plano_do_mes[mes])) {
-      destino.plano_do_mes[mes] = tela.plano_do_mes[mes];
-      mudouPlano++;
+  for (const p of plano) {
+    const mes = p.mes;
+    if (p.tipo === 'só no repo') continue;
+    if (p.tipo === 'diverge' && p.quemEMaisNovo !== 'tela' && !forcados.has(mes)) {
+      recusados.push(p);
+      continue;
     }
+    destino.plano_do_mes[mes] = tela.plano_do_mes[mes];
+    mudouPlano++;
   }
 
   const idx = porId(destino.fluxo_mensal && destino.fluxo_mensal.transacoes);
@@ -241,6 +276,11 @@ function main() {
 
   console.log('\n▸ O QUE SERIA GRAVADO EM ' + ARQ_REPO + '\n');
   console.log(`  ${mudouPlano} mês(es) de plano vindos da tela`);
+  for (const p of recusados) {
+    const motivo = p.quemEMaisNovo === 'repo' ? 'a tela é mais velha' : 'não dá para saber qual é mais novo';
+    console.log(`  ${p.mes}: NÃO trazido — ${motivo} (tela ${p.ta || '?'} · repo ${p.tb || '?'})`);
+    console.log(`     para trazer assim mesmo: --plano-da-tela ${p.mes}`);
+  }
   console.log(`  ${mudouCampo} campo(s) de classificação vindos da tela`);
   console.log(`  ${t.soNaTela.length} lançamento(s) que só existem na tela: NÃO são criados — se algum for`);
   console.log('     seu, ele precisa ser lançado à mão ou reimportado da fonte.');
