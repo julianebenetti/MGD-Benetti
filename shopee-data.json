@@ -1,9 +1,9 @@
 {
-  "updated_at": 1790325306,
-  "updated_at_br": "25/09/2026 05:28",
+  "updated_at": 1790330608,
+  "updated_at_br": "25/09/2026 06:57",
   "period_days": 90,
-  "total_orders": 7508,
-  "total_conversions": 7172,
+  "total_orders": 7507,
+  "total_conversions": 7171,
   "orders": [
     {
       "ID do pedido": "260924TDG80368",
@@ -187677,31 +187677,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236253726104941",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-27"
-    },
-    {
-      "ID do pedido": "26062777WY5NYC",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-27 08:44:00",
-      "Sub_id1": "24Jun26EsterelizadorEscovaVs2",
-      "Valor de Compra(R$)": "27.99",
-      "Comissao liquida do afiliado(R$)": "0.8397",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.8397",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8397",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Suporte para Escova de Dentes com Dispensador de Creme Dental - Com Esterilizador Uv/Modelo Sem Uv",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58209090430",
-      "ID da loja": "1278427063",
-      "Nome da loja": "V ELETRONICO",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "236249040137843",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-27"
     }
