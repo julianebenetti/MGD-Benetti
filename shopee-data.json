@@ -1,9 +1,9 @@
 {
-  "updated_at": 1790577432,
-  "updated_at_br": "28/09/2026 03:31",
+  "updated_at": 1790587419,
+  "updated_at_br": "28/09/2026 06:17",
   "period_days": 90,
-  "total_orders": 7219,
-  "total_conversions": 6895,
+  "total_orders": 7218,
+  "total_conversions": 6894,
   "orders": [
     {
       "ID do pedido": "26092753942KR1",
@@ -180452,31 +180452,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "236511519123040",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-06-30"
-    },
-    {
-      "ID do pedido": "260630ERFMPV7F",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-06-30 08:28:52",
-      "Sub_id1": "18Jun26SegundaPeleVs1",
-      "Valor de Compra(R$)": "58.76",
-      "Comissao liquida do afiliado(R$)": "1.7628",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.7628",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.7628",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Moletom Infantil CR7 Cristiano Ronaldo Menino com Capuz Canguru Flanelado Algodão Futebol",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58259369131",
-      "ID da loja": "519914486",
-      "Nome da loja": "maricloset.shop",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "236507331176037",
       "conversionStatus": "COMPLETED",
       "data": "2026-06-30"
     }
