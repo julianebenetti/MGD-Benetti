@@ -1,6 +1,6 @@
 {
-  "updated_at": 1790649328,
-  "updated_at_br": "28/09/2026 23:29",
+  "updated_at": 1790664450,
+  "updated_at_br": "29/09/2026 03:41",
   "period_days": 90,
   "total_orders": 7149,
   "total_conversions": 6827,
@@ -7182,7 +7182,7 @@
     },
     {
       "ID do pedido": "2609178JSBE4UB",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-16 21:57:36",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "38.89",
@@ -7194,7 +7194,7 @@
       "Comissao total do pedido(R$)": "2.48896",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Brinquedo Caranguejo Fujão + Girafa Dançarino Musical Brinquedo Infantil Interativo Sensorial",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58209377025",
       "ID da loja": "452840283",
       "Nome da loja": "FLY ECOM",
@@ -7202,7 +7202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243295056111061",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-16"
     },
     {
