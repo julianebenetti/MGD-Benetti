@@ -1,9 +1,9 @@
 {
-  "updated_at": 1790664450,
-  "updated_at_br": "29/09/2026 03:41",
+  "updated_at": 1790674242,
+  "updated_at_br": "29/09/2026 06:24",
   "period_days": 90,
-  "total_orders": 7149,
-  "total_conversions": 6827,
+  "total_orders": 7148,
+  "total_conversions": 6826,
   "orders": [
     {
       "ID do pedido": "2609287EYDQ0GW",
@@ -178703,31 +178703,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236597182137695",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-01"
-    },
-    {
-      "ID do pedido": "260701HAXY0WVW",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-01 09:04:52",
-      "Sub_id1": "28Jun26KokeshiVs2",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "23.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit Dupla Renovadores Faciais Kokeshi Pele Porcelana Olhos Gueixa",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "23994387054",
-      "ID da loja": "395166866",
-      "Nome da loja": "KOKESHI OFICIAL",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "236595892137270",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-01"
     }
   ]
