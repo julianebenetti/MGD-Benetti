@@ -1,9 +1,9 @@
 {
-  "updated_at": 1790750054,
-  "updated_at_br": "30/09/2026 03:28",
+  "updated_at": 1790760065,
+  "updated_at_br": "30/09/2026 06:15",
   "period_days": 90,
-  "total_orders": 7070,
-  "total_conversions": 6754,
+  "total_orders": 7069,
+  "total_conversions": 6753,
   "orders": [
     {
       "ID do pedido": "2609299WJWH4KH",
@@ -176727,31 +176727,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236683856156386",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-02"
-    },
-    {
-      "ID do pedido": "260702KTBTFPT3",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-02 08:45:50",
-      "Sub_id1": "18Jun26SegundaPeleVs1",
-      "Valor de Compra(R$)": "98.93",
-      "Comissao liquida do afiliado(R$)": "6.52938",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "3.60%",
-      "Comissao Shopee(R$)": "2.9679",
-      "Comissao do vendedor(R$)": "3.56148",
-      "Comissao total do pedido(R$)": "6.52938",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Jaqueta Puffer Masculina  Blusa Bobojaco Agasalho Capuz Removível Impermeável Bolsos Internos Casaco De Frio Inverno",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58205695282",
-      "ID da loja": "381952298",
-      "Nome da loja": "BLOX ECOM",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "236681149193686",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-02"
     }
