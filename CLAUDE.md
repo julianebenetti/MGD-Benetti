@@ -1488,6 +1488,67 @@ nenhum momento do teste.
 nesse arquivo, em vez de só dizer "resolva com cuidado" — a mensagem de erro é
 lida exatamente no momento em que ninguém lembra o que fazer.
 
+### A devolução que não é renda, e o filtro de sinal em quatro cópias (01/10)
+A Juliane mandou os holerites de **31/08** e **30/09**. O importador recusou os
+dois, e os dois problemas eram o mesmo: a rubrica **`517W Coparti Bradesco -
+DEV`** não tinha regra, e os **R$ 6,90** dela eram exatamente a diferença entre
+os R$ 2.649,70 calculados para setembro e os **R$ 2.656,60** do comprovante.
+Recusar foi o comportamento certo — a rubrica desconhecida era a causa do
+descasamento, não um detalhe à parte.
+
+**Ela vem na coluna de PROVENTOS e é a devolução de uma coparticipação médica
+cobrada antes (`578N`).** Nenhuma das naturezas existentes servia:
+
+- **`receita` não**, porque não é renda: é o mesmo dinheiro voltando, e contar
+  como salário inflaria o rendimento tributável do IRPF.
+- **`ajuste` não**, porque ajuste é a retificação de competência que lança os
+  dois lados e **não muda o caixa** — esta muda: entra no líquido.
+- **`estorno` sim**, que é o que a base já usa para devolução: abate o gasto
+  onde ele foi contado. Natureza nova no holerite, documentada no cabeçalho de
+  `importar-holerites.js` junto das outras três.
+
+**Gravada com valor NEGATIVO**, como todo estorno desta base — é o que faz a
+saúde da Família cair R$ 6,90 em vez de subir. A conferência contra o líquido
+não depende desse sinal: ela soma `item.valor` cru, do lado em que o comprovante
+imprime.
+
+**E o sinal negativo expôs a mesma conta escrita em quatro lugares, todos
+filtrando por `t.valor > 0`** — um filtro defensivo que nunca tinha sido
+exercitado, porque até aqui nenhum lançamento de folha era negativo. Cada um
+descartava a linha em silêncio:
+
+| Onde | O que mentia |
+|---|---|
+| `folhaDoMes()` | líquido de Set/26 em R$ 2.649,70 contra os R$ 2.656,60 do comprovante |
+| `referenciaDeSalario()` | **projetava Out/26 em R$ 2.649,70 enquanto a tela do próprio Set/26 dizia R$ 2.656,60** — duas cópias da mesma conta discordando na mesma tela |
+| `testar-dashboard.js` | 4 cópias do recálculo independente |
+
+A segunda só apareceu porque o teste do recálculo passou a estar certo: o teste
+achou o defeito que o teste anterior escondia. **Verificado repondo o filtro: 2
+testes falham e nomeiam o número certo.**
+
+**Dois guardas da suíte falharam sem nada estar quebrado, e a causa foi o
+calendário.** Hoje é dia 1º: o mês vigente ainda não tem conta paga nem conta
+vencida, então *"conta já paga não tem o que decidir"* e *"existe conta vencida
+e prevista"* ficavam com zero de cada lado. É literalmente o defeito documentado
+em 23/09 com a conta adiada — **teste preso a dado vivo em vez de ao
+mecanismo**, e desta vez o gatilho foi a virada do mês, que acontece doze vezes
+por ano.
+
+`mesesParaProcurar()`: os dois blocos passaram a **procurar o mês mais recente
+que tenha o que provar** (o vigente primeiro, depois para trás), em vez de
+depender de qual mês é hoje. Acharam Set/26 nos dois casos. O mecanismo continua
+sendo testado todo dia do mês, inclusive no dia 1º.
+
+**Fica registrado, e não foi mexido:** `apurarIrpf()` tem um `if (t.valor <= 0)
+return`, então estorno **não abate dedução**. Em 2026 isso vale R$ 6,90 de saúde
+a mais na dedução (o outro estorno em categoria dedutível é farmácia, que já não
+deduz) — imaterial hoje, mas é dedução bruta onde a Receita quer líquida. Se um
+dia aparecer devolução grande de plano de saúde ou de escola, isto precisa mudar.
+
+Set/26: proventos R$ 6.046,94, descontos R$ 3.390,34, **líquido R$ 2.656,60**.
+Suíte em **519 testes**, `conciliar.js` íntegro.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos
