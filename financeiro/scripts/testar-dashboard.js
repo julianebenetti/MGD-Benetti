@@ -64,6 +64,17 @@ const hojeNoTeste = new Date();
 const mesVigenteNoTeste =
   `${MES_ORDEM[hojeNoTeste.getMonth()]}/${String(hojeNoTeste.getFullYear()).slice(2)}`;
 
+// Mes vigente primeiro, depois para tras. Serve aos blocos cujo guarda precisa
+// de um mes que TENHA o que provar: no dia 1o o mes vigente ainda nao tem conta
+// paga nem conta vencida, e amarrar o teste a ele faz a suite ficar vermelha
+// porque o calendario virou, sem nada estar quebrado. Ja aconteceu antes, com a
+// conta adiada (23/09): teste preso a dado vivo em vez de ao mecanismo.
+function mesesParaProcurar(todos) {
+  return [...new Set(todos.map(t => t.mes_vencimento))]
+    .filter(m => noEscopo(m) && m !== A_CONFIRMAR && ordemDoMes(m) <= ordemDoMes(mesVigenteNoTeste))
+    .sort((a, b) => ordemDoMes(b) - ordemDoMes(a));
+}
+
 function noEscopo(mv) {
   if (!mv) return false;
   if (mv === A_CONFIRMAR) return true;
@@ -472,7 +483,7 @@ function noEscopo(mv) {
     const folha = doMes.filter(t => t.origem === 'holerite_elektro');
     const proventos = folha.filter(t => t.natureza === 'receita')
                            .reduce((s, t) => s + t.valor, 0);
-    const descontos = folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+    const descontos = folha.filter(t => t.natureza !== 'receita')
       .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
     const liquido = proventos - descontos;
     const temFolha = folha.some(t => t.natureza === 'receita');
@@ -656,7 +667,7 @@ function noEscopo(mv) {
     for (const mes of comFolha) {
       const folha = todosLancamentos.filter(t => t.mes_vencimento === mes && t.origem === 'holerite_elektro');
       const bruto = folha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0);
-      const desc = folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+      const desc = folha.filter(t => t.natureza !== 'receita')
                         .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
       if (desc < 0.01) continue; // sem desconto, bruto e liquido coincidem
       const visto = await pagina.evaluate(m => {
@@ -741,7 +752,7 @@ function noEscopo(mv) {
       const folha = todosLancamentos.filter(t => t.mes_vencimento === mes && t.origem === 'holerite_elektro');
       if (!folha.some(t => t.natureza === 'receita')) continue;
       const liquido = folha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0)
-                    - folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+                    - folha.filter(t => t.natureza !== 'receita')
                            .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
       // PLR e férias chegam em comprovante separado e podem cair num mês de
       // calendário diferente do crédito — esses ficam de fora da conferência
@@ -844,7 +855,7 @@ function noEscopo(mv) {
       });
       const folha = todosLancamentos.filter(t => t.mes_vencimento === puro && t.origem === 'holerite_elektro');
       const esperado = folha.filter(t => t.natureza === 'receita').reduce((s, t) => s + t.valor, 0)
-        - folha.filter(t => t.natureza !== 'receita' && t.valor > 0)
+        - folha.filter(t => t.natureza !== 'receita')
                .reduce((s, t) => s + (t.natureza === 'ajuste' && t.tipo === 'entrada' ? -t.valor : t.valor), 0);
 
       const visto = await pagina.evaluate(m => {
@@ -865,10 +876,9 @@ function noEscopo(mv) {
   // A marcação por mês é a decisão que ela toma de verdade ("destas contas,
   // quais cabem este mês"), diferente do flag permanente de contrato/cartão.
   {
-    const mes = mesVigenteNoTeste;
-    const estado = await pagina.evaluate(m => {
+    const lerPlano = m => pagina.evaluate(mm => {
       document.querySelector('[data-tab="painel"]').click();
-      document.getElementById('painel_mes').value = m;
+      document.getElementById('painel_mes').value = mm;
       delete dadosGlobais.plano_do_mes;
       renderizarPainel();
       const el = document.getElementById('painel_vencimentos_criticos');
@@ -879,7 +889,15 @@ function noEscopo(mv) {
         jaSaiu: linhas.filter(tr => !tr.querySelector('.plano-btn')).length,
         adiadosPorPadrao: linhas.filter(tr => tr.querySelector('.plano-btn.ativo-adiar')).length
       };
-    }, mes);
+    }, m);
+
+    // O alvo e o mecanismo ("o que ja aconteceu nao e decisao"), nao o mes de
+    // hoje: procura o mes mais recente que tenha as duas coisas ao mesmo tempo.
+    let mes = mesVigenteNoTeste, estado = await lerPlano(mes);
+    for (const m of mesesParaProcurar(todosLancamentos)) {
+      if (estado.jaSaiu > 0 && estado.decidiveis > 0) break;
+      mes = m; estado = await lerPlano(m);
+    }
 
     // Cartão com pagamento suspenso já entra marcado como "deixo": a Juliane
     // não deve ter de repetir todo mês uma decisão que já tomou.
@@ -1000,10 +1018,9 @@ function noEscopo(mv) {
   // perguntou por quê — e a resposta era que o extrato importado parava antes
   // da data delas. Dizer "previsto" nos dois casos escondia essa diferença.
   {
-    const mes = mesVigenteNoTeste;
-    const tela = await pagina.evaluate(m => {
+    const lerVencimentos = m => pagina.evaluate(mm => {
       document.querySelector('[data-tab="painel"]').click();
-      document.getElementById('painel_mes').value = m;
+      document.getElementById('painel_mes').value = mm;
       renderizarPainel();
       const el = document.getElementById('painel_vencimentos_criticos');
       return {
@@ -1016,13 +1033,23 @@ function noEscopo(mv) {
         cobreAte: extratoCobreAte(),
         txt: el.innerText,
       };
-    }, mes);
+    }, m);
 
     const iso = br => br.split('/').reverse().join('-');
     const hojeISO = new Date().toISOString().slice(0, 10);
-    const vencidasPrevistas = tela.linhas.filter(l =>
+    const vencidasDe = t => t.linhas.filter(l =>
       /previsto|não dá para conferir/i.test(l.situacao)
       && /^\d{2}\/\d{2}\/\d{4}$/.test(l.quando) && iso(l.quando) < hojeISO);
+
+    // Pelo mesmo motivo do bloco acima: no dia 1o o mes vigente nao tem conta
+    // vencida nenhuma, e as asserções passariam vazias (ou o guarda falharia
+    // sem nada estar quebrado). Procura o mes que tem o que provar.
+    let mes = mesVigenteNoTeste, tela = await lerVencimentos(mes);
+    for (const m of mesesParaProcurar(todosLancamentos)) {
+      if (vencidasDe(tela).length) break;
+      mes = m; tela = await lerVencimentos(m);
+    }
+    const vencidasPrevistas = vencidasDe(tela);
 
     const alemDoExtrato = vencidasPrevistas.filter(l => !l.fora && iso(l.quando) > (tela.cobreAte || '0000'));
     const dentroDoExtrato = vencidasPrevistas.filter(l => !l.fora && iso(l.quando) <= (tela.cobreAte || '0000'));

@@ -103,6 +103,11 @@ function linhasDoPdf(caminho) {
 //   despesa           desconto que e gasto de verdade
 //   divida_parcelada  parcela de emprestimo: quita divida, nao e consumo novo
 //   ajuste            acerto de competencia; entra e sai, nao muda o caixa
+//   estorno           devolucao de um desconto ja cobrado: abate o gasto.
+//                     Diferente de 'receita' (nao e renda, e dinheiro de volta)
+//                     e de 'ajuste' (que nao muda o caixa — este muda: entra no
+//                     liquido). Gravado com valor NEGATIVO, como todo estorno
+//                     desta base, para abater o gasto onde ele foi contado.
 
 const RUBRICAS = {
   // proventos
@@ -149,6 +154,10 @@ const RUBRICAS = {
   '55CN': { natureza: 'despesa', categoria: 'alimentacao',         descricao: 'Cesta básica' },
   '578N': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco — coparticipação médica' },
   '57AN': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Saúde' },
+  // Vem na coluna de PROVENTOS: e a devolucao de uma coparticipacao medica
+  // cobrada antes (578N). Nao e renda — e o mesmo dinheiro voltando, entao
+  // abate a saude em vez de somar ao salario.
+  '517W': { natureza: 'estorno', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco — devolução de coparticipação médica' },
   '6A9N': { natureza: 'despesa', categoria: 'saude', pessoa: 'Família', descricao: 'Bradesco Odonto' },
 
   // Descontos do comprovante de ferias: o INSS e a previdencia privada
@@ -311,7 +320,11 @@ holerites.forEach(h => {
       tipo: item.ehProvento ? 'entrada' : 'saida',
       natureza,
       descricao: r.descricao + (item.retifica ? ` (acerto de ${item.retifica})` : ''),
-      valor: item.valor,
+      // O estorno e gravado negativo para abater o gasto onde ele foi contado,
+      // que e a convencao do resto da base. A conferencia contra o liquido
+      // acima usa `item.valor` cru, do lado em que o comprovante imprime, e
+      // por isso nao depende deste sinal.
+      valor: r.natureza === 'estorno' ? -item.valor : item.valor,
       pessoa: r.pessoa || 'Juliane',
       ambito: 'pessoal',
       categoria: r.categoria,
@@ -362,6 +375,7 @@ const receitas = transacoes.filter(t => t.natureza === 'receita');
 const despesas = transacoes.filter(t => t.natureza === 'despesa');
 const divida = transacoes.filter(t => t.natureza === 'divida_parcelada');
 const ajustes = transacoes.filter(t => t.natureza === 'ajuste');
+const estornos = transacoes.filter(t => t.natureza === 'estorno');
 
 // Conferencia da classificacao: uma linha por rubrica, para bater o olho e ver
 // se algo foi para a categoria ou a pessoa errada.
@@ -373,7 +387,7 @@ transacoes.forEach(t => {
   porRubrica[k].n++;
   porRubrica[k].soma += t.valor;
 });
-const ordem = { receita: 0, despesa: 1, divida_parcelada: 2, ajuste: 3 };
+const ordem = { receita: 0, despesa: 1, divida_parcelada: 2, estorno: 3, ajuste: 4 };
 Object.values(porRubrica)
   .sort((a, b) => ordem[a.natureza] - ordem[b.natureza] || b.soma - a.soma)
   .forEach(r => console.log(
@@ -386,6 +400,7 @@ console.log(`${transacoes.length} lançamentos em ${holerites.length} comprovant
 console.log(`   receita ............ ${brl(receitas.reduce((s, t) => s + t.valor, 0)).padStart(13)}  (${receitas.length})`);
 console.log(`   desconto que é gasto ${brl(despesas.reduce((s, t) => s + t.valor, 0)).padStart(13)}  (${despesas.length})`);
 console.log(`   consignado ......... ${brl(divida.reduce((s, t) => s + t.valor, 0)).padStart(13)}  (${divida.length})  não é consumo`);
+if (estornos.length) console.log(`   devolução ..........  ${brl(estornos.reduce((s, t) => s + t.valor, 0)).padStart(12)}  (${estornos.length})  abate o gasto`);
 if (ajustes.length) console.log(`   acerto de competência ${brl(ajustes.reduce((s, t) => s + t.valor, 0)).padStart(12)}  (${ajustes.length})  não muda o caixa`);
 
 if (problemas) {
