@@ -1,9 +1,9 @@
 {
-  "updated_at": 1790924159,
-  "updated_at_br": "02/10/2026 03:50",
+  "updated_at": 1790932985,
+  "updated_at_br": "02/10/2026 06:17",
   "period_days": 90,
-  "total_orders": 6954,
-  "total_conversions": 6642,
+  "total_orders": 6953,
+  "total_conversions": 6641,
   "orders": [
     {
       "ID do pedido": "261001F08866C0",
@@ -173828,31 +173828,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236865504160352",
       "conversionStatus": "CANCELLED",
-      "data": "2026-07-04"
-    },
-    {
-      "ID do pedido": "260704RSEED6MJ",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-04 08:12:43",
-      "Sub_id1": "01Jul26LeggingSacoVerdeVs3Copia24mai26",
-      "Valor de Compra(R$)": "42.99",
-      "Comissao liquida do afiliado(R$)": "7.7382",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "15.00%",
-      "Comissao Shopee(R$)": "1.2897",
-      "Comissao do vendedor(R$)": "6.4485",
-      "Comissao total do pedido(R$)": "7.7382",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Legging Termica Flanelada Peluciada Cós Alto Leg Feminina",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "24898131886",
-      "ID da loja": "1025213096",
-      "Nome da loja": "VM_Moda_",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "236851962145894",
-      "conversionStatus": "COMPLETED",
       "data": "2026-07-04"
     }
   ]
