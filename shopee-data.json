@@ -1,9 +1,9 @@
 {
-  "updated_at": 1790970998,
-  "updated_at_br": "02/10/2026 16:50",
+  "updated_at": 1790975746,
+  "updated_at_br": "02/10/2026 18:09",
   "period_days": 90,
-  "total_orders": 6921,
-  "total_conversions": 6611,
+  "total_orders": 6920,
+  "total_conversions": 6610,
   "orders": [
     {
       "ID do pedido": "261002HM50Y5X5",
@@ -1532,7 +1532,7 @@
     },
     {
       "ID do pedido": "2609262CU5GD9J",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-26 00:41:57",
       "Sub_id1": "05Ago26calcinhaplussizeVs1",
       "Valor de Compra(R$)": "61.98",
@@ -1544,7 +1544,7 @@
       "Comissao total do pedido(R$)": "4.9584",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "KIT com 10 calcinha plus size fio dental duplo não marca roupa feminina lingerie confortavel para o dia dia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21299887910",
       "ID da loja": "1635751650",
       "Nome da loja": "Ville moda",
@@ -1552,7 +1552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "244082516126941",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-26"
     },
     {
@@ -173002,31 +173002,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "236899841104398",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-04"
-    },
-    {
-      "ID do pedido": "260705T3E7HMG3",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-04 20:44:13",
-      "Sub_id1": "GruposPromosApp",
-      "Valor de Compra(R$)": "99.96",
-      "Comissao liquida do afiliado(R$)": "4.19832",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "1.20%",
-      "Comissao Shopee(R$)": "2.9988",
-      "Comissao do vendedor(R$)": "1.19952",
-      "Comissao total do pedido(R$)": "4.19832",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Luminária Noturna De Silicone De Ovelhinha Com Relógio e Caixa De Som Marca XTRAD",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22198092324",
-      "ID da loja": "995022276",
-      "Nome da loja": "PANGU Store",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "236897052104942",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-04"
     }
