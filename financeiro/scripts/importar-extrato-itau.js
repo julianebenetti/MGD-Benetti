@@ -347,6 +347,19 @@ const REGRAS = [
     descricao: 'Transurc — transporte para o trabalho',
     nota: 'Mesma regra que já valia para a fatura do cartão (Juliane, 23/08).',
   },
+  // SESI = Servico Social da Industria, a escola do Luca. O Itau corta a
+  // descricao em "SERVICO SOC". Provado em 23/09: dois Pix de R$ 563,68 e
+  // R$ 558,03 batem um a um, ao centavo, com os dois boletos do carne (agosto e
+  // setembro, reemitidos para 24/09) — nao e so o total que fecha, e cada um.
+  // So na saida: dinheiro vindo da escola seria estorno, nao mensalidade.
+  {
+    // `entrada: false` e o flag que o casador conhece; `saida: true` seria
+    // ignorado em silencio e a regra casaria nos dois sentidos.
+    padrao: /PIX (TRANSF|QRS) SERVICO SOC/i, entrada: false,
+    natureza: 'despesa', categoria: 'educacao', pessoa: 'Luca',
+    descricao: 'Escola do Luca (SESI)',
+    nota: 'Mesma classificação que "Sesi / Editora Sesi" já tinha na fatura (Juliane, 23/08).',
+  },
   // Mesmo caso do Transurc: "Tokio Marine -> seguro do carro / Familia" ja era
   // decisao dela (23/08), mas so existia em regras-classificacao.json, que vale
   // para a fatura. Quando o seguro e pago por boleto no extrato, a regra precisa

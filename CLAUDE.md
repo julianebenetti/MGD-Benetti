@@ -1549,6 +1549,129 @@ dia aparecer devolução grande de plano de saúde ou de escola, isto precisa mu
 Set/26: proventos R$ 6.046,94, descontos R$ 3.390,34, **líquido R$ 2.656,60**.
 Suíte em **519 testes**, `conciliar.js` íntegro.
 
+### A fatura sem corte de coluna, e a quinta cópia da conta do líquido (04/10)
+A Juliane mandou cinco faturas do Itaú em PDF e o extrato de 04/10. Quatro das
+cinco **já estavam gravadas com o total certo** — o dado novo era uma só, e foi
+ela que expôs dois defeitos.
+
+**A fatura do 0442 de 01/10 não tinha corte de coluna nenhum.** `colunaDaDireita`
+exige dois "DATA" na **mesma linha**, e nesta fatura as duas tabelas começam em
+alturas diferentes: o cabeçalho da esquerda está numa linha e o da direita em
+outra. A calha também falhou — o parágrafo que explica o pagamento obrigatório
+atravessa o branco entre as colunas, e a exigência de 98% derruba a faixa.
+
+Sem corte, as duas colunas ficam na mesma linha de texto e **só passam os
+lançamentos que por acaso estão sozinhos**: R$ 635,33 de compras onde a própria
+fatura imprime **R$ 1.108,84**, e o bloco do parcelamento inteiro invisível.
+
+`colunaPorCabecalhos()` lê a mesma evidência na **página** em vez da linha: as
+posições de "DATA" se agrupam em duas colunas (17 e 93 naquela página), e a
+direita é onde a segunda tabela começa. Exige exatamente dois grupos — com um
+só a página tem tabela única e não há o que desembaralhar. A precedência vai da
+evidência mais forte para a mais fraca: dois "DATA" na mesma linha, depois os
+cabeçalhos da página, depois a calha, e só então o corte herdado do documento.
+
+**E faltavam R$ 30,00 depois disso, por um ponto órfão.** A linha
+`15/09 TRANSURCCAMPINASBR 30,00     .` termina com um `.` solto que a extração
+deixou, e a regex exigia fim de linha logo após o valor. Agora tolera sobra —
+**mas só sem dígito nenhum**: número depois do valor é a coluna vizinha colada,
+não ruído, e aí a linha tem de ser recusada em vez de lida pela metade.
+
+Com os dois consertos a fatura fecha nos três subtotais impressos: compras
+R$ 1.108,84, produtos e serviços −R$ 843,43, encargos R$ 87,04, lançamentos
+atuais R$ 265,41. **0442 Out/26 era R$ 922,29 (foto de ciclo aberto) e é
+R$ 1.604,01.**
+
+`CREDITO POR PARCELAMENT` caía em `nao_classificado`: a regex de dívida
+parcelada tinha `credito por parcelamento` inteiro, e o PDF corta no `T`. É a
+mesma armadilha de `PARCELA DE REF`, que por isso já estava escrita truncada ao
+lado. R$ 1.263,70 de crédito de refinanciamento entrando como "ninguém sabe o
+que é".
+
+**As duas faturas que não fecham são as de camada de texto degradada** (`9.661,
+17`, `Car tã o`), já documentadas em 21/09 — e as duas já estão gravadas e
+conferidas por outra fonte. Recusar continua certo: não há dado novo nelas.
+
+**A quinta cópia da conta do líquido da folha, e foi o extrato que a achou.**
+Ontem corrigi `folhaDoMes`, `referenciaDeSalario` e quatro cópias na suíte. O
+`conciliar.js` tem a sua, escrita de outro jeito — soma `sinal * valor` com o
+sinal vindo do `tipo` — e com o estorno gravado negativo os dois sinais se
+multiplicavam: líquido de Set/26 em R$ 2.642,80 contra os **R$ 2.656,60 que o
+banco creditou**. Os R$ 13,80 de diferença são duas vezes os R$ 6,90, faltando
+de um lado e sobrando do outro.
+
+Quem decide o sinal ali é **a coluna do comprovante**, não o sinal gravado:
+passou a somar `sinal * Math.abs(valor)`. **Só apareceu porque o extrato chegou**
+— era uma divergência entre duas fontes independentes, invisível enquanto só
+existia uma.
+
+**O teste da conta adiada falhou de novo, uma camada abaixo.** Em 23/09 ele foi
+reescrito para injetar a conta adiada em memória em vez de depender de existir
+uma. Mas o alvo continuava fixo pelo nome, `'faxina'` — e o extrato de hoje traz
+a faxina agendada para 05/10. Com ela lançada no mês, saiu da projeção, o
+adiamento injetado não teve onde grudar e **5 testes falharam sem nada estar
+quebrado**. O alvo agora sai da própria projeção do mês, qualquer conta que
+esteja lá, com um guarda novo: se *nenhuma* conta estiver projetada em Out/26,
+isso não é "nada a testar", é a projeção inteira calada.
+
+**A lição que se repete**, e vale escrever de uma vez: *toda* âncora em dado
+vivo vira alarme falso — a conta adiada existir, o mês vigente ter conta paga,
+uma conta específica continuar projetável. O teste tem de se amarrar ao
+mecanismo e **procurar** o caso que o exercita.
+
+Suíte em **516 testes**, `conciliar.js` íntegro.
+
+### O que o extrato de 04/10 respondeu, e o que ele abriu (04/10)
+**A escola do Luca foi paga, e a prova é individual.** Dois Pix
+`PIX QRS SERVICO SOC` em **23/09**, um dia antes do vencimento reemitido:
+R$ 563,68 e R$ 558,03 — cada um batendo ao centavo com o seu boleto do carnê
+(agosto e setembro). Não é o total que fecha, é cada um. SESI = Serviço Social
+da Indústria, e o Itaú corta a descrição em "SERVICO SOC".
+
+Regra nova no importador do extrato, **travada na saída** (`entrada: false`):
+dinheiro vindo da escola seria estorno, não mensalidade. `saida: true` teria
+sido **ignorado em silêncio** — o casador só conhece `entrada`, e a regra casaria
+nos dois sentidos sem ninguém notar.
+
+As duas dívidas foram encerradas com `montante: 0` em vez de apagadas, como o
+`refin_fatura_4846_jun26` já tinha sido — o histórico não some.
+
+**Efeito no plano de Out/26**, duas correções em sentidos opostos:
+
+| | |
+|---|---|
+| Escola do Luca paga em **setembro** | −R$ 1.121,71 |
+| Infinite fechou em R$ 1.604,01, não R$ 922,29 | +R$ 681,72 |
+| **Orçamento** | R$ 13.910,86 → **R$ 13.470,87** |
+
+E o quadro melhorou muito: a conta fechou **+R$ 6.573,73** (estava −R$ 1.061,35
+em 22/09), porque entraram **R$ 9.000,00 da Benetti UP em 23/09** — que é
+exatamente o aporte que o plano pressupunha. Com o salário de 25/10 dá
+R$ 9.230,33, e falta **~R$ 4.240,54** em vez dos R$ 9.303,83 de antes.
+
+**Três coisas ficaram em aberto, e nenhuma foi decidida por dedução:**
+
+1. **R$ 253,61 sai em 28/09 (`CRED CONSIGNAD`) e volta em 29/09** como
+   "liberação de empréstimo consignado". Mesmo valor, dias seguidos, e é
+   exatamente a parcela do 1CT2 que já é descontada na folha. Parece débito
+   indevido estornado no dia seguinte — mas hoje a base conta **R$ 253,61 de
+   despesa e R$ 253,61 de dívida nova**. A regra que classifica "Credito
+   Consignado positivo" como empréstimo está certa isolada; o que muda a leitura
+   é o débito do dia anterior, que ela não vê.
+2. **`Pró-labore (Juliane não recebe)` está escrito no topo deste arquivo e o
+   dado diz o contrário o ano inteiro:** 8 lançamentos, **R$ 32.870,77** em 2026,
+   sendo R$ 9.000,00 em 23/09. Tudo entra como rendimento **tributável** dela —
+   ~R$ 9.039 de imposto na faixa de 27,5%. Se for pró-labore de verdade, o
+   contador precisa saber; se for a empresa cobrindo conta pessoal, o IRPF está
+   superestimado em muito. **Não dá para resolver olhando o extrato.**
+3. Quatro lançamentos sem regra: `PIX QRS BLOX BRASIL` (R$ 17,90),
+   `PIX TRANSF Roberta` (R$ 60,00), `PIX TRANSF COLEGIO` (R$ 10,00 — e "COLEGIO"
+   já bateu mensalidade e ballet antes, então fica manual) e
+   `TED 755.1306.AMAZON S D` (+R$ 30,82, entrada).
+
+**Condomínio e escola da Valentina não foram pagos** — conferido no extrato, que
+agora alcança 02/10.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos

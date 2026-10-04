@@ -56,7 +56,14 @@ const herdadoPor = {};
 
 // A parcela de fatura renegociada não é consumo novo: as compras que geraram a
 // dívida já foram contadas uma a uma na fatura em que aconteceram.
-const DIVIDA_PARCELADA = /(parc fatura|parcela de ref|credito por parcelamento|cred parc fat)/i;
+// O PDF corta a descricao na largura da coluna e o XLSX nao, entao cada nome
+// precisa casar tambem truncado: `Credito Por Parcelamento` chega como
+// `CREDITO POR PARCELAMENT` (sem o "o" final) na fatura do 0442 de 01/10, e caia
+// em `nao_classificado` — R$ 1.263,70 de credito de refinanciamento entrando
+// como se ninguem soubesse o que era. E a mesma armadilha ja documentada com
+// `PARCELA DE REF`, que por isso ja estava escrita truncada aqui.
+const DIVIDA_PARCELADA =
+  /(parc fatura|parc\.? ?automatic|parcela de ref|credito por parcelament|canc credito parc|canc parc de ref|cred parc fat)/i;
 
 const lidas = alvos.map(a => ler(a));
 const ruins = lidas.filter(f => f.erros.length);

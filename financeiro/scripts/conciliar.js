@@ -153,9 +153,17 @@ console.log('\n\n▸ O QUE NÃO BATE\n');
 // mesmo assim reduz o que cai na conta: contando so as despesas, marco fecharia
 // R$ 3.098,09 a mais e pareceria divergencia dos dados.
 const liquidoPorMes = {};
+// E o MODULO do valor que entra, porque quem decide o sinal aqui e a coluna do
+// comprovante, nao o sinal gravado. A devolucao de coparticipacao (517W) vem na
+// coluna de proventos e e gravada NEGATIVA, para abater a saude onde ela foi
+// contada — multiplicar os dois sinais a transformava em desconto e o liquido de
+// Set/26 dava R$ 2.642,80 contra os R$ 2.656,60 que o banco creditou. Os
+// R$ 13,80 de diferenca sao duas vezes os R$ 6,90: o valor faltando de um lado
+// e sobrando do outro.
 daFonte('holerite_elektro').forEach(t => {
   const sinal = t.tipo === 'entrada' ? 1 : -1;
-  liquidoPorMes[t.mes_vencimento] = (liquidoPorMes[t.mes_vencimento] || 0) + sinal * t.valor;
+  liquidoPorMes[t.mes_vencimento] =
+    (liquidoPorMes[t.mes_vencimento] || 0) + sinal * Math.abs(t.valor);
 });
 
 let divergencias = 0;

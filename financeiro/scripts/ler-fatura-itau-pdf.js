@@ -99,6 +99,48 @@ function colunaDaDireita(linhas) {
   return posicoes[Math.floor(posicoes.length / 2)];
 }
 
+// Os dois "DATA" nem sempre caem na MESMA linha de texto. Na fatura do 0442 de
+// 01/10 as duas tabelas comecam em alturas diferentes, entao o cabecalho da
+// esquerda esta numa linha e o da direita em outra — e a regra acima devolve
+// null. A calha tambem falha ali, porque o paragrafo que explica o pagamento
+// obrigatorio atravessa o branco entre as colunas.
+//
+// A evidencia continua sendo do documento, so que lida na pagina inteira em vez
+// de linha a linha: as posicoes de "DATA" se agrupam em DUAS colunas (17 e 93
+// naquela pagina), e a direita e onde a segunda tabela comeca. Sem isso o leitor
+// nao cortava nada, as duas colunas ficavam na mesma linha e so passavam os
+// lancamentos que por acaso estavam sozinhos: R$ 635,33 de compras onde a
+// propria fatura imprime R$ 1.108,84, e o parcelamento inteiro invisivel.
+function colunaPorCabecalhos(linhas) {
+  const posicoes = [];
+  linhas.forEach(l => {
+    for (const m of l.matchAll(DOIS_DATA)) posicoes.push(m.index);
+  });
+  if (posicoes.length < 2) return null;
+  const largura = Math.max(...linhas.map(l => l.length));
+  if (largura < 40) return null;
+
+  // Agrupa posicoes vizinhas: a mesma coluna varia uns poucos caracteres entre
+  // paginas e entre tabelas.
+  posicoes.sort((a, b) => a - b);
+  const grupos = [];
+  for (const x of posicoes) {
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && x - ultimo[ultimo.length - 1] <= 5) ultimo.push(x);
+    else grupos.push([x]);
+  }
+  // Duas tabelas lado a lado dao exatamente dois grupos. Com um so, a pagina
+  // tem uma tabela unica e nao ha o que desembaralhar; com mais de dois, o
+  // desenho nao e o que esta funcao sabe ler e e melhor deixar outra tentar.
+  if (grupos.length !== 2) return null;
+
+  const direita = grupos[1][Math.floor(grupos[1].length / 2)];
+  // Mesmo miolo que a calha exige: um "DATA" encostado na margem nao e inicio
+  // de segunda coluna.
+  if (direita <= largura * 0.25 || direita >= largura * 0.9) return null;
+  return direita;
+}
+
 // Quando a página não tem linha de cabeçalho com dois "DATA" (a página 2 da
 // fatura do Black é assim), a posição da coluna é descoberta pela **calha**: a
 // faixa vertical de espaço em branco que separa as duas tabelas. Para cada
@@ -157,10 +199,15 @@ function calhaDaPagina(linhas) {
 // páginas embaralhadas essa continuação herda a seção errada. Foi o que jogou a
 // "Redução Mensalidade" de produtos e serviços para dentro de compras.
 function linearizar(texto) {
-  const corteGlobal = colunaDaDireita(texto.split(/\n/));
+  const todas = texto.split(/\n/);
+  const corteGlobal = colunaDaDireita(todas) || colunaPorCabecalhos(todas);
   return texto.split('\f').flatMap(pagina => {
     const linhas = pagina.split('\n');
-    const corte = colunaDaDireita(linhas) || calhaDaPagina(linhas) || corteGlobal;
+    // Da evidencia mais forte para a mais fraca: dois "DATA" na mesma linha,
+    // depois os cabecalhos das duas tabelas na pagina, depois a calha, e so
+    // entao o corte herdado do documento inteiro.
+    const corte = colunaDaDireita(linhas) || colunaPorCabecalhos(linhas)
+               || calhaDaPagina(linhas) || corteGlobal;
     if (!corte) return linhas;
     const esq = [], dir = [];
     linhas.forEach(l => {
@@ -175,7 +222,14 @@ function linearizar(texto) {
 // a extração às vezes quebra a palavra.
 const ROTULO_DE_ENCARGO = /^(jurosdorotativo|jurosdemora|multaporatraso|iofdefinanciamento|encargosderefinanciamento|multacontratualdeatraso|jurosdemoradeatraso)/i;
 
-const LANC = new RegExp(String.raw`^(\d{2})\/(\d{2})\s+(.*?)\s{2,}(` + NUM + String.raw`)\s*$`);
+// O valor fecha a linha, mas a extracao as vezes deixa um caractere solto
+// depois dele — na fatura do 0442 de 01/10, `30,00     .` com um ponto orfao no
+// fim. Exigir fim de linha logo apos o valor descartava o lancamento inteiro, e
+// eram exatamente os R$ 30,00 que faltavam para a soma bater com o subtotal
+// impresso. Sobra depois do valor so e tolerada se nao tiver digito nenhum:
+// numero depois do valor e a coluna vizinha colada, nao ruido, e ai a linha
+// tem de ser recusada em vez de lida pela metade.
+const LANC = new RegExp(String.raw`^(\d{2})\/(\d{2})\s+(.*?)\s{2,}(` + NUM + String.raw`)\s*(?:[^\d\s]\s*){0,3}$`);
 const PARCELA = /\s(\d{2})\/(\d{2})\s*$/;
 
 function ler(arquivo) {

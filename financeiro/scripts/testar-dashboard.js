@@ -1519,9 +1519,20 @@ function noEscopo(mv) {
   // este bloco, e devolvida no fim. Nada é gravado no servidor: essa é a mesma
   // armadilha que já apagou o plano de verdade da Juliane uma vez.
   {
-    const ALVO = 'faxina';           // conta projetada de verdade, com histórico
+    // **O alvo também não pode ser fixo.** A primeira versão escolhia 'faxina'
+    // pelo nome, e o extrato de 04/10 trouxe a faxina agendada para 05/10: com
+    // ela lançada no mês, saiu da projeção, o adiamento injetado não teve onde
+    // grudar e 5 testes falharam sem nada estar quebrado. É o mesmo defeito que
+    // este bloco já tinha sido reescrito para evitar, uma camada abaixo — a
+    // injeção tirou a dependência de "existe conta adiada" e deixou a de "a
+    // faxina continua projetável". O alvo passa a sair da própria projeção do
+    // mês, qualquer conta que esteja lá.
     const ACERTO = 'Dez/26';
-    const injetado = await pagina.evaluate(({ chave, acertar }) => {
+    const injetado = await pagina.evaluate(({ acertar }) => {
+      const candidatas = (recorrentesFaltandoEm('Out/26') || [])
+        .filter(x => x.valor > 0 && x.chave && !x.fora_da_conta);
+      if (!candidatas.length) return { semAlvo: true };
+      const chave = candidatas[0].chave;
       const original = configuracoesGlobais.recorrentes_adiadas;
       configuracoesGlobais.recorrentes_adiadas = [{
         chave, descricao: 'INJETADO PELO TESTE',
@@ -1543,14 +1554,20 @@ function noEscopo(mv) {
                       descricao: out.descricao },
         nov: nov && { adiada: !!nov.adiada },
         dez: dez && { valor: dez.valor, acerto: !!dez.acerto, meses: dez.meses_acumulados },
-        texto,
+        texto, chave,
         devolvido: JSON.stringify(configuracoesGlobais.recorrentes_adiadas) === JSON.stringify(original)
       };
-    }, { chave: ALVO, acertar: ACERTO });
+    }, { acertar: ACERTO });
 
-    // Sem isso, todas as asserções abaixo passariam vazias.
+    // Sem isso, todas as asserções abaixo passariam vazias. E se NENHUMA conta
+    // estiver projetada em Out/26, isso não é "nada a testar": é a projeção
+    // inteira calada, que é defeito maior do que o adiamento.
+    ok('Existe conta projetada em Out/26 para o adiamento ter onde grudar',
+       !injetado.semAlvo, 'recorrentesFaltandoEm("Out/26") não devolveu nenhuma');
+
     ok('A conta adiada injetada existe na projeção do mês',
-       !!(injetado.out && injetado.out.valor > 0), JSON.stringify(injetado.out));
+       !!(injetado.out && injetado.out.valor > 0),
+       `alvo: ${injetado.chave || '(nenhum)'} · ${JSON.stringify(injetado.out)}`);
 
     ok('Out/26: a conta injetada está marcada como adiada até o mês do acerto',
        !!(injetado.out && injetado.out.adiada && injetado.out.ate === ACERTO),
