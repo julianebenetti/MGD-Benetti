@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791096419,
-  "updated_at_br": "04/10/2026 03:41",
+  "updated_at": 1791105721,
+  "updated_at_br": "04/10/2026 06:16",
   "period_days": 90,
-  "total_orders": 6819,
-  "total_conversions": 6514,
+  "total_orders": 6818,
+  "total_conversions": 6513,
   "orders": [
     {
       "ID do pedido": "261003M1CJ2GSQ",
@@ -170453,31 +170453,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237032276130619",
       "conversionStatus": "CANCELLED",
-      "data": "2026-07-06"
-    },
-    {
-      "ID do pedido": "2607060QE53713",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-06 08:19:32",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "44.99",
-      "Comissao liquida do afiliado(R$)": "2.96934",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "3.60%",
-      "Comissao Shopee(R$)": "1.3497",
-      "Comissao do vendedor(R$)": "1.61964",
-      "Comissao total do pedido(R$)": "2.96934",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 50 Potes Cumbuca 500ml Para Sobremesa Petisco Sopas Caldos Gelatinas Açaí Porções Sorvetes",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19098137370",
-      "ID da loja": "718801907",
-      "Nome da loja": "Dina Decorações",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237025171172613",
-      "conversionStatus": "COMPLETED",
       "data": "2026-07-06"
     }
   ]
