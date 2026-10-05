@@ -1672,6 +1672,45 @@ R$ 9.230,33, e falta **~R$ 4.240,54** em vez dos R$ 9.303,83 de antes.
 **Condomínio e escola da Valentina não foram pagos** — conferido no extrato, que
 agora alcança 02/10.
 
+### A fatura fechada do Bradesco deu razão a ela: era "quase 3k" mesmo (05/10)
+A Juliane mandou **o mesmo PDF duas vezes** — `md5sum` idêntico nos dois
+arquivos, mesmo horário no nome. É exatamente o caso que a regra de "nunca somar
+duas leituras da mesma fatura" já cobre: cópia repetida do mesmo arquivo conta
+uma vez só. Conferir o hash **antes** de ler custa um segundo e evita dobrar uma
+fatura inteira.
+
+**E ela estava certa desde 23/09.** Naquele dia ela disse *"não achei a fatura do
+visa do bradesco que já está em quase 3k"*, e eu registrei em aberto que a minha
+conta dava R$ 2.224,60, não "quase 3k". A fatura fechada resolve:
+
+| | lido dos screenshots (22/09) | fatura fechada (05/10) |
+|---|---|---|
+| 3987 Out/26 | R$ 2.080,36 · 47 lançamentos | **R$ 2.711,31 · 64** |
+| 3711 Out/26 | R$ 144,24 · **0** (só cabeçalho) | **R$ 256,26 · 8** |
+| **Total** | R$ 2.224,60 | **R$ 2.967,57** |
+
+O screenshot era foto de **ciclo ainda aberto**; faltavam as compras do fim do
+período. A leitura de 22/09 não estava errada — estava **incompleta, e declarada
+como tal**. O que ela lembrava era o número do app, que já contava o ciclo
+inteiro. **Quando a memória dela e a minha leitura discordam, pode ser que as
+duas estejam certas sobre coisas diferentes** — e aqui era isso.
+
+- A fatura fecha nos dois cartões e **a soma dos subtotais bate com o total
+  declarado**, que é a conferência criada em 15/09 justamente para garantir que
+  nenhum bloco ficou de fora.
+- **O 3711 saiu de `sem_itemizacao`.** Os R$ 144,24 tinham vindo da memória dela,
+  não de arquivo, e estavam declarados assim (`total_fonte`). Agora há documento
+  e 8 lançamentos; o importador limpou as duas marcas sozinho. O guarda escrito
+  em 23/09 — *"fatura marcada sem itemização não pode ter lançamento nenhum"* —
+  teria pegado se não tivesse limpado.
+- O extrato em aberto de 22/09 foi **descartado com aviso** (`R$ 2.080,36 →
+  2.711,31`), como a regra de 15/09 manda.
+
+**Plano de Out/26: R$ 13.470,87 → R$ 14.213,84.** Com R$ 9.230,33 disponíveis,
+a falta volta a **~R$ 4.983,51**.
+
+Suíte em **517 testes**, `conciliar.js` íntegro.
+
 ### Só é recorrente o que ela informa ou o que é reconhecidamente rotina (17/09)
 Logo depois da correção acima, a Juliane fechou a regra: *"você só vai colocar
 como recorrente o que eu informar ou as despesas que você entende que são gastos
