@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791300902,
-  "updated_at_br": "06/10/2026 12:29",
+  "updated_at": 1791306209,
+  "updated_at_br": "06/10/2026 13:57",
   "period_days": 90,
-  "total_orders": 6612,
-  "total_conversions": 6327,
+  "total_orders": 6611,
+  "total_conversions": 6326,
   "orders": [
     {
       "ID do pedido": "261006UH3VGDK3",
@@ -165277,31 +165277,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237230524165110",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-08"
-    },
-    {
-      "ID do pedido": "2607096MQDFQ5S",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-08 16:46:59",
-      "Sub_id1": "27Jun26MochilaExpansivelVs1",
-      "Valor de Compra(R$)": "37.97",
-      "Comissao liquida do afiliado(R$)": "1.1391",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.1391",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.1391",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Alicate Repuxador Milimétrico com 25 Ventosas para Martelinho De Ouro Reparo De Amassados em Carro",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58262194302",
-      "ID da loja": "379949191",
-      "Nome da loja": "BEST BAZAR",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237228419163851",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-08"
     }
