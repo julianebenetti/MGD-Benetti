@@ -24,13 +24,7 @@
   houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
   a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
 
-## Central TikTok (pasta `central-tiktok/`)
-- Projeto **separado da AfiliDash** — a Juliane não quer ligação entre os dois. Não integrar
-  com Supabase/abas da AfiliDash.
-- Robô do Telegram rodando no VPS (serviço `central-tiktok`): grupo com tópicos Brutos →
-  Editados (aprovação) → Hora de postar → Postados. Corta trechos com a modelo parada,
-  escreve a headline na tela, sugere 5 hashtags + chamada do link a partir do glossário do
-  Método UGC (`glossario.py`, fonte: artifact "Prompts do Método UGC").
-- 6 posts/dia entre 17h e 22h, sempre em horários quebrados. Vídeos sem áudio.
-- Postagem no TikTok: opção A (vai pros rascunhos, ela valida e escolhe o produto do TikTok
-  Shop na hora de postar). Nunca publicar direto sem aprovação dela.
+## Central TikTok — NÃO fica aqui
+- A Central TikTok (robô do Telegram que edita/agenda os vídeos UGC) mora no repositório
+  **julianebenetti/Tik-Tok**, pasta `central-tiktok/`. É projeto separado da AfiliDash e
+  deste repositório — não recriar nada dela aqui.
