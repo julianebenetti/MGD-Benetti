@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791394770,
-  "updated_at_br": "07/10/2026 14:34",
+  "updated_at": 1791400740,
+  "updated_at_br": "07/10/2026 16:13",
   "period_days": 90,
-  "total_orders": 6557,
-  "total_conversions": 6274,
+  "total_orders": 6556,
+  "total_conversions": 6273,
   "orders": [
     {
       "ID do pedido": "26100711BX2RM2",
@@ -757,7 +757,7 @@
     },
     {
       "ID do pedido": "261003M1CJ2GSQ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-03 01:04:50",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "53.97",
@@ -769,7 +769,7 @@
       "Comissao total do pedido(R$)": "11.3337",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21555426052",
       "ID da loja": "653366546",
       "Nome da loja": "Atacado Rylú",
@@ -777,7 +777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "244688690111698",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-03"
     },
     {
@@ -12357,7 +12357,7 @@
     },
     {
       "ID do pedido": "2609154NPU4AMM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-15 08:39:15",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "13.23814",
@@ -12369,7 +12369,7 @@
       "Comissao total do pedido(R$)": "1.82398",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Conjunto De Brincos De Pérola Com Laço De Brilhante Francês Retrô Vintage Joias De Alta Qualidade Para Mulheres 2026",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "55513367131",
       "ID da loja": "1874844426",
       "Nome da loja": "gjma.br",
@@ -12377,12 +12377,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243160754185724",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-15"
     },
     {
       "ID do pedido": "2609154NPU4AMM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-15 08:39:15",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "15.26185",
@@ -12394,7 +12394,7 @@
       "Comissao total do pedido(R$)": "1.82398",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Conjunto De Brincos De Pérola Com Laço De Brilhante Francês Retrô Vintage Joias De Alta Qualidade Para Mulheres 2026",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "55513367131",
       "ID da loja": "1874844426",
       "Nome da loja": "gjma.br",
@@ -12402,7 +12402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243160754185724",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-15"
     },
     {
@@ -163902,31 +163902,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237328466133254",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-09"
-    },
-    {
-      "ID do pedido": "2607109AEMB4RM",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-09 18:21:06",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "29.9",
-      "Comissao liquida do afiliado(R$)": "1.45314",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "2.40%",
-      "Comissao Shopee(R$)": "0.897",
-      "Comissao do vendedor(R$)": "0.7176",
-      "Comissao total do pedido(R$)": "1.6146",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Saia Feminina Cintura Alta Zíper Lateral Courino Premium Design Justo",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22299450557",
-      "ID da loja": "418918949",
-      "Nome da loja": "Lavi Modas femininas",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237320466164567",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-09"
     }
