@@ -1,6 +1,6 @@
 {
-  "updated_at": 1791400740,
-  "updated_at_br": "07/10/2026 16:13",
+  "updated_at": 1791405414,
+  "updated_at_br": "07/10/2026 17:31",
   "period_days": 90,
   "total_orders": 6556,
   "total_conversions": 6273,
@@ -7507,7 +7507,7 @@
     },
     {
       "ID do pedido": "260918BAYHHJ89",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-18 00:15:53",
       "Sub_id1": "31Jul26VEAcalcinhaalgodao",
       "Valor de Compra(R$)": "14.31",
@@ -7519,7 +7519,7 @@
       "Comissao total do pedido(R$)": "0.5724",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Relógio Quadrado Unissex Versátil De Quartzo : Pulseira De Plástico E Caixa De Liga À Prova D'água-Eleva Seu Visual Diár",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "43710767559",
       "ID da loja": "935991633",
       "Nome da loja": "br.Fashionista",
@@ -7527,7 +7527,7 @@
       "buyerType": "NEW",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243389753120365",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-18"
     },
     {
