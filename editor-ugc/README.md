@@ -33,3 +33,36 @@ e um `relatorio.csv` dizendo quanto foi cortado em cada um.
 O áudio é cortado junto com o vídeo (com um fade de 30 ms pra não estalar).
 Se a narração estiver por cima da parte parada, ela também sai — nesse caso é melhor
 editar sem áudio e colocar a narração/música depois.
+
+---
+
+# Robô do Telegram (jeito mais fácil)
+
+Você manda ou encaminha os vídeos pro seu robô no Telegram e ele devolve cada um
+já editado. Ele roda 24h no VPS da Hostinger.
+
+## Instalação (uma vez só)
+1. **Criar o robô:** no Telegram, abra o **@BotFather** → `/newbot` → escolha um nome
+   e um usuário terminado em `bot`. Guarde o **token** que ele te der.
+2. **Descobrir seu ID:** mande `/start` pro **@userinfobot** e anote o número `Id`.
+3. **Instalar no VPS:** no hPanel → VPS → **Terminal** (ou via SSH como root), cole:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/julianebenetti/MGD-Benetti/claude/ugc-tiktok-video-editing-7d11hx/editor-ugc/instalar-bot.sh | bash
+   ```
+   Ele vai pedir o token e o seu ID. No fim deve aparecer **✅ Robô rodando!**
+4. Abra o seu robô no Telegram e mande `/start`.
+
+## Uso
+- Mande ou **encaminhe** os vídeos (vários de uma vez também funciona; ele faz um por vez).
+- Ele responde cada vídeo com a versão editada e a legenda `✂️ N corte(s) — 12.0s → 9.4s`.
+- `/limiar 1.5` → corta mais (se ainda sobrar parada). `/limiar 0.7` → corta menos.
+- `/minparado 0.3` → corta também paradas mais curtas.
+- `/config` → mostra os ajustes atuais.
+
+Limite: o Telegram só deixa robôs baixarem vídeos de até **20 MB**.
+
+## Manutenção (no terminal do VPS)
+- Ver se está rodando / erros: `journalctl -u editor-ugc -n 50`
+- Reiniciar: `systemctl restart editor-ugc`
+- Atualizar o código: rodar o mesmo comando `curl ... | bash` de novo
+- Trocar token ou liberar outra pessoa: `nano /etc/editor-ugc.env` e depois `systemctl restart editor-ugc`

@@ -176,15 +176,17 @@ def processar(video, pasta_saida, args):
     if not cortes:
         print("   ✓ nenhum trecho parado encontrado")
 
-    status = "analisado"
+    status, saida = "analisado", None
     if not args.analisar:
         saida = pasta_saida / f"{video.stem}_editado.mp4"
         if not mantidos:
             print("   ⚠ vídeo inteiro parado — pulei")
-            status = "pulado (todo parado)"
+            status, saida = "pulado (todo parado)", None
+        elif not cortes:
+            status, saida = "sem paradas", None
         elif dur_final < args.min_final:
             print(f"   ⚠ sobraria só {dur_final:.1f}s — pulei (ajuste --min-final)")
-            status = "pulado (ficaria curto)"
+            status, saida = "pulado (ficaria curto)", None
         else:
             renderizar(video, saida, mantidos, tem_audio, args.crf)
             print(f"   💾 {saida.name}  ({fmt(duracao)} → {fmt(dur_final)})")
@@ -194,6 +196,7 @@ def processar(video, pasta_saida, args):
         "duracao_final": round(dur_final, 2), "cortes": len(cortes),
         "tempo_cortado": round(duracao - dur_final, 2), "status": status,
         "trechos_cortados": " | ".join(f"{a:.2f}-{b:.2f}" for a, b in cortes),
+        "saida": saida,
     }
 
 
@@ -243,7 +246,7 @@ def main():
         campos = ["video", "status", "duracao_original", "duracao_final",
                   "tempo_cortado", "cortes", "trechos_cortados"]
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=campos)
+            w = csv.DictWriter(f, fieldnames=campos, extrasaction="ignore")
             w.writeheader()
             w.writerows(relatorio)
         editados = sum(1 for r in relatorio if r.get("status") == "editado")
