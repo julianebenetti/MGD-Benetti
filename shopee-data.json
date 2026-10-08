@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791486935,
-  "updated_at_br": "08/10/2026 16:10",
+  "updated_at": 1791492176,
+  "updated_at_br": "08/10/2026 17:37",
   "period_days": 90,
-  "total_orders": 6515,
-  "total_conversions": 6233,
+  "total_orders": 6514,
+  "total_conversions": 6232,
   "orders": [
     {
       "ID do pedido": "2610083P1BGSJS",
@@ -4257,7 +4257,7 @@
     },
     {
       "ID do pedido": "260922PUBY8BWN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-22 14:08:27",
       "Sub_id1": "31Jul26VIPcalcinhaalgodao",
       "Valor de Compra(R$)": "10.8",
@@ -4269,7 +4269,7 @@
       "Comissao total do pedido(R$)": "0.7236",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Corda de Pular PVC 280cm Ajustável Antiderrapante, Treino Fitness para Exercício Casa e Estudantes",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58255777817",
       "ID da loja": "1654795160",
       "Nome da loja": "Lar & Tudo",
@@ -4277,7 +4277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "243785307157029",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-22"
     },
     {
@@ -162852,31 +162852,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237415616155027",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-10"
-    },
-    {
-      "ID do pedido": "260711C1SDXRYF",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-10 20:24:04",
-      "Sub_id1": "21Jun26SuporteEscovaObjVendasVs3",
-      "Valor de Compra(R$)": "20.81",
-      "Comissao liquida do afiliado(R$)": "2.99664",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "0.6243",
-      "Comissao do vendedor(R$)": "2.7053",
-      "Comissao total do pedido(R$)": "3.3296",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Porta Escovas e Creme Dental com Encaixe Adesivo",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22594194702",
-      "ID da loja": "1040913486",
-      "Nome da loja": "Lapê Shop",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "237414244108969",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-10"
     }
