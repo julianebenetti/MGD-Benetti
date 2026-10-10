@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791615397,
-  "updated_at_br": "10/10/2026 03:51",
+  "updated_at": 1791624317,
+  "updated_at_br": "10/10/2026 06:19",
   "period_days": 90,
-  "total_orders": 6470,
-  "total_conversions": 6191,
+  "total_orders": 6469,
+  "total_conversions": 6190,
   "orders": [
     {
       "ID do pedido": "26100966VHVB8A",
@@ -161727,31 +161727,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237549281143776",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-12"
-    },
-    {
-      "ID do pedido": "260712FW2RA89E",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-12 09:10:28",
-      "Sub_id1": "21Jun26SuporteEscovaObjVendasVs3",
-      "Valor de Compra(R$)": "30.47",
-      "Comissao liquida do afiliado(R$)": "3.56499",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "0.9141",
-      "Comissao do vendedor(R$)": "3.047",
-      "Comissao total do pedido(R$)": "3.9611",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Porta Escovas De Dente Organizador Auto Colante Banheiro Lavabo Luxo Envio Imediato",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18563093271",
-      "ID da loja": "460050107",
-      "Nome da loja": "LZRO CENTER",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "237546627192518",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-12"
     }
