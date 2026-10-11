@@ -69,10 +69,7 @@ class ShopeeVideoAutomation:
 
             # 4. Adicionar marca d'água
             logger.info("Adicionando marca d'água...")
-            watermarked_video = self.video_processor.add_watermark(
-                processed_video,
-                "AfiliDash"
-            )
+            watermarked_video = self.video_processor.add_watermark(processed_video)
 
             # 5. Salvar como rascunho
             logger.info("Salvando como rascunho...")

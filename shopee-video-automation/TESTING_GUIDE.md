@@ -293,7 +293,7 @@ print(content)
 - [ ] **Web Scraping** - Extrai informações do produto
 - [ ] **Teste Manual** - Enviar vídeo + link no Telegram e processar
 - [ ] **Validação de Rascunho** - Arquivo JSON gerado corretamente
-- [ ] **Marca d'água** - Vídeo tem watermark "AfiliDash"
+- [ ] **Marca d'água** - Logo "Achados Relâmpagos" no canto superior esquerdo
 
 ---
 

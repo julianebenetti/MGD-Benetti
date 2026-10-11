@@ -11,6 +11,12 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_LOGO = Path(__file__).parent / 'assets' / 'logo_achados_relampagos.png'
+# Proporções medidas no print de referência do app Shopee Video
+LOGO_WIDTH_RATIO = 0.25
+LOGO_MARGIN_X_RATIO = 0.01
+LOGO_TOP_RATIO = 0.10
+
 
 class VideoProcessor:
     def __init__(self, aspect_ratio: str = '9:16', width: int = 1080,
@@ -83,33 +89,30 @@ class VideoProcessor:
             logger.error(f"Erro ao processar vídeo: {e}")
             return None
 
-    def add_watermark(self, video_path: str, text: str = "AfiliDash",
-                     output_dir: Optional[Path] = None) -> Optional[str]:
-        """Adiciona marca d'água ao vídeo"""
+    def add_watermark(self, video_path: str, logo_path: str = str(DEFAULT_LOGO),
+                      output_dir: Optional[Path] = None) -> Optional[str]:
+        """Sobrepõe o logo no canto superior esquerdo (abaixo da barra de busca da Shopee)."""
         try:
             if output_dir is None:
                 output_dir = Path(video_path).parent
 
             output_file = output_dir / f"watermarked_{Path(video_path).stem}.mp4"
 
-            logger.info(f"Adicionando marca d'água: {text}")
+            logger.info(f"Adicionando logo: {logo_path}")
 
-            # FFmpeg comando para adicionar texto
-            # Posiciona no canto inferior direito
+            logo_w = int(self.width * LOGO_WIDTH_RATIO)
+            margin_x = int(self.width * LOGO_MARGIN_X_RATIO)
+            margin_y = int(self.height * LOGO_TOP_RATIO)
+
             cmd = [
                 'ffmpeg',
                 '-i', video_path,
-                '-vf', f"""
-                    drawtext=
-                    text='{text}':
-                    fontsize=40:
-                    fontcolor=white:
-                    x=w-tw-20:
-                    y=h-th-20:
-                    box=1:
-                    boxcolor=black@0.5:
-                    boxborderw=5
-                """.replace('\n', '').replace('  ', ''),
+                '-i', logo_path,
+                '-filter_complex',
+                f"[1:v]scale={logo_w}:-1[logo];[0:v][logo]overlay={margin_x}:{margin_y}",
+                '-c:v', 'libx264',
+                '-crf', '23',
+                '-preset', 'medium',
                 '-c:a', 'copy',
                 '-y',
                 str(output_file)
