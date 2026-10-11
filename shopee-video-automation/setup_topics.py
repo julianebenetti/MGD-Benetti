@@ -15,6 +15,7 @@ from telegram_handler import TelegramMonitor
 TOPICS = [
     ('TELEGRAM_TOPIC_ENVIOS', '📥 Envios', 0x6FB9F0),
     ('TELEGRAM_TOPIC_EDITADOS', '✅ Editados', 0x8EEE98),
+    ('TELEGRAM_TOPIC_POSTADOS', '🚀 Postados', 0xFFD67E),
 ]
 
 

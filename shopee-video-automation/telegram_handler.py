@@ -1,6 +1,7 @@
 """
 Telegram Bot Handler
-Lê os envios no tópico "📥 Envios" do grupo e entrega o material editado no tópico "✅ Editados".
+Tópicos do grupo: "📥 Envios" (entrada), "✅ Editados" (material pronto) e
+"🚀 Postados" (o que já foi enviado ao bot da Shopee).
 """
 
 import html
