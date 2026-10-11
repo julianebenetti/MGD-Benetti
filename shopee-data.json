@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791702092,
-  "updated_at_br": "11/10/2026 03:56",
+  "updated_at": 1791711741,
+  "updated_at_br": "11/10/2026 06:36",
   "period_days": 90,
-  "total_orders": 6431,
-  "total_conversions": 6157,
+  "total_orders": 6430,
+  "total_conversions": 6156,
   "orders": [
     {
       "ID do pedido": "2610108JH1E6DT",
@@ -160753,31 +160753,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "237635921171062",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-13"
-    },
-    {
-      "ID do pedido": "260713JA0PC849",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-13 08:07:17",
-      "Sub_id1": "11Jun26SegundaPeleCopia19mai26SegundaPele",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "3.00%",
-      "Taxa de comissao do vendedor do item": "1.50%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Desengordurante Spray Potente Multiuso Cozinha Fogão e Air Fryer 300ml Super Dom",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "58209682843",
-      "ID da loja": "967211054",
-      "Nome da loja": "Marca Texto e Papel Fotográfico",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237629236178294",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-13"
     }
   ]
