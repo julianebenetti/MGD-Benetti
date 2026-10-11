@@ -52,3 +52,6 @@ secrets.json
 
 # Navegador automático (perfil com login da Shopee)
 .browser-profile/
+
+# Registro local de sub_ids já usados
+sub_ids_usados.json

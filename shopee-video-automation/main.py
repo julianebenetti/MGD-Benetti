@@ -5,9 +5,7 @@ Monitora grupo Telegram, processa vídeos e publica na Shopee Video
 """
 
 import os
-import sys
 import logging
-from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -16,6 +14,8 @@ from video_processor import VideoProcessor
 from shopee_affiliate import ShopeeAffiliateClient
 from content_generator import ContentGenerator
 from cover_generator import CoverGenerator
+from product_matcher import check_match
+from sub_id import novo_sub_id
 
 load_dotenv()
 
@@ -52,78 +52,83 @@ class ShopeeVideoAutomation:
         self.cover_gen = CoverGenerator()
 
         self.output_dir = Path(os.getenv('VIDEOS_OUTPUT_DIR', './processed_videos'))
-        self.drafts_dir = Path(os.getenv('DRAFTS_OUTPUT_DIR', './drafts'))
 
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.drafts_dir.mkdir(parents=True, exist_ok=True)
 
-    def process_video(self, video_path: str, product: dict, affiliate_link: str) -> dict:
-        """Processa um vídeo do início ao fim"""
-        logger.info(f"Iniciando processamento: {video_path}")
+    def _pick_product(self, video_path: str, candidates: list):
+        """Primeiro candidato que a IA confirma estar no vídeo; senão (None, motivos)."""
+        motivos = []
+        for product in candidates:
+            resultado, motivo = check_match(video_path, product)
+            if resultado == 'sim':
+                return product, []
+            motivos.append(f"• {product['productName']}: {resultado} ({motivo})")
+        return None, motivos
 
-        try:
-            processed_video = self.video_processor.process(video_path, self.output_dir)
-
-            product_info = {
-                'name': product['productName'],
-                'price': product.get('priceMin') or product.get('price'),
-                'rating': product.get('ratingStar'),
-                'sold': product.get('sales'),
-            }
-            logger.info("Gerando headline, descrição, hashtags e SEO...")
-            metadata = self.content_gen.generate(product_info)
-
-            logger.info("Adicionando marca d'água...")
-            watermarked_video = self.video_processor.add_watermark(processed_video)
-
-            logger.info("Gerando capa...")
-            cover_path = self.cover_gen.generate(
-                watermarked_video,
-                metadata['cover_title'],
-                str(Path(watermarked_video).with_suffix('.capa.jpg'))
+    def process_message(self, message: dict):
+        link = message['product_link']
+        candidates = self.shopee.find_candidates(link, message.get('text', ''))
+        if not candidates:
+            logger.warning(f"Produto não identificado para {link}")
+            self.telegram.reply_in_envios(
+                message['message_id'],
+                "⚠️ Não consegui identificar o produto deste vídeo. "
+                "Reenvie com o link do PRODUTO (não do vídeo) ou com o nome exato do produto."
             )
+            return
 
-            return {
-                'video_path': watermarked_video,
-                'cover_path': cover_path,
-                'product_url': affiliate_link,
-                'product_info': product_info,
-                'metadata': metadata,
-                'timestamp': datetime.now().isoformat(),
-                'status': 'draft'
-            }
+        processed_video = self.video_processor.process(message['video_file'], self.output_dir)
+        if not processed_video:
+            self.telegram.reply_in_envios(message['message_id'], "⚠️ Não consegui processar este vídeo.")
+            return
 
-        except Exception as e:
-            logger.error(f"Erro ao processar vídeo: {e}", exc_info=True)
-            return None
+        product, motivos = self._pick_product(processed_video, candidates)
+        if not product:
+            self.telegram.reply_in_envios(
+                message['message_id'],
+                "⚠️ A conferência não confirmou que o produto é o do vídeo, então não segui:\n"
+                + "\n".join(motivos)
+                + "\n\nReenvie com o link do produto certo."
+            )
+            return
+
+        product_info = {
+            'name': product['productName'],
+            'price': product.get('priceMin') or product.get('price'),
+            'rating': product.get('ratingStar'),
+            'sold': product.get('sales'),
+        }
+        logger.info("Gerando headline, descrição, hashtags e SEO...")
+        metadata = self.content_gen.generate(product_info)
+
+        sub_id = novo_sub_id(metadata['short_name'])
+        affiliate_link = self.shopee.affiliate_link(product, sub_id)
+        logger.info(f"Link de afiliado ({sub_id}): {affiliate_link}")
+
+        watermarked_video = self.video_processor.add_watermark(processed_video)
+        cover_path = self.cover_gen.generate(
+            watermarked_video,
+            metadata['cover_title'],
+            str(Path(watermarked_video).with_suffix('.capa.jpg'))
+        )
+        if not watermarked_video or not cover_path:
+            self.telegram.reply_in_envios(message['message_id'], "⚠️ Falha ao gerar o vídeo final ou a capa.")
+            return
+
+        self.telegram.send_edited(
+            watermarked_video, cover_path, metadata, affiliate_link,
+            product_info['name'], sub_id
+        )
+        logger.info(f"✅ Vídeo pronto: {watermarked_video}")
 
     def run(self):
-        """Executa a automação"""
         logger.info("Iniciando automação de vídeos Shopee...")
-
         for message in self.telegram.get_new_messages():
-            link = message['product_link']
-            resolved = self.shopee.resolve(link, message.get('text', ''))
-            if not resolved:
-                logger.warning(f"Produto não identificado para {link}")
-                self.telegram.reply_in_envios(
-                    message['message_id'],
-                    "⚠️ Não consegui identificar o produto deste vídeo com segurança. "
-                    "Reenvie o vídeo com o link do PRODUTO (não do vídeo) ou com o nome exato do produto."
-                )
-                continue
-
-            result = self.process_video(message['video_file'], resolved['product'], resolved['affiliate_link'])
-            if result:
-                logger.info(f"✅ Vídeo pronto: {result['video_path']}")
-                self.telegram.send_edited(
-                    result['video_path'], result['cover_path'],
-                    result['metadata'], result['product_url'],
-                    result['product_info']['name']
-                )
-            else:
-                logger.error("❌ Falha ao processar vídeo")
-
+            try:
+                self.process_message(message)
+            except Exception as e:
+                logger.error(f"Erro ao processar mensagem {message.get('message_id')}: {e}", exc_info=True)
+                self.telegram.reply_in_envios(message['message_id'], f"⚠️ Erro inesperado: {e}")
         logger.info("Automação concluída")
 
 

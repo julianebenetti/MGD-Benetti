@@ -1,7 +1,7 @@
 """
 Shopee Affiliate Open API + conversão de links
-Transforma qualquer link recebido (produto, link curto ou link de Shopee Video)
-no link de afiliado do produto. Nunca devolve link de vídeo.
+Descobre o produto por trás de qualquer link recebido (produto, link curto ou
+link de Shopee Video) e gera o link de afiliado do produto. Nunca devolve link de vídeo.
 """
 
 import difflib
@@ -96,7 +96,7 @@ class ShopeeAffiliateClient:
 
     def short_link(self, origin_url: str, sub_ids: Optional[List[str]] = None) -> str:
         query = 'mutation($input:ShortLinkInput!){generateShortLink(input:$input){shortLink}}'
-        variables = {'input': {'originUrl': origin_url, 'subIds': sub_ids or ['shopeevideo']}}
+        variables = {'input': {'originUrl': origin_url, 'subIds': sub_ids or []}}
         return self._graphql(query, variables)['generateShortLink']['shortLink']
 
     def find_by_name(self, name: str, shop_name: Optional[str] = None) -> Optional[Dict]:
@@ -124,46 +124,41 @@ class ShopeeAffiliateClient:
             logger.warning(f"Não consegui abrir {url}: {e}")
             return url
 
-    def _product_from_video_page(self, video_url: str) -> Optional[Dict]:
-        """O vídeo pode ter vários produtos: usa o primeiro que a página carrega e que a API confirma."""
+    def _products_from_video_page(self, video_url: str, limit: int = 5) -> List[Dict]:
         from video_page_reader import read_video_products
         try:
             candidates = read_video_products(video_url)
         except Exception as e:
             logger.warning(f"Não consegui ler a página do vídeo: {e}")
-            return None
-        for c in candidates:
+            return []
+        products = []
+        for c in candidates[:limit]:
             product = self.product_by_ids(c['shop_id'], c['item_id'])
             if product:
-                if len(candidates) > 1:
-                    logger.info(f"Vídeo com {len(candidates)} produtos; usando: {product['productName']}")
-                return product
-        return None
+                products.append(product)
+        return products
 
-    def resolve(self, url: str, message_text: str = '') -> Optional[Dict]:
+    def find_candidates(self, url: str, message_text: str = '') -> List[Dict]:
         """
-        Devolve {'product': {...}, 'affiliate_link': ...} ou None se não der para
-        identificar o produto com segurança.
+        Produtos possíveis para o link recebido, em ordem de prioridade.
+        Link de produto: 1 candidato. Link de vídeo: os produtos vinculados ao vídeo.
         """
         final_url = self.resolve_url(url)
         ids = extract_ids(final_url) or extract_ids(url)
-
-        product = None
         if ids:
             product = self.product_by_ids(ids['shop_id'], ids['item_id'])
-        elif is_video_link(final_url) or is_video_link(url):
-            product = self._product_from_video_page(final_url)
-            if not product:
-                name = product_name_from_text(message_text)
-                if name:
-                    product = self.find_by_name(name)
+            return [product] if product else []
 
-        if not product:
-            return None
+        candidates: List[Dict] = []
+        if is_video_link(final_url) or is_video_link(url):
+            candidates = self._products_from_video_page(final_url)
+        if not candidates:
+            name = product_name_from_text(message_text)
+            product = self.find_by_name(name) if name else None
+            if product:
+                candidates = [product]
+        return candidates
 
+    def affiliate_link(self, product: Dict, sub_id: str) -> str:
         product_url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"
-        return {
-            'product': product,
-            'product_url': product_url,
-            'affiliate_link': self.short_link(product_url),
-        }
+        return self.short_link(product_url, [sub_id])

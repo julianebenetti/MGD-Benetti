@@ -61,6 +61,9 @@ Automação completa para postagem de vídeos na Shopee Video com processamento 
    ├── video_processor.py      # Processamento com FFmpeg
    ├── shopee_affiliate.py     # API de afiliados: produto + link de afiliado
    ├── video_page_reader.py    # Abre a página do Shopee Video e acha o produto
+   ├── product_matcher.py      # Conferência vídeo × produto por IA
+   ├── sub_id.py               # Sub_id: Data + SV + Produto (ex: 11Out26SVSapateiraBanco)
+   ├── claude_client.py        # Chamada à Claude (JSON por esquema)
    ├── cover_generator.py      # Capa do vídeo
    ├── setup_topics.py         # Cria os tópicos Envios/Editados/Postados
    ├── content_generator.py    # Geração de conteúdo com IA

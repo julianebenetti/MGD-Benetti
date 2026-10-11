@@ -4,53 +4,41 @@ Gera descrição, hashtags e SEO usando Claude AI
 """
 
 import logging
-import json
-import os
 from typing import Dict
-from anthropic import Anthropic
+
+from claude_client import ask_json
 
 logger = logging.getLogger(__name__)
 
+SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'cover_title': {'type': 'string'},
+        'description': {'type': 'string'},
+        'hashtags': {'type': 'array', 'items': {'type': 'string'}},
+        'seo_keywords': {'type': 'array', 'items': {'type': 'string'}},
+        'short_name': {'type': 'string'},
+    },
+    'required': ['cover_title', 'description', 'hashtags', 'seo_keywords', 'short_name'],
+    'additionalProperties': False,
+}
+
 
 class ContentGenerator:
-    def __init__(self):
-        self.client = Anthropic()
-        self.model = "claude-3-5-sonnet-20241022"
-
     def generate(self, product_info: Dict) -> Dict:
-        """
-        Gera conteúdo completo para o vídeo:
-        - Descrição otimizada
-        - 5 hashtags relevantes
-        - 10 palavras-chave SEO (sem repetição)
-        """
+        """Headline da capa, descrição, 5 hashtags, 10 palavras de SEO e nome curto (para o sub_id)."""
         try:
             logger.info(f"Gerando conteúdo para: {product_info.get('name', 'Produto')}")
-
-            # Preparar prompt com informações do produto
-            prompt = self._build_prompt(product_info)
-
-            # Chamar Claude para gerar conteúdo
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=1024,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ]
-            )
-
-            # Extrair e parsear resposta
-            content = response.content[0].text
-
-            # Extrair JSON da resposta
-            result = self._parse_response(content) or self._default_content(product_info)
-
+            data = ask_json(self._build_prompt(product_info), SCHEMA)
+            result = {
+                'cover_title': data['cover_title'][:60],
+                'description': data['description'][:150],
+                'hashtags': [h if h.startswith('#') else f'#{h}' for h in data['hashtags']][:5],
+                'seo_keywords': data['seo_keywords'][:10],
+                'short_name': data['short_name'],
+            }
             logger.info("✅ Conteúdo gerado com sucesso")
             return result
-
         except Exception as e:
             logger.error(f"Erro ao gerar conteúdo: {e}")
             return self._default_content(product_info)
@@ -77,15 +65,12 @@ INFORMAÇÕES DO PRODUTO:
 - Vendas: {sold} unidades
 - Descrição: {description[:300]}
 
-TAREFA:
-Gere um JSON com exatamente este formato (responda APENAS com JSON válido):
-
-{{
-  "cover_title": "Gancho curto para a capa (máx 60 caracteres), em tom de conversa, que gere curiosidade. Pode começar com 1 emoji e deve terminar com 😱🔥. Ex: 'Se você usa plus size, olha esse achado! 😱🔥'",
-  "description": "Uma descrição atrativa e engajante para o vídeo Shopee Video (máx 150 caracteres). Deve mencionar benefício principal, ser persuasiva e convidar à ação.",
-  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3", "#hashtag4", "#hashtag5"],
-  "seo_keywords": ["palavra1", "palavra2", "palavra3", "palavra4", "palavra5", "palavra6", "palavra7", "palavra8", "palavra9", "palavra10"]
-}}
+CAMPOS:
+- cover_title: gancho curto para a capa, em tom de conversa, que gere curiosidade. Pode começar com 1 emoji e deve terminar com 😱🔥. Ex: "Se você usa plus size, olha esse achado! 😱🔥"
+- description: descrição atrativa para o Shopee Video, mencionando o benefício principal e convidando à ação
+- hashtags: 5 hashtags começando com #
+- seo_keywords: 10 palavras-chave
+- short_name: nome curto do produto para identificação interna, 1 a 2 palavras, sem acento, sem espaço, cada palavra com inicial maiúscula (ex: "SapateiraBanco", "ConjuntoLinho")
 
 REGRAS:
 - Cover title: máximo 60 caracteres, não cite preço nem marca
@@ -93,7 +78,6 @@ REGRAS:
 - Hashtags: 5 hashtags relevantes ao produto/categoria (começando com #)
 - SEO Keywords: 10 palavras-chave diferentes (sem repetir nenhuma palavra), separadas por vírgula, ordenadas por relevância
 - Nenhuma palavra pode se repetir entre description, hashtags e keywords
-- Sempre retorna JSON válido
 
 COMPLIANCE (obrigatório em todos os campos):
 - Use apenas informações presentes nos dados do produto acima; não invente características nem benefícios
@@ -103,65 +87,21 @@ COMPLIANCE (obrigatório em todos os campos):
 - Não cite preço (pode mudar até a publicação)
 - Vendas e avaliação só como dado informativo, sem exagero
 - Nunca mencione comissão nem a apresente como vantagem para quem compra
-
-Responda APENAS com o JSON, sem explicações adicionais.
 """
         return prompt
-
-    def _parse_response(self, response_text: str) -> Dict:
-        """Parseia a resposta JSON do Claude"""
-        try:
-            # Tentar extrair JSON da resposta
-            import re
-            json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-
-            if json_match:
-                json_str = json_match.group()
-                data = json.loads(json_str)
-
-                # Validar campos
-                if 'description' in data and 'hashtags' in data and 'seo_keywords' in data:
-                    return {
-                        'cover_title': data.get('cover_title', '')[:60],
-                        'description': data['description'][:150],
-                        'hashtags': data['hashtags'][:5],
-                        'seo_keywords': data['seo_keywords'][:10]
-                    }
-
-            logger.warning("Resposta JSON inválida, usando conteúdo padrão")
-            return None
-
-        except json.JSONDecodeError as e:
-            logger.error(f"Erro ao fazer parse JSON: {e}")
-            return None
 
     def _default_content(self, product_info: Dict) -> Dict:
         """Conteúdo padrão caso a IA falhe"""
         product_name = product_info.get('name', 'Produto')
-        category = product_info.get('category', 'Categoria')
-
         return {
             'cover_title': 'Olha esse achado! 😱🔥',
-            'description': f'🎯 Confira este {category}! Qualidade garantida. Link na bio! 👆',
-            'hashtags': [
-                f'#{category.replace(" ", "")}',
-                '#Shopee',
-                '#Oferta',
-                '#Promoção',
-                '#Compre'
-            ],
-            'seo_keywords': [
-                product_name.split()[0] if product_name else 'produto',
-                category,
-                'shopee',
-                'oferta',
-                'comprar',
-                'promoção',
-                'melhor preço',
-                'qualidade',
-                'entrega rápida',
-                'confiável'
-            ]
+            'description': f'{product_name} 👀 Confira os detalhes no link do produto.'[:150],
+            'hashtags': ['#Shopee', '#ShopeeVideo', '#Achadinhos', '#AchadosShopee', '#AchadosRelampagos'],
+            'seo_keywords': list(dict.fromkeys(
+                [w for w in product_name.lower().split() if len(w) > 2]
+                + ['shopee', 'achadinhos', 'achados', 'video', 'dicas', 'compras', 'novidade']
+            ))[:10],
+            'short_name': ''.join(w.capitalize() for w in product_name.split()[:2]) or 'Produto',
         }
 
     def validate_content(self, content: Dict) -> bool:
