@@ -5,11 +5,12 @@ Preparação de um vídeo: produto confirmado + links extras + textos + vídeo c
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from content_generator import ContentGenerator
 from cover_generator import CoverGenerator
 from product_matcher import check_match
+from product_page_capture import capture_variations
 from shopee_affiliate import ShopeeAffiliateClient
 from sub_id import novo_sub_id
 from video_processor import VideoProcessor
@@ -96,7 +97,8 @@ class Pipeline:
         final_video = self.video.add_watermark(processed)
         if not final_video:
             raise PipelineError("Falha ao aplicar o logo no vídeo.")
-        cover = self.make_cover(final_video, metadata['cover_title'])
+        sticker = self.variations_print(main)
+        cover = self.make_cover(final_video, metadata['cover_title'], sticker)
 
         return {
             'product_key': key,
@@ -107,12 +109,23 @@ class Pipeline:
             'metadata': metadata,
             'video_path': final_video,
             'cover_path': cover,
+            'sticker_path': sticker,
         }
 
-    def make_cover(self, video_path: str, headline: str) -> str:
+    def variations_print(self, product: Dict):
+        url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"
+        out = self.output_dir / f"variacoes_{product['shopId']}_{product['itemId']}.png"
+        try:
+            path = capture_variations(url, out)
+            return str(path) if path else None
+        except Exception as e:
+            logger.warning(f"Print das variações falhou: {e}")
+            return None
+
+    def make_cover(self, video_path: str, headline: str, sticker_path: Optional[str] = None) -> str:
         n = len(list(Path(video_path).parent.glob(f"{Path(video_path).stem}.capa*.jpg")))
         out = str(Path(video_path).with_suffix(f'.capa{n or ""}.jpg'))
-        if not self.cover.generate(video_path, headline, out):
+        if not self.cover.generate(video_path, headline, out, sticker_path):
             raise PipelineError("Falha ao gerar a capa.")
         return out
 

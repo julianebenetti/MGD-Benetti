@@ -65,6 +65,8 @@ def post_text(post: Dict) -> str:
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
         f"🔗 <b>Links:</b>\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
+        + ("" if post.get('sticker_path') else
+           "\n\n⚠️ Capa sem print das variações (produto sem variações ou a página não carregou).")
     )
 
 
@@ -140,7 +142,7 @@ class Bot:
             return
         if headline is None:
             headline = self.pipeline.new_headline(post, self.db.headlines_for(post['product_key']))
-        cover = self.pipeline.make_cover(post['video_path'], headline)
+        cover = self.pipeline.make_cover(post['video_path'], headline, post.get('sticker_path'))
         metadata = {**post['metadata'], 'cover_title': headline}
         self.tg.delete(post['editados_msgs'])
         self.db.update_post(post_id, metadata=metadata, cover_path=cover)

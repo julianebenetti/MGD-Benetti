@@ -168,8 +168,7 @@ class ShopeeAffiliateClient:
                 candidates = [product]
         return candidates
 
-    def other_sellers(self, product: Dict, min_commission: float = 9.0,
-                      min_rating: float = 4.5) -> List[Dict]:
+    def other_sellers(self, product: Dict, min_rating: float = 4.5) -> List[Dict]:
         """Mesmo tipo de produto em outras lojas, ordenado por maior comissão (R$)."""
         keyword = ' '.join(product['productName'].split()[:8])
         others = []
@@ -179,8 +178,7 @@ class ShopeeAffiliateClient:
             if float(node.get('ratingStar') or 0) < min_rating:
                 continue
             node['commissionValue'] = commission_value(node)
-            if node['commissionValue'] >= min_commission:
-                others.append(node)
+            others.append(node)
         return sorted(others, key=lambda n: n['commissionValue'], reverse=True)
 
     def affiliate_link(self, product: Dict, sub_id: str) -> str:

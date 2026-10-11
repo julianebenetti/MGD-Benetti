@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS posts (
     metadata TEXT,                     -- JSON: headline, descrição, hashtags, SEO
     video_path TEXT,
     cover_path TEXT,
+    sticker_path TEXT,
     editados_msgs TEXT DEFAULT '[]',
     agenda_msgs TEXT DEFAULT '[]',
     scheduled_at TEXT

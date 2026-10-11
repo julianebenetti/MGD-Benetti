@@ -26,6 +26,11 @@ PILL_PAD_X_RATIO = 0.35
 PILL_PAD_Y_RATIO = 0.10
 LINE_OVERLAP_RATIO = 0.18
 TEXT_COLOR = (34, 34, 34, 255)
+# Figurinha com o print das variações, abaixo da headline
+STICKER_TOP_RATIO = 0.60
+STICKER_MAX_W_RATIO = 0.92
+STICKER_MAX_H_RATIO = 0.30
+STICKER_ROTATION = -3
 PILL_COLOR = (255, 255, 255, 240)
 
 
@@ -146,9 +151,38 @@ class CoverGenerator:
                 x += int(self.font.getlength(run))
         return pill_h
 
-    def generate(self, video_path: str, title: str, output_path: str) -> Optional[str]:
+    def _sticker(self, path: str) -> Image.Image:
+        """Recorte com cara de figurinha: borda branca, cantos arredondados, sombra e leve giro."""
+        img = Image.open(path).convert('RGBA')
+        img.thumbnail((int(self.width * STICKER_MAX_W_RATIO), int(self.height * STICKER_MAX_H_RATIO)), Image.LANCZOS)
+        border = int(self.width * 0.014)
+        radius = int(self.width * 0.03)
+        w, h = img.width + 2 * border, img.height + 2 * border
+
+        card = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+        ImageDraw.Draw(card).rounded_rectangle((0, 0, w - 1, h - 1), radius=radius, fill=(255, 255, 255, 255))
+        mask = Image.new('L', img.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, img.width - 1, img.height - 1),
+                                               radius=max(1, radius - border), fill=255)
+        card.paste(img, (border, border), mask)
+
+        pad = int(self.width * 0.03)
+        shadow = Image.new('RGBA', (w + 2 * pad, h + 2 * pad), (0, 0, 0, 0))
+        ImageDraw.Draw(shadow).rounded_rectangle((pad, pad + pad // 3, pad + w, pad + h + pad // 3),
+                                                 radius=radius, fill=(0, 0, 0, 110))
+        shadow = shadow.filter(ImageFilter.GaussianBlur(pad // 2))
+        shadow.alpha_composite(card, (pad, pad))
+        return shadow.rotate(STICKER_ROTATION, resample=Image.BICUBIC, expand=True)
+
+    def generate(self, video_path: str, title: str, output_path: str,
+                 sticker_path: Optional[str] = None) -> Optional[str]:
         try:
             frame = self.pick_frame(video_path).convert('RGBA')
+            if sticker_path:
+                sticker = self._sticker(sticker_path)
+                top = int(self.height * STICKER_TOP_RATIO)
+                top = min(top, self.height - sticker.height - int(self.height * 0.03))
+                frame.alpha_composite(sticker, ((self.width - sticker.width) // 2, top))
             lines = self._wrap(title)
             ascent, descent = self.font.getmetrics()
             pill_h = ascent + descent + 2 * int(self.font_size * PILL_PAD_Y_RATIO)
