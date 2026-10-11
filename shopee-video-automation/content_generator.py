@@ -46,7 +46,7 @@ class ContentGenerator:
             content = response.content[0].text
 
             # Extrair JSON da resposta
-            result = self._parse_response(content)
+            result = self._parse_response(content) or self._default_content(product_info)
 
             logger.info("✅ Conteúdo gerado com sucesso")
             return result
@@ -81,12 +81,14 @@ TAREFA:
 Gere um JSON com exatamente este formato (responda APENAS com JSON válido):
 
 {{
+  "cover_title": "Gancho curto para a capa (máx 60 caracteres), em tom de conversa, que gere curiosidade. Pode começar com 1 emoji e deve terminar com 😱🔥. Ex: 'Se você usa plus size, olha esse achado! 😱🔥'",
   "description": "Uma descrição atrativa e engajante para o vídeo Shopee Video (máx 150 caracteres). Deve mencionar benefício principal, ser persuasiva e convidar à ação.",
   "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3", "#hashtag4", "#hashtag5"],
   "seo_keywords": ["palavra1", "palavra2", "palavra3", "palavra4", "palavra5", "palavra6", "palavra7", "palavra8", "palavra9", "palavra10"]
 }}
 
 REGRAS:
+- Cover title: máximo 60 caracteres, não cite preço nem marca
 - Description: máximo 150 caracteres, urgente e envolvente
 - Hashtags: 5 hashtags relevantes ao produto/categoria (começando com #)
 - SEO Keywords: 10 palavras-chave diferentes (sem repetir nenhuma palavra), separadas por vírgula, ordenadas por relevância
@@ -111,6 +113,7 @@ Responda APENAS com o JSON, sem explicações adicionais.
                 # Validar campos
                 if 'description' in data and 'hashtags' in data and 'seo_keywords' in data:
                     return {
+                        'cover_title': data.get('cover_title', '')[:60],
                         'description': data['description'][:150],
                         'hashtags': data['hashtags'][:5],
                         'seo_keywords': data['seo_keywords'][:10]
@@ -129,6 +132,7 @@ Responda APENAS com o JSON, sem explicações adicionais.
         category = product_info.get('category', 'Categoria')
 
         return {
+            'cover_title': 'Olha esse achado! 😱🔥',
             'description': f'🎯 Confira este {category}! Qualidade garantida. Link na bio! 👆',
             'hashtags': [
                 f'#{category.replace(" ", "")}',

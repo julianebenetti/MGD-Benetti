@@ -15,6 +15,7 @@ from telegram_handler import TelegramMonitor
 from video_processor import VideoProcessor
 from shopee_scraper import ShopeeScraper
 from content_generator import ContentGenerator
+from cover_generator import CoverGenerator
 
 load_dotenv()
 
@@ -43,6 +44,7 @@ class ShopeeVideoAutomation:
         )
         self.shopee = ShopeeScraper()
         self.content_gen = ContentGenerator()
+        self.cover_gen = CoverGenerator()
 
         self.output_dir = Path(os.getenv('VIDEOS_OUTPUT_DIR', './processed_videos'))
         self.drafts_dir = Path(os.getenv('DRAFTS_OUTPUT_DIR', './drafts'))
@@ -71,10 +73,18 @@ class ShopeeVideoAutomation:
             logger.info("Adicionando marca d'água...")
             watermarked_video = self.video_processor.add_watermark(processed_video)
 
+            logger.info("Gerando capa...")
+            cover_path = self.cover_gen.generate(
+                watermarked_video,
+                metadata['cover_title'],
+                str(Path(watermarked_video).with_suffix('.capa.jpg'))
+            )
+
             # 5. Salvar como rascunho
             logger.info("Salvando como rascunho...")
             draft_data = {
                 'video_path': watermarked_video,
+                'cover_path': cover_path,
                 'product_url': product_url,
                 'product_info': product_info,
                 'metadata': metadata,
