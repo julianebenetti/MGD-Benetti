@@ -34,7 +34,9 @@ class ShopeeVideoAutomation:
     def __init__(self):
         self.telegram = TelegramMonitor(
             token=os.getenv('TELEGRAM_BOT_TOKEN'),
-            chat_id=os.getenv('TELEGRAM_CHAT_ID')
+            chat_id=os.getenv('TELEGRAM_CHAT_ID'),
+            topic_envios=int(os.getenv('TELEGRAM_TOPIC_ENVIOS') or 0) or None,
+            topic_editados=int(os.getenv('TELEGRAM_TOPIC_EDITADOS') or 0) or None
         )
         self.video_processor = VideoProcessor(
             aspect_ratio=os.getenv('VIDEO_ASPECT_RATIO', '9:16'),
@@ -115,6 +117,10 @@ class ShopeeVideoAutomation:
 
                 if result:
                     logger.info(f"✅ Vídeo pronto para publicação: {result['video_path']}")
+                    self.telegram.send_edited(
+                        result['video_path'], result['cover_path'],
+                        result['metadata'], result['product_url']
+                    )
                 else:
                     logger.error(f"❌ Falha ao processar vídeo")
 
