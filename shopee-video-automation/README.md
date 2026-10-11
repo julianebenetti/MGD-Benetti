@@ -41,10 +41,14 @@ Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `
 
 ## Instalação no VPS
 
-1. Copie esta pasta para o VPS.
-2. Ative **Tópicos** no grupo e deixe o bot admin com **Gerenciar tópicos**.
-3. Rode `bash instalar.sh`. Na primeira vez ele cria o `.env`: preencha as chaves e rode de novo.
-   Ele instala tudo, cria os tópicos e liga o serviço `shopee-video`.
+1. Ative **Tópicos** no grupo e deixe o bot admin com **Gerenciar tópicos** e **Apagar mensagens**.
+2. No terminal do VPS, rode:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/julianebenetti/MGD-Benetti/claude/shopee-video-posts-fy4an1/shopee-video-automation/instalar.sh | bash
+   ```
+   Na primeira vez ele baixa o código em `/opt/shopee-video`, cria o `.env` e para.
+3. `nano /opt/shopee-video/shopee-video-automation/.env`, preencha as chaves, salve e rode o mesmo comando.
+   Ele instala tudo, cria os tópicos e liga o serviço `shopee-video`. O mesmo comando também atualiza.
 
 | O quê | Comando |
 |---|---|
