@@ -124,6 +124,22 @@ class ShopeeAffiliateClient:
             logger.warning(f"Não consegui abrir {url}: {e}")
             return url
 
+    def _product_from_video_page(self, video_url: str) -> Optional[Dict]:
+        """O vídeo pode ter vários produtos: usa o primeiro que a página carrega e que a API confirma."""
+        from video_page_reader import read_video_products
+        try:
+            candidates = read_video_products(video_url)
+        except Exception as e:
+            logger.warning(f"Não consegui ler a página do vídeo: {e}")
+            return None
+        for c in candidates:
+            product = self.product_by_ids(c['shop_id'], c['item_id'])
+            if product:
+                if len(candidates) > 1:
+                    logger.info(f"Vídeo com {len(candidates)} produtos; usando: {product['productName']}")
+                return product
+        return None
+
     def resolve(self, url: str, message_text: str = '') -> Optional[Dict]:
         """
         Devolve {'product': {...}, 'affiliate_link': ...} ou None se não der para
@@ -136,11 +152,11 @@ class ShopeeAffiliateClient:
         if ids:
             product = self.product_by_ids(ids['shop_id'], ids['item_id'])
         elif is_video_link(final_url) or is_video_link(url):
-            name = product_name_from_text(message_text)
-            if name:
-                product = self.find_by_name(name)
-            else:
-                logger.warning("Link de vídeo sem nome do produto na mensagem")
+            product = self._product_from_video_page(final_url)
+            if not product:
+                name = product_name_from_text(message_text)
+                if name:
+                    product = self.find_by_name(name)
 
         if not product:
             return None

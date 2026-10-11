@@ -118,7 +118,8 @@ class ShopeeVideoAutomation:
                 logger.info(f"✅ Vídeo pronto: {result['video_path']}")
                 self.telegram.send_edited(
                     result['video_path'], result['cover_path'],
-                    result['metadata'], result['product_url']
+                    result['metadata'], result['product_url'],
+                    result['product_info']['name']
                 )
             else:
                 logger.error("❌ Falha ao processar vídeo")

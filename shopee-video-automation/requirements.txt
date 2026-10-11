@@ -4,4 +4,4 @@ lxml==4.9.3
 python-dotenv==1.0.0
 anthropic==0.28.0
 selenium==4.15.2
-playwright==1.40.0
+playwright==1.56.0

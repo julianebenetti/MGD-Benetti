@@ -136,7 +136,7 @@ class TelegramMonitor:
             logger.error(f"Erro ao responder em Envios: {e}")
 
     def send_edited(self, video_path: str, cover_path: str, metadata: Dict,
-                    product_url: str, reply_to: Optional[int] = None) -> bool:
+                    product_url: str, product_name: str = '') -> bool:
         """Entrega capa + vídeo + textos no tópico Editados."""
         try:
             thread = {'message_thread_id': self.topic_editados} if self.topic_editados else {}
@@ -156,7 +156,7 @@ class TelegramMonitor:
                 f"📝 <b>Descrição:</b>\n{e(metadata['description'])}\n\n"
                 f"#️⃣ <b>Hashtags:</b>\n{e(' '.join(metadata['hashtags']))}\n\n"
                 f"🔍 <b>SEO:</b>\n{e(', '.join(metadata['seo_keywords']))}\n\n"
-                f"🔗 <b>Produto:</b>\n{e(product_url)}"
+                f"🛍️ <b>Produto:</b> {e(product_name)}\n🔗 {e(product_url)}"
             )
             self._call('sendMessage', data={
                 'chat_id': self.chat_id, 'text': text, 'parse_mode': 'HTML',

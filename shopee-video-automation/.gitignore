@@ -49,3 +49,6 @@ automation.log
 # Sensitive
 credentials.json
 secrets.json
+
+# Navegador automático (perfil com login da Shopee)
+.browser-profile/

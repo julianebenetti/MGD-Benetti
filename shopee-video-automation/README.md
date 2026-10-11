@@ -44,6 +44,7 @@ Automação completa para postagem de vídeos na Shopee Video com processamento 
 2. **Instale dependências**
    ```bash
    pip install -r requirements.txt
+   python -m playwright install chromium
    ```
 
 3. **Configure variáveis de ambiente**
@@ -59,6 +60,7 @@ Automação completa para postagem de vídeos na Shopee Video com processamento 
    ├── telegram_handler.py     # Monitor do Telegram
    ├── video_processor.py      # Processamento com FFmpeg
    ├── shopee_affiliate.py     # API de afiliados: produto + link de afiliado
+   ├── video_page_reader.py    # Abre a página do Shopee Video e acha o produto
    ├── cover_generator.py      # Capa do vídeo
    ├── setup_topics.py         # Cria os tópicos Envios/Editados/Postados
    ├── content_generator.py    # Geração de conteúdo com IA
