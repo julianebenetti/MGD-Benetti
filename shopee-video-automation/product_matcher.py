@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple
 import requests
 from PIL import Image
 
-from claude_client import ask_json
+from ai_client import ask_json
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def check_match(video_path: str, product: Dict) -> Tuple[str, str]:
         photo.raise_for_status()
         content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)))))
         content.append({'type': 'text', 'text': PROMPT.format(name=product['productName'])})
-        data = ask_json(content, SCHEMA, max_tokens=2000)
+        data = ask_json(content, SCHEMA)
         logger.info(f"Conferência '{product['productName']}': {data['resultado']} ({data['motivo']})")
         return data['resultado'], data['motivo']
     except Exception as e:

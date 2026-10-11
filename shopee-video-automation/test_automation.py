@@ -112,7 +112,7 @@ class AutomationTester:
     def test_content_generation(self):
         """Testa geração de conteúdo com IA"""
         print("\n" + "="*60)
-        print("🧪 TESTE 3: Geração de Conteúdo (Claude AI)")
+        print("🧪 TESTE 3: Geração de Conteúdo (OpenAI)")
         print("="*60)
 
         try:

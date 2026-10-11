@@ -13,7 +13,7 @@ from typing import List, Optional
 
 from PIL import Image
 
-from claude_client import ask_json
+from ai_client import ask_json
 from video_page_reader import PROFILE_DIR
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ def _boxes_by_ai(png: bytes, width: int, height: int) -> List[dict]:
             "Na linha de variação de COR, localize a MINIATURA (imagem) de cada opção de cor, na ordem da página. "
             "Devolva uma caixa por miniatura, em pixels desta imagem, só a imagem (sem o texto do nome). "
             "Se não houver variação de cor com miniaturas, devolva a lista vazia.")},
-    ], BOXES_SCHEMA, max_tokens=3000)
+    ], BOXES_SCHEMA)
     return [b for b in data['opcoes'] if b['x1'] > b['x0'] and b['y1'] > b['y0']][:MAX_OPTIONS]
 
 

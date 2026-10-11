@@ -33,7 +33,7 @@ fica automático.)
 | Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
 | Capa | Quadro do vídeo com logo, headline e **cartão de cores** (miniaturas das cores do produto principal, como na página do vendedor), à esquerda, logo abaixo da headline, sem inclinação |
-| Headline | Gerada pela IA, até 60 caracteres, termina com 😱🔥, nunca repete para o mesmo produto |
+| Headline | Gerada pela IA, até 60 caracteres, termina com 😱🔥, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
 | Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
 
@@ -69,7 +69,8 @@ Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
 | `video_page_reader.py` | Abre a página do Shopee Video e acha os produtos |
 | `product_page_capture.py` | Miniaturas das cores na página do produto |
 | `product_matcher.py` | Conferência vídeo × produto por IA |
-| `content_generator.py` | Headline, descrição, hashtags, SEO |
+| `content_generator.py` | Headline (rodízio de 5 gatilhos), descrição, hashtags, SEO |
+| `ai_client.py` | Chamada à OpenAI com resposta em JSON por esquema |
 | `video_processor.py` / `cover_generator.py` | Vídeo 9:16 com logo / capa |
 | `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
 | `sub_id.py` | Sub_id dos links |
@@ -78,4 +79,4 @@ Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
 ## Limites conhecidos
 
 - O Telegram só deixa o bot baixar arquivos de até **20 MB**.
-- Cada vídeo usa várias chamadas à Claude (conferência de até 7 produtos + textos).
+- Cada vídeo usa várias chamadas à OpenAI (conferência de até 7 produtos + textos).
