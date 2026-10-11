@@ -1,0 +1,13 @@
+[Unit]
+Description=Bot Telegram - capas de Reels
+After=network-online.target
+
+[Service]
+WorkingDirectory=/opt/capa-bot
+EnvironmentFile=/opt/capa-bot/.env
+ExecStart=/opt/capa-bot/venv/bin/python bot.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
