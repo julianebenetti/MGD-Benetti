@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""
+Robô do Shopee Video (sempre ligado).
+
+📥 Envios → ✅ Editados (aprovação) → ⏰ Agenda → 🚀 Postados
+"""
+
+import html
+import logging
+import os
+import queue
+import threading
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional
+
+from dotenv import load_dotenv
+
+load_dotenv(Path(__file__).parent / '.env')
+
+import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
+from pipeline import Pipeline, PipelineError  # noqa: E402
+from storage import Storage  # noqa: E402
+from telegram_handler import TelegramBot, extract_shopee_links, keyboard  # noqa: E402
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
+logger = logging.getLogger('bot')
+
+BASE = Path(__file__).parent
+ASK_AFTER_SECONDS = 30
+BATCH_LINK_TTL = 600
+DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+
+
+def topic(name: str) -> Optional[int]:
+    return int(os.getenv(name) or 0) or None
+
+
+ENVIOS = topic('TELEGRAM_TOPIC_ENVIOS')
+EDITADOS = topic('TELEGRAM_TOPIC_EDITADOS')
+AGENDA = topic('TELEGRAM_TOPIC_AGENDA')
+POSTADOS = topic('TELEGRAM_TOPIC_POSTADOS')
+
+
+def fmt_when(iso: str) -> str:
+    when = datetime.fromisoformat(iso).astimezone(scheduler.TZ)
+    return f"{DIAS[when.weekday()]}, {when:%d/%m} às {when:%H:%M}"
+
+
+def post_text(post: Dict) -> str:
+    e = html.escape
+    m = post['metadata']
+    links = '\n'.join(
+        f"{i}. {e(p.get('shopName', ''))}: {e(link)}"
+        for i, (p, link) in enumerate(zip(post['products'], post['links']), 1))
+    return (
+        f"🎬 <b>Headline:</b> {e(m['cover_title'])}\n\n"
+        f"📝 <b>Descrição:</b>\n{e(m['description'])}\n\n"
+        f"#️⃣ <b>Hashtags:</b>\n{e(' '.join(m['hashtags']))}\n\n"
+        f"🔍 <b>SEO:</b>\n{e(', '.join(m['seo_keywords']))}\n\n"
+        f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
+        f"🔗 <b>Links:</b>\n{links}\n"
+        f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
+    )
+
+
+class Bot:
+    def __init__(self):
+        self.tg = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
+        self.db = Storage()
+        self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
+        self.jobs: queue.Queue = queue.Queue()
+        self.pending: List[Dict] = []
+        self.pending_asked = False
+        self.batch_link: Optional[Dict] = None
+
+    # ---------- Envios ----------
+
+    def on_envios(self, msg: Dict):
+        file_id = None
+        if 'video' in msg:
+            file_id = msg['video']['file_id']
+        elif msg.get('document', {}).get('mime_type', '').startswith('video/'):
+            file_id = msg['document']['file_id']
+        text = msg.get('caption') or msg.get('text') or ''
+        links = extract_shopee_links(text)
+
+        if file_id:
+            if links:
+                self.enqueue_video(msg['message_id'], file_id, links[0], text)
+            elif self.batch_link and time.time() - self.batch_link['at'] < BATCH_LINK_TTL:
+                self.enqueue_video(msg['message_id'], file_id, self.batch_link['link'],
+                                   f"{self.batch_link['text']}\n{text}")
+            else:
+                self.pending.append({'msg_id': msg['message_id'], 'file_id': file_id,
+                                     'text': text, 'at': time.time()})
+        elif links:
+            if self.pending:
+                for p in self.pending:
+                    self.enqueue_video(p['msg_id'], p['file_id'], links[0], f"{p['text']}\n{text}")
+                self.pending, self.pending_asked = [], False
+                self.tg.react(msg['message_id'], '👌')
+            else:
+                self.batch_link = {'link': links[0], 'text': text, 'at': time.time()}
+                self.tg.react(msg['message_id'], '✍')
+
+    def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str):
+        self.tg.react(msg_id, '👌')
+        self.jobs.put(('video', msg_id, file_id, link, text))
+
+    def job_video(self, msg_id: int, file_id: str, link: str, text: str):
+        try:
+            video = self.tg.download(file_id, BASE / 'downloads')
+            result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for)
+        except PipelineError as e:
+            self.tg.react(msg_id, '🤔')
+            self.tg.send_text(ENVIOS, f"⚠️ {html.escape(str(e))}", reply_to=msg_id)
+            return
+        post_id = self.db.create_post(source_msg_id=msg_id, **result)
+        self.db.add_headline(result['product_key'], result['metadata']['cover_title'])
+        self.send_to_editados(self.db.get_post(post_id))
+        self.tg.react(msg_id, '👍')
+
+    # ---------- Editados ----------
+
+    def send_to_editados(self, post: Dict):
+        ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
+        ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=keyboard(
+            [('✅ Aprovar', f"ap:{post['id']}"), ('🔄 Outra headline', f"hl:{post['id']}")],
+            [('❌ Descartar', f"dc:{post['id']}")])))
+        self.db.update_post(post['id'], editados_msgs=ids)
+
+    def job_headline(self, post_id: int, headline: Optional[str]):
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'editado':
+            return
+        if headline is None:
+            headline = self.pipeline.new_headline(post, self.db.headlines_for(post['product_key']))
+        cover = self.pipeline.make_cover(post['video_path'], headline)
+        metadata = {**post['metadata'], 'cover_title': headline}
+        self.tg.delete(post['editados_msgs'])
+        self.db.update_post(post_id, metadata=metadata, cover_path=cover)
+        self.db.add_headline(post['product_key'], headline)
+        self.send_to_editados(self.db.get_post(post_id))
+
+    def on_editados_reply(self, msg: Dict):
+        post = self.db.post_by_editados_msg(msg['reply_to_message']['message_id'])
+        text = (msg.get('text') or '').strip()
+        if post and text:
+            self.tg.react(msg['message_id'], '✍')
+            self.jobs.put(('headline', post['id'], text[:60]))
+
+    # ---------- Botões ----------
+
+    def on_callback(self, cb: Dict):
+        action, _, raw_id = cb.get('data', '').partition(':')
+        post = self.db.get_post(int(raw_id)) if raw_id.isdigit() else None
+        if not post:
+            self.tg.answer_callback(cb['id'], 'Post não encontrado')
+            return
+
+        if action == 'ap' and post['status'] == 'editado':
+            slot = scheduler.next_slot(post['product_key'], self.db.scheduled())
+            self.tg.delete(post['editados_msgs'])
+            self.db.update_post(post['id'], status='agendado', scheduled_at=slot.isoformat(), editados_msgs=[])
+            post = self.db.get_post(post['id'])
+            ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], post['video_path'])
+            ids.append(self.tg.send_text(
+                AGENDA, f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
+                markup=keyboard([('✅ Postei', f"ok:{post['id']}"), ('❌ Descartar', f"dc:{post['id']}")])))
+            self.db.update_post(post['id'], agenda_msgs=ids)
+            self.tg.answer_callback(cb['id'], f"Agendado: {fmt_when(post['scheduled_at'])}")
+
+        elif action == 'hl' and post['status'] == 'editado':
+            self.tg.answer_callback(cb['id'], 'Gerando outra headline…')
+            self.jobs.put(('headline', post['id'], None))
+
+        elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado'):
+            self.tg.delete(post['editados_msgs'] + post['agenda_msgs'])
+            self.db.update_post(post['id'], status='descartado')
+            self.tg.answer_callback(cb['id'], 'Descartado')
+
+        elif action == 'ok' and post['status'] in ('agendado', 'avisado'):
+            self.tg.delete(post['agenda_msgs'])
+            self.db.update_post(post['id'], status='postado', agenda_msgs=[])
+            self.tg.send_photo(POSTADOS, post['cover_path'],
+                               f"✅ Postado ({fmt_when(scheduler.now().isoformat())})\n\n{post_text(post)}"[:1024])
+            self.tg.answer_callback(cb['id'], 'Movido para Postados')
+
+        else:
+            self.tg.answer_callback(cb['id'], 'Já resolvido')
+
+    # ---------- Relógio ----------
+
+    def tick(self):
+        if self.pending and not self.pending_asked and time.time() - self.pending[0]['at'] > ASK_AFTER_SECONDS:
+            self.pending_asked = True
+            n = len(self.pending)
+            self.tg.send_text(ENVIOS, f"🔗 Recebi {n} vídeo(s) sem link. Mande o link do produto "
+                                      f"(vale para {'todos' if n > 1 else 'ele'}).",
+                              reply_to=self.pending[0]['msg_id'])
+
+        current = scheduler.now()
+        for post in self.db.scheduled():
+            if post['status'] == 'agendado' and datetime.fromisoformat(post['scheduled_at']) <= current:
+                reply_to = post['agenda_msgs'][-1] if post['agenda_msgs'] else None
+                msg_id = self.tg.send_text(AGENDA, f"⏰ <b>Hora de postar!</b> {html.escape(post['product_name'])}",
+                                           reply_to=reply_to)
+                self.db.update_post(post['id'], status='avisado', agenda_msgs=post['agenda_msgs'] + [msg_id])
+
+    # ---------- Loop ----------
+
+    def worker(self):
+        while True:
+            job = self.jobs.get()
+            try:
+                if job[0] == 'video':
+                    self.job_video(*job[1:])
+                elif job[0] == 'headline':
+                    self.job_headline(*job[1:])
+            except Exception as e:
+                logger.exception(f"Falha no job {job[0]}")
+                if job[0] == 'video':
+                    self.tg.send_text(ENVIOS, f"⚠️ Erro inesperado: {html.escape(str(e))}", reply_to=job[1])
+
+    def handle(self, update: Dict):
+        if 'callback_query' in update:
+            self.on_callback(update['callback_query'])
+            return
+        msg = update.get('message')
+        if not msg or msg.get('chat', {}).get('id') != self.tg.chat_id:
+            return
+        thread = msg.get('message_thread_id')
+        if thread == ENVIOS:
+            self.on_envios(msg)
+        elif thread == EDITADOS and msg.get('reply_to_message') and not msg.get('from', {}).get('is_bot'):
+            self.on_editados_reply(msg)
+
+    def run(self):
+        threading.Thread(target=self.worker, daemon=True).start()
+        offset = int(self.db.get_meta('offset', '0'))
+        logger.info("Robô do Shopee Video ligado")
+        while True:
+            try:
+                for update in self.tg.get_updates(offset, timeout=20):
+                    offset = update['update_id'] + 1
+                    self.db.set_meta('offset', str(offset))
+                    try:
+                        self.handle(update)
+                    except Exception:
+                        logger.exception("Falha ao tratar update")
+                self.tick()
+            except Exception:
+                logger.exception("Falha no loop principal")
+                time.sleep(5)
+
+
+if __name__ == '__main__':
+    Bot().run()

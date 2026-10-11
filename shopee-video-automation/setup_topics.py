@@ -10,11 +10,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv, set_key
 
-from telegram_handler import TelegramMonitor
+from telegram_handler import TelegramBot
 
 TOPICS = [
     ('TELEGRAM_TOPIC_ENVIOS', '📥 Envios', 0x6FB9F0),
     ('TELEGRAM_TOPIC_EDITADOS', '✅ Editados', 0x8EEE98),
+    ('TELEGRAM_TOPIC_AGENDA', '⏰ Agenda', 0xFF93B2),
     ('TELEGRAM_TOPIC_POSTADOS', '🚀 Postados', 0xFFD67E),
 ]
 
@@ -22,7 +23,7 @@ TOPICS = [
 def main():
     env_path = Path(__file__).parent / '.env'
     load_dotenv(env_path)
-    bot = TelegramMonitor(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
+    bot = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
 
     for env_key, name, color in TOPICS:
         if os.getenv(env_key):

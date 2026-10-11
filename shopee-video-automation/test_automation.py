@@ -31,7 +31,7 @@ class AutomationTester:
         print("="*60)
 
         try:
-            from telegram_handler import TelegramMonitor
+            from telegram_handler import TelegramBot
 
             token = os.getenv('TELEGRAM_BOT_TOKEN')
             chat_id = os.getenv('TELEGRAM_CHAT_ID')
@@ -41,11 +41,10 @@ class AutomationTester:
                 self.failed += 1
                 return False
 
-            monitor = TelegramMonitor(token, chat_id)
-
-            # Tentar obter atualizações (sem requisições longas)
-            updates = monitor.get_updates()
-            print(f"✅ Conexão OK! Últimas {len(updates)} mensagens encontradas")
+            bot = TelegramBot(token, chat_id)
+            me = bot.call('getMe')
+            chat = bot.call('getChat', data={'chat_id': chat_id})
+            print(f"✅ Conexão OK: @{me['username']} no grupo '{chat.get('title')}' (tópicos: {chat.get('is_forum', False)})")
             self.passed += 1
             return True
 
@@ -199,31 +198,42 @@ class AutomationTester:
         self.failed += 1
         return False
 
-    def test_end_to_end(self):
-        """Teste ponta-a-ponta completo"""
+    def test_agenda(self):
+        """Testa as regras da agenda (sem rede)"""
         print("\n" + "="*60)
-        print("🧪 TESTE 5: Fluxo Completo (End-to-End)")
+        print("🧪 TESTE 5: Agenda")
         print("="*60)
 
-        try:
-            from main import ShopeeVideoAutomation
+        import random
+        from datetime import datetime
+        import scheduler
 
-            automation = ShopeeVideoAutomation()
-            print("✅ Automação inicializada com sucesso")
+        rng = random.Random(1)
+        start = datetime(2026, 10, 13, 8, 0, tzinfo=scheduler.TZ)
+        posts = []
+        for i in range(12):
+            key = 'A' if i < 3 else f'P{i}'
+            slot = scheduler.next_slot(key, posts, start, rng)
+            posts.append({'scheduled_at': slot.isoformat(), 'product_key': key})
 
-            print("\n📋 Verificando componentes:")
-            print("   ✅ Telegram Monitor OK")
-            print("   ✅ Video Processor OK")
-            print("   ✅ Shopee Affiliate OK")
-            print("   ✅ Content Generator OK")
-
+        days_a = [p['scheduled_at'][:10] for p in posts if p['product_key'] == 'A']
+        per_day = {}
+        for p in posts:
+            per_day[p['scheduled_at'][:10]] = per_day.get(p['scheduled_at'][:10], 0) + 1
+        times = [datetime.fromisoformat(p['scheduled_at']) for p in posts]
+        checks = [
+            len(set(days_a)) == 3,
+            max(per_day.values()) <= scheduler.POSTS_PER_DAY,
+            all(scheduler.START_HOUR <= t.hour < scheduler.END_HOUR for t in times),
+            all(t.minute % 5 for t in times),
+        ]
+        if all(checks):
+            print(f"✅ Mesmo produto em dias diferentes, ≤{scheduler.POSTS_PER_DAY}/dia, horários quebrados")
             self.passed += 1
             return True
-
-        except Exception as e:
-            print(f"❌ Erro: {e}")
-            self.failed += 1
-            return False
+        print(f"❌ Falhou: {checks}")
+        self.failed += 1
+        return False
 
     def run_all_tests(self):
         """Executa todos os testes"""
@@ -236,7 +246,7 @@ class AutomationTester:
         self.test_video_processor()
         self.test_content_generation()
         self.test_shopee_links()
-        self.test_end_to_end()
+        self.test_agenda()
 
         print("\n" + "="*60)
         print("📊 RESULTADO FINAL")

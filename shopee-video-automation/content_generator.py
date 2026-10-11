@@ -4,7 +4,7 @@ Gera descrição, hashtags e SEO usando Claude AI
 """
 
 import logging
-from typing import Dict
+from typing import Dict, List
 
 from claude_client import ask_json
 
@@ -25,11 +25,11 @@ SCHEMA = {
 
 
 class ContentGenerator:
-    def generate(self, product_info: Dict) -> Dict:
+    def generate(self, product_info: Dict, avoid_headlines: List[str] = ()) -> Dict:
         """Headline da capa, descrição, 5 hashtags, 10 palavras de SEO e nome curto (para o sub_id)."""
         try:
             logger.info(f"Gerando conteúdo para: {product_info.get('name', 'Produto')}")
-            data = ask_json(self._build_prompt(product_info), SCHEMA)
+            data = ask_json(self._build_prompt(product_info) + self._avoid_block(avoid_headlines), SCHEMA)
             result = {
                 'cover_title': data['cover_title'][:60],
                 'description': data['description'][:150],
@@ -42,6 +42,22 @@ class ContentGenerator:
         except Exception as e:
             logger.error(f"Erro ao gerar conteúdo: {e}")
             return self._default_content(product_info)
+
+    def new_headline(self, product_info: Dict, avoid_headlines: List[str]) -> str:
+        """Só uma headline nova para a capa, diferente das já usadas para o produto."""
+        data = ask_json(
+            self._build_prompt(product_info) + self._avoid_block(avoid_headlines)
+            + "\nNesta resposta só o campo cover_title importa; preencha os outros com o mínimo.",
+            SCHEMA)
+        return data['cover_title'][:60]
+
+    @staticmethod
+    def _avoid_block(headlines: List[str]) -> str:
+        if not headlines:
+            return ''
+        lista = '\n'.join(f'- {h}' for h in headlines)
+        return ("\n\nHEADLINES JÁ USADAS PARA ESTE PRODUTO (crie uma de ângulo diferente, "
+                f"sem repetir nem parafrasear estas):\n{lista}\n")
 
     def _build_prompt(self, product_info: Dict) -> str:
         """Constrói o prompt para Claude gerar conteúdo"""

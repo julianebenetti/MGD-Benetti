@@ -1,198 +1,74 @@
-# Shopee Video Posts Automation
+# Robô do Shopee Video — Achados Relâmpagos
 
-Automação completa para postagem de vídeos na Shopee Video com processamento de vídeos, geração de metadados e publicação.
+Robô de Telegram sempre ligado que prepara os vídeos do Shopee Video: vídeo 9:16 com logo,
+capa com headline, descrição, hashtags, SEO e 3 links de afiliado (o produto do vídeo + 2 de
+outros vendedores), com aprovação e agenda.
 
-## 🎯 Funcionalidades
+## Fluxo (tópicos do grupo "Shopee Video Bot")
 
-- ✅ Monitora grupo Telegram para novos vídeos + links de produtos
-- ✅ Processa vídeos com FFmpeg (redimensiona para 9:16 em 1080p)
-- ✅ Extrai informações dos produtos via web scraping
-- ✅ Gera descrição, hashtags e 10 palavras-chave SEO com IA (Claude)
-- ✅ Adiciona marca d'água aos vídeos
-- ✅ Salva em rascunho para validação antes de publicar
-- ✅ Executa automaticamente via Routine diária às 14h
-
-## 📋 Pré-requisitos
-
-### Sistema
-- Python 3.9+
-- FFmpeg instalado
-  ```bash
-  # Ubuntu/Debian
-  sudo apt-get install ffmpeg ffprobe
-  
-  # macOS
-  brew install ffmpeg
-  
-  # Windows
-  # Baixe de https://ffmpeg.org/download.html
-  ```
-
-### Credenciais
-- Bot Token do Telegram
-- Chat ID do grupo Telegram
-- API Key da Anthropic (Claude)
-
-## 🚀 Instalação
-
-1. **Clone o repositório**
-   ```bash
-   git clone <repo>
-   cd shopee-video-automation
-   ```
-
-2. **Instale dependências**
-   ```bash
-   pip install -r requirements.txt
-   python -m playwright install chromium
-   ```
-
-3. **Configure variáveis de ambiente**
-   ```bash
-   cp .env.example .env
-   # Edite .env com suas credenciais
-   ```
-
-4. **Estrutura de pastas**
-   ```
-   shopee-video-automation/
-   ├── main.py                 # Script principal
-   ├── telegram_handler.py     # Monitor do Telegram
-   ├── video_processor.py      # Processamento com FFmpeg
-   ├── shopee_affiliate.py     # API de afiliados: produto + link de afiliado
-   ├── video_page_reader.py    # Abre a página do Shopee Video e acha o produto
-   ├── product_matcher.py      # Conferência vídeo × produto por IA
-   ├── sub_id.py               # Sub_id: Data + SV + Produto (ex: 11Out26SVSapateiraBanco)
-   ├── claude_client.py        # Chamada à Claude (JSON por esquema)
-   ├── cover_generator.py      # Capa do vídeo
-   ├── setup_topics.py         # Cria os tópicos Envios/Editados/Postados
-   ├── content_generator.py    # Geração de conteúdo com IA
-   ├── routine.py              # Configuração da Routine
-   ├── downloads/              # Vídeos baixados do Telegram
-   ├── processed_videos/       # Vídeos processados
-   ├── drafts/                 # Rascunhos prontos para publicação
-   └── .env                    # Variáveis de ambiente (git ignore)
-   ```
-
-## 📖 Uso
-
-### Execução Manual
-```bash
-# Processar vídeos pendentes
-python main.py
+```
+📥 Envios  →  ✅ Editados (sua aprovação)  →  ⏰ Agenda  →  🚀 Postados
 ```
 
-### Execução Automática (Routine)
-A automação roda automaticamente todos os dias às 14h (Brasília).
+**📥 Envios** — mande o vídeo com o link Shopee na legenda. Também vale:
+- vários vídeos e depois **um link** (vale para todos);
+- **o link antes** e os vídeos depois (até 10 min);
+- se faltar o link por 30 s, o robô pergunta uma vez.
 
-Configure via arquivo `routine.py`:
-```bash
-python routine.py setup
-```
+Reações: 👌 recebido · ✍ link guardado para a próxima leva · 👍 editado · 🤔 não deu (o robô explica).
 
-## 🔧 Configuração
+**✅ Editados** — capa + vídeo + textos e links. Botões **✅ Aprovar** · **🔄 Outra headline** ·
+**❌ Descartar**. Para usar uma headline sua, **responda** a mensagem com o texto.
 
-### Variáveis de Ambiente (.env)
+**⏰ Agenda** — aprovados com dia e horário. Na hora: aviso "⏰ Hora de postar!" e botão
+**✅ Postei**, que move para Postados. (Quando o bot que posta na Shopee for conectado, esse envio
+fica automático.)
 
-```env
-# Telegram
-TELEGRAM_BOT_TOKEN=seu_token_aqui
-TELEGRAM_CHAT_ID=-seu_chat_id_aqui
+## Regras
 
-# Shopee Affiliate Open API
-SHOPEE_AFFILIATE_APP_ID=seu_app_id
-SHOPEE_AFFILIATE_SECRET=seu_secret
+| Tema | Regra |
+|---|---|
+| Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo |
+| Links extras | Mesmo produto em outras lojas, maior comissão, comissão ≥ R$ 9 e nota ≥ 4,5, confirmado pela IA |
+| Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
+| Headline | Gerada pela IA, até 60 caracteres, termina com 😱🔥, nunca repete para o mesmo produto |
+| Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
+| Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
 
-# Claude AI
-ANTHROPIC_API_KEY=sua_api_key
+Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `AGENDA_FIM`.
 
-# Vídeo (9:16 vertical)
-VIDEO_WIDTH=1080
-VIDEO_HEIGHT=1920
-VIDEO_BITRATE=5M
+## Instalação no VPS
 
-# Diretórios
-VIDEOS_OUTPUT_DIR=./processed_videos
-DRAFTS_OUTPUT_DIR=./drafts
+1. Copie esta pasta para o VPS.
+2. Ative **Tópicos** no grupo e deixe o bot admin com **Gerenciar tópicos**.
+3. Rode `bash instalar.sh`. Na primeira vez ele cria o `.env`: preencha as chaves e rode de novo.
+   Ele instala tudo, cria os tópicos e liga o serviço `shopee-video`.
 
-# Timing
-ROUTINE_HOUR=14
-ROUTINE_TIMEZONE=America/Sao_Paulo
-```
+| O quê | Comando |
+|---|---|
+| Ver logs | `journalctl -u shopee-video -n 50` |
+| Reiniciar | `sudo systemctl restart shopee-video` |
+| Testes rápidos | `.venv/bin/python test_automation.py` |
 
-## 📹 Processo de Publicação
+Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
+`SHOPEE_BROWSER_HEADLESS=false` numa máquina com tela para entrar na conta.
 
-1. **Enviar no Telegram**: Poste o vídeo + link Shopee no grupo
-2. **Automação**: Bot baixa, processa e gera metadados
-3. **Validação**: Vídeo fica em rascunho para revisar
-4. **Publicação**: Upload manual na Shopee Video ou automático
+## Arquivos
 
-## 🎬 Especificações de Vídeo
+| Arquivo | Função |
+|---|---|
+| `bot.py` | Robô: Telegram, botões, fila, agenda |
+| `pipeline.py` | Prepara um vídeo do início ao fim |
+| `shopee_affiliate.py` | API de afiliados: produto, outros vendedores, link de afiliado |
+| `video_page_reader.py` | Abre a página do Shopee Video e acha os produtos |
+| `product_matcher.py` | Conferência vídeo × produto por IA |
+| `content_generator.py` | Headline, descrição, hashtags, SEO |
+| `video_processor.py` / `cover_generator.py` | Vídeo 9:16 com logo / capa |
+| `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
+| `sub_id.py` | Sub_id dos links |
+| `setup_topics.py` / `instalar.sh` | Configuração inicial |
 
-- **Proporção**: 9:16 (vertical)
-- **Resolução**: 1920x1080
-- **Bitrate**: 5 Mbps
-- **FPS**: 30
-- **Duração**: 15s - 10min
-- **Tamanho máx**: 500MB
+## Limites conhecidos
 
-## 🔍 Logs
-
-Verifique `automation.log` para debug:
-```bash
-tail -f automation.log
-```
-
-## 🐛 Troubleshooting
-
-### "FFmpeg não encontrado"
-```bash
-# Instale FFmpeg
-sudo apt-get install ffmpeg ffprobe
-```
-
-### "Erro ao baixar vídeo do Telegram"
-- Verifique Bot Token
-- Verifique Chat ID (deve ser negativo)
-- Certifique-se que o bot é admin do grupo
-
-### "Erro na geração de conteúdo"
-- Verifique ANTHROPIC_API_KEY
-- Verifique limite de tokens/requisições
-
-## 📝 Estrutura de Saída
-
-Cada vídeo processado gera:
-
-```json
-{
-  "video_path": "processed_videos/processed_video.mp4",
-  "product_url": "https://shopee.com.br/p/...",
-  "product_info": {
-    "name": "Nome do Produto",
-    "price": 99.90,
-    "category": "Eletrônicos",
-    "description": "..."
-  },
-  "metadata": {
-    "description": "Descrição otimizada...",
-    "hashtags": ["#Shopee", "#Oferta", ...],
-    "seo_keywords": ["produto", "oferta", ...]
-  },
-  "timestamp": "2024-01-15T14:30:00",
-  "status": "draft"
-}
-```
-
-## 🚨 Segurança
-
-- ⚠️ **Nunca commite .env** (está em .gitignore)
-- ⚠️ **Proteja suas credenciais**
-- ⚠️ **Use variáveis de ambiente em produção**
-
-## 📞 Suporte
-
-Para dúvidas ou problemas:
-1. Verifique os logs (`automation.log`)
-2. Consulte a documentação
-3. Abra uma issue no repositório
+- O Telegram só deixa o bot baixar arquivos de até **20 MB**.
+- Cada vídeo usa várias chamadas à Claude (conferência de até 7 produtos + textos).

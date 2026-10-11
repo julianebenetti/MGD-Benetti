@@ -60,6 +60,15 @@ def product_name_from_text(text: str) -> str:
     return ' '.join(text.split())
 
 
+def commission_value(product: Dict) -> float:
+    """Comissão estimada em R$ (a API manda a taxa como fração, ex: '0.08')."""
+    price = float(product.get('priceMin') or product.get('price') or 0)
+    rate = float(product.get('commissionRate') or 0)
+    if rate > 1:
+        rate /= 100
+    return round(price * rate, 2)
+
+
 class ShopeeAffiliateClient:
     def __init__(self, app_id: str, secret: str):
         self.app_id = app_id
@@ -158,6 +167,21 @@ class ShopeeAffiliateClient:
             if product:
                 candidates = [product]
         return candidates
+
+    def other_sellers(self, product: Dict, min_commission: float = 9.0,
+                      min_rating: float = 4.5) -> List[Dict]:
+        """Mesmo tipo de produto em outras lojas, ordenado por maior comissão (R$)."""
+        keyword = ' '.join(product['productName'].split()[:8])
+        others = []
+        for node in self.search(keyword, limit=30):
+            if str(node['itemId']) == str(product['itemId']) or str(node['shopId']) == str(product['shopId']):
+                continue
+            if float(node.get('ratingStar') or 0) < min_rating:
+                continue
+            node['commissionValue'] = commission_value(node)
+            if node['commissionValue'] >= min_commission:
+                others.append(node)
+        return sorted(others, key=lambda n: n['commissionValue'], reverse=True)
 
     def affiliate_link(self, product: Dict, sub_id: str) -> str:
         product_url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"

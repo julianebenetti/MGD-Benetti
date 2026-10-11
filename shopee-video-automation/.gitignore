@@ -55,3 +55,7 @@ secrets.json
 
 # Registro local de sub_ids já usados
 sub_ids_usados.json
+
+# Estado do robô
+estado.db
+.venv/
