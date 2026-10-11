@@ -77,6 +77,13 @@ class TelegramBot:
                 'chat_id': self.chat_id, 'caption': caption, 'parse_mode': 'HTML', **self._thread(thread_id)},
                 files={'photo': photo})['message_id']
 
+    def edit_markup(self, message_id: int, markup: str):
+        try:
+            self.call('editMessageReplyMarkup', data={
+                'chat_id': self.chat_id, 'message_id': message_id, 'reply_markup': markup})
+        except RuntimeError as e:
+            logger.warning(f"Não consegui atualizar os botões: {e}")
+
     def delete(self, message_ids: List[int]):
         for chunk in range(0, len(message_ids), 100):
             try:

@@ -1,5 +1,5 @@
 """
-Print das variações do produto (Cor, Tamanho...) na página do vendedor, recortado.
+Print da variação de cores do produto na página do vendedor, recortado.
 Primeiro localiza o bloco pelos rótulos da página; se não achar, a IA aponta a área no print.
 """
 
@@ -20,9 +20,7 @@ logger = logging.getLogger(__name__)
 VIEWPORT = {'width': 1280, 'height': 900}
 USER_AGENT = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
               '(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36')
-LABELS = ['cor', 'cores', 'tamanho', 'tamanhos', 'variacao', 'variacoes', 'modelo', 'modelos',
-          'estampa', 'sabor', 'voltagem', 'kit', 'opcao', 'opcoes', 'tipo', 'medida', 'medidas',
-          'numeracao', 'quantidade de pecas']
+LABELS = ['cor', 'cores', 'cor do produto', 'cores disponiveis']
 PADDING = 14
 SEARCH_HEIGHT = 1600
 
@@ -81,10 +79,10 @@ def _bbox_by_ai(png: bytes, width: int, height: int):
                                      'data': base64.standard_b64encode(png).decode()}},
         {'type': 'text', 'text': (
             f"Print da página de um produto da Shopee ({width}x{height} px). "
-            "Localize o bloco de VARIAÇÕES do produto: os rótulos (ex.: Cor, Tamanho) com os botões "
-            "das opções, incluindo as miniaturas. Não inclua preço, frete, quantidade nem botões de compra. "
+            "Localize SOMENTE a linha de variação de COR do produto: o rótulo (ex.: Cor) com os botões "
+            "das cores, incluindo as miniaturas. Não inclua tamanho, preço, frete, quantidade nem botões de compra. "
             "Responda as coordenadas em pixels desta imagem (canto superior esquerdo e inferior direito). "
-            "Se o produto não tiver variações, encontrou=false.")},
+            "Se o produto não tiver variação de cor, encontrou=false.")},
     ], BBOX_SCHEMA, max_tokens=2000)
     if not data['encontrou'] or data['x1'] <= data['x0'] or data['y1'] <= data['y0']:
         return None
@@ -114,7 +112,7 @@ def capture_variations(product_url: str, out_path: Path, wait_ms: int = 5000) ->
                                       full_page=True, scale='css')
                 box = _bbox_by_ai(png, VIEWPORT['width'], SEARCH_HEIGHT)
                 if not box:
-                    logger.info("Produto sem bloco de variações encontrado")
+                    logger.info("Produto sem variação de cor encontrada")
                     return None
                 x0, y0, x1, y1 = box
                 source = 'IA'

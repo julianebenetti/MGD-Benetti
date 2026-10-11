@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS posts (
     video_path TEXT,
     cover_path TEXT,
     sticker_path TEXT,
+    cover_approved INTEGER DEFAULT 0,
     editados_msgs TEXT DEFAULT '[]',
     agenda_msgs TEXT DEFAULT '[]',
     scheduled_at TEXT

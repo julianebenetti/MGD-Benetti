@@ -129,11 +129,17 @@ class Bot:
 
     # ---------- Editados ----------
 
+    @staticmethod
+    def editados_markup(post: Dict) -> str:
+        pid = post['id']
+        capa = ('✅ Capa aprovada', f"cv:{pid}") if post['cover_approved'] else ('✅ Aprovar capa', f"cv:{pid}")
+        return keyboard(
+            [capa, ('🔄 Outra headline', f"hl:{pid}")],
+            [('✅ Aprovar e agendar', f"ap:{pid}"), ('❌ Descartar', f"dc:{pid}")])
+
     def send_to_editados(self, post: Dict):
         ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
-        ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=keyboard(
-            [('✅ Aprovar', f"ap:{post['id']}"), ('🔄 Outra headline', f"hl:{post['id']}")],
-            [('❌ Descartar', f"dc:{post['id']}")])))
+        ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=self.editados_markup(post)))
         self.db.update_post(post['id'], editados_msgs=ids)
 
     def job_headline(self, post_id: int, headline: Optional[str]):
@@ -145,7 +151,7 @@ class Bot:
         cover = self.pipeline.make_cover(post['video_path'], headline, post.get('sticker_path'))
         metadata = {**post['metadata'], 'cover_title': headline}
         self.tg.delete(post['editados_msgs'])
-        self.db.update_post(post_id, metadata=metadata, cover_path=cover)
+        self.db.update_post(post_id, metadata=metadata, cover_path=cover, cover_approved=0)
         self.db.add_headline(post['product_key'], headline)
         self.send_to_editados(self.db.get_post(post_id))
 
@@ -165,7 +171,18 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Post não encontrado')
             return
 
-        if action == 'ap' and post['status'] == 'editado':
+        if action == 'cv' and post['status'] == 'editado':
+            if post['cover_approved']:
+                self.tg.answer_callback(cb['id'], 'Capa já aprovada')
+                return
+            self.db.update_post(post['id'], cover_approved=1)
+            self.tg.edit_markup(post['editados_msgs'][-1], self.editados_markup(self.db.get_post(post['id'])))
+            self.tg.answer_callback(cb['id'], 'Capa aprovada')
+
+        elif action == 'ap' and post['status'] == 'editado' and not post['cover_approved']:
+            self.tg.answer_callback(cb['id'], 'Aprove a capa primeiro (✅ Aprovar capa)')
+
+        elif action == 'ap' and post['status'] == 'editado':
             slot = scheduler.next_slot(post['product_key'], self.db.scheduled())
             self.tg.delete(post['editados_msgs'])
             self.db.update_post(post['id'], status='agendado', scheduled_at=slot.isoformat(), editados_msgs=[])

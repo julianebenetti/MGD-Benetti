@@ -26,9 +26,10 @@ PILL_PAD_X_RATIO = 0.35
 PILL_PAD_Y_RATIO = 0.10
 LINE_OVERLAP_RATIO = 0.18
 TEXT_COLOR = (34, 34, 34, 255)
-# Figurinha com o print das variações, abaixo da headline
-STICKER_TOP_RATIO = 0.60
-STICKER_MAX_W_RATIO = 0.92
+# Figurinha com o print das cores: metade da largura, lado esquerdo, logo abaixo do meio
+STICKER_TOP_RATIO = 0.56
+STICKER_LEFT_RATIO = 0.03
+STICKER_WIDTH_RATIO = 0.50
 STICKER_MAX_H_RATIO = 0.30
 STICKER_ROTATION = -3
 PILL_COLOR = (255, 255, 255, 240)
@@ -154,7 +155,8 @@ class CoverGenerator:
     def _sticker(self, path: str) -> Image.Image:
         """Recorte com cara de figurinha: borda branca, cantos arredondados, sombra e leve giro."""
         img = Image.open(path).convert('RGBA')
-        img.thumbnail((int(self.width * STICKER_MAX_W_RATIO), int(self.height * STICKER_MAX_H_RATIO)), Image.LANCZOS)
+        scale = min(self.width * STICKER_WIDTH_RATIO / img.width, self.height * STICKER_MAX_H_RATIO / img.height)
+        img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
         border = int(self.width * 0.014)
         radius = int(self.width * 0.03)
         w, h = img.width + 2 * border, img.height + 2 * border
@@ -182,7 +184,7 @@ class CoverGenerator:
                 sticker = self._sticker(sticker_path)
                 top = int(self.height * STICKER_TOP_RATIO)
                 top = min(top, self.height - sticker.height - int(self.height * 0.03))
-                frame.alpha_composite(sticker, ((self.width - sticker.width) // 2, top))
+                frame.alpha_composite(sticker, (int(self.width * STICKER_LEFT_RATIO), top))
             lines = self._wrap(title)
             ascent, descent = self.font.getmetrics()
             pill_h = ascent + descent + 2 * int(self.font_size * PILL_PAD_Y_RATIO)
