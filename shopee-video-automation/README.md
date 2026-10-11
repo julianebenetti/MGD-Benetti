@@ -58,7 +58,9 @@ Automação completa para postagem de vídeos na Shopee Video com processamento 
    ├── main.py                 # Script principal
    ├── telegram_handler.py     # Monitor do Telegram
    ├── video_processor.py      # Processamento com FFmpeg
-   ├── shopee_scraper.py       # Web scraping
+   ├── shopee_affiliate.py     # API de afiliados: produto + link de afiliado
+   ├── cover_generator.py      # Capa do vídeo
+   ├── setup_topics.py         # Cria os tópicos Envios/Editados/Postados
    ├── content_generator.py    # Geração de conteúdo com IA
    ├── routine.py              # Configuração da Routine
    ├── downloads/              # Vídeos baixados do Telegram
@@ -92,9 +94,9 @@ python routine.py setup
 TELEGRAM_BOT_TOKEN=seu_token_aqui
 TELEGRAM_CHAT_ID=-seu_chat_id_aqui
 
-# Shopee
-SHOPEE_USERNAME=seu_usuario
-SHOPEE_PASSWORD=sua_senha
+# Shopee Affiliate Open API
+SHOPEE_AFFILIATE_APP_ID=seu_app_id
+SHOPEE_AFFILIATE_SECRET=seu_secret
 
 # Claude AI
 ANTHROPIC_API_KEY=sua_api_key

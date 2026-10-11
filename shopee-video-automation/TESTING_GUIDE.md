@@ -167,42 +167,26 @@ Validação: ✅ OK
 
 ---
 
-### Teste 4: Shopee Web Scraping
+### Teste 4: Links Shopee e API de afiliados
 
-**Objetivo**: Testar extração de informações de produtos
+**Objetivo**: Converter um link (produto, link curto ou Shopee Video) no link de afiliado do produto
 
 ```bash
 python -c "
-from shopee_scraper import ShopeeScraper
-
-scraper = ShopeeScraper()
-
-# Use uma URL real de produto
-url = 'https://shopee.com.br/p/52kekkac'  # Ajuste com URL real
-
-product_info = scraper.extract_product_info(url)
-
-if product_info.get('name'):
-    print('✅ Scraping bem-sucedido!')
-    print(f'Nome: {product_info[\"name\"]}')
-    print(f'Preço: R$ {product_info[\"price\"]}')
-    print(f'Categoria: {product_info[\"category\"]}')
-else:
-    print('❌ Nenhuma informação extraída')
+import os
+from dotenv import load_dotenv
+from shopee_affiliate import ShopeeAffiliateClient
+load_dotenv()
+c = ShopeeAffiliateClient(os.environ['SHOPEE_AFFILIATE_APP_ID'], os.environ['SHOPEE_AFFILIATE_SECRET'])
+r = c.resolve('https://s.shopee.com.br/2qNZGRcXif')
+print(r['product']['productName'], r['affiliate_link']) if r else print('Produto não identificado')
 "
 ```
 
-**Esperado**:
-```
-✅ Scraping bem-sucedido!
-Nome: [nome do produto]
-Preço: R$ [preço]
-Categoria: [categoria]
-```
+**Esperado**: nome do produto e um link `https://s.shopee.com.br/...` que abre o **produto** (não o vídeo).
 
-**Troubleshooting**:
-- ❌ Sem resultados → URL pode estar inválida ou mudou
-- ❌ Rate limit → Aguarde alguns minutos
+Para link de vídeo, passe o nome do produto como segundo argumento:
+`c.resolve('https://br.shp.ee/...', 'Produto: Conjunto Pantalona Camisa sem mangas Linho Misto')`
 
 ---
 

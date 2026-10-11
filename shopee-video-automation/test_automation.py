@@ -173,43 +173,31 @@ class AutomationTester:
             self.failed += 1
             return False
 
-    def test_shopee_scraping(self):
-        """Testa web scraping da Shopee"""
+    def test_shopee_links(self):
+        """Testa a leitura de links Shopee (sem rede)"""
         print("\n" + "="*60)
-        print("🧪 TESTE 4: Web Scraping Shopee")
+        print("🧪 TESTE 4: Links Shopee")
         print("="*60)
 
-        try:
-            from shopee_scraper import ShopeeScraper
+        from shopee_affiliate import extract_ids, is_video_link, product_name_from_text
 
-            scraper = ShopeeScraper()
-
-            # URL de teste (use um produto real da Shopee)
-            test_url = "https://shopee.com.br/p/52kekkac"
-
-            print(f"🔗 Testando com: {test_url}")
-            print("ℹ️  (Se você tiver uma URL real, altere em test_automation.py)")
-
-            product_info = scraper.extract_product_info(test_url)
-
-            if product_info and product_info.get('name'):
-                print(f"\n✅ Scraping bem-sucedido:")
-                print(f"   Nome: {product_info.get('name', 'N/A')}")
-                print(f"   Preço: R$ {product_info.get('price', 'N/A')}")
-                print(f"   Categoria: {product_info.get('category', 'N/A')}")
-                self.passed += 1
-                return True
-            else:
-                print("⚠️  Nenhuma informação extraída (URL pode estar inválida)")
-                print("ℹ️  Teste com uma URL real de produto Shopee")
-                self.failed += 1
-                return False
-
-        except Exception as e:
-            print(f"⚠️  Erro: {e}")
-            print("ℹ️  Isso é normal se a URL não for válida")
-            self.failed += 1
-            return False
+        checks = [
+            extract_ids('https://shopee.com.br/product/463412861/23898463274') ==
+            {'shop_id': 463412861, 'item_id': 23898463274},
+            extract_ids('https://shopee.com.br/Conjunto-Linho-i.463412861.23898463274?sp_atk=x') ==
+            {'shop_id': 463412861, 'item_id': 23898463274},
+            is_video_link('https://sv.shopee.com.br/share-video/AeIal74mCgArbiVDAAAAAA==?c=share_web'),
+            not is_video_link('https://shopee.com.br/product/1/2'),
+            product_name_from_text('Produto: Conjunto Pantalona Linho https://br.shp.ee/x') ==
+            'Conjunto Pantalona Linho',
+        ]
+        if all(checks):
+            print("✅ Links de produto, de vídeo e nome do produto reconhecidos")
+            self.passed += 1
+            return True
+        print(f"❌ Falhou: {checks}")
+        self.failed += 1
+        return False
 
     def test_end_to_end(self):
         """Teste ponta-a-ponta completo"""
@@ -226,7 +214,7 @@ class AutomationTester:
             print("\n📋 Verificando componentes:")
             print("   ✅ Telegram Monitor OK")
             print("   ✅ Video Processor OK")
-            print("   ✅ Shopee Scraper OK")
+            print("   ✅ Shopee Affiliate OK")
             print("   ✅ Content Generator OK")
 
             self.passed += 1
@@ -247,7 +235,7 @@ class AutomationTester:
         self.test_telegram_connection()
         self.test_video_processor()
         self.test_content_generation()
-        self.test_shopee_scraping()
+        self.test_shopee_links()
         self.test_end_to_end()
 
         print("\n" + "="*60)

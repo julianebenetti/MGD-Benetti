@@ -89,11 +89,20 @@ Gere um JSON com exatamente este formato (responda APENAS com JSON válido):
 
 REGRAS:
 - Cover title: máximo 60 caracteres, não cite preço nem marca
-- Description: máximo 150 caracteres, urgente e envolvente
+- Description: máximo 150 caracteres, envolvente e com convite à ação
 - Hashtags: 5 hashtags relevantes ao produto/categoria (começando com #)
 - SEO Keywords: 10 palavras-chave diferentes (sem repetir nenhuma palavra), separadas por vírgula, ordenadas por relevância
 - Nenhuma palavra pode se repetir entre description, hashtags e keywords
 - Sempre retorna JSON válido
+
+COMPLIANCE (obrigatório em todos os campos):
+- Use apenas informações presentes nos dados do produto acima; não invente características nem benefícios
+- Não invente avaliações, vendas, descontos ou cupons
+- Não crie falsa escassez ou urgência ("últimas unidades", "só hoje", "corre que acaba")
+- Não afirme que é o melhor, o mais barato ou o mais vendido
+- Não cite preço (pode mudar até a publicação)
+- Vendas e avaliação só como dado informativo, sem exagero
+- Nunca mencione comissão nem a apresente como vantagem para quem compra
 
 Responda APENAS com o JSON, sem explicações adicionais.
 """

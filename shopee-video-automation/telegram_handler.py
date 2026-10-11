@@ -83,27 +83,30 @@ class TelegramMonitor:
             elif message.get('document', {}).get('mime_type', '').startswith('video/'):
                 video_file_id = message['document']['file_id']
 
-            links = self.extract_shopee_links(message.get('text') or message.get('caption'))
+            text = message.get('text') or message.get('caption') or ''
+            links = self.extract_shopee_links(text)
 
             if video_file_id and links:
                 pending_video = None
-                self._queue(processed, video_file_id, links[0], message)
+                self._queue(processed, video_file_id, links[0], message, text)
             elif video_file_id:
-                pending_video = {'file_id': video_file_id, 'message': message}
+                pending_video = {'file_id': video_file_id, 'message': message, 'text': text}
             elif links and pending_video:
-                self._queue(processed, pending_video['file_id'], links[0], pending_video['message'])
+                self._queue(processed, pending_video['file_id'], links[0], pending_video['message'],
+                            f"{pending_video['text']}\n{text}")
                 pending_video = None
 
         if pending_video:
             logger.warning(f"Vídeo sem link Shopee ignorado (msg {pending_video['message']['message_id']})")
         return processed
 
-    def _queue(self, processed: List[Dict], file_id: str, link: str, message: Dict):
+    def _queue(self, processed: List[Dict], file_id: str, link: str, message: Dict, text: str):
         video_path = self.download_video(file_id)
         if video_path:
             processed.append({
                 'video_file': video_path,
                 'product_link': link,
+                'text': text,
                 'message_id': message['message_id'],
             })
             logger.info(f"Envio recebido: {link}")
@@ -122,6 +125,15 @@ class TelegramMonitor:
         except Exception as e:
             logger.error(f"Erro ao baixar vídeo: {e}")
             return None
+
+    def reply_in_envios(self, message_id: int, text: str):
+        thread = {'message_thread_id': self.topic_envios} if self.topic_envios else {}
+        try:
+            self._call('sendMessage', data={
+                'chat_id': self.chat_id, 'text': text,
+                'reply_parameters': json.dumps({'message_id': message_id}), **thread})
+        except Exception as e:
+            logger.error(f"Erro ao responder em Envios: {e}")
 
     def send_edited(self, video_path: str, cover_path: str, metadata: Dict,
                     product_url: str, reply_to: Optional[int] = None) -> bool:
