@@ -32,7 +32,7 @@ fica automático.)
 | Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo |
 | Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
-| Capa | Quadro do vídeo com logo, headline e **figurinha com o print das cores** do produto principal, metade da largura, lado esquerdo, logo abaixo do meio |
+| Capa | Quadro do vídeo com logo, headline e **cartão de cores** (miniaturas das cores do produto principal, como na página do vendedor), à esquerda, logo abaixo da headline, sem inclinação |
 | Headline | Gerada pela IA, até 60 caracteres, termina com 😱🔥, nunca repete para o mesmo produto |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
 | Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
@@ -63,7 +63,7 @@ Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
 | `pipeline.py` | Prepara um vídeo do início ao fim |
 | `shopee_affiliate.py` | API de afiliados: produto, outros vendedores, link de afiliado |
 | `video_page_reader.py` | Abre a página do Shopee Video e acha os produtos |
-| `product_page_capture.py` | Print recortado da variação de cores na página do produto |
+| `product_page_capture.py` | Miniaturas das cores na página do produto |
 | `product_matcher.py` | Conferência vídeo × produto por IA |
 | `content_generator.py` | Headline, descrição, hashtags, SEO |
 | `video_processor.py` / `cover_generator.py` | Vídeo 9:16 com logo / capa |

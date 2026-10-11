@@ -10,7 +10,7 @@ from typing import Dict, List, Optional, Tuple
 from content_generator import ContentGenerator
 from cover_generator import CoverGenerator
 from product_matcher import check_match
-from product_page_capture import capture_variations
+from product_page_capture import capture_color_thumbs
 from shopee_affiliate import ShopeeAffiliateClient
 from sub_id import novo_sub_id
 from video_processor import VideoProcessor
@@ -112,15 +112,18 @@ class Pipeline:
             'sticker_path': sticker,
         }
 
-    def variations_print(self, product: Dict):
+    def variations_print(self, product: Dict) -> Optional[str]:
+        """Cartão com as miniaturas das cores do produto (None se não tiver cores)."""
         url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"
-        out = self.output_dir / f"variacoes_{product['shopId']}_{product['itemId']}.png"
+        folder = self.output_dir / f"cores_{product['shopId']}_{product['itemId']}"
         try:
-            path = capture_variations(url, out)
-            return str(path) if path else None
+            thumbs = capture_color_thumbs(url, folder)
         except Exception as e:
-            logger.warning(f"Print das variações falhou: {e}")
+            logger.warning(f"Captura das cores falhou: {e}")
             return None
+        if len(thumbs) < 2:
+            return None
+        return self.cover.colors_card([str(t) for t in thumbs], str(folder / 'cartao.png'))
 
     def make_cover(self, video_path: str, headline: str, sticker_path: Optional[str] = None) -> str:
         n = len(list(Path(video_path).parent.glob(f"{Path(video_path).stem}.capa*.jpg")))

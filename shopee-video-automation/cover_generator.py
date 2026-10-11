@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 from typing import List, Optional, Tuple
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageStat
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps, ImageStat
 
 logger = logging.getLogger(__name__)
 
@@ -26,12 +26,15 @@ PILL_PAD_X_RATIO = 0.35
 PILL_PAD_Y_RATIO = 0.10
 LINE_OVERLAP_RATIO = 0.18
 TEXT_COLOR = (34, 34, 34, 255)
-# Figurinha com o print das cores: metade da largura, lado esquerdo, logo abaixo do meio
-STICKER_TOP_RATIO = 0.56
-STICKER_LEFT_RATIO = 0.03
-STICKER_WIDTH_RATIO = 0.50
-STICKER_MAX_H_RATIO = 0.30
-STICKER_ROTATION = -3
+# Cartão das cores: à esquerda, logo abaixo da headline, sem inclinação
+CARD_FONT = ASSETS / 'fonts' / 'Roboto.ttf'
+CARD_WIDTH_RATIO = 0.50
+CARD_LEFT_RATIO = 0.02
+CARD_MIN_TOP_RATIO = 0.55
+CARD_MAX_BOTTOM_RATIO = 0.86
+CARD_GAP_BELOW_TEXT = 0.025
+CARD_MAX_COLS = 5
+CARD_MAX_THUMB = 130
 PILL_COLOR = (255, 255, 255, 240)
 
 
@@ -152,39 +155,39 @@ class CoverGenerator:
                 x += int(self.font.getlength(run))
         return pill_h
 
-    def _sticker(self, path: str) -> Image.Image:
-        """Recorte com cara de figurinha: borda branca, cantos arredondados, sombra e leve giro."""
-        img = Image.open(path).convert('RGBA')
-        scale = min(self.width * STICKER_WIDTH_RATIO / img.width, self.height * STICKER_MAX_H_RATIO / img.height)
-        img = img.resize((round(img.width * scale), round(img.height * scale)), Image.LANCZOS)
-        border = int(self.width * 0.014)
-        radius = int(self.width * 0.03)
-        w, h = img.width + 2 * border, img.height + 2 * border
+    def colors_card(self, thumbs: List[str], out_path: str, label: str = 'Cor') -> str:
+        """Cartão branco com o rótulo e as miniaturas das cores lado a lado (até 5 por linha, linhas equilibradas)."""
+        pad, gap, border = 16, 10, 2
+        rows = -(-len(thumbs) // CARD_MAX_COLS)
+        cols = -(-len(thumbs) // rows)
+        inner = int(self.width * CARD_WIDTH_RATIO) - 2 * pad
+        thumb = min(CARD_MAX_THUMB, (inner - gap * (cols - 1)) // cols)
+        font = ImageFont.truetype(str(CARD_FONT), 26)
+        font.set_variation_by_name('Regular')
+        label_h = font.getbbox(label)[3] + 12
 
-        card = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-        ImageDraw.Draw(card).rounded_rectangle((0, 0, w - 1, h - 1), radius=radius, fill=(255, 255, 255, 255))
-        mask = Image.new('L', img.size, 0)
-        ImageDraw.Draw(mask).rounded_rectangle((0, 0, img.width - 1, img.height - 1),
-                                               radius=max(1, radius - border), fill=255)
-        card.paste(img, (border, border), mask)
+        w = 2 * pad + cols * thumb + (cols - 1) * gap
+        h = pad + label_h + rows * thumb + (rows - 1) * gap + pad
+        card = Image.new('RGB', (w, h), (255, 255, 255))
+        d = ImageDraw.Draw(card)
+        d.rectangle((0, 0, w - 1, h - 1), outline=(222, 222, 222), width=2)
+        d.text((pad, pad - 4), label, font=font, fill=(110, 110, 110))
 
-        pad = int(self.width * 0.03)
-        shadow = Image.new('RGBA', (w + 2 * pad, h + 2 * pad), (0, 0, 0, 0))
-        ImageDraw.Draw(shadow).rounded_rectangle((pad, pad + pad // 3, pad + w, pad + h + pad // 3),
-                                                 radius=radius, fill=(0, 0, 0, 110))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(pad // 2))
-        shadow.alpha_composite(card, (pad, pad))
-        return shadow.rotate(STICKER_ROTATION, resample=Image.BICUBIC, expand=True)
+        for i, path in enumerate(thumbs):
+            img = ImageOps.contain(Image.open(path).convert('RGB'), (thumb - 2 * border, thumb - 2 * border),
+                                   Image.LANCZOS)
+            x = pad + (i % cols) * (thumb + gap)
+            y = pad + label_h + (i // cols) * (thumb + gap)
+            d.rectangle((x, y, x + thumb - 1, y + thumb - 1), outline=(225, 225, 225), width=border)
+            card.paste(img, (x + (thumb - img.width) // 2, y + (thumb - img.height) // 2))
+
+        card.save(out_path)
+        return out_path
 
     def generate(self, video_path: str, title: str, output_path: str,
-                 sticker_path: Optional[str] = None) -> Optional[str]:
+                 card_path: Optional[str] = None) -> Optional[str]:
         try:
             frame = self.pick_frame(video_path).convert('RGBA')
-            if sticker_path:
-                sticker = self._sticker(sticker_path)
-                top = int(self.height * STICKER_TOP_RATIO)
-                top = min(top, self.height - sticker.height - int(self.height * 0.03))
-                frame.alpha_composite(sticker, (int(self.width * STICKER_LEFT_RATIO), top))
             lines = self._wrap(title)
             ascent, descent = self.font.getmetrics()
             pill_h = ascent + descent + 2 * int(self.font_size * PILL_PAD_Y_RATIO)
@@ -193,6 +196,12 @@ class CoverGenerator:
             top = int(self.height * TEXT_CENTER_Y_RATIO - total_h / 2)
             for i, line in enumerate(lines):
                 self._draw_line(frame, line, self.width // 2, top + i * step)
+            if card_path:
+                card = Image.open(card_path).convert('RGBA')
+                card_top = max(int(self.height * CARD_MIN_TOP_RATIO),
+                               top + total_h + int(self.height * CARD_GAP_BELOW_TEXT))
+                card_top = min(card_top, int(self.height * CARD_MAX_BOTTOM_RATIO) - card.height)
+                frame.alpha_composite(card, (int(self.width * CARD_LEFT_RATIO), card_top))
             frame.convert('RGB').save(output_path, quality=92)
             logger.info(f'✅ Capa gerada: {output_path}')
             return output_path
