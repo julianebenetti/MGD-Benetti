@@ -436,7 +436,9 @@ class Bot:
             self.tg.send_text(EDITADOS, "⚠️ Não consegui juntar a capa ao vídeo. Tente aprovar de novo.",
                               reply_to=post['editados_msgs'][-1] if post['editados_msgs'] else None)
             return
-        slot = scheduler.next_slot(post['product_key'], self.db.scheduled())
+        posted = [p['posted_at'] for p in self.db.with_status('postado') if p['posted_at']]
+        last_posted = datetime.fromisoformat(max(posted)) if posted else None
+        slot = scheduler.next_slot(post['product_key'], self.db.scheduled(), last_posted=last_posted)
         self.tg.delete(post['editados_msgs'])
         self.db.update_post(post_id, status='agendado', scheduled_at=slot.isoformat(),
                             editados_msgs=[], final_video_path=final)

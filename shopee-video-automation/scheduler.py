@@ -1,6 +1,6 @@
 """
-Agenda: N posts por dia dentro de uma janela, em horários quebrados,
-nunca o mesmo produto duas vezes no mesmo dia.
+Agenda em sequência: cada post entra de 1 a 2 horas depois do anterior, dentro da janela do dia,
+em horários quebrados, no máximo N por dia e nunca o mesmo produto duas vezes no mesmo dia.
 """
 
 import os
@@ -21,49 +21,47 @@ def now() -> datetime:
     return datetime.now(TZ)
 
 
-def _segment(day, index: int) -> tuple:
-    start = datetime.combine(day, time(START_HOUR), TZ)
-    length = (END_HOUR - START_HOUR) * 60 / POSTS_PER_DAY
-    return start + timedelta(minutes=index * length), length
+GAP_MIN = int(os.getenv('AGENDA_INTERVALO_MIN', '60'))    # minutos entre um post e o próximo
+GAP_MAX = int(os.getenv('AGENDA_INTERVALO_MAX', '120'))
 
 
-def _broken_time(seg_start: datetime, seg_minutes: float, rng: random.Random) -> datetime:
-    """Horário dentro do segmento, fugindo de minutos redondos (ex: 17:34, não 17:30)."""
-    while True:
-        t = seg_start + timedelta(minutes=rng.randint(3, max(4, int(seg_minutes) - 3)))
-        if t.minute % 5:
-            return t.replace(second=0, microsecond=0)
+def _broken(t: datetime) -> datetime:
+    """Foge de minutos redondos (ex: 17:34, não 17:30)."""
+    t = t.replace(second=0, microsecond=0)
+    while t.minute % 5 == 0:
+        t += timedelta(minutes=1)
+    return t
+
+
+def _day_start(day, rng: random.Random) -> datetime:
+    return _broken(datetime.combine(day, time(START_HOUR), TZ) + timedelta(minutes=rng.randint(2, 25)))
 
 
 def next_slot(product_key: str, scheduled: Iterable[dict], current: Optional[datetime] = None,
-              rng: Optional[random.Random] = None) -> datetime:
+              rng: Optional[random.Random] = None, last_posted: Optional[datetime] = None) -> datetime:
     """
+    Sequência por dia: o post entra de GAP_MIN a GAP_MAX minutos depois do último daquele dia (ou do último
+    postado, ou de agora), dentro da janela START_HOUR–END_HOUR. Dia cheio (POSTS_PER_DAY), sem espaço até
+    END_HOUR ou que já tem o mesmo produto: vai para o dia seguinte, começando logo depois de START_HOUR.
     `scheduled`: posts já agendados, cada um com 'scheduled_at' (ISO) e 'product_key'.
-    Devolve o primeiro horário livre respeitando as regras.
     """
     current = current or now()
     rng = rng or random.Random()
-    by_day = {}
-    for post in scheduled:
-        when = datetime.fromisoformat(post['scheduled_at']).astimezone(TZ)
-        by_day.setdefault(when.date(), []).append((when, post['product_key']))
-
+    items = [(datetime.fromisoformat(p['scheduled_at']).astimezone(TZ), p['product_key']) for p in scheduled]
     for offset in range(MAX_DAYS_AHEAD):
         day = (current + timedelta(days=offset)).date()
-        items = by_day.get(day, [])
-        if any(key == product_key for _, key in items) or len(items) >= POSTS_PER_DAY:
+        day_items = [(w, k) for w, k in items if w.date() == day]
+        if len(day_items) >= POSTS_PER_DAY or any(k == product_key for _, k in day_items):
             continue
-        taken = set()
-        for when, _ in items:
-            for i in range(POSTS_PER_DAY):
-                seg_start, length = _segment(day, i)
-                if seg_start <= when < seg_start + timedelta(minutes=length):
-                    taken.add(i)
-        for i in range(POSTS_PER_DAY):
-            if i in taken:
-                continue
-            seg_start, length = _segment(day, i)
-            slot = _broken_time(seg_start, length, rng)
-            if slot >= current + MIN_LEAD:
-                return slot
+        refs = [w for w, _ in day_items]
+        if offset == 0:
+            refs += [current] + ([last_posted.astimezone(TZ)] if last_posted else [])
+        if refs and max(refs) >= datetime.combine(day, time(START_HOUR), TZ):
+            slot = _broken(max(refs) + timedelta(minutes=rng.randint(GAP_MIN, GAP_MAX)))
+        else:
+            slot = _day_start(day, rng)
+        if slot.time() < time(START_HOUR):
+            slot = _day_start(day, rng)
+        if slot.date() == day and slot.time() <= time(END_HOUR):
+            return slot
     raise RuntimeError('Agenda cheia nos próximos 60 dias')

@@ -226,9 +226,12 @@ class AutomationTester:
             max(per_day.values()) <= scheduler.POSTS_PER_DAY,
             all(scheduler.START_HOUR <= t.hour < scheduler.END_HOUR for t in times),
             all(t.minute % 5 for t in times),
+            # mesma data: de 1 a 2 horas (com folga do minuto quebrado) entre um post e o seguinte
+            all(55 <= (b - a).total_seconds() / 60 <= scheduler.GAP_MAX + 5
+                for a, b in zip(sorted(times), sorted(times)[1:]) if a.date() == b.date()),
         ]
         if all(checks):
-            print(f"✅ Mesmo produto em dias diferentes, ≤{scheduler.POSTS_PER_DAY}/dia, horários quebrados")
+            print(f"✅ Sequência de 1 a 2 h, mesmo produto em dias diferentes, ≤{scheduler.POSTS_PER_DAY}/dia, horários quebrados")
             self.passed += 1
             return True
         print(f"❌ Falhou: {checks}")

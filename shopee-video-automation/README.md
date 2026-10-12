@@ -104,9 +104,9 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Legenda | Descrição + **3 hashtags** em até **150 caracteres no total** (cortada no fim de uma palavra se precisar). SEO + persuasão: começa pela palavra-chave como as pessoas buscam, cita quantidade/kit/tamanho/modelo (regra de relevância), benefício sensorial e específico, chamada para ação; hashtags = palavra-chave principal + categoria/cauda longa + uso/ocasião |
 | CTA | Laranja Shopee com letra branca e sombra (aparece em vídeo claro ou escuro) |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
-| Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
+| Agenda | Em sequência: cada vídeo aprovado entra **de 1 a 2 horas depois do último** da fila (ou do último postado), entre 9h e 22h, até 10 por dia, horários quebrados, nunca o mesmo produto no mesmo dia (esse vai para a manhã seguinte e os outros seguem o dia). `AGENDA_INTERVALO_MIN`/`MAX` mudam o intervalo |
 
-Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `AGENDA_FIM`.
+Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `AGENDA_FIM`, `AGENDA_INTERVALO_MIN`, `AGENDA_INTERVALO_MAX`.
 
 ## Instalação no VPS
 
