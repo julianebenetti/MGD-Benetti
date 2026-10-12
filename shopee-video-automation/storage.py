@@ -16,7 +16,7 @@ JSON_FIELDS = ('products', 'links', 'metadata', 'editados_msgs', 'agenda_msgs')
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    status TEXT NOT NULL,              -- editado | agendado | avisado | postado | descartado
+    status TEXT NOT NULL,              -- editado | agendando | agendado | enviando | avisado | postado | descartado
     created_at TEXT NOT NULL,
     source_msg_id INTEGER,
     product_key TEXT,                  -- shopId:itemId do produto principal
@@ -107,7 +107,7 @@ class Storage:
     def scheduled(self) -> List[Dict]:
         with self.lock:
             rows = self.conn.execute(
-                "SELECT * FROM posts WHERE status IN ('agendado', 'avisado') ORDER BY scheduled_at").fetchall()
+                "SELECT * FROM posts WHERE status IN ('agendado', 'avisado', 'enviando') ORDER BY scheduled_at").fetchall()
         return [self._row(r) for r in rows]
 
     def add_headline(self, product_key: str, headline: str):

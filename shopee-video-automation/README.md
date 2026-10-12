@@ -33,9 +33,31 @@ aprovação da capa. Para usar uma headline sua, **responda** a mensagem com o t
 Ao **✅ Aprovar e agendar**, o robô junta a capa na abertura do vídeo (`CAPA_SEGUNDOS`, padrão 1 s):
 esse vídeo final é o que vai para a Agenda.
 
-**⏰ Agenda** — aprovados com dia e horário. Na hora: aviso "⏰ Hora de postar!" e botão
-**✅ Postei**, que move para Postados. (Quando o bot que posta na Shopee for conectado, esse envio
-fica automático.)
+**⏰ Agenda** — aprovados com dia e horário. Na hora, o robô manda o vídeo final para a **LiA**
+(@Liaautomacao_bot), toca em **Publicar** no resumo dela e move o post para 🚀 Postados. Se algo
+falhar, ele avisa na Agenda com os botões **📤 Enviar à LiA** (tentar de novo) e **✅ Postei**.
+Sem a LiA configurada: aviso "⏰ Hora de postar!" e botão **✅ Postei**.
+
+## LiA (bot que posta no Shopee Video)
+
+Bot não conversa com bot no Telegram, então o envio sai **pela sua conta** (o que você faria à mão).
+O que vai para a LiA:
+- o vídeo final (capa na abertura + logo) com `#semcapa #semmarca`, para ela não colocar de novo;
+- os 3 links do **menor para o maior** comissionamento (regra dela: o último fica em destaque);
+- a descrição + hashtags do robô com `#semia` (`LIA_LEGENDA=ia` deixa a LiA escrever);
+- `#postar` (ou `#rascunho` com `LIA_MODO=rascunho`).
+
+Configuração (uma vez):
+1. Em **my.telegram.org** → *API development tools*, crie um app (nome e descrição quaisquer) e
+   copie **api_id** e **api_hash** para `TELEGRAM_API_ID` e `TELEGRAM_API_HASH` no `.env`.
+2. Rode o comando de instalação de novo (instala a biblioteca) e depois, no VPS:
+   `cd /opt/shopee-video/shopee-video-automation && .venv/bin/python lia_login.py`
+   — digite seu telefone (+55…), o código que chega no seu Telegram e a senha de duas etapas, se tiver.
+3. `sudo systemctl restart shopee-video`. O log mostra `LiA: ligada (agenda)`.
+
+O login fica em `lia.session`, só no VPS (nunca no GitHub). Ele dá acesso à sua conta: não copie esse
+arquivo para lugar nenhum. Para desligar o envio: `LIA_ENVIAR=nao`. Para mandar logo ao aprovar, em vez de
+no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Publicar: `LIA_PUBLICAR_AUTO=nao`.
 
 ## Regras
 
@@ -90,6 +112,7 @@ as variações vêm do print que você manda, e links de vídeo (`sv.shopee`) pr
 | `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
 | `sub_id.py` | Sub_id dos links |
 | `shopee_session.py` | Login da Shopee no navegador do robô (cookies via /cookies) |
+| `lia_sender.py` / `lia_login.py` | Envio à LiA pela sua conta / login dessa conta (uma vez) |
 | `setup_topics.py` / `instalar.sh` | Configuração inicial |
 
 ## Limites conhecidos

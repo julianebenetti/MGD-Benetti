@@ -62,3 +62,7 @@ estado.db
 
 # Login da Shopee do robô (enviado pelo Telegram com /cookies)
 shopee_cookies.json
+
+# Login da conta do Telegram que envia para a LiA (acesso total à conta: nunca subir)
+*.session
+*.session-journal

@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / '.env')
 
+import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError  # noqa: E402
 from shopee_session import CookieError, save_cookies  # noqa: E402
@@ -80,6 +81,8 @@ class Bot:
         self.pending: List[Dict] = []
         self.pending_asked = False
         self.batch_link: Optional[Dict] = None
+        self.lia = lia_sender.enabled()
+        self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
 
     # ---------- Envios ----------
 
@@ -225,8 +228,55 @@ class Bot:
         ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], final)
         ids.append(self.tg.send_text(
             AGENDA, f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
-            markup=keyboard([('✅ Postei', f"ok:{post_id}"), ('❌ Descartar', f"dc:{post_id}")])))
+            markup=self.agenda_markup(post_id)))
         self.db.update_post(post_id, agenda_msgs=ids)
+        if self.lia and self.lia_when == 'aprovar':
+            self.send_to_lia(self.db.get_post(post_id))
+
+    # ---------- Agenda / LiA ----------
+
+    def agenda_markup(self, post_id: int) -> str:
+        row = [('✅ Postei', f"ok:{post_id}")]
+        if self.lia:
+            row.append(('📤 Enviar à LiA', f"la:{post_id}"))
+        return keyboard(row, [('❌ Descartar', f"dc:{post_id}")])
+
+    def send_to_lia(self, post: Dict):
+        self.db.update_post(post['id'], status='enviando')
+        self.jobs.put(('lia', post['id']))
+
+    def job_lia(self, post_id: int):
+        """Manda o vídeo final para a LiA e toca em Publicar; deu certo → Postados."""
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'enviando':
+            return
+        reply_to = post['agenda_msgs'][-1] if post['agenda_msgs'] else None
+        try:
+            result = lia_sender.send(post)
+        except Exception as e:
+            if not isinstance(e, lia_sender.LiaError):
+                logger.exception("Falha ao enviar à LiA")
+            self.db.update_post(post_id, status='avisado')
+            msg_id = self.tg.send_text(
+                AGENDA, f"⚠️ Não consegui passar <b>{html.escape(post['product_name'])}</b> para a LiA: "
+                        f"{html.escape(str(e))}\nToque 📤 Enviar à LiA para tentar de novo, ou poste e toque ✅ Postei.",
+                reply_to=reply_to, markup=self.agenda_markup(post_id))
+            self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
+            return
+        if result.published:
+            self.move_to_postados(self.db.get_post(post_id), "🤖 Enviado à LiA e publicado")
+            return
+        self.db.update_post(post_id, status='avisado')
+        msg_id = self.tg.send_text(
+            AGENDA, f"📤 Enviado à LiA: falta tocar <b>Publicar</b> na conversa com ela. Depois toque ✅ Postei."
+                    f"\n\n{lia_sender.summary_html(result)}", reply_to=reply_to, markup=self.agenda_markup(post_id))
+        self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
+
+    def move_to_postados(self, post: Dict, label: str = "✅ Postado"):
+        self.tg.delete(post['agenda_msgs'])
+        self.db.update_post(post['id'], status='postado', agenda_msgs=[])
+        self.tg.send_photo(POSTADOS, post['cover_path'],
+                           f"{label} ({fmt_when(scheduler.now().isoformat())})\n\n{post_text(post)}"[:1024])
 
     def job_variations(self, post_id: int, file_id: str, reply_to: int):
         """Print das variações → cartão → capa refeita (precisa aprovar de novo)."""
@@ -309,11 +359,12 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Descartado')
 
         elif action == 'ok' and post['status'] in ('agendado', 'avisado'):
-            self.tg.delete(post['agenda_msgs'])
-            self.db.update_post(post['id'], status='postado', agenda_msgs=[])
-            self.tg.send_photo(POSTADOS, post['cover_path'],
-                               f"✅ Postado ({fmt_when(scheduler.now().isoformat())})\n\n{post_text(post)}"[:1024])
+            self.move_to_postados(post)
             self.tg.answer_callback(cb['id'], 'Movido para Postados')
+
+        elif action == 'la' and post['status'] in ('agendado', 'avisado') and self.lia:
+            self.send_to_lia(post)
+            self.tg.answer_callback(cb['id'], 'Enviando à LiA…')
 
         else:
             self.tg.answer_callback(cb['id'], 'Já resolvido')
@@ -331,6 +382,9 @@ class Bot:
         current = scheduler.now()
         for post in self.db.scheduled():
             if post['status'] == 'agendado' and datetime.fromisoformat(post['scheduled_at']) <= current:
+                if self.lia and self.lia_when == 'agenda':
+                    self.send_to_lia(post)
+                    continue
                 reply_to = post['agenda_msgs'][-1] if post['agenda_msgs'] else None
                 msg_id = self.tg.send_text(AGENDA, f"⏰ <b>Hora de postar!</b> {html.escape(post['product_name'])}",
                                            reply_to=reply_to)
@@ -350,6 +404,8 @@ class Bot:
                     self.job_approve(*job[1:])
                 elif job[0] == 'variations':
                     self.job_variations(*job[1:])
+                elif job[0] == 'lia':
+                    self.job_lia(*job[1:])
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
 
@@ -395,8 +451,23 @@ class Bot:
         self.on_envios({'message_id': copied, 'video': {'file_id': file_id},
                         'caption': msg.get('caption') or ''})
 
+    def recover_lia(self):
+        """Envio à LiA interrompido por reinício: não reenvia sozinho (pode ter chegado lá)."""
+        for post in self.db.scheduled():
+            if post['status'] != 'enviando':
+                continue
+            self.db.update_post(post['id'], status='avisado')
+            msg_id = self.tg.send_text(
+                AGENDA, f"⚠️ O robô reiniciou enquanto enviava <b>{html.escape(post['product_name'])}</b> à LiA. "
+                        "Confira na conversa com ela; se não chegou, toque 📤 Enviar à LiA.",
+                reply_to=post['agenda_msgs'][-1] if post['agenda_msgs'] else None,
+                markup=self.agenda_markup(post['id']))
+            self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
+
     def run(self):
+        self.recover_lia()
         threading.Thread(target=self.worker, daemon=True).start()
+        logger.info(f"LiA: {'ligada (' + self.lia_when + ')' if self.lia else 'desligada'}")
         offset = int(self.db.get_meta('offset', '0'))
         logger.info("Robô do Shopee Video ligado")
         while True:
