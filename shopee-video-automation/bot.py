@@ -470,6 +470,11 @@ class Bot:
         self.tg.answer_callback(cb['id'], 'Ok, seguindo com este link')
         self.enqueue_video(msg_id, failure['file_id'], failure['link'], failure['text'], trust_link=True)
 
+    def refresh_buttons(self, post: Dict):
+        """Põe os botões atuais na mensagem dos textos (posts enviados antes de uma atualização)."""
+        if len(post['editados_msgs']) > 2:
+            self.tg.edit_markup(post['editados_msgs'][2], self.editados_markup(post))
+
     def on_callback(self, cb: Dict):
         action, _, raw_id = cb.get('data', '').partition(':')
         if action == 'vk' and raw_id.isdigit():
@@ -502,6 +507,7 @@ class Bot:
 
         elif action == 'cv' and post['status'] == 'editado':
             if post['cover_approved']:
+                self.refresh_buttons(post)
                 self.tg.answer_callback(cb['id'], 'Capa já aprovada')
                 return
             self.db.update_post(post['id'], cover_approved=1)
@@ -509,10 +515,12 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Capa aprovada')
 
         elif action == 'ap' and post['status'] == 'editado' and not post['cover_approved']:
+            self.refresh_buttons(post)
             self.tg.answer_callback(cb['id'], 'Aprove a capa primeiro (✅ Aprovar capa)')
 
         elif action == 'ap' and post['status'] == 'editado' and not post.get('caption_approved'):
-            self.tg.answer_callback(cb['id'], 'Aprove a legenda primeiro (✅ Aprovar legenda)')
+            self.refresh_buttons(post)  # mensagens antigas não tinham o botão da legenda
+            self.tg.answer_callback(cb['id'], 'Aprove a legenda primeiro (✅ Aprovar legenda, logo acima)')
 
         elif action == 'ca' and post['status'] == 'editado':
             if post.get('caption_approved'):
