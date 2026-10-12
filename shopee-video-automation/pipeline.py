@@ -4,6 +4,7 @@ Preparação de um vídeo: produto confirmado + links extras + textos + vídeo c
 
 import logging
 import os
+import random
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -19,6 +20,14 @@ from video_processor import VideoProcessor
 logger = logging.getLogger(__name__)
 
 TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '3'))
+CTA_SECONDS = float(os.getenv('CTA_SEGUNDOS', '5'))
+# Sem preço, desconto ou cupom (podem mudar até a publicação)
+CTAS = [
+    'Adicione já ao carrinho! 🛒',
+    'Clique na sacolinha e garanta o seu! 🛒',
+    'Leva esse achadinho pra casa! 🛒',
+    'Já coloca no carrinho e garante o seu! 🛒',
+]
 MAX_EXTRA_CHECKS = 6
 
 
@@ -97,7 +106,9 @@ class Pipeline:
         sub_id = novo_sub_id(metadata['short_name'])
         links = [self.shopee.affiliate_link(p, sub_id) for p in products]
 
-        final_video = self.video.add_watermark(processed)
+        metadata['cta'] = random.choice(CTAS)
+        cta = self.cover.cta_overlay(metadata['cta'], str(Path(processed).with_suffix('.cta.png')))
+        final_video = self.video.add_watermark(processed, cta_path=cta, cta_seconds=CTA_SECONDS)
         if not final_video:
             raise PipelineError("Falha ao aplicar o logo no vídeo.")
         from shopee_session import PAGES_ENABLED

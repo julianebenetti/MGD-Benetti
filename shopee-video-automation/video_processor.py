@@ -90,8 +90,12 @@ class VideoProcessor:
             return None
 
     def add_watermark(self, video_path: str, logo_path: str = str(DEFAULT_LOGO),
-                      output_dir: Optional[Path] = None) -> Optional[str]:
-        """Sobrepõe o logo no canto superior esquerdo (abaixo da barra de busca da Shopee)."""
+                      output_dir: Optional[Path] = None, cta_path: Optional[str] = None,
+                      cta_seconds: float = 5.0) -> Optional[str]:
+        """
+        Sobrepõe o logo no canto superior esquerdo (abaixo da barra de busca da Shopee) e,
+        se houver, a imagem da CTA nos `cta_seconds` finais.
+        """
         try:
             if output_dir is None:
                 output_dir = Path(video_path).parent
@@ -104,12 +108,16 @@ class VideoProcessor:
             margin_x = int(self.width * LOGO_MARGIN_X_RATIO)
             margin_y = int(self.height * LOGO_TOP_RATIO)
 
+            graph = f"[1:v]scale={logo_w}:-1[logo];[0:v][logo]overlay={margin_x}:{margin_y}"
+            inputs = ['-i', video_path, '-i', logo_path]
+            if cta_path:
+                start = max(0.0, self.get_video_info(video_path).get('duration', 0) - cta_seconds)
+                inputs += ['-i', cta_path]
+                graph += f"[v];[v][2:v]overlay=0:0:enable='gte(t,{start:.2f})'"
             cmd = [
                 'ffmpeg',
-                '-i', video_path,
-                '-i', logo_path,
-                '-filter_complex',
-                f"[1:v]scale={logo_w}:-1[logo];[0:v][logo]overlay={margin_x}:{margin_y}",
+                *inputs,
+                '-filter_complex', graph,
                 '-c:v', 'libx264',
                 '-crf', '23',
                 '-preset', 'medium',

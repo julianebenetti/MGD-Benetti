@@ -42,6 +42,8 @@ CARD_GAP_BELOW_TEXT = 0.015    # se crescer para cima, para quase encostando na 
 CARD_MAX_COLS = 5
 CARD_MAX_THUMB = 130
 PILL_COLOR = (255, 255, 255, 240)
+# CTA dos segundos finais: abaixo do meio, acima da legenda/produto que o app mostra embaixo
+CTA_CENTER_Y_RATIO = 0.60
 
 
 def _is_emoji(ch: str) -> bool:
@@ -160,6 +162,23 @@ class CoverGenerator:
                 d.text((x, top + pad_y), run, font=self.font, fill=TEXT_COLOR)
                 x += int(self.font.getlength(run))
         return pill_h
+
+    def cta_overlay(self, text: str, out_path: str) -> str:
+        """Imagem transparente 9:16 com a CTA nas faixas brancas da headline, um pouco abaixo do meio."""
+        base = Image.new('RGBA', (self.width, self.height), (0, 0, 0, 0))
+        lines = self._wrap(text)
+        if len(lines) == 2:  # duas linhas equilibradas, sem palavra sobrando sozinha embaixo
+            words = text.split()
+            cut = min(range(1, len(words)), key=lambda i: max(self._measure(' '.join(words[:i])),
+                                                              self._measure(' '.join(words[i:]))))
+            lines = [' '.join(words[:cut]), ' '.join(words[cut:])]
+        pill_h = self.font.getmetrics()[0] + self.font.getmetrics()[1] + 2 * int(self.font_size * PILL_PAD_Y_RATIO)
+        step = int(pill_h * (1 - LINE_OVERLAP_RATIO))
+        top = int(self.height * CTA_CENTER_Y_RATIO) - (step * (len(lines) - 1) + pill_h) // 2
+        for i, line in enumerate(lines):
+            self._draw_line(base, line, self.width // 2, top + i * step)
+        base.save(out_path)
+        return out_path
 
     def colors_card(self, thumbs: List[str], out_path: str, label: str = 'Cor') -> str:
         """Cartão branco com o título (ex.: "3 Variações Disponíveis") e as miniaturas (até 5 por linha)."""

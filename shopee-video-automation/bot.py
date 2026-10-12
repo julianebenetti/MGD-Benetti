@@ -66,6 +66,7 @@ def post_text(post: Dict) -> str:
         f"📝 <b>Descrição:</b>\n{e(m['description'])}\n\n"
         f"#️⃣ <b>Hashtags:</b>\n{e(' '.join(m['hashtags']))}\n\n"
         f"🔍 <b>SEO:</b>\n{e(', '.join(m['seo_keywords']))}\n\n"
+        + (f"📣 <b>CTA (5 s finais):</b> {e(m['cta'])}\n\n" if m.get('cta') else '') +
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
         f"🔗 <b>Links:</b>\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
