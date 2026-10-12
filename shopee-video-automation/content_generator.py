@@ -43,11 +43,25 @@ EMOJIS_FINAIS = {
     'Dor': ['🙌', '🥹', '😌'],
     'Autoridade': ['⭐', '🏆', '🫶'],
 }
+# Legenda do Shopee Vídeo: descrição + hashtags juntas em até 150 caracteres, com 3 hashtags
+LEGENDA_MAX = 150
+HASHTAGS = 3
+
 EMOJI_RE = re.compile('[\U0001F000-\U0001FFFF\u2600-\u27BF\u2B00-\u2BFF\u200D\uFE0F]')
 
 
 def gatilho_da_vez(avoid_headlines: List[str]):
     return GATILHOS[len(avoid_headlines) % len(GATILHOS)]
+
+
+def fit_caption(description: str, hashtags: List[str]) -> str:
+    """Corta a descrição (no fim de uma palavra) para que descrição + espaço + hashtags caibam em LEGENDA_MAX."""
+    room = LEGENDA_MAX - len(' '.join(hashtags)) - 1
+    description = ' '.join(description.split())
+    if len(description) <= room:
+        return description
+    cut = description[:room - 1].rsplit(' ', 1)[0].rstrip(' ,;:-')
+    return cut + '…'
 
 
 def com_emoji(headline: str, gatilho: str) -> str:
@@ -58,17 +72,17 @@ def com_emoji(headline: str, gatilho: str) -> str:
 
 class ContentGenerator:
     def generate(self, product_info: Dict, avoid_headlines: List[str] = ()) -> Dict:
-        """Headline da capa, descrição, 5 hashtags, 10 palavras de SEO e nome curto (para o sub_id)."""
+        """Headline da capa, descrição, 3 hashtags, 10 palavras de SEO e nome curto (para o sub_id)."""
         try:
             logger.info(f"Gerando conteúdo para: {product_info.get('name', 'Produto')}")
             data = ask_json(self._build_prompt(product_info, avoid_headlines), SCHEMA, name='conteudo')
             result = {
                 'cover_title': com_emoji(data['cover_title'], gatilho_da_vez(avoid_headlines)[0]),
-                'description': data['description'][:150],
-                'hashtags': [h if h.startswith('#') else f'#{h}' for h in data['hashtags']][:5],
+                'hashtags': [h if h.startswith('#') else f'#{h}' for h in data['hashtags']][:HASHTAGS],
                 'seo_keywords': data['seo_keywords'][:10],
                 'short_name': data['short_name'],
             }
+            result['description'] = fit_caption(data['description'], result['hashtags'])
             logger.info("✅ Conteúdo gerado com sucesso")
             return result
         except Exception as e:
@@ -104,9 +118,12 @@ CAMPOS
   Gatilho obrigatório desta vez: {gatilho}: {explicacao}.
   Exemplos do perfil: "Se você usa plus size, olha esse achado!", "E se sua academia pudesse ficar dentro de casa?",
   "A escova que faz o trabalho pesado por você".
-{usadas}- description: legenda do vídeo, até 150 caracteres, no tom de uma amiga recomendando (sem começar com "Amiga"),
+{usadas}- description: legenda do vídeo, ATÉ 110 CARACTERES (com as hashtags, a legenda inteira tem no máximo 150),
+  no tom de uma amiga recomendando (sem começar com "Amiga"),
   com o benefício principal e um convite para ver o produto.
-- hashtags: exatamente 5, específicas do produto e da categoria; evite genéricas como #shopee #achadinhos.
+  Se o produto tiver quantidade, kit, tamanho, capacidade ou modelo (ex.: "kit 4 peças", "2,3L", "100 LEDs"),
+  cite isso na legenda: a Shopee penaliza vídeos que omitem quantidade, variação ou modelo.
+- hashtags: exatamente 3, curtas e específicas do produto e da categoria; evite genéricas como #shopee #achadinhos.
 - seo_keywords: 10 palavras-chave que uma pessoa digitaria para buscar este produto, da mais para a menos relevante.
 - short_name: nome curto do produto para identificação interna, 1 a 2 palavras, sem acento, sem espaço,
   cada palavra com inicial maiúscula (ex: "SapateiraBanco", "ConjuntoLinho").
@@ -124,8 +141,9 @@ REGRAS
         product_name = product_info.get('name', 'Produto')
         return {
             'cover_title': 'Olha esse achado! 👀',
-            'description': f'{product_name} 👀 Confira os detalhes no link do produto.'[:150],
-            'hashtags': ['#Shopee', '#ShopeeVideo', '#Achadinhos', '#AchadosShopee', '#AchadosRelampagos'],
+            'description': fit_caption(f'{product_name} 👀 Confira os detalhes no link do produto.',
+                                       ['#ShopeeVideo', '#AchadosShopee', '#AchadosRelampagos']),
+            'hashtags': ['#ShopeeVideo', '#AchadosShopee', '#AchadosRelampagos'],
             'seo_keywords': list(dict.fromkeys(
                 [w for w in product_name.lower().split() if len(w) > 2]
                 + ['shopee', 'achadinhos', 'achados', 'video', 'dicas', 'compras', 'novidade']
@@ -137,13 +155,13 @@ REGRAS
         """Valida se o conteúdo atende aos requisitos"""
         try:
             # Verificar descrição
-            if not content.get('description') or len(content['description']) > 150:
+            if not content.get('description') or len(content['description']) > LEGENDA_MAX:
                 logger.warning("Descrição inválida")
                 return False
 
             # Verificar hashtags
             hashtags = content.get('hashtags', [])
-            if len(hashtags) != 5 or not all(h.startswith('#') for h in hashtags):
+            if len(hashtags) != HASHTAGS or not all(h.startswith('#') for h in hashtags):
                 logger.warning("Hashtags inválidas")
                 return False
 

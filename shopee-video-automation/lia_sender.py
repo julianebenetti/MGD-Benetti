@@ -14,12 +14,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
 
+from content_generator import HASHTAGS, fit_caption
 from shopee_affiliate import commission_value
 
 logger = logging.getLogger(__name__)
 
 SESSION = Path(__file__).parent / 'lia'          # vira lia.session
-CAPTION_LIMIT = 1024
 WAIT_PUBLICAR = int(os.getenv('LIA_ESPERA_SEGUNDOS', '300'))
 
 
@@ -58,11 +58,10 @@ def caption(post: Dict) -> str:
     tail = '\n\n' + '\n'.join(links_for_lia(post)) + '\n\n' + ' '.join(tags)
     if not nossa:
         return tail.strip()
+    # legenda do Shopee Vídeo: descrição + 3 hashtags em até 150 caracteres (vale também para posts antigos)
     m = post['metadata']
-    hashtags = ' '.join(m['hashtags'])
-    room = CAPTION_LIMIT - len(tail) - len(hashtags) - 2
-    description = m['description'] if len(m['description']) <= room else m['description'][:room - 1].rstrip() + '…'
-    return f"{description}\n\n{hashtags}{tail}"
+    hashtags = m['hashtags'][:HASHTAGS]
+    return f"{fit_caption(m['description'], hashtags)} {' '.join(hashtags)}{tail}"
 
 
 def _publish_button(message):

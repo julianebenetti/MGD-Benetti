@@ -1,7 +1,7 @@
 # Robô do Shopee Video — Achados Relâmpagos
 
 Robô de Telegram sempre ligado que prepara os vídeos do Shopee Video: vídeo 9:16 com logo,
-capa com headline, descrição, hashtags, SEO e 5 links de afiliado (a loja divulgada + 4 de
+capa com headline, descrição, 3 hashtags, SEO e 5 links de afiliado (a loja divulgada + 4 de
 outros vendedores), com aprovação e agenda.
 
 ## Fluxo (tópicos do grupo "Shopee Video Bot")
@@ -73,6 +73,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |
 | Headline | Gerada pela IA, até 60 caracteres, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto. Termina com **um emoji** sorteado pelo gatilho: Choque 😱 🤯 😳 · Urgência 🔥 ⚡ 💥 · Curiosidade 👀 🤔 🤫 · Dor 🙌 🥹 😌 · Autoridade ⭐ 🏆 🫶 (listas em `EMOJIS_FINAIS`, `content_generator.py`). Headline digitada por você vai como está |
 | CTA | Nos 5 segundos finais do vídeo (`CTA_SEGUNDOS`), uma CTA sorteada em faixas brancas, um pouco abaixo do meio: "Adicione já ao carrinho!", "Clique na sacolinha e garanta o seu!", "Leva esse achadinho pra casa!", "Já coloca no carrinho e garante o seu!", "Compre agora e aproveite o desconto!", "Aproveita o preço especial!", "Compre com o cupom!" (lista `CTAS` em `pipeline.py`) |
+| Legenda | Descrição + **3 hashtags** em até **150 caracteres no total** (a descrição é cortada no fim de uma palavra se precisar). Cita quantidade, kit, tamanho ou modelo quando o produto tiver (regra de relevância do Shopee Vídeo) |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
 | Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
 
