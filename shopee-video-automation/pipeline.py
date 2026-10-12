@@ -166,8 +166,10 @@ class Pipeline:
         """
         best = post['melhores'][index]
         known = dict(zip(map(product_key, post['products']), post['links']))
-        pool = {product_key(p): p for p in post['products'] + post['melhores']}
-        pool.pop(product_key(best))
+        pool = {}  # uma vez cada loja, sem a loja escolhida
+        for p in sorted(post['products'] + post['melhores'], key=commission_value, reverse=True):
+            if str(p['shopId']) != str(best['shopId']):
+                pool.setdefault(str(p['shopId']), p)
         for p in pool.values():
             p.setdefault('commissionValue', commission_value(p))
         rest = sorted(pool.values(), key=lambda p: p['commissionValue'], reverse=True)[:TOTAL_LINKS - 1]

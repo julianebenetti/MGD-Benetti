@@ -181,7 +181,7 @@ class ShopeeAffiliateClient:
         return candidates
 
     def other_sellers(self, product: Dict, min_rating: float = 4.5) -> List[Dict]:
-        """Mesmo tipo de produto em outras lojas, ordenado por maior comissão (R$)."""
+        """Mesmo tipo de produto em outras lojas (uma vez cada loja, o anúncio de maior comissão), por comissão."""
         keyword = ' '.join(product['productName'].split()[:8])
         others = []
         for node in self.search(keyword, limit=30):
@@ -191,7 +191,10 @@ class ShopeeAffiliateClient:
                 continue
             node['commissionValue'] = commission_value(node)
             others.append(node)
-        return sorted(others, key=lambda n: n['commissionValue'], reverse=True)
+        best_per_shop = {}
+        for node in sorted(others, key=lambda n: n['commissionValue'], reverse=True):
+            best_per_shop.setdefault(str(node['shopId']), node)
+        return list(best_per_shop.values())
 
     def affiliate_link(self, product: Dict, sub_id: str) -> str:
         product_url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"

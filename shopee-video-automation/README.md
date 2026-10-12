@@ -91,7 +91,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Tema | Regra |
 |---|---|
 | Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo, inclusive a variação (cor/estampa/modelo) |
-| Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA (até 10 lojas conferidas ao mesmo tempo). A mensagem mostra a comissão estimada de cada link |
+| Links extras | Mesmo produto em outras lojas (**cada loja aparece uma vez só**, com o anúncio de maior comissão dela), maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA (até 10 lojas conferidas ao mesmo tempo). A mensagem mostra a comissão estimada de cada link |
 | Escolha da loja divulgada | Se outras lojas pagam mais que a do seu link, o robô lista até 5 em ✅ Editados com **preço, nota e comissão** de cada uma (e da sua) e o link para abrir. Toque na loja que quer divulgar (ou **Manter o meu**): ela vira o 1º link e os outros são as maiores comissões. O pedido do print das variações vem depois dessa escolha |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |
