@@ -64,11 +64,11 @@ class Pipeline:
         self.variations_blocked = False
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
-                   max_checks: int = 99, accept_uncertain: bool = False) -> Tuple[List[Dict], List[str]]:
+                   max_checks: int = 99) -> Tuple[List[Dict], List[str]]:
         found, reasons = [], []
         for product in candidates[:max_checks]:
             resultado, motivo = check_match(video_path, product)
-            if resultado == 'sim' or (accept_uncertain and resultado == 'incerto'):
+            if resultado == 'sim':
                 found.append(product)
                 if len(found) >= wanted:
                     break
@@ -80,7 +80,6 @@ class Pipeline:
         """
         `used_headlines(product_key) -> list` evita repetir headline do mesmo produto.
         `trust_link`: link reenviado pela Juliane depois de uma recusa, vale sem a conferência da IA.
-        Sem ele, o produto do link só é recusado se a IA disser que é outro produto ("incerto" passa).
         Levanta PipelineError com a explicação quando não dá para seguir.
         """
         candidates = self.shopee.find_candidates(link, text)
@@ -96,7 +95,7 @@ class Pipeline:
         if trust_link:
             main_found, reasons = candidates[:1], []
         else:
-            main_found, reasons = self._confirmed(processed, candidates, wanted=1, accept_uncertain=True)
+            main_found, reasons = self._confirmed(processed, candidates, wanted=1)
         if not main_found:
             raise PipelineError("A conferência não confirmou que o produto é o do vídeo:\n"
                                 + "\n".join(reasons) + "\n\nSe o produto é esse mesmo (ex.: outra cor), responda esta "
