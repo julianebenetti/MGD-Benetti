@@ -19,7 +19,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 API_URL = 'https://open-api.affiliate.shopee.com.br/graphql'
-PRODUCT_FIELDS = ('itemId shopId productName shopName price priceMin priceMax '
+PRODUCT_FIELDS = ('itemId shopId productName shopName priceMin priceMax '
                   'ratingStar sales commissionRate offerLink productLink imageUrl')
 MATCH_THRESHOLD = 0.90
 URL_RE = re.compile(r'https?://\S+')
@@ -61,6 +61,11 @@ def product_name_from_text(text: str) -> str:
     return ' '.join(text.split())
 
 
+def _gql_str(value: str) -> str:
+    """Texto como literal GraphQL (mesmas regras de escape do JSON)."""
+    return json.dumps(str(value), ensure_ascii=False)
+
+
 def commission_value(product: Dict) -> float:
     """Comissão estimada em R$ (a API manda a taxa como fração, ex: '0.08')."""
     price = float(product.get('priceMin') or product.get('price') or 0)
@@ -80,11 +85,12 @@ class ShopeeAffiliateClient:
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
             '(KHTML, like Gecko) Chrome/126.0 Safari/537.36')
 
-    def _graphql(self, query: str, variables: Dict) -> Dict:
-        payload = json.dumps({'query': query, 'variables': variables}, separators=(',', ':'))
+    def _graphql(self, query: str) -> Dict:
+        # A API da Shopee rejeita variáveis GraphQL para IDs ("wrong type"): valores vão direto na consulta.
+        payload = json.dumps({'query': query}, separators=(',', ':'), ensure_ascii=False)
         ts = str(int(time.time()))
         signature = hashlib.sha256(f'{self.app_id}{ts}{payload}{self.secret}'.encode()).hexdigest()
-        resp = self.session.post(API_URL, data=payload, timeout=30, headers={
+        resp = self.session.post(API_URL, data=payload.encode(), timeout=30, headers={
             'Content-Type': 'application/json',
             'Authorization': f'SHA256 Credential={self.app_id}, Timestamp={ts}, Signature={signature}',
         })
@@ -95,20 +101,21 @@ class ShopeeAffiliateClient:
         return data['data']
 
     def product_by_ids(self, shop_id: int, item_id: int) -> Optional[Dict]:
-        query = (f'query($shopId:Int64,$itemId:Int64){{productOfferV2(shopId:$shopId,itemId:$itemId,limit:1)'
+        query = (f'{{productOfferV2(shopId:{int(shop_id)},itemId:{int(item_id)},limit:1)'
                  f'{{nodes{{{PRODUCT_FIELDS}}}}}}}')
-        nodes = self._graphql(query, {'shopId': shop_id, 'itemId': item_id})['productOfferV2']['nodes']
+        nodes = self._graphql(query)['productOfferV2']['nodes']
         return nodes[0] if nodes else None
 
     def search(self, keyword: str, limit: int = 20) -> List[Dict]:
-        query = (f'query($keyword:String,$limit:Int){{productOfferV2(keyword:$keyword,limit:$limit)'
+        query = (f'{{productOfferV2(keyword:{_gql_str(keyword)},limit:{int(limit)})'
                  f'{{nodes{{{PRODUCT_FIELDS}}}}}}}')
-        return self._graphql(query, {'keyword': keyword, 'limit': limit})['productOfferV2']['nodes']
+        return self._graphql(query)['productOfferV2']['nodes']
 
     def short_link(self, origin_url: str, sub_ids: Optional[List[str]] = None) -> str:
-        query = 'mutation($input:ShortLinkInput!){generateShortLink(input:$input){shortLink}}'
-        variables = {'input': {'originUrl': origin_url, 'subIds': sub_ids or []}}
-        return self._graphql(query, variables)['generateShortLink']['shortLink']
+        subs = ','.join(_gql_str(s) for s in (sub_ids or []))
+        query = (f'mutation{{generateShortLink(input:{{originUrl:{_gql_str(origin_url)},subIds:[{subs}]}})'
+                 f'{{shortLink}}}}')
+        return self._graphql(query)['generateShortLink']['shortLink']
 
     def find_by_name(self, name: str, shop_name: Optional[str] = None) -> Optional[Dict]:
         """Só aceita quando há um único produto com nome praticamente idêntico."""
