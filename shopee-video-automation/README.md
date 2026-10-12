@@ -15,7 +15,10 @@ outros vendedores), com aprovação e agenda.
 - **o link antes** e os vídeos depois (até 10 min);
 - se faltar o link por 30 s, o robô pergunta uma vez;
 - se o robô não achar o produto, **responda a mensagem de erro (ou o próprio vídeo) com o link certo**:
-  ele refaz o vídeo sem você reenviar nada (vale mesmo depois de o robô reiniciar).
+  ele refaz o vídeo sem você reenviar nada (vale mesmo depois de o robô reiniciar);
+- se o vídeo mostra **outra variação** do produto do link (outra cor, estampa ou modelo), o robô avisa e
+  pede: toque **✅ Pode seguir** para usar o mesmo link, ou responda com o link da variação certa.
+  O link que você confirma ou reenvia não passa de novo pela conferência da IA.
 
 **Vídeos da Central Post TikTok** — o bot precisa estar no grupo do TikTok como **administrador**
 (sem permissões especiais). Mande **`/brutos`** uma vez dentro do tópico Brutos: a partir daí cada
@@ -63,7 +66,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 
 | Tema | Regra |
 |---|---|
-| Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo |
+| Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo, inclusive a variação (cor/estampa/modelo) |
 | Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |

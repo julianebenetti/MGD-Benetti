@@ -37,6 +37,10 @@ class PipelineError(Exception):
     """Erro com mensagem para mostrar no Telegram."""
 
 
+class VariationMismatch(PipelineError):
+    """Mesmo produto do link, mas o vídeo mostra outra variação: pede o ok da Juliane ou outro link."""
+
+
 def product_key(product: Dict) -> str:
     return f"{product['shopId']}:{product['itemId']}"
 
@@ -64,17 +68,20 @@ class Pipeline:
         self.variations_blocked = False
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
-                   max_checks: int = 99) -> Tuple[List[Dict], List[str]]:
-        found, reasons = [], []
+                   max_checks: int = 99, accept_variation: bool = False) -> Tuple[List[Dict], List[str], List[str]]:
+        """Produtos confirmados, motivos das recusas e motivos de 'outra variação' (quando não aceita)."""
+        found, reasons, variations = [], [], []
         for product in candidates[:max_checks]:
             resultado, motivo = check_match(video_path, product)
-            if resultado == 'sim':
+            if resultado == 'sim' or (accept_variation and resultado == 'variacao'):
                 found.append(product)
                 if len(found) >= wanted:
                     break
+            elif resultado == 'variacao':
+                variations.append(f"• {product['productName']}: {motivo}")
             else:
                 reasons.append(f"• {product['productName']}: {resultado} ({motivo})")
-        return found, reasons
+        return found, reasons, variations
 
     def prepare(self, video_file: str, link: str, text: str, used_headlines, trust_link: bool = False) -> Dict:
         """
@@ -93,9 +100,13 @@ class Pipeline:
             raise PipelineError("Não consegui processar este vídeo.")
 
         if trust_link:
-            main_found, reasons = candidates[:1], []
+            main_found, reasons, variations = candidates[:1], [], []
         else:
-            main_found, reasons = self._confirmed(processed, candidates, wanted=1)
+            main_found, reasons, variations = self._confirmed(processed, candidates, wanted=1)
+        if not main_found and variations:
+            raise VariationMismatch("O produto do vídeo é o mesmo do link, mas em OUTRA VARIAÇÃO:\n"
+                                    + "\n".join(variations) + "\n\nToque ✅ Pode seguir para usar este link "
+                                    "assim mesmo, ou responda esta mensagem com o link da variação certa.")
         if not main_found:
             raise PipelineError("A conferência não confirmou que o produto é o do vídeo:\n"
                                 + "\n".join(reasons) + "\n\nSe o produto é esse mesmo (ex.: outra cor), responda esta "
@@ -103,8 +114,8 @@ class Pipeline:
         main = main_found[0]
         key = product_key(main)
 
-        extras, _ = self._confirmed(processed, self.shopee.other_sellers(main),
-                                    wanted=TOTAL_LINKS - 1, max_checks=MAX_EXTRA_CHECKS)
+        extras, _, _ = self._confirmed(processed, self.shopee.other_sellers(main), wanted=TOTAL_LINKS - 1,
+                                       max_checks=MAX_EXTRA_CHECKS, accept_variation=True)
         products = [main] + extras
         logger.info(f"{len(products)} link(s) para {main['productName']}")
 

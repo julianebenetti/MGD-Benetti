@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 SCHEMA = {
     'type': 'object',
     'properties': {
-        'resultado': {'type': 'string', 'enum': ['sim', 'nao', 'incerto']},
+        'resultado': {'type': 'string', 'enum': ['sim', 'variacao', 'nao', 'incerto']},
         'motivo': {'type': 'string'},
     },
     'required': ['resultado', 'motivo'],
@@ -30,10 +30,12 @@ Produto do anúncio: "{name}"
 
 O produto que aparece em destaque no vídeo é este produto do anúncio?
 Um anúncio da Shopee vende várias VARIAÇÕES do mesmo produto (cor, estampa, tamanho, modelo, voltagem, kit),
-e a foto oficial mostra só uma delas. Compare o tipo de item e o formato/design, não a cor nem a estampa.
-- "sim": é o mesmo produto, mesmo que em outra cor, estampa ou variação
+e a foto oficial mostra uma delas.
+- "sim": é o mesmo produto, na mesma variação da foto (mesma cor/estampa/modelo)
+- "variacao": é o mesmo produto (mesmo tipo e design), mas o vídeo mostra outra variação (outra cor, estampa ou modelo)
 - "nao": é claramente outro tipo de produto ou outro design
 - "incerto": não dá para afirmar
+Em "variacao", diga no motivo qual variação aparece no vídeo e qual aparece na foto.
 
 Em "motivo", explique em uma frase curta, em português."""
 
@@ -65,7 +67,7 @@ def _image_block(b64: str) -> Dict:
 
 
 def check_match(video_path: str, product: Dict) -> Tuple[str, str]:
-    """Devolve (resultado, motivo); resultado é 'sim', 'nao' ou 'incerto'."""
+    """Devolve (resultado, motivo); resultado é 'sim', 'variacao', 'nao' ou 'incerto'."""
     try:
         content = [_image_block(_jpeg_b64(f)) for f in _video_frames(video_path)]
         photo = requests.get(product['imageUrl'], timeout=30)

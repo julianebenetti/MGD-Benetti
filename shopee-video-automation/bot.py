@@ -22,7 +22,7 @@ load_dotenv(Path(__file__).parent / '.env')
 
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
-from pipeline import Pipeline, PipelineError  # noqa: E402
+from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
 from shopee_session import CookieError, save_cookies  # noqa: E402
 from storage import Storage  # noqa: E402
 from telegram_handler import TelegramBot, extract_shopee_links, keyboard  # noqa: E402
@@ -172,8 +172,9 @@ class Bot:
                 logger.exception("Falha ao preparar vídeo")
             reason = str(e) if isinstance(e, PipelineError) else f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
-            err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id)
-            self.db.add_failure(msg_id, err_id, file_id, text)
+            markup = keyboard([('✅ Pode seguir', f"vk:{msg_id}")]) if isinstance(e, VariationMismatch) else None
+            err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id, markup=markup)
+            self.db.add_failure(msg_id, err_id, file_id, text, link)
             return
         post_id = self.db.create_post(source_msg_id=msg_id, **result)
         self.db.add_headline(result['product_key'], result['metadata']['cover_title'])
@@ -320,8 +321,22 @@ class Bot:
 
     # ---------- Botões ----------
 
+    def on_variation_ok(self, cb: Dict, msg_id: int):
+        """✅ Pode seguir: outra variação confirmada por você, refaz com o mesmo link sem conferir."""
+        failure = self.db.find_failure(msg_id, 0)
+        if not failure or failure['msg_id'] != msg_id or not failure.get('link'):
+            self.tg.answer_callback(cb['id'], 'Já resolvido')
+            return
+        self.db.remove_failure(msg_id)
+        self.tg.edit_markup(failure['err_msg_id'], keyboard())
+        self.tg.answer_callback(cb['id'], 'Ok, seguindo com este link')
+        self.enqueue_video(msg_id, failure['file_id'], failure['link'], failure['text'], trust_link=True)
+
     def on_callback(self, cb: Dict):
         action, _, raw_id = cb.get('data', '').partition(':')
+        if action == 'vk' and raw_id.isdigit():
+            self.on_variation_ok(cb, int(raw_id))
+            return
         post = self.db.get_post(int(raw_id)) if raw_id.isdigit() else None
         if not post:
             self.tg.answer_callback(cb['id'], 'Post não encontrado')
