@@ -4,13 +4,21 @@ Cliente da Bot API do Telegram usado pelo robô.
 
 import json
 import logging
+import os
 import re
+import socket
 from pathlib import Path
 from typing import Dict, List, Optional
 
 import requests
+import urllib3.util.connection
 
 logger = logging.getLogger(__name__)
+
+# Em VPS com IPv6 instável, a conexão com o Telegram fica pendurada até estourar o tempo ("sem resposta").
+# Por padrão as conexões do robô (requests: Telegram e Shopee) usam só IPv4. FORCAR_IPV4=nao desliga.
+if os.getenv('FORCAR_IPV4', 'sim').strip().lower() != 'nao':
+    urllib3.util.connection.allowed_gai_family = lambda: socket.AF_INET
 
 SHOPEE_LINK_RE = re.compile(
     r'https?://(?:[\w-]+\.)?(?:shopee\.com\.br|shp\.ee)/\S+', re.IGNORECASE)
