@@ -183,6 +183,9 @@ class Bot:
         links = extract_shopee_links(text)
 
         album = msg.get('media_group_id')
+        logger.info(f"Envios: mensagem {msg['message_id']} ({'vídeo' if file_id else 'texto'}"
+                    f"{', com link' if links else ', sem link'}"
+                    f"{', resposta a ' + str(msg['reply_to_message']['message_id']) if msg.get('reply_to_message') else ''})")
         if file_id:
             if links:
                 self.enqueue_video(msg['message_id'], file_id, links[0], text)
@@ -560,6 +563,7 @@ class Bot:
 
     def on_callback(self, cb: Dict):
         action, _, raw_id = cb.get('data', '').partition(':')
+        logger.info(f"Botão {cb.get('data', '')}")
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
             return
