@@ -130,7 +130,10 @@ class Pipeline:
     def make_cover(self, video_path: str, headline: str, sticker_path: Optional[str] = None) -> str:
         n = len(list(Path(video_path).parent.glob(f"{Path(video_path).stem}.capa*.jpg")))
         out = str(Path(video_path).with_suffix(f'.capa{n or ""}.jpg'))
-        if not self.cover.generate(video_path, headline, out, sticker_path):
+        # o quadro da capa vem do vídeo sem logo; a capa põe o logo na área visível da grade
+        clean = Path(video_path).with_name(Path(video_path).name.replace('watermarked_', '', 1))
+        source = str(clean) if clean.exists() else video_path
+        if not self.cover.generate(source, headline, out, sticker_path):
             raise PipelineError("Falha ao gerar a capa.")
         return out
 

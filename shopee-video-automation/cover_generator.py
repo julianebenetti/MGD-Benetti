@@ -18,6 +18,13 @@ TEXT_FONT = ASSETS / 'fonts' / 'Oswald.ttf'
 EMOJI_FONT = Path('/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf')
 EMOJI_NATIVE_SIZE = 109  # Noto Color Emoji só renderiza nesse tamanho
 
+# A grade do perfil mostra a capa cortada em 3:4: some ~12,5% em cima e ~12,5% embaixo.
+# Tudo o que importa fica entre 14% e 78% da altura.
+COVER_LOGO = ASSETS / 'logo_achados_relampagos.png'
+COVER_LOGO_WIDTH_RATIO = 0.25
+COVER_LOGO_LEFT_RATIO = 0.01
+COVER_LOGO_TOP_RATIO = 0.14
+
 # Proporções medidas nas capas de referência do perfil
 FONT_SIZE_RATIO = 0.062
 MAX_TEXT_WIDTH_RATIO = 0.70
@@ -30,9 +37,9 @@ TEXT_COLOR = (34, 34, 34, 255)
 CARD_FONT = ASSETS / 'fonts' / 'Roboto.ttf'
 CARD_WIDTH_RATIO = 0.50
 CARD_LEFT_RATIO = 0.02
-CARD_MIN_TOP_RATIO = 0.55
-CARD_MAX_BOTTOM_RATIO = 0.86
-CARD_GAP_BELOW_TEXT = 0.025
+CARD_MIN_TOP_RATIO = 0.56
+CARD_MAX_BOTTOM_RATIO = 0.78   # o contador de views da grade fica no canto inferior esquerdo (~80-87%)
+CARD_GAP_BELOW_TEXT = 0.04
 CARD_MAX_COLS = 5
 CARD_MAX_THUMB = 130
 PILL_COLOR = (255, 255, 255, 240)
@@ -186,8 +193,14 @@ class CoverGenerator:
 
     def generate(self, video_path: str, title: str, output_path: str,
                  card_path: Optional[str] = None) -> Optional[str]:
+        """`video_path` deve ser o vídeo SEM o logo: a capa coloca o logo na posição segura da grade."""
         try:
             frame = self.pick_frame(video_path).convert('RGBA')
+            logo = Image.open(COVER_LOGO).convert('RGBA')
+            logo_w = int(self.width * COVER_LOGO_WIDTH_RATIO)
+            logo = logo.resize((logo_w, round(logo.height * logo_w / logo.width)), Image.LANCZOS)
+            frame.alpha_composite(logo, (int(self.width * COVER_LOGO_LEFT_RATIO),
+                                         int(self.height * COVER_LOGO_TOP_RATIO)))
             lines = self._wrap(title)
             ascent, descent = self.font.getmetrics()
             pill_h = ascent + descent + 2 * int(self.font_size * PILL_PAD_Y_RATIO)
