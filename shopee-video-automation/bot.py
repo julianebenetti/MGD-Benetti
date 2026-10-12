@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / '.env')
 
+import conversions  # noqa: E402
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
@@ -105,7 +106,7 @@ class Bot:
         self.db = Storage()
         self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
         # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
-        self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue()}
+        self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue()}
         self.pending: List[Dict] = []
         self.pending_asked = False
         self.batch_link: Optional[Dict] = None
@@ -115,7 +116,9 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        self.queues['video' if kind == 'video' else 'lia' if kind == 'lia' else 'ui'].put(job)
+        name = 'video' if kind == 'video' else 'lia' if kind == 'lia' else 'report' if kind in ('report', 'sales') \
+            else 'ui'
+        self.queues[name].put(job)
 
     # ---------- Envios ----------
 
@@ -581,6 +584,8 @@ class Bot:
                 lines.append(f"{when:%H:%M} · {e(p['product_name'][:40])} · {e(main.get('shopName', '')[:20])} "
                              f"({brl(commission_value(main)) if main else '-'})")
 
+        lines += ["", f"💵 Vendas do dia (Shopee): {self.day_sales(day)}"]
+
         tomorrow = day + timedelta(days=1)
         scheduled = self.db.scheduled()
         lines += ["", "<b>Agora</b>",
@@ -598,6 +603,42 @@ class Bot:
         lines.append(f"Total: <b>{sum(counts)}</b> · média {sum(counts) / 7:.1f} por dia".replace('.', ','))
         return '\n'.join(lines)[:4000]
 
+    def posts_by_sub(self) -> Dict[str, str]:
+        return {p['sub_id']: p['product_name'] for p in
+                self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'avisado', 'postado', 'descartado')
+                if p['sub_id']}
+
+    def day_sales(self, day: date) -> str:
+        start = datetime.combine(day, datetime.min.time(), scheduler.TZ)
+        try:
+            items = conversions.fetch(self.pipeline.shopee, start, min(start + timedelta(days=1), scheduler.now()))
+        except Exception as e:
+            logger.warning(f"Relatório de conversões falhou: {e}")
+            return f"não consegui consultar ({html.escape(str(e)[:120])})"
+        return conversions.summary_line(items)
+
+    def job_sales(self, thread: Optional[int], days: int):
+        end = scheduler.now()
+        start = datetime.combine((end - timedelta(days=days - 1)).date(), datetime.min.time(), scheduler.TZ)
+        try:
+            items = conversions.fetch(self.pipeline.shopee, start, end)
+        except Exception as e:
+            logger.warning(f"Relatório de conversões falhou: {e}")
+            self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas na Shopee: {html.escape(str(e)[:300])}")
+            return
+        title = 'Vendas de hoje' if days == 1 else f"Vendas dos últimos {days} dias ({start:%d/%m} a {end:%d/%m})"
+        self.tg.send_text(thread, conversions.report(items, self.posts_by_sub(), title)[:4000])
+
+    def on_sales_command(self, thread: Optional[int], command: str):
+        """/vendas (últimos 7 dias), /vendas hoje ou /vendas 30."""
+        arg = command.split()[1].lower() if len(command.split()) > 1 else '7'
+        days = 1 if arg == 'hoje' else int(arg) if arg.isdigit() else 0
+        if not 1 <= days <= 90:
+            self.tg.send_text(thread, "Use /vendas, /vendas hoje ou /vendas 30 (até 90 dias).")
+            return
+        self.tg.send_text(thread or RELATORIO, "💵 Consultando as vendas na Shopee… (leva até 1 minuto)")
+        self.submit(('sales', thread or RELATORIO, days))
+
     def on_report_command(self, thread: Optional[int], command: str):
         """/relatorio (hoje) ou /relatorio 10/10 (outro dia), respondido no tópico em que foi pedido."""
         day = scheduler.now().date()
@@ -609,7 +650,7 @@ class Bot:
         except ValueError:
             self.tg.send_text(thread, "Use /relatorio ou /relatorio 10/10.")
             return
-        self.tg.send_text(thread or RELATORIO, self.report_text(day))
+        self.submit(('report', thread or RELATORIO, day))
 
     def daily_report(self):
         """No horário RELATORIO_HORA, o relatório do dia vai sozinho para 📊 Relatório (uma vez por dia)."""
@@ -619,7 +660,7 @@ class Bot:
         if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('relatorio_dia') == today:
             return
         self.db.set_meta('relatorio_dia', today)
-        self.tg.send_text(RELATORIO or POSTADOS, self.report_text(current.date()))
+        self.submit(('report', RELATORIO or POSTADOS, current.date()))
 
     # ---------- Loop ----------
 
@@ -639,6 +680,10 @@ class Bot:
                     self.job_lia(*job[1:])
                 elif job[0] == 'switch':
                     self.job_switch(*job[1:])
+                elif job[0] == 'report':
+                    self.tg.send_text(job[1], self.report_text(job[2]))
+                elif job[0] == 'sales':
+                    self.job_sales(*job[1:])
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
 
@@ -656,6 +701,9 @@ class Bot:
         command = (msg.get('text') or '').strip()
         if command.lower().startswith('/relatorio'):
             self.on_report_command(thread, command)
+            return
+        if command.lower().startswith('/vendas'):
+            self.on_sales_command(thread, command)
             return
         if thread == ENVIOS:
             self.on_envios(msg)

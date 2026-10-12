@@ -53,6 +53,11 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 últimos 7 dias. A qualquer hora: **`/relatorio`** (hoje) ou **`/relatorio 10/10`** (outro dia), em
 qualquer tópico do grupo.
 
+**💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
+comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por
+vídeo (pelo sub_id de cada um), pendente × concluída, cancelados e o que veio de links fora do robô. A
+Shopee pode levar algumas horas para mostrar uma venda, e só deixa consultar de novo depois de 30 segundos.
+
 ## LiA (bot que posta no Shopee Video)
 
 Bot não conversa com bot no Telegram, então o envio sai **pela sua conta** (o que você faria à mão).
@@ -129,6 +134,7 @@ as variações vêm do print que você manda, e links de vídeo (`sv.shopee`) pr
 | `video_processor.py` / `cover_generator.py` | Vídeo 9:16 com logo / capa |
 | `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
 | `sub_id.py` | Sub_id dos links |
+| `conversions.py` | Vendas reais por sub_id (relatório de conversões da Shopee) |
 | `shopee_session.py` | Login da Shopee no navegador do robô (cookies via /cookies) |
 | `lia_sender.py` / `lia_login.py` | Envio à LiA pela sua conta / login dessa conta (uma vez) |
 | `setup_topics.py` / `instalar.sh` | Configuração inicial |
