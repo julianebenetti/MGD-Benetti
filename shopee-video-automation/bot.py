@@ -23,6 +23,7 @@ load_dotenv(Path(__file__).parent / '.env')
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
+from shopee_affiliate import commission_value  # noqa: E402
 from shopee_session import CookieError, save_cookies  # noqa: E402
 from storage import Storage  # noqa: E402
 from telegram_handler import TelegramBot, extract_shopee_links, keyboard  # noqa: E402
@@ -56,11 +57,19 @@ def fmt_when(iso: str) -> str:
     return f"{DIAS[when.weekday()]}, {when:%d/%m} às {when:%H:%M}"
 
 
+def brl(value: float) -> str:
+    return f"R$ {value:.2f}".replace('.', ',')
+
+
+def product_url(p: Dict) -> str:
+    return f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
+
+
 def post_text(post: Dict) -> str:
     e = html.escape
     m = post['metadata']
     links = '\n'.join(
-        f"{i}. {e(p.get('shopName', ''))}: {e(link)}"
+        f"{i}. {e(p.get('shopName', ''))} ({brl(commission_value(p))}){' ⭐ divulgado' if i == 1 else ''}: {e(link)}"
         for i, (p, link) in enumerate(zip(post['products'], post['links']), 1))
     return (
         f"🎬 <b>Headline:</b> {e(m['cover_title'])}\n\n"
@@ -69,7 +78,7 @@ def post_text(post: Dict) -> str:
         f"🔍 <b>SEO:</b>\n{e(', '.join(m['seo_keywords']))}\n\n"
         + (f"📣 <b>CTA (5 s finais):</b> {e(m['cta'])}\n\n" if m.get('cta') else '') +
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
-        f"🔗 <b>Links:</b>\n{links}\n"
+        f"🔗 <b>Links</b> (comissão estimada; para a LiA vão do menor pro maior):\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
     )
 
@@ -79,12 +88,17 @@ class Bot:
         self.tg = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
         self.db = Storage()
         self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
-        self.jobs: queue.Queue = queue.Queue()
+        # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
+        self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue()}
         self.pending: List[Dict] = []
         self.pending_asked = False
         self.batch_link: Optional[Dict] = None
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
+
+    def submit(self, job: tuple):
+        kind = job[0]
+        self.queues['video' if kind == 'video' else 'lia' if kind == 'lia' else 'ui'].put(job)
 
     # ---------- Envios ----------
 
@@ -161,7 +175,7 @@ class Bot:
 
     def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         self.tg.react(msg_id, '👌')
-        self.jobs.put(('video', msg_id, file_id, link, text, trust_link))
+        self.submit(('video', msg_id, file_id, link, text, trust_link))
 
     def job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         try:
@@ -195,12 +209,39 @@ class Bot:
         """Capa, vídeo, textos com botões e, enquanto faltar, o pedido do print das variações."""
         ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
         ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=self.editados_markup(post)))
-        if post.get('variacoes', 'pendente') == 'pendente' and not post.get('sticker_path'):
+        if post.get('troca') == 'pendente':
+            ids.append(self.tg.send_text(EDITADOS, self.switch_question(post), reply_to=ids[-1], markup=keyboard(
+                [('🔁 Trocar pela melhor', f"tm:{post['id']}"), ('Manter o meu', f"mm:{post['id']}")])))
+        elif post.get('variacoes', 'pendente') == 'pendente' and not post.get('sticker_path'):
             ids.append(self.tg.send_text(
                 EDITADOS, "🖼️ <b>Responda esta mensagem com o print das variações</b> do produto "
                           "(a tela com as miniaturas). Eu recorto e coloco o cartão na capa.",
                 reply_to=ids[-1], markup=keyboard([('Sem variações', f"sv:{post['id']}")])))
         self.db.update_post(post['id'], editados_msgs=ids)
+
+    @staticmethod
+    def switch_question(post: Dict) -> str:
+        e = html.escape
+        mine = post['products'][0]
+        options = '\n'.join(
+            f"{i}. {e(p.get('shopName', ''))}: <b>{brl(commission_value(p))}</b> · nota {p.get('ratingStar') or '-'} · "
+            f"{e(product_url(p))}" for i, p in enumerate(post['melhores'], 1))
+        return (f"💰 <b>Achei {len(post['melhores'])} loja(s) pagando mais</b> que a do seu link "
+                f"({e(mine.get('shopName', ''))}: {brl(commission_value(mine))}):\n{options}\n\n"
+                "Quer trocar o item divulgado pela <b>1</b> (maior comissão)? Se trocar, abra o link dela "
+                "para tirar o print das variações, que eu peço em seguida.")
+
+    def job_switch(self, post_id: int, trocar: bool):
+        """Troca o item divulgado pela loja de maior comissão (ou mantém) e reenvia o post em Editados."""
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'editado' or post.get('troca') != 'pendente':
+            return
+        fields = self.pipeline.switch_to_best(post) if trocar else {}
+        self.tg.delete(post['editados_msgs'])
+        self.db.update_post(post_id, troca='trocado' if trocar else 'mantido', **fields)
+        if trocar:
+            self.db.add_headline(fields['product_key'], post['metadata']['cover_title'])
+        self.send_to_editados(self.db.get_post(post_id))
 
     def job_headline(self, post_id: int, headline: Optional[str]):
         post = self.db.get_post(post_id)
@@ -248,7 +289,7 @@ class Bot:
 
     def send_to_lia(self, post: Dict):
         self.db.update_post(post['id'], status='enviando')
-        self.jobs.put(('lia', post['id']))
+        self.submit(('lia', post['id']))
 
     def job_lia(self, post_id: int):
         """Manda o vídeo final para a LiA e toca em Publicar; deu certo → Postados."""
@@ -312,12 +353,15 @@ class Bot:
         elif msg.get('document', {}).get('mime_type', '').startswith('image/'):
             image_id = msg['document']['file_id']
         text = (msg.get('text') or '').strip()
-        if image_id:
+        if image_id and post.get('troca') == 'pendente':
+            self.tg.send_text(EDITADOS, "Antes do print, escolha se troca pela loja de maior comissão "
+                                        "(🔁 Trocar pela melhor / Manter o meu).", reply_to=msg['message_id'])
+        elif image_id:
             self.tg.react(msg['message_id'], '👌')
-            self.jobs.put(('variations', post['id'], image_id, msg['message_id']))
+            self.submit(('variations', post['id'], image_id, msg['message_id']))
         elif text:
             self.tg.react(msg['message_id'], '✍')
-            self.jobs.put(('headline', post['id'], text[:60]))
+            self.submit(('headline', post['id'], text[:60]))
 
     # ---------- Botões ----------
 
@@ -348,6 +392,13 @@ class Bot:
             self.db.update_post(post['id'], variacoes='sem', editados_msgs=post['editados_msgs'][:3])
             self.tg.answer_callback(cb['id'], 'Ok, capa sem cartão de variações')
 
+        elif action in ('tm', 'mm') and post['status'] == 'editado' and post.get('troca') == 'pendente':
+            self.tg.answer_callback(cb['id'], 'Trocando…' if action == 'tm' else 'Ok, mantendo o seu link')
+            self.submit(('switch', post['id'], action == 'tm'))
+
+        elif action in ('cv', 'ap') and post['status'] == 'editado' and post.get('troca') == 'pendente':
+            self.tg.answer_callback(cb['id'], 'Antes, escolha se troca pela loja de maior comissão')
+
         elif action == 'cv' and post['status'] == 'editado' and post.get('variacoes') == 'pendente' \
                 and not post.get('sticker_path'):
             self.tg.answer_callback(cb['id'], 'Antes, mande o print das variações (ou toque em Sem variações)')
@@ -366,11 +417,11 @@ class Bot:
         elif action == 'ap' and post['status'] == 'editado':
             self.db.update_post(post['id'], status='agendando')
             self.tg.answer_callback(cb['id'], 'Juntando a capa ao vídeo e agendando…')
-            self.jobs.put(('approve', post['id']))
+            self.submit(('approve', post['id']))
 
         elif action == 'hl' and post['status'] == 'editado':
             self.tg.answer_callback(cb['id'], 'Gerando outra headline…')
-            self.jobs.put(('headline', post['id'], None))
+            self.submit(('headline', post['id'], None))
 
         elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado'):
             self.tg.delete(post['editados_msgs'] + post['agenda_msgs'])
@@ -411,9 +462,9 @@ class Bot:
 
     # ---------- Loop ----------
 
-    def worker(self):
+    def worker(self, jobs: queue.Queue):
         while True:
-            job = self.jobs.get()
+            job = jobs.get()
             try:
                 if job[0] == 'video':
                     self.job_video(*job[1:])
@@ -425,6 +476,8 @@ class Bot:
                     self.job_variations(*job[1:])
                 elif job[0] == 'lia':
                     self.job_lia(*job[1:])
+                elif job[0] == 'switch':
+                    self.job_switch(*job[1:])
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
 
@@ -485,7 +538,8 @@ class Bot:
 
     def run(self):
         self.recover_lia()
-        threading.Thread(target=self.worker, daemon=True).start()
+        for jobs in self.queues.values():
+            threading.Thread(target=self.worker, args=(jobs,), daemon=True).start()
         logger.info(f"LiA: {'ligada (' + self.lia_when + ')' if self.lia else 'desligada'}")
         offset = int(self.db.get_meta('offset', '0'))
         logger.info("Robô do Shopee Video ligado")

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 DB_PATH = Path(__file__).parent / 'estado.db'
-JSON_FIELDS = ('products', 'links', 'metadata', 'editados_msgs', 'agenda_msgs')
+JSON_FIELDS = ('products', 'links', 'metadata', 'editados_msgs', 'agenda_msgs', 'melhores')
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS posts (
@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS posts (
     cover_approved INTEGER DEFAULT 0,
     final_video_path TEXT,             -- vídeo com a capa na abertura (gerado ao aprovar)
     variacoes TEXT DEFAULT 'pendente', -- pendente (aguarda o print) | ok | sem
+    melhores TEXT,                     -- JSON: lojas com comissão maior que a do link enviado
+    troca TEXT DEFAULT 'sem',          -- pendente (pergunta se troca pela melhor) | trocado | mantido | sem
     editados_msgs TEXT DEFAULT '[]',
     agenda_msgs TEXT DEFAULT '[]',
     scheduled_at TEXT
@@ -56,7 +58,8 @@ class Storage:
         """Bancos criados por versões antigas ganham as colunas novas (CREATE IF NOT EXISTS não altera)."""
         existing = {r[1] for r in self.conn.execute("PRAGMA table_info(posts)")}
         for name, decl in (('sticker_path', 'TEXT'), ('cover_approved', 'INTEGER DEFAULT 0'),
-                           ('final_video_path', 'TEXT'), ('variacoes', "TEXT DEFAULT 'pendente'")):
+                           ('final_video_path', 'TEXT'), ('variacoes', "TEXT DEFAULT 'pendente'"),
+                           ('melhores', 'TEXT'), ('troca', "TEXT DEFAULT 'sem'")):
             if name not in existing:
                 self.conn.execute(f"ALTER TABLE posts ADD COLUMN {name} {decl}")
         if 'link' not in {r[1] for r in self.conn.execute("PRAGMA table_info(failures)")}:

@@ -5,6 +5,7 @@ Preparação de um vídeo: produto confirmado + links extras + textos + vídeo c
 import logging
 import os
 import random
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -13,7 +14,7 @@ from cover_generator import CoverGenerator
 from product_matcher import check_match
 from product_page_capture import capture_variation_thumbs
 from variations_print import thumbs_from_print
-from shopee_affiliate import ShopeeAffiliateClient
+from shopee_affiliate import ShopeeAffiliateClient, commission_value
 from sub_id import novo_sub_id
 from video_processor import VideoProcessor
 
@@ -30,7 +31,8 @@ CTAS = [
     'Aproveita o preço especial! 🛒',
     'Compre com o cupom! 🛒',
 ]
-MAX_EXTRA_CHECKS = 6
+MAX_EXTRA_CHECKS = 10   # outras lojas conferidas pela IA (em paralelo)
+MAX_BETTER = 5          # opções de comissão maior oferecidas para troca
 
 
 class PipelineError(Exception):
@@ -66,17 +68,22 @@ class Pipeline:
         self.content = ContentGenerator()
         self.cover = CoverGenerator()
         self.variations_blocked = False
+        self.workers = ThreadPoolExecutor(max_workers=6)
+
+    def _check_all(self, video_path: str, candidates: List[Dict]) -> List[Tuple[Dict, str, str]]:
+        """Conferência de vários produtos ao mesmo tempo (cada uma é uma chamada à IA), na ordem recebida."""
+        results = list(self.workers.map(lambda p: check_match(video_path, p), candidates))
+        return [(p, r, m) for p, (r, m) in zip(candidates, results)]
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
                    max_checks: int = 99, accept_variation: bool = False) -> Tuple[List[Dict], List[str], List[str]]:
         """Produtos confirmados, motivos das recusas e motivos de 'outra variação' (quando não aceita)."""
         found, reasons, variations = [], [], []
-        for product in candidates[:max_checks]:
-            resultado, motivo = check_match(video_path, product)
+        for product, resultado, motivo in self._check_all(video_path, candidates[:max_checks]):
+            if len(found) >= wanted:
+                break
             if resultado == 'sim' or (accept_variation and resultado == 'variacao'):
                 found.append(product)
-                if len(found) >= wanted:
-                    break
             elif resultado == 'variacao':
                 variations.append(f"• {product['productName']}: {motivo}")
             else:
@@ -88,6 +95,8 @@ class Pipeline:
         `used_headlines(product_key) -> list` evita repetir headline do mesmo produto.
         `trust_link`: link reenviado pela Juliane depois de uma recusa, vale sem a conferência da IA.
         Levanta PipelineError com a explicação quando não dá para seguir.
+
+        Para ganhar tempo, o vídeo é codificado enquanto a IA confere os produtos e escreve os textos.
         """
         candidates = self.shopee.find_candidates(link, text)
         if not candidates:
@@ -95,14 +104,14 @@ class Pipeline:
                                 f"(o link abriu em: {self.shopee.last_final_url[:150]}). "
                                 "Mande o link do PRODUTO respondendo esta mensagem que eu refaço.")
 
-        processed = self.video.process(video_file, self.output_dir)
-        if not processed:
-            raise PipelineError("Não consegui processar este vídeo.")
+        cta_text = random.choice(CTAS)
+        cta_png = self.cover.cta_overlay(cta_text, str(self.output_dir / f"{Path(video_file).stem}.cta.png"))
+        rendering = self.workers.submit(self.video.render, video_file, self.output_dir, cta_png, CTA_SECONDS)
 
         if trust_link:
             main_found, reasons, variations = candidates[:1], [], []
         else:
-            main_found, reasons, variations = self._confirmed(processed, candidates, wanted=1)
+            main_found, reasons, variations = self._confirmed(video_file, candidates[:3], wanted=1)
         if not main_found and variations:
             raise VariationMismatch("O produto do vídeo é o mesmo do link, mas em OUTRA VARIAÇÃO:\n"
                                     + "\n".join(variations) + "\n\nToque ✅ Pode seguir para usar este link "
@@ -112,23 +121,26 @@ class Pipeline:
                                 + "\n".join(reasons) + "\n\nSe o produto é esse mesmo (ex.: outra cor), responda esta "
                                 "mensagem com o link que eu sigo sem conferir. Se não, mande o link do produto certo.")
         main = main_found[0]
+        main['commissionValue'] = commission_value(main)
         key = product_key(main)
 
-        extras, _, _ = self._confirmed(processed, self.shopee.other_sellers(main), wanted=TOTAL_LINKS - 1,
+        writing = self.workers.submit(self.content.generate, product_info(main), used_headlines(key))
+        others, _, _ = self._confirmed(video_file, self.shopee.other_sellers(main), wanted=MAX_BETTER + TOTAL_LINKS,
                                        max_checks=MAX_EXTRA_CHECKS, accept_variation=True)
-        products = [main] + extras
-        logger.info(f"{len(products)} link(s) para {main['productName']}")
+        # outras lojas confirmadas, da maior para a menor comissão
+        better = [p for p in others if p['commissionValue'] > main['commissionValue']][:MAX_BETTER]
+        products = [main] + others[:TOTAL_LINKS - 1]
+        logger.info(f"{len(products)} link(s) para {main['productName']}; {len(better)} opção(ões) com comissão maior")
 
-        info = product_info(main)
-        metadata = self.content.generate(info, used_headlines(key))
+        metadata = writing.result()
+        metadata['cta'] = cta_text
         sub_id = novo_sub_id(metadata['short_name'])
         links = [self.shopee.affiliate_link(p, sub_id) for p in products]
 
-        metadata['cta'] = random.choice(CTAS)
-        cta = self.cover.cta_overlay(metadata['cta'], str(Path(processed).with_suffix('.cta.png')))
-        final_video = self.video.add_watermark(processed, cta_path=cta, cta_seconds=CTA_SECONDS)
-        if not final_video:
-            raise PipelineError("Falha ao aplicar o logo no vídeo.")
+        rendered = rendering.result()
+        if not rendered:
+            raise PipelineError("Não consegui processar este vídeo.")
+        final_video = rendered[1]
         from shopee_session import PAGES_ENABLED
         sticker = self.variations_print(main) if PAGES_ENABLED else None  # senão, vem do print enviado
         cover = self.make_cover(final_video, metadata['cover_title'], sticker)
@@ -143,7 +155,26 @@ class Pipeline:
             'video_path': final_video,
             'cover_path': cover,
             'sticker_path': sticker,
+            'melhores': better,
+            'troca': 'pendente' if better else 'sem',
         }
+
+    def switch_to_best(self, post: Dict) -> Dict:
+        """
+        A opção de maior comissão vira o item divulgado (1º link); os outros links são as próximas
+        maiores comissões entre as lojas já conferidas (o produto do link original entra se couber).
+        """
+        best = post['melhores'][0]
+        known = dict(zip(map(product_key, post['products']), post['links']))
+        pool = {product_key(p): p for p in post['products'] + post['melhores']}
+        pool.pop(product_key(best))
+        for p in pool.values():
+            p.setdefault('commissionValue', commission_value(p))
+        rest = sorted(pool.values(), key=lambda p: p['commissionValue'], reverse=True)[:TOTAL_LINKS - 1]
+        products = [best] + rest
+        links = [known.get(product_key(p)) or self.shopee.affiliate_link(p, post['sub_id']) for p in products]
+        return {'products': products, 'links': links, 'product_key': product_key(best),
+                'product_name': best['productName']}
 
     def variations_print(self, product: Dict) -> Optional[str]:
         """Cartão "N Variações Disponíveis" com as miniaturas (None se o produto não tiver variações)."""

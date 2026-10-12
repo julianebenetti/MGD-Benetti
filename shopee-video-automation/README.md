@@ -26,7 +26,7 @@ vídeo novo ali é copiado para 📥 Envios, onde o robô pede o link. Nada é e
 
 Reações: 👌 recebido · ✍ link guardado para a próxima leva · 👍 editado · 🤔 não deu (o robô explica).
 
-**✅ Editados** — capa + vídeo + textos e links. Logo abaixo, o robô pede **o print das variações**:
+**✅ Editados** — capa + vídeo + textos e links. Se houver loja pagando mais, primeiro vem a pergunta da troca. Logo abaixo, o robô pede **o print das variações**:
 responda essa mensagem com o print do app/site (a tela com as miniaturas) e ele recorta e monta o
 cartão "N Variações Disponíveis" na capa; para produto sem variações, toque em **Sem variações**.
 A capa só pode ser aprovada depois disso. Botões **✅ Aprovar capa** · **🔄 Outra headline** ·
@@ -67,7 +67,8 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Tema | Regra |
 |---|---|
 | Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo, inclusive a variação (cor/estampa/modelo) |
-| Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA |
+| Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA (até 10 lojas conferidas ao mesmo tempo). A mensagem mostra a comissão estimada de cada link |
+| Troca pela maior comissão | Se outras lojas pagam mais que a do seu link, o robô lista até 5 em ✅ Editados (comissão, nota, link para abrir) e pergunta: **🔁 Trocar pela melhor** (ela vira o item divulgado, 1º link, e os outros links são as próximas maiores comissões) ou **Manter o meu**. O pedido do print das variações vem depois dessa escolha |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |
 | Headline | Gerada pela IA, até 60 caracteres, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto. Termina com **um emoji** sorteado pelo gatilho: Choque 😱 🤯 😳 · Urgência 🔥 ⚡ 💥 · Curiosidade 👀 🤔 🤫 · Dor 🙌 🥹 😌 · Autoridade ⭐ 🏆 🫶 (listas em `EMOJIS_FINAIS`, `content_generator.py`). Headline digitada por você vai como está |

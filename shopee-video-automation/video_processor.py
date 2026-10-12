@@ -7,7 +7,7 @@ import logging
 import subprocess
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +88,38 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Erro ao processar vídeo: {e}")
             return None
+
+    def render(self, input_video: str, output_dir: Path, cta_path: Optional[str] = None,
+               cta_seconds: float = 5.0, logo_path: str = str(DEFAULT_LOGO)) -> Optional[Tuple[str, str]]:
+        """
+        Uma passada só: o vídeo 9:16 limpo (para os quadros da capa, codificação rápida) e o final
+        com logo e CTA nos `cta_seconds` finais (mesma qualidade de antes, sem recodificar duas vezes).
+        """
+        stem = Path(input_video).stem
+        clean = output_dir / f"processed_{stem}.mp4"
+        final = output_dir / f"watermarked_processed_{stem}.mp4"
+        logo_w = int(self.width * LOGO_WIDTH_RATIO)
+        margin_x = int(self.width * LOGO_MARGIN_X_RATIO)
+        margin_y = int(self.height * LOGO_TOP_RATIO)
+        graph = (f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=decrease,"
+                 f"pad={self.width}:{self.height}:(ow-iw)/2:(oh-ih)/2:color=black,fps={self.fps},"
+                 f"split=2[clean][w0];[1:v]scale={logo_w}:-1[logo];[w0][logo]overlay={margin_x}:{margin_y}")
+        inputs = ['-i', input_video, '-i', logo_path]
+        if cta_path:
+            start = max(0.0, self.get_video_info(input_video).get('duration', 0) - cta_seconds)
+            inputs += ['-i', cta_path]
+            graph += f"[w1];[w1][2:v]overlay=0:0:enable='gte(t,{start:.2f})'"
+        graph += "[final]"
+        audio = ['-map', '0:a?', '-c:a', 'aac', '-b:a', '128k']
+        cmd = ['ffmpeg', '-loglevel', 'error', *inputs, '-filter_complex', graph,
+               '-map', '[clean]', *audio, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '18', '-y', str(clean),
+               '-map', '[final]', *audio, '-c:v', 'libx264', '-preset', 'medium', '-crf', '23', '-y', str(final)]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            logger.error(f"Erro FFmpeg: {result.stderr}")
+            return None
+        logger.info(f"✅ Vídeo pronto: {final}")
+        return str(clean), str(final)
 
     def add_watermark(self, video_path: str, logo_path: str = str(DEFAULT_LOGO),
                       output_dir: Optional[Path] = None, cta_path: Optional[str] = None,
