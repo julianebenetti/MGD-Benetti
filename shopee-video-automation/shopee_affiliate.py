@@ -170,7 +170,8 @@ class ShopeeAffiliateClient:
             return [product] if product else []
 
         candidates: List[Dict] = []
-        if is_video_link(final_url) or is_video_link(url):
+        from shopee_session import PAGES_ENABLED
+        if PAGES_ENABLED and (is_video_link(final_url) or is_video_link(url)):
             candidates = self._products_from_video_page(final_url)
         if not candidates:
             name = product_name_from_text(message_text)

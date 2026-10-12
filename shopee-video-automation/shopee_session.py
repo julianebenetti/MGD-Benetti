@@ -18,6 +18,9 @@ from typing import Dict, List, Tuple
 logger = logging.getLogger(__name__)
 
 COOKIES_FILE = Path(__file__).parent / 'shopee_cookies.json'
+# Desligado por padrão: a Shopee bloqueia o navegador do VPS como robô ("verify/traffic") e as
+# tentativas ficam associadas à conta logada. Com 'nao', o robô nunca abre páginas da Shopee.
+PAGES_ENABLED = os.getenv('SHOPEE_ACESSAR_PAGINAS', 'nao').lower() in ('sim', 'true', '1')
 LOGIN_COOKIES = ('SPC_EC', 'SPC_ST', 'SPC_U')
 SAME_SITE = {'no_restriction': 'None', 'none': 'None', 'lax': 'Lax', 'strict': 'Strict'}
 

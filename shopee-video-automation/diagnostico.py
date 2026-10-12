@@ -21,6 +21,9 @@ from telegram_handler import TelegramBot  # noqa: E402
 
 
 def main(link: str):
+    from shopee_session import PAGES_ENABLED
+    if not PAGES_ENABLED:
+        sys.exit("Visitas às páginas da Shopee estão desligadas (SHOPEE_ACESSAR_PAGINAS=nao) para proteger a conta.")
     shopee = ShopeeAffiliateClient(os.environ['SHOPEE_AFFILIATE_APP_ID'], os.environ['SHOPEE_AFFILIATE_SECRET'])
     tg = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
     envios = int(os.getenv('TELEGRAM_TOPIC_ENVIOS') or 0) or None

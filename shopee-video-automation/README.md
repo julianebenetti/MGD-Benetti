@@ -23,7 +23,10 @@ vídeo novo ali é copiado para 📥 Envios, onde o robô pede o link. Nada é e
 
 Reações: 👌 recebido · ✍ link guardado para a próxima leva · 👍 editado · 🤔 não deu (o robô explica).
 
-**✅ Editados** — capa + vídeo + textos e links. Botões **✅ Aprovar capa** · **🔄 Outra headline** ·
+**✅ Editados** — capa + vídeo + textos e links. Logo abaixo, o robô pede **o print das variações**:
+responda essa mensagem com o print do app/site (a tela com as miniaturas) e ele recorta e monta o
+cartão "N Variações Disponíveis" na capa; para produto sem variações, toque em **Sem variações**.
+A capa só pode ser aprovada depois disso. Botões **✅ Aprovar capa** · **🔄 Outra headline** ·
 **✅ Aprovar e agendar** (só depois da capa aprovada) · **❌ Descartar**. Trocar a headline pede nova
 aprovação da capa. Para usar uma headline sua, **responda** a mensagem com o texto.
 
@@ -66,14 +69,9 @@ Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `
 | Testes rápidos | `.venv/bin/python test_automation.py` |
 | Diagnóstico do cartão de variações | `.venv/bin/python diagnostico.py <link do produto>` (manda o print da página para Envios) |
 
-**Login da Shopee do robô** — sem login, a Shopee mostra "Login Necessário" ao navegador do VPS
-(sem cartão de variações e sem leitura de links de vídeo). No computador, logada em shopee.com.br,
-exporte os cookies com a extensão **Cookie-Editor** (Export → JSON, salve num arquivo .json) e mande
-o arquivo na pasta 📥 Envios com a legenda **`/cookies`**. O robô guarda e apaga a mensagem.
-
-O navegador do robô roda como um Chromium normal numa tela virtual (Xvfb), sem a marca de automação,
-porque o modo "headless" é bloqueado pela Shopee (`SHOPEE_BROWSER_MODE=auto`). As variações são
-lidas primeiro dos dados que a página recebe (`tier_variations`), depois da tela e, por último, pela IA.
+**Páginas da Shopee desligadas** (`SHOPEE_ACESSAR_PAGINAS=nao`) — a Shopee bloqueia o navegador do VPS
+como robô e as tentativas ficam associadas à conta logada. Por isso o robô não abre páginas da Shopee:
+as variações vêm do print que você manda, e links de vídeo (`sv.shopee`) precisam do link do produto.
 
 ## Arquivos
 
@@ -83,7 +81,8 @@ lidas primeiro dos dados que a página recebe (`tier_variations`), depois da tel
 | `pipeline.py` | Prepara um vídeo do início ao fim |
 | `shopee_affiliate.py` | API de afiliados: produto, outros vendedores, link de afiliado |
 | `video_page_reader.py` | Abre a página do Shopee Video e acha os produtos |
-| `product_page_capture.py` | Miniaturas das variações disponíveis na página do produto |
+| `variations_print.py` | Recorta as miniaturas do print das variações (IA) |
+| `product_page_capture.py` | Captura pela página da Shopee (desligada) |
 | `product_matcher.py` | Conferência vídeo × produto por IA |
 | `content_generator.py` | Headline (rodízio de 5 gatilhos), descrição, hashtags, SEO |
 | `ai_client.py` | Chamada à OpenAI com resposta em JSON por esquema |

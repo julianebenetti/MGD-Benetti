@@ -11,6 +11,7 @@ from content_generator import ContentGenerator
 from cover_generator import CoverGenerator
 from product_matcher import check_match
 from product_page_capture import capture_variation_thumbs
+from variations_print import thumbs_from_print
 from shopee_affiliate import ShopeeAffiliateClient
 from sub_id import novo_sub_id
 from video_processor import VideoProcessor
@@ -99,7 +100,8 @@ class Pipeline:
         final_video = self.video.add_watermark(processed)
         if not final_video:
             raise PipelineError("Falha ao aplicar o logo no vídeo.")
-        sticker = self.variations_print(main)
+        from shopee_session import PAGES_ENABLED
+        sticker = self.variations_print(main) if PAGES_ENABLED else None  # senão, vem do print enviado
         cover = self.make_cover(final_video, metadata['cover_title'], sticker)
 
         return {
@@ -128,6 +130,14 @@ class Pipeline:
         if len(thumbs) < 2:
             return None
         return self.cover.colors_card([str(t) for t in thumbs], str(folder / 'cartao.png'),
+                                      label=f"{total} Variações Disponíveis")
+
+    def variations_card_from_print(self, image_path: str, out_dir: Path) -> Optional[str]:
+        """Cartão a partir do print das variações que a Juliane manda (a IA recorta as miniaturas)."""
+        thumbs, total = thumbs_from_print(image_path, out_dir)
+        if len(thumbs) < 2:
+            return None
+        return self.cover.colors_card([str(t) for t in thumbs], str(out_dir / 'cartao.png'),
                                       label=f"{total} Variações Disponíveis")
 
     def make_cover(self, video_path: str, headline: str, sticker_path: Optional[str] = None) -> str:

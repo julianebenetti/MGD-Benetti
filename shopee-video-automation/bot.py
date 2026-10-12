@@ -68,9 +68,6 @@ def post_text(post: Dict) -> str:
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
         f"🔗 <b>Links:</b>\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
-        + ("" if post.get('sticker_path') else
-           "\n\n⚠️ Capa sem o cartão de variações: o produto não tem variações, ou a Shopee pediu login "
-           "(mande os cookies da Shopee com /cookies).")
     )
 
 
@@ -187,8 +184,14 @@ class Bot:
             [('✅ Aprovar e agendar', f"ap:{pid}"), ('❌ Descartar', f"dc:{pid}")])
 
     def send_to_editados(self, post: Dict):
+        """Capa, vídeo, textos com botões e, enquanto faltar, o pedido do print das variações."""
         ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
         ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=self.editados_markup(post)))
+        if post.get('variacoes', 'pendente') == 'pendente' and not post.get('sticker_path'):
+            ids.append(self.tg.send_text(
+                EDITADOS, "🖼️ <b>Responda esta mensagem com o print das variações</b> do produto "
+                          "(a tela com as miniaturas). Eu recorto e coloco o cartão na capa.",
+                reply_to=ids[-1], markup=keyboard([('Sem variações', f"sv:{post['id']}")])))
         self.db.update_post(post['id'], editados_msgs=ids)
 
     def job_headline(self, post_id: int, headline: Optional[str]):
@@ -199,6 +202,7 @@ class Bot:
             headline = self.pipeline.new_headline(post, self.db.headlines_for(post['product_key']))
         cover = self.pipeline.make_cover(post['video_path'], headline, post.get('sticker_path'))
         metadata = {**post['metadata'], 'cover_title': headline}
+        # headline nova = capa nova: precisa aprovar de novo
         self.tg.delete(post['editados_msgs'])
         self.db.update_post(post_id, metadata=metadata, cover_path=cover, cover_approved=0)
         self.db.add_headline(post['product_key'], headline)
@@ -224,10 +228,39 @@ class Bot:
             markup=keyboard([('✅ Postei', f"ok:{post_id}"), ('❌ Descartar', f"dc:{post_id}")])))
         self.db.update_post(post_id, agenda_msgs=ids)
 
+    def job_variations(self, post_id: int, file_id: str, reply_to: int):
+        """Print das variações → cartão → capa refeita (precisa aprovar de novo)."""
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'editado':
+            return
+        folder = Path(post['video_path']).parent / f"variacoes_post_{post_id}"
+        image = self.tg.download(file_id, folder)
+        card = self.pipeline.variations_card_from_print(str(image), folder)
+        if not card:
+            self.tg.react(reply_to, '🤔')
+            self.tg.send_text(EDITADOS, "⚠️ Não encontrei as miniaturas das variações nesse print. "
+                                        "Mande um print em que elas apareçam (ou toque em Sem variações).",
+                              reply_to=reply_to)
+            return
+        cover = self.pipeline.make_cover(post['video_path'], post['metadata']['cover_title'], card)
+        self.tg.delete(post['editados_msgs'] + [reply_to])
+        self.db.update_post(post_id, sticker_path=card, cover_path=cover, cover_approved=0, variacoes='ok')
+        self.send_to_editados(self.db.get_post(post_id))
+
     def on_editados_reply(self, msg: Dict):
         post = self.db.post_by_editados_msg(msg['reply_to_message']['message_id'])
+        if not post:
+            return
+        image_id = None
+        if msg.get('photo'):
+            image_id = msg['photo'][-1]['file_id']  # maior resolução
+        elif msg.get('document', {}).get('mime_type', '').startswith('image/'):
+            image_id = msg['document']['file_id']
         text = (msg.get('text') or '').strip()
-        if post and text:
+        if image_id:
+            self.tg.react(msg['message_id'], '👌')
+            self.jobs.put(('variations', post['id'], image_id, msg['message_id']))
+        elif text:
             self.tg.react(msg['message_id'], '✍')
             self.jobs.put(('headline', post['id'], text[:60]))
 
@@ -240,12 +273,22 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Post não encontrado')
             return
 
-        if action == 'cv' and post['status'] == 'editado':
+        if action == 'sv' and post['status'] == 'editado':
+            pedido = post['editados_msgs'][3:]
+            self.tg.delete(pedido)
+            self.db.update_post(post['id'], variacoes='sem', editados_msgs=post['editados_msgs'][:3])
+            self.tg.answer_callback(cb['id'], 'Ok, capa sem cartão de variações')
+
+        elif action == 'cv' and post['status'] == 'editado' and post.get('variacoes') == 'pendente' \
+                and not post.get('sticker_path'):
+            self.tg.answer_callback(cb['id'], 'Antes, mande o print das variações (ou toque em Sem variações)')
+
+        elif action == 'cv' and post['status'] == 'editado':
             if post['cover_approved']:
                 self.tg.answer_callback(cb['id'], 'Capa já aprovada')
                 return
             self.db.update_post(post['id'], cover_approved=1)
-            self.tg.edit_markup(post['editados_msgs'][-1], self.editados_markup(self.db.get_post(post['id'])))
+            self.tg.edit_markup(post['editados_msgs'][2], self.editados_markup(self.db.get_post(post['id'])))
             self.tg.answer_callback(cb['id'], 'Capa aprovada')
 
         elif action == 'ap' and post['status'] == 'editado' and not post['cover_approved']:
@@ -305,6 +348,8 @@ class Bot:
                     self.job_headline(*job[1:])
                 elif job[0] == 'approve':
                     self.job_approve(*job[1:])
+                elif job[0] == 'variations':
+                    self.job_variations(*job[1:])
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
 
