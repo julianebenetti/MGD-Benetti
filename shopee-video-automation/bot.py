@@ -34,6 +34,7 @@ BASE = Path(__file__).parent
 ASK_AFTER_SECONDS = 30
 BATCH_LINK_TTL = 600
 FAILED_RETRY_TTL = 1800
+COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
 DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 
@@ -178,6 +179,26 @@ class Bot:
         self.db.add_headline(post['product_key'], headline)
         self.send_to_editados(self.db.get_post(post_id))
 
+    def job_approve(self, post_id: int):
+        """Junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
+        post = self.db.get_post(post_id)
+        final = str(Path(post['video_path']).with_name(f"final_{post_id}.mp4"))
+        if not self.pipeline.video.prepend_cover(post['cover_path'], post['video_path'], final, COVER_SECONDS):
+            self.db.update_post(post_id, status='editado')
+            self.tg.send_text(EDITADOS, "⚠️ Não consegui juntar a capa ao vídeo. Tente aprovar de novo.",
+                              reply_to=post['editados_msgs'][-1] if post['editados_msgs'] else None)
+            return
+        slot = scheduler.next_slot(post['product_key'], self.db.scheduled())
+        self.tg.delete(post['editados_msgs'])
+        self.db.update_post(post_id, status='agendado', scheduled_at=slot.isoformat(),
+                            editados_msgs=[], final_video_path=final)
+        post = self.db.get_post(post_id)
+        ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], final)
+        ids.append(self.tg.send_text(
+            AGENDA, f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
+            markup=keyboard([('✅ Postei', f"ok:{post_id}"), ('❌ Descartar', f"dc:{post_id}")])))
+        self.db.update_post(post_id, agenda_msgs=ids)
+
     def on_editados_reply(self, msg: Dict):
         post = self.db.post_by_editados_msg(msg['reply_to_message']['message_id'])
         text = (msg.get('text') or '').strip()
@@ -206,16 +227,9 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Aprove a capa primeiro (✅ Aprovar capa)')
 
         elif action == 'ap' and post['status'] == 'editado':
-            slot = scheduler.next_slot(post['product_key'], self.db.scheduled())
-            self.tg.delete(post['editados_msgs'])
-            self.db.update_post(post['id'], status='agendado', scheduled_at=slot.isoformat(), editados_msgs=[])
-            post = self.db.get_post(post['id'])
-            ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], post['video_path'])
-            ids.append(self.tg.send_text(
-                AGENDA, f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
-                markup=keyboard([('✅ Postei', f"ok:{post['id']}"), ('❌ Descartar', f"dc:{post['id']}")])))
-            self.db.update_post(post['id'], agenda_msgs=ids)
-            self.tg.answer_callback(cb['id'], f"Agendado: {fmt_when(post['scheduled_at'])}")
+            self.db.update_post(post['id'], status='agendando')
+            self.tg.answer_callback(cb['id'], 'Juntando a capa ao vídeo e agendando…')
+            self.jobs.put(('approve', post['id']))
 
         elif action == 'hl' and post['status'] == 'editado':
             self.tg.answer_callback(cb['id'], 'Gerando outra headline…')
@@ -264,6 +278,8 @@ class Bot:
                     self.job_video(*job[1:])
                 elif job[0] == 'headline':
                     self.job_headline(*job[1:])
+                elif job[0] == 'approve':
+                    self.job_approve(*job[1:])
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
 

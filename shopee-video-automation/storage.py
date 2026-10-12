@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS posts (
     cover_path TEXT,
     sticker_path TEXT,
     cover_approved INTEGER DEFAULT 0,
+    final_video_path TEXT,             -- vídeo com a capa na abertura (gerado ao aprovar)
     editados_msgs TEXT DEFAULT '[]',
     agenda_msgs TEXT DEFAULT '[]',
     scheduled_at TEXT
@@ -48,6 +49,16 @@ class Storage:
         self.lock = threading.Lock()
         with self.lock:
             self.conn.executescript(SCHEMA)
+            self._add_missing_columns()
+
+    def _add_missing_columns(self):
+        """Bancos criados por versões antigas ganham as colunas novas (CREATE IF NOT EXISTS não altera)."""
+        existing = {r[1] for r in self.conn.execute("PRAGMA table_info(posts)")}
+        for name, decl in (('sticker_path', 'TEXT'), ('cover_approved', 'INTEGER DEFAULT 0'),
+                           ('final_video_path', 'TEXT')):
+            if name not in existing:
+                self.conn.execute(f"ALTER TABLE posts ADD COLUMN {name} {decl}")
+        self.conn.commit()
 
     def _row(self, row) -> Optional[Dict]:
         if row is None:

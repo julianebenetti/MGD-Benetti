@@ -131,6 +131,38 @@ class VideoProcessor:
             logger.error(f"Erro ao adicionar marca d'água: {e}")
             return None
 
+    def prepend_cover(self, cover_path: str, video_path: str, output_path: str,
+                      seconds: float = 1.0) -> Optional[str]:
+        """Vídeo final: a capa parada por `seconds` na abertura, seguida do vídeo."""
+        try:
+            has_audio = bool(subprocess.run(
+                ['ffprobe', '-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index',
+                 '-of', 'csv=p=0', video_path], capture_output=True, text=True).stdout.strip())
+            size = f"scale={self.width}:{self.height}:force_original_aspect_ratio=decrease," \
+                   f"pad={self.width}:{self.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={self.fps},format=yuv420p"
+            cmd = ['ffmpeg', '-loglevel', 'error', '-loop', '1', '-t', str(seconds), '-i', cover_path,
+                   '-i', video_path]
+            if has_audio:
+                cmd += ['-f', 'lavfi', '-t', str(seconds), '-i', 'anullsrc=r=44100:cl=stereo',
+                        '-filter_complex',
+                        f"[0:v]{size}[c];[1:v]{size}[v];[1:a]aresample=44100[a];"
+                        f"[c][2:a][v][a]concat=n=2:v=1:a=1[outv][outa]",
+                        '-map', '[outv]', '-map', '[outa]', '-c:a', 'aac', '-b:a', '128k']
+            else:
+                cmd += ['-filter_complex', f"[0:v]{size}[c];[1:v]{size}[v];[c][v]concat=n=2:v=1:a=0[outv]",
+                        '-map', '[outv]']
+            cmd += ['-c:v', 'libx264', '-crf', '23', '-preset', 'medium', '-movflags', '+faststart',
+                    '-y', output_path]
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                logger.error(f"Erro ao juntar capa e vídeo: {result.stderr}")
+                return None
+            logger.info(f"✅ Capa adicionada na abertura: {output_path}")
+            return output_path
+        except Exception as e:
+            logger.error(f"Erro ao juntar capa e vídeo: {e}")
+            return None
+
     def get_video_info(self, video_path: str) -> dict:
         """Extrai informações do vídeo (duração, resolução, etc)"""
         try:

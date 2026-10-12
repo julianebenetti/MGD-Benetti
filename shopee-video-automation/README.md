@@ -27,6 +27,9 @@ Reações: 👌 recebido · ✍ link guardado para a próxima leva · 👍 edita
 **✅ Aprovar e agendar** (só depois da capa aprovada) · **❌ Descartar**. Trocar a headline pede nova
 aprovação da capa. Para usar uma headline sua, **responda** a mensagem com o texto.
 
+Ao **✅ Aprovar e agendar**, o robô junta a capa na abertura do vídeo (`CAPA_SEGUNDOS`, padrão 1 s):
+esse vídeo final é o que vai para a Agenda.
+
 **⏰ Agenda** — aprovados com dia e horário. Na hora: aviso "⏰ Hora de postar!" e botão
 **✅ Postei**, que move para Postados. (Quando o bot que posta na Shopee for conectado, esse envio
 fica automático.)
@@ -61,6 +64,7 @@ Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `
 | Ver logs | `journalctl -u shopee-video -n 50` |
 | Reiniciar | `sudo systemctl restart shopee-video` |
 | Testes rápidos | `.venv/bin/python test_automation.py` |
+| Diagnóstico do cartão de variações | `.venv/bin/python diagnostico.py <link do produto>` (manda o print da página para Envios) |
 
 Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
 `SHOPEE_BROWSER_HEADLESS=false` numa máquina com tela para entrar na conta.
