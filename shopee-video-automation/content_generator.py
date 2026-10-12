@@ -70,6 +70,30 @@ def com_emoji(headline: str, gatilho: str) -> str:
     return f"{texto} {random.choice(EMOJIS_FINAIS.get(gatilho, ['👀']))}"
 
 
+# Legenda: SEO da busca do Shopee Vídeo + persuasão (vale para a geração inicial e para "Outra legenda")
+CAPTION_RULES = """- description: legenda do vídeo, ATÉ 110 CARACTERES (com as hashtags, a legenda inteira tem no máximo 150).
+  Técnicas obrigatórias:
+  1. SEO: COMECE pela palavra-chave principal do jeito que as pessoas buscam na Shopee (ex.: "Guirlanda de Natal
+     40cm", "Porta tempero organizador 2,3L"): a busca dá mais peso ao começo do texto.
+  2. Especificidade: cite quantidade, kit, tamanho, capacidade ou modelo quando houver (a Shopee penaliza vídeos
+     que omitem quantidade, variação ou modelo).
+  3. Persuasão: em seguida, o benefício que a pessoa SENTE (a transformação, o "depois"), com palavras
+     sensoriais/emocionais e específicas do produto, no tom de uma amiga recomendando. Nada genérico como
+     "deixa tudo mais lindo" ou "facilita o dia a dia".
+  4. Termine com uma chamada curta para ação (ex.: "toca na sacolinha", "garante o seu").
+  5. Use 1 palavra-chave secundária de forma natural. No máximo 1 emoji. Não repita palavras dentro da legenda.
+- hashtags: exatamente 3, sem acento, minúsculas, termos que as pessoas BUSCAM: 1 com a palavra-chave principal
+  (ex.: #guirlandadenatal), 1 da categoria ou cauda longa (ex.: #decoracaonatalina), 1 de uso/ocasião/público
+  (ex.: #portadecorada). Nada genérico como #shopee #achadinhos #promo."""
+
+CAPTION_SCHEMA = {
+    'type': 'object',
+    'properties': {'description': {'type': 'string'}, 'hashtags': {'type': 'array', 'items': {'type': 'string'}}},
+    'required': ['description', 'hashtags'],
+    'additionalProperties': False,
+}
+
+
 class ContentGenerator:
     def generate(self, product_info: Dict, avoid_headlines: List[str] = ()) -> Dict:
         """Headline da capa, descrição, 3 hashtags, 10 palavras de SEO e nome curto (para o sub_id)."""
@@ -97,6 +121,28 @@ class ContentGenerator:
             SCHEMA, name='conteudo')
         return com_emoji(data['cover_title'], gatilho_da_vez(avoid_headlines)[0])
 
+    def new_caption(self, product_info: Dict, avoid: List[str]) -> Dict:
+        """Outra legenda + 3 hashtags, diferente das já sugeridas."""
+        usadas = '\n'.join(f'- {a}' for a in avoid)
+        prompt = (f"""Você escreve a legenda dos vídeos do perfil Achados Relâmpagos no Shopee Vídeo.
+
+PRODUTO
+- Nome: {product_info.get('name', 'Produto')}
+- Nota: {product_info.get('rating') or 'não informada'}
+- Vendas: {product_info.get('sold') or 'não informado'}
+
+{CAPTION_RULES}
+
+Legendas já sugeridas (não repita nem parafraseie; traga outro ângulo de benefício):
+{usadas or '- nenhuma'}
+
+REGRAS
+- Use apenas o que está nos dados do produto: não invente características, benefícios, avaliações ou vendas.
+- Não cite preço, desconto, cupom nem frete grátis; não crie falsa escassez; nunca mencione comissão.""")
+        data = ask_json(prompt, CAPTION_SCHEMA, name='legenda')
+        hashtags = [h if h.startswith('#') else f'#{h}' for h in data['hashtags']][:HASHTAGS]
+        return {'description': fit_caption(data['description'], hashtags), 'hashtags': hashtags}
+
     def _build_prompt(self, product_info: Dict, avoid_headlines: List[str] = ()) -> str:
         gatilho, explicacao = gatilho_da_vez(avoid_headlines)
         usadas = ''
@@ -118,18 +164,14 @@ CAMPOS
   Gatilho obrigatório desta vez: {gatilho}: {explicacao}.
   Exemplos do perfil: "Se você usa plus size, olha esse achado!", "E se sua academia pudesse ficar dentro de casa?",
   "A escova que faz o trabalho pesado por você".
-{usadas}- description: legenda do vídeo, ATÉ 110 CARACTERES (com as hashtags, a legenda inteira tem no máximo 150),
-  no tom de uma amiga recomendando (sem começar com "Amiga"),
-  com o benefício principal e um convite para ver o produto.
-  Se o produto tiver quantidade, kit, tamanho, capacidade ou modelo (ex.: "kit 4 peças", "2,3L", "100 LEDs"),
-  cite isso na legenda: a Shopee penaliza vídeos que omitem quantidade, variação ou modelo.
-- hashtags: exatamente 3, curtas e específicas do produto e da categoria; evite genéricas como #shopee #achadinhos.
+{usadas}{CAPTION_RULES}
 - seo_keywords: 10 palavras-chave que uma pessoa digitaria para buscar este produto, da mais para a menos relevante.
 - short_name: nome curto do produto para identificação interna, 1 a 2 palavras, sem acento, sem espaço,
   cada palavra com inicial maiúscula (ex: "SapateiraBanco", "ConjuntoLinho").
 
 REGRAS
-- Nenhuma palavra pode se repetir entre description, hashtags e seo_keywords, nem dentro de cada um.
+- Nenhuma palavra se repete dentro da description nem entre as seo_keywords; as hashtags podem usar a
+  palavra-chave principal da legenda (é o que a pessoa busca).
 - Use apenas o que está nos dados do produto: não invente características, benefícios, avaliações ou vendas.
 - Não cite preço, desconto, cupom nem frete grátis (podem mudar até a publicação).
 - Não crie falsa escassez ("últimas unidades", "só hoje", "corre que acaba").

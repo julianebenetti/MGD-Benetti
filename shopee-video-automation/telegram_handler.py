@@ -83,12 +83,13 @@ class TelegramBot:
                 'chat_id': self.chat_id, 'caption': caption, 'parse_mode': 'HTML', **self._thread(thread_id)},
                 files={'photo': photo})['message_id']
 
-    def edit_text(self, message_id: int, text: str) -> bool:
-        """Troca o texto de uma mensagem; False se ela não existe mais (foi apagada)."""
+    def edit_text(self, message_id: int, text: str, markup: Optional[str] = None) -> bool:
+        """Troca o texto (e os botões) de uma mensagem; False se ela não existe mais (foi apagada)."""
         try:
             self.call('editMessageText', data={
                 'chat_id': self.chat_id, 'message_id': message_id, 'text': text, 'parse_mode': 'HTML',
-                'link_preview_options': json.dumps({'is_disabled': True})})
+                'link_preview_options': json.dumps({'is_disabled': True}),
+                **({'reply_markup': markup} if markup else {})})
         except RuntimeError as e:
             if 'not modified' in str(e):
                 return True

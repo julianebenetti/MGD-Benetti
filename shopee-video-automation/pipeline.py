@@ -210,5 +210,8 @@ class Pipeline:
             raise PipelineError("Falha ao gerar a capa.")
         return out
 
+    def new_caption(self, post: Dict, avoid: List[str]) -> Dict:
+        return self.content.new_caption(product_info(post['products'][0]), avoid)
+
     def new_headline(self, post: Dict, avoid: List[str]) -> str:
         return self.content.new_headline(product_info(post['products'][0]), avoid)

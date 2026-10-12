@@ -33,8 +33,10 @@ Reações: 👌 recebido · ✍ link guardado para a próxima leva · 👍 edita
 responda essa mensagem com o print do app/site (a tela com as miniaturas) e ele recorta e monta o
 cartão "N Variações Disponíveis" na capa; para produto sem variações, toque em **Sem variações**.
 A capa só pode ser aprovada depois disso. Botões **✅ Aprovar capa** · **🔄 Outra headline** ·
-**✅ Aprovar e agendar** (só depois da capa aprovada) · **❌ Descartar**. Trocar a headline pede nova
-aprovação da capa. Para usar uma headline sua, **responda** a mensagem com o texto.
+**✅ Aprovar legenda** · **📝 Outra legenda** · **✅ Aprovar e agendar** (só com capa e legenda aprovadas) ·
+**❌ Descartar**. Trocar a headline pede nova aprovação da capa. **Responda** a mensagem dos textos com
+um texto curto para usar uma headline sua, ou com um texto com #hashtags para usar uma legenda sua (já
+entra aprovada).
 
 Ao **✅ Aprovar e agendar**, o robô junta a capa na abertura do vídeo (`CAPA_SEGUNDOS`, padrão 1 s):
 esse vídeo final é o que vai para a Agenda.
@@ -93,7 +95,8 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |
 | Headline | Gerada pela IA, até 60 caracteres, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto. Termina com **um emoji** sorteado pelo gatilho: Choque 😱 🤯 😳 · Urgência 🔥 ⚡ 💥 · Curiosidade 👀 🤔 🤫 · Dor 🙌 🥹 😌 · Autoridade ⭐ 🏆 🫶 (listas em `EMOJIS_FINAIS`, `content_generator.py`). Headline digitada por você vai como está |
 | CTA | Nos 5 segundos finais do vídeo (`CTA_SEGUNDOS`), uma CTA sorteada em faixas brancas, um pouco abaixo do meio: "Adicione já ao carrinho!", "Clique na sacolinha e garanta o seu!", "Leva esse achadinho pra casa!", "Já coloca no carrinho e garante o seu!", "Compre agora e aproveite o desconto!", "Aproveita o preço especial!", "Compre com o cupom!" (lista `CTAS` em `pipeline.py`) |
-| Legenda | Descrição + **3 hashtags** em até **150 caracteres no total** (a descrição é cortada no fim de uma palavra se precisar). Cita quantidade, kit, tamanho ou modelo quando o produto tiver (regra de relevância do Shopee Vídeo) |
+| Legenda | Descrição + **3 hashtags** em até **150 caracteres no total** (cortada no fim de uma palavra se precisar). SEO + persuasão: começa pela palavra-chave como as pessoas buscam, cita quantidade/kit/tamanho/modelo (regra de relevância), benefício sensorial e específico, chamada para ação; hashtags = palavra-chave principal + categoria/cauda longa + uso/ocasião |
+| CTA | Laranja Shopee com letra branca e sombra (aparece em vídeo claro ou escuro) |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
 | Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
 

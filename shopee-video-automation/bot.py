@@ -6,6 +6,7 @@ Robô do Shopee Video (sempre ligado).
 """
 
 import html
+import re
 import logging
 from datetime import date, timedelta
 import os
@@ -25,6 +26,7 @@ import conversions  # noqa: E402
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
+from content_generator import HASHTAGS, fit_caption  # noqa: E402
 from shopee_affiliate import commission_value  # noqa: E402
 from shopee_session import CookieError, save_cookies  # noqa: E402
 from storage import Storage  # noqa: E402
@@ -83,7 +85,7 @@ def product_url(p: Dict) -> str:
     return f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
 
 
-def post_text(post: Dict) -> str:
+def post_text(post: Dict, hint: bool = False) -> str:
     e = html.escape
     m = post['metadata']
     links = '\n'.join(
@@ -91,13 +93,16 @@ def post_text(post: Dict) -> str:
         for i, (p, link) in enumerate(zip(post['products'], post['links']), 1))
     return (
         f"🎬 <b>Headline:</b> {e(m['cover_title'])}\n\n"
-        f"📝 <b>Descrição:</b>\n{e(m['description'])}\n\n"
+        f"📝 <b>Legenda</b> ({len(m['description']) + 1 + len(' '.join(m['hashtags']))}/150 caracteres):\n"
+        f"{e(m['description'])}\n\n"
         f"#️⃣ <b>Hashtags:</b>\n{e(' '.join(m['hashtags']))}\n\n"
         f"🔍 <b>SEO:</b>\n{e(', '.join(m['seo_keywords']))}\n\n"
         + (f"📣 <b>CTA (5 s finais):</b> {e(m['cta'])}\n\n" if m.get('cta') else '') +
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
         f"🔗 <b>Links</b> (para a LiA vão do menor pro maior comissionamento, o divulgado por último):\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
+        + ("\n\n✍️ <i>Responda esta mensagem: texto curto = nova headline · texto com #hashtags = nova legenda</i>"
+           if hint else '')
     )
 
 
@@ -241,14 +246,17 @@ class Bot:
     def editados_markup(post: Dict) -> str:
         pid = post['id']
         capa = ('✅ Capa aprovada', f"cv:{pid}") if post['cover_approved'] else ('✅ Aprovar capa', f"cv:{pid}")
+        legenda = ('✅ Legenda aprovada', f"ca:{pid}") if post.get('caption_approved') \
+            else ('✅ Aprovar legenda', f"ca:{pid}")
         return keyboard(
             [capa, ('🔄 Outra headline', f"hl:{pid}")],
+            [legenda, ('📝 Outra legenda', f"lg:{pid}")],
             [('✅ Aprovar e agendar', f"ap:{pid}"), ('❌ Descartar', f"dc:{pid}")])
 
     def send_to_editados(self, post: Dict):
         """Capa, vídeo, textos com botões e, enquanto faltar, o pedido do print das variações."""
         ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
-        ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=self.editados_markup(post)))
+        ids.append(self.tg.send_text(EDITADOS, post_text(post, hint=True), markup=self.editados_markup(post)))
         if post.get('troca') == 'pendente':
             options = [[(f"{i}. {p.get('shopName', '')[:24]} ({brl(commission_value(p))})", f"tm{i}:{post['id']}")]
                        for i, p in enumerate(post['melhores'], 1)]
@@ -299,6 +307,27 @@ class Bot:
         self.db.update_post(post_id, metadata=metadata, cover_path=cover, cover_approved=0)
         self.db.add_headline(post['product_key'], headline)
         self.send_to_editados(self.db.get_post(post_id))
+
+    def job_caption(self, post_id: int, text: Optional[str]):
+        """Outra legenda da IA (None) ou a sua (com #hashtags, já aprovada); atualiza a mensagem dos textos."""
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'editado':
+            return
+        m = post['metadata']
+        if text is None:
+            avoid = m.get('legendas_usadas', []) + [m['description']]
+            new = self.pipeline.new_caption(post, avoid)
+            approved = 0
+        else:
+            hashtags = re.findall(r'#\w+', text)[:HASHTAGS] or m['hashtags']
+            new = {'description': fit_caption(re.sub(r'#\w+', '', text), hashtags), 'hashtags': hashtags}
+            approved = 1
+        new['description'] = fit_caption(new['description'], new['hashtags'])
+        metadata = {**m, **new, 'legendas_usadas': m.get('legendas_usadas', []) + [m['description']]}
+        self.db.update_post(post_id, metadata=metadata, caption_approved=approved)
+        post = self.db.get_post(post_id)
+        if len(post['editados_msgs']) > 2:
+            self.tg.edit_text(post['editados_msgs'][2], post_text(post, hint=True), markup=self.editados_markup(post))
 
     def job_approve(self, post_id: int):
         """Junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
@@ -403,6 +432,9 @@ class Bot:
         elif image_id:
             self.tg.react(msg['message_id'], '👌')
             self.submit(('variations', post['id'], image_id, msg['message_id']))
+        elif text and '#' in text:  # com hashtags: é uma legenda sua
+            self.tg.react(msg['message_id'], '✍')
+            self.submit(('caption', post['id'], text))
         elif text:
             self.tg.react(msg['message_id'], '✍')
             self.submit(('headline', post['id'], text[:60]))
@@ -460,6 +492,21 @@ class Bot:
 
         elif action == 'ap' and post['status'] == 'editado' and not post['cover_approved']:
             self.tg.answer_callback(cb['id'], 'Aprove a capa primeiro (✅ Aprovar capa)')
+
+        elif action == 'ap' and post['status'] == 'editado' and not post.get('caption_approved'):
+            self.tg.answer_callback(cb['id'], 'Aprove a legenda primeiro (✅ Aprovar legenda)')
+
+        elif action == 'ca' and post['status'] == 'editado':
+            if post.get('caption_approved'):
+                self.tg.answer_callback(cb['id'], 'Legenda já aprovada')
+                return
+            self.db.update_post(post['id'], caption_approved=1)
+            self.tg.edit_markup(post['editados_msgs'][2], self.editados_markup(self.db.get_post(post['id'])))
+            self.tg.answer_callback(cb['id'], 'Legenda aprovada')
+
+        elif action == 'lg' and post['status'] == 'editado':
+            self.tg.answer_callback(cb['id'], 'Gerando outra legenda…')
+            self.submit(('caption', post['id'], None))
 
         elif action == 'ap' and post['status'] == 'editado':
             self.db.update_post(post['id'], status='agendando')
@@ -530,6 +577,8 @@ class Bot:
                 what, target = '🖼️ Mandar o print das variações', msgs[3] if len(msgs) > 3 else msgs[2]
             elif not post['cover_approved']:
                 what, target = '✅ Aprovar a capa', msgs[2]
+            elif not post.get('caption_approved'):
+                what, target = '✍️ Aprovar a legenda', msgs[2]
             else:
                 what, target = '✅ Aprovar e agendar', msgs[2]
             items.append((datetime.fromisoformat(post['created_at']).timestamp(), EDITADOS, what,
@@ -700,6 +749,8 @@ class Bot:
                     self.job_variations(*job[1:])
                 elif job[0] == 'lia':
                     self.job_lia(*job[1:])
+                elif job[0] == 'caption':
+                    self.job_caption(*job[1:])
                 elif job[0] == 'switch':
                     self.job_switch(*job[1:])
                 elif job[0] == 'report':

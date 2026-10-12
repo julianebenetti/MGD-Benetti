@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS posts (
     cover_path TEXT,
     sticker_path TEXT,
     cover_approved INTEGER DEFAULT 0,
+    caption_approved INTEGER DEFAULT 0,
     final_video_path TEXT,             -- vídeo com a capa na abertura (gerado ao aprovar)
     variacoes TEXT DEFAULT 'pendente', -- pendente (aguarda o print) | ok | sem
     melhores TEXT,                     -- JSON: lojas com comissão maior que a do link enviado
@@ -61,6 +62,7 @@ class Storage:
         """Bancos criados por versões antigas ganham as colunas novas (CREATE IF NOT EXISTS não altera)."""
         existing = {r[1] for r in self.conn.execute("PRAGMA table_info(posts)")}
         for name, decl in (('sticker_path', 'TEXT'), ('cover_approved', 'INTEGER DEFAULT 0'),
+                           ('caption_approved', 'INTEGER DEFAULT 0'),
                            ('final_video_path', 'TEXT'), ('variacoes', "TEXT DEFAULT 'pendente'"),
                            ('melhores', 'TEXT'), ('troca', "TEXT DEFAULT 'sem'"), ('posted_at', 'TEXT'),
                            ('posted_via', 'TEXT'), ('discarded_at', 'TEXT')):

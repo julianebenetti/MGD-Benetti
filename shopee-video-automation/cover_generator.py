@@ -44,6 +44,10 @@ CARD_MAX_THUMB = 130
 PILL_COLOR = (255, 255, 255, 240)
 # CTA dos segundos finais: abaixo do meio, acima da legenda/produto que o app mostra embaixo
 CTA_CENTER_Y_RATIO = 0.60
+# CTA em laranja Shopee com letra branca e sombra: aparece em vídeo claro ou escuro
+CTA_PILL_COLOR = (238, 77, 45, 255)
+CTA_TEXT_COLOR = (255, 255, 255, 255)
+CTA_SHADOW = (0, 0, 0, 110)
 
 
 def _is_emoji(ch: str) -> bool:
@@ -136,7 +140,8 @@ class CoverGenerator:
             lines.append(cur)
         return lines
 
-    def _draw_line(self, base: Image.Image, text: str, cx: int, top: int) -> int:
+    def _draw_line(self, base: Image.Image, text: str, cx: int, top: int, fill=PILL_COLOR,
+                   text_color=TEXT_COLOR, shadow=None) -> int:
         text_w = self._measure(text)
         ascent, descent = self.font.getmetrics()
         line_h = ascent + descent
@@ -145,9 +150,14 @@ class CoverGenerator:
         pill_w, pill_h = text_w + 2 * pad_x, line_h + 2 * pad_y
         left = cx - pill_w // 2
 
+        if shadow:
+            blur = Image.new('RGBA', base.size, (0, 0, 0, 0))
+            ImageDraw.Draw(blur).rounded_rectangle((left, top + 8, left + pill_w, top + pill_h + 8),
+                                                   radius=pill_h // 2, fill=shadow)
+            base.alpha_composite(blur.filter(ImageFilter.GaussianBlur(10)))
         overlay = Image.new('RGBA', base.size, (0, 0, 0, 0))
         d = ImageDraw.Draw(overlay)
-        d.rounded_rectangle((left, top, left + pill_w, top + pill_h), radius=pill_h // 2, fill=PILL_COLOR)
+        d.rounded_rectangle((left, top, left + pill_w, top + pill_h), radius=pill_h // 2, fill=fill)
         base.alpha_composite(overlay)
 
         d = ImageDraw.Draw(base)
@@ -159,7 +169,7 @@ class CoverGenerator:
                     base.alpha_composite(em, (x + 2, top + pad_y + (line_h - self.emoji_size) // 2))
                     x += self.emoji_size + 4
             else:
-                d.text((x, top + pad_y), run, font=self.font, fill=TEXT_COLOR)
+                d.text((x, top + pad_y), run, font=self.font, fill=text_color)
                 x += int(self.font.getlength(run))
         return pill_h
 
@@ -176,7 +186,8 @@ class CoverGenerator:
         step = int(pill_h * (1 - LINE_OVERLAP_RATIO))
         top = int(self.height * CTA_CENTER_Y_RATIO) - (step * (len(lines) - 1) + pill_h) // 2
         for i, line in enumerate(lines):
-            self._draw_line(base, line, self.width // 2, top + i * step)
+            self._draw_line(base, line, self.width // 2, top + i * step, fill=CTA_PILL_COLOR,
+                            text_color=CTA_TEXT_COLOR, shadow=CTA_SHADOW)
         base.save(out_path)
         return out_path
 
