@@ -80,7 +80,6 @@ class Bot:
         self.pending: List[Dict] = []
         self.pending_asked = False
         self.batch_link: Optional[Dict] = None
-        self.failed: Dict[int, Dict] = {}  # vídeo que falhou -> dados para refazer com outro link
 
     # ---------- Envios ----------
 
@@ -105,7 +104,7 @@ class Bot:
         elif links:
             retry = self.failed_to_retry(msg)
             if retry:
-                self.failed.pop(retry['msg_id'], None)
+                self.db.remove_failure(retry['msg_id'])
                 self.tg.react(msg['message_id'], '👌')
                 self.enqueue_video(retry['msg_id'], retry['file_id'], links[0], f"{retry['text']}\n{text}")
             elif self.pending:
@@ -118,13 +117,17 @@ class Bot:
                 self.tg.react(msg['message_id'], '✍')
 
     def failed_to_retry(self, msg: Dict) -> Optional[Dict]:
-        """Link novo respondendo o vídeo/erro, ou mandado logo depois de uma falha."""
-        replied = (msg.get('reply_to_message') or {}).get('message_id')
-        for item in self.failed.values():
-            if replied in (item['msg_id'], item.get('err_msg_id')):
-                return item
-        recent = [f for f in self.failed.values() if time.time() - f['at'] < FAILED_RETRY_TTL]
-        return max(recent, key=lambda f: f['at']) if recent else None
+        """
+        Vídeo a refazer quando chega só um link: o vídeo respondido (o Telegram manda o vídeo junto
+        com a resposta), a falha cuja mensagem de erro foi respondida, ou a falha mais recente.
+        """
+        replied = msg.get('reply_to_message') or {}
+        video = replied.get('video') or (replied.get('document') if replied.get('document', {})
+                                         .get('mime_type', '').startswith('video/') else None)
+        if video:
+            return {'msg_id': replied['message_id'], 'file_id': video['file_id'],
+                    'text': replied.get('caption') or ''}
+        return self.db.find_failure(replied.get('message_id'), FAILED_RETRY_TTL)
 
     def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str):
         self.tg.react(msg_id, '👌')
@@ -140,8 +143,7 @@ class Bot:
             reason = str(e) if isinstance(e, PipelineError) else f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
             err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id)
-            self.failed[msg_id] = {'msg_id': msg_id, 'file_id': file_id, 'text': text,
-                                   'at': time.time(), 'err_msg_id': err_id}
+            self.db.add_failure(msg_id, err_id, file_id, text)
             return
         post_id = self.db.create_post(source_msg_id=msg_id, **result)
         self.db.add_headline(result['product_key'], result['metadata']['cover_title'])

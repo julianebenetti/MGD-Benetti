@@ -5,6 +5,7 @@ Estado do robô em SQLite: posts, headlines já usadas e posição da leitura do
 import json
 import sqlite3
 import threading
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -34,6 +35,9 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 CREATE TABLE IF NOT EXISTS headlines (product_key TEXT, headline TEXT);
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS failures (      -- vídeos que falharam, para refazer com um link novo
+    msg_id INTEGER PRIMARY KEY, err_msg_id INTEGER, file_id TEXT, text TEXT, at REAL
+);
 """
 
 
@@ -103,6 +107,29 @@ class Storage:
         with self.lock:
             rows = self.conn.execute("SELECT headline FROM headlines WHERE product_key = ?", (product_key,))
             return [r[0] for r in rows.fetchall()]
+
+    def add_failure(self, msg_id: int, err_msg_id: int, file_id: str, text: str):
+        with self.lock:
+            self.conn.execute("INSERT OR REPLACE INTO failures VALUES (?, ?, ?, ?, ?)",
+                              (msg_id, err_msg_id, file_id, text, time.time()))
+            self.conn.commit()
+
+    def find_failure(self, replied_id: Optional[int], max_age: float) -> Optional[Dict]:
+        """A falha respondida (pelo vídeo ou pela mensagem de erro); senão, a mais recente dentro do prazo."""
+        with self.lock:
+            row = None
+            if replied_id:
+                row = self.conn.execute("SELECT * FROM failures WHERE msg_id = ? OR err_msg_id = ?",
+                                        (replied_id, replied_id)).fetchone()
+            if row is None:
+                row = self.conn.execute("SELECT * FROM failures WHERE at > ? ORDER BY at DESC LIMIT 1",
+                                        (time.time() - max_age,)).fetchone()
+        return dict(row) if row else None
+
+    def remove_failure(self, msg_id: int):
+        with self.lock:
+            self.conn.execute("DELETE FROM failures WHERE msg_id = ?", (msg_id,))
+            self.conn.commit()
 
     def get_meta(self, key: str, default: str = '') -> str:
         with self.lock:

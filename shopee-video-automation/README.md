@@ -13,7 +13,9 @@ outros vendedores), com aprovação e agenda.
 **📥 Envios** — mande o vídeo com o link Shopee na legenda. Também vale:
 - vários vídeos e depois **um link** (vale para todos);
 - **o link antes** e os vídeos depois (até 10 min);
-- se faltar o link por 30 s, o robô pergunta uma vez.
+- se faltar o link por 30 s, o robô pergunta uma vez;
+- se o robô não achar o produto, **responda a mensagem de erro (ou o próprio vídeo) com o link certo**:
+  ele refaz o vídeo sem você reenviar nada (vale mesmo depois de o robô reiniciar).
 
 **Vídeos da Central Post TikTok** — o bot precisa estar no grupo do TikTok como **administrador**
 (sem permissões especiais). Mande **`/brutos`** uma vez dentro do tópico Brutos: a partir daí cada
