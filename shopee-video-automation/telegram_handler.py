@@ -60,6 +60,12 @@ class TelegramBot:
             data['reply_markup'] = markup
         return self.call('sendMessage', data=data)['message_id']
 
+    def copy(self, thread_id: Optional[int], from_chat_id: int, message_id: int) -> int:
+        """Copia uma mensagem de outro grupo para cá (sem o 'encaminhado de')."""
+        return self.call('copyMessage', data={
+            'chat_id': self.chat_id, 'from_chat_id': from_chat_id, 'message_id': message_id,
+            **self._thread(thread_id)})['message_id']
+
     def send_cover_and_video(self, thread_id: Optional[int], cover_path: str, video_path: str) -> List[int]:
         media = [
             {'type': 'photo', 'media': 'attach://cover'},

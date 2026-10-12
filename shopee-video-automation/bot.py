@@ -270,13 +270,42 @@ class Bot:
             self.on_callback(update['callback_query'])
             return
         msg = update.get('message')
-        if not msg or msg.get('chat', {}).get('id') != self.tg.chat_id:
+        if not msg:
+            return
+        if msg.get('chat', {}).get('id') != self.tg.chat_id:
+            self.on_external(msg)
             return
         thread = msg.get('message_thread_id')
         if thread == ENVIOS:
             self.on_envios(msg)
         elif thread == EDITADOS and msg.get('reply_to_message') and not msg.get('from', {}).get('is_bot'):
             self.on_editados_reply(msg)
+
+    # ---------- Central Post TikTok (tópico Brutos) ----------
+
+    def on_external(self, msg: Dict):
+        """Grupo de fora: só o tópico registrado com /brutos interessa; o robô não fala nada lá."""
+        chat_id = msg['chat']['id']
+        thread = msg.get('message_thread_id')
+        text = (msg.get('text') or '').strip().lower()
+        if text.startswith('/brutos'):
+            self.db.set_meta('fonte_chat', str(chat_id))
+            self.db.set_meta('fonte_topico', str(thread or ''))
+            nome = html.escape(msg['chat'].get('title', 'grupo'))
+            self.tg.send_text(ENVIOS, f"🔗 Conectado: vídeos novos do tópico em <b>{nome}</b> serão copiados para cá.")
+            logger.info(f"Fonte de vídeos registrada: chat {chat_id}, tópico {thread}")
+            return
+
+        if str(chat_id) != self.db.get_meta('fonte_chat') or str(thread or '') != self.db.get_meta('fonte_topico'):
+            return
+        file_id = (msg.get('video') or {}).get('file_id')
+        if not file_id and msg.get('document', {}).get('mime_type', '').startswith('video/'):
+            file_id = msg['document']['file_id']
+        if not file_id:
+            return
+        copied = self.tg.copy(ENVIOS, chat_id, msg['message_id'])
+        self.on_envios({'message_id': copied, 'video': {'file_id': file_id},
+                        'caption': msg.get('caption') or ''})
 
     def run(self):
         threading.Thread(target=self.worker, daemon=True).start()
