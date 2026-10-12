@@ -21,12 +21,14 @@ logger = logging.getLogger(__name__)
 
 TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '3'))
 CTA_SECONDS = float(os.getenv('CTA_SEGUNDOS', '5'))
-# Sem preço, desconto ou cupom (podem mudar até a publicação)
 CTAS = [
     'Adicione já ao carrinho! 🛒',
+    'Compre agora e aproveite o desconto! 🛒',
     'Clique na sacolinha e garanta o seu! 🛒',
     'Leva esse achadinho pra casa! 🛒',
     'Já coloca no carrinho e garante o seu! 🛒',
+    'Aproveita o preço especial! 🛒',
+    'Compre com o cupom! 🛒',
 ]
 MAX_EXTRA_CHECKS = 6
 
