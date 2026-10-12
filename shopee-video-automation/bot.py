@@ -7,6 +7,7 @@ Robô do Shopee Video (sempre ligado).
 
 import html
 import logging
+from datetime import date, timedelta
 import os
 import queue
 import threading
@@ -51,6 +52,8 @@ EDITADOS = topic('TELEGRAM_TOPIC_EDITADOS')
 AGENDA = topic('TELEGRAM_TOPIC_AGENDA')
 POSTADOS = topic('TELEGRAM_TOPIC_POSTADOS')
 PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
+RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
+REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
 MAX_PENDING_LINES = 40
 
@@ -327,7 +330,7 @@ class Bot:
             self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
             return
         if result.published:
-            self.move_to_postados(self.db.get_post(post_id), "🤖 Enviado à LiA e publicado")
+            self.move_to_postados(self.db.get_post(post_id), "🤖 Enviado à LiA e publicado", via='lia')
             return
         self.db.update_post(post_id, status='avisado')
         msg_id = self.tg.send_text(
@@ -335,9 +338,10 @@ class Bot:
                     f"\n\n{lia_sender.summary_html(result)}", reply_to=reply_to, markup=self.agenda_markup(post_id))
         self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
 
-    def move_to_postados(self, post: Dict, label: str = "✅ Postado"):
+    def move_to_postados(self, post: Dict, label: str = "✅ Postado", via: str = 'manual'):
         self.tg.delete(post['agenda_msgs'])
-        self.db.update_post(post['id'], status='postado', agenda_msgs=[])
+        self.db.update_post(post['id'], status='postado', agenda_msgs=[],
+                            posted_at=scheduler.now().isoformat(timespec='seconds'), posted_via=via)
         self.tg.send_photo(POSTADOS, post['cover_path'],
                            f"{label} ({fmt_when(scheduler.now().isoformat())})\n\n{post_text(post)}"[:1024])
 
@@ -445,7 +449,8 @@ class Bot:
 
         elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado'):
             self.tg.delete(post['editados_msgs'] + post['agenda_msgs'])
-            self.db.update_post(post['id'], status='descartado')
+            self.db.update_post(post['id'], status='descartado',
+                                discarded_at=scheduler.now().isoformat(timespec='seconds'))
             self.tg.answer_callback(cb['id'], 'Descartado')
 
         elif action == 'ok' and post['status'] in ('agendado', 'avisado'):
@@ -544,6 +549,78 @@ class Bot:
             self.tg.pin(msg_id)
         self.pending_last = text
 
+    # ---------- Relatório ----------
+
+    @staticmethod
+    def _day(iso: Optional[str]) -> Optional[date]:
+        return datetime.fromisoformat(iso).astimezone(scheduler.TZ).date() if iso else None
+
+    def report_text(self, day: date) -> str:
+        e = html.escape
+        posted = [p for p in self.db.with_status('postado') if self._day(p['posted_at'] or p['scheduled_at']) == day]
+        posted.sort(key=lambda p: p['posted_at'] or p['scheduled_at'] or '')
+        discarded = [p for p in self.db.with_status('descartado') if self._day(p['discarded_at']) == day]
+        by_lia = sum(1 for p in posted if p['posted_via'] == 'lia')
+        meta = scheduler.POSTS_PER_DAY
+        lines = [f"📊 <b>Relatório de {DIAS[day.weekday()]}, {day:%d/%m}</b>", "",
+                 f"🚀 Postados: <b>{len(posted)}</b> de {meta} (meta do dia)"]
+        if posted:
+            lines.append(f"     🤖 pela LiA: {by_lia} · ✋ manual: {len(posted) - by_lia}")
+        lines.append(f"❌ Descartados: {len(discarded)}")
+        if posted:
+            values = [commission_value(p['products'][0]) for p in posted if p['products']]
+            best = max(posted, key=lambda p: commission_value(p['products'][0]) if p['products'] else 0)
+            lines.append(f"💰 Comissão por venda dos itens divulgados: média {brl(sum(values) / len(values))}, "
+                         f"maior {brl(max(values))} ({e(best['product_name'][:30])})")
+            trocas = sum(1 for p in posted if p.get('troca') == 'trocado')
+            lines.append(f"🔁 Trocados por loja de comissão maior: {trocas}")
+            lines += ["", "<b>Postados</b>"]
+            for p in posted:
+                when = datetime.fromisoformat(p['posted_at'] or p['scheduled_at']).astimezone(scheduler.TZ)
+                main = p['products'][0] if p['products'] else {}
+                lines.append(f"{when:%H:%M} · {e(p['product_name'][:40])} · {e(main.get('shopName', '')[:20])} "
+                             f"({brl(commission_value(main)) if main else '-'})")
+
+        tomorrow = day + timedelta(days=1)
+        scheduled = self.db.scheduled()
+        lines += ["", "<b>Agora</b>",
+                  f"✅ Em Editados: {len(self.db.with_status('editado'))}",
+                  f"⏰ Agendados: {len(scheduled)} (para {tomorrow:%d/%m}: "
+                  f"{sum(1 for p in scheduled if self._day(p['scheduled_at']) == tomorrow)})",
+                  f"📌 Pendências: {len(self.pending_items())}"]
+
+        all_posted = self.db.with_status('postado')
+        week = [(day - timedelta(days=i)) for i in range(6, -1, -1)]
+        counts = [sum(1 for p in all_posted if self._day(p['posted_at'] or p['scheduled_at']) == d) for d in week]
+        lines += ["", "<b>Últimos 7 dias</b>"]
+        for d, n in zip(week, counts):
+            lines.append(f"<code>{DIAS[d.weekday()]} {d:%d/%m} {'▇' * min(n, 15):<15} {n}</code>")
+        lines.append(f"Total: <b>{sum(counts)}</b> · média {sum(counts) / 7:.1f} por dia".replace('.', ','))
+        return '\n'.join(lines)[:4000]
+
+    def on_report_command(self, thread: Optional[int], command: str):
+        """/relatorio (hoje) ou /relatorio 10/10 (outro dia), respondido no tópico em que foi pedido."""
+        day = scheduler.now().date()
+        arg = command.split()[1] if len(command.split()) > 1 else ''
+        try:
+            if arg:
+                d, m = (int(x) for x in arg.split('/')[:2])
+                day = date(day.year, m, d)
+        except ValueError:
+            self.tg.send_text(thread, "Use /relatorio ou /relatorio 10/10.")
+            return
+        self.tg.send_text(thread or RELATORIO, self.report_text(day))
+
+    def daily_report(self):
+        """No horário RELATORIO_HORA, o relatório do dia vai sozinho para 📊 Relatório (uma vez por dia)."""
+        current = scheduler.now()
+        hour, minute = (int(x) for x in REPORT_TIME.split(':'))
+        today = current.date().isoformat()
+        if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('relatorio_dia') == today:
+            return
+        self.db.set_meta('relatorio_dia', today)
+        self.tg.send_text(RELATORIO or POSTADOS, self.report_text(current.date()))
+
     # ---------- Loop ----------
 
     def worker(self, jobs: queue.Queue):
@@ -576,6 +653,10 @@ class Bot:
             self.on_external(msg)
             return
         thread = msg.get('message_thread_id')
+        command = (msg.get('text') or '').strip()
+        if command.lower().startswith('/relatorio'):
+            self.on_report_command(thread, command)
+            return
         if thread == ENVIOS:
             self.on_envios(msg)
         elif thread == EDITADOS and msg.get('reply_to_message') and not msg.get('from', {}).get('is_bot'):
@@ -638,6 +719,7 @@ class Bot:
                         logger.exception("Falha ao tratar update")
                 self.tick()
                 self.refresh_pending()
+                self.daily_report()
             except requests.RequestException as e:
                 logger.warning(f"Telegram sem resposta ({e.__class__.__name__}); tentando de novo")
                 time.sleep(5)

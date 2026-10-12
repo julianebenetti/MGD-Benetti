@@ -7,7 +7,7 @@ outros vendedores), com aprovação e agenda.
 ## Fluxo (tópicos do grupo "Shopee Video Bot")
 
 ```
-📥 Envios  →  ✅ Editados (sua aprovação)  →  ⏰ Agenda  →  🚀 Postados      (+ 📌 Pendências)
+📥 Envios  →  ✅ Editados (sua aprovação)  →  ⏰ Agenda  →  🚀 Postados      (+ 📌 Pendências e 📊 Relatório)
 ```
 
 **📥 Envios** — mande o vídeo com o link Shopee na legenda. Também vale:
@@ -46,6 +46,12 @@ separado por tópico (vídeo sem link, link a corrigir, variação a confirmar, 
 variações, capa a aprovar, aprovar e agendar, post que não foi para a LiA). Cada item é um link que abre a
 mensagem certa. Quando não há nada: "✅ Nada esperando por você". (Para fixar, o bot precisa da permissão
 **Fixar mensagens**; sem ela a lista funciona igual, só não fica fixada.)
+
+**📊 Relatório** — todo dia às 22:30 (`RELATORIO_HORA`) o robô manda o resumo do dia: postados (meta,
+pela LiA × manual, horário, loja e comissão de cada um), descartados, comissão média e maior dos itens
+divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/Pendências e o gráfico dos
+últimos 7 dias. A qualquer hora: **`/relatorio`** (hoje) ou **`/relatorio 10/10`** (outro dia), em
+qualquer tópico do grupo.
 
 ## LiA (bot que posta no Shopee Video)
 
