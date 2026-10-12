@@ -67,7 +67,7 @@ def post_text(post: Dict) -> str:
         f"🔗 <b>Links:</b>\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
         + ("" if post.get('sticker_path') else
-           "\n\n⚠️ Capa sem o cartão de cores (produto sem variação de cor ou a página não carregou).")
+           "\n\n⚠️ Capa sem o cartão de variações (produto sem variações ou a página não carregou).")
     )
 
 

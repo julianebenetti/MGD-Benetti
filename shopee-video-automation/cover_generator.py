@@ -26,7 +26,7 @@ PILL_PAD_X_RATIO = 0.35
 PILL_PAD_Y_RATIO = 0.10
 LINE_OVERLAP_RATIO = 0.18
 TEXT_COLOR = (34, 34, 34, 255)
-# Cartão das cores: à esquerda, logo abaixo da headline, sem inclinação
+# Cartão de variações: à esquerda, logo abaixo da headline, sem inclinação
 CARD_FONT = ASSETS / 'fonts' / 'Roboto.ttf'
 CARD_WIDTH_RATIO = 0.50
 CARD_LEFT_RATIO = 0.02
@@ -156,7 +156,7 @@ class CoverGenerator:
         return pill_h
 
     def colors_card(self, thumbs: List[str], out_path: str, label: str = 'Cor') -> str:
-        """Cartão branco com o rótulo e as miniaturas das cores lado a lado (até 5 por linha, linhas equilibradas)."""
+        """Cartão branco com o título (ex.: "3 Variações Disponíveis") e as miniaturas (até 5 por linha)."""
         pad, gap, border = 16, 10, 2
         rows = -(-len(thumbs) // CARD_MAX_COLS)
         cols = -(-len(thumbs) // rows)
@@ -166,7 +166,7 @@ class CoverGenerator:
         font.set_variation_by_name('Regular')
         label_h = font.getbbox(label)[3] + 12
 
-        w = 2 * pad + cols * thumb + (cols - 1) * gap
+        w = max(2 * pad + cols * thumb + (cols - 1) * gap, int(font.getlength(label)) + 2 * pad)
         h = pad + label_h + rows * thumb + (rows - 1) * gap + pad
         card = Image.new('RGB', (w, h), (255, 255, 255))
         d = ImageDraw.Draw(card)
