@@ -749,7 +749,19 @@ class Bot:
                 markup=self.agenda_markup(post['id']))
             self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
 
+    def register_commands(self):
+        """Menu do / : no grupo do robô, os comandos dele; nos outros grupos, só o /brutos."""
+        self.tg.set_commands([
+            ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
+            ('vendas', 'Vendas reais por vídeo: 7 dias (ou /vendas hoje, /vendas 30)'),
+            ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
+        ], {'type': 'chat', 'chat_id': self.tg.chat_id})
+        self.tg.set_commands([
+            ('brutos', 'Conecta este tópico: vídeos novos vão para Envios'),
+        ], {'type': 'all_group_chats'})
+
     def run(self):
+        self.register_commands()
         self.recover_lia()
         for jobs in self.queues.values():
             threading.Thread(target=self.worker, args=(jobs,), daemon=True).start()

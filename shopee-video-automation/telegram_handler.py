@@ -96,6 +96,15 @@ class TelegramBot:
             return False
         return True
 
+    def set_commands(self, commands: List[tuple], scope: Dict):
+        """Menu que aparece ao digitar / (lista de (comando, descrição))."""
+        try:
+            self.call('setMyCommands', data={
+                'commands': json.dumps([{'command': c, 'description': d} for c, d in commands], ensure_ascii=False),
+                'scope': json.dumps(scope)})
+        except RuntimeError as e:
+            logger.warning(f"Não consegui registrar os comandos: {e}")
+
     def pin(self, message_id: int):
         try:
             self.call('pinChatMessage', data={'chat_id': self.chat_id, 'message_id': message_id,
