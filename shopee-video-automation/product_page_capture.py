@@ -7,7 +7,6 @@ a IA aponta as miniaturas no print.
 import base64
 import io
 import logging
-import os
 import re
 from pathlib import Path
 from typing import List, Optional, Tuple
@@ -15,7 +14,7 @@ from typing import List, Optional, Tuple
 from PIL import Image
 
 from ai_client import ask_json
-from shopee_session import apply_session, is_blocked
+from shopee_session import is_blocked, launch
 from video_page_reader import PROFILE_DIR
 
 logger = logging.getLogger(__name__)
@@ -143,49 +142,108 @@ def _boxes_by_ai(png: bytes, width: int, height: int) -> List[dict]:
     return [b for b in data['opcoes'] if b['x1'] > b['x0'] and b['y1'] > b['y0']][:MAX_OPTIONS]
 
 
-def capture_variation_thumbs(product_url: str, out_dir: Path, wait_ms: int = 5000) -> Tuple[List[Path], int]:
+IMAGE_CDN = 'https://down-br.img.susercontent.com/file/'
+
+
+def _tiers_in_json(data) -> List[dict]:
+    """Procura 'tier_variations' (nome, opções e imagens de cada variação) no JSON da página."""
+    found = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            tiers = node.get('tier_variations')
+            if isinstance(tiers, list) and tiers and isinstance(tiers[0], dict):
+                found.extend(tiers)
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(data)
+    return found
+
+
+def _pick_tier(tiers: List[dict]) -> Optional[dict]:
+    with_images = [t for t in tiers if len([i for i in (t.get('images') or []) if i]) >= 2]
+    with_options = [t for t in tiers if len(t.get('options') or []) >= 2]
+    return (with_images or with_options or [None])[0]
+
+
+def capture_variation_thumbs(product_url: str, out_dir: Path, wait_ms: int = 5000,
+                             debug: Optional[dict] = None) -> Tuple[List[Path], int]:
     """
     Salva uma imagem por variação em `out_dir` (até MAX_OPTIONS).
     Devolve (imagens, total de variações). Lista vazia se o produto não tiver variações.
+    Ordem: dados que a página recebe (tier_variations) > o que aparece na tela > IA no print.
+    `debug` (opcional) recebe url, título, origem e o print da página em debug['shot'].
     """
     from playwright.sync_api import sync_playwright
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    headless = os.getenv('SHOPEE_BROWSER_HEADLESS', 'true').lower() != 'false'
     shots: List[bytes] = []
-    total = 0
+    total, source = 0, 'nenhuma'
+    tiers: List[dict] = []
+
+    def on_response(response):
+        if 'shopee' in response.url and 'json' in response.headers.get('content-type', ''):
+            try:
+                tiers.extend(_tiers_in_json(response.json()))
+            except Exception:
+                pass
+
     with sync_playwright() as p:
-        context = p.chromium.launch_persistent_context(
-            str(PROFILE_DIR), headless=headless, locale='pt-BR',
-            viewport=VIEWPORT, user_agent=USER_AGENT, device_scale_factor=2)
-        apply_session(context)
+        context = launch(p, PROFILE_DIR, viewport=VIEWPORT, user_agent=USER_AGENT, device_scale_factor=2)
         page = context.new_page()
+        page.on('response', on_response)
         try:
             page.goto(product_url, wait_until='domcontentloaded', timeout=45000)
             page.wait_for_timeout(wait_ms)
+            if debug is not None:
+                debug.update(url=page.url, title=page.title())
             if is_blocked(page.url):
                 raise ShopeeBlocked(page.url)
             page.keyboard.press('Escape')
-            found = find_variations(page)
-            total = found['total']
-            if total:
-                for item in found['items'][:MAX_OPTIONS]:
-                    original = _download_original(page, item['src'])
-                    if original:
-                        shots.append(original)
-                    elif item['w'] > 4 and item['h'] > 4:
-                        shots.append(page.screenshot(full_page=True, clip={
-                            'x': item['x'], 'y': item['y'], 'width': item['w'], 'height': item['h']}))
-                source = 'página'
-            else:
+
+            tier = _pick_tier(tiers)
+            if tier:
+                total = len(tier.get('options') or [])
+                for h in [i for i in (tier.get('images') or []) if i][:MAX_OPTIONS]:
+                    img = _download_original(page, h if h.startswith('http') else IMAGE_CDN + h)
+                    if img:
+                        shots.append(img)
+                source = f"dados da página ({tier.get('name', 'variação')})"
+
+            if not shots:
+                found = find_variations(page)
+                if found['total']:
+                    total = found['total']
+                    for item in found['items'][:MAX_OPTIONS]:
+                        original = _download_original(page, item['src'])
+                        if original:
+                            shots.append(original)
+                        elif item['w'] > 4 and item['h'] > 4:
+                            shots.append(page.screenshot(full_page=True, clip={
+                                'x': item['x'], 'y': item['y'], 'width': item['w'], 'height': item['h']}))
+                    source = 'tela'
+
+            if not shots and not total:
                 png = page.screenshot(clip={'x': 0, 'y': 0, 'width': VIEWPORT['width'], 'height': SEARCH_HEIGHT},
                                       full_page=True, scale='css')
                 for b in _boxes_by_ai(png, VIEWPORT['width'], SEARCH_HEIGHT):
                     shots.append(page.screenshot(full_page=True, clip={
                         'x': b['x0'], 'y': b['y0'], 'width': b['x1'] - b['x0'], 'height': b['y1'] - b['y0']}))
                 total = len(shots)
-                source = 'IA'
+                source = 'IA' if shots else 'nenhuma'
         finally:
+            if debug is not None:
+                debug['source'] = source
+                try:
+                    page.evaluate('window.scrollTo(0, 0)')
+                    page.screenshot(path=str(debug['shot']), scale='css', full_page=True,
+                                    clip={'x': 0, 'y': 0, 'width': VIEWPORT['width'], 'height': 1400})
+                except Exception:
+                    pass
             context.close()
 
     paths = []
@@ -193,5 +251,5 @@ def capture_variation_thumbs(product_url: str, out_dir: Path, wait_ms: int = 500
         path = out_dir / f"variacao_{i}.png"
         Image.open(io.BytesIO(png)).convert('RGB').save(path)
         paths.append(path)
-    logger.info(f"{len(paths)} de {total} variação(ões) ({source if shots else 'nenhuma'})")
+    logger.info(f"{len(paths)} de {total} variação(ões) ({source})")
     return paths, max(total, len(paths))

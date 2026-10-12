@@ -6,7 +6,6 @@ como reserva, os links de produto presentes na página.
 """
 
 import logging
-import os
 import re
 from pathlib import Path
 from typing import Any, Dict, List
@@ -63,7 +62,6 @@ def read_video_products(url: str, wait_ms: int = 8000) -> List[Dict]:
     """Devolve os produtos vinculados ao vídeo, na ordem em que aparecem."""
     from playwright.sync_api import sync_playwright
 
-    headless = os.getenv('SHOPEE_BROWSER_HEADLESS', 'true').lower() != 'false'
     from_json: List[Dict] = []
 
     def on_response(response):
@@ -75,12 +73,8 @@ def read_video_products(url: str, wait_ms: int = 8000) -> List[Dict]:
             pass
 
     with sync_playwright() as p:
-        context = p.chromium.launch_persistent_context(
-            str(PROFILE_DIR), headless=headless, locale='pt-BR',
-            viewport={'width': 430, 'height': 932}, is_mobile=True,
-        )
-        from shopee_session import apply_session, is_blocked
-        apply_session(context)
+        from shopee_session import is_blocked, launch
+        context = launch(p, PROFILE_DIR, viewport={'width': 430, 'height': 932}, is_mobile=True)
         page = context.new_page()
         page.on('response', on_response)
         try:

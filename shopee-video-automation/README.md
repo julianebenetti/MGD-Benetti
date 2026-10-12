@@ -71,8 +71,9 @@ Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `
 exporte os cookies com a extensão **Cookie-Editor** (Export → JSON, salve num arquivo .json) e mande
 o arquivo na pasta 📥 Envios com a legenda **`/cookies`**. O robô guarda e apaga a mensagem.
 
-Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
-`SHOPEE_BROWSER_HEADLESS=false` numa máquina com tela para entrar na conta.
+O navegador do robô roda como um Chromium normal numa tela virtual (Xvfb), sem a marca de automação,
+porque o modo "headless" é bloqueado pela Shopee (`SHOPEE_BROWSER_MODE=auto`). As variações são
+lidas primeiro dos dados que a página recebe (`tier_variations`), depois da tela e, por último, pela IA.
 
 ## Arquivos
 

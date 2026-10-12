@@ -14,12 +14,10 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / '.env')
 
-from product_page_capture import (USER_AGENT, VIEWPORT, capture_variation_thumbs,  # noqa: E402
-                                  find_variations)
+from product_page_capture import capture_variation_thumbs  # noqa: E402
 from shopee_affiliate import ShopeeAffiliateClient  # noqa: E402
-from shopee_session import COOKIES_FILE, apply_session  # noqa: E402
+from shopee_session import COOKIES_FILE  # noqa: E402
 from telegram_handler import TelegramBot  # noqa: E402
-from video_page_reader import PROFILE_DIR  # noqa: E402
 
 
 def main(link: str):
@@ -35,37 +33,25 @@ def main(link: str):
     url = f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
     print(f"Produto: {p['productName']}\nPágina: {url}")
 
-    from playwright.sync_api import sync_playwright
     shot = Path(tempfile.mkdtemp()) / 'pagina.png'
-    with sync_playwright() as pw:
-        ctx = pw.chromium.launch_persistent_context(
-            str(PROFILE_DIR), headless=os.getenv('SHOPEE_BROWSER_HEADLESS', 'true').lower() != 'false',
-            locale='pt-BR', viewport=VIEWPORT, user_agent=USER_AGENT)
-        apply_session(ctx)
-        page = ctx.new_page()
-        page.goto(url, wait_until='domcontentloaded', timeout=45000)
-        page.wait_for_timeout(5000)
-        page.keyboard.press('Escape')
-        final_url, title = page.url, page.title()
-        found = find_variations(page)['total']
-        page.evaluate('window.scrollTo(0, 0)')
-        page.screenshot(path=str(shot), clip={'x': 0, 'y': 0, 'width': VIEWPORT['width'], 'height': 1400},
-                        full_page=True)
-        ctx.close()
-
+    debug = {'shot': shot, 'url': '-', 'title': '-', 'source': '-'}
     try:
-        thumbs, total = capture_variation_thumbs(url, Path(tempfile.mkdtemp()))
+        thumbs, total = capture_variation_thumbs(url, Path(tempfile.mkdtemp()), debug=debug)
     except Exception as e:
         thumbs, total = [], f"0 ({e.__class__.__name__})"
     resumo = (f"🔎 Diagnóstico das variações\n"
               f"Produto: {p['productName']}\n"
               f"Cookies de login: {'sim' if COOKIES_FILE.exists() else 'NÃO'}\n"
-              f"Página aberta: {final_url}\n"
-              f"Título: {title}\n"
-              f"Variações achadas na página: {found}\n"
+              f"Navegador: {os.getenv('SHOPEE_BROWSER_MODE', 'auto')}\n"
+              f"Página aberta: {debug['url']}\n"
+              f"Título: {debug['title']}\n"
+              f"Origem das variações: {debug['source']}\n"
               f"Miniaturas capturadas: {len(thumbs)} de {total}")
     print(resumo)
-    tg.send_photo(envios, str(shot), html.escape(resumo)[:1024])
+    if shot.exists():
+        tg.send_photo(envios, str(shot), html.escape(resumo)[:1024])
+    else:
+        tg.send_text(envios, html.escape(resumo))
     print("Print enviado para a pasta Envios.")
 
 

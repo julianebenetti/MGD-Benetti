@@ -4,8 +4,13 @@ Os cookies vêm exportados do navegador da Juliane (extensão Cookie-Editor, for
 ou arquivo cookies.txt) e ficam em shopee_cookies.json.
 """
 
+import atexit
 import json
 import logging
+import os
+import shutil
+import subprocess
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -95,3 +100,40 @@ def apply_session(context):
 
 def is_blocked(url: str) -> bool:
     return '/verify/' in url or '/buyer/login' in url
+
+
+# ---------- navegador ----------
+# A Shopee detecta o Chromium "headless" e o marca de automação ("verify/traffic").
+# Por padrão o robô abre um Chromium normal numa tela virtual (Xvfb) e esconde o navigator.webdriver.
+BROWSER_ARGS = ['--disable-blink-features=AutomationControlled']
+HIDE_AUTOMATION_JS = "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+_xvfb = None
+
+
+def _ensure_display() -> bool:
+    global _xvfb
+    if os.environ.get('DISPLAY'):
+        return True
+    if not shutil.which('Xvfb'):
+        return False
+    if _xvfb is None:
+        _xvfb = subprocess.Popen(['Xvfb', ':99', '-screen', '0', '1920x1080x24', '-nolisten', 'tcp'],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        atexit.register(_xvfb.terminate)
+        time.sleep(1)  # se outra instância já usa :99, a tela dela serve igual
+    os.environ['DISPLAY'] = ':99'
+    return True
+
+
+def launch(playwright, profile_dir, **kwargs):
+    """Navegador persistente, logado na Shopee e com menos cara de automação."""
+    mode = os.getenv('SHOPEE_BROWSER_MODE', 'auto').lower()  # auto | headless | visivel
+    headless = mode == 'headless' or (mode == 'auto' and not _ensure_display())
+    # o processo do Playwright já existia antes da tela virtual: a tela vai explícita para o navegador
+    env = {**os.environ} if headless else {**os.environ, 'DISPLAY': os.environ.get('DISPLAY', ':99')}
+    context = playwright.chromium.launch_persistent_context(
+        str(profile_dir), headless=headless, locale='pt-BR', args=BROWSER_ARGS, env=env,
+        ignore_default_args=['--enable-automation'], **kwargs)
+    context.add_init_script(HIDE_AUTOMATION_JS)
+    apply_session(context)
+    return context
