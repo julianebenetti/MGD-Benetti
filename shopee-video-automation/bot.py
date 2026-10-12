@@ -50,6 +50,9 @@ ENVIOS = topic('TELEGRAM_TOPIC_ENVIOS')
 EDITADOS = topic('TELEGRAM_TOPIC_EDITADOS')
 AGENDA = topic('TELEGRAM_TOPIC_AGENDA')
 POSTADOS = topic('TELEGRAM_TOPIC_POSTADOS')
+PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
+FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
+MAX_PENDING_LINES = 40
 
 
 def fmt_when(iso: str) -> str:
@@ -105,6 +108,7 @@ class Bot:
         self.batch_link: Optional[Dict] = None
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
+        self.pending_last = ''
 
     def submit(self, job: tuple):
         kind = job[0]
@@ -476,6 +480,70 @@ class Bot:
                                            reply_to=reply_to)
                 self.db.update_post(post['id'], status='avisado', agenda_msgs=post['agenda_msgs'] + [msg_id])
 
+    # ---------- Pendências ----------
+
+    def pending_items(self) -> List[tuple]:
+        """(quando, tópico, o que fazer, nome, mensagem) de tudo que espera uma ação sua."""
+        items = []
+        for p in self.pending:
+            items.append((p['at'], ENVIOS, '🔗 Mandar o link', 'vídeo sem link', p['msg_id']))
+        for f in self.db.recent_failures(FAILURES_SHOWN):
+            what = '✅ Confirmar variação ou mandar outro link' if f.get('link') else '⚠️ Responder com o link certo'
+            items.append((f['at'], ENVIOS, what, 'vídeo que não passou', f['err_msg_id'] or f['msg_id']))
+        for post in self.db.with_status('editado'):
+            msgs = post['editados_msgs']
+            if len(msgs) < 3:
+                continue
+            if post.get('troca') == 'pendente':
+                what, target = '💰 Escolher a loja divulgada', msgs[3] if len(msgs) > 3 else msgs[2]
+            elif post.get('variacoes') == 'pendente' and not post.get('sticker_path'):
+                what, target = '🖼️ Mandar o print das variações', msgs[3] if len(msgs) > 3 else msgs[2]
+            elif not post['cover_approved']:
+                what, target = '✅ Aprovar a capa', msgs[2]
+            else:
+                what, target = '✅ Aprovar e agendar', msgs[2]
+            items.append((datetime.fromisoformat(post['created_at']).timestamp(), EDITADOS, what,
+                          post['product_name'], target))
+        for post in self.db.with_status('avisado'):
+            if post['agenda_msgs']:
+                items.append((datetime.fromisoformat(post['scheduled_at']).timestamp(), AGENDA,
+                              '🚀 Postar (ou reenviar à LiA) e tocar ✅ Postei', post['product_name'],
+                              post['agenda_msgs'][-1]))
+        return sorted(items)
+
+    def pending_text(self) -> str:
+        items = self.pending_items()
+        if not items:
+            return "📌 <b>Pendências</b>\n\n✅ Nada esperando por você."
+        names = {ENVIOS: '📥 Envios', EDITADOS: '✅ Editados', AGENDA: '⏰ Agenda'}
+        lines = [f"📌 <b>Pendências ({len(items)})</b> · toque no item para ir até a mensagem"]
+        for thread in (ENVIOS, EDITADOS, AGENDA):
+            group = [i for i in items if i[1] == thread]
+            if not group:
+                continue
+            lines.append(f"\n<b>{names[thread]}</b>")
+            for when, _, what, name, msg_id in group[:MAX_PENDING_LINES]:
+                since = datetime.fromtimestamp(when, scheduler.TZ).strftime('%d/%m %H:%M')
+                link = self.tg.message_link(thread, msg_id)
+                lines.append(f"• {what}: <a href=\"{link}\">{html.escape(name[:45])}</a> · desde {since}")
+            if len(group) > MAX_PENDING_LINES:
+                lines.append(f"… e mais {len(group) - MAX_PENDING_LINES}")
+        return '\n'.join(lines)[:4000]
+
+    def refresh_pending(self):
+        """Mantém uma mensagem fixada em 📌 Pendências com tudo que espera ação (só edita se mudou)."""
+        if not PENDENCIAS:
+            return
+        text = self.pending_text()
+        if text == self.pending_last:
+            return
+        msg_id = int(self.db.get_meta('pendencias_msg', '0'))
+        if not msg_id or not self.tg.edit_text(msg_id, text):
+            msg_id = self.tg.send_text(PENDENCIAS, text)
+            self.db.set_meta('pendencias_msg', str(msg_id))
+            self.tg.pin(msg_id)
+        self.pending_last = text
+
     # ---------- Loop ----------
 
     def worker(self, jobs: queue.Queue):
@@ -569,6 +637,7 @@ class Bot:
                     except Exception:
                         logger.exception("Falha ao tratar update")
                 self.tick()
+                self.refresh_pending()
             except requests.RequestException as e:
                 logger.warning(f"Telegram sem resposta ({e.__class__.__name__}); tentando de novo")
                 time.sleep(5)

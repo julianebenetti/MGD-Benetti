@@ -115,6 +115,19 @@ class Storage:
                 "SELECT * FROM posts WHERE status IN ('agendado', 'avisado', 'enviando') ORDER BY scheduled_at").fetchall()
         return [self._row(r) for r in rows]
 
+    def with_status(self, *statuses: str) -> List[Dict]:
+        with self.lock:
+            rows = self.conn.execute(
+                f"SELECT * FROM posts WHERE status IN ({', '.join('?' * len(statuses))}) ORDER BY created_at",
+                statuses).fetchall()
+        return [self._row(r) for r in rows]
+
+    def recent_failures(self, max_age: float) -> List[Dict]:
+        with self.lock:
+            rows = self.conn.execute("SELECT * FROM failures WHERE at > ? ORDER BY at",
+                                     (time.time() - max_age,)).fetchall()
+        return [dict(r) for r in rows]
+
     def add_headline(self, product_key: str, headline: str):
         with self.lock:
             self.conn.execute("INSERT INTO headlines VALUES (?, ?)", (product_key, headline))

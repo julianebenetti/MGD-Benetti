@@ -83,6 +83,32 @@ class TelegramBot:
                 'chat_id': self.chat_id, 'caption': caption, 'parse_mode': 'HTML', **self._thread(thread_id)},
                 files={'photo': photo})['message_id']
 
+    def edit_text(self, message_id: int, text: str) -> bool:
+        """Troca o texto de uma mensagem; False se ela não existe mais (foi apagada)."""
+        try:
+            self.call('editMessageText', data={
+                'chat_id': self.chat_id, 'message_id': message_id, 'text': text, 'parse_mode': 'HTML',
+                'link_preview_options': json.dumps({'is_disabled': True})})
+        except RuntimeError as e:
+            if 'not modified' in str(e):
+                return True
+            logger.warning(f"Não consegui editar a mensagem {message_id}: {e}")
+            return False
+        return True
+
+    def pin(self, message_id: int):
+        try:
+            self.call('pinChatMessage', data={'chat_id': self.chat_id, 'message_id': message_id,
+                                              'disable_notification': True})
+        except RuntimeError as e:
+            logger.warning(f"Não consegui fixar a mensagem: {e}")
+
+    def message_link(self, thread_id: Optional[int], message_id: int) -> str:
+        """Link que abre a mensagem dentro do tópico."""
+        internal = str(self.chat_id).removeprefix('-100')
+        return f"https://t.me/c/{internal}/{thread_id}/{message_id}" if thread_id \
+            else f"https://t.me/c/{internal}/{message_id}"
+
     def edit_markup(self, message_id: int, markup: str):
         try:
             self.call('editMessageReplyMarkup', data={

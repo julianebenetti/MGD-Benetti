@@ -7,7 +7,7 @@ outros vendedores), com aprovação e agenda.
 ## Fluxo (tópicos do grupo "Shopee Video Bot")
 
 ```
-📥 Envios  →  ✅ Editados (sua aprovação)  →  ⏰ Agenda  →  🚀 Postados
+📥 Envios  →  ✅ Editados (sua aprovação)  →  ⏰ Agenda  →  🚀 Postados      (+ 📌 Pendências)
 ```
 
 **📥 Envios** — mande o vídeo com o link Shopee na legenda. Também vale:
@@ -40,6 +40,12 @@ esse vídeo final é o que vai para a Agenda.
 (@Liaautomacao_bot), toca em **Publicar** no resumo dela e move o post para 🚀 Postados. Se algo
 falhar, ele avisa na Agenda com os botões **📤 Enviar à LiA** (tentar de novo) e **✅ Postei**.
 Sem a LiA configurada: aviso "⏰ Hora de postar!" e botão **✅ Postei**.
+
+**📌 Pendências** — uma mensagem fixada que o robô mantém atualizada com tudo que espera uma ação sua,
+separado por tópico (vídeo sem link, link a corrigir, variação a confirmar, loja a escolher, print das
+variações, capa a aprovar, aprovar e agendar, post que não foi para a LiA). Cada item é um link que abre a
+mensagem certa. Quando não há nada: "✅ Nada esperando por você". (Para fixar, o bot precisa da permissão
+**Fixar mensagens**; sem ela a lista funciona igual, só não fica fixada.)
 
 ## LiA (bot que posta no Shopee Video)
 
