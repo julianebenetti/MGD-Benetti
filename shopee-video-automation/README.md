@@ -67,7 +67,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |
-| Headline | Gerada pela IA, até 60 caracteres, termina com 😱🔥, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto |
+| Headline | Gerada pela IA, até 60 caracteres, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto. Termina com **um emoji** sorteado pelo gatilho: Choque 😱 🤯 😳 · Urgência 🔥 ⚡ 💥 · Curiosidade 👀 🤔 🤫 · Dor 🙌 🥹 😌 · Autoridade ⭐ 🏆 🫶 (listas em `EMOJIS_FINAIS`, `content_generator.py`). Headline digitada por você vai como está |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
 | Agenda | 10 posts/dia entre 9h e 22h, horários quebrados, nunca o mesmo produto no mesmo dia |
 

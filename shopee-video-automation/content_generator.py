@@ -4,6 +4,8 @@ Gera headline, descrição, hashtags e SEO com a OpenAI
 """
 
 import logging
+import random
+import re
 from typing import Dict, List
 
 from ai_client import ask_json
@@ -33,6 +35,26 @@ GATILHOS = [
     ('Autoridade', 'prova social com dados reais de vendas/nota, se houver ("o queridinho de quem organiza a casa")'),
 ]
 
+# Emoji do fim da headline, sorteado pelo gatilho dela (sempre um só; a IA escreve sem emoji)
+EMOJIS_FINAIS = {
+    'Choque': ['😱', '🤯', '😳'],
+    'Urgência': ['🔥', '⚡', '💥'],
+    'Curiosidade': ['👀', '🤔', '🤫'],
+    'Dor': ['🙌', '🥹', '😌'],
+    'Autoridade': ['⭐', '🏆', '🫶'],
+}
+EMOJI_RE = re.compile('[\U0001F000-\U0001FFFF\u2600-\u27BF\u2B00-\u2BFF\u200D\uFE0F]')
+
+
+def gatilho_da_vez(avoid_headlines: List[str]):
+    return GATILHOS[len(avoid_headlines) % len(GATILHOS)]
+
+
+def com_emoji(headline: str, gatilho: str) -> str:
+    """Tira os emojis que a IA tenha colocado e fecha com um emoji da lista do gatilho."""
+    texto = ' '.join(EMOJI_RE.sub('', headline).split())[:57].rstrip()
+    return f"{texto} {random.choice(EMOJIS_FINAIS.get(gatilho, ['👀']))}"
+
 
 class ContentGenerator:
     def generate(self, product_info: Dict, avoid_headlines: List[str] = ()) -> Dict:
@@ -41,7 +63,7 @@ class ContentGenerator:
             logger.info(f"Gerando conteúdo para: {product_info.get('name', 'Produto')}")
             data = ask_json(self._build_prompt(product_info, avoid_headlines), SCHEMA, name='conteudo')
             result = {
-                'cover_title': data['cover_title'][:60],
+                'cover_title': com_emoji(data['cover_title'], gatilho_da_vez(avoid_headlines)[0]),
                 'description': data['description'][:150],
                 'hashtags': [h if h.startswith('#') else f'#{h}' for h in data['hashtags']][:5],
                 'seo_keywords': data['seo_keywords'][:10],
@@ -59,10 +81,10 @@ class ContentGenerator:
             self._build_prompt(product_info, avoid_headlines)
             + "\nNesta resposta só o campo cover_title importa; preencha os outros com o mínimo.",
             SCHEMA, name='conteudo')
-        return data['cover_title'][:60]
+        return com_emoji(data['cover_title'], gatilho_da_vez(avoid_headlines)[0])
 
     def _build_prompt(self, product_info: Dict, avoid_headlines: List[str] = ()) -> str:
-        gatilho, explicacao = GATILHOS[len(avoid_headlines) % len(GATILHOS)]
+        gatilho, explicacao = gatilho_da_vez(avoid_headlines)
         usadas = ''
         if avoid_headlines:
             lista = '\n'.join(f'- {h}' for h in avoid_headlines)
@@ -77,11 +99,11 @@ PRODUTO
 - Descrição da Shopee: {(product_info.get('description') or 'não informada')[:600]}
 
 CAMPOS
-- cover_title: headline escrita na capa do vídeo. Até 60 caracteres, tom de conversa, vende a TRANSFORMAÇÃO
-  (o que muda na vida de quem usa), não a característica técnica. Pode começar com 1 emoji e termina com 😱🔥.
+- cover_title: headline escrita na capa do vídeo. Até 55 caracteres, tom de conversa, vende a TRANSFORMAÇÃO
+  (o que muda na vida de quem usa), não a característica técnica. SEM emoji (o emoji final é colocado depois).
   Gatilho obrigatório desta vez: {gatilho}: {explicacao}.
-  Exemplos do perfil: "Se você usa plus size, olha esse achado! 😱🔥", "E se sua academia pudesse ficar dentro de casa? 😱🔥",
-  "A escova que faz o trabalho pesado por você 😱🔥".
+  Exemplos do perfil: "Se você usa plus size, olha esse achado!", "E se sua academia pudesse ficar dentro de casa?",
+  "A escova que faz o trabalho pesado por você".
 {usadas}- description: legenda do vídeo, até 150 caracteres, no tom de uma amiga recomendando (sem começar com "Amiga"),
   com o benefício principal e um convite para ver o produto.
 - hashtags: exatamente 5, específicas do produto e da categoria; evite genéricas como #shopee #achadinhos.
@@ -101,7 +123,7 @@ REGRAS
         """Conteúdo padrão caso a IA falhe"""
         product_name = product_info.get('name', 'Produto')
         return {
-            'cover_title': 'Olha esse achado! 😱🔥',
+            'cover_title': 'Olha esse achado! 👀',
             'description': f'{product_name} 👀 Confira os detalhes no link do produto.'[:150],
             'hashtags': ['#Shopee', '#ShopeeVideo', '#Achadinhos', '#AchadosShopee', '#AchadosRelampagos'],
             'seo_keywords': list(dict.fromkeys(
