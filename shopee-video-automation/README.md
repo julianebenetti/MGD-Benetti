@@ -14,7 +14,7 @@ outros vendedores), com aprovação e agenda.
 - vários vídeos e depois **um link** (vale para todos);
 - **o link antes** e os vídeos depois (até 10 min);
 - vários vídeos num **álbum** com o link na legenda de um deles: vale para o álbum todo;
-- se faltar o link por 30 s, o robô pergunta **em cada vídeo**: responda o vídeo com o link (só ele) ou
+- vídeo sem link: o robô reage com 👀 e em poucos segundos pergunta **em cada vídeo**: responda o vídeo com o link (só ele) ou
   mande um link solto (vale para todos os vídeos sem link). Os outros vídeos não ficam esperando;
 - a fila fica gravada: se o robô reiniciar (ex.: numa atualização), ele retoma os vídeos da fila, os que
   esperam link e os agendamentos em andamento;

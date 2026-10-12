@@ -31,7 +31,7 @@ class TelegramBot:
         self.chat_id = int(chat_id)
         self.api_url = f"https://api.telegram.org/bot{token}"
 
-    def call(self, method: str, timeout: int = 120, **kwargs):
+    def call(self, method: str, timeout: int = 30, **kwargs):
         resp = requests.post(f"{self.api_url}/{method}", timeout=timeout, **kwargs)
         data = resp.json()
         if not data.get('ok'):
@@ -79,7 +79,7 @@ class TelegramBot:
 
     def send_photo(self, thread_id: Optional[int], photo_path: str, caption: str = '') -> int:
         with open(photo_path, 'rb') as photo:
-            return self.call('sendPhoto', data={
+            return self.call('sendPhoto', timeout=120, data={
                 'chat_id': self.chat_id, 'caption': caption, 'parse_mode': 'HTML', **self._thread(thread_id)},
                 files={'photo': photo})['message_id']
 

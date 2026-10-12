@@ -40,7 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger('bot')
 
 BASE = Path(__file__).parent
-ASK_AFTER_SECONDS = 30
+ASK_AFTER_SECONDS = 8   # só o tempo de chegarem os outros vídeos de um álbum (o link pode vir em um deles)
 BATCH_LINK_TTL = 600
 FAILED_RETRY_TTL = 1800
 COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
@@ -84,6 +84,17 @@ def details(p: Dict) -> str:
 
 def product_url(p: Dict) -> str:
     return f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
+
+
+def postados_caption(post: Dict, label: str) -> str:
+    """Resumo curto para a foto em Postados (legenda de foto tem limite de 1024 caracteres; sem links)."""
+    e = html.escape
+    main = post['products'][0] if post['products'] else {}
+    return (f"{label} ({fmt_when(scheduler.now().isoformat())})\n\n"
+            f"🎬 {e(post['metadata'].get('cover_title', ''))}\n"
+            f"🛍️ {e(post['product_name'][:120])}\n"
+            f"⭐ {e(main.get('shopName', ''))}" + (f" · comissão {brl(commission_value(main))}" if main else '') + "\n"
+            f"🔗 {len(post['links'])} link(s) · 🏷️ {e(post['sub_id'])}")[:1024]
 
 
 def post_text(post: Dict, hint: bool = False) -> str:
@@ -187,6 +198,7 @@ class Bot:
                 self.enqueue_video(msg['message_id'], file_id, self.batch_link['link'],
                                    f"{self.batch_link['text']}\n{text}")
             else:
+                self.tg.react(msg['message_id'], '👀')   # recebido; o pedido do link vem em seguida
                 self.pending.append({'msg_id': msg['message_id'], 'file_id': file_id, 'text': text,
                                      'at': time.time(), 'album': album, 'asked': False})
         elif links:
@@ -477,8 +489,7 @@ class Bot:
         self.tg.delete(post['agenda_msgs'])
         self.db.update_post(post['id'], status='postado', agenda_msgs=[],
                             posted_at=scheduler.now().isoformat(timespec='seconds'), posted_via=via)
-        self.tg.send_photo(POSTADOS, post['cover_path'],
-                           f"{label} ({fmt_when(scheduler.now().isoformat())})\n\n{post_text(post)}"[:1024])
+        self.tg.send_photo(POSTADOS, post['cover_path'], postados_caption(post, label))
 
     def job_variations(self, post_id: int, file_id: str, reply_to: int):
         """Print das variações → cartão → capa refeita (precisa aprovar de novo)."""
