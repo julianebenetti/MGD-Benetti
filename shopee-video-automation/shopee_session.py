@@ -13,6 +13,7 @@ from typing import Dict, List, Tuple
 logger = logging.getLogger(__name__)
 
 COOKIES_FILE = Path(__file__).parent / 'shopee_cookies.json'
+LOGIN_COOKIES = ('SPC_EC', 'SPC_ST', 'SPC_U')
 SAME_SITE = {'no_restriction': 'None', 'none': 'None', 'lax': 'Lax', 'strict': 'Strict'}
 
 
@@ -75,8 +76,11 @@ def save_cookies(raw: str) -> Tuple[int, str]:
     cookies = parse_cookies(raw)
     COOKIES_FILE.write_text(json.dumps(cookies))
     COOKIES_FILE.chmod(0o600)
-    login = [c.get('expires') for c in cookies if c['name'].startswith('SPC_') and c.get('expires')]
-    validade = datetime.fromtimestamp(min(login)).strftime('%d/%m/%Y') if login else 'sem data'
+    # validade do login = cookie de sessão principal (os outros SPC_ são curtos e se renovam sozinhos)
+    main = [c.get('expires') for c in cookies if c['name'] in LOGIN_COOKIES and c.get('expires')]
+    others = [c.get('expires') for c in cookies if c['name'].startswith('SPC_') and c.get('expires')]
+    when = min(main) if main else (max(others) if others else None)
+    validade = datetime.fromtimestamp(when).strftime('%d/%m/%Y') if when else 'sem data'
     return len(cookies), validade
 
 
