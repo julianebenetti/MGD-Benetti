@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 CREATE TABLE IF NOT EXISTS headlines (product_key TEXT, headline TEXT);
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS esgotados (product_key TEXT PRIMARY KEY, at REAL);  -- marcados por você
 CREATE TABLE IF NOT EXISTS video_jobs (    -- vídeos na fila: sobrevivem a reinícios do robô
     msg_id INTEGER PRIMARY KEY, file_id TEXT, link TEXT, text TEXT, trust INTEGER, at REAL
 );
@@ -184,6 +185,16 @@ class Storage:
     def video_jobs(self) -> List[Dict]:
         with self.lock:
             return [dict(r) for r in self.conn.execute("SELECT * FROM video_jobs ORDER BY at").fetchall()]
+
+    def mark_sold_out(self, product_key: str):
+        with self.lock:
+            self.conn.execute("INSERT OR REPLACE INTO esgotados VALUES (?, ?)", (product_key, time.time()))
+            self.conn.commit()
+
+    def is_sold_out(self, product_key: str, max_age: float = 7 * 24 * 3600) -> bool:
+        with self.lock:
+            return self.conn.execute("SELECT 1 FROM esgotados WHERE product_key = ? AND at > ?",
+                                     (product_key, time.time() - max_age)).fetchone() is not None
 
     def get_meta(self, key: str, default: str = '') -> str:
         with self.lock:

@@ -69,6 +69,7 @@ class Pipeline:
         self.cover = CoverGenerator()
         self.variations_blocked = False
         self.workers = ThreadPoolExecutor(max_workers=6)
+        self.is_sold_out = lambda key: False   # o robô liga no banco (anúncios marcados como esgotados)
 
     def _check_all(self, video_path: str, candidates: List[Dict]) -> List[Tuple[Dict, str, str]]:
         """Conferência de vários produtos ao mesmo tempo (cada uma é uma chamada à IA), na ordem recebida."""
@@ -125,7 +126,8 @@ class Pipeline:
         key = product_key(main)
 
         writing = self.workers.submit(self.content.generate, product_info(main), used_headlines(key))
-        others, _, _ = self._confirmed(video_file, self.shopee.other_sellers(main), wanted=MAX_BETTER + TOTAL_LINKS,
+        candidates = [p for p in self.shopee.other_sellers(main) if not self.is_sold_out(product_key(p))]
+        others, _, _ = self._confirmed(video_file, candidates, wanted=MAX_BETTER + TOTAL_LINKS,
                                        max_checks=MAX_EXTRA_CHECKS, accept_variation=True)
         # outras lojas confirmadas, da maior para a menor comissão
         better = [p for p in others if p['commissionValue'] > main['commissionValue']][:MAX_BETTER]
@@ -134,6 +136,7 @@ class Pipeline:
 
         metadata = writing.result()
         metadata['cta'] = cta_text
+        metadata['reservas'] = others   # lojas já conferidas, para repor um link esgotado
         sub_id = novo_sub_id(metadata['short_name'])
         links = [self.shopee.affiliate_link(p, sub_id) for p in products]
 
@@ -158,6 +161,25 @@ class Pipeline:
             'melhores': better,
             'troca': 'pendente' if better else 'sem',
         }
+
+    def replace_sold_out(self, post: Dict, index: int, sold_out) -> Dict:
+        """
+        Tira o link `index` (0 = divulgado: a próxima loja vira a divulgada) e repõe com a loja conferida de
+        maior comissão que ainda não está nos links nem esgotada. Devolve os campos a atualizar no post.
+        """
+        products = [p for i, p in enumerate(post['products']) if i != index]
+        links = [l for i, l in enumerate(post['links']) if i != index]
+        used = {str(p['shopId']) for p in post['products']}
+        reserves = sorted(post['metadata'].get('reservas') or post.get('melhores') or [],
+                          key=commission_value, reverse=True)
+        extra = next((p for p in reserves if str(p['shopId']) not in used and not sold_out(product_key(p))), None)
+        if extra:
+            products.append(extra)
+            links.append(self.shopee.affiliate_link(extra, post['sub_id']))
+        if not products:
+            raise PipelineError("Não sobrou nenhuma loja disponível para este produto.")
+        return {'products': products, 'links': links, 'product_key': product_key(products[0]),
+                'product_name': products[0]['productName'], 'reposto': extra}
 
     def switch_to(self, post: Dict, index: int) -> Dict:
         """

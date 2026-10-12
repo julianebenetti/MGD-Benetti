@@ -103,6 +103,7 @@ def post_text(post: Dict, hint: bool = False) -> str:
         f"🔗 <b>Links</b> (para a LiA vão do menor pro maior comissionamento, o divulgado por último):\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
         + ("\n\n✍️ <i>Responda esta mensagem: texto curto = nova headline · texto com #hashtags = nova legenda</i>"
+           "\n🚫 <i>Link esgotado? Toque no 🚫 com o número dele: troco pela próxima loja.</i>"
            if hint else '')
     )
 
@@ -112,6 +113,7 @@ class Bot:
         self.tg = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
         self.db = Storage()
         self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
+        self.pipeline.is_sold_out = self.db.is_sold_out
         # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
         self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue()}
         self.pending: List[Dict] = []
@@ -269,9 +271,11 @@ class Bot:
             else ('⬜ Aprovar legenda', f"ca:{pid}")
         ready = post['cover_approved'] and post.get('caption_approved')
         agendar = ('📅 Aprovar e agendar', f"ap:{pid}") if ready else ('🔒 Aprovar e agendar', f"ap:{pid}")
+        esgotado = [(f"🚫 {i}", f"eg{i}:{pid}") for i in range(1, len(post['links']) + 1)]
         return keyboard(
             [capa, ('🔄 Outra headline', f"hl:{pid}")],
             [legenda, ('📝 Outra legenda', f"lg:{pid}")],
+            esgotado,
             [agendar, ('❌ Descartar', f"dc:{pid}")])
 
     def send_to_editados(self, post: Dict):
@@ -349,6 +353,25 @@ class Bot:
         post = self.db.get_post(post_id)
         if len(post['editados_msgs']) > 2:
             self.tg.edit_text(post['editados_msgs'][2], post_text(post, hint=True), markup=self.editados_markup(post))
+
+    def job_sold_out(self, post_id: int, index: int):
+        """Link esgotado: anota (não volta por 7 dias), tira e repõe com a próxima loja conferida."""
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'editado' or index >= len(post['products']):
+            return
+        self.db.mark_sold_out(f"{post['products'][index]['shopId']}:{post['products'][index]['itemId']}")
+        fields = self.pipeline.replace_sold_out(post, index, self.db.is_sold_out)
+        extra = fields.pop('reposto')
+        self.db.update_post(post_id, **fields)
+        post = self.db.get_post(post_id)
+        if len(post['editados_msgs']) > 2:
+            self.tg.edit_text(post['editados_msgs'][2], post_text(post, hint=True), markup=self.editados_markup(post))
+        note = (f"🚫 Link {index + 1} tirado (esgotado)"
+                + (f" e trocado por <b>{html.escape(extra.get('shopName', ''))}</b>." if extra
+                   else ". Não havia outra loja conferida para repor."))
+        if index == 0:
+            note += f"\n⭐ Agora a divulgada é <b>{html.escape(post['products'][0].get('shopName', ''))}</b>."
+        self.tg.send_text(EDITADOS, note, reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None)
 
     def job_approve(self, post_id: int):
         """Junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
@@ -543,6 +566,14 @@ class Bot:
             self.tg.edit_markup(post['editados_msgs'][2], keyboard([('⏳ Agendando…', f"ag:{post['id']}")]))
             self.tg.answer_callback(cb['id'], 'Juntando a capa ao vídeo e agendando…')
             self.submit(('approve', post['id']))
+
+        elif action[:2] == 'eg' and action[2:].isdigit() and post['status'] == 'editado':
+            index = int(action[2:]) - 1
+            if index >= len(post['links']):
+                self.tg.answer_callback(cb['id'], 'Esse link já foi trocado')
+                return
+            self.tg.answer_callback(cb['id'], f"Trocando o link {index + 1} (esgotado)…")
+            self.submit(('soldout', post['id'], index))
 
         elif action == 'ag':
             self.tg.answer_callback(cb['id'], 'Já estou agendando, aguarde uns segundos')
@@ -783,6 +814,8 @@ class Bot:
                     self.job_variations(*job[1:])
                 elif job[0] == 'lia':
                     self.job_lia(*job[1:])
+                elif job[0] == 'soldout':
+                    self.job_sold_out(*job[1:])
                 elif job[0] == 'caption':
                     self.job_caption(*job[1:])
                 elif job[0] == 'switch':
