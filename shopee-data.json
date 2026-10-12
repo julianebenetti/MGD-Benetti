@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791844357,
-  "updated_at_br": "12/10/2026 19:27",
+  "updated_at": 1791848122,
+  "updated_at_br": "12/10/2026 20:29",
   "period_days": 90,
-  "total_orders": 6456,
-  "total_conversions": 6191,
+  "total_orders": 6455,
+  "total_conversions": 6190,
   "orders": [
     {
       "ID do pedido": "261012DR87VP74",
@@ -161379,31 +161379,6 @@
       "conversionId": "237772939199873",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-15"
-    },
-    {
-      "ID do pedido": "260715PC67AA2Y",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-14 22:56:48",
-      "Sub_id1": "21Jun26SuporteEscovaObjVendasVs3",
-      "Valor de Compra(R$)": "19",
-      "Comissao liquida do afiliado(R$)": "0.684",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.76",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.76",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Agulha Singer 2020 - máquina de costura doméstica caseira - universal comum tecido de algodão",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58211451404",
-      "ID da loja": "1732603877",
-      "Nome da loja": "UNIVERSOMAQ",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237769008151132",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-14"
     }
   ]
 }
