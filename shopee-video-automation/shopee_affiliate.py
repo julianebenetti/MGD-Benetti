@@ -12,7 +12,7 @@ import re
 import time
 import unicodedata
 from typing import Dict, List, Optional
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import requests
 
@@ -25,7 +25,7 @@ MATCH_THRESHOLD = 0.90
 URL_RE = re.compile(r'https?://\S+')
 
 ID_PATTERNS = [
-    re.compile(r'/product/(?P<shop>\d+)/(?P<item>\d+)'),
+    re.compile(r'/(?:product|opaanlp)/(?P<shop>\d+)/(?P<item>\d+)'),
     re.compile(r'-i\.(?P<shop>\d+)\.(?P<item>\d+)'),
 ]
 
@@ -37,8 +37,9 @@ def _normalize(text: str) -> str:
 
 
 def extract_ids(url: str) -> Optional[Dict[str, int]]:
+    decoded = unquote(unquote(url))  # links que caem no login trazem o destino codificado em ?next=
     for pattern in ID_PATTERNS:
-        m = pattern.search(url)
+        m = pattern.search(decoded)
         if m:
             return {'shop_id': int(m['shop']), 'item_id': int(m['item'])}
     qs = parse_qs(urlparse(url).query)
@@ -73,6 +74,7 @@ class ShopeeAffiliateClient:
     def __init__(self, app_id: str, secret: str):
         self.app_id = app_id
         self.secret = secret
+        self.last_final_url = ''
         self.session = requests.Session()
         self.session.headers['User-Agent'] = (
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
@@ -153,6 +155,8 @@ class ShopeeAffiliateClient:
         Link de produto: 1 candidato. Link de vídeo: os produtos vinculados ao vídeo.
         """
         final_url = self.resolve_url(url)
+        self.last_final_url = final_url
+        logger.info(f"Link {url} abriu em {final_url}")
         ids = extract_ids(final_url) or extract_ids(url)
         if ids:
             product = self.product_by_ids(ids['shop_id'], ids['item_id'])

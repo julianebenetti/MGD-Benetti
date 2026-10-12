@@ -70,8 +70,9 @@ class Pipeline:
         """
         candidates = self.shopee.find_candidates(link, text)
         if not candidates:
-            raise PipelineError("Não consegui identificar o produto deste vídeo. "
-                                "Reenvie com o link do PRODUTO (não do vídeo) ou com o nome exato.")
+            raise PipelineError("Não consegui identificar o produto deste vídeo "
+                                f"(o link abriu em: {self.shopee.last_final_url[:150]}). "
+                                "Mande o link do PRODUTO respondendo esta mensagem que eu refaço.")
 
         processed = self.video.process(video_file, self.output_dir)
         if not processed:
@@ -80,7 +81,7 @@ class Pipeline:
         main_found, reasons = self._confirmed(processed, candidates, wanted=1)
         if not main_found:
             raise PipelineError("A conferência não confirmou que o produto é o do vídeo:\n"
-                                + "\n".join(reasons) + "\n\nReenvie com o link do produto certo.")
+                                + "\n".join(reasons) + "\n\nMande o link do produto certo respondendo esta mensagem que eu refaço.")
         main = main_found[0]
         key = product_key(main)
 

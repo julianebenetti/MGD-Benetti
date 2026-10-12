@@ -33,6 +33,7 @@ logger = logging.getLogger('bot')
 BASE = Path(__file__).parent
 ASK_AFTER_SECONDS = 30
 BATCH_LINK_TTL = 600
+FAILED_RETRY_TTL = 1800
 DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 
@@ -79,6 +80,7 @@ class Bot:
         self.pending: List[Dict] = []
         self.pending_asked = False
         self.batch_link: Optional[Dict] = None
+        self.failed: Dict[int, Dict] = {}  # vídeo que falhou -> dados para refazer com outro link
 
     # ---------- Envios ----------
 
@@ -101,7 +103,12 @@ class Bot:
                 self.pending.append({'msg_id': msg['message_id'], 'file_id': file_id,
                                      'text': text, 'at': time.time()})
         elif links:
-            if self.pending:
+            retry = self.failed_to_retry(msg)
+            if retry:
+                self.failed.pop(retry['msg_id'], None)
+                self.tg.react(msg['message_id'], '👌')
+                self.enqueue_video(retry['msg_id'], retry['file_id'], links[0], f"{retry['text']}\n{text}")
+            elif self.pending:
                 for p in self.pending:
                     self.enqueue_video(p['msg_id'], p['file_id'], links[0], f"{p['text']}\n{text}")
                 self.pending, self.pending_asked = [], False
@@ -109,6 +116,15 @@ class Bot:
             else:
                 self.batch_link = {'link': links[0], 'text': text, 'at': time.time()}
                 self.tg.react(msg['message_id'], '✍')
+
+    def failed_to_retry(self, msg: Dict) -> Optional[Dict]:
+        """Link novo respondendo o vídeo/erro, ou mandado logo depois de uma falha."""
+        replied = (msg.get('reply_to_message') or {}).get('message_id')
+        for item in self.failed.values():
+            if replied in (item['msg_id'], item.get('err_msg_id')):
+                return item
+        recent = [f for f in self.failed.values() if time.time() - f['at'] < FAILED_RETRY_TTL]
+        return max(recent, key=lambda f: f['at']) if recent else None
 
     def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str):
         self.tg.react(msg_id, '👌')
@@ -118,9 +134,14 @@ class Bot:
         try:
             video = self.tg.download(file_id, BASE / 'downloads')
             result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for)
-        except PipelineError as e:
+        except Exception as e:
+            if not isinstance(e, PipelineError):
+                logger.exception("Falha ao preparar vídeo")
+            reason = str(e) if isinstance(e, PipelineError) else f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
-            self.tg.send_text(ENVIOS, f"⚠️ {html.escape(str(e))}", reply_to=msg_id)
+            err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id)
+            self.failed[msg_id] = {'msg_id': msg_id, 'file_id': file_id, 'text': text,
+                                   'at': time.time(), 'err_msg_id': err_id}
             return
         post_id = self.db.create_post(source_msg_id=msg_id, **result)
         self.db.add_headline(result['product_key'], result['metadata']['cover_title'])
@@ -241,10 +262,8 @@ class Bot:
                     self.job_video(*job[1:])
                 elif job[0] == 'headline':
                     self.job_headline(*job[1:])
-            except Exception as e:
+            except Exception:
                 logger.exception(f"Falha no job {job[0]}")
-                if job[0] == 'video':
-                    self.tg.send_text(ENVIOS, f"⚠️ Erro inesperado: {html.escape(str(e))}", reply_to=job[1])
 
     def handle(self, update: Dict):
         if 'callback_query' in update:
