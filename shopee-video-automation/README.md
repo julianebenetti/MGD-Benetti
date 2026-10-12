@@ -39,6 +39,8 @@ A capa só pode ser aprovada depois disso. Botões **✅ Aprovar capa** · **�
 **❌ Descartar**. Trocar a headline pede nova aprovação da capa. **Responda** a mensagem dos textos com
 um texto curto para usar uma headline sua, ou com um texto com #hashtags para usar uma legenda sua (já
 entra aprovada).
+Nos botões, **⬜** = falta aprovar e **✔️ … APROVADA** = já aprovado (tocar de novo não faz nada); o
+**🔒 Aprovar e agendar** vira **📅** quando capa e legenda estão aprovadas e **⏳ Agendando…** depois do toque.
 
 Ao **✅ Aprovar e agendar**, o robô junta a capa na abertura do vídeo (`CAPA_SEGUNDOS`, padrão 1 s):
 esse vídeo final é o que vai para a Agenda.

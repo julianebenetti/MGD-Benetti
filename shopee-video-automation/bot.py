@@ -263,13 +263,16 @@ class Bot:
     @staticmethod
     def editados_markup(post: Dict) -> str:
         pid = post['id']
-        capa = ('✅ Capa aprovada', f"cv:{pid}") if post['cover_approved'] else ('✅ Aprovar capa', f"cv:{pid}")
-        legenda = ('✅ Legenda aprovada', f"ca:{pid}") if post.get('caption_approved') \
-            else ('✅ Aprovar legenda', f"ca:{pid}")
+        # ⬜ falta aprovar · ✔️ já aprovado (tocar de novo não faz nada) · 🔒 agendar libera com capa e legenda
+        capa = ('✔️ CAPA APROVADA', f"cv:{pid}") if post['cover_approved'] else ('⬜ Aprovar capa', f"cv:{pid}")
+        legenda = ('✔️ LEGENDA APROVADA', f"ca:{pid}") if post.get('caption_approved') \
+            else ('⬜ Aprovar legenda', f"ca:{pid}")
+        ready = post['cover_approved'] and post.get('caption_approved')
+        agendar = ('📅 Aprovar e agendar', f"ap:{pid}") if ready else ('🔒 Aprovar e agendar', f"ap:{pid}")
         return keyboard(
             [capa, ('🔄 Outra headline', f"hl:{pid}")],
             [legenda, ('📝 Outra legenda', f"lg:{pid}")],
-            [('✅ Aprovar e agendar', f"ap:{pid}"), ('❌ Descartar', f"dc:{pid}")])
+            [agendar, ('❌ Descartar', f"dc:{pid}")])
 
     def send_to_editados(self, post: Dict):
         """Capa, vídeo, textos com botões e, enquanto faltar, o pedido do print das variações."""
@@ -353,6 +356,7 @@ class Bot:
         final = str(Path(post['video_path']).with_name(f"final_{post_id}.mp4"))
         if not self.pipeline.video.prepend_cover(post['cover_path'], post['video_path'], final, COVER_SECONDS):
             self.db.update_post(post_id, status='editado')
+            self.refresh_buttons(self.db.get_post(post_id))
             self.tg.send_text(EDITADOS, "⚠️ Não consegui juntar a capa ao vídeo. Tente aprovar de novo.",
                               reply_to=post['editados_msgs'][-1] if post['editados_msgs'] else None)
             return
@@ -516,11 +520,11 @@ class Bot:
 
         elif action == 'ap' and post['status'] == 'editado' and not post['cover_approved']:
             self.refresh_buttons(post)
-            self.tg.answer_callback(cb['id'], 'Aprove a capa primeiro (✅ Aprovar capa)')
+            self.tg.answer_callback(cb['id'], 'Aprove a capa primeiro (⬜ Aprovar capa)')
 
         elif action == 'ap' and post['status'] == 'editado' and not post.get('caption_approved'):
             self.refresh_buttons(post)  # mensagens antigas não tinham o botão da legenda
-            self.tg.answer_callback(cb['id'], 'Aprove a legenda primeiro (✅ Aprovar legenda, logo acima)')
+            self.tg.answer_callback(cb['id'], 'Aprove a legenda primeiro (⬜ Aprovar legenda, logo acima)')
 
         elif action == 'ca' and post['status'] == 'editado':
             if post.get('caption_approved'):
@@ -536,8 +540,12 @@ class Bot:
 
         elif action == 'ap' and post['status'] == 'editado':
             self.db.update_post(post['id'], status='agendando')
+            self.tg.edit_markup(post['editados_msgs'][2], keyboard([('⏳ Agendando…', f"ag:{post['id']}")]))
             self.tg.answer_callback(cb['id'], 'Juntando a capa ao vídeo e agendando…')
             self.submit(('approve', post['id']))
+
+        elif action == 'ag':
+            self.tg.answer_callback(cb['id'], 'Já estou agendando, aguarde uns segundos')
 
         elif action == 'hl' and post['status'] == 'editado':
             self.tg.answer_callback(cb['id'], 'Gerando outra headline…')
