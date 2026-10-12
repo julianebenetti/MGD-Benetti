@@ -6,6 +6,7 @@ Robô do Shopee Video (sempre ligado).
 """
 
 import html
+import json
 import re
 import logging
 from datetime import date, timedelta
@@ -148,6 +149,12 @@ class Bot:
         self.tg.send_text(ENVIOS, reply)
 
     def on_envios(self, msg: Dict):
+        try:
+            self._on_envios(msg)
+        finally:
+            self.save_pending()
+
+    def _on_envios(self, msg: Dict):
         command = (msg.get('caption') or msg.get('text') or '').strip()
         if command.lower().startswith('/cookies'):
             self.on_cookies(msg, command)
@@ -220,9 +227,20 @@ class Bot:
 
     def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         self.tg.react(msg_id, '👌')
+        self.db.add_video_job(msg_id, file_id, link, text, trust_link)
         self.submit(('video', msg_id, file_id, link, text, trust_link))
 
+    def save_pending(self):
+        """Vídeos esperando link ficam gravados: um reinício (ex.: atualização) não os perde."""
+        self.db.set_meta('videos_sem_link', json.dumps(self.pending))
+
     def job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
+        try:
+            self._job_video(msg_id, file_id, link, text, trust_link)
+        finally:
+            self.db.remove_video_job(msg_id)
+
+    def _job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         try:
             video = self.tg.download(file_id, BASE / 'downloads')
             result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for, trust_link)
@@ -542,9 +560,9 @@ class Bot:
         for p in self.pending:  # cada vídeo sem link é perguntado sozinho; os outros seguem
             if not p['asked'] and time.time() - p['at'] > ASK_AFTER_SECONDS:
                 p['asked'] = True
+                self.save_pending()
                 self.tg.send_text(ENVIOS, "🔗 Falta o link deste vídeo: <b>responda este vídeo</b> com o link do "
-                                          "produto. (Um link solto, sem responder, vale para todos os vídeos sem link.)",
-                                  reply_to=p['msg_id'])
+                                          "produto.", reply_to=p['msg_id'])
 
         current = scheduler.now()
         for post in self.db.scheduled():
@@ -833,8 +851,21 @@ class Bot:
             ('brutos', 'Conecta este tópico: vídeos novos vão para Envios'),
         ], {'type': 'all_group_chats'})
 
+    def resume_after_restart(self):
+        """Retoma o que estava em andamento quando o robô foi reiniciado (ex.: por uma atualização)."""
+        self.pending = json.loads(self.db.get_meta('videos_sem_link', '[]'))
+        jobs = self.db.video_jobs()
+        for j in jobs:
+            self.submit(('video', j['msg_id'], j['file_id'], j['link'], j['text'], bool(j['trust'])))
+        stuck = self.db.with_status('agendando')
+        for post in stuck:
+            self.submit(('approve', post['id']))
+        if jobs or stuck:
+            logger.info(f"Retomando depois do reinício: {len(jobs)} vídeo(s) na fila, {len(stuck)} agendamento(s)")
+
     def run(self):
         self.register_commands()
+        self.resume_after_restart()
         self.recover_lia()
         for name, jobs in self.queues.items():
             for _ in range(VIDEO_WORKERS if name == 'video' else 1):

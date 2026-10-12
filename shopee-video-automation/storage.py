@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 CREATE TABLE IF NOT EXISTS headlines (product_key TEXT, headline TEXT);
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS video_jobs (    -- vídeos na fila: sobrevivem a reinícios do robô
+    msg_id INTEGER PRIMARY KEY, file_id TEXT, link TEXT, text TEXT, trust INTEGER, at REAL
+);
 CREATE TABLE IF NOT EXISTS failures (      -- vídeos que falharam, para refazer com um link novo
     msg_id INTEGER PRIMARY KEY, err_msg_id INTEGER, file_id TEXT, text TEXT, at REAL, link TEXT
 );
@@ -166,6 +169,21 @@ class Storage:
         with self.lock:
             self.conn.execute("DELETE FROM failures WHERE msg_id = ?", (msg_id,))
             self.conn.commit()
+
+    def add_video_job(self, msg_id: int, file_id: str, link: str, text: str, trust: bool):
+        with self.lock:
+            self.conn.execute("INSERT OR REPLACE INTO video_jobs VALUES (?, ?, ?, ?, ?, ?)",
+                              (msg_id, file_id, link, text, int(trust), time.time()))
+            self.conn.commit()
+
+    def remove_video_job(self, msg_id: int):
+        with self.lock:
+            self.conn.execute("DELETE FROM video_jobs WHERE msg_id = ?", (msg_id,))
+            self.conn.commit()
+
+    def video_jobs(self) -> List[Dict]:
+        with self.lock:
+            return [dict(r) for r in self.conn.execute("SELECT * FROM video_jobs ORDER BY at").fetchall()]
 
     def get_meta(self, key: str, default: str = '') -> str:
         with self.lock:
