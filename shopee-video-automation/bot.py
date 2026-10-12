@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
 
+import requests
 from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / '.env')
@@ -481,6 +482,9 @@ class Bot:
                     except Exception:
                         logger.exception("Falha ao tratar update")
                 self.tick()
+            except requests.RequestException as e:
+                logger.warning(f"Telegram sem resposta ({e.__class__.__name__}); tentando de novo")
+                time.sleep(5)
             except Exception:
                 logger.exception("Falha no loop principal")
                 time.sleep(5)
