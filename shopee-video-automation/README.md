@@ -93,6 +93,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | Tema | Regra |
 |---|---|
 | Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo, inclusive a variação (cor/estampa/modelo) |
+| Conferir e trocar links | Cada link mostra **🔎 conferir o anúncio** (página normal do produto, sem gerar clique no seu link de afiliado). Para trocar por um link que você achou, responda a mensagem dos textos com o **número e o link** (ex.: `3 https://s.shopee.com.br/…`): o robô troca, gera o seu link de afiliado com o mesmo sub_id e mostra preço, nota e comissão |
 | Link esgotado | A API da Shopee não informa estoque. Em ✅ Editados, toque **🚫 N** no link esgotado: o robô tira, repõe com a próxima loja já conferida (se for o 1º, a próxima vira a divulgada) e não sugere esse anúncio por 7 dias |
 | Links extras | Mesmo produto em outras lojas (**cada loja aparece uma vez só**, com o anúncio de maior comissão dela), maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA (até 10 lojas conferidas ao mesmo tempo). A mensagem mostra a comissão estimada de cada link |
 | Escolha da loja divulgada | Se outras lojas pagam mais que a do seu link, o robô lista até 5 em ✅ Editados com **preço, nota e comissão** de cada uma (e da sua) e o link para abrir. Toque na loja que quer divulgar (ou **Manter o meu**): ela vira o 1º link e os outros são as maiores comissões. O pedido do print das variações vem depois dessa escolha |

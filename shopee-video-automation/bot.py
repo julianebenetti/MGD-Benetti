@@ -91,6 +91,7 @@ def post_text(post: Dict, hint: bool = False) -> str:
     m = post['metadata']
     links = '\n'.join(
         f"{i}. {e(p.get('shopName', ''))}{' ⭐ divulgado' if i == 1 else ''}: {details(p)}\n{e(link)}"
+        f"\n   🔎 <a href=\"{e(product_url(p))}\">conferir o anúncio</a>"
         for i, (p, link) in enumerate(zip(post['products'], post['links']), 1))
     return (
         f"🎬 <b>Headline:</b> {e(m['cover_title'])}\n\n"
@@ -104,6 +105,7 @@ def post_text(post: Dict, hint: bool = False) -> str:
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
         + ("\n\n✍️ <i>Responda esta mensagem: texto curto = nova headline · texto com #hashtags = nova legenda</i>"
            "\n🚫 <i>Link esgotado? Toque no 🚫 com o número dele: troco pela próxima loja.</i>"
+           "\n🔁 <i>Achou um link melhor? Responda com o número e o link (ex.: 3 https://…): troco pelo seu.</i>"
            if hint else '')
     )
 
@@ -354,6 +356,42 @@ class Bot:
         if len(post['editados_msgs']) > 2:
             self.tg.edit_text(post['editados_msgs'][2], post_text(post, hint=True), markup=self.editados_markup(post))
 
+    def job_replace_link(self, post_id: int, index: int, url: str, reply_to: int):
+        """Troca o link `index` pelo produto do link que você mandou (com o seu link de afiliado e o mesmo sub_id)."""
+        post = self.db.get_post(post_id)
+        if not post or post['status'] != 'editado':
+            return
+        index = min(index, len(post['products']))   # número além da lista: entra no fim
+        shopee = self.pipeline.shopee
+        found = shopee.find_candidates(url)
+        if not found:
+            self.tg.react(reply_to, '🤔')
+            self.tg.send_text(EDITADOS, "⚠️ Não encontrei o produto desse link. Mande o link do anúncio (produto).",
+                              reply_to=reply_to)
+            return
+        new = found[0]
+        new['commissionValue'] = commission_value(new)
+        products, links = list(post['products']), list(post['links'])
+        same_shop = [i + 1 for i, p in enumerate(products) if str(p['shopId']) == str(new['shopId']) and i != index]
+        link = shopee.affiliate_link(new, post['sub_id'])
+        if index < len(products):
+            products[index], links[index] = new, link
+        else:
+            products.append(new)
+            links.append(link)
+        fields = {'products': products, 'links': links}
+        if index == 0:
+            fields.update(product_key=f"{new['shopId']}:{new['itemId']}", product_name=new['productName'])
+        self.db.update_post(post_id, **fields)
+        post = self.db.get_post(post_id)
+        if len(post['editados_msgs']) > 2:
+            self.tg.edit_text(post['editados_msgs'][2], post_text(post, hint=True), markup=self.editados_markup(post))
+        note = f"🔁 Link {index + 1} trocado por <b>{html.escape(new.get('shopName', ''))}</b>: {details(new)}"
+        if same_shop:
+            note += f"\n⚠️ Essa loja já está no link {', '.join(map(str, same_shop))}."
+        self.tg.react(reply_to, '👍')
+        self.tg.send_text(EDITADOS, note, reply_to=reply_to)
+
     def job_sold_out(self, post_id: int, index: int):
         """Link esgotado: anota (não volta por 7 dias), tira e repõe com a próxima loja conferida."""
         post = self.db.get_post(post_id)
@@ -477,6 +515,13 @@ class Bot:
         elif image_id:
             self.tg.react(msg['message_id'], '👌')
             self.submit(('variations', post['id'], image_id, msg['message_id']))
+        elif text and re.match(r'^\s*\d\s+\S', text) and extract_shopee_links(text):  # "3 <link>": troca o link 3
+            self.tg.react(msg['message_id'], '👌')
+            self.submit(('replace_link', post['id'], int(text.strip()[0]) - 1, extract_shopee_links(text)[0],
+                         msg['message_id']))
+        elif text and extract_shopee_links(text):
+            self.tg.send_text(EDITADOS, "Para trocar um link, mande o <b>número</b> dele e o link novo, "
+                                        "ex.: <code>3 https://s.shopee.com.br/…</code>", reply_to=msg['message_id'])
         elif text and '#' in text:  # com hashtags: é uma legenda sua
             self.tg.react(msg['message_id'], '✍')
             self.submit(('caption', post['id'], text))
@@ -814,6 +859,8 @@ class Bot:
                     self.job_variations(*job[1:])
                 elif job[0] == 'lia':
                     self.job_lia(*job[1:])
+                elif job[0] == 'replace_link':
+                    self.job_replace_link(*job[1:])
                 elif job[0] == 'soldout':
                     self.job_sold_out(*job[1:])
                 elif job[0] == 'caption':
