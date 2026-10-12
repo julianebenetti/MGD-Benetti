@@ -14,6 +14,15 @@ logger = logging.getLogger(__name__)
 _client = None
 
 
+def _http_client():
+    """Conexão só por IPv4 (VPS com IPv6 quebrado deixava cada chamada pendurada); FORCAR_IPV4=nao desliga."""
+    import httpx2
+    from openai import DefaultHttpxClient
+    if os.getenv('FORCAR_IPV4', 'sim').strip().lower() == 'nao':
+        return DefaultHttpxClient()
+    return DefaultHttpxClient(transport=httpx2.HTTPTransport(local_address='0.0.0.0'))
+
+
 class AIRefusal(RuntimeError):
     pass
 
@@ -30,7 +39,7 @@ def ask_json(content: Union[str, List[Dict]], schema: Dict, name: str = 'respost
     """`content`: texto, ou lista de blocos {'type': 'text'|'image', ...} (imagem em base64)."""
     global _client
     if _client is None:
-        _client = OpenAI()
+        _client = OpenAI(http_client=_http_client())
 
     if not isinstance(content, str):
         content = [_to_openai(b) for b in content]
