@@ -20,7 +20,7 @@ from video_processor import VideoProcessor
 
 logger = logging.getLogger(__name__)
 
-TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '3'))
+TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '5'))
 CTA_SECONDS = float(os.getenv('CTA_SEGUNDOS', '5'))
 CTAS = [
     'Adicione já ao carrinho! 🛒',
@@ -159,12 +159,12 @@ class Pipeline:
             'troca': 'pendente' if better else 'sem',
         }
 
-    def switch_to_best(self, post: Dict) -> Dict:
+    def switch_to(self, post: Dict, index: int) -> Dict:
         """
-        A opção de maior comissão vira o item divulgado (1º link); os outros links são as próximas
+        A loja escolhida (posição em `melhores`) vira o item divulgado (1º link); os outros links são as
         maiores comissões entre as lojas já conferidas (o produto do link original entra se couber).
         """
-        best = post['melhores'][0]
+        best = post['melhores'][index]
         known = dict(zip(map(product_key, post['products']), post['links']))
         pool = {product_key(p): p for p in post['products'] + post['melhores']}
         pool.pop(product_key(best))

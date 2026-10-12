@@ -1,7 +1,7 @@
 # Robô do Shopee Video — Achados Relâmpagos
 
 Robô de Telegram sempre ligado que prepara os vídeos do Shopee Video: vídeo 9:16 com logo,
-capa com headline, descrição, hashtags, SEO e 3 links de afiliado (o produto do vídeo + 2 de
+capa com headline, descrição, hashtags, SEO e 5 links de afiliado (a loja divulgada + 4 de
 outros vendedores), com aprovação e agenda.
 
 ## Fluxo (tópicos do grupo "Shopee Video Bot")
@@ -46,7 +46,7 @@ Sem a LiA configurada: aviso "⏰ Hora de postar!" e botão **✅ Postei**.
 Bot não conversa com bot no Telegram, então o envio sai **pela sua conta** (o que você faria à mão).
 O que vai para a LiA:
 - o vídeo final (capa na abertura + logo) com `#semcapa #semmarca`, para ela não colocar de novo;
-- os 3 links do **menor para o maior** comissionamento (regra dela: o último fica em destaque);
+- os 5 links (`LINKS_POR_VIDEO`) do **menor para o maior** comissionamento e, por último (em destaque), a loja que você escolheu divulgar;
 - a descrição + hashtags do robô com `#semia` (`LIA_LEGENDA=ia` deixa a LiA escrever);
 - `#postar` (ou `#rascunho` com `LIA_MODO=rascunho`).
 
@@ -68,7 +68,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 |---|---|
 | Produto | Descoberto pelo link (produto, link curto ou link de vídeo); a IA confere nos quadros do vídeo, inclusive a variação (cor/estampa/modelo) |
 | Links extras | Mesmo produto em outras lojas, maior comissão (sem piso), nota ≥ 4,5, confirmado pela IA (até 10 lojas conferidas ao mesmo tempo). A mensagem mostra a comissão estimada de cada link |
-| Troca pela maior comissão | Se outras lojas pagam mais que a do seu link, o robô lista até 5 em ✅ Editados (comissão, nota, link para abrir) e pergunta: **🔁 Trocar pela melhor** (ela vira o item divulgado, 1º link, e os outros links são as próximas maiores comissões) ou **Manter o meu**. O pedido do print das variações vem depois dessa escolha |
+| Escolha da loja divulgada | Se outras lojas pagam mais que a do seu link, o robô lista até 5 em ✅ Editados com **preço, nota e comissão** de cada uma (e da sua) e o link para abrir. Toque na loja que quer divulgar (ou **Manter o meu**): ela vira o 1º link e os outros são as maiores comissões. O pedido do print das variações vem depois dessa escolha |
 | Sub_id | `Data + SV + Produto` (ex.: `11Out26SVSapateiraBanco`), `V2`/`V3` se repetir; o mesmo nos 3 links |
 | Capa | Tudo dentro do recorte 3:4 da grade do perfil (logo a 14%; cartão ancorado logo acima do contador de views, crescendo para cima até quase a headline). Quadro do vídeo com logo, headline e **cartão "N Variações Disponíveis"** (miniaturas das variações do produto principal: cor, modelo, voltagem, kit…), à esquerda, sem inclinação |
 | Headline | Gerada pela IA, até 60 caracteres, vende a transformação; gatilhos em rodízio (Choque, Urgência, Curiosidade, Dor, Autoridade); nunca repete para o mesmo produto. Termina com **um emoji** sorteado pelo gatilho: Choque 😱 🤯 😳 · Urgência 🔥 ⚡ 💥 · Curiosidade 👀 🤔 🤫 · Dor 🙌 🥹 😌 · Autoridade ⭐ 🏆 🫶 (listas em `EMOJIS_FINAIS`, `content_generator.py`). Headline digitada por você vai como está |

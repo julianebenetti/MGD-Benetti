@@ -61,6 +61,16 @@ def brl(value: float) -> str:
     return f"R$ {value:.2f}".replace('.', ',')
 
 
+def price(p: Dict) -> str:
+    low, high = float(p.get('priceMin') or p.get('price') or 0), float(p.get('priceMax') or 0)
+    return f"{brl(low)} a {brl(high)}" if high > low else brl(low)
+
+
+def details(p: Dict) -> str:
+    """Preço · nota · comissão da loja."""
+    return f"{price(p)} · nota {p.get('ratingStar') or '-'} · comissão <b>{brl(commission_value(p))}</b>"
+
+
 def product_url(p: Dict) -> str:
     return f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
 
@@ -69,7 +79,7 @@ def post_text(post: Dict) -> str:
     e = html.escape
     m = post['metadata']
     links = '\n'.join(
-        f"{i}. {e(p.get('shopName', ''))} ({brl(commission_value(p))}){' ⭐ divulgado' if i == 1 else ''}: {e(link)}"
+        f"{i}. {e(p.get('shopName', ''))}{' ⭐ divulgado' if i == 1 else ''}: {details(p)}\n{e(link)}"
         for i, (p, link) in enumerate(zip(post['products'], post['links']), 1))
     return (
         f"🎬 <b>Headline:</b> {e(m['cover_title'])}\n\n"
@@ -78,7 +88,7 @@ def post_text(post: Dict) -> str:
         f"🔍 <b>SEO:</b>\n{e(', '.join(m['seo_keywords']))}\n\n"
         + (f"📣 <b>CTA (5 s finais):</b> {e(m['cta'])}\n\n" if m.get('cta') else '') +
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
-        f"🔗 <b>Links</b> (comissão estimada; para a LiA vão do menor pro maior):\n{links}\n"
+        f"🔗 <b>Links</b> (para a LiA vão do menor pro maior comissionamento, o divulgado por último):\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
     )
 
@@ -210,8 +220,10 @@ class Bot:
         ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
         ids.append(self.tg.send_text(EDITADOS, post_text(post), markup=self.editados_markup(post)))
         if post.get('troca') == 'pendente':
+            options = [[(f"{i}. {p.get('shopName', '')[:24]} ({brl(commission_value(p))})", f"tm{i}:{post['id']}")]
+                       for i, p in enumerate(post['melhores'], 1)]
             ids.append(self.tg.send_text(EDITADOS, self.switch_question(post), reply_to=ids[-1], markup=keyboard(
-                [('🔁 Trocar pela melhor', f"tm:{post['id']}"), ('Manter o meu', f"mm:{post['id']}")])))
+                *options, [('Manter o meu', f"mm:{post['id']}")])))
         elif post.get('variacoes', 'pendente') == 'pendente' and not post.get('sticker_path'):
             ids.append(self.tg.send_text(
                 EDITADOS, "🖼️ <b>Responda esta mensagem com o print das variações</b> do produto "
@@ -223,20 +235,21 @@ class Bot:
     def switch_question(post: Dict) -> str:
         e = html.escape
         mine = post['products'][0]
-        options = '\n'.join(
-            f"{i}. {e(p.get('shopName', ''))}: <b>{brl(commission_value(p))}</b> · nota {p.get('ratingStar') or '-'} · "
-            f"{e(product_url(p))}" for i, p in enumerate(post['melhores'], 1))
-        return (f"💰 <b>Achei {len(post['melhores'])} loja(s) pagando mais</b> que a do seu link "
-                f"({e(mine.get('shopName', ''))}: {brl(commission_value(mine))}):\n{options}\n\n"
-                "Quer trocar o item divulgado pela <b>1</b> (maior comissão)? Se trocar, abra o link dela "
-                "para tirar o print das variações, que eu peço em seguida.")
+        options = '\n\n'.join(
+            f"<b>{i}. {e(p.get('shopName', ''))}</b>\n{details(p)}\n{e(product_url(p))}"
+            for i, p in enumerate(post['melhores'], 1))
+        return (f"💰 <b>Achei {len(post['melhores'])} loja(s) pagando mais que a do seu link</b>\n\n"
+                f"<b>Seu link: {e(mine.get('shopName', ''))}</b>\n{details(mine)}\n\n{options}\n\n"
+                "Toque na loja que você quer <b>divulgar</b> (ou Manter o meu). Abra o link dela para tirar "
+                "o print das variações, que eu peço em seguida.")
 
-    def job_switch(self, post_id: int, trocar: bool):
-        """Troca o item divulgado pela loja de maior comissão (ou mantém) e reenvia o post em Editados."""
+    def job_switch(self, post_id: int, escolha: Optional[int]):
+        """Troca o item divulgado pela loja escolhida (posição em `melhores`; None mantém) e reenvia o post."""
         post = self.db.get_post(post_id)
         if not post or post['status'] != 'editado' or post.get('troca') != 'pendente':
             return
-        fields = self.pipeline.switch_to_best(post) if trocar else {}
+        trocar = escolha is not None and escolha < len(post['melhores'])
+        fields = self.pipeline.switch_to(post, escolha) if trocar else {}
         self.tg.delete(post['editados_msgs'])
         self.db.update_post(post_id, troca='trocado' if trocar else 'mantido', **fields)
         if trocar:
@@ -354,8 +367,8 @@ class Bot:
             image_id = msg['document']['file_id']
         text = (msg.get('text') or '').strip()
         if image_id and post.get('troca') == 'pendente':
-            self.tg.send_text(EDITADOS, "Antes do print, escolha se troca pela loja de maior comissão "
-                                        "(🔁 Trocar pela melhor / Manter o meu).", reply_to=msg['message_id'])
+            self.tg.send_text(EDITADOS, "Antes do print, escolha a loja que vai divulgar "
+                                        "(botões da mensagem 💰).", reply_to=msg['message_id'])
         elif image_id:
             self.tg.react(msg['message_id'], '👌')
             self.submit(('variations', post['id'], image_id, msg['message_id']))
@@ -392,12 +405,15 @@ class Bot:
             self.db.update_post(post['id'], variacoes='sem', editados_msgs=post['editados_msgs'][:3])
             self.tg.answer_callback(cb['id'], 'Ok, capa sem cartão de variações')
 
-        elif action in ('tm', 'mm') and post['status'] == 'editado' and post.get('troca') == 'pendente':
-            self.tg.answer_callback(cb['id'], 'Trocando…' if action == 'tm' else 'Ok, mantendo o seu link')
-            self.submit(('switch', post['id'], action == 'tm'))
+        elif (action == 'mm' or action[:2] == 'tm' and action[2:].isdigit()) and post['status'] == 'editado' \
+                and post.get('troca') == 'pendente':
+            escolha = int(action[2:]) - 1 if action != 'mm' else None
+            self.tg.answer_callback(cb['id'], 'Trocando a loja divulgada…' if escolha is not None
+                                    else 'Ok, mantendo o seu link')
+            self.submit(('switch', post['id'], escolha))
 
         elif action in ('cv', 'ap') and post['status'] == 'editado' and post.get('troca') == 'pendente':
-            self.tg.answer_callback(cb['id'], 'Antes, escolha se troca pela loja de maior comissão')
+            self.tg.answer_callback(cb['id'], 'Antes, escolha a loja que vai divulgar')
 
         elif action == 'cv' and post['status'] == 'editado' and post.get('variacoes') == 'pendente' \
                 and not post.get('sticker_path'):

@@ -43,9 +43,12 @@ def enabled() -> bool:
 
 
 def links_for_lia(post: Dict) -> List[str]:
-    """A LiA quer do MENOR para o MAIOR comissionamento: o último fica em destaque."""
-    pairs = sorted(zip(post['products'], post['links']), key=lambda pl: commission_value(pl[0]))
-    return [link for _, link in pairs]
+    """
+    A LiA quer do MENOR para o MAIOR comissionamento e destaca o último: os outros links em ordem
+    crescente de comissão e, por último, a loja que a Juliane escolheu divulgar (1º de `products`).
+    """
+    rest = sorted(zip(post['products'][1:], post['links'][1:]), key=lambda pl: commission_value(pl[0]))
+    return [link for _, link in rest] + post['links'][:1]
 
 
 def caption(post: Dict) -> str:
