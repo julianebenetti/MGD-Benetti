@@ -79,11 +79,15 @@ def read_video_products(url: str, wait_ms: int = 8000) -> List[Dict]:
             str(PROFILE_DIR), headless=headless, locale='pt-BR',
             viewport={'width': 430, 'height': 932}, is_mobile=True,
         )
+        from shopee_session import apply_session, is_blocked
+        apply_session(context)
         page = context.new_page()
         page.on('response', on_response)
         try:
             page.goto(url, wait_until='domcontentloaded', timeout=45000)
             page.wait_for_timeout(wait_ms)
+            if is_blocked(page.url):
+                logger.warning(f"Shopee pediu login ao abrir o vídeo: {page.url[:120]}")
             hrefs = page.eval_on_selector_all('a[href]', 'els => els.map(e => e.href)')
         finally:
             context.close()

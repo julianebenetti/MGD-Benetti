@@ -21,6 +21,7 @@ load_dotenv(Path(__file__).parent / '.env')
 
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError  # noqa: E402
+from shopee_session import CookieError, save_cookies  # noqa: E402
 from storage import Storage  # noqa: E402
 from telegram_handler import TelegramBot, extract_shopee_links, keyboard  # noqa: E402
 
@@ -68,7 +69,8 @@ def post_text(post: Dict) -> str:
         f"🔗 <b>Links:</b>\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
         + ("" if post.get('sticker_path') else
-           "\n\n⚠️ Capa sem o cartão de variações (produto sem variações ou a página não carregou).")
+           "\n\n⚠️ Capa sem o cartão de variações: o produto não tem variações, ou a Shopee pediu login "
+           "(mande os cookies da Shopee com /cookies).")
     )
 
 
@@ -84,7 +86,30 @@ class Bot:
 
     # ---------- Envios ----------
 
+    def on_cookies(self, msg: Dict, text: str):
+        """/cookies + arquivo exportado (Cookie-Editor JSON ou cookies.txt), ou colado na mensagem."""
+        try:
+            if msg.get('document'):
+                path = self.tg.download(msg['document']['file_id'], BASE / 'downloads')
+                raw = path.read_text(errors='ignore')
+                path.unlink(missing_ok=True)
+            else:
+                raw = text.split(None, 1)[1] if len(text.split(None, 1)) > 1 else ''
+            count, validade = save_cookies(raw)
+            reply = f"✅ Login da Shopee salvo ({count} cookies, válido até {validade}). Mensagem apagada por segurança."
+        except CookieError as e:
+            reply = f"⚠️ {html.escape(str(e))}"
+        except Exception as e:
+            logger.exception("Falha ao salvar cookies")
+            reply = f"⚠️ Não consegui ler os cookies: {html.escape(str(e))}"
+        self.tg.delete([msg['message_id']])
+        self.tg.send_text(ENVIOS, reply)
+
     def on_envios(self, msg: Dict):
+        command = (msg.get('caption') or msg.get('text') or '').strip()
+        if command.lower().startswith('/cookies'):
+            self.on_cookies(msg, command)
+            return
         file_id = None
         if 'video' in msg:
             file_id = msg['video']['file_id']

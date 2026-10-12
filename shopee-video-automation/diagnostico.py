@@ -17,6 +17,7 @@ load_dotenv(Path(__file__).parent / '.env')
 from product_page_capture import (LABELS, MARK_VARIATIONS_JS, USER_AGENT, VIEWPORT,  # noqa: E402
                                   capture_variation_thumbs)
 from shopee_affiliate import ShopeeAffiliateClient  # noqa: E402
+from shopee_session import COOKIES_FILE, apply_session  # noqa: E402
 from telegram_handler import TelegramBot  # noqa: E402
 from video_page_reader import PROFILE_DIR  # noqa: E402
 
@@ -40,6 +41,7 @@ def main(link: str):
         ctx = pw.chromium.launch_persistent_context(
             str(PROFILE_DIR), headless=os.getenv('SHOPEE_BROWSER_HEADLESS', 'true').lower() != 'false',
             locale='pt-BR', viewport=VIEWPORT, user_agent=USER_AGENT)
+        apply_session(ctx)
         page = ctx.new_page()
         page.goto(url, wait_until='domcontentloaded', timeout=45000)
         page.wait_for_timeout(5000)
@@ -50,9 +52,13 @@ def main(link: str):
                         full_page=True)
         ctx.close()
 
-    thumbs, total = capture_variation_thumbs(url, Path(tempfile.mkdtemp()))
+    try:
+        thumbs, total = capture_variation_thumbs(url, Path(tempfile.mkdtemp()))
+    except Exception as e:
+        thumbs, total = [], f"0 ({e.__class__.__name__})"
     resumo = (f"🔎 Diagnóstico das variações\n"
               f"Produto: {p['productName']}\n"
+              f"Cookies de login: {'sim' if COOKIES_FILE.exists() else 'NÃO'}\n"
               f"Página aberta: {final_url}\n"
               f"Título: {title}\n"
               f"Variações achadas na página: {found}\n"

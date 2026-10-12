@@ -66,6 +66,11 @@ Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `
 | Testes rápidos | `.venv/bin/python test_automation.py` |
 | Diagnóstico do cartão de variações | `.venv/bin/python diagnostico.py <link do produto>` (manda o print da página para Envios) |
 
+**Login da Shopee do robô** — sem login, a Shopee mostra "Login Necessário" ao navegador do VPS
+(sem cartão de variações e sem leitura de links de vídeo). No computador, logada em shopee.com.br,
+exporte os cookies com a extensão **Cookie-Editor** (Export → JSON, salve num arquivo .json) e mande
+o arquivo na pasta 📥 Envios com a legenda **`/cookies`**. O robô guarda e apaga a mensagem.
+
 Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
 `SHOPEE_BROWSER_HEADLESS=false` numa máquina com tela para entrar na conta.
 
@@ -84,6 +89,7 @@ Se a Shopee pedir login/captcha ao abrir páginas de vídeo, rode uma vez com
 | `video_processor.py` / `cover_generator.py` | Vídeo 9:16 com logo / capa |
 | `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
 | `sub_id.py` | Sub_id dos links |
+| `shopee_session.py` | Login da Shopee no navegador do robô (cookies via /cookies) |
 | `setup_topics.py` / `instalar.sh` | Configuração inicial |
 
 ## Limites conhecidos

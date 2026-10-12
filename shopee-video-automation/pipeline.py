@@ -49,6 +49,7 @@ class Pipeline:
         )
         self.content = ContentGenerator()
         self.cover = CoverGenerator()
+        self.variations_blocked = False
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
                    max_checks: int = 99) -> Tuple[List[Dict], List[str]]:
@@ -117,10 +118,12 @@ class Pipeline:
         """Cartão "N Variações Disponíveis" com as miniaturas (None se o produto não tiver variações)."""
         url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"
         folder = self.output_dir / f"variacoes_{product['shopId']}_{product['itemId']}"
+        self.variations_blocked = False
         try:
             thumbs, total = capture_variation_thumbs(url, folder)
         except Exception as e:
-            logger.warning(f"Captura das variações falhou: {e}")
+            logger.warning(f"Captura das variações falhou: {e.__class__.__name__}: {e}")
+            self.variations_blocked = e.__class__.__name__ == 'ShopeeBlocked'
             return None
         if len(thumbs) < 2:
             return None

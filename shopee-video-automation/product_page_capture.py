@@ -15,6 +15,7 @@ from typing import List, Optional, Tuple
 from PIL import Image
 
 from ai_client import ask_json
+from shopee_session import apply_session, is_blocked
 from video_page_reader import PROFILE_DIR
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,10 @@ MARK_VARIATIONS_JS = """
 }
 """
 
+class ShopeeBlocked(RuntimeError):
+    """A Shopee mostrou 'Login Necessário' em vez da página (faltam os cookies de login)."""
+
+
 BOXES_SCHEMA = {
     'type': 'object',
     'properties': {
@@ -132,10 +137,13 @@ def capture_variation_thumbs(product_url: str, out_dir: Path, wait_ms: int = 500
         context = p.chromium.launch_persistent_context(
             str(PROFILE_DIR), headless=headless, locale='pt-BR',
             viewport=VIEWPORT, user_agent=USER_AGENT, device_scale_factor=2)
+        apply_session(context)
         page = context.new_page()
         try:
             page.goto(product_url, wait_until='domcontentloaded', timeout=45000)
             page.wait_for_timeout(wait_ms)
+            if is_blocked(page.url):
+                raise ShopeeBlocked(page.url)
             page.keyboard.press('Escape')
             total = page.evaluate(MARK_VARIATIONS_JS, LABELS)
             if total:
