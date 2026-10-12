@@ -37,9 +37,8 @@ TEXT_COLOR = (34, 34, 34, 255)
 CARD_FONT = ASSETS / 'fonts' / 'Roboto.ttf'
 CARD_WIDTH_RATIO = 0.50
 CARD_LEFT_RATIO = 0.02
-CARD_MIN_TOP_RATIO = 0.56
-CARD_MAX_BOTTOM_RATIO = 0.78   # o contador de views da grade fica no canto inferior esquerdo (~80-87%)
-CARD_GAP_BELOW_TEXT = 0.04
+CARD_BOTTOM_RATIO = 0.78       # ancorado logo acima do contador de views da grade (~80-87%)
+CARD_GAP_BELOW_TEXT = 0.015    # se crescer para cima, para quase encostando na headline
 CARD_MAX_COLS = 5
 CARD_MAX_THUMB = 130
 PILL_COLOR = (255, 255, 255, 240)
@@ -211,10 +210,12 @@ class CoverGenerator:
                 self._draw_line(frame, line, self.width // 2, top + i * step)
             if card_path:
                 card = Image.open(card_path).convert('RGBA')
-                card_top = max(int(self.height * CARD_MIN_TOP_RATIO),
-                               top + total_h + int(self.height * CARD_GAP_BELOW_TEXT))
-                card_top = min(card_top, int(self.height * CARD_MAX_BOTTOM_RATIO) - card.height)
-                frame.alpha_composite(card, (int(self.width * CARD_LEFT_RATIO), card_top))
+                bottom = int(self.height * CARD_BOTTOM_RATIO)
+                room = bottom - (top + total_h + int(self.height * CARD_GAP_BELOW_TEXT))
+                if card.height > room:  # não cabe entre a headline e o contador: reduz o cartão
+                    scale = room / card.height
+                    card = card.resize((round(card.width * scale), room), Image.LANCZOS)
+                frame.alpha_composite(card, (int(self.width * CARD_LEFT_RATIO), bottom - card.height))
             frame.convert('RGB').save(output_path, quality=92)
             logger.info(f'✅ Capa gerada: {output_path}')
             return output_path
