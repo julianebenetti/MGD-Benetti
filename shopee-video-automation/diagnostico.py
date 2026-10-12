@@ -14,8 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).parent / '.env')
 
-from product_page_capture import (LABELS, MARK_VARIATIONS_JS, USER_AGENT, VIEWPORT,  # noqa: E402
-                                  capture_variation_thumbs)
+from product_page_capture import (USER_AGENT, VIEWPORT, capture_variation_thumbs,  # noqa: E402
+                                  find_variations)
 from shopee_affiliate import ShopeeAffiliateClient  # noqa: E402
 from shopee_session import COOKIES_FILE, apply_session  # noqa: E402
 from telegram_handler import TelegramBot  # noqa: E402
@@ -47,7 +47,8 @@ def main(link: str):
         page.wait_for_timeout(5000)
         page.keyboard.press('Escape')
         final_url, title = page.url, page.title()
-        found = page.evaluate(MARK_VARIATIONS_JS, LABELS)
+        found = find_variations(page)['total']
+        page.evaluate('window.scrollTo(0, 0)')
         page.screenshot(path=str(shot), clip={'x': 0, 'y': 0, 'width': VIEWPORT['width'], 'height': 1400},
                         full_page=True)
         ctx.close()

@@ -29,26 +29,35 @@ LABELS = ['cor', 'cores', 'modelo', 'modelos', 'variacao', 'variacoes', 'tipo', 
 MAX_OPTIONS = 8
 SEARCH_HEIGHT = 1600
 
-# Marca as opções da variação com data-sv-opt e devolve quantas existem (0 se não achou).
-# Prioridade: bloco "N variações disponíveis" > primeira linha de variação com imagens > primeira linha rotulada.
-MARK_VARIATIONS_JS = """
+# Acha as variações e devolve {total, items: [{src, x, y, w, h}]} num único instante
+# (a página da Shopee se redesenha enquanto carrega, então nada é marcado no DOM).
+# Prioridade: bloco "N variações disponíveis" > linha de variação com imagens > primeira linha rotulada.
+FIND_VARIATIONS_JS = """
 (labels) => {
   const norm = s => s.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').trim().toLowerCase();
-  const isOption = b => !/(carrinho|comprar|^[-+]$|^$)/.test(norm(b.innerText || b.getAttribute('aria-label') || ''))
-                        || b.querySelector('img');
+  const bgUrl = n => { const m = getComputedStyle(n).backgroundImage.match(/url\\(["']?(.*?)["']?\\)/); return m ? m[1] : null; };
+  const imgOf = el => {
+    const img = el.tagName === 'IMG' ? el : el.querySelector('img');
+    if (img) return {el: img, src: img.currentSrc || img.src || img.getAttribute('data-src') || ''};
+    for (const n of [el, ...el.querySelectorAll('*')]) { const u = bgUrl(n); if (u) return {el: n, src: u}; }
+    return null;
+  };
+  const isOption = b => imgOf(b) || !/(carrinho|comprar|^[-+]$|^$)/.test(norm(b.innerText || b.getAttribute('aria-label') || ''));
+  const describe = (els, total) => ({total, items: els.map(o => {
+    const im = imgOf(o); const target = im ? im.el : o;
+    target.scrollIntoView({block: 'center'});
+    const r = target.getBoundingClientRect();
+    return {src: im ? im.src : '', x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height};
+  })});
   const leaves = [...document.querySelectorAll('body *')].filter(el => !el.children.length);
 
   for (const el of leaves) {
-    const t = norm(el.textContent || '');
-    const m = t.match(/^(\\d+)\\s+variac(oes|ao)\\s+disponive(is|l)$/);
+    const m = norm(el.textContent || '').match(/^(\\d+)\\s+variac(oes|ao)\\s+disponive(is|l)$/);
     if (!m) continue;
     let box = el.parentElement;
     for (let i = 0; i < 4 && box; i++, box = box.parentElement) {
-      const imgs = box.querySelectorAll('img');
-      if (imgs.length >= 2) {
-        imgs.forEach(img => img.setAttribute('data-sv-opt', '1'));
-        return parseInt(m[1]);
-      }
+      const imgs = [...box.querySelectorAll('img')];
+      if (imgs.length >= 2) return describe(imgs, parseInt(m[1]));
     }
   }
 
@@ -60,7 +69,7 @@ MARK_VARIATIONS_JS = """
     for (let i = 0; i < 3 && row; i++, row = row.parentElement) {
       const opts = [...row.querySelectorAll('button, [role=button]')].filter(isOption);
       if (opts.length >= 2) {
-        const withImg = opts.filter(o => o.querySelector('img')).length;
+        const withImg = opts.filter(o => imgOf(o)).length;
         if (labels.includes(label) || withImg >= 2) rows.push({row, opts, withImg});
         break;
       }
@@ -69,11 +78,24 @@ MARK_VARIATIONS_JS = """
   // fica só com as linhas mais internas (um bloco que contém várias linhas não é uma variação)
   const inner = rows.filter(r => !rows.some(o => o.row !== r.row && r.row.contains(o.row)));
   const chosen = inner.find(r => r.withImg >= 2) || inner[0];
-  if (!chosen) return 0;
-  chosen.opts.forEach(o => o.setAttribute('data-sv-opt', '1'));
-  return chosen.opts.length;
+  return chosen ? describe(chosen.opts, chosen.opts.length) : {total: 0, items: []};
 }
 """
+FIND_TIMEOUT_MS = 15000
+
+
+def find_variations(page) -> dict:
+    """Tenta por até FIND_TIMEOUT_MS: as variações costumam aparecer alguns segundos depois do resto."""
+    waited, found = 0, {'total': 0, 'items': []}
+    while waited <= FIND_TIMEOUT_MS:
+        found = page.evaluate(FIND_VARIATIONS_JS, LABELS)
+        if found['total']:
+            page.wait_for_timeout(1000)  # deixa as miniaturas terminarem de carregar e lê de novo
+            return page.evaluate(FIND_VARIATIONS_JS, LABELS) or found
+        page.wait_for_timeout(1000)
+        waited += 1000
+    return found
+
 
 class ShopeeBlocked(RuntimeError):
     """A Shopee mostrou 'Login Necessário' em vez da página (faltam os cookies de login)."""
@@ -93,9 +115,8 @@ BOXES_SCHEMA = {
 }
 
 
-def _download_original(page, img) -> Optional[bytes]:
+def _download_original(page, src: str) -> Optional[bytes]:
     """Baixa a imagem da variação em resolução cheia (na Shopee, sem o sufixo _tn de miniatura)."""
-    src = img.evaluate('el => el.currentSrc || el.src') or ''
     if not src.startswith('http'):
         return None
     src = re.sub(r'_tn(?=$|[?.])', '', src)
@@ -145,21 +166,16 @@ def capture_variation_thumbs(product_url: str, out_dir: Path, wait_ms: int = 500
             if is_blocked(page.url):
                 raise ShopeeBlocked(page.url)
             page.keyboard.press('Escape')
-            total = page.evaluate(MARK_VARIATIONS_JS, LABELS)
+            found = find_variations(page)
+            total = found['total']
             if total:
-                options = page.locator('[data-sv-opt]')
-                for i in range(min(options.count(), MAX_OPTIONS)):
-                    option = options.nth(i)
-                    is_img = option.evaluate("el => el.tagName === 'IMG'")
-                    img = option if is_img else option.locator('img').first
-                    has_img = is_img or option.locator('img').count() > 0
-                    original = _download_original(page, img) if has_img else None
+                for item in found['items'][:MAX_OPTIONS]:
+                    original = _download_original(page, item['src'])
                     if original:
                         shots.append(original)
-                        continue
-                    target = img if has_img else option
-                    target.scroll_into_view_if_needed()
-                    shots.append(target.screenshot())
+                    elif item['w'] > 4 and item['h'] > 4:
+                        shots.append(page.screenshot(full_page=True, clip={
+                            'x': item['x'], 'y': item['y'], 'width': item['w'], 'height': item['h']}))
                 source = 'página'
             else:
                 png = page.screenshot(clip={'x': 0, 'y': 0, 'width': VIEWPORT['width'], 'height': SEARCH_HEIGHT},
