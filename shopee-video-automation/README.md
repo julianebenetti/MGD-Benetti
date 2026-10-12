@@ -13,7 +13,10 @@ outros vendedores), com aprovação e agenda.
 **📥 Envios** — mande o vídeo com o link Shopee na legenda. Também vale:
 - vários vídeos e depois **um link** (vale para todos);
 - **o link antes** e os vídeos depois (até 10 min);
-- se faltar o link por 30 s, o robô pergunta uma vez;
+- vários vídeos num **álbum** com o link na legenda de um deles: vale para o álbum todo;
+- se faltar o link por 30 s, o robô pergunta **em cada vídeo**: responda o vídeo com o link (só ele) ou
+  mande um link solto (vale para todos os vídeos sem link). Os outros vídeos não ficam esperando;
+- o robô prepara 2 vídeos ao mesmo tempo (`VIDEOS_AO_MESMO_TEMPO`): um vídeo com problema não segura os outros;
 - se o robô não achar o produto, **responda a mensagem de erro (ou o próprio vídeo) com o link certo**:
   ele refaz o vídeo sem você reenviar nada (vale mesmo depois de o robô reiniciar);
 - se o vídeo mostra **outra variação** do produto do link (outra cor, estampa ou modelo), o robô avisa e

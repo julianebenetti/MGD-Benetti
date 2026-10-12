@@ -5,6 +5,7 @@ Mesmo padrão do Central Post; repetição ganha V2, V3...
 
 import json
 import re
+import threading
 import unicodedata
 from datetime import date
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Optional
 REGISTRY = Path(__file__).parent / 'sub_ids_usados.json'
 MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 SIGLA = 'SV'
+_lock = threading.Lock()  # dois vídeos preparados ao mesmo tempo não pegam o mesmo sub_id
 MAX_PRODUTO = 20
 
 
@@ -32,11 +34,12 @@ def _usados() -> set:
 def novo_sub_id(nome_curto: str, hoje: Optional[date] = None) -> str:
     hoje = hoje or date.today()
     base = f"{hoje.day:02d}{MESES[hoje.month - 1]}{hoje.year % 100:02d}{SIGLA}{_limpar(nome_curto)}"
-    usados = _usados()
-    sub_id, versao = base, 2
-    while sub_id in usados:
-        sub_id = f"{base}V{versao}"
-        versao += 1
-    usados.add(sub_id)
-    REGISTRY.write_text(json.dumps(sorted(usados), indent=0))
+    with _lock:
+        usados = _usados()
+        sub_id, versao = base, 2
+        while sub_id in usados:
+            sub_id = f"{base}V{versao}"
+            versao += 1
+        usados.add(sub_id)
+        REGISTRY.write_text(json.dumps(sorted(usados), indent=0))
     return sub_id

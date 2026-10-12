@@ -41,6 +41,7 @@ ASK_AFTER_SECONDS = 30
 BATCH_LINK_TTL = 600
 FAILED_RETRY_TTL = 1800
 COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
+VIDEO_WORKERS = int(os.getenv('VIDEOS_AO_MESMO_TEMPO', '2'))   # vídeos preparados ao mesmo tempo
 DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 
@@ -108,7 +109,7 @@ class Bot:
         # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
         self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue()}
         self.pending: List[Dict] = []
-        self.pending_asked = False
+        self.album_links: Dict[str, Dict] = {}
         self.batch_link: Optional[Dict] = None
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
@@ -154,36 +155,52 @@ class Bot:
         text = msg.get('caption') or msg.get('text') or ''
         links = extract_shopee_links(text)
 
+        album = msg.get('media_group_id')
         if file_id:
             if links:
                 self.enqueue_video(msg['message_id'], file_id, links[0], text)
+                if album:  # álbum: a legenda com o link vem num vídeo só e vale para os outros do álbum
+                    self.album_links[album] = {'link': links[0], 'text': text, 'at': time.time()}
+                    for p in [p for p in self.pending if p.get('album') == album]:
+                        self.pending.remove(p)
+                        self.enqueue_video(p['msg_id'], p['file_id'], links[0], f"{p['text']}\n{text}")
+            elif album in self.album_links:
+                shared = self.album_links[album]
+                self.enqueue_video(msg['message_id'], file_id, shared['link'], f"{shared['text']}\n{text}")
             elif self.batch_link and time.time() - self.batch_link['at'] < BATCH_LINK_TTL:
                 self.enqueue_video(msg['message_id'], file_id, self.batch_link['link'],
                                    f"{self.batch_link['text']}\n{text}")
             else:
-                self.pending.append({'msg_id': msg['message_id'], 'file_id': file_id,
-                                     'text': text, 'at': time.time()})
+                self.pending.append({'msg_id': msg['message_id'], 'file_id': file_id, 'text': text,
+                                     'at': time.time(), 'album': album, 'asked': False})
         elif links:
-            retry = self.failed_to_retry(msg)
-            if retry:
+            replied_id = (msg.get('reply_to_message') or {}).get('message_id')
+            waiting = next((p for p in self.pending if p['msg_id'] == replied_id), None)
+            retry = None if waiting else self.failed_to_retry(msg, allow_latest=not self.pending)
+            if waiting:  # resposta a um vídeo que esperava o link: só ele, com a conferência normal
+                self.pending.remove(waiting)
+                self.tg.react(msg['message_id'], '👌')
+                self.enqueue_video(waiting['msg_id'], waiting['file_id'], links[0], f"{waiting['text']}\n{text}")
+            elif retry:
                 self.db.remove_failure(retry['msg_id'])
                 self.tg.react(msg['message_id'], '👌')
                 # link reenviado por você: vale o link, sem a conferência da IA
                 self.enqueue_video(retry['msg_id'], retry['file_id'], links[0], f"{retry['text']}\n{text}",
                                    trust_link=True)
-            elif self.pending:
+            elif self.pending:  # link solto: vale para todos os vídeos que estavam sem link
                 for p in self.pending:
                     self.enqueue_video(p['msg_id'], p['file_id'], links[0], f"{p['text']}\n{text}")
-                self.pending, self.pending_asked = [], False
+                self.pending = []
                 self.tg.react(msg['message_id'], '👌')
             else:
                 self.batch_link = {'link': links[0], 'text': text, 'at': time.time()}
                 self.tg.react(msg['message_id'], '✍')
 
-    def failed_to_retry(self, msg: Dict) -> Optional[Dict]:
+    def failed_to_retry(self, msg: Dict, allow_latest: bool = True) -> Optional[Dict]:
         """
         Vídeo a refazer quando chega só um link: o vídeo respondido (o Telegram manda o vídeo junto
-        com a resposta), a falha cuja mensagem de erro foi respondida, ou a falha mais recente.
+        com a resposta), a falha cuja mensagem de erro foi respondida, ou (link solto, sem vídeos
+        esperando link) a falha mais recente.
         """
         replied = msg.get('reply_to_message') or {}
         video = replied.get('video') or (replied.get('document') if replied.get('document', {})
@@ -191,7 +208,10 @@ class Bot:
         if video:
             return {'msg_id': replied['message_id'], 'file_id': video['file_id'],
                     'text': replied.get('caption') or ''}
-        return self.db.find_failure(replied.get('message_id'), FAILED_RETRY_TTL)
+        failure = self.db.find_failure(replied.get('message_id'), FAILED_RETRY_TTL)
+        if failure and not allow_latest and replied.get('message_id') not in (failure['msg_id'], failure['err_msg_id']):
+            return None
+        return failure
 
     def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         self.tg.react(msg_id, '👌')
@@ -470,12 +490,14 @@ class Bot:
     # ---------- Relógio ----------
 
     def tick(self):
-        if self.pending and not self.pending_asked and time.time() - self.pending[0]['at'] > ASK_AFTER_SECONDS:
-            self.pending_asked = True
-            n = len(self.pending)
-            self.tg.send_text(ENVIOS, f"🔗 Recebi {n} vídeo(s) sem link. Mande o link do produto "
-                                      f"(vale para {'todos' if n > 1 else 'ele'}).",
-                              reply_to=self.pending[0]['msg_id'])
+        for album in [a for a, v in self.album_links.items() if time.time() - v['at'] > BATCH_LINK_TTL]:
+            del self.album_links[album]
+        for p in self.pending:  # cada vídeo sem link é perguntado sozinho; os outros seguem
+            if not p['asked'] and time.time() - p['at'] > ASK_AFTER_SECONDS:
+                p['asked'] = True
+                self.tg.send_text(ENVIOS, "🔗 Falta o link deste vídeo: <b>responda este vídeo</b> com o link do "
+                                          "produto. (Um link solto, sem responder, vale para todos os vídeos sem link.)",
+                                  reply_to=p['msg_id'])
 
         current = scheduler.now()
         for post in self.db.scheduled():
@@ -763,8 +785,9 @@ class Bot:
     def run(self):
         self.register_commands()
         self.recover_lia()
-        for jobs in self.queues.values():
-            threading.Thread(target=self.worker, args=(jobs,), daemon=True).start()
+        for name, jobs in self.queues.items():
+            for _ in range(VIDEO_WORKERS if name == 'video' else 1):
+                threading.Thread(target=self.worker, args=(jobs,), daemon=True).start()
         logger.info(f"LiA: {'ligada (' + self.lia_when + ')' if self.lia else 'desligada'}")
         offset = int(self.db.get_meta('offset', '0'))
         logger.info("Robô do Shopee Video ligado")
