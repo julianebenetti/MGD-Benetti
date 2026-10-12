@@ -91,7 +91,7 @@ def post_text(post: Dict, hint: bool = False) -> str:
     m = post['metadata']
     links = '\n'.join(
         f"{i}. {e(p.get('shopName', ''))}{' ⭐ divulgado' if i == 1 else ''}: {details(p)}\n{e(link)}"
-        f"\n   🔎 <a href=\"{e(product_url(p))}\">conferir o anúncio</a>"
+        + (f"\n   🔎 <a href=\"{e(product_url(p))}\">conferir o anúncio</a>" if p.get('shopId') else '')
         for i, (p, link) in enumerate(zip(post['products'], post['links']), 1))
     return (
         f"🎬 <b>Headline:</b> {e(m['cover_title'])}\n\n"
