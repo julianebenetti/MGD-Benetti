@@ -134,7 +134,9 @@ class Bot:
             if retry:
                 self.db.remove_failure(retry['msg_id'])
                 self.tg.react(msg['message_id'], '👌')
-                self.enqueue_video(retry['msg_id'], retry['file_id'], links[0], f"{retry['text']}\n{text}")
+                # link reenviado por você: vale o link, sem a conferência da IA
+                self.enqueue_video(retry['msg_id'], retry['file_id'], links[0], f"{retry['text']}\n{text}",
+                                   trust_link=True)
             elif self.pending:
                 for p in self.pending:
                     self.enqueue_video(p['msg_id'], p['file_id'], links[0], f"{p['text']}\n{text}")
@@ -157,14 +159,14 @@ class Bot:
                     'text': replied.get('caption') or ''}
         return self.db.find_failure(replied.get('message_id'), FAILED_RETRY_TTL)
 
-    def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str):
+    def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         self.tg.react(msg_id, '👌')
-        self.jobs.put(('video', msg_id, file_id, link, text))
+        self.jobs.put(('video', msg_id, file_id, link, text, trust_link))
 
-    def job_video(self, msg_id: int, file_id: str, link: str, text: str):
+    def job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         try:
             video = self.tg.download(file_id, BASE / 'downloads')
-            result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for)
+            result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for, trust_link)
         except Exception as e:
             if not isinstance(e, PipelineError):
                 logger.exception("Falha ao preparar vídeo")

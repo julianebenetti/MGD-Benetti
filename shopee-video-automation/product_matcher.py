@@ -28,9 +28,11 @@ SCHEMA = {
 PROMPT = """As primeiras imagens são quadros de um vídeo de divulgação. A última é a foto oficial do anúncio na Shopee.
 Produto do anúncio: "{name}"
 
-O produto que aparece em destaque no vídeo é este produto do anúncio (mesmo tipo de item, mesmo modelo/estilo; cor diferente é aceitável)?
-- "sim": é claramente o mesmo produto
-- "nao": é outro produto
+O produto que aparece em destaque no vídeo é este produto do anúncio?
+Um anúncio da Shopee vende várias VARIAÇÕES do mesmo produto (cor, estampa, tamanho, modelo, voltagem, kit),
+e a foto oficial mostra só uma delas. Compare o tipo de item e o formato/design, não a cor nem a estampa.
+- "sim": é o mesmo produto, mesmo que em outra cor, estampa ou variação
+- "nao": é claramente outro tipo de produto ou outro design
 - "incerto": não dá para afirmar
 
 Em "motivo", explique em uma frase curta, em português."""

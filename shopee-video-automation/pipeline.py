@@ -64,11 +64,11 @@ class Pipeline:
         self.variations_blocked = False
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
-                   max_checks: int = 99) -> Tuple[List[Dict], List[str]]:
+                   max_checks: int = 99, accept_uncertain: bool = False) -> Tuple[List[Dict], List[str]]:
         found, reasons = [], []
         for product in candidates[:max_checks]:
             resultado, motivo = check_match(video_path, product)
-            if resultado == 'sim':
+            if resultado == 'sim' or (accept_uncertain and resultado == 'incerto'):
                 found.append(product)
                 if len(found) >= wanted:
                     break
@@ -76,9 +76,11 @@ class Pipeline:
                 reasons.append(f"• {product['productName']}: {resultado} ({motivo})")
         return found, reasons
 
-    def prepare(self, video_file: str, link: str, text: str, used_headlines) -> Dict:
+    def prepare(self, video_file: str, link: str, text: str, used_headlines, trust_link: bool = False) -> Dict:
         """
         `used_headlines(product_key) -> list` evita repetir headline do mesmo produto.
+        `trust_link`: link reenviado pela Juliane depois de uma recusa, vale sem a conferência da IA.
+        Sem ele, o produto do link só é recusado se a IA disser que é outro produto ("incerto" passa).
         Levanta PipelineError com a explicação quando não dá para seguir.
         """
         candidates = self.shopee.find_candidates(link, text)
@@ -91,10 +93,14 @@ class Pipeline:
         if not processed:
             raise PipelineError("Não consegui processar este vídeo.")
 
-        main_found, reasons = self._confirmed(processed, candidates, wanted=1)
+        if trust_link:
+            main_found, reasons = candidates[:1], []
+        else:
+            main_found, reasons = self._confirmed(processed, candidates, wanted=1, accept_uncertain=True)
         if not main_found:
             raise PipelineError("A conferência não confirmou que o produto é o do vídeo:\n"
-                                + "\n".join(reasons) + "\n\nMande o link do produto certo respondendo esta mensagem que eu refaço.")
+                                + "\n".join(reasons) + "\n\nSe o produto é esse mesmo (ex.: outra cor), responda esta "
+                                "mensagem com o link que eu sigo sem conferir. Se não, mande o link do produto certo.")
         main = main_found[0]
         key = product_key(main)
 
