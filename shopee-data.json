@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791877048,
-  "updated_at_br": "13/10/2026 04:32",
+  "updated_at": 1791886039,
+  "updated_at_br": "13/10/2026 07:01",
   "period_days": 90,
-  "total_orders": 6447,
-  "total_conversions": 6182,
+  "total_orders": 6446,
+  "total_conversions": 6181,
   "orders": [
     {
       "ID do pedido": "261012DR87VP74",
@@ -161152,31 +161152,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237812756163786",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-15"
-    },
-    {
-      "ID do pedido": "260715Q9T8NN70",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-15 07:47:00",
-      "Sub_id1": "11Jul26TesteDiaCalcaMom",
-      "Valor de Compra(R$)": "19.9",
-      "Comissao liquida do afiliado(R$)": "0.7164",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.796",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.796",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Forro adesivo para armário anti gordura impermeável protetor gaveta cozinha papel parede alumínio",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22398409772",
-      "ID da loja": "1472285791",
-      "Nome da loja": "VIDA AQUI",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237800819175948",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-15"
     }
