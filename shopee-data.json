@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791928127,
-  "updated_at_br": "13/10/2026 18:43",
+  "updated_at": 1791933341,
+  "updated_at_br": "13/10/2026 20:10",
   "period_days": 90,
-  "total_orders": 6497,
-  "total_conversions": 6232,
+  "total_orders": 6496,
+  "total_conversions": 6231,
   "orders": [
     {
       "ID do pedido": "261013G5D398PQ",
@@ -14632,7 +14632,7 @@
     },
     {
       "ID do pedido": "260920FQKU4HP1",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-09-19 18:12:39",
       "Sub_id1": "04Set26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "63.2",
@@ -14644,7 +14644,7 @@
       "Comissao total do pedido(R$)": "13.272",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Macaquinho Saia Plus Size Feminino Elegante Decote Bobo & Amarração Lateral",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "46464714769",
       "ID da loja": "972022966",
       "Nome da loja": "FashionWear",
@@ -14652,7 +14652,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "243540758135481",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-09-19"
     },
     {
@@ -162403,31 +162403,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237856496171008",
       "conversionStatus": "CANCELLED",
-      "data": "2026-07-15"
-    },
-    {
-      "ID do pedido": "260716RVMGSK77",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-15 22:56:28",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "34.9",
-      "Comissao liquida do afiliado(R$)": "2.66985",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "4.50%",
-      "Comissao Shopee(R$)": "1.396",
-      "Comissao do vendedor(R$)": "1.5705",
-      "Comissao total do pedido(R$)": "2.9665",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Controle Remoto Usb Para Tv Box E Smart Tv Sem Fio Pra Pc",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58254002772",
-      "ID da loja": "1452751590",
-      "Nome da loja": "VicelaMix",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237855387196870",
-      "conversionStatus": "COMPLETED",
       "data": "2026-07-15"
     }
   ]
