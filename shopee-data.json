@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791853764,
-  "updated_at_br": "12/10/2026 22:04",
+  "updated_at": 1791858795,
+  "updated_at_br": "12/10/2026 23:27",
   "period_days": 90,
-  "total_orders": 6451,
-  "total_conversions": 6186,
+  "total_orders": 6450,
+  "total_conversions": 6185,
   "orders": [
     {
       "ID do pedido": "261012DR87VP74",
@@ -1682,7 +1682,7 @@
     },
     {
       "ID do pedido": "261011B7FPEDAV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 02:46:40",
       "Sub_id1": "",
       "Valor de Compra(R$)": "94.98",
@@ -1694,7 +1694,7 @@
       "Comissao total do pedido(R$)": "1.66215",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -1702,7 +1702,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245386000176955",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
@@ -161252,31 +161252,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "237782145199465",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-15"
-    },
-    {
-      "ID do pedido": "260715PQ3WR0HU",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-15 02:12:22",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "29.22",
-      "Comissao liquida do afiliado(R$)": "1.05192",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.1688",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.1688",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Prateado 103 Filtro de Café Inox Aço 304 com Pegador Silicone Reutilizável para Coador Não Precisa Papel  Pour Over",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58206038858",
-      "ID da loja": "1760688286",
-      "Nome da loja": "Su33 SHOP",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237780742160412",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-15"
     }
