@@ -1,9 +1,9 @@
 {
-  "updated_at": 1791966326,
-  "updated_at_br": "14/10/2026 05:19",
+  "updated_at": 1791971871,
+  "updated_at_br": "14/10/2026 06:52",
   "period_days": 90,
-  "total_orders": 6488,
-  "total_conversions": 6224,
+  "total_orders": 6487,
+  "total_conversions": 6223,
   "orders": [
     {
       "ID do pedido": "261013G5D398PQ",
@@ -162177,31 +162177,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "237896293197996",
-      "conversionStatus": "CANCELLED",
-      "data": "2026-07-16"
-    },
-    {
-      "ID do pedido": "260716T0WAC2B2",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-16 09:45:37",
-      "Sub_id1": "19Mai26ConjSegundaPeleTermicaVEA",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "NOVO A31 Fone De Ouvido Ruído Cancelando Earbuds Bluetooth Sem Fio HiFi Stereo Com Carregamento De Visor Digital",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "26430773695",
-      "ID da loja": "1378634979",
-      "Nome da loja": "MUNDO_ONLINE.br",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "237894337159614",
       "conversionStatus": "CANCELLED",
       "data": "2026-07-16"
     }
