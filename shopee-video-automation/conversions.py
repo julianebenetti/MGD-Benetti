@@ -1,8 +1,9 @@
 """
 Vendas reais (relatório de conversões da API de afiliados), separadas pelo sub_id de cada vídeo.
 
-O sub_id do link volta no campo utmContent de cada conversão ("12Out26SVKitCapas----": os 5 sub_ids
-do link separados por "-"); a comissão de cada item vem em itemTotalCommission.
+O sub_id do link volta no campo utmContent de cada conversão ("SV-14Out26-KitCapas--": os 5 sub_ids
+do link separados por "-"; posts antigos: "12Out26SVKitCapas----"); a comissão de cada item vem em
+itemTotalCommission.
 """
 
 import html
@@ -36,8 +37,7 @@ def _status(order_status: str) -> str:
 
 
 def sub_id_of(utm_content: str) -> str:
-    parts = [p for p in (utm_content or '').split('-') if p]
-    return parts[0] if parts else ''
+    return '-'.join(p for p in (utm_content or '').split('-') if p)
 
 
 def fetch(client, start: datetime, end: datetime) -> List[Dict]:

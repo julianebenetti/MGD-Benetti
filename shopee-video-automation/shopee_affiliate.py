@@ -198,4 +198,5 @@ class ShopeeAffiliateClient:
 
     def affiliate_link(self, product: Dict, sub_id: str) -> str:
         product_url = f"https://shopee.com.br/product/{product['shopId']}/{product['itemId']}"
-        return self.short_link(product_url, [sub_id])
+        from sub_id import partes
+        return self.short_link(product_url, partes(sub_id))

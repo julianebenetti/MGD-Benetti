@@ -137,7 +137,7 @@ class Pipeline:
         metadata = writing.result()
         metadata['cta'] = cta_text
         metadata['reservas'] = others   # lojas já conferidas, para repor um link esgotado
-        sub_id = novo_sub_id(metadata['short_name'])
+        sub_id = novo_sub_id(metadata['short_name'], reservar=False)   # provisório: o definitivo sai ao agendar
         links = [self.shopee.affiliate_link(p, sub_id) for p in products]
 
         rendered = rendering.result()

@@ -28,6 +28,7 @@ import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
 from content_generator import HASHTAGS, fit_caption  # noqa: E402
+from sub_id import nome_do_sub_id, novo_sub_id, prefixo  # noqa: E402
 from shopee_affiliate import commission_value  # noqa: E402
 from shopee_session import CookieError, save_cookies  # noqa: E402
 from storage import Storage  # noqa: E402
@@ -442,6 +443,7 @@ class Bot:
         self.tg.delete(post['editados_msgs'])
         self.db.update_post(post_id, status='agendado', scheduled_at=slot.isoformat(),
                             editados_msgs=[], final_video_path=final)
+        self.resubid(self.db.get_post(post_id), force=True)   # sub_id definitivo, com a data da publicação
         post = self.db.get_post(post_id)
         ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], final)
         ids.append(self.tg.send_text(
@@ -450,6 +452,40 @@ class Bot:
         self.db.update_post(post_id, agenda_msgs=ids)
         if self.lia and self.lia_when == 'aprovar':
             self.send_to_lia(self.db.get_post(post_id))
+
+    def resubid(self, post: Dict, force: bool = False) -> bool:
+        """
+        Refaz o sub_id com a data agendada (SV-<data>-<produto>) e os links com ele. Vídeo e horário não
+        mudam. Se a Shopee falhar, mantém o sub_id e os links que já estavam.
+        """
+        when = datetime.fromisoformat(post['scheduled_at']).astimezone(scheduler.TZ).date()
+        name = post['metadata'].get('short_name') or nome_do_sub_id(post['sub_id'])
+        if not force and post['sub_id'].startswith(prefixo(when)):
+            return False   # já está com a data certa
+        sub_id = novo_sub_id(name, when)
+        try:
+            links = [self.pipeline.shopee.affiliate_link(p, sub_id) for p in post['products']]
+        except Exception as e:
+            logger.warning(f"Não consegui refazer os links do post {post['id']} com o sub_id {sub_id}: {e}")
+            return False
+        self.db.update_post(post['id'], sub_id=sub_id, links=links)
+        logger.info(f"Post {post['id']}: sub_id {post['sub_id']} -> {sub_id}")
+        return True
+
+    def job_resubid_agenda(self):
+        """Posts que já estavam na Agenda: sub_id novo com a data agendada e a mensagem atualizada."""
+        changed = 0
+        for post in self.db.with_status('agendado', 'avisado'):
+            if not post['scheduled_at'] or not self.resubid(post):
+                continue
+            changed += 1
+            post = self.db.get_post(post['id'])
+            if len(post['agenda_msgs']) > 2:
+                self.tg.edit_text(post['agenda_msgs'][2], f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
+                                  markup=self.agenda_markup(post['id']))
+        if changed:
+            self.tg.send_text(AGENDA, f"🏷️ Sub_id atualizado em {changed} post(s) da Agenda: agora é "
+                                      "SV-&lt;data da publicação&gt;-&lt;produto&gt;. Vídeos e horários não mudaram.")
 
     # ---------- Agenda / LiA ----------
 
@@ -876,6 +912,8 @@ class Bot:
                     self.job_variations(*job[1:])
                 elif job[0] == 'lia':
                     self.job_lia(*job[1:])
+                elif job[0] == 'resubid_agenda':
+                    self.job_resubid_agenda()
                 elif job[0] == 'replace_link':
                     self.job_replace_link(*job[1:])
                 elif job[0] == 'soldout':
@@ -979,6 +1017,7 @@ class Bot:
     def run(self):
         self.register_commands()
         self.resume_after_restart()
+        self.submit(('resubid_agenda',))
         self.recover_lia()
         for name, jobs in self.queues.items():
             for _ in range(VIDEO_WORKERS if name == 'video' else 1):
