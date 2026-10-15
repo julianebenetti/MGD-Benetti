@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792091095,
-  "updated_at_br": "15/10/2026 15:59",
+  "updated_at": 1792095347,
+  "updated_at_br": "15/10/2026 17:10",
   "period_days": 90,
-  "total_orders": 6534,
-  "total_conversions": 6273,
+  "total_orders": 6533,
+  "total_conversions": 6272,
   "orders": [
     {
       "ID do pedido": "261015N61GU9DD",
@@ -2882,7 +2882,7 @@
     },
     {
       "ID do pedido": "261013G2R4A8MT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-13 01:05:14",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "10.99",
@@ -2894,7 +2894,7 @@
       "Comissao total do pedido(R$)": "0.3297",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "1/2/3/4 USB LED LUZ Noturna LED Luminaria Sensor De Presença e Movimento LUZ FRIO/LUZ QUENTE",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "20198262806",
       "ID da loja": "1534896372",
       "Nome da loja": "TAYANSHOPPING",
@@ -2902,7 +2902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245552713137834",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-13"
     },
     {
@@ -8632,7 +8632,7 @@
     },
     {
       "ID do pedido": "2610109JPG3XF2",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-10 11:02:01",
       "Sub_id1": "09Out26VestidoMidiFloral",
       "Valor de Compra(R$)": "20.6",
@@ -8644,7 +8644,7 @@
       "Comissao total do pedido(R$)": "1.4832",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Protetor Solar Rosto FPS 60 Dermachem -Validade 2027 Sem Cor Toque Seco  Rejuvenescedor 40g,",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58203142791",
       "ID da loja": "954537380",
       "Nome da loja": "Company Store Shop",
@@ -8652,7 +8652,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245329320108735",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-10"
     },
     {
@@ -8957,7 +8957,7 @@
     },
     {
       "ID do pedido": "261010860NQUS7",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-09 21:42:23",
       "Sub_id1": "",
       "Valor de Compra(R$)": "99.81",
@@ -8969,7 +8969,7 @@
       "Comissao total do pedido(R$)": "1.74667",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -8977,7 +8977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245281343166197",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-09"
     },
     {
@@ -163328,31 +163328,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238019556194982",
       "conversionStatus": "CANCELLED",
-      "data": "2026-07-17"
-    },
-    {
-      "ID do pedido": "2607180FE42AXJ",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-17 19:43:01",
-      "Sub_id1": "03Jul26MochilaExpansivelVs3",
-      "Valor de Compra(R$)": "133.91",
-      "Comissao liquida do afiliado(R$)": "6.26699",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "1.20%",
-      "Comissao Shopee(R$)": "5.3564",
-      "Comissao do vendedor(R$)": "1.60692",
-      "Comissao total do pedido(R$)": "6.96332",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "KIT BODY SPLASH MASCULINO ENIGMA + MIDTOWN + BARBARIUS + ADVENTUS 200ML - PRIMACIAL",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "53859312867",
-      "ID da loja": "1295467768",
-      "Nome da loja": "Primacial",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238016580168544",
-      "conversionStatus": "COMPLETED",
       "data": "2026-07-17"
     }
   ]
