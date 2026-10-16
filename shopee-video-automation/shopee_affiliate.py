@@ -106,8 +106,10 @@ class ShopeeAffiliateClient:
         nodes = self._graphql(query)['productOfferV2']['nodes']
         return nodes[0] if nodes else None
 
-    def search(self, keyword: str, limit: int = 20) -> List[Dict]:
-        query = (f'{{productOfferV2(keyword:{_gql_str(keyword)},limit:{int(limit)})'
+    def search(self, keyword: str, limit: int = 20, sort_type: Optional[int] = None) -> List[Dict]:
+        """`sort_type` da API: 2 = mais vendidos, 5 = maior comissão (sem ele, relevância)."""
+        sort = f',sortType:{int(sort_type)}' if sort_type else ''
+        query = (f'{{productOfferV2(keyword:{_gql_str(keyword)},limit:{int(limit)}{sort})'
                  f'{{nodes{{{PRODUCT_FIELDS}}}}}}}')
         return self._graphql(query)['productOfferV2']['nodes']
 

@@ -62,6 +62,13 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 últimos 7 dias. A qualquer hora: **`/relatorio`** (hoje) ou **`/relatorio 10/10`** (outro dia), em
 qualquer tópico do grupo.
 
+**💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`**: pelo menos 15 produtos
+para gravar (normalmente 20), das datas comemorativas dos próximos 90 dias e de categorias que vendem o ano
+todo. Regras do Garimpo: comissão ≥ R$ 9 por venda, nota ≥ 4,7, ≥ 100 vendas, nunca suplementos; sem
+produtos já postados/agendados nem sugeridos nos últimos 5 dias. Ordenadas por comissão × vendas (a API de
+afiliados não informa "mais buscados", o sinal de procura é o total de vendas). Cada ideia traz preço,
+comissão, vendas, nota, a data/categoria e o link do produto para gravar.
+
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por
 vídeo (pelo sub_id de cada um), pendente × concluída, cancelados e o que veio de links fora do robô. A
@@ -147,6 +154,7 @@ as variações vêm do print que você manda, e links de vídeo (`sv.shopee`) pr
 | `video_processor.py` / `cover_generator.py` | Vídeo 9:16 com logo / capa |
 | `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
 | `sub_id.py` | Sub_id dos links |
+| `ideas.py` | Ideias de produtos para gravar (💡 Ideias e /sugestoes) |
 | `conversions.py` | Vendas reais por sub_id (relatório de conversões da Shopee) |
 | `shopee_session.py` | Login da Shopee no navegador do robô (cookies via /cookies) |
 | `lia_sender.py` / `lia_login.py` | Envio à LiA pela sua conta / login dessa conta (uma vez) |

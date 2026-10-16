@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / '.env')
 
 import conversions  # noqa: E402
+import ideas  # noqa: E402
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
@@ -59,6 +60,9 @@ AGENDA = topic('TELEGRAM_TOPIC_AGENDA')
 POSTADOS = topic('TELEGRAM_TOPIC_POSTADOS')
 PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
 RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
+IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
+IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
+IDEAS_NO_REPEAT_DAYS = 5                          # ideia sugerida não volta antes disso
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
 MAX_PENDING_LINES = 40
@@ -139,7 +143,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind == 'lia' else 'report' if kind in ('report', 'sales') \
+        name = 'video' if kind == 'video' else 'lia' if kind == 'lia' else 'report' if kind in ('report', 'sales', 'ideas') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -886,6 +890,41 @@ class Bot:
             return
         self.submit(('report', thread or RELATORIO, day))
 
+    def job_ideas(self, thread: Optional[int]):
+        """Lista de ideias: sem produtos já postados/agendados nem sugeridos nos últimos dias."""
+        today = scheduler.now().date()
+        used = {p['product_key'] for p in self.db.with_status(
+            'editado', 'agendando', 'agendado', 'enviando', 'avisado', 'postado')}
+        for p in self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'avisado', 'postado'):
+            used |= {f"{x['shopId']}:{x['itemId']}" for x in p['products'] or []}
+        suggested = json.loads(self.db.get_meta('ideias_sugeridas', '{}'))
+        cutoff = (today - timedelta(days=IDEAS_NO_REPEAT_DAYS)).isoformat()
+        suggested = {k: d for k, d in suggested.items() if d > cutoff}
+        try:
+            seasonal, evergreen = ideas.collect(self.pipeline.shopee, today,
+                                                lambda key: key in used or key in suggested)
+        except Exception as e:
+            logger.exception("Ideias falharam")
+            self.tg.send_text(thread, f"⚠️ Não consegui buscar ideias agora: {html.escape(str(e)[:200])}")
+            return
+        for message in ideas.render(seasonal, evergreen, today):
+            self.tg.send_text(thread, message)
+        for p in seasonal + evergreen:
+            suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
+        self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
+
+    def daily_ideas(self):
+        """No horário IDEIAS_HORA, a lista do dia vai sozinha para 💡 Ideias (uma vez por dia)."""
+        if not IDEIAS:
+            return
+        current = scheduler.now()
+        hour, minute = (int(x) for x in IDEAS_TIME.split(':'))
+        today = current.date().isoformat()
+        if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('ideias_dia') == today:
+            return
+        self.db.set_meta('ideias_dia', today)
+        self.submit(('ideas', IDEIAS))
+
     def daily_report(self):
         """No horário RELATORIO_HORA, o relatório do dia vai sozinho para 📊 Relatório (uma vez por dia)."""
         current = scheduler.now()
@@ -924,6 +963,8 @@ class Bot:
                     self.job_switch(*job[1:])
                 elif job[0] == 'report':
                     self.tg.send_text(job[1], self.report_text(job[2]))
+                elif job[0] == 'ideas':
+                    self.job_ideas(*job[1:])
                 elif job[0] == 'sales':
                     self.job_sales(*job[1:])
             except Exception:
@@ -943,6 +984,11 @@ class Bot:
         command = (msg.get('text') or '').strip()
         if command.lower().startswith('/relatorio'):
             self.on_report_command(thread, command)
+            return
+        if command.lower().startswith('/sugestoes') or command.lower().startswith('/sugestões'):
+            target = thread or IDEIAS
+            self.tg.send_text(target, "💡 Buscando ideias na Shopee… (leva 1 a 2 minutos)")
+            self.submit(('ideas', target))
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
@@ -996,6 +1042,7 @@ class Bot:
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('vendas', 'Vendas reais por vídeo: 7 dias (ou /vendas hoje, /vendas 30)'),
+            ('sugestoes', 'Ideias de produtos para gravar (comissão ≥ R$ 9)'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})
         self.tg.set_commands([
@@ -1037,6 +1084,7 @@ class Bot:
                 self.tick()
                 self.refresh_pending()
                 self.daily_report()
+                self.daily_ideas()
             except requests.RequestException as e:
                 logger.warning(f"Telegram sem resposta ({e.__class__.__name__}); tentando de novo")
                 time.sleep(5)

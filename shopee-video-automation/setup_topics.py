@@ -18,6 +18,7 @@ TOPICS = [
     ('TELEGRAM_TOPIC_POSTADOS', '🚀 Postados', 0xFFD67E),
     ('TELEGRAM_TOPIC_PENDENCIAS', '📌 Pendências', 0xFB6F5F),
     ('TELEGRAM_TOPIC_RELATORIO', '📊 Relatório', 0xCB86DB),
+    ('TELEGRAM_TOPIC_IDEIAS', '💡 Ideias', 0xFFD67E),
 ]
 
 
