@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792152775,
-  "updated_at_br": "16/10/2026 09:07",
+  "updated_at": 1792157973,
+  "updated_at_br": "16/10/2026 10:34",
   "period_days": 90,
-  "total_orders": 6534,
-  "total_conversions": 6275,
+  "total_orders": 6533,
+  "total_conversions": 6274,
   "orders": [
     {
       "ID do pedido": "261016QRCSEVX2",
@@ -782,27 +782,27 @@
     },
     {
       "ID do pedido": "261015PBD3BE5S",
-      "Status do Pedido": "UNPAID",
+      "Status do Pedido": "CANCELLED",
       "Horario do pedido": "2026-10-15 12:56:05",
       "Sub_id1": "10Out26VEAConjuntoCaneladoFeminino",
-      "Valor de Compra(R$)": "24.11",
-      "Comissao liquida do afiliado(R$)": "1.58042",
+      "Valor de Compra(R$)": "0",
+      "Comissao liquida do afiliado(R$)": "0",
       "Taxa de comissao Shopee do item": "3.00%",
       "Taxa de comissao do vendedor do item": "3.90%",
-      "Comissao Shopee(R$)": "0.7233",
-      "Comissao do vendedor(R$)": "0.94029",
-      "Comissao total do pedido(R$)": "1.66359",
+      "Comissao Shopee(R$)": "0",
+      "Comissao do vendedor(R$)": "0",
+      "Comissao total do pedido(R$)": "0",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Óculos Grau +0.50 até +5.0 Armação Retangular Retro Várias Cores Chocolate Perto Feminino Acetato",
-      "Status do item do afiliado": "UNPAID",
+      "Status do item do afiliado": "CANCELLED",
       "ID do item": "58210963579",
       "ID da loja": "970020633",
       "Nome da loja": "Ponto Ótico",
-      "Quantidade": "1",
+      "Quantidade": "0",
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245768165134860",
-      "conversionStatus": "UNPAID",
+      "conversionStatus": "CANCELLED",
       "data": "2026-10-15"
     },
     {
@@ -5982,7 +5982,7 @@
     },
     {
       "ID do pedido": "261012DJBP16VJ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-12 01:06:37",
       "Sub_id1": "09Out26VestidoMidiFloral",
       "Valor de Compra(R$)": "54.9",
@@ -5994,7 +5994,7 @@
       "Comissao total do pedido(R$)": "2.99754",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vestido Feminino Longo de Alça Regulagem Tecido Grosa Verão M-G-GG",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "52703282863",
       "ID da loja": "1194890557",
       "Nome da loja": "SEBITAS",
@@ -6002,7 +6002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245466396156504",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-12"
     },
     {
@@ -7007,7 +7007,7 @@
     },
     {
       "ID do pedido": "261011CE3TX1RR",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 14:17:59",
       "Sub_id1": "10Out26VEAcalcinhacosalto",
       "Valor de Compra(R$)": "22.99",
@@ -7019,7 +7019,7 @@
       "Comissao total do pedido(R$)": "0.96558",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Macaquinho Feminino Ribana  Casual Confortável Curto Ajustado",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "52506235113",
       "ID da loja": "426155289",
       "Nome da loja": "Brmodaoficial",
@@ -7027,7 +7027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245427478158276",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
@@ -11282,7 +11282,7 @@
     },
     {
       "ID do pedido": "2610095FYP3GEU",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-08 20:02:48",
       "Sub_id1": "",
       "Valor de Compra(R$)": "17.88",
@@ -11294,7 +11294,7 @@
       "Comissao total do pedido(R$)": "0.5364",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Chinelo Infantil Super Herois Macio Para Passeio",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23193606692",
       "ID da loja": "1357631403",
       "Nome da loja": "Loja Rosetti 2",
@@ -11302,7 +11302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245188968192826",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-08"
     },
     {
@@ -163328,31 +163328,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238084146156570",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-18"
-    },
-    {
-      "ID do pedido": "260718291R8R5S",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-18 12:54:03",
-      "Sub_id1": "17Jul26LeggingSacoVerde",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 2 Calças Legging Cintura Alta Leg Suplex Grossa Levanta Bumbum Zero Transparência",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22697451890",
-      "ID da loja": "869193731",
-      "Nome da loja": "OxeanJeans",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "238078442163343",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-18"
     }
   ]
