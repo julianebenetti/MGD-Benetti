@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792176529,
-  "updated_at_br": "16/10/2026 15:43",
+  "updated_at": 1792180420,
+  "updated_at_br": "16/10/2026 16:48",
   "period_days": 90,
-  "total_orders": 6513,
-  "total_conversions": 6254,
+  "total_orders": 6511,
+  "total_conversions": 6252,
   "orders": [
     {
       "ID do pedido": "261016QRCSEVX2",
@@ -3857,7 +3857,7 @@
     },
     {
       "ID do pedido": "261013G3C3APKP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-13 01:16:23",
       "Sub_id1": "",
       "Valor de Compra(R$)": "17.99",
@@ -3869,7 +3869,7 @@
       "Comissao total do pedido(R$)": "3.2382",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "BGM-Película de Lente iPhone 17 Pro Max, Anti-choque Anti-risco, Alta Transparência, Não Afeta Fotos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58260218931",
       "ID da loja": "1645795521",
       "Nome da loja": "Princesa BGM",
@@ -3877,7 +3877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245553383181998",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-13"
     },
     {
@@ -12607,7 +12607,7 @@
     },
     {
       "ID do pedido": "261005RPNHMDJW",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-04 21:36:19",
       "Sub_id1": "",
       "Valor de Compra(R$)": "99.99",
@@ -12619,7 +12619,7 @@
       "Comissao total do pedido(R$)": "1.74982",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -12627,7 +12627,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "244848979172640",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-04"
     },
     {
@@ -12907,7 +12907,7 @@
     },
     {
       "ID do pedido": "261003KMUXS78W",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-02 21:20:48",
       "Sub_id1": "",
       "Valor de Compra(R$)": "99.99",
@@ -12919,7 +12919,7 @@
       "Comissao total do pedido(R$)": "1.74982",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -12927,7 +12927,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "244675248110498",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-02"
     },
     {
@@ -162778,56 +162778,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238105140126197",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-18"
-    },
-    {
-      "ID do pedido": "2607192Y5ACS3A",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-18 19:29:44",
-      "Sub_id1": "03Jul26MochilaExpansivelVs3",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "3.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "MiniI Mochila Saco Pequena Academia Casual Leve Passeio Infantil",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "23493931710",
-      "ID da loja": "1248916732",
-      "Nome da loja": "FN Mochilas",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238102184153618",
-      "conversionStatus": "CANCELLED",
-      "data": "2026-07-18"
-    },
-    {
-      "ID do pedido": "2607192XJBVVHN",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-18 19:19:09",
-      "Sub_id1": "17Jul26LeggingSacoVerde",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "10.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit 2 Calça Legging Flare Flanelada Leg Boca De Sino Bailarina Grossa Zero Transparência",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "27383710859",
-      "ID da loja": "869193731",
-      "Nome da loja": "OxeanJeans",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "238101548196610",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-18"
     }
   ]
