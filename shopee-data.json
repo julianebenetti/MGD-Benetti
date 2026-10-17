@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792222396,
-  "updated_at_br": "17/10/2026 04:27",
+  "updated_at": 1792227787,
+  "updated_at_br": "17/10/2026 05:57",
   "period_days": 90,
-  "total_orders": 6477,
-  "total_conversions": 6218,
+  "total_orders": 6476,
+  "total_conversions": 6217,
   "orders": [
     {
       "ID do pedido": "261016QRCSEVX2",
@@ -161902,31 +161902,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238151365199292",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-19"
-    },
-    {
-      "ID do pedido": "26071949WT6QVG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-19 08:15:03",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "26.4",
-      "Comissao liquida do afiliado(R$)": "1.80576",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "3.60%",
-      "Comissao Shopee(R$)": "1.056",
-      "Comissao do vendedor(R$)": "0.9504",
-      "Comissao total do pedido(R$)": "2.0064",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit Desodorante Antitranspirante Aerossol Herbíssimo Blue Ice 250ml Embalagem Econômica (3 unidades)",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23898760847",
-      "ID da loja": "436104412",
-      "Nome da loja": "Dana Cosmeticos",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238148103194696",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-19"
     }
