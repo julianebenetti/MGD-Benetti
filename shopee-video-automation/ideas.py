@@ -9,6 +9,7 @@ regras do Garimpo: comissão de pelo menos R$ 9 por venda, nota ≥ 4,7, nunca s
 import html
 import logging
 import math
+import os
 import re
 from datetime import date, timedelta
 from typing import Callable, Dict, List, Set, Tuple
@@ -20,8 +21,13 @@ logger = logging.getLogger(__name__)
 MIN_COMMISSION = 9.0      # R$ por venda (piso do Garimpo)
 MIN_RATING = 4.7
 MIN_SALES = 100
-TARGET = 20               # ideias por lista (mínimo 15)
+TARGET = 15               # ideias da lista principal (comissão ≥ R$ 9)
 MINIMUM = 15
+# 💸 Preço acessível (o que mais vende no Shopee Vídeo): preço baixo, comissão menor, muitas vendas
+CHEAP_PRICE = float(os.getenv('IDEIAS_PRECO_ACESSIVEL', '60'))
+CHEAP_MIN_COMMISSION = float(os.getenv('IDEIAS_COMISSAO_ACESSIVEL', '3'))
+CHEAP_MIN_SALES = 500
+CHEAP_TARGET = 10
 PER_KEYWORD = 50
 SEASON_DAYS = 90
 
@@ -98,12 +104,19 @@ def _similar_key(name: str) -> str:
     return ' '.join(re.sub(r'[^a-z0-9 ]', '', name.lower()).split()[:4])
 
 
-def collect(client, today: date, skip: Callable[[str], bool]) -> Tuple[List[Dict], List[Dict]]:
+def collect(client, today: date, skip: Callable[[str], bool]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
     """
-    (ideias de datas, ideias do ano todo). `skip(product_key)`: produtos já postados ou sugeridos há pouco.
-    Cada ideia tem 'tema' (data ou categoria).
+    (ideias de datas, ideias do ano todo, ideias de preço acessível). `skip(product_key)`: produtos já
+    postados ou sugeridos há pouco. Cada ideia tem 'tema' (data ou categoria).
     """
+    cache: Dict[str, List[Dict]] = {}
+
     def search(keyword: str) -> List[Dict]:
+        if keyword not in cache:
+            cache[keyword] = _search(keyword)
+        return cache[keyword]
+
+    def _search(keyword: str) -> List[Dict]:
         try:
             return client.search(keyword, limit=PER_KEYWORD, sort_type=2)   # mais vendidos
         except Exception as e:
@@ -117,22 +130,25 @@ def collect(client, today: date, skip: Callable[[str], bool]) -> Tuple[List[Dict
     seen_items: Set[str] = set()
     seen_names: Set[str] = set()
 
-    def good(p: Dict) -> bool:
+    def good(p: Dict, cheap: bool = False) -> bool:
         key = f"{p['shopId']}:{p['itemId']}"
         name = _similar_key(p.get('productName', ''))
-        ok = (commission_value(p) >= MIN_COMMISSION and float(p.get('ratingStar') or 0) >= MIN_RATING
-              and int(p.get('sales') or 0) >= MIN_SALES and not BLOCKED.search(p.get('productName', ''))
+        price = float(p.get('priceMin') or 0)
+        rules = (price <= CHEAP_PRICE and commission_value(p) >= CHEAP_MIN_COMMISSION
+                 and int(p.get('sales') or 0) >= CHEAP_MIN_SALES) if cheap else \
+            (commission_value(p) >= MIN_COMMISSION and int(p.get('sales') or 0) >= MIN_SALES)
+        ok = (rules and float(p.get('ratingStar') or 0) >= MIN_RATING and not BLOCKED.search(p.get('productName', ''))
               and key not in seen_items and name not in seen_names and not skip(key))
         if ok:
             seen_items.add(key)
             seen_names.add(name)
         return ok
 
-    def pick(keywords: List[str], tema: str, per_keyword: int) -> List[Dict]:
+    def pick(keywords: List[str], tema: str, per_keyword: int, cheap: bool = False) -> List[Dict]:
         chosen = []
         for keyword in keywords:
             found = sorted(search(keyword), key=_score, reverse=True)
-            chosen += [{**p, 'tema': tema} for p in [p for p in found if good(p)][:per_keyword]]
+            chosen += [{**p, 'tema': tema} for p in [p for p in found if good(p, cheap)][:per_keyword]]
         return chosen
 
     seasonal = []
@@ -143,7 +159,14 @@ def collect(client, today: date, skip: Callable[[str], bool]) -> Tuple[List[Dict
         evergreen += pick(EVERGREEN, 'o ano todo', 2)
     seasonal.sort(key=_score, reverse=True)
     evergreen.sort(key=_score, reverse=True)
-    return seasonal[:12], evergreen[:TARGET - len(seasonal[:12])]
+    seasonal, evergreen = seasonal[:10], evergreen[:TARGET - len(seasonal[:10])]
+
+    cheap = []   # mesmas buscas (sem chamadas novas à API), regras de preço acessível
+    for when, name, keywords in upcoming(today):
+        cheap += pick(keywords, f"{name} ({when:%d/%m})", 1, cheap=True)
+    cheap += pick(EVERGREEN, 'o ano todo', 1, cheap=True)
+    cheap.sort(key=_score, reverse=True)
+    return seasonal, evergreen, cheap[:CHEAP_TARGET]
 
 
 def _brl(v: float) -> str:
@@ -154,7 +177,7 @@ def _milhar(n: int) -> str:
     return f"{n:,}".replace(',', '.')
 
 
-def render(seasonal: List[Dict], evergreen: List[Dict], today: date) -> List[str]:
+def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today: date) -> List[str]:
     """Mensagens (cada uma abaixo do limite do Telegram) com a lista numerada."""
     e = html.escape
 
@@ -165,23 +188,28 @@ def render(seasonal: List[Dict], evergreen: List[Dict], today: date) -> List[str
                 f"{_milhar(int(p.get('sales') or 0))} vendas · nota {p.get('ratingStar')}" +
                 f"\n   🏷️ {e(p['tema'])} · {e(p.get('shopName', '')[:30])}\n   🔗 {url}")
 
-    total = len(seasonal) + len(evergreen)
-    blocks = [f"💡 <b>{total} ideias para gravar</b> · {today:%d/%m}\n"
-              f"Comissão ≥ {_brl(MIN_COMMISSION)} por venda, nota ≥ {MIN_RATING}, ordenadas por comissão × vendas. "
-              "Grave e mande em 📥 Envios com o link."]
+    main_total = len(seasonal) + len(evergreen)
+    blocks = [f"💡 <b>{main_total + len(cheap)} ideias para gravar</b> · {today:%d/%m}\n"
+              f"Nota ≥ {MIN_RATING}, ordenadas por comissão × vendas. Grave e mande em 📥 Envios com o link."]
     i = 1
     if seasonal:
-        blocks.append("📅 <b>Datas que estão chegando</b>")
+        blocks.append(f"📅 <b>Datas que estão chegando</b> (comissão ≥ {_brl(MIN_COMMISSION)})")
         for p in seasonal:
             blocks.append(line(i, p))
             i += 1
     if evergreen:
-        blocks.append("🏠 <b>Vendem o ano todo</b>")
+        blocks.append(f"🏠 <b>Vendem o ano todo</b> (comissão ≥ {_brl(MIN_COMMISSION)})")
         for p in evergreen:
             blocks.append(line(i, p))
             i += 1
-    if total < MINIMUM:
-        blocks.append(f"⚠️ Só {total} produto(s) passaram nas regras hoje.")
+    if cheap:
+        blocks.append(f"💸 <b>Preço acessível</b> (até {_brl(CHEAP_PRICE)}, comissão ≥ {_brl(CHEAP_MIN_COMMISSION)}, "
+                      f"{CHEAP_MIN_SALES}+ vendas: o que mais gira no Shopee Vídeo)")
+        for p in cheap:
+            blocks.append(line(i, p))
+            i += 1
+    if main_total < MINIMUM:
+        blocks.append(f"⚠️ Só {main_total} produto(s) com comissão ≥ {_brl(MIN_COMMISSION)} passaram nas regras hoje.")
 
     messages, current = [], ''
     for block in blocks:

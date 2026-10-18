@@ -901,15 +901,15 @@ class Bot:
         cutoff = (today - timedelta(days=IDEAS_NO_REPEAT_DAYS)).isoformat()
         suggested = {k: d for k, d in suggested.items() if d > cutoff}
         try:
-            seasonal, evergreen = ideas.collect(self.pipeline.shopee, today,
-                                                lambda key: key in used or key in suggested)
+            seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today,
+                                                       lambda key: key in used or key in suggested)
         except Exception as e:
             logger.exception("Ideias falharam")
             self.tg.send_text(thread, f"⚠️ Não consegui buscar ideias agora: {html.escape(str(e)[:200])}")
             return
-        for message in ideas.render(seasonal, evergreen, today):
+        for message in ideas.render(seasonal, evergreen, cheap, today):
             self.tg.send_text(thread, message)
-        for p in seasonal + evergreen:
+        for p in seasonal + evergreen + cheap:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
         self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
 

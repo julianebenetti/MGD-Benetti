@@ -68,6 +68,8 @@ todo. Regras do Garimpo: comissão ≥ R$ 9 por venda, nota ≥ 4,7, ≥ 100 ven
 produtos já postados/agendados nem sugeridos nos últimos 5 dias. Ordenadas por comissão × vendas (a API de
 afiliados não informa "mais buscados", o sinal de procura é o total de vendas). Cada ideia traz preço,
 comissão, vendas, nota, a data/categoria e o link do produto para gravar.
+Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira no Shopee Vídeo): até R$ 60
+(`IDEIAS_PRECO_ACESSIVEL`), comissão ≥ R$ 3 por venda (`IDEIAS_COMISSAO_ACESSIVEL`), 500+ vendas, nota ≥ 4,7.
 
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por
