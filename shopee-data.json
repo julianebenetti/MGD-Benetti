@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792302058,
-  "updated_at_br": "18/10/2026 02:35",
+  "updated_at": 1792309713,
+  "updated_at_br": "18/10/2026 04:43",
   "period_days": 90,
-  "total_orders": 6446,
-  "total_conversions": 6188,
+  "total_orders": 6445,
+  "total_conversions": 6187,
   "orders": [
     {
       "ID do pedido": "261017T968JKTQ",
@@ -161127,31 +161127,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238243157183790",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-20"
-    },
-    {
-      "ID do pedido": "2607206RH83YBA",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-20 07:41:48",
-      "Sub_id1": "03Jul26MochilaExpansivelVs3",
-      "Valor de Compra(R$)": "78.14",
-      "Comissao liquida do afiliado(R$)": "2.81304",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "3.1256",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "3.1256",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Filamento Impressora 3d Print Pulse PLA 1.75mm Importado Alta Qualidade de Impressao",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "26644670920",
-      "ID da loja": "1316734858",
-      "Nome da loja": "PRA EU TUDO",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238232507171884",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-20"
     }
