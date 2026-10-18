@@ -1,6 +1,6 @@
 {
-  "updated_at": 1792309713,
-  "updated_at_br": "18/10/2026 04:43",
+  "updated_at": 1792315324,
+  "updated_at_br": "18/10/2026 06:16",
   "period_days": 90,
   "total_orders": 6445,
   "total_conversions": 6187,
@@ -8032,7 +8032,7 @@
     },
     {
       "ID do pedido": "261011CEA0B0B6",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 14:21:25",
       "Sub_id1": "10Out26VEAconjuntoacademia",
       "Valor de Compra(R$)": "60.33",
@@ -8044,7 +8044,7 @@
       "Comissao total do pedido(R$)": "1.8099",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Blusa Regata Feminina Gola Boba Suplex Premium Drapeada Elegante Moda Verão",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58205586653",
       "ID da loja": "1291415920",
       "Nome da loja": "Nalin Modas",
@@ -8052,7 +8052,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245427685154574",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
