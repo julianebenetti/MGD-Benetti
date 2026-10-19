@@ -14,8 +14,10 @@ logger = logging.getLogger(__name__)
 DEFAULT_LOGO = Path(__file__).parent / 'assets' / 'logo_achados_relampagos.png'
 # Proporções medidas no print de referência do app Shopee Video
 LOGO_WIDTH_RATIO = 0.25
-LOGO_MARGIN_X_RATIO = 0.01
-LOGO_TOP_RATIO = 0.10
+# Em tela cheia o app corta ~9% de cada lateral (celular 19,5:9 x vídeo 9:16): o logo fica fora desse corte
+# e abaixo da seta de voltar/barra de busca
+LOGO_MARGIN_X_RATIO = 0.11
+LOGO_TOP_RATIO = 0.12
 
 
 class VideoProcessor:

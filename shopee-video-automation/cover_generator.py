@@ -22,7 +22,7 @@ EMOJI_NATIVE_SIZE = 109  # Noto Color Emoji só renderiza nesse tamanho
 # Tudo o que importa fica entre 14% e 78% da altura.
 COVER_LOGO = ASSETS / 'logo_achados_relampagos.png'
 COVER_LOGO_WIDTH_RATIO = 0.25
-COVER_LOGO_LEFT_RATIO = 0.01
+COVER_LOGO_LEFT_RATIO = 0.11   # fora do corte lateral da tela cheia (a capa abre o vídeo)
 COVER_LOGO_TOP_RATIO = 0.14
 
 # Proporções medidas nas capas de referência do perfil
@@ -36,14 +36,17 @@ TEXT_COLOR = (34, 34, 34, 255)
 # Cartão de variações: à esquerda, logo abaixo da headline, sem inclinação
 CARD_FONT = ASSETS / 'fonts' / 'Roboto.ttf'
 CARD_WIDTH_RATIO = 0.50
-CARD_LEFT_RATIO = 0.02
+CARD_LEFT_RATIO = 0.10
 CARD_BOTTOM_RATIO = 0.78       # ancorado logo acima do contador de views da grade (~80-87%)
 CARD_GAP_BELOW_TEXT = 0.015    # se crescer para cima, para quase encostando na headline
 CARD_MAX_COLS = 5
 CARD_MAX_THUMB = 130
 PILL_COLOR = (255, 255, 255, 240)
 # CTA dos segundos finais: abaixo do meio, acima da legenda/produto que o app mostra embaixo
-CTA_CENTER_Y_RATIO = 0.60
+CTA_CENTER_Y_RATIO = 0.52   # acima do card do produto que a Shopee abre (~64% da tela)
+# Área segura da CTA: fora do corte lateral (~9% de cada lado) e da coluna de botões da Shopee à direita
+CTA_MAX_WIDTH_RATIO = 0.62
+CTA_CENTER_X_RATIO = 0.45
 # CTA em laranja Shopee com letra branca e sombra: aparece em vídeo claro ou escuro
 CTA_PILL_COLOR = (238, 77, 45, 255)
 CTA_TEXT_COLOR = (255, 255, 255, 255)
@@ -126,8 +129,8 @@ class CoverGenerator:
                 w += int(self.font.getlength(run))
         return w
 
-    def _wrap(self, text: str) -> List[str]:
-        max_w = self.width * MAX_TEXT_WIDTH_RATIO
+    def _wrap(self, text: str, max_ratio: float = MAX_TEXT_WIDTH_RATIO) -> List[str]:
+        max_w = self.width * max_ratio
         lines, cur = [], ''
         for word in text.split():
             cand = f'{cur} {word}'.strip()
@@ -176,7 +179,7 @@ class CoverGenerator:
     def cta_overlay(self, text: str, out_path: str) -> str:
         """Imagem transparente 9:16 com a CTA nas faixas brancas da headline, um pouco abaixo do meio."""
         base = Image.new('RGBA', (self.width, self.height), (0, 0, 0, 0))
-        lines = self._wrap(text)
+        lines = self._wrap(text, CTA_MAX_WIDTH_RATIO)
         if len(lines) == 2:  # duas linhas equilibradas, sem palavra sobrando sozinha embaixo
             words = text.split()
             cut = min(range(1, len(words)), key=lambda i: max(self._measure(' '.join(words[:i])),
@@ -186,7 +189,7 @@ class CoverGenerator:
         step = int(pill_h * (1 - LINE_OVERLAP_RATIO))
         top = int(self.height * CTA_CENTER_Y_RATIO) - (step * (len(lines) - 1) + pill_h) // 2
         for i, line in enumerate(lines):
-            self._draw_line(base, line, self.width // 2, top + i * step, fill=CTA_PILL_COLOR,
+            self._draw_line(base, line, int(self.width * CTA_CENTER_X_RATIO), top + i * step, fill=CTA_PILL_COLOR,
                             text_color=CTA_TEXT_COLOR, shadow=CTA_SHADOW)
         base.save(out_path)
         return out_path
