@@ -93,6 +93,13 @@ Configuração (uma vez):
    — digite seu telefone (+55…), o código que chega no seu Telegram e a senha de duas etapas, se tiver.
 3. `sudo systemctl restart shopee-video`. O log mostra `LiA: ligada (agenda)`.
 
+**Confirmação da publicação:** tocar em Publicar só põe o vídeo na fila da LiA; quem publica é o
+tablet/celular. O post fica **🤖 na LiA** e, a cada 5 minutos, o robô lê a conversa com ela: publicado → vai
+para 🚀 Postados; "Não consegui publicar" (ex.: tablet desligado) → volta para ⏰ Agenda com o motivo e o botão
+**📤 Enviar à LiA**; sem resposta em 2 h (`LIA_ALERTA_HORAS`) → aviso. **`/verificarlia`** confere a conversa
+toda e devolve para a Agenda os vídeos que tinham ido para Postados mas falharam na LiA (feito uma vez,
+sozinho, na primeira vez que o robô liga com esta versão).
+
 O login fica em `lia.session`, só no VPS (nunca no GitHub). Ele dá acesso à sua conta: não copie esse
 arquivo para lugar nenhum. Para desligar o envio: `LIA_ENVIAR=nao`. Para mandar logo ao aprovar, em vez de
 no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Publicar: `LIA_PUBLICAR_AUTO=nao`.

@@ -16,7 +16,7 @@ JSON_FIELDS = ('products', 'links', 'metadata', 'editados_msgs', 'agenda_msgs', 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    status TEXT NOT NULL,              -- editado | agendando | agendado | enviando | avisado | postado | descartado
+    status TEXT NOT NULL,              -- editado | agendando | agendado | enviando | na_lia | avisado | postado | descartado
     created_at TEXT NOT NULL,
     source_msg_id INTEGER,
     product_key TEXT,                  -- shopId:itemId do produto principal
@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS posts (
     posted_at TEXT,                    -- quando foi para Postados
     posted_via TEXT,                   -- lia | manual
     discarded_at TEXT,
+    lia_msg_id INTEGER,                -- vídeo na conversa com a LiA (status na_lia: esperando ela publicar)
+    lia_sent_at REAL,
     editados_msgs TEXT DEFAULT '[]',
     agenda_msgs TEXT DEFAULT '[]',
     scheduled_at TEXT
@@ -69,7 +71,8 @@ class Storage:
                            ('caption_approved', 'INTEGER DEFAULT 0'),
                            ('final_video_path', 'TEXT'), ('variacoes', "TEXT DEFAULT 'pendente'"),
                            ('melhores', 'TEXT'), ('troca', "TEXT DEFAULT 'sem'"), ('posted_at', 'TEXT'),
-                           ('posted_via', 'TEXT'), ('discarded_at', 'TEXT')):
+                           ('posted_via', 'TEXT'), ('discarded_at', 'TEXT'), ('lia_msg_id', 'INTEGER'),
+                           ('lia_sent_at', 'REAL')):
             if name not in existing:
                 self.conn.execute(f"ALTER TABLE posts ADD COLUMN {name} {decl}")
         if 'link' not in {r[1] for r in self.conn.execute("PRAGMA table_info(failures)")}:
@@ -122,7 +125,8 @@ class Storage:
     def scheduled(self) -> List[Dict]:
         with self.lock:
             rows = self.conn.execute(
-                "SELECT * FROM posts WHERE status IN ('agendado', 'avisado', 'enviando') ORDER BY scheduled_at").fetchall()
+                "SELECT * FROM posts WHERE status IN ('agendado', 'avisado', 'enviando', 'na_lia') ORDER BY scheduled_at"
+            ).fetchall()
         return [self._row(r) for r in rows]
 
     def with_status(self, *statuses: str) -> List[Dict]:

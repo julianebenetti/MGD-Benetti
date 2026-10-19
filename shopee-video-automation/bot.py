@@ -62,7 +62,9 @@ PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
 RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
-IDEAS_NO_REPEAT_DAYS = 5                          # ideia sugerida não volta antes disso
+IDEAS_NO_REPEAT_DAYS = 5
+LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
+LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # sem confirmação: avisa                          # ideia sugerida não volta antes disso
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
 MAX_PENDING_LINES = 40
@@ -140,10 +142,11 @@ class Bot:
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
         self.pending_last = ''
+        self.lia_checked = 0.0
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind == 'lia' else 'report' if kind in ('report', 'sales', 'ideas') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -521,14 +524,83 @@ class Bot:
                 reply_to=reply_to, markup=self.agenda_markup(post_id))
             self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
             return
-        if result.published:
-            self.move_to_postados(self.db.get_post(post_id), "🤖 Enviado à LiA e publicado", via='lia')
+        if result.published:   # a publicação acontece depois, no aparelho: confirmo lendo a LiA
+            self.db.update_post(post_id, status='na_lia', lia_msg_id=result.sent_id, lia_sent_at=time.time())
+            msg_id = self.tg.send_text(AGENDA, f"🤖 <b>{html.escape(post['product_name'][:60])}</b> está com a LiA, "
+                                               "publicando. Te aviso se der problema.", reply_to=reply_to)
+            self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
             return
         self.db.update_post(post_id, status='avisado')
         msg_id = self.tg.send_text(
             AGENDA, f"📤 Enviado à LiA: falta tocar <b>Publicar</b> na conversa com ela. Depois toque ✅ Postei."
                     f"\n\n{lia_sender.summary_html(result)}", reply_to=reply_to, markup=self.agenda_markup(post_id))
         self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
+
+    def job_lia_check(self):
+        """Confere na conversa com a LiA se os vídeos foram publicados ou se ela não conseguiu."""
+        waiting = [p for p in self.db.with_status('na_lia') if p.get('lia_msg_id')]
+        if not waiting:
+            return
+        try:
+            results = lia_sender.check(waiting)
+        except Exception as e:
+            logger.warning(f"Não consegui ler a conversa com a LiA: {e}")
+            return
+        for post in waiting:
+            outcome = results.get(post['id'])
+            reply_to = post['agenda_msgs'][-1] if post['agenda_msgs'] else None
+            if outcome and outcome[0] == 'ok':
+                self.move_to_postados(post, "🤖 Publicado pela LiA", via='lia')
+            elif outcome:
+                self.db.update_post(post['id'], status='avisado')
+                msg_id = self.tg.send_text(
+                    AGENDA, f"❌ <b>A LiA não conseguiu publicar</b> {html.escape(post['product_name'][:60])}\n"
+                            f"Motivo: {html.escape(outcome[1])}\n\nConfira se o tablet/celular está ligado e "
+                            "conectado e toque 📤 Enviar à LiA para tentar de novo (ou poste e toque ✅ Postei).",
+                    reply_to=reply_to, markup=self.agenda_markup(post['id']))
+                self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
+            elif time.time() - (post.get('lia_sent_at') or time.time()) > LIA_ALERT_SECONDS \
+                    and not post['metadata'].get('lia_alertado'):
+                self.db.update_post(post['id'], metadata={**post['metadata'], 'lia_alertado': True})
+                msg_id = self.tg.send_text(
+                    AGENDA, f"⏳ A LiA ainda não confirmou a publicação de "
+                            f"<b>{html.escape(post['product_name'][:60])}</b> (faz mais de "
+                            f"{LIA_ALERT_SECONDS // 3600} h). O tablet/celular está ligado? Se já postou, toque ✅ Postei.",
+                    reply_to=reply_to, markup=self.agenda_markup(post['id']))
+                self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
+
+    def job_lia_retro(self, thread: Optional[int] = None):
+        """
+        Vídeos que foram para Postados mas cuja última tentativa na LiA falhou (ex.: tablet desligado):
+        voltam para a Agenda com o motivo e os botões para reenviar.
+        """
+        try:
+            failures = lia_sender.recent_failures()
+        except Exception as e:
+            logger.warning(f"Não consegui ler a conversa com a LiA: {e}")
+            if thread:
+                self.tg.send_text(thread, f"⚠️ Não consegui ler a conversa com a LiA: {html.escape(str(e)[:200])}")
+            return
+        back = []
+        for post in self.db.with_status('postado', 'na_lia'):
+            if post['status'] == 'postado' and post.get('posted_via') != 'lia':
+                continue
+            match = next((v for k, v in failures.items() if lia_sender.same_product(k, post['product_name'])), None)
+            if not match:
+                continue
+            video = post.get('final_video_path') or post['video_path']
+            ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], video) if Path(video).exists() else []
+            ids.append(self.tg.send_text(
+                AGENDA, f"❌ <b>A LiA não conseguiu publicar este vídeo</b>\nMotivo: {html.escape(match[1])}\n\n"
+                        f"{post_text(post)}\n\nConfira se o tablet/celular está ligado e toque 📤 Enviar à LiA "
+                        "(ou poste e toque ✅ Postei).", markup=self.agenda_markup(post['id'])))
+            self.db.update_post(post['id'], status='avisado', agenda_msgs=ids, posted_at=None, posted_via=None)
+            back.append(post['product_name'][:50])
+        note = (f"🔎 Conferi a conversa com a LiA: {len(back)} vídeo(s) não tinham sido publicados e voltaram para "
+                f"⏰ Agenda:\n" + '\n'.join(f"• {html.escape(n)}" for n in back)) if back \
+            else "🔎 Conferi a conversa com a LiA: nenhum vídeo ficou sem publicar."
+        if back or thread:
+            self.tg.send_text(thread or AGENDA, note)
 
     def move_to_postados(self, post: Dict, label: str = "✅ Postado", via: str = 'manual'):
         self.tg.delete(post['agenda_msgs'])
@@ -684,17 +756,17 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Gerando outra headline…')
             self.submit(('headline', post['id'], None))
 
-        elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado'):
+        elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado', 'na_lia'):
             self.tg.delete(post['editados_msgs'] + post['agenda_msgs'])
             self.db.update_post(post['id'], status='descartado',
                                 discarded_at=scheduler.now().isoformat(timespec='seconds'))
             self.tg.answer_callback(cb['id'], 'Descartado')
 
-        elif action == 'ok' and post['status'] in ('agendado', 'avisado'):
+        elif action == 'ok' and post['status'] in ('agendado', 'avisado', 'na_lia'):
             self.move_to_postados(post)
             self.tg.answer_callback(cb['id'], 'Movido para Postados')
 
-        elif action == 'la' and post['status'] in ('agendado', 'avisado') and self.lia:
+        elif action == 'la' and post['status'] in ('agendado', 'avisado', 'na_lia') and self.lia:
             self.send_to_lia(post)
             self.tg.answer_callback(cb['id'], 'Enviando à LiA…')
 
@@ -951,6 +1023,10 @@ class Bot:
                     self.job_variations(*job[1:])
                 elif job[0] == 'lia':
                     self.job_lia(*job[1:])
+                elif job[0] == 'lia_check':
+                    self.job_lia_check()
+                elif job[0] == 'lia_retro':
+                    self.job_lia_retro(*job[1:])
                 elif job[0] == 'resubid_agenda':
                     self.job_resubid_agenda()
                 elif job[0] == 'replace_link':
@@ -989,6 +1065,10 @@ class Bot:
             target = thread or IDEIAS
             self.tg.send_text(target, "💡 Buscando ideias na Shopee… (leva 1 a 2 minutos)")
             self.submit(('ideas', target))
+            return
+        if command.lower().startswith('/verificarlia'):
+            self.tg.send_text(thread or AGENDA, "🔎 Conferindo a conversa com a LiA…")
+            self.submit(('lia_retro', thread or AGENDA))
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
@@ -1043,6 +1123,7 @@ class Bot:
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('vendas', 'Vendas reais por vídeo: 7 dias (ou /vendas hoje, /vendas 30)'),
             ('sugestoes', 'Ideias de produtos para gravar (comissão ≥ R$ 9)'),
+            ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})
         self.tg.set_commands([
@@ -1065,6 +1146,9 @@ class Bot:
         self.register_commands()
         self.resume_after_restart()
         self.submit(('resubid_agenda',))
+        if self.lia and self.db.get_meta('lia_retro_feito') != '1':   # uma vez: vídeos antigos que falharam
+            self.db.set_meta('lia_retro_feito', '1')
+            self.submit(('lia_retro',))
         self.recover_lia()
         for name, jobs in self.queues.items():
             for _ in range(VIDEO_WORKERS if name == 'video' else 1):
@@ -1085,6 +1169,9 @@ class Bot:
                 self.refresh_pending()
                 self.daily_report()
                 self.daily_ideas()
+                if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
+                    self.lia_checked = time.time()
+                    self.submit(('lia_check',))
             except requests.RequestException as e:
                 logger.warning(f"Telegram sem resposta ({e.__class__.__name__}); tentando de novo")
                 time.sleep(5)

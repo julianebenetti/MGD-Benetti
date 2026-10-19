@@ -138,7 +138,7 @@ Legendas já sugeridas (não repita nem parafraseie; traga outro ângulo de bene
 
 REGRAS
 - Use apenas o que está nos dados do produto: não invente características, benefícios, avaliações ou vendas.
-- Não cite preço, desconto, cupom nem frete grátis; não crie falsa escassez; nunca mencione comissão.""")
+- Não cite preço, desconto, cupom nem frete grátis, e não compare preço (nada de "custa menos", "mais barato", "economiza", "preço de loja"); não crie falsa escassez; nunca mencione comissão.""")
         data = ask_json(prompt, CAPTION_SCHEMA, name='legenda')
         hashtags = [h if h.startswith('#') else f'#{h}' for h in data['hashtags']][:HASHTAGS]
         return {'description': fit_caption(data['description'], hashtags), 'hashtags': hashtags}
@@ -173,7 +173,7 @@ REGRAS
 - Nenhuma palavra se repete dentro da description nem entre as seo_keywords; as hashtags podem usar a
   palavra-chave principal da legenda (é o que a pessoa busca).
 - Use apenas o que está nos dados do produto: não invente características, benefícios, avaliações ou vendas.
-- Não cite preço, desconto, cupom nem frete grátis (podem mudar até a publicação).
+- Não cite preço, desconto, cupom nem frete grátis, e não compare preço (nada de "custa menos", "mais barato", "economiza", "preço de loja") (podem mudar até a publicação).
 - Não crie falsa escassez ("últimas unidades", "só hoje", "corre que acaba").
 - Não afirme que é o melhor, o mais barato ou o mais vendido; nunca mencione comissão.
 """
