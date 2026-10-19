@@ -118,68 +118,25 @@ def send(post: Dict) -> LiaResult:
 
 
 def _is_success(text: str) -> bool:
-    """Confirmação de publicação (as mensagens de fila da LiA também têm ✅ e "é publicado": ficam de fora)."""
+    """
+    Confirmação da LiA: "Vídeo salvo na Shopee ✅" (ou "publicado"/"postado"). As mensagens de fila também
+    têm ✅ e "é publicado" ("Aprovado ✅ … indo pra fila", "Na fila ✅ Vou preparar…"): ficam de fora.
+    """
     low = (text or '').lower()
+    if 'salvo na shopee' in low:
+        return True
     if any(w in low for w in ('fila', 'aprovado', 'vou preparar', 'iniciando')):
         return False
     return 'publicad' in low or 'postad' in low or '✅' in text
 
 
+def _is_failure(text: str) -> bool:
+    low = (text or '').lower()
+    return 'não consegui' in low or 'nao consegui' in low or '❌' in text
+
+
 def _norm(text: str) -> str:
     return ' '.join(re.sub(r'[^a-z0-9 ]', ' ', (text or '').lower()).split())
-
-
-def outcomes(messages: List[Tuple[int, str]], posts: List[Dict]) -> Dict[int, Tuple[str, str]]:
-    """
-    Lê as respostas da LiA (id, texto, da mais antiga para a mais nova) e devolve {post_id: ('ok'|'falhou', texto)}.
-    A LiA avisa "Iniciando: <produto>" e depois "Não consegui publicar… Motivo: …" ou a confirmação; a
-    resposta vale para o último "Iniciando" daquele produto depois do envio do post.
-    """
-    result: Dict[int, Tuple[str, str]] = {}
-    current = None   # post do último "Iniciando"
-    for msg_id, text in messages:
-        low = (text or '').lower()
-        if 'iniciando' in low:
-            name = _norm(text.split(':', 1)[-1])[:40]
-            current = next((p for p in posts if msg_id > (p.get('lia_msg_id') or 0)
-                            and name and (_norm(p['product_name']).startswith(name[:30])
-                                          or name.startswith(_norm(p['product_name'])[:30]))), None)
-            continue
-        if current is None or current['id'] in result:
-            continue
-        if 'não consegui' in low or 'nao consegui' in low or '❌' in text:
-            reason = text.split('Motivo:', 1)[-1].strip() if 'Motivo:' in text else text.strip()
-            result[current['id']] = ('falhou', reason[:300])
-        elif _is_success(text):
-            result[current['id']] = ('ok', text.strip()[:300])
-    return result
-
-
-def last_outcome_by_name(messages: List[Tuple[int, str]]) -> Dict[str, Tuple[str, str]]:
-    """{nome do produto (normalizado): ('ok'|'falhou', texto)} do último resultado de cada produto na conversa."""
-    result: Dict[str, Tuple[str, str]] = {}
-    current = None
-    for _, text in messages:
-        low = (text or '').lower()
-        if 'iniciando' in low:
-            current = _norm(text.split(':', 1)[-1])[:40]
-            continue
-        if not current:
-            continue
-        if 'não consegui' in low or 'nao consegui' in low or '❌' in text:
-            reason = text.split('Motivo:', 1)[-1].strip() if 'Motivo:' in text else text.strip()
-            result[current] = ('falhou', reason[:300])
-            current = None
-        elif _is_success(text):
-            result[current] = ('ok', text.strip()[:300])
-            current = None
-    return result
-
-
-def recent_failures(limit: int = 500) -> Dict[str, Tuple[str, str]]:
-    """Produtos cuja última tentativa na LiA falhou (lê as últimas `limit` mensagens dela)."""
-    messages = asyncio.run(_read(0, limit))
-    return {k: v for k, v in last_outcome_by_name(messages).items() if v[0] == 'falhou'}
 
 
 def same_product(norm_name: str, product_name: str) -> bool:
@@ -187,7 +144,58 @@ def same_product(norm_name: str, product_name: str) -> bool:
     return bool(norm_name) and (mine.startswith(norm_name[:30]) or norm_name.startswith(mine[:30]))
 
 
-async def _read(min_id: int, limit: int = 300) -> List[Tuple[int, str]]:
+Message = Tuple[int, str, str]          # (id, texto, data ISO)
+Outcome = Tuple[str, str, str]          # ('ok'|'falhou', texto ou motivo, data ISO da mensagem)
+
+
+def attempts(messages: List[Message]) -> List[Tuple[int, str, Outcome]]:
+    """
+    Cada tentativa de publicação na conversa (da mais antiga para a mais nova): (id do "Iniciando", nome do
+    produto normalizado, resultado). A LiA avisa "Iniciando: <produto>" e depois "Não consegui publicar…
+    Motivo: …" ou "Vídeo salvo na Shopee ✅".
+    """
+    found, current = [], None
+    for msg_id, text, when in messages:
+        if 'iniciando' in (text or '').lower():
+            current = (msg_id, _norm(text.split(':', 1)[-1])[:40])
+            continue
+        if not current:
+            continue
+        if _is_failure(text):
+            reason = text.split('Motivo:', 1)[-1].strip() if 'Motivo:' in text else text.strip()
+            found.append((current[0], current[1], ('falhou', reason[:300], when)))
+            current = None
+        elif _is_success(text):
+            found.append((current[0], current[1], ('ok', text.strip()[:300], when)))
+            current = None
+    return found
+
+
+def outcomes(messages: List[Message], posts: List[Dict]) -> Dict[int, Outcome]:
+    """{post_id: resultado} da primeira tentativa de cada post depois do envio dele (lia_msg_id)."""
+    result: Dict[int, Outcome] = {}
+    for start_id, name, outcome in attempts(messages):
+        post = next((p for p in posts if p['id'] not in result and start_id > (p.get('lia_msg_id') or 0)
+                     and same_product(name, p['product_name'])), None)
+        if post:
+            result[post['id']] = outcome
+    return result
+
+
+def last_outcome_by_name(messages: List[Message]) -> Dict[str, Outcome]:
+    """{produto normalizado: resultado da ÚLTIMA tentativa} (reenviou e deu certo: vale o sucesso)."""
+    result: Dict[str, Outcome] = {}
+    for _, name, outcome in attempts(messages):
+        result[name] = outcome
+    return result
+
+
+def recent_outcomes(limit: int = 1000) -> Dict[str, Outcome]:
+    """Último resultado de cada produto nas últimas `limit` mensagens da LiA."""
+    return last_outcome_by_name(asyncio.run(_read(0, limit)))
+
+
+async def _read(min_id: int, limit: int = 300) -> List[Message]:
     from telethon import TelegramClient
 
     client = TelegramClient(str(SESSION), int(os.environ['TELEGRAM_API_ID']), os.environ['TELEGRAM_API_HASH'])
@@ -197,12 +205,12 @@ async def _read(min_id: int, limit: int = 300) -> List[Tuple[int, str]]:
             raise LiaError("a conta não está logada no VPS (rode lia_login.py)")
         bot = await client.get_entity(os.getenv('LIA_BOT', '@Liaautomacao_bot'))
         messages = await client.get_messages(bot, min_id=min_id, limit=limit)
-        return [(m.id, m.message or '') for m in reversed(messages) if not m.out]
+        return [(m.id, m.message or '', m.date.isoformat()) for m in reversed(messages) if not m.out]
     finally:
         await client.disconnect()
 
 
-def check(posts: List[Dict]) -> Dict[int, Tuple[str, str]]:
+def check(posts: List[Dict]) -> Dict[int, Outcome]:
     """Resultado da publicação dos posts que a LiA está publicando (lê a conversa com ela)."""
     if not posts:
         return {}

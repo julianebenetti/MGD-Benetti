@@ -94,11 +94,12 @@ Configuração (uma vez):
 3. `sudo systemctl restart shopee-video`. O log mostra `LiA: ligada (agenda)`.
 
 **Confirmação da publicação:** tocar em Publicar só põe o vídeo na fila da LiA; quem publica é o
-tablet/celular. O post fica **🤖 na LiA** e, a cada 5 minutos, o robô lê a conversa com ela: publicado → vai
-para 🚀 Postados; "Não consegui publicar" (ex.: tablet desligado) → volta para ⏰ Agenda com o motivo e o botão
+tablet/celular. O post fica **🤖 na LiA** e, a cada 5 minutos, o robô lê a conversa com ela: "Vídeo salvo na
+Shopee ✅" → vai para 🚀 Postados com a data/hora dessa mensagem (horário real da postagem); "Não consegui publicar" (ex.: tablet desligado) → volta para ⏰ Agenda com o motivo e o botão
 **📤 Enviar à LiA**; sem resposta em 2 h (`LIA_ALERTA_HORAS`) → aviso. **`/verificarlia`** confere a conversa
-toda e devolve para a Agenda os vídeos que tinham ido para Postados mas falharam na LiA (feito uma vez,
-sozinho, na primeira vez que o robô liga com esta versão).
+toda pela última tentativa de cada vídeo: se falhou e foi reenviado com sucesso, fica em Postados com a
+data/hora real da postagem; se a última tentativa falhou, volta para a Agenda (feito uma vez, sozinho, ao ligar
+esta versão).
 
 O login fica em `lia.session`, só no VPS (nunca no GitHub). Ele dá acesso à sua conta: não copie esse
 arquivo para lugar nenhum. Para desligar o envio: `LIA_ENVIAR=nao`. Para mandar logo ao aprovar, em vez de
