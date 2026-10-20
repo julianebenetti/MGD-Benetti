@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792523501,
-  "updated_at_br": "20/10/2026 16:06",
+  "updated_at": 1792527757,
+  "updated_at_br": "20/10/2026 17:17",
   "period_days": 90,
-  "total_orders": 6247,
-  "total_conversions": 6000,
+  "total_orders": 6246,
+  "total_conversions": 5999,
   "orders": [
     {
       "ID do pedido": "26102040TSGFFU",
@@ -7257,7 +7257,7 @@
     },
     {
       "ID do pedido": "261013FD0HKMN6",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-12 18:36:13",
       "Sub_id1": "10Out26VEAcalcinhacosalto",
       "Valor de Compra(R$)": "49.99",
@@ -7269,7 +7269,7 @@
       "Comissao total do pedido(R$)": "2.09958",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Conjunto bebê menina 3 a 6 meses algodão linho babadinhos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23094934822",
       "ID da loja": "329973352",
       "Nome da loja": "Jardim Baby",
@@ -7277,7 +7277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245529373188551",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-12"
     },
     {
@@ -9657,7 +9657,7 @@
     },
     {
       "ID do pedido": "261011CKEW0JHA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 15:53:38",
       "Sub_id1": "10Out26VEAConjuntoCaneladoFeminino",
       "Valor de Compra(R$)": "51.87",
@@ -9669,7 +9669,7 @@
       "Comissao total do pedido(R$)": "11.9301",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Conjunto Canelado Feminino Elegante Calça e Blusa Confortável Passeio Trabalho festa",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "51762747273",
       "ID da loja": "1178846577",
       "Nome da loja": "LUNAKIDS",
@@ -9677,7 +9677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245433218147170",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
@@ -14382,7 +14382,7 @@
     },
     {
       "ID do pedido": "2610083Q2G0UXH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-08 03:04:20",
       "Sub_id1": "",
       "Valor de Compra(R$)": "94.77",
@@ -14394,7 +14394,7 @@
       "Comissao total do pedido(R$)": "1.65847",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -14402,7 +14402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245127859190987",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-08"
     },
     {
@@ -156152,31 +156152,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238451387174779",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-22"
-    },
-    {
-      "ID do pedido": "260723D1B99J4W",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-22 19:35:29",
-      "Sub_id1": "20Jul26BobojacoFemininaVs2",
-      "Valor de Compra(R$)": "69.99",
-      "Comissao liquida do afiliado(R$)": "6.2991",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "6.00%",
-      "Comissao Shopee(R$)": "2.7996",
-      "Comissao do vendedor(R$)": "4.1994",
-      "Comissao total do pedido(R$)": "6.999",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Calça Jeans Branca Feminina Skinny Lycra Tecido Grosso Cintura Alta perfeita pra Enfermagem/Dentista",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "4376050877",
-      "ID da loja": "373054496",
-      "Nome da loja": "Billy Jeans",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238448129198366",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-22"
     }
