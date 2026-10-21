@@ -1,6 +1,6 @@
 {
-  "updated_at": 1792562118,
-  "updated_at_br": "21/10/2026 02:50",
+  "updated_at": 1792570714,
+  "updated_at_br": "21/10/2026 05:13",
   "period_days": 90,
   "total_orders": 6226,
   "total_conversions": 5979,
@@ -8082,7 +8082,7 @@
     },
     {
       "ID do pedido": "261012EJX6G74Q",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-12 10:49:37",
       "Sub_id1": "10Out26VEAcalcinhacosalto",
       "Valor de Compra(R$)": "19.99",
@@ -8094,7 +8094,7 @@
       "Comissao total do pedido(R$)": "0.89955",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Meias E Pulseiras Com Chocalhos Sozzy Criança Brinquedo Coordenação Motora  - Envio em 24 Hrs",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23092686678",
       "ID da loja": "304268222",
       "Nome da loja": "Victória NetStore",
@@ -8102,12 +8102,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245501377148307",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-12"
     },
     {
       "ID do pedido": "261012EJX6G74P",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-12 10:49:37",
       "Sub_id1": "10Out26VEAcalcinhacosalto",
       "Valor de Compra(R$)": "24.75",
@@ -8119,7 +8119,7 @@
       "Comissao total do pedido(R$)": "1.485",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Brinquedo Bebe Chocalho Mordedor Silicone Macio Bola Colorida 8 Peça Menina e Menino Móbile",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18899895250",
       "ID da loja": "1032065719",
       "Nome da loja": "Shopping Das Utilidades BR",
@@ -8127,7 +8127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245501377148307",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-12"
     },
     {
