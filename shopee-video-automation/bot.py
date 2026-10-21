@@ -444,9 +444,7 @@ class Bot:
             self.tg.send_text(EDITADOS, "⚠️ Não consegui juntar a capa ao vídeo. Tente aprovar de novo.",
                               reply_to=post['editados_msgs'][-1] if post['editados_msgs'] else None)
             return
-        posted = [p['posted_at'] for p in self.db.with_status('postado') if p['posted_at']]
-        last_posted = datetime.fromisoformat(max(posted)) if posted else None
-        slot = scheduler.next_slot(post['product_key'], self.db.scheduled(), last_posted=last_posted)
+        slot = self.next_slot(post)
         self.tg.delete(post['editados_msgs'])
         self.db.update_post(post_id, status='agendado', scheduled_at=slot.isoformat(),
                             editados_msgs=[], final_video_path=final)
@@ -459,6 +457,42 @@ class Bot:
         self.db.update_post(post_id, agenda_msgs=ids)
         if self.lia and self.lia_when == 'aprovar':
             self.send_to_lia(self.db.get_post(post_id))
+
+    def next_slot(self, post: Dict) -> datetime:
+        """Próximo horário livre da agenda para o post (os já postados contam no limite do dia)."""
+        since = (scheduler.now() - timedelta(days=2)).isoformat()
+        posted = [p for p in self.db.with_status('postado') if p['posted_at'] and p['posted_at'] >= since]
+        last = max((p['posted_at'] for p in posted), default=None)
+        others = [p for p in self.db.scheduled() if p['id'] != post['id']]
+        return scheduler.next_slot(post['product_key'], others, posted=posted,
+                                   last_posted=datetime.fromisoformat(last) if last else None)
+
+    def reschedule(self, post: Dict, reason: str):
+        """
+        A LiA não conseguiu publicar: o post ganha o próximo horário livre da agenda (mesmas regras) e, nessa
+        hora, vai de novo para a LiA, até ser publicado. Avisa na Agenda com o motivo e o novo horário.
+        """
+        slot = self.next_slot(post)
+        tries = post['metadata'].get('lia_tentativas', 0) + 1
+        self.db.update_post(post['id'], status='agendado', scheduled_at=slot.isoformat(), posted_at=None,
+                            posted_via=None, metadata={**post['metadata'], 'lia_tentou': True,
+                                                       'lia_tentativas': tries, 'lia_alertado': False})
+        self.resubid(self.db.get_post(post['id']))   # a data da publicação mudou: sub_id e links acompanham
+        post = self.db.get_post(post['id'])
+        text = f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}"
+        msgs = post['agenda_msgs']
+        if len(msgs) > 2 and self.tg.edit_text(msgs[2], text, markup=self.agenda_markup(post['id'])):
+            ids = list(msgs)
+        else:   # as mensagens da Agenda já tinham sido apagadas (ex.: tinha ido para Postados)
+            video = post.get('final_video_path') or post['video_path']
+            ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], video) if Path(video).exists() else []
+            ids.append(self.tg.send_text(AGENDA, text, markup=self.agenda_markup(post['id'])))
+        ids.append(self.tg.send_text(
+            AGENDA, f"❌ <b>A LiA não conseguiu publicar</b> {html.escape(post['product_name'][:60])} "
+                    f"(tentativa {tries})\nMotivo: {html.escape(reason)}\n\n🔁 <b>Reagendado para "
+                    f"{fmt_when(post['scheduled_at'])}</b>: nessa hora mando de novo. Deixe o tablet/celular "
+                    "ligado e conectado.", reply_to=ids[-1] if ids else None, markup=self.agenda_markup(post['id'])))
+        self.db.update_post(post['id'], agenda_msgs=ids)
 
     def resubid(self, post: Dict, force: bool = False) -> bool:
         """
@@ -517,12 +551,7 @@ class Bot:
         except Exception as e:
             if not isinstance(e, lia_sender.LiaError):
                 logger.exception("Falha ao enviar à LiA")
-            self.db.update_post(post_id, status='avisado')
-            msg_id = self.tg.send_text(
-                AGENDA, f"⚠️ Não consegui passar <b>{html.escape(post['product_name'])}</b> para a LiA: "
-                        f"{html.escape(str(e))}\nToque 📤 Enviar à LiA para tentar de novo, ou poste e toque ✅ Postei.",
-                reply_to=reply_to, markup=self.agenda_markup(post_id))
-            self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
+            self.reschedule(post, f"não consegui passar o vídeo para a LiA ({e})")
             return
         if result.published:   # a publicação acontece depois, no aparelho: confirmo lendo a LiA
             self.db.update_post(post_id, status='na_lia', lia_msg_id=result.sent_id, lia_sent_at=time.time())
@@ -552,14 +581,7 @@ class Bot:
             if outcome and outcome[0] == 'ok':
                 self.move_to_postados(post, "🤖 Publicado pela LiA", via='lia', when=outcome[2])
             elif outcome:
-                self.db.update_post(post['id'], status='avisado',
-                                    metadata={**post['metadata'], 'lia_tentou': True})
-                msg_id = self.tg.send_text(
-                    AGENDA, f"❌ <b>A LiA não conseguiu publicar</b> {html.escape(post['product_name'][:60])}\n"
-                            f"Motivo: {html.escape(outcome[1])}\n\nConfira se o tablet/celular está ligado e "
-                            "conectado e toque 📤 Enviar à LiA para tentar de novo (ou poste e toque ✅ Postei).",
-                    reply_to=reply_to, markup=self.agenda_markup(post['id']))
-                self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
+                self.reschedule(post, outcome[1])
             elif time.time() - (post.get('lia_sent_at') or time.time()) > LIA_ALERT_SECONDS \
                     and not post['metadata'].get('lia_alertado'):
                 self.db.update_post(post['id'], metadata={**post['metadata'], 'lia_alertado': True})
@@ -575,7 +597,7 @@ class Bot:
         Confere a conversa toda com a LiA e acerta cada vídeo pelo resultado da ÚLTIMA tentativa:
         - deu certo (reenviado depois de uma falha, inclusive): fica em Postados com a data/hora real da
           mensagem "Vídeo salvo na Shopee";
-        - falhou e não houve tentativa depois: volta para a Agenda com o motivo e o botão para reenviar.
+        - falhou e não houve tentativa depois: ganha um novo horário na Agenda (reagendado) e é reenviado nele.
         """
         try:
             results = lia_sender.recent_outcomes()
@@ -585,7 +607,9 @@ class Bot:
                 self.tg.send_text(thread, f"⚠️ Não consegui ler a conversa com a LiA: {html.escape(str(e)[:200])}")
             return
         fixed, back = [], []
-        for post in self.db.with_status('postado', 'na_lia', 'avisado'):
+        # posts 'na_lia' (reenviados, esperando a LiA) ficam com a checagem de 5 min, que só olha as respostas
+        # depois do envio: aqui uma falha antiga do mesmo produto os reagendaria por engano
+        for post in self.db.with_status('postado', 'avisado'):
             sent_to_lia = post.get('lia_msg_id') or post['metadata'].get('lia_tentou') or post.get('posted_via') == 'lia'
             if not sent_to_lia:
                 continue
@@ -601,22 +625,15 @@ class Bot:
             elif status == 'ok':
                 self.move_to_postados(post, "🤖 Publicado pela LiA", via='lia', when=when)
                 fixed.append(f"{post['product_name'][:45]} → {real:%d/%m %H:%M}")
-            elif post['status'] in ('postado', 'na_lia'):
-                video = post.get('final_video_path') or post['video_path']
-                ids = self.tg.send_cover_and_video(AGENDA, post['cover_path'], video) if Path(video).exists() else []
-                ids.append(self.tg.send_text(
-                    AGENDA, f"❌ <b>A LiA não conseguiu publicar este vídeo</b>\nMotivo: {html.escape(text)}\n\n"
-                            f"{post_text(post)}\n\nConfira se o tablet/celular está ligado e toque 📤 Enviar à LiA "
-                            "(ou poste e toque ✅ Postei).", markup=self.agenda_markup(post['id'])))
-                self.db.update_post(post['id'], status='avisado', agenda_msgs=ids, posted_at=None, posted_via=None,
-                                    metadata={**post['metadata'], 'lia_tentou': True})
+            elif post['status'] == 'postado':
+                self.reschedule(post, text)
                 back.append(post['product_name'][:50])
         parts = []
         if fixed:
             parts.append(f"✅ {len(fixed)} vídeo(s) publicados pela LiA, com a data/hora real da postagem:\n"
                          + '\n'.join(f"• {html.escape(f)}" for f in fixed))
         if back:
-            parts.append(f"❌ {len(back)} vídeo(s) não foram publicados e voltaram para ⏰ Agenda:\n"
+            parts.append(f"❌ {len(back)} vídeo(s) não foram publicados e foram reagendados na ⏰ Agenda:\n"
                          + '\n'.join(f"• {html.escape(n)}" for n in back))
         if parts or thread:
             self.tg.send_text(thread or AGENDA, "🔎 <b>Conferi a conversa com a LiA</b>\n\n"

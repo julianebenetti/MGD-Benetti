@@ -1,5 +1,6 @@
 """
-Agenda em sequência: cada post entra de 1 a 2 horas depois do anterior, dentro da janela do dia,
+Agenda em sequência: cada post entra de 1 a 2 horas depois do anterior (menos, se for preciso para caberem
+os N do dia; nunca menos de 1 hora), dentro da janela do dia,
 em horários quebrados, no máximo N por dia e nunca o mesmo produto duas vezes no mesmo dia.
 """
 
@@ -38,16 +39,22 @@ def _day_start(day, rng: random.Random) -> datetime:
 
 
 def next_slot(product_key: str, scheduled: Iterable[dict], current: Optional[datetime] = None,
-              rng: Optional[random.Random] = None, last_posted: Optional[datetime] = None) -> datetime:
+              rng: Optional[random.Random] = None, last_posted: Optional[datetime] = None,
+              posted: Iterable[dict] = ()) -> datetime:
     """
-    Sequência por dia: o post entra de GAP_MIN a GAP_MAX minutos depois do último daquele dia (ou do último
-    postado, ou de agora), dentro da janela START_HOUR–END_HOUR. Dia cheio (POSTS_PER_DAY), sem espaço até
-    END_HOUR ou que já tem o mesmo produto: vai para o dia seguinte, começando logo depois de START_HOUR.
-    `scheduled`: posts já agendados, cada um com 'scheduled_at' (ISO) e 'product_key'.
+    Sequência por dia: o post entra depois do último daquele dia (ou do último postado, ou de agora), dentro da
+    janela START_HOUR–END_HOUR, em minuto quebrado. O intervalo é de GAP_MIN a GAP_MAX minutos, encurtado (nunca
+    abaixo de GAP_MIN) quando é preciso para caberem os POSTS_PER_DAY do dia até END_HOUR. Dia cheio, sem espaço
+    ou que já tem o mesmo produto: vai para o dia seguinte, logo depois de START_HOUR.
+    `scheduled`: posts agendados ('scheduled_at', 'product_key'); `posted`: já postados ('posted_at',
+    'product_key'), que também contam no limite do dia e na regra do mesmo produto.
     """
     current = current or now()
     rng = rng or random.Random()
-    items = [(datetime.fromisoformat(p['scheduled_at']).astimezone(TZ), p['product_key']) for p in scheduled]
+    items = [(datetime.fromisoformat(p['scheduled_at']).astimezone(TZ), p['product_key'])
+             for p in scheduled if p.get('scheduled_at')]
+    items += [(datetime.fromisoformat(p['posted_at']).astimezone(TZ), p['product_key'])
+              for p in posted if p.get('posted_at')]
     for offset in range(MAX_DAYS_AHEAD):
         day = (current + timedelta(days=offset)).date()
         day_items = [(w, k) for w, k in items if w.date() == day]
@@ -57,7 +64,11 @@ def next_slot(product_key: str, scheduled: Iterable[dict], current: Optional[dat
         if offset == 0:
             refs += [current] + ([last_posted.astimezone(TZ)] if last_posted else [])
         if refs and max(refs) >= datetime.combine(day, time(START_HOUR), TZ):
-            slot = _broken(max(refs) + timedelta(minutes=rng.randint(GAP_MIN, GAP_MAX)))
+            base = max(refs)
+            left = POSTS_PER_DAY - len(day_items)                       # posts que ainda cabem no dia
+            room = (datetime.combine(day, time(END_HOUR), TZ) - base).total_seconds() / 60
+            top = max(GAP_MIN, min(GAP_MAX, int(room / left)))           # encurta para caberem os do dia
+            slot = _broken(base + timedelta(minutes=rng.randint(GAP_MIN, top)))
         else:
             slot = _day_start(day, rng)
         if slot.time() < time(START_HOUR):

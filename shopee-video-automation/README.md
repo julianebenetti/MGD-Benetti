@@ -95,8 +95,8 @@ Configuração (uma vez):
 
 **Confirmação da publicação:** tocar em Publicar só põe o vídeo na fila da LiA; quem publica é o
 tablet/celular. O post fica **🤖 na LiA** e, a cada 5 minutos, o robô lê a conversa com ela: "Vídeo salvo na
-Shopee ✅" → vai para 🚀 Postados com a data/hora dessa mensagem (horário real da postagem); "Não consegui publicar" (ex.: tablet desligado) → volta para ⏰ Agenda com o motivo e o botão
-**📤 Enviar à LiA**; sem resposta em 2 h (`LIA_ALERTA_HORAS`) → aviso. **`/verificarlia`** confere a conversa
+Shopee ✅" → vai para 🚀 Postados com a data/hora dessa mensagem (horário real da postagem); "Não consegui publicar" (ex.: tablet desligado) ou erro ao mandar → **reagendado** no próximo horário
+livre da agenda (mesmas regras), com aviso do motivo, e reenviado nesse horário até ser publicado; sem resposta em 2 h (`LIA_ALERTA_HORAS`) → aviso. **`/verificarlia`** confere a conversa
 toda pela última tentativa de cada vídeo: se falhou e foi reenviado com sucesso, fica em Postados com a
 data/hora real da postagem; se a última tentativa falhou, volta para a Agenda (feito uma vez, sozinho, ao ligar
 esta versão).
@@ -122,7 +122,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | CTA | Laranja Shopee com letra branca e sombra (aparece em vídeo claro ou escuro), na área segura da tela cheia: longe do corte lateral (~9% de cada lado), dos botões da direita e do card do produto |
 | Logo no vídeo | 11% da borda esquerda e 12% do topo: inteiro na tela cheia (o app corta as laterais) e abaixo da seta/busca |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
-| Agenda | Em sequência: cada vídeo aprovado entra **de 1 a 2 horas depois do último** da fila (ou do último postado), entre 9h e 22h, até 10 por dia, horários quebrados, nunca o mesmo produto no mesmo dia (esse vai para a manhã seguinte e os outros seguem o dia). `AGENDA_INTERVALO_MIN`/`MAX` mudam o intervalo |
+| Agenda | Em sequência, entre 9h e 22h, até 10 por dia (os já postados contam), horários quebrados (ex.: 14:37). Cada vídeo entra de 1 a 2 h depois do anterior; quando é preciso para caberem os 10 do dia, o intervalo encurta, nunca abaixo de 1 h. Nunca o mesmo produto no mesmo dia (vai para a manhã seguinte e os outros seguem o dia). `AGENDA_INTERVALO_MIN`/`MAX` mudam o intervalo |
 
 Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `AGENDA_FIM`, `AGENDA_INTERVALO_MIN`, `AGENDA_INTERVALO_MAX`.
 
