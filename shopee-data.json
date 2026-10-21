@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792570714,
-  "updated_at_br": "21/10/2026 05:13",
+  "updated_at": 1792576307,
+  "updated_at_br": "21/10/2026 06:46",
   "period_days": 90,
-  "total_orders": 6226,
-  "total_conversions": 5979,
+  "total_orders": 6225,
+  "total_conversions": 5978,
   "orders": [
     {
       "ID do pedido": "26102040TSGFFU",
@@ -155627,31 +155627,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238500535123456",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-23"
-    },
-    {
-      "ID do pedido": "260723EGHX0ASD",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-23 09:40:18",
-      "Sub_id1": "20Jul26BobojacoFemininaVs2",
-      "Valor de Compra(R$)": "109.9",
-      "Comissao liquida do afiliado(R$)": "5.14332",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "1.20%",
-      "Comissao Shopee(R$)": "4.396",
-      "Comissao do vendedor(R$)": "1.3188",
-      "Comissao total do pedido(R$)": "5.7148",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 3 Complexo B - AlwaysFit - Forma Ativa B6 B9 (Metilfolato) B12 (Metilcobalamina)",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22994900568",
-      "ID da loja": "1543591764",
-      "Nome da loja": "Always Fit Suplementos",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238498818101770",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-23"
     }
