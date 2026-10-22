@@ -1,6 +1,6 @@
 {
-  "updated_at": 1792657196,
-  "updated_at_br": "22/10/2026 05:14",
+  "updated_at": 1792662731,
+  "updated_at_br": "22/10/2026 06:46",
   "period_days": 90,
   "total_orders": 6208,
   "total_conversions": 5960,
@@ -1482,7 +1482,7 @@
     },
     {
       "ID do pedido": "2610180YCV3RK6",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-18 14:41:58",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "41.9",
@@ -1494,7 +1494,7 @@
       "Comissao total do pedido(R$)": "9.218",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Kit 10 Calcinhas Femininas de Algodão Cotton Adulto Lisas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22399130131",
       "ID da loja": "597534350",
       "Nome da loja": "Amazile Store",
@@ -1502,7 +1502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "246033718139534",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-18"
     },
     {
@@ -11507,7 +11507,7 @@
     },
     {
       "ID do pedido": "261011AWEA07V3",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-10 23:46:56",
       "Sub_id1": "10Out26VEAcalcinhacosalto",
       "Valor de Compra(R$)": "43.99",
@@ -11519,7 +11519,7 @@
       "Comissao total do pedido(R$)": "3.9591",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Colcha Lençol Com Babado Queen 3 Peças Toque de Algodão - Kit Completo Com Fronhas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "46165643279",
       "ID da loja": "1649551591",
       "Nome da loja": "E. M. TEXTIL",
@@ -11527,7 +11527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245375216150070",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-10"
     },
     {
