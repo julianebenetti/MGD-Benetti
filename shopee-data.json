@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792648674,
-  "updated_at_br": "22/10/2026 02:52",
+  "updated_at": 1792657196,
+  "updated_at_br": "22/10/2026 05:14",
   "period_days": 90,
-  "total_orders": 6209,
-  "total_conversions": 5961,
+  "total_orders": 6208,
+  "total_conversions": 5960,
   "orders": [
     {
       "ID do pedido": "26102177R1DPXC",
@@ -155203,31 +155203,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238587151150882",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-24"
-    },
-    {
-      "ID do pedido": "260724GUJDKVB0",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-24 08:02:46",
-      "Sub_id1": "18Jul26JaquetaSarjaBarba",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Calça masculina xadrez jogger lápis fino skinny",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "20699208612",
-      "ID da loja": "1194074429",
-      "Nome da loja": "Use do Carmo",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238579365107013",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-24"
     }
   ]
