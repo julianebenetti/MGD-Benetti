@@ -62,7 +62,6 @@ PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
 RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
-IDEAS_NO_REPEAT_DAYS = 5
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
 LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # sem confirmação: avisa                          # ideia sugerida não volta antes disso
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
@@ -1003,18 +1002,27 @@ class Bot:
         self.submit(('report', thread or RELATORIO, day))
 
     def job_ideas(self, thread: Optional[int]):
-        """Lista de ideias: sem produtos já postados/agendados nem sugeridos nos últimos dias."""
+        """
+        Lista de ideias sem repetir: nada já postado/agendado (nem parecido) e nada sugerido nos últimos
+        ideas.REPEAT_DAYS dias, nem o mesmo anúncio nem o mesmo tipo de produto de outra loja.
+        """
         today = scheduler.now().date()
-        used = {p['product_key'] for p in self.db.with_status(
-            'editado', 'agendando', 'agendado', 'enviando', 'avisado', 'postado')}
-        for p in self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'avisado', 'postado'):
+        active = self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'na_lia', 'avisado', 'postado')
+        used = {p['product_key'] for p in active}
+        used_types = {ideas.similar_key(p['product_name']) for p in active}
+        for p in active:
             used |= {f"{x['shopId']}:{x['itemId']}" for x in p['products'] or []}
-        suggested = json.loads(self.db.get_meta('ideias_sugeridas', '{}'))
-        cutoff = (today - timedelta(days=IDEAS_NO_REPEAT_DAYS)).isoformat()
-        suggested = {k: d for k, d in suggested.items() if d > cutoff}
+        cutoff = (today - timedelta(days=ideas.REPEAT_DAYS)).isoformat()
+        suggested = {k: d for k, d in json.loads(self.db.get_meta('ideias_sugeridas', '{}')).items() if d > cutoff}
+        types = {k: d for k, d in json.loads(self.db.get_meta('ideias_tipos', '{}')).items() if d > cutoff}
+
+        def skip(p: Dict) -> bool:
+            kind = ideas.similar_key(p.get('productName', ''))
+            key = f"{p['shopId']}:{p['itemId']}"
+            return key in used or key in suggested or kind in types or kind in used_types
+
         try:
-            seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today,
-                                                       lambda key: key in used or key in suggested)
+            seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today, skip)
         except Exception as e:
             logger.exception("Ideias falharam")
             self.tg.send_text(thread, f"⚠️ Não consegui buscar ideias agora: {html.escape(str(e)[:200])}")
@@ -1023,7 +1031,9 @@ class Bot:
             self.tg.send_text(thread, message)
         for p in seasonal + evergreen + cheap:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
+            types[ideas.similar_key(p['productName'])] = today.isoformat()
         self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
+        self.db.set_meta('ideias_tipos', json.dumps(types))
 
     def daily_ideas(self):
         """No horário IDEIAS_HORA, a lista do dia vai sozinha para 💡 Ideias (uma vez por dia)."""

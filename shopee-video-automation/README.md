@@ -63,9 +63,12 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 qualquer tópico do grupo.
 
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`**: pelo menos 15 produtos
-para gravar (normalmente 20), das datas comemorativas dos próximos 90 dias e de categorias que vendem o ano
-todo. Regras do Garimpo: comissão ≥ R$ 9 por venda, nota ≥ 4,7, ≥ 100 vendas, nunca suplementos; sem
-produtos já postados/agendados nem sugeridos nos últimos 5 dias. Ordenadas por comissão × vendas (a API de
+para gravar, das datas comemorativas dos próximos 90 dias e de **20 nichos** (cozinha, organização,
+banheiro, limpeza, decoração, quarto, pet, bebê, beleza, moda, calçados/roupas, tecnologia, casa inteligente,
+escritório, fitness, carro, jardim, ferramentas, viagem, festa/presentes), 12 por dia em rodízio, com uma
+palavra-chave diferente por dia e no máximo 2 ideias por nicho. Regras do Garimpo: comissão ≥ R$ 9 por venda, nota ≥ 4,7, ≥ 100 vendas, nunca suplementos; sem
+produtos já postados/agendados nem sugeridos nos últimos 30 dias, nem o mesmo tipo de produto de outra loja
+(ex.: "capa de almofada natal" de lojas diferentes conta como repetido). Ordenadas por comissão × vendas (a API de
 afiliados não informa "mais buscados", o sinal de procura é o total de vendas). Cada ideia traz preço,
 comissão, vendas, nota, a data/categoria e o link do produto para gravar.
 Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira no Shopee Vídeo): até R$ 60
