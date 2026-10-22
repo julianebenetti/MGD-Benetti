@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792696329,
-  "updated_at_br": "22/10/2026 16:06",
+  "updated_at": 1792701016,
+  "updated_at_br": "22/10/2026 17:25",
   "period_days": 90,
-  "total_orders": 6204,
-  "total_conversions": 5956,
+  "total_orders": 6202,
+  "total_conversions": 5954,
   "orders": [
     {
       "ID do pedido": "2610229SB2QSUH",
@@ -1107,7 +1107,7 @@
     },
     {
       "ID do pedido": "2610216P13MX7V",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-20 21:10:19",
       "Sub_id1": "20Out26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "59.25",
@@ -1119,7 +1119,7 @@
       "Comissao total do pedido(R$)": "12.4425",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Macaquinho Saia Plus Size Feminino Elegante Decote Bobo & Amarração Lateral",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "46464714769",
       "ID da loja": "972022966",
       "Nome da loja": "FashionWear",
@@ -1127,7 +1127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "246229818137511",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-20"
     },
     {
@@ -4882,7 +4882,7 @@
     },
     {
       "ID do pedido": "261015PNFNXE9G",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-15 15:56:29",
       "Sub_id1": "",
       "Valor de Compra(R$)": "99.99",
@@ -4894,7 +4894,7 @@
       "Comissao total do pedido(R$)": "1.74982",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -4902,7 +4902,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245778989156524",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-15"
     },
     {
@@ -8632,7 +8632,7 @@
     },
     {
       "ID do pedido": "261013FQUEB5CM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-12 21:50:14",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "85.5",
@@ -8644,7 +8644,7 @@
       "Comissao total do pedido(R$)": "2.565",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Luva de Procedimento Roxa Purple Com Pó - Unigloves",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "17486240766",
       "ID da loja": "427630921",
       "Nome da loja": "NIHONDIN MEDICAL",
@@ -8652,7 +8652,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245541013150907",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-12"
     },
     {
@@ -9007,7 +9007,7 @@
     },
     {
       "ID do pedido": "261013FA15TQDA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-12 17:42:53",
       "Sub_id1": "",
       "Valor de Compra(R$)": "99.99",
@@ -9019,7 +9019,7 @@
       "Comissao total do pedido(R$)": "1.74982",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Escova Rotativa Elétrica Secador de cabelo Professinal 2 em 1  110v e 220v",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18299260537",
       "ID da loja": "372103398",
       "Nome da loja": "ADS-store",
@@ -9027,7 +9027,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245526173169821",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-12"
     },
     {
@@ -11132,7 +11132,7 @@
     },
     {
       "ID do pedido": "261012CQBH9VR2",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 17:03:20",
       "Sub_id1": "10Out26VEABodySplashAyra",
       "Valor de Compra(R$)": "25",
@@ -11144,7 +11144,7 @@
       "Comissao total do pedido(R$)": "8.25",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "BODY SPLASH FEMININO ARABE AYRA 100ML - PRIMACIAL PERFUME FLORAL",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22094238842",
       "ID da loja": "1295467768",
       "Nome da loja": "Primacial",
@@ -11152,7 +11152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245437400172904",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
@@ -11207,7 +11207,7 @@
     },
     {
       "ID do pedido": "261012CP2MTYRT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 16:40:29",
       "Sub_id1": "10Out26VEAcalcinhareforcada",
       "Valor de Compra(R$)": "28.9",
@@ -11219,7 +11219,7 @@
       "Comissao total do pedido(R$)": "1.734",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 2 Sutiãs Tomara que Caia Top Faixa com Bojo Sem Alça Conforto Sustentação Bustiê Feminino Dia",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58207054443",
       "ID da loja": "1531233152",
       "Nome da loja": "Velus",
@@ -11227,7 +11227,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245436028140506",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
@@ -12732,7 +12732,7 @@
     },
     {
       "ID do pedido": "261011ARQ7T8BY",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-10 22:22:27",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "39.9",
@@ -12744,7 +12744,7 @@
       "Comissao total do pedido(R$)": "8.778",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Kit 10 Calcinhas Femininas de Algodão Cotton Adulto Lisas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22399130131",
       "ID da loja": "597534350",
       "Nome da loja": "Amazile Store",
@@ -12752,7 +12752,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245370147133600",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-10"
     },
     {
@@ -13707,7 +13707,7 @@
     },
     {
       "ID do pedido": "2610109QUJHMJU",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-10 12:34:19",
       "Sub_id1": "07Out26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "28.67",
@@ -13719,7 +13719,7 @@
       "Comissao total do pedido(R$)": "1.7202",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camisa Camiseta Proteção Uv 50+ Tecido Gelado Segunda Pele Térmica Dry Secagem Rápida",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23791444929",
       "ID da loja": "959065787",
       "Nome da loja": "DISPERTY",
@@ -13727,7 +13727,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245334859128143",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-10"
     },
     {
@@ -155053,56 +155053,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238624335135763",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-24"
-    },
-    {
-      "ID do pedido": "260725J27U6AV3",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-24 19:34:47",
-      "Sub_id1": "20Jul26BobojacoFemininaVs2",
-      "Valor de Compra(R$)": "21.99",
-      "Comissao liquida do afiliado(R$)": "0.83562",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.8796",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8796",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 10 Bowl Preto 1300ml com Tampa Potes GL MIX - Reforçados Cozinha Alimentos e Marmitas Congelador",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22399332095",
-      "ID da loja": "1731657310",
-      "Nome da loja": "GL MIX Utilidades Oficial",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238620886175138",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-24"
-    },
-    {
-      "ID do pedido": "260725J1SHDF01",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-24 19:26:47",
-      "Sub_id1": "03Jul26KitKokeshiVs1",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "23.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Kit Dupla Renovadores Faciais Kokeshi Pele Porcelana Olhos Gueixa",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "23994387054",
-      "ID da loja": "395166866",
-      "Nome da loja": "KOKESHI OFICIAL",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "238620406163782",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-24"
     }
   ]
