@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792782395,
-  "updated_at_br": "23/10/2026 16:01",
+  "updated_at": 1792786629,
+  "updated_at_br": "23/10/2026 17:11",
   "period_days": 90,
-  "total_orders": 6166,
-  "total_conversions": 5922,
+  "total_orders": 6165,
+  "total_conversions": 5921,
   "orders": [
     {
       "ID do pedido": "261023C9CJ1M9D",
@@ -7307,7 +7307,7 @@
     },
     {
       "ID do pedido": "261014KV5A3908",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-14 13:17:58",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "44",
@@ -7319,7 +7319,7 @@
       "Comissao total do pedido(R$)": "3.168",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 5 Calcinha Tradicional De Algodão Com Viés Aberto Para Academia Não Marca Na Roupa Modelo Básico",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23991837770",
       "ID da loja": "500031331",
       "Nome da loja": "Lifting Lingerie",
@@ -7327,7 +7327,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245683078161703",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-14"
     },
     {
@@ -11757,7 +11757,7 @@
     },
     {
       "ID do pedido": "261012D00FTHXV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-11 19:38:13",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "41.9",
@@ -11769,7 +11769,7 @@
       "Comissao total do pedido(R$)": "9.218",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Kit 10 Calcinhas Femininas de Algodão Cotton Adulto Lisas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22399130131",
       "ID da loja": "597534350",
       "Nome da loja": "Amazile Store",
@@ -11777,7 +11777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245446693192191",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-11"
     },
     {
@@ -154127,31 +154127,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238711042179680",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-25"
-    },
-    {
-      "ID do pedido": "260726MH58HPKV",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-25 19:07:05",
-      "Sub_id1": "25Jul26CalcaJoggerVs1",
-      "Valor de Compra(R$)": "12.68",
-      "Comissao liquida do afiliado(R$)": "0.77095",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "2.40%",
-      "Comissao Shopee(R$)": "0.5072",
-      "Comissao do vendedor(R$)": "0.30432",
-      "Comissao total do pedido(R$)": "0.81152",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Resident Evil 4 Dublado BR - Ps2",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18199646934",
-      "ID da loja": "1442870173",
-      "Nome da loja": "Tilt-Games",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238705625110413",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-25"
     }
