@@ -136,8 +136,18 @@ def compact(prompt: str) -> str:
     head, speech = (prompt[:i.end()], prompt[i.end():]) if i else (prompt, '')
     for pattern, short in ABBREVIATIONS:
         head = re.sub(pattern, short, head, flags=re.IGNORECASE)
-    head = re.sub(r'(^|[.!?]\s+)([a-zà-ú])', lambda m: m.group(1) + m.group(2).upper(), head)   # início de frase
+    head = re.sub(r'(^|[.!?]\s+)([a-zà-ú])', lambda m: _capitalize(m, head), head)   # início de frase
     return (head + speech).strip()
+
+
+ABBREVIATED = re.compile(r'\b(mov|ref|fem|nº|n°|aprox|ex)\.\s+$', re.IGNORECASE)
+
+
+def _capitalize(m, text: str) -> str:
+    # o ponto de "mov." / "ref." / "fem." não termina a frase: "mov. suaves" continua minúsculo
+    if ABBREVIATED.search(text[:m.start(2)]):
+        return m.group(0)
+    return m.group(1) + m.group(2).upper()
 
 
 def _split(prompt: str):
