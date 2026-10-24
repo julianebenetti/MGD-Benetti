@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792820357,
-  "updated_at_br": "24/10/2026 02:34",
+  "updated_at": 1792828539,
+  "updated_at_br": "24/10/2026 04:50",
   "period_days": 90,
-  "total_orders": 6141,
-  "total_conversions": 5899,
+  "total_orders": 6140,
+  "total_conversions": 5898,
   "orders": [
     {
       "ID do pedido": "261023C9CJ1M9D",
@@ -153502,31 +153502,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238753297126479",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-26"
-    },
-    {
-      "ID do pedido": "260726NN8NKPQN",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-26 05:53:14",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "67.9",
-      "Comissao liquida do afiliado(R$)": "10.3208",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "12.00%",
-      "Comissao Shopee(R$)": "2.716",
-      "Comissao do vendedor(R$)": "8.148",
-      "Comissao total do pedido(R$)": "10.864",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Mochila Mala Viagem De Bordo Executiva MALETA Expansível Até 45l Boa Presentes",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23494919037",
-      "ID da loja": "1643020166",
-      "Nome da loja": "DASÁRABIA",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "238744394181109",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-26"
     }
