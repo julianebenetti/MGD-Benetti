@@ -42,10 +42,16 @@ Em "motivo", explique em uma frase curta, em português."""
 
 STRICT_NOTE = """
 
-VALIDAÇÃO RIGOROSA (antes de publicar): a Shopee pune como "produto irrelevante" indicar uma versão parecida em vez
-do item exato do vídeo. Só responda "sim" se for o MESMO modelo: mesmo formato, design, detalhes, material aparente
-e mesma quantidade/kit (ex.: kit com 4 peças ≠ peça avulsa; 16 cm ≠ 30 cm se der para perceber). Produto
-"parecido", "do mesmo tipo" ou de outro fabricante é "nao". Na dúvida, "incerto"."""
+VALIDAÇÃO RIGOROSA (antes de publicar): a Shopee pune como "produto irrelevante" quando o produto do vídeo não é
+EXATAMENTE o da foto do anúncio. Os vídeos costumam ser gerados por IA, que inventa ou muda detalhes. Compare
+detalhe por detalhe, nos quadros em que o produto aparece:
+- quantidade de peças, barras, prateleiras, ganchos, gavetas, divisórias, lâmpadas (ex.: 4 barras no vídeo e 2 no
+  anúncio = diferente);
+- estampas, flores, desenhos, bordados, textos e cores de cada parte (ex.: outra flor na toalha = diferente);
+- formato, proporções, puxadores, pés, acessórios e acabamento.
+Só responda "sim" se NENHUM detalhe visível for diferente. Qualquer diferença de detalhe é "nao" (se for só outra
+cor/estampa que o anúncio também vende, "variacao"). Produto "parecido" ou de outro fabricante é "nao". Na dúvida,
+"incerto". No motivo, diga QUAL detalhe difere (ex.: "vídeo: 4 barras embaixo; anúncio: 2")."""
 
 
 def _jpeg_b64(img: Image.Image, max_side: int = 768) -> str:
@@ -80,10 +86,11 @@ def check_match(video_path: str, product: Dict, strict: bool = False) -> Tuple[s
     agendar, com 6 quadros do vídeo e exigindo o mesmo modelo (não só o mesmo tipo de produto).
     """
     try:
-        content = [_image_block(_jpeg_b64(f)) for f in _video_frames(video_path, 6 if strict else 3)]
+        side = 1024 if strict else 768   # mais resolução e quadros para enxergar os detalhes
+        content = [_image_block(_jpeg_b64(f, side)) for f in _video_frames(video_path, 8 if strict else 3)]
         photo = requests.get(product['imageUrl'], timeout=30)
         photo.raise_for_status()
-        content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)))))
+        content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)), side)))
         content.append({'type': 'text', 'text': PROMPT.format(name=product['productName']) + (STRICT_NOTE if strict else '')})
         data = ask_json(content, SCHEMA)
         logger.info(f"Conferência '{product['productName']}': {data['resultado']} ({data['motivo']})")

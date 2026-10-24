@@ -76,11 +76,11 @@ class Pipeline:
         results = list(self.workers.map(lambda p: check_match(video_path, p, strict), candidates))
         return [(p, r, m) for p, (r, m) in zip(candidates, results)]
 
-    def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
-                   max_checks: int = 99, accept_variation: bool = False) -> Tuple[List[Dict], List[str], List[str]]:
+    def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int, max_checks: int = 99,
+                   accept_variation: bool = False, strict: bool = False) -> Tuple[List[Dict], List[str], List[str]]:
         """Produtos confirmados, motivos das recusas e motivos de 'outra variação' (quando não aceita)."""
         found, reasons, variations = [], [], []
-        for product, resultado, motivo in self._check_all(video_path, candidates[:max_checks]):
+        for product, resultado, motivo in self._check_all(video_path, candidates[:max_checks], strict):
             if len(found) >= wanted:
                 break
             if resultado == 'sim' or (accept_variation and resultado == 'variacao'):
@@ -112,7 +112,8 @@ class Pipeline:
         if trust_link:
             main_found, reasons, variations = candidates[:1], [], []
         else:
-            main_found, reasons, variations = self._confirmed(video_file, candidates[:3], wanted=1)
+            # já na chegada, a conferência detalhada: vídeo de IA que mudou um detalhe aparece aqui, antes de capa e textos
+            main_found, reasons, variations = self._confirmed(video_file, candidates[:3], wanted=1, strict=True)
         if not main_found and variations:
             raise VariationMismatch("O produto do vídeo é o mesmo do link, mas em OUTRA VARIAÇÃO:\n"
                                     + "\n".join(variations) + "\n\n⚠️ A Shopee costuma punir como \"produto irrelevante\" "
@@ -120,9 +121,10 @@ class Pipeline:
                                     "mensagem com o link de um anúncio cuja foto seja igual ao vídeo. Toque ✅ Pode seguir para usar este link "
                                     "assim mesmo, ou responda esta mensagem com o link da variação certa.")
         if not main_found:
-            raise PipelineError("A conferência não confirmou que o produto é o do vídeo:\n"
-                                + "\n".join(reasons) + "\n\nSe o produto é esse mesmo (ex.: outra cor), responda esta "
-                                "mensagem com o link que eu sigo sem conferir. Se não, mande o link do produto certo.")
+            raise PipelineError("O produto do vídeo não está idêntico ao anúncio:\n"
+                                + "\n".join(reasons) + "\n\nA Shopee pune isso como \"produto irrelevante\". Se o vídeo "
+                                "foi gerado por IA, gere de novo mantendo o produto igual à foto do anúncio (mesmos "
+                                "detalhes) e mande de novo. Se o anúncio certo é outro, responda esta mensagem com o link.")
         main = main_found[0]
         main['commissionValue'] = commission_value(main)
         key = product_key(main)
