@@ -113,13 +113,13 @@ def _facts(product: Dict) -> str:
 ABBREVIATIONS = [
     (r'narra[çc][ãa]o feminina em portugu[êe]s (do )?brasileiro', 'Narração fem. PT/BR'),
     (r'narra[çc][ãa]o feminina em portugu[êe]s do brasil', 'Narração fem. PT/BR'),
-    (r'crie um v[íi]deo (promocional )?(pov )?vertical 9:16', 'Vídeo POV 9:16'),
-    (r'crie um v[íi]deo (promocional )?vertical 9:16, estilo pov', 'Vídeo POV 9:16'),
+    (r'crie (um )?v[íi]deo (promocional )?vertical 9:16,? (no )?estilo pov', 'Vídeo POV 9:16'),
+    (r'crie (um )?v[íi]deo (promocional )?(pov )?vertical 9:16', 'Vídeo POV 9:16'),
     (r'use a imagem enviada como refer[êe]ncia (obrigat[óo]ria|fiel)', 'Use a imagem enviada como ref. fiel'),
     (r'preserve a fidelidade visual absoluta d[oa]', 'preserve'),
-    (r'n[ãa]o adicione textos?, legendas?, t[íi]tulos?, pre[çc]os?, logotipos? ou qualquer escrita na tela',
-     'Sem textos/legendas/preços/logos na tela'),
-    (r'n[ãa]o adicione textos?, legendas?, t[íi]tulos?, pre[çc]os? ou qualquer escrita na tela',
+    (r'(n[ãa]o adicione|sem) textos?, legendas?, t[íi]tulos?, pre[çc]os?, (logotipos?|logos?|marcas?) ou '
+     r'(qualquer )?escrita na tela', 'Sem textos/legendas/preços/logos na tela'),
+    (r'(n[ãa]o adicione|sem) textos?, legendas?, t[íi]tulos?, pre[çc]os? ou (qualquer )?escrita na tela',
      'Sem textos/legendas/preços na tela'),
     (r'quantidade de pe[çc]as', 'nº de peças'),
     (r'movimentos suaves( de c[âa]mera| e realistas)?', 'mov. suaves'),
@@ -173,6 +173,18 @@ def problems(prompt: str) -> list:
     return found
 
 
+def _sentences(text: str) -> list:
+    """Frases das instruções; o ponto de "mov." / "ref." / "fem." não quebra a frase."""
+    parts = re.split(r'(?<=[.!?])\s+', text)
+    out = []
+    for part in parts:
+        if out and ABBREVIATED.search(out[-1] + ' '):
+            out[-1] += ' ' + part
+        else:
+            out.append(part)
+    return out
+
+
 def _fit(prompt: str) -> str:
     """
     Último recurso para caber em MAX_CHARS sem nunca cortar a narração: encurta as instruções do vídeo (no fim de
@@ -186,15 +198,15 @@ def _fit(prompt: str) -> str:
         cut = prompt[:MAX_CHARS]
         end = max(cut.rfind('. '), cut.rfind('! '), cut.rfind('? '))
         return cut[:end + 1] if end > MAX_CHARS // 2 else cut.rstrip()
-    sentences = re.split(r'(?<=[.!?])\s+', instructions)
+    sentences = _sentences(instructions)
 
     def priority(sentence: str) -> int:
         low = sentence.lower()
-        if 'imagem enviada' in low or 'não adicione' in low or 'escrita' in low:
+        if 'imagem enviada' in low or 'não adicione' in low or 'escrita' in low or 'na tela' in low:
             return 0   # fidelidade ao produto e nada escrito na tela: nunca sai
         if low.startswith('mostre'):
             return 1   # a cena de uso: a última a sair
-        if low.startswith('crie'):
+        if low.startswith(('crie', 'vídeo')):
             return 2   # abertura (tipo de vídeo)
         return 3       # o resto (ambiente, reforços) sai primeiro
     chosen = set(range(len(sentences)))
