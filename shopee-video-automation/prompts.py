@@ -60,8 +60,17 @@ A NARRAÇÃO VENDE O BENEFÍCIO, NÃO A FICHA TÉCNICA. Antes de escrever, liste
 que fazem alguém comprar ESTE produto (o resultado na vida da pessoa), do mais forte para o menos forte. Ex.:
 frigideira antiaderente → cozinhar sem óleo (ou quase), nada gruda, comida mais saudável, lava em segundos;
 organizador → acaba a bagunça, acha tudo rápido; cadeira → conforto por horas, sem dor nas costas. O benefício
-principal (o 1º) tem que estar na narração, dito de forma clara e concreta. Medidas, cores e nº de peças ficam nas
-instruções do vídeo; na narração, só se forem o próprio benefício e mesmo assim em poucas palavras.
+principal (o 1º) tem que estar na narração, dito de forma clara e concreta.
+O BENEFÍCIO PRINCIPAL NUNCA É a variedade do kit (vários tamanhos, nº de peças, cores, modelos) nem "praticidade" ou
+"organização" genéricas: é o que o produto FAZ por quem usa. Deduza pela foto e pelo nome (ex.: interior
+salpicado/granito/preto liso numa panela = revestimento antiaderente → sem óleo, nada gruda, lava fácil). Medidas,
+cores e nº de peças ficam nas instruções do vídeo; na narração, no máximo uma menção curta.
+Fale com a pessoa sem adjetivo de gênero ("Sabe quando…", "Já pensou…", nunca "Cansado/Cansada").
+
+EXEMPLO DE NARRAÇÃO BOA (jogo de frigideiras antiaderentes):
+“Já pensou fritar um ovo sem uma gota de óleo? Nessas frigideiras antiaderentes nada gruda: a comida desliza e fica
+mais leve. E a limpeza é num instante, só passar a esponja. Nota 4,8 e mais de 8 mil vendidos. Toque no carrinho e
+garanta o seu!”
 
 ESTRUTURA DA NARRAÇÃO: 1) gancho que desperta curiosidade (pergunta ou dor do dia a dia ligada ao benefício
 principal); 2) quebra de objeção com o benefício principal (ex.: "sem óleo e nada gruda"); 3) mais 1 benefício
@@ -180,6 +189,10 @@ def _mentions(benefit: str, speech: str) -> bool:
     return not words or any(w[:5] in low for w in words)
 
 
+SPEC_BENEFIT = re.compile(r'tamanh|medida|pe[çc]as|\bcores\b|modelos|variedade|organiza|praticidade', re.IGNORECASE)
+SPEC_SPEECH = re.compile(r'tamanh|medida|\bcm\b|cent[íi]metro', re.IGNORECASE)
+
+
 def problems(prompt: str, benefits: Optional[list] = None) -> list:
     """O que está errado no prompt: tamanho, narração faltando, sem CTA, cortada ou sem o benefício principal."""
     found = []
@@ -192,9 +205,15 @@ def problems(prompt: str, benefits: Optional[list] = None) -> list:
         quote = narration.split(':', 1)[-1]
         if not quote.rstrip().endswith(('”', '"')):
             found.append('a narração não termina fechando as aspas (está cortada)')
+        if len(SPEC_SPEECH.findall(quote)) > 1:
+            found.append('a narração gasta tempo com tamanhos/medidas: fale do benefício de usar o produto')
         if not any(w in quote.lower()[-160:] for w in CTA_WORDS):
             found.append('a narração não termina com um CTA (ex.: "Toque no carrinho e garanta o seu!")')
-        if benefits and not _mentions(benefits[0], quote):
+        if benefits and SPEC_BENEFIT.search(benefits[0]):
+            found.append(f'o benefício principal ("{benefits[0]}") é ficha técnica/genérico: troque pelo que o produto '
+                         'FAZ por quem usa (ex.: frigideira antiaderente: sem óleo, nada gruda, lava fácil) e '
+                         'reescreva a narração em cima dele')
+        elif benefits and not _mentions(benefits[0], quote):
             found.append(f'a narração não fala do benefício principal ("{benefits[0]}"): fale dele no lugar de '
                          'medidas/ficha técnica')
     return found
