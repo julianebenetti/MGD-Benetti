@@ -98,8 +98,9 @@ Shopee pode levar algumas horas para mostrar uma venda, e só deixa consultar de
   trás ganham novos horários em sequência, com as regras da agenda.
 - **`/validaragenda`**: validação rigorosa (6 quadros, mesmo modelo) de todos os posts da Agenda; tira lojas extras que
   não batem e **retém** (não manda para a LiA) o post cujo produto divulgado não bate com o vídeo.
-- **`LIA_MAX_LINKS`** (padrão 2): quantos links vão para a LiA (o divulgado + os extras de maior comissão). Cada link
-  extra é mais um produto que a Shopee pode julgar irrelevante.
+- **`LIA_MAX_LINKS`** (padrão 1): quantos links vão para a LiA (o divulgado + os extras de maior comissão). A regra
+  da Shopee pune vídeos que divulgam produtos "diferentes, **adicionais** ou não relacionados" ao anúncio vinculado,
+  então o padrão é só o link do produto mostrado no vídeo.
 
 ## LiA (bot que posta no Shopee Video)
 

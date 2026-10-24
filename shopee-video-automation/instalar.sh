@@ -57,6 +57,9 @@ if command -v ufw >/dev/null && $SUDO ufw status | grep -q 'Status: active'; the
   $SUDO ufw allow "$PORTA_AVALIACOES/tcp" >/dev/null
 fi
 
+# Só o link do produto do vídeo vai para a LiA (punições por produto "adicional"); .env antigos vinham com 2
+sed -i 's/^LIA_MAX_LINKS=2$/LIA_MAX_LINKS=1/' .env
+
 # 5 links por vídeo (todos vão para a LiA); .env antigos vinham com 3
 sed -i 's/^LINKS_POR_VIDEO=3$/LINKS_POR_VIDEO=5/' .env
 

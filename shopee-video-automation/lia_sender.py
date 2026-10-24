@@ -50,9 +50,10 @@ def links_for_lia(post: Dict) -> List[str]:
     crescente de comissão e, por último, a loja que a Juliane escolheu divulgar (1º de `products`).
     """
     extras = sorted(zip(post['products'][1:], post['links'][1:]), key=lambda pl: commission_value(pl[0]))
-    # LIA_MAX_LINKS: cada link extra é mais um produto que a Shopee pode julgar "irrelevante"; ficam os de
+    # LIA_MAX_LINKS (padrão 1, só o divulgado): a Shopee pune "produtos adicionais" ao anúncio vinculado; com mais,
+    # cada link extra é mais um produto que ela pode julgar "irrelevante"; ficam os de
     # maior comissão
-    keep = max(0, int(os.getenv('LIA_MAX_LINKS', '2')) - 1)
+    keep = max(0, int(os.getenv('LIA_MAX_LINKS', '1')) - 1)
     extras = extras[len(extras) - keep:] if keep else []
     return [link for _, link in extras] + post['links'][:1]
 
