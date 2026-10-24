@@ -39,9 +39,9 @@ REGRAS OBRIGATÓRIAS DO PROMPT
 5. Urgência sem inventar estoque limitado, desconto ou prazo.
 6. Terminar a narração com CTA (conferir, aproveitar ou comprar).
 7. Fidelidade visual absoluta: usar a imagem enviada como referência e preservar cores, formato, proporções, marca,
-   detalhes e características; não inventar nem modificar o produto. Inclua UMA frase curta "Manter exatamente: …"
-   com os 2 ou 3 detalhes que um gerador de vídeo mais costuma mudar neste produto (quantidade de peças/barras,
-   estampa/flores, formato).
+   detalhes e características; não inventar nem modificar o produto. Na frase "preserve …", cite os detalhes
+   concretos que um gerador de vídeo mais costuma mudar neste produto (quantidade de peças/barras, tamanhos,
+   estampa/flores, cores de cada parte, formato).
 8. Movimentos POV suaves, realistas e coerentes com o uso do produto; sem gestos artificiais nem mudanças bruscas.
 9. Nenhuma escrita na tela: proibir legendas, títulos, palavras, preços, logotipos ou texto sobreposto.
 10. Mostrar benefícios práticos (como facilita a rotina), sem promessas exageradas.
@@ -49,6 +49,27 @@ REGRAS OBRIGATÓRIAS DO PROMPT
 
 ESTRUTURA DA NARRAÇÃO: 1) gancho; 2) quebra de objeção com um diferencial verdadeiro; 3) benefício e curiosidade;
 4) urgência responsável; 5) CTA final.
+
+FORMATO (o mesmo que a Juliane usa), em um parágrafo corrido:
+"Crie um vídeo POV vertical 9:16, realista e natural, … Use a imagem enviada como referência fiel/obrigatória e preserve
+<detalhes concretos: quantidade de peças, tamanhos, cores, estampa, materiais>. Não altere cores, proporções, textura,
+quantidade de peças ou detalhes. Mostre <cena de uso real, com ações do dia a dia>, destacando <benefícios práticos>.
+Movimentos suaves e realistas, iluminação natural, <ambiente>. Não adicione textos, legendas, títulos, preços ou
+qualquer escrita na tela. Narração feminina em português brasileiro: “<narração>”"
+
+EXEMPLO DA JULIANE (estilo e tamanho de referência, não copie o conteúdo):
+Crie um vídeo promocional vertical 9:16, estilo POV natural, com movimentos suaves de câmera, como uma pessoa
+mostrando o produto de perto. Use a imagem enviada como referência obrigatória e preserve a fidelidade visual absoluta
+do conjunto de 3 frigideiras: formato, tamanhos de 14, 18 e 24 cm, exterior vermelho com pintinhas claras, interior
+preto com revestimento salpicado e cabos pretos. Não altere cores, proporções, textura, quantidade de peças ou
+detalhes. Mostre as frigideiras no fogão preparando ovo, panqueca e omelete, destacando o revestimento antiaderente,
+o preparo prático, o uso de menos óleo e a facilidade de limpeza. Movimentos realistas, iluminação natural e cozinha
+aconchegante. Narração feminina em português brasileiro: “Três frigideiras para facilitar sua rotina! Prepare ovos,
+panquecas e muito mais com revestimento antiaderente e limpeza prática. Mais praticidade na sua cozinha! Toque no
+carrinho e garanta seu conjunto!”
+
+Se houver PRINTS DO ANÚNCIO anexos (depois da foto principal), use os dados deles (medidas, materiais, garantia,
+certificações, itens do kit) como fatos reais para descrever o produto e quebrar objeções. Nunca use preço.
 
 CAMPOS
 - detalhes_fixos: os detalhes da foto que não podem mudar no vídeo (para a Juliane conferir), em português.
@@ -84,19 +105,36 @@ def _trim(prompt: str) -> str:
     return cut[:end + 1] if end > MAX_CHARS // 2 else cut.rstrip()
 
 
-def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, request: str = '') -> Dict:
-    """Prompt novo (ou ajustado, com `previous` + `request`) a partir da foto e dos dados do anúncio."""
+def _file_b64(path: str) -> str:
+    img = Image.open(path).convert('RGB')
+    img.thumbnail((1400, 1400))   # prints com texto: um pouco mais de resolução
+    buf = io.BytesIO()
+    img.save(buf, 'JPEG', quality=88)
+    return base64.standard_b64encode(buf.getvalue()).decode()
+
+
+def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, request: str = '',
+          prints: Optional[list] = None) -> Dict:
+    """
+    Prompt novo (ou ajustado, com `previous` + `request`) a partir da foto e dos dados do anúncio. `prints`:
+    caminhos de prints do anúncio (medidas, garantia…) que a Juliane mandou, usados como fatos reais.
+    """
     text = f"{RULES}\n\n{_facts(product)}"
     if notes:
         text += f"\nOBSERVAÇÕES DA JULIANE: {notes}"
     if previous:
         text += (f"\n\nPROMPT ANTERIOR:\n{previous.get('prompt', '')}\n\nAJUSTE PEDIDO: {request}\n"
                  "Refaça seguindo todas as regras.")
-    image = {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
-                                         'data': _photo_b64(product['imageUrl'])}}
-    data = ask_json([image, {'type': 'text', 'text': text}], SCHEMA, name='prompt_video')
+    images = [{'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                                           'data': _photo_b64(product['imageUrl'])}}]
+    for path in (prints or [])[:4]:
+        images.append({'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                                                   'data': _file_b64(path)}})
+    if len(images) > 1:
+        text += f"\n\n(As {len(images) - 1} imagem(ns) depois da foto principal são PRINTS DO ANÚNCIO.)"
+    data = ask_json([*images, {'type': 'text', 'text': text}], SCHEMA, name='prompt_video')
     if len(data['prompt']) > MAX_CHARS:   # passou do limite: pede para encurtar uma vez
-        data = ask_json([image, {'type': 'text', 'text': text + f"\n\nO prompt abaixo tem {len(data['prompt'])} "
+        data = ask_json([*images, {'type': 'text', 'text': text + f"\n\nO prompt abaixo tem {len(data['prompt'])} "
                                  f"caracteres. Reescreva com no máximo {MAX_CHARS - 40}, mantendo todas as regras:\n"
                                  f"{data['prompt']}"}], SCHEMA, name='prompt_video')
     data['prompt'] = _trim(data['prompt'].strip())

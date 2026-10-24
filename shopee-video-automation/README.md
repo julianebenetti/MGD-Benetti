@@ -78,8 +78,11 @@ Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira 
 caracteres**; narração feminina em PT-BR (gancho → quebra de objeção → benefício → urgência sem falsa escassez → CTA);
 fidelidade visual à imagem do anúncio (com uma linha "Manter exatamente: …" dos detalhes mais arriscados); movimentos
 POV suaves; **nenhuma escrita na tela**; benefícios práticos; simples e direto. Objeções quebradas só com dados reais
-(nota e vendas do anúncio). Mande o **link do produto** (e uma observação, se quiser); **responda o prompt** para
-ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
+(nota e vendas do anúncio, e dos **prints do anúncio** que você mandar: medidas, garantia, itens do kit). Mesmo
+formato dos prompts da Juliane ("Crie um vídeo POV vertical 9:16… Use a imagem enviada como referência fiel e preserve
+<detalhes>… Não adicione textos… Narração feminina em português brasileiro: “…”"). Mande o **link do produto** (e uma
+observação, se quiser) — com prints, mande-os em álbum com o link na legenda ou antes do link; **responda o prompt**
+para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por

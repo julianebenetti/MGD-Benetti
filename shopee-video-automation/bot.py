@@ -140,6 +140,7 @@ class Bot:
         self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue()}
         self.pending: List[Dict] = []
         self.album_links: Dict[str, Dict] = {}
+        self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
         self.batch_link: Optional[Dict] = None
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
@@ -1184,15 +1185,27 @@ class Bot:
     # ---------- Prompts de vídeo ----------
 
     def on_prompts(self, msg: Dict):
-        """Link de produto (+ observação) = prompt novo; resposta a um prompt = ajuste dele."""
+        """
+        Link de produto (+ observação) = prompt novo; resposta a um prompt = ajuste dele. Prints do anúncio
+        (fotos, em álbum ou soltas, até 5 min antes do link ou com o link na legenda) entram como fatos reais.
+        """
         text = (msg.get('text') or msg.get('caption') or '').strip()
+        if msg.get('photo'):
+            self.prompt_prints = [p for p in self.prompt_prints if time.time() - p[0] < 300]
+            self.prompt_prints.append((time.time(), msg.get('media_group_id'), msg['photo'][-1]['file_id']))
+            if not extract_shopee_links(text):
+                if not msg.get('media_group_id'):
+                    self.tg.react(msg['message_id'], '👌')
+                return
         replied = (msg.get('reply_to_message') or {}).get('message_id')
         previous = json.loads(self.db.get_meta(f"prompt:{replied}", 'null')) if replied else None
         links = extract_shopee_links(text)
         if links:
             notes = text.replace(links[0], '').strip()
             self.tg.react(msg['message_id'], '👀')
-            self.submit(('prompt', links[0], notes, None, msg['message_id']))
+            prints, self.prompt_prints = [p[2] for p in self.prompt_prints], []
+            # o resto do álbum pode chegar logo depois da foto com o link: espera uns segundos
+            self.submit(('prompt', links[0], notes, None, msg['message_id'], prints, msg.get('media_group_id')))
         elif previous and text:
             self.tg.react(msg['message_id'], '✍')
             self.submit(('prompt', previous['link'], previous.get('notes', ''), {**previous, 'pedido': text},
@@ -1201,14 +1214,25 @@ class Bot:
             self.tg.send_text(PROMPTS, "Mande o <b>link do produto</b> (pode escrever uma observação junto), ou "
                                        "responda um prompt meu para ajustar.", reply_to=msg['message_id'])
 
-    def job_prompt(self, link: str, notes: str, previous: Optional[Dict], reply_to: Optional[int]):
+    def job_prompt(self, link: str, notes: str, previous: Optional[Dict], reply_to: Optional[int],
+                   prints: Optional[List[str]] = None, album: Optional[str] = None):
+        if album:   # fotos do mesmo álbum que chegaram depois da que tinha o link
+            time.sleep(4)
+            prints = (prints or []) + [p[2] for p in self.prompt_prints if p[1] == album]
+            self.prompt_prints = [p for p in self.prompt_prints if p[1] != album]
+        paths = []
+        for file_id in (prints or [])[:4]:
+            try:
+                paths.append(str(self.tg.download(file_id, BASE / 'downloads' / 'prints')))
+            except Exception as e:
+                logger.warning(f"Print do anúncio não baixou: {e}")
         found = self.pipeline.shopee.find_candidates(link)
         if not found:
             self.tg.send_text(PROMPTS, "⚠️ Não achei o produto desse link. Mande o link do anúncio.", reply_to=reply_to)
             return
         product = found[0]
         try:
-            data = prompts.build(product, notes, previous, (previous or {}).get('pedido', ''))
+            data = prompts.build(product, notes, previous, (previous or {}).get('pedido', ''), paths)
         except Exception as e:
             logger.exception("Prompt falhou")
             self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar o prompt: {html.escape(str(e)[:200])}", reply_to=reply_to)
