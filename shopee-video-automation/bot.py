@@ -120,6 +120,7 @@ def post_text(post: Dict, hint: bool = False) -> str:
         f"🛍️ <b>Produto:</b> {e(post['product_name'])}\n"
         f"🔗 <b>Links</b> (para a LiA vão do menor pro maior comissionamento, o divulgado por último):\n{links}\n"
         f"🏷️ <b>Sub_id:</b> {e(post['sub_id'])}"
+        + (f"\n🔎 {e(m['validacao'])}" if m.get('validacao') else '')
         + ("\n\n✍️ <i>Responda esta mensagem: texto curto = nova headline · texto com #hashtags = nova legenda</i>"
            "\n🚫 <i>Link esgotado? Toque no 🚫 com o número dele: troco pela próxima loja.</i>"
            "\n🔁 <i>Achou um link melhor? Responda com o número e o link (ex.: 3 https://…): troco pelo seu.</i>"
@@ -393,6 +394,7 @@ class Bot:
             return
         new = found[0]
         new['commissionValue'] = commission_value(new)
+        new['escolhido'] = True   # você escolheu: a validação antes de agendar só avisa, não tira
         products, links = list(post['products']), list(post['links'])
         same_shop = [i + 1 for i, p in enumerate(products) if str(p['shopId']) == str(new['shopId']) and i != index]
         link = shopee.affiliate_link(new, post['sub_id'])
@@ -433,8 +435,47 @@ class Bot:
             note += f"\n⭐ Agora a divulgada é <b>{html.escape(post['products'][0].get('shopName', ''))}</b>."
         self.tg.send_text(EDITADOS, note, reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None)
 
+    def validate_before_agenda(self, post: Dict) -> Optional[Dict]:
+        """
+        Validação rigorosa (6 quadros, mesmo modelo) antes de agendar. Tira lojas extras que não são o produto
+        do vídeo (e repõe com reservas validadas). Se o produto divulgado não bater, devolve None: o post volta
+        para Editados com o motivo e o botão "Agendar mesmo assim".
+        """
+        e = html.escape
+        v = self.pipeline.validate(post)
+        result, reason = v['main']
+        confirmed = (post['metadata'].get('principal_confirmado') or post['products'][0].get('escolhido')
+                     or post['metadata'].get('validacao_forcada'))   # "Agendar mesmo assim" vale só para o divulgado
+        if result in ('nao', 'incerto') and not confirmed:
+            self.db.update_post(post['id'], status='editado')
+            post = self.db.get_post(post['id'])
+            self.refresh_buttons(post)
+            self.tg.send_text(
+                EDITADOS, f"🔎 <b>Validação: o produto divulgado não bate com o vídeo</b>\n"
+                          f"{e(post['product_name'][:80])}\n{'Diferente' if result == 'nao' else 'Não deu para confirmar'}: "
+                          f"{e(reason)}\n\nPara não arriscar \"produto irrelevante\", não agendei. Troque o link 1 "
+                          "(responda os textos com <code>1 https://…</code>) ou, se tiver certeza, toque abaixo.",
+                reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
+                markup=keyboard([('📅 Agendar mesmo assim', f"af:{post['id']}")]))
+            return None
+        lines = [f"🔎 <b>Validação antes da Agenda:</b> {len(v['products'])} link(s) idênticos ao vídeo"]
+        if result != 'sim':
+            lines.append(f"• Divulgado: {e(reason)} (confirmado por você)" if confirmed
+                         else f"• Divulgado em outra variação do mesmo anúncio: {e(reason)}")
+        lines += [f"• ❌ Tirei {e(shop)}: {e(why)}" for shop, _, why in v['removed']]
+        lines += [f"• ➕ Pus {e(shop)} no lugar (validado)" for shop in v['added']]
+        lines += [f"• ⚠️ {e(shop)} (escolhido por você) pode não ser idêntico: {e(why)}" for shop, _, why in v['warnings']]
+        metadata = {**post['metadata'], 'validacao': f"{len(v['products'])} link(s) validados (mesmo modelo do vídeo)"}
+        self.db.update_post(post['id'], products=v['products'], links=v['links'], metadata=metadata)
+        return {'note': '\n'.join(lines)}
+
     def job_approve(self, post_id: int):
-        """Junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
+        """Valida os produtos, junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
+        post = self.db.get_post(post_id)
+        checked = self.validate_before_agenda(post)
+        if checked is None:
+            return
+        note = checked['note']
         post = self.db.get_post(post_id)
         final = str(Path(post['video_path']).with_name(f"final_{post_id}.mp4"))
         if not self.pipeline.video.prepend_cover(post['cover_path'], post['video_path'], final, COVER_SECONDS):
@@ -453,6 +494,8 @@ class Bot:
         ids.append(self.tg.send_text(
             AGENDA, f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
             markup=self.agenda_markup(post_id)))
+        if note:
+            ids.append(self.tg.send_text(AGENDA, note, reply_to=ids[-1]))
         self.db.update_post(post_id, agenda_msgs=ids)
         if self.lia and self.lia_when == 'aprovar':
             self.send_to_lia(self.db.get_post(post_id))
@@ -777,7 +820,7 @@ class Bot:
         elif action == 'ap' and post['status'] == 'editado':
             self.db.update_post(post['id'], status='agendando')
             self.tg.edit_markup(post['editados_msgs'][2], keyboard([('⏳ Agendando…', f"ag:{post['id']}")]))
-            self.tg.answer_callback(cb['id'], 'Juntando a capa ao vídeo e agendando…')
+            self.tg.answer_callback(cb['id'], 'Validando os produtos e agendando… (até 1 minuto)')
             self.submit(('approve', post['id']))
 
         elif action[:2] == 'eg' and action[2:].isdigit() and post['status'] == 'editado':
@@ -787,6 +830,12 @@ class Bot:
                 return
             self.tg.answer_callback(cb['id'], f"Trocando o link {index + 1} (esgotado)…")
             self.submit(('soldout', post['id'], index))
+
+        elif action == 'af' and post['status'] == 'editado':
+            self.db.update_post(post['id'], status='agendando',
+                                metadata={**post['metadata'], 'validacao_forcada': True})
+            self.tg.answer_callback(cb['id'], 'Ok, agendando mesmo assim…')
+            self.submit(('approve', post['id']))
 
         elif action == 'ag':
             self.tg.answer_callback(cb['id'], 'Já estou agendando, aguarde uns segundos')

@@ -71,9 +71,9 @@ class Pipeline:
         self.workers = ThreadPoolExecutor(max_workers=6)
         self.is_sold_out = lambda key: False   # o robô liga no banco (anúncios marcados como esgotados)
 
-    def _check_all(self, video_path: str, candidates: List[Dict]) -> List[Tuple[Dict, str, str]]:
+    def _check_all(self, video_path: str, candidates: List[Dict], strict: bool = False) -> List[Tuple[Dict, str, str]]:
         """Conferência de vários produtos ao mesmo tempo (cada uma é uma chamada à IA), na ordem recebida."""
-        results = list(self.workers.map(lambda p: check_match(video_path, p), candidates))
+        results = list(self.workers.map(lambda p: check_match(video_path, p, strict), candidates))
         return [(p, r, m) for p, (r, m) in zip(candidates, results)]
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int,
@@ -128,7 +128,7 @@ class Pipeline:
         writing = self.workers.submit(self.content.generate, product_info(main), used_headlines(key))
         candidates = [p for p in self.shopee.other_sellers(main) if not self.is_sold_out(product_key(p))]
         others, _, _ = self._confirmed(video_file, candidates, wanted=MAX_BETTER + TOTAL_LINKS,
-                                       max_checks=MAX_EXTRA_CHECKS, accept_variation=True)
+                                       max_checks=MAX_EXTRA_CHECKS)
         # outras lojas confirmadas, da maior para a menor comissão
         better = [p for p in others if p['commissionValue'] > main['commissionValue']][:MAX_BETTER]
         products = [main] + others[:TOTAL_LINKS - 1]
@@ -137,6 +137,7 @@ class Pipeline:
         metadata = writing.result()
         metadata['cta'] = cta_text
         metadata['reservas'] = others   # lojas já conferidas, para repor um link esgotado
+        metadata['principal_confirmado'] = trust_link   # você confirmou o produto (outra variação, link reenviado)
         sub_id = novo_sub_id(metadata['short_name'], reservar=False)   # provisório: o definitivo sai ao agendar
         links = [self.shopee.affiliate_link(p, sub_id) for p in products]
 
@@ -180,6 +181,40 @@ class Pipeline:
             raise PipelineError("Não sobrou nenhuma loja disponível para este produto.")
         return {'products': products, 'links': links, 'product_key': product_key(products[0]),
                 'product_name': products[0]['productName'], 'reposto': extra}
+
+    def validate(self, post: Dict) -> Dict:
+        """
+        Validação rigorosa antes de agendar: cada produto dos links contra 6 quadros do vídeo, exigindo o mesmo
+        modelo. Lojas extras que não passam saem e são repostas com reservas que passem. Devolve
+        {'main': (resultado, motivo), 'products', 'links', 'removed': [(loja, resultado, motivo)], 'added': [lojas]}.
+        """
+        clean = Path(post['video_path']).with_name(Path(post['video_path']).name.replace('watermarked_', '', 1))
+        video = str(clean) if clean.exists() else post['video_path']
+        checks = self._check_all(video, post['products'], strict=True)
+        main_result = checks[0][1:]
+        products, links, removed = [post['products'][0]], [post['links'][0]], []
+        warnings = []
+        for (product, result, reason), link in zip(checks[1:], post['links'][1:]):
+            if result == 'sim' or product.get('escolhido'):   # link que você escolheu: fica, só avisa
+                products.append(product)
+                links.append(link)
+                if result != 'sim':
+                    warnings.append((product.get('shopName', ''), result, reason))
+            else:
+                removed.append((product.get('shopName', ''), result, reason))
+        added = []
+        used = {str(p['shopId']) for p in post['products']}
+        reserves = [p for p in sorted(post['metadata'].get('reservas') or [], key=commission_value, reverse=True)
+                    if str(p['shopId']) not in used and not self.is_sold_out(product_key(p))]
+        missing = TOTAL_LINKS - len(products)
+        if missing > 0 and reserves:
+            for product, result, _ in self._check_all(video, reserves[:missing + 3], strict=True):
+                if result == 'sim' and len(products) < TOTAL_LINKS:
+                    products.append(product)
+                    links.append(self.shopee.affiliate_link(product, post['sub_id']))
+                    added.append(product.get('shopName', ''))
+        return {'main': main_result, 'products': products, 'links': links, 'removed': removed, 'added': added,
+                'warnings': warnings}
 
     def switch_to(self, post: Dict, index: int) -> Dict:
         """

@@ -40,6 +40,14 @@ Em "variacao", diga no motivo qual variação aparece no vídeo e qual aparece n
 Em "motivo", explique em uma frase curta, em português."""
 
 
+STRICT_NOTE = """
+
+VALIDAÇÃO RIGOROSA (antes de publicar): a Shopee pune como "produto irrelevante" indicar uma versão parecida em vez
+do item exato do vídeo. Só responda "sim" se for o MESMO modelo: mesmo formato, design, detalhes, material aparente
+e mesma quantidade/kit (ex.: kit com 4 peças ≠ peça avulsa; 16 cm ≠ 30 cm se der para perceber). Produto
+"parecido", "do mesmo tipo" ou de outro fabricante é "nao". Na dúvida, "incerto"."""
+
+
 def _jpeg_b64(img: Image.Image, max_side: int = 768) -> str:
     img = img.convert('RGB')
     img.thumbnail((max_side, max_side))
@@ -66,14 +74,17 @@ def _image_block(b64: str) -> Dict:
     return {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': b64}}
 
 
-def check_match(video_path: str, product: Dict) -> Tuple[str, str]:
-    """Devolve (resultado, motivo); resultado é 'sim', 'variacao', 'nao' ou 'incerto'."""
+def check_match(video_path: str, product: Dict, strict: bool = False) -> Tuple[str, str]:
+    """
+    Devolve (resultado, motivo); resultado é 'sim', 'variacao', 'nao' ou 'incerto'. `strict`: validação antes de
+    agendar, com 6 quadros do vídeo e exigindo o mesmo modelo (não só o mesmo tipo de produto).
+    """
     try:
-        content = [_image_block(_jpeg_b64(f)) for f in _video_frames(video_path)]
+        content = [_image_block(_jpeg_b64(f)) for f in _video_frames(video_path, 6 if strict else 3)]
         photo = requests.get(product['imageUrl'], timeout=30)
         photo.raise_for_status()
         content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)))))
-        content.append({'type': 'text', 'text': PROMPT.format(name=product['productName'])})
+        content.append({'type': 'text', 'text': PROMPT.format(name=product['productName']) + (STRICT_NOTE if strict else '')})
         data = ask_json(content, SCHEMA)
         logger.info(f"Conferência '{product['productName']}': {data['resultado']} ({data['motivo']})")
         return data['resultado'], data['motivo']
