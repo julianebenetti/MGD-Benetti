@@ -1,8 +1,7 @@
 """
-Prompts para gerar os vídeos com IA (YouTube Create / Veo), no tópico 🎬 Prompts.
-
-A IA olha a foto do anúncio e trava os detalhes que os geradores de vídeo costumam mudar (quantidade de peças,
-estampas, flores, formato), para o vídeo não virar "Produto Irrelevante" na Shopee.
+Prompts para gerar os vídeos com IA no YouTube Create (tópico 🎬 Prompts), com as regras da Juliane:
+até 900 caracteres, narração feminina em PT-BR (gancho → objeção → benefício → urgência responsável → CTA),
+fidelidade visual à imagem do anúncio, movimentos POV naturais e nenhuma escrita na tela.
 """
 
 import base64
@@ -15,36 +14,46 @@ from PIL import Image
 
 from ai_client import ask_json
 
+MAX_CHARS = 900   # limite do YouTube Create (instruções + narração)
+
 SCHEMA = {
     'type': 'object',
     'properties': {
         'detalhes_fixos': {'type': 'array', 'items': {'type': 'string'}},
         'prompt': {'type': 'string'},
-        'evitar': {'type': 'string'},
-        'cenas': {'type': 'array', 'items': {'type': 'string'}},
-        'dica': {'type': 'string'},
+        'conferir': {'type': 'string'},
     },
-    'required': ['detalhes_fixos', 'prompt', 'evitar', 'cenas', 'dica'],
+    'required': ['detalhes_fixos', 'prompt', 'conferir'],
     'additionalProperties': False,
 }
 
-RULES = """Você cria prompts para gerar vídeos curtos de produto com IA (YouTube Create / Veo, imagem → vídeo) para o
-perfil Achados Relâmpagos no Shopee Vídeo. A Shopee pune como "Produto Irrelevante" quando o produto do vídeo não é
-EXATAMENTE o da foto do anúncio, e os geradores de vídeo costumam inventar detalhes. Então:
+RULES = f"""Você cria o prompt de um vídeo promocional curto no YouTube Create para o perfil Achados Relâmpagos
+(Shopee Vídeo). A imagem anexa é a foto principal do anúncio e será enviada como base do vídeo.
 
-- detalhes_fixos: olhe a foto e liste, em português, tudo o que NÃO pode mudar: quantidade de peças/barras/
-  prateleiras/ganchos (conte!), estampa, flores e desenhos (cor, tamanho, posição), formato, cores de cada parte,
-  acessórios, textos/marcas visíveis.
-- prompt: em INGLÊS (os geradores entendem melhor), para usar com a foto do anúncio como imagem inicial. Vertical 9:16,
-  6 a 8 segundos. Produto parado e inteiro em quadro, câmera com movimento lento e suave (slow push-in ou leve
-  orbit), sem cortes, sem transformações. Descreva o produto com os detalhes fixos (contagens e estampas exatas) e
-  diga explicitamente para mantê-lo idêntico à imagem de referência. Ambiente coerente com o uso do produto,
-  luz natural, visual de "achadinho" bonito. Sem pessoas mexendo no produto, sem texto na tela.
-- evitar: em INGLÊS, lista para o campo de "o que evitar"/negative prompt (ex.: changing the print, extra bars,
-  different flowers, morphing, extra objects, text, logos).
-- cenas: 3 variações curtas do prompt (em inglês), cada uma com outro enquadramento/ambiente, todas com o produto
-  idêntico.
-- dica: 1 frase em português sobre o que conferir no vídeo gerado antes de mandar (o detalhe mais arriscado)."""
+REGRAS OBRIGATÓRIAS DO PROMPT
+1. No máximo {MAX_CHARS} caracteres no total (instruções + narração, contando espaços e pontuação).
+2. Narração feminina em português brasileiro, natural, persuasiva, para vídeo curto.
+3. Quebrar objeções (preço, praticidade, qualidade, conforto, durabilidade, facilidade de uso) só com informações
+   reais do produto (nome, foto, nota e vendas abaixo). Sem citar valores, descontos ou cupons.
+4. Começar com uma pergunta, situação do dia a dia ou frase que prenda a atenção.
+5. Urgência sem inventar estoque limitado, desconto ou prazo.
+6. Terminar a narração com CTA (conferir, aproveitar ou comprar).
+7. Fidelidade visual absoluta: usar a imagem enviada como referência e preservar cores, formato, proporções, marca,
+   detalhes e características; não inventar nem modificar o produto. Inclua UMA frase curta "Manter exatamente: …"
+   com os 2 ou 3 detalhes que um gerador de vídeo mais costuma mudar neste produto (quantidade de peças/barras,
+   estampa/flores, formato).
+8. Movimentos POV suaves, realistas e coerentes com o uso do produto; sem gestos artificiais nem mudanças bruscas.
+9. Nenhuma escrita na tela: proibir legendas, títulos, palavras, preços, logotipos ou texto sobreposto.
+10. Mostrar benefícios práticos (como facilita a rotina), sem promessas exageradas.
+11. Simples e direto: poucas cenas, nada contraditório, sem efeitos desnecessários.
+
+ESTRUTURA DA NARRAÇÃO: 1) gancho; 2) quebra de objeção com um diferencial verdadeiro; 3) benefício e curiosidade;
+4) urgência responsável; 5) CTA final.
+
+CAMPOS
+- detalhes_fixos: os detalhes da foto que não podem mudar no vídeo (para a Juliane conferir), em português.
+- prompt: o prompt final, pronto para copiar e colar, em português, com até {MAX_CHARS} caracteres.
+- conferir: 1 frase dizendo o que conferir no vídeo gerado antes de mandar (o detalhe mais arriscado)."""
 
 
 def _photo_b64(url: str) -> str:
@@ -57,26 +66,49 @@ def _photo_b64(url: str) -> str:
     return base64.standard_b64encode(buf.getvalue()).decode()
 
 
+def _facts(product: Dict) -> str:
+    facts = [f"PRODUTO DO ANÚNCIO: {product['productName']}"]
+    if product.get('ratingStar'):
+        facts.append(f"Nota: {product['ratingStar']}")
+    if product.get('sales'):
+        facts.append(f"Vendidos: {product['sales']}")
+    return '\n'.join(facts)
+
+
+def _trim(prompt: str) -> str:
+    """Último recurso: corta no fim de uma frase para caber nos 900 caracteres."""
+    if len(prompt) <= MAX_CHARS:
+        return prompt
+    cut = prompt[:MAX_CHARS]
+    end = max(cut.rfind('. '), cut.rfind('! '), cut.rfind('? '))
+    return cut[:end + 1] if end > MAX_CHARS // 2 else cut.rstrip()
+
+
 def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, request: str = '') -> Dict:
-    """Prompt novo (ou ajustado, com `previous` + `request`) a partir da foto e do nome do anúncio."""
-    text = f"{RULES}\n\nPRODUTO DO ANÚNCIO: {product['productName']}"
+    """Prompt novo (ou ajustado, com `previous` + `request`) a partir da foto e dos dados do anúncio."""
+    text = f"{RULES}\n\n{_facts(product)}"
     if notes:
         text += f"\nOBSERVAÇÕES DA JULIANE: {notes}"
     if previous:
         text += (f"\n\nPROMPT ANTERIOR:\n{previous.get('prompt', '')}\n\nAJUSTE PEDIDO: {request}\n"
-                 "Refaça mantendo os detalhes fixos do produto.")
-    content = [{'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
-                                            'data': _photo_b64(product['imageUrl'])}},
-               {'type': 'text', 'text': text}]
-    return ask_json(content, SCHEMA, name='prompt_video')
+                 "Refaça seguindo todas as regras.")
+    image = {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                                         'data': _photo_b64(product['imageUrl'])}}
+    data = ask_json([image, {'type': 'text', 'text': text}], SCHEMA, name='prompt_video')
+    if len(data['prompt']) > MAX_CHARS:   # passou do limite: pede para encurtar uma vez
+        data = ask_json([image, {'type': 'text', 'text': text + f"\n\nO prompt abaixo tem {len(data['prompt'])} "
+                                 f"caracteres. Reescreva com no máximo {MAX_CHARS - 40}, mantendo todas as regras:\n"
+                                 f"{data['prompt']}"}], SCHEMA, name='prompt_video')
+    data['prompt'] = _trim(data['prompt'].strip())
+    return data
 
 
 def render(product: Dict, data: Dict, url: str) -> str:
     e = html.escape
     fixed = '\n'.join(f"• {e(d)}" for d in data['detalhes_fixos'])
-    scenes = '\n\n'.join(f"<b>Cena {i}</b>\n<code>{e(c)}</code>" for i, c in enumerate(data['cenas'], 1))
     return (f"🎬 <b>{e(product['productName'][:90])}</b>\n{e(url)}\n\n"
-            f"🔒 <b>Não pode mudar no vídeo</b>\n{fixed}\n\n"
-            f"✍️ <b>Prompt</b> (use a foto do anúncio como imagem inicial; toque para copiar)\n<code>{e(data['prompt'])}</code>\n\n"
-            f"🚫 <b>Evitar</b>\n<code>{e(data['evitar'])}</code>\n\n{scenes}\n\n"
-            f"🔎 {e(data['dica'])}\n\n<i>Responda esta mensagem para ajustar (ex.: \"mais movimento\", \"fundo de sala\").</i>")[:4000]
+            f"✍️ <b>Prompt</b> ({len(data['prompt'])}/{MAX_CHARS} caracteres · toque para copiar)\n"
+            f"<code>{e(data['prompt'])}</code>\n\n"
+            f"🔒 <b>Conferir no vídeo gerado</b>\n{fixed}\n🔎 {e(data['conferir'])}\n\n"
+            f"<i>Use a foto principal do anúncio como base. Responda esta mensagem para ajustar "
+            f"(ex.: \"mais curto\", \"gancho com pergunta\").</i>")[:4000]

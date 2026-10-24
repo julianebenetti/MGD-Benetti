@@ -74,11 +74,12 @@ comissão, vendas, nota, a data/categoria e o link do produto para gravar.
 Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira no Shopee Vídeo): até R$ 60
 (`IDEIAS_PRECO_ACESSIVEL`), comissão ≥ R$ 3 por venda (`IDEIAS_COMISSAO_ACESSIVEL`), 500+ vendas, nota ≥ 4,7.
 
-**🎬 Prompts** — prompts para gerar os vídeos com IA (YouTube Create), usando a mesma OpenAI do robô. Mande o **link do
-produto** (com uma observação, se quiser): o robô olha a foto do anúncio e devolve os detalhes que não podem mudar
-(contagem de peças, estampas, flores, formato), o prompt em inglês para usar com a foto como imagem inicial, o que
-evitar e 3 cenas. **Responda o prompt** para ajustar (ex.: "mais movimento"). Quando um vídeo é barrado por detalhe
-diferente, a mensagem em 📥 Envios tem **🎬 Prompt corrigido**, que gera um prompt reforçando o detalhe que mudou.
+**🎬 Prompts** — prompts para o YouTube Create (usando a mesma OpenAI do robô), com as regras da Juliane: **até 900
+caracteres**; narração feminina em PT-BR (gancho → quebra de objeção → benefício → urgência sem falsa escassez → CTA);
+fidelidade visual à imagem do anúncio (com uma linha "Manter exatamente: …" dos detalhes mais arriscados); movimentos
+POV suaves; **nenhuma escrita na tela**; benefícios práticos; simples e direto. Objeções quebradas só com dados reais
+(nota e vendas do anúncio). Mande o **link do produto** (e uma observação, se quiser); **responda o prompt** para
+ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por
