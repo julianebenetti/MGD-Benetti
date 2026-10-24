@@ -47,6 +47,16 @@ if [ ! -f .env ]; then
   exit 1
 fi
 
+# Chave da extensão de avaliações (/extensao): criada uma vez; porta liberada no firewall, se houver
+if ! grep -q '^AVALIACOES_CHAVE=.' .env; then
+  sed -i '/^AVALIACOES_CHAVE=/d' .env
+  echo "AVALIACOES_CHAVE=$(python3 -c 'import secrets; print(secrets.token_hex(16))')" >> .env
+fi
+PORTA_AVALIACOES=$(grep -oP '^AVALIACOES_PORTA=\K[0-9]+' .env || echo 8787)
+if command -v ufw >/dev/null && $SUDO ufw status | grep -q 'Status: active'; then
+  $SUDO ufw allow "$PORTA_AVALIACOES/tcp" >/dev/null
+fi
+
 # 5 links por vídeo (todos vão para a LiA); .env antigos vinham com 3
 sed -i 's/^LINKS_POR_VIDEO=3$/LINKS_POR_VIDEO=5/' .env
 

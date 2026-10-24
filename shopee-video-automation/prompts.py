@@ -347,15 +347,16 @@ def narrations(product: Dict, notes: str = '', prints: Optional[list] = None, re
 
 
 def render_narrations(product: Dict, data: Dict, url: str, reviews_read: Optional[int] = None,
-                      from_file: bool = False) -> str:
+                      source: Optional[str] = None) -> str:
     e = html.escape
     lines = [f"🎙 <b>Escolha a narração</b> — {e(product['productName'][:80])}", e(url), '']
-    if from_file:
-        lines.append(f"📝 Usei {reviews_read} avaliação(ões) do arquivo da extensão")
-    elif reviews_read is not None:
-        lines.append(f"📝 Li {reviews_read} avaliação(ões) na Shopee" if reviews_read else
-                     "📝 A Shopee não deixou ler as avaliações: mande o JSON/CSV da extensão (ou prints) junto com o "
-                     "link, ou responda esta mensagem com o arquivo")
+    if source == 'arquivo':
+        lines.append(f"📝 Usei {reviews_read} avaliação(ões) do arquivo")
+    elif reviews_read:
+        lines.append(f"📝 Usei {reviews_read} avaliação(ões) que a extensão mandou")
+    elif source:
+        lines.append("📝 Sem avaliações deste produto: abra-o no Chrome com a extensão (role até as avaliações) e "
+                     "toque 🔄 Outras 4")
     if data.get('beneficios'):
         lines.append('💪 ' + e(' · '.join(data['beneficios'])))
     if data.get('avaliacoes'):

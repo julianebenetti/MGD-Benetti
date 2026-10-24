@@ -91,6 +91,11 @@ class TelegramBot:
                 'chat_id': self.chat_id, 'caption': caption, 'parse_mode': 'HTML', **self._thread(thread_id)},
                 files={'photo': photo})['message_id']
 
+    def send_document(self, thread_id: Optional[int], name: str, content: bytes, caption: str = '') -> int:
+        return self.call('sendDocument', timeout=120, data={
+            'chat_id': self.chat_id, 'caption': caption, 'parse_mode': 'HTML', **self._thread(thread_id)},
+            files={'document': (name, content)})['message_id']
+
     def edit_text(self, message_id: int, text: str, markup: Optional[str] = None) -> bool:
         """Troca o texto (e os botões) de uma mensagem; False se ela não existe mais (foi apagada)."""
         try:

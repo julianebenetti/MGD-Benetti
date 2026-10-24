@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "AfiliDash Avaliações",
+  "version": "1.0",
+  "description": "Quando você abre um produto na Shopee, manda para o robô as avaliações que a própria página já carregou (não faz pedidos à Shopee).",
+  "host_permissions": ["__ORIGEM__/*"],
+  "background": {"service_worker": "background.js"},
+  "content_scripts": [
+    {"matches": ["https://shopee.com.br/*"], "js": ["inject.js"], "world": "MAIN", "run_at": "document_start"},
+    {"matches": ["https://shopee.com.br/*"], "js": ["relay.js"], "run_at": "document_start"}
+  ],
+  "action": {"default_title": "AfiliDash Avaliações"}
+}

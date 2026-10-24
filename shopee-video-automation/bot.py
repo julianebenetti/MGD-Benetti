@@ -151,7 +151,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -1287,7 +1287,7 @@ class Bot:
         4 opções de narração para a Juliane escolher. Avaliações: do arquivo da extensão, se ela mandou; senão,
         a leitura anônima na Shopee. Os prints, quando vierem, são lidos como fatos reais.
         """
-        reviews_read, from_file = None, False
+        reviews_read, source = None, None
         if previous:
             paths, product, comments = previous.get('prints') or [], previous['product'], previous.get('reviews') or []
         else:
@@ -1298,12 +1298,16 @@ class Bot:
                                   reply_to=reply_to)
                 return
             product = found[0]
+        # o robô nunca acessa a Shopee: as avaliações vêm do arquivo que ela mandou ou da extensão do Chrome dela
         file_comments = self._read_review_files(review_files, reply_to)
+        from_extension = reviews.stored(self.db, product.get('itemId'))
         if file_comments:
-            comments, reviews_read, from_file = file_comments, len(file_comments), True
-        elif not previous:
-            comments = reviews.fetch(product)   # sem a conta da Juliane
-            reviews_read = len(comments)
+            comments, source = file_comments, 'arquivo'
+        elif len(from_extension) >= len((previous or {}).get('reviews') or []) and (from_extension or not previous):
+            comments, source = from_extension, 'extensao'
+        else:
+            comments, source = previous['reviews'], previous.get('fonte', 'extensao')
+        reviews_read = len(comments)
         try:
             data = prompts.narrations(product, notes, paths, (previous or {}).get('pedido', ''),
                                       (previous or {}).get('opcoes'), comments)
@@ -1312,12 +1316,36 @@ class Bot:
             self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar as narrações: {html.escape(str(e)[:200])}",
                               reply_to=reply_to)
             return
-        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link, reviews_read, from_file),
+        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link, reviews_read, source),
                                    reply_to=reply_to)
         self.tg.edit_markup(msg_id, self._narration_markup(msg_id, count=len(data['opcoes'])))
         self.db.set_meta(f"narr:{msg_id}", json.dumps({
             'link': link, 'notes': notes, 'product': product, 'prints': paths, 'opcoes': data['opcoes'],
-            'beneficios': data.get('beneficios') or [], 'reviews': comments}, default=str))
+            'beneficios': data.get('beneficios') or [], 'reviews': comments, 'fonte': source}, default=str))
+
+    def job_extension(self, thread: Optional[int]):
+        """/extensao: manda o .zip da extensão já configurado com o endereço do VPS e a chave."""
+        key = os.getenv('AVALIACOES_CHAVE')
+        if not key:
+            self.tg.send_text(thread, "⚠️ Falta a chave das avaliações no VPS: rode o comando de atualização de novo.")
+            return
+        url = os.getenv('AVALIACOES_URL')
+        if not url:
+            try:   # IP público do VPS (só para montar o endereço; não toca na Shopee)
+                ip = requests.get('https://api.ipify.org', timeout=15).text.strip()
+            except requests.RequestException as e:
+                self.tg.send_text(thread, f"⚠️ Não descobri o IP do VPS ({e.__class__.__name__}). Coloque "
+                                          "AVALIACOES_URL=http://SEU_IP:8787/avaliacoes no .env.")
+                return
+            url = f"http://{ip}:{reviews.PORT}/avaliacoes"
+        self.tg.send_document(thread, 'afilidash-avaliacoes.zip', reviews.extension_zip(url, key), (
+            "🧩 <b>Extensão AfiliDash Avaliações</b>\n"
+            "1. Baixe e descompacte este .zip no computador.\n"
+            "2. No Chrome: <code>chrome://extensions</code> → ligue o <b>Modo do desenvolvedor</b> → "
+            "<b>Carregar sem compactação</b> → escolha a pasta <b>afilidash-avaliacoes</b>.\n"
+            "3. Pronto: ao abrir um produto na Shopee e rolar até as avaliações, ela manda para o robô o que a "
+            "página já mostrou (o número verde no ícone = avaliações guardadas; ! vermelho = não chegou).\n\n"
+            "Ela não faz pedidos à Shopee. O arquivo tem a chave do robô: não compartilhe."))
 
     def on_narration_button(self, cb: Dict, raw: str):
         msg_id, _, n = raw.partition('.')
@@ -1473,6 +1501,8 @@ class Bot:
                     self.tg.send_text(job[1], self.report_text(job[2]))
                 elif job[0] == 'prompt':
                     self.job_prompt(*job[1:])
+                elif job[0] == 'extension':
+                    self.job_extension(*job[1:])
                 elif job[0] == 'narrations':
                     self.job_narrations(*job[1:])
                 elif job[0] == 'prompt_narr':
@@ -1519,6 +1549,9 @@ class Bot:
         if command.lower().startswith('/validaragenda'):
             self.tg.send_text(thread or AGENDA, "🔎 Validando os posts da Agenda (produto × vídeo)… pode levar alguns minutos.")
             self.submit(('validate_agenda', thread or AGENDA))
+            return
+        if command.lower().startswith('/extensao') or command.lower().startswith('/extensão'):
+            self.submit(('extension', thread or PROMPTS))
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
@@ -1581,6 +1614,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
+            ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})
         self.tg.set_commands([
             ('brutos', 'Conecta este tópico: vídeos novos vão para Envios'),
@@ -1606,6 +1640,11 @@ class Bot:
             self.db.set_meta('lia_retro_feito', '2')
             self.submit(('lia_retro',))
         self.recover_lia()
+        if os.getenv('AVALIACOES_CHAVE'):
+            try:
+                reviews.serve(self.db, os.environ['AVALIACOES_CHAVE'])
+            except OSError as e:
+                logger.error(f"Não consegui abrir a porta das avaliações ({reviews.PORT}): {e}")
         for name, jobs in self.queues.items():
             for _ in range(VIDEO_WORKERS if name == 'video' else 1):
                 threading.Thread(target=self.worker, args=(jobs,), daemon=True).start()

@@ -82,8 +82,9 @@ POV suaves; **nenhuma escrita na tela**; benefícios práticos; simples e direto
 formato dos prompts da Juliane ("Crie um vídeo POV vertical 9:16… Use a imagem enviada como referência fiel e preserve
 <detalhes>… Não adicione textos… Narração feminina em português brasileiro: “…”"). Mande o **link do produto** (e uma
 observação, se quiser) — com prints (do anúncio e das **avaliações**: o robô não abre a página da Shopee, então as
-avaliações vêm do print ou do **JSON/CSV da extensão Shopee Reviews Grabber**, que lê as avaliações no seu Chrome
-logado; sem nada disso o robô tenta ler as avaliações sem conta, o que a Shopee costuma barrar), mande-os em álbum com o link na legenda ou antes do link. Primeiro chegam **4 opções de
+avaliações vêm da **extensão AfiliDash Avaliações** — mande `/extensao` no grupo para receber o .zip já
+configurado; com ela instalada no Chrome, basta abrir o produto e rolar até as avaliações: ela repassa ao robô o que a
+página já carregou, sem fazer pedidos à Shopee — ou de prints / do JSON/CSV da extensão Shopee Reviews Grabber), mande-os em álbum com o link na legenda ou antes do link. Primeiro chegam **4 opções de
 narração** (botões 1–4 e 🔄 Outras 4; responder a mensagem pede ajuste; "minha: …" usa uma narração sua); escolhida a
 narração, vem o prompt completo com ela intacta. **Responda o prompt** para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
@@ -192,6 +193,8 @@ as variações vêm do print que você manda, e links de vídeo (`sv.shopee`) pr
 | `scheduler.py` / `storage.py` | Agenda / estado (SQLite `estado.db`) |
 | `sub_id.py` | Sub_id dos links |
 | `prompts.py` | Prompts de vídeo com IA (🎬 Prompts) |
+| `reviews.py` | Avaliações recebidas da extensão (porta `AVALIACOES_PORTA`, chave `AVALIACOES_CHAVE`) e leitura dos JSON/CSV |
+| `extensao_avaliacoes/` | Extensão do Chrome "AfiliDash Avaliações" (o `/extensao` manda o .zip configurado) |
 | `ideas.py` | Ideias de produtos para gravar (💡 Ideias e /sugestoes) |
 | `conversions.py` | Vendas reais por sub_id (relatório de conversões da Shopee) |
 | `shopee_session.py` | Login da Shopee no navegador do robô (cookies via /cookies) |
