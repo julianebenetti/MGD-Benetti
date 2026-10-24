@@ -1,6 +1,7 @@
 """
 Prompts para gerar os vídeos com IA no YouTube Create (tópico 🎬 Prompts), com as regras da Juliane:
-até 900 caracteres, narração feminina em PT-BR (gancho → objeção → benefício → urgência responsável → CTA),
+até 900 caracteres, narração feminina em PT-BR que vende o benefício principal do produto (curiosidade → objeção →
+benefício → urgência verdadeira → CTA),
 fidelidade visual à imagem do anúncio, movimentos POV naturais e nenhuma escrita na tela.
 """
 
@@ -23,11 +24,12 @@ CTA_WORDS = ('carrinho', 'garanta', 'garante', 'confira', 'confere', 'aproveite'
 SCHEMA = {
     'type': 'object',
     'properties': {
+        'beneficios': {'type': 'array', 'items': {'type': 'string'}},
         'detalhes_fixos': {'type': 'array', 'items': {'type': 'string'}},
         'prompt': {'type': 'string'},
         'conferir': {'type': 'string'},
     },
-    'required': ['detalhes_fixos', 'prompt', 'conferir'],
+    'required': ['beneficios', 'detalhes_fixos', 'prompt', 'conferir'],
     'additionalProperties': False,
 }
 
@@ -37,11 +39,13 @@ RULES = f"""Você cria o prompt de um vídeo promocional curto no YouTube Create
 REGRAS OBRIGATÓRIAS DO PROMPT
 1. No máximo {MAX_CHARS} caracteres no total (instruções + narração, contando espaços e pontuação).
 2. Narração feminina em português brasileiro, natural, persuasiva, para vídeo curto.
-3. Quebrar objeções (preço, praticidade, qualidade, conforto, durabilidade, facilidade de uso) só com informações
-   reais do produto (nome, foto, nota e vendas abaixo). Sem citar valores, descontos ou cupons.
-4. Começar com uma pergunta, situação do dia a dia ou frase que prenda a atenção.
-5. Urgência sem inventar estoque limitado, desconto ou prazo.
-6. Terminar a narração com CTA (conferir, aproveitar ou comprar).
+3. Quebra de objeções: responder às dúvidas que impedem a compra, como qualidade, praticidade, conforto ou
+   custo-benefício, conforme o produto, só com informações reais (nome, foto, prints, nota e vendas abaixo).
+   Sem citar valores, descontos ou cupons.
+4. Curiosidade: despertar vontade de conhecer o produto (começar com uma pergunta ou situação do dia a dia).
+5. Urgência e escassez: incentivar a compra com argumentos verdadeiros (ex.: nota alta, muitos vendidos), sem
+   inventar promoções, desconto, prazo ou estoque limitado.
+6. CTA no final: terminar com uma chamada direta para a pessoa conferir, aproveitar ou comprar o produto.
 7. Fidelidade visual absoluta: usar a imagem enviada como referência e preservar cores, formato, proporções, marca,
    detalhes e características; não inventar nem modificar o produto. Na frase "preserve …", cite os detalhes
    concretos que um gerador de vídeo mais costuma mudar neste produto (quantidade de peças/barras, tamanhos,
@@ -52,13 +56,22 @@ REGRAS OBRIGATÓRIAS DO PROMPT
     limpar, monta sem ferramenta), na cena e na narração, sem promessas exageradas.
 11. Simples e direto: poucas cenas, nada contraditório, sem efeitos desnecessários.
 
-ESTRUTURA DA NARRAÇÃO: 1) gancho; 2) quebra de objeção com um diferencial verdadeiro; 3) benefício e curiosidade;
-4) urgência responsável; 5) CTA final.
+A NARRAÇÃO VENDE O BENEFÍCIO, NÃO A FICHA TÉCNICA. Antes de escrever, liste em "beneficios" os 2 ou 3 benefícios
+que fazem alguém comprar ESTE produto (o resultado na vida da pessoa), do mais forte para o menos forte. Ex.:
+frigideira antiaderente → cozinhar sem óleo (ou quase), nada gruda, comida mais saudável, lava em segundos;
+organizador → acaba a bagunça, acha tudo rápido; cadeira → conforto por horas, sem dor nas costas. O benefício
+principal (o 1º) tem que estar na narração, dito de forma clara e concreta. Medidas, cores e nº de peças ficam nas
+instruções do vídeo; na narração, só se forem o próprio benefício e mesmo assim em poucas palavras.
+
+ESTRUTURA DA NARRAÇÃO: 1) gancho que desperta curiosidade (pergunta ou dor do dia a dia ligada ao benefício
+principal); 2) quebra de objeção com o benefício principal (ex.: "sem óleo e nada gruda"); 3) mais 1 benefício
+prático; 4) urgência e escassez verdadeiras (nota, vendidos); 5) CTA final direto.
 
 FORMATO (o mesmo que a Juliane usa), em um parágrafo corrido:
 "Crie um vídeo POV vertical 9:16, realista e natural, … Use a imagem enviada como referência fiel/obrigatória e preserve
 <detalhes concretos: quantidade de peças, tamanhos, cores, estampa, materiais>. Não altere cores, proporções, textura,
-quantidade de peças ou detalhes. Mostre <cena de uso real, com ações do dia a dia>, destacando <benefícios práticos>.
+quantidade de peças ou detalhes. Mostre <cena de uso real que PROVA o benefício principal (ex.: ovo deslizando na frigideira sem óleo)>,
+destacando <benefícios práticos>.
 Movimentos suaves e realistas, iluminação natural, <ambiente>. Não adicione textos, legendas, títulos, preços ou
 qualquer escrita na tela. Narração feminina em português brasileiro: “<narração>”"
 
@@ -84,6 +97,7 @@ TAMANHO: instruções do vídeo com até 550 caracteres e narração com até 30
 {MAX_CHARS}). A narração tem que vir INTEIRA, com as 5 partes, terminando no CTA e fechando as aspas.
 
 CAMPOS
+- beneficios: os 2 ou 3 benefícios que fazem comprar o produto, do mais forte ao menos forte, em português.
 - detalhes_fixos: os detalhes da foto que não podem mudar no vídeo (para a Juliane conferir), em português.
 - prompt: o prompt final, pronto para copiar e colar, em português, com até {MAX_CHARS} caracteres.
 - conferir: 1 frase dizendo o que conferir no vídeo gerado antes de mandar (o detalhe mais arriscado)."""
@@ -156,8 +170,18 @@ def _split(prompt: str):
     return (prompt, '') if i < 0 else (prompt[:i].rstrip(), prompt[i:].strip())
 
 
-def problems(prompt: str) -> list:
-    """O que está errado no prompt: tamanho, narração faltando, sem CTA ou cortada."""
+STOPWORDS = {'para', 'mais', 'menos', 'muito', 'muita', 'como', 'qualquer', 'fácil', 'facil', 'sempre', 'todo', 'toda'}
+
+
+def _mentions(benefit: str, speech: str) -> bool:
+    """A fala cita o benefício? (alguma palavra forte dele, pelo radical: "gruda" ~ "grudar")."""
+    words = [w for w in re.findall(r'[a-zà-ú]{4,}', benefit.lower()) if w not in STOPWORDS]
+    low = speech.lower()
+    return not words or any(w[:5] in low for w in words)
+
+
+def problems(prompt: str, benefits: Optional[list] = None) -> list:
+    """O que está errado no prompt: tamanho, narração faltando, sem CTA, cortada ou sem o benefício principal."""
     found = []
     _, narration = _split(prompt)
     if len(prompt) > MAX_CHARS:
@@ -170,6 +194,9 @@ def problems(prompt: str) -> list:
             found.append('a narração não termina fechando as aspas (está cortada)')
         if not any(w in quote.lower()[-160:] for w in CTA_WORDS):
             found.append('a narração não termina com um CTA (ex.: "Toque no carrinho e garanta o seu!")')
+        if benefits and not _mentions(benefits[0], quote):
+            found.append(f'a narração não fala do benefício principal ("{benefits[0]}"): fale dele no lugar de '
+                         'medidas/ficha técnica')
     return found
 
 
@@ -249,7 +276,7 @@ def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, reque
     data = ask_json([*images, {'type': 'text', 'text': text}], SCHEMA, name='prompt_video')
     data['prompt'] = compact(data['prompt'])
     for _ in range(2):   # passou do limite ou a narração veio sem CTA/cortada: pede para corrigir
-        issues = problems(data['prompt'].strip())
+        issues = problems(data['prompt'].strip(), data.get('beneficios'))
         if not issues:
             break
         data = ask_json([*images, {'type': 'text', 'text': text + "\n\nO prompt abaixo tem problemas: "
@@ -265,8 +292,10 @@ def render(product: Dict, data: Dict, url: str) -> str:
     """Mensagem de informações (o prompt vai sozinho na mensagem seguinte, para copiar só ele)."""
     e = html.escape
     fixed = '\n'.join(f"• {e(d)}" for d in data['detalhes_fixos'])
+    benefits = '\n'.join(f"• {e(b)}" for b in data.get('beneficios') or [])
     return (f"🎬 <b>{e(product['productName'][:90])}</b>\n{e(url)}\n"
             f"Prompt com {len(data['prompt'])}/{MAX_CHARS} caracteres na mensagem abaixo: toque e segure → Copiar.\n\n"
+            + (f"💪 <b>Benefícios na narração</b>\n{benefits}\n\n" if benefits else '') +
             f"🔒 <b>Conferir no vídeo gerado</b>\n{fixed}\n🔎 {e(data['conferir'])}\n\n"
             f"<i>Use a foto principal do anúncio como base. Para ajustar, responda o prompt "
             f"(ex.: \"mais curto\", \"gancho com pergunta\").</i>")[:4000]
