@@ -142,11 +142,16 @@ def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, reque
 
 
 def render(product: Dict, data: Dict, url: str) -> str:
+    """Mensagem de informações (o prompt vai sozinho na mensagem seguinte, para copiar só ele)."""
     e = html.escape
     fixed = '\n'.join(f"• {e(d)}" for d in data['detalhes_fixos'])
-    return (f"🎬 <b>{e(product['productName'][:90])}</b>\n{e(url)}\n\n"
-            f"✍️ <b>Prompt</b> ({len(data['prompt'])}/{MAX_CHARS} caracteres · toque para copiar)\n"
-            f"<code>{e(data['prompt'])}</code>\n\n"
+    return (f"🎬 <b>{e(product['productName'][:90])}</b>\n{e(url)}\n"
+            f"Prompt com {len(data['prompt'])}/{MAX_CHARS} caracteres na mensagem abaixo: toque e segure → Copiar.\n\n"
             f"🔒 <b>Conferir no vídeo gerado</b>\n{fixed}\n🔎 {e(data['conferir'])}\n\n"
-            f"<i>Use a foto principal do anúncio como base. Responda esta mensagem para ajustar "
+            f"<i>Use a foto principal do anúncio como base. Para ajustar, responda o prompt "
             f"(ex.: \"mais curto\", \"gancho com pergunta\").</i>")[:4000]
+
+
+def prompt_only(data: Dict) -> str:
+    """Só o prompt, sem nada junto: copiar a mensagem copia exatamente o prompt."""
+    return html.escape(data['prompt'])

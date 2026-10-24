@@ -1237,8 +1237,11 @@ class Bot:
             logger.exception("Prompt falhou")
             self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar o prompt: {html.escape(str(e)[:200])}", reply_to=reply_to)
             return
-        msg_id = self.tg.send_text(PROMPTS, prompts.render(product, data, link), reply_to=reply_to)
-        self.db.set_meta(f"prompt:{msg_id}", json.dumps({'link': link, 'notes': notes, 'prompt': data['prompt']}))
+        info_id = self.tg.send_text(PROMPTS, prompts.render(product, data, link), reply_to=reply_to)
+        prompt_id = self.tg.send_text(PROMPTS, prompts.prompt_only(data))   # sozinho: copiar = só o prompt
+        state = json.dumps({'link': link, 'notes': notes, 'prompt': data['prompt']})
+        for msg_id in (info_id, prompt_id):   # responder qualquer uma das duas ajusta o prompt
+            self.db.set_meta(f"prompt:{msg_id}", state)
 
     def job_ideas(self, thread: Optional[int]):
         """
