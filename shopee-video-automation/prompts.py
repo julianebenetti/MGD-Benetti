@@ -136,6 +136,7 @@ def compact(prompt: str) -> str:
     head, speech = (prompt[:i.end()], prompt[i.end():]) if i else (prompt, '')
     for pattern, short in ABBREVIATIONS:
         head = re.sub(pattern, short, head, flags=re.IGNORECASE)
+    head = re.sub(r'(^|[.!?]\s+)([a-zà-ú])', lambda m: m.group(1) + m.group(2).upper(), head)   # início de frase
     return (head + speech).strip()
 
 
