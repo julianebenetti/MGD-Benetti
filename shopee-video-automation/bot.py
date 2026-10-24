@@ -147,6 +147,7 @@ class Bot:
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
         self.pending_last = ''
+        self.agenda_last = ''
         self.lia_checked = 0.0
 
     def submit(self, job: tuple):
@@ -459,25 +460,7 @@ class Bot:
             self.db.update_post(post['id'], status='editado')
             post = self.db.get_post(post['id'])
             self.refresh_buttons(post)
-            what = {'variacao': 'Outra variação (cor/estampa/modelo) da foto do anúncio',
-                    'nao': 'Diferente'}.get(result, 'Não deu para confirmar')
-            alt = self.pipeline.find_identical(post)
-            buttons = []
-            if alt:
-                self.db.update_post(post['id'], metadata={**post['metadata'], 'alternativa_identica': alt})
-                buttons.append([(f"🔁 Usar {alt.get('shopName', '')[:22]} (idêntico)", f"vm:{post['id']}")])
-            buttons.append([('📅 Agendar mesmo assim (risco)', f"af:{post['id']}")])
-            alt_text = (f"\n\n✅ Achei um anúncio <b>idêntico ao vídeo</b>: {e(alt.get('shopName', ''))} · "
-                        f"{details(alt)}\n{e(product_url(alt))}") if alt else \
-                "\n\nNão achei outro anúncio idêntico. Responda os textos com <code>1 https://…</code> de um anúncio " \
-                "cuja foto seja igual ao vídeo, ou descarte."
-            self.tg.send_text(
-                EDITADOS, f"🔎 <b>Validação: o produto divulgado não é idêntico ao vídeo</b>\n"
-                          f"{e(post['product_name'][:80])}\n{what}: {e(reason)}\n\n"
-                          f"A Shopee pune isso como \"produto irrelevante\" (o produto divulgado é o que ela confere), "
-                          f"então não agendei.{alt_text}",
-                reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
-                markup=keyboard(*buttons))
+            self.validation_alert(post, result, reason)
             return None
         lines = [f"🔎 <b>Validação antes da Agenda:</b> {len(v['products'])} link(s) idênticos ao vídeo"]
         if result != 'sim':
@@ -488,6 +471,41 @@ class Bot:
         metadata = {**post['metadata'], 'validacao': f"{len(v['products'])} link(s) validados (mesmo modelo do vídeo)"}
         self.db.update_post(post['id'], products=v['products'], links=v['links'], metadata=metadata)
         return {'note': '\n'.join(lines)}
+
+    def validation_alert(self, post: Dict, result: str, reason: str, from_agenda: bool = False):
+        """Em Editados: por que o divulgado não passou e as saídas (anúncio idêntico, agendar mesmo assim)."""
+        e = html.escape
+        what = {'variacao': 'Outra variação (cor/estampa/modelo) da foto do anúncio',
+                'nao': 'Diferente'}.get(result, 'Não deu para confirmar')
+        alt = self.pipeline.find_identical(post)
+        buttons = []
+        if alt:
+            self.db.update_post(post['id'], metadata={**post['metadata'], 'alternativa_identica': alt})
+            buttons.append([(f"🔁 Usar {alt.get('shopName', '')[:22]} (idêntico)", f"vm:{post['id']}")])
+        buttons.append([('📅 Agendar mesmo assim (risco)', f"af:{post['id']}")])
+        alt_text = (f"\n\n✅ Achei um anúncio <b>idêntico ao vídeo</b>: {e(alt.get('shopName', ''))} · "
+                    f"{details(alt)}\n{e(product_url(alt))}") if alt else \
+            "\n\nNão achei outro anúncio idêntico. Responda os textos com <code>1 https://…</code> de um anúncio " \
+            "cuja foto seja igual ao vídeo, ou descarte."
+        buttons.append([('❌ Descartar', f"dc:{post['id']}")])
+        origin = "Tirei da Agenda e voltei para cá" if from_agenda else "Não agendei"
+        self.tg.send_text(
+            EDITADOS, f"🔎 <b>Validação: o produto divulgado não é idêntico ao vídeo</b>\n"
+                      f"{e(post['product_name'][:80])}\n{what}: {e(reason)}\n\n"
+                      f"A Shopee pune isso como \"produto irrelevante\" (o produto divulgado é o que ela confere). "
+                      f"{origin}.{alt_text}",
+            reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
+            markup=keyboard(*buttons))
+
+    def back_to_editados(self, post: Dict, result: Optional[str] = None, reason: str = ''):
+        """Tira o post da Agenda (apaga as mensagens dele lá) e manda de novo para Editados, sem horário."""
+        self.tg.delete(post['agenda_msgs'])
+        meta = {k: v for k, v in post['metadata'].items() if k not in ('validacao_forcada', 'lia_alertado')}
+        self.db.update_post(post['id'], status='editado', scheduled_at=None, agenda_msgs=[], metadata=meta)
+        post = self.db.get_post(post['id'])
+        self.send_to_editados(post)
+        if result:
+            self.validation_alert(self.db.get_post(post['id']), result, reason, from_agenda=True)
 
     def job_use_identical(self, post_id: int):
         """Põe o anúncio idêntico ao vídeo como divulgado (1º link, mesmo sub_id) e agenda de novo."""
@@ -612,7 +630,7 @@ class Bot:
         row = [('✅ Postei', f"ok:{post_id}")]
         if self.lia:
             row.append(('📤 Enviar à LiA', f"la:{post_id}"))
-        return keyboard(row, [('❌ Descartar', f"dc:{post_id}")])
+        return keyboard(row, [('↩️ Voltar p/ Editados', f"bk:{post_id}"), ('❌ Descartar', f"dc:{post_id}")])
 
     def send_to_lia(self, post: Dict):
         self.db.update_post(post['id'], status='enviando')
@@ -732,14 +750,9 @@ class Bot:
             meta = {**post['metadata'], 'validacao': f"{len(v['products'])} link(s) validados (mesmo modelo do vídeo)"}
             self.db.update_post(post['id'], products=v['products'], links=v['links'], metadata=meta)
             if result != 'sim' and not post['metadata'].get('validacao_forcada'):   # divulgado: só idêntico
-                self.db.update_post(post['id'], status='avisado')
                 held.append(f"{e(post['product_name'][:45])}: {e(reason)}")
-                msg = self.tg.send_text(
-                    AGENDA, f"⛔ <b>Retido: o produto divulgado não bate com o vídeo</b>\n{e(post['product_name'][:80])}\n"
-                            f"{e(reason)}\n\nNão vai para a LiA. Toque ❌ Descartar, ou 📤 Enviar à LiA se tiver certeza.",
-                    reply_to=post['agenda_msgs'][-1] if post['agenda_msgs'] else None,
-                    markup=self.agenda_markup(post['id']))
-                self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg])
+                self.back_to_editados(self.db.get_post(post['id']), result, reason)
+                continue
             elif v['removed'] or v['added']:
                 fixed.append(f"{e(post['product_name'][:45])}: tirei {len(v['removed'])}, pus {len(v['added'])}")
             else:
@@ -752,7 +765,9 @@ class Bot:
         if fixed:
             parts.append(f"🔧 {len(fixed)} com lojas extras trocadas:\n" + '\n'.join(f"• {f}" for f in fixed))
         if held:
-            parts.append(f"⛔ {len(held)} retido(s), não vão para a LiA:\n" + '\n'.join(f"• {h}" for h in held))
+            parts.append(f"↩️ {len(held)} voltaram para ✅ Editados (o produto divulgado não é idêntico ao vídeo; lá "
+                         "você escolhe: anúncio idêntico, agendar mesmo assim ou descartar):\n"
+                         + '\n'.join(f"• {h}" for h in held))
         self.tg.send_text(thread, '\n\n'.join(parts))
 
     def job_lia_retro(self, thread: Optional[int] = None):
@@ -987,6 +1002,14 @@ class Bot:
                                 discarded_at=scheduler.now().isoformat(timespec='seconds'))
             self.tg.answer_callback(cb['id'], 'Descartado')
 
+        elif action == 'bk' and post['status'] in ('agendado', 'avisado'):
+            self.db.update_post(post['id'], status='voltando')
+            self.tg.answer_callback(cb['id'], 'Voltando para Editados…')
+            self.submit(('back', post['id']))
+
+        elif action == 'bk':
+            self.tg.answer_callback(cb['id'], 'Já está com a LiA ou saiu da Agenda')
+
         elif action == 'ok' and post['status'] in ('agendado', 'avisado', 'na_lia'):
             self.move_to_postados(post)
             self.tg.answer_callback(cb['id'], 'Movido para Postados')
@@ -1079,6 +1102,47 @@ class Bot:
             if len(group) > MAX_PENDING_LINES:
                 lines.append(f"… e mais {len(group) - MAX_PENDING_LINES}")
         return '\n'.join(lines)[:4000]
+
+    AGENDA_ICONS = {'agendado': '⏰', 'enviando': '📤', 'na_lia': '🤖', 'avisado': '⚠️'}
+
+    def agenda_summary_text(self) -> str:
+        """Resumo da Agenda em ordem de horário: o que vai sair sozinho e o que precisa de você."""
+        posts = [p for p in self.db.scheduled() if p['scheduled_at']]
+        if not posts:
+            return "🗓️ <b>Agenda</b>\n\nNenhum vídeo agendado."
+        lines = ["🗓️ <b>Agenda</b> · em ordem de horário (toque no nome para ir até o vídeo)",
+                 "⏰ agendado · 📤 indo para a LiA · 🤖 LiA publicando · ⚠️ precisa de você"]
+        pause = self.db.get_meta('pausa_ate')
+        if pause:
+            lines.append("⏸️ Postagens pausadas" + ('' if pause == 'indefinida' else f" até {fmt_when(pause)}"))
+        day = None
+        for p in posts:
+            when = datetime.fromisoformat(p['scheduled_at']).astimezone(scheduler.TZ)
+            if when.date() != day:
+                day = when.date()
+                lines.append(f"\n<b>{DIAS[when.weekday()]}, {when:%d/%m}</b>")
+            name = html.escape(p['product_name'][:45])
+            if p['agenda_msgs']:
+                name = f"<a href=\"{self.tg.message_link(AGENDA, p['agenda_msgs'][-1])}\">{name}</a>"
+            lines.append(f"{self.AGENDA_ICONS.get(p['status'], '•')} {when:%H:%M} · {name}")
+        return '\n'.join(lines)[:4000]
+
+    def refresh_agenda_summary(self, repost: bool = False):
+        """Mensagem fixada na Agenda com o resumo (só edita se mudou; /agenda manda uma nova no fim)."""
+        if not AGENDA:
+            return
+        text = self.agenda_summary_text()
+        if text == self.agenda_last and not repost:
+            return
+        msg_id = int(self.db.get_meta('agenda_resumo_msg', '0'))
+        if repost and msg_id:
+            self.tg.delete([msg_id])
+            msg_id = 0
+        if not msg_id or not self.tg.edit_text(msg_id, text):
+            msg_id = self.tg.send_text(AGENDA, text)
+            self.db.set_meta('agenda_resumo_msg', str(msg_id))
+            self.tg.pin(msg_id)
+        self.agenda_last = text
 
     def refresh_pending(self):
         """Mantém uma mensagem fixada em 📌 Pendências com tudo que espera ação (só edita se mudou)."""
@@ -1508,6 +1572,8 @@ class Bot:
                     self.tg.send_text(job[1], self.report_text(job[2]))
                 elif job[0] == 'prompt':
                     self.job_prompt(*job[1:])
+                elif job[0] == 'back':
+                    self.back_to_editados(self.db.get_post(job[1]))
                 elif job[0] == 'extension':
                     self.job_extension(*job[1:])
                 elif job[0] == 'narrations':
@@ -1559,6 +1625,9 @@ class Bot:
             return
         if command.lower().startswith('/extensao') or command.lower().startswith('/extensão'):
             self.submit(('extension', thread or PROMPTS))
+            return
+        if command.lower().startswith('/agenda'):
+            self.refresh_agenda_summary(repost=True)
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
@@ -1620,6 +1689,7 @@ class Bot:
             ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
+            ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
             ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})
@@ -1669,6 +1739,7 @@ class Bot:
                         logger.exception("Falha ao tratar update")
                 self.tick()
                 self.refresh_pending()
+                self.refresh_agenda_summary()
                 self.daily_report()
                 self.daily_ideas()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
