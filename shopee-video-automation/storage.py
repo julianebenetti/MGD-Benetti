@@ -75,8 +75,11 @@ class Storage:
                            ('lia_sent_at', 'REAL')):
             if name not in existing:
                 self.conn.execute(f"ALTER TABLE posts ADD COLUMN {name} {decl}")
-        if 'link' not in {r[1] for r in self.conn.execute("PRAGMA table_info(failures)")}:
+        failure_cols = {r[1] for r in self.conn.execute("PRAGMA table_info(failures)")}
+        if 'link' not in failure_cols:
             self.conn.execute("ALTER TABLE failures ADD COLUMN link TEXT")
+        if 'reason' not in failure_cols:
+            self.conn.execute("ALTER TABLE failures ADD COLUMN reason TEXT")
         self.conn.commit()
 
     def _row(self, row) -> Optional[Dict]:
@@ -152,10 +155,11 @@ class Storage:
             rows = self.conn.execute("SELECT headline FROM headlines WHERE product_key = ?", (product_key,))
             return [r[0] for r in rows.fetchall()]
 
-    def add_failure(self, msg_id: int, err_msg_id: int, file_id: str, text: str, link: str = ''):
+    def add_failure(self, msg_id: int, err_msg_id: int, file_id: str, text: str, link: str = '', reason: str = ''):
         with self.lock:
-            self.conn.execute("INSERT OR REPLACE INTO failures (msg_id, err_msg_id, file_id, text, at, link) "
-                              "VALUES (?, ?, ?, ?, ?, ?)", (msg_id, err_msg_id, file_id, text, time.time(), link))
+            self.conn.execute("INSERT OR REPLACE INTO failures (msg_id, err_msg_id, file_id, text, at, link, reason) "
+                              "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                              (msg_id, err_msg_id, file_id, text, time.time(), link, reason))
             self.conn.commit()
 
     def find_failure(self, replied_id: Optional[int], max_age: float) -> Optional[Dict]:

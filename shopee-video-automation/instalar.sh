@@ -51,7 +51,8 @@ fi
 sed -i 's/^LINKS_POR_VIDEO=3$/LINKS_POR_VIDEO=5/' .env
 
 if ! grep -q '^TELEGRAM_TOPIC_ENVIOS=[0-9]' .env || ! grep -q '^TELEGRAM_TOPIC_PENDENCIAS=[0-9]' .env \
-   || ! grep -q '^TELEGRAM_TOPIC_RELATORIO=[0-9]' .env || ! grep -q '^TELEGRAM_TOPIC_IDEIAS=[0-9]' .env; then
+   || ! grep -q '^TELEGRAM_TOPIC_RELATORIO=[0-9]' .env || ! grep -q '^TELEGRAM_TOPIC_IDEIAS=[0-9]' .env \
+   || ! grep -q '^TELEGRAM_TOPIC_PROMPTS=[0-9]' .env; then
   echo "▶ Criando os tópicos no grupo"
   .venv/bin/python setup_topics.py
 fi

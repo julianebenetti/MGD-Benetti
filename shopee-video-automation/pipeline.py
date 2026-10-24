@@ -39,6 +39,10 @@ class PipelineError(Exception):
     """Erro com mensagem para mostrar no Telegram."""
 
 
+class DetailMismatch(PipelineError):
+    """O produto do vídeo não está idêntico ao anúncio (ex.: vídeo de IA mudou um detalhe)."""
+
+
 class VariationMismatch(PipelineError):
     """Mesmo produto do link, mas o vídeo mostra outra variação: pede o ok da Juliane ou outro link."""
 
@@ -121,7 +125,7 @@ class Pipeline:
                                     "mensagem com o link de um anúncio cuja foto seja igual ao vídeo. Toque ✅ Pode seguir para usar este link "
                                     "assim mesmo, ou responda esta mensagem com o link da variação certa.")
         if not main_found:
-            raise PipelineError("O produto do vídeo não está idêntico ao anúncio:\n"
+            raise DetailMismatch("O produto do vídeo não está idêntico ao anúncio:\n"
                                 + "\n".join(reasons) + "\n\nA Shopee pune isso como \"produto irrelevante\". Se o vídeo "
                                 "foi gerado por IA, gere de novo mantendo o produto igual à foto do anúncio (mesmos "
                                 "detalhes) e mande de novo. Se o anúncio certo é outro, responda esta mensagem com o link.")

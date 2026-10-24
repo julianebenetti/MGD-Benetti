@@ -27,7 +27,8 @@ import conversions  # noqa: E402
 import ideas  # noqa: E402
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
-from pipeline import Pipeline, PipelineError, VariationMismatch  # noqa: E402
+from pipeline import DetailMismatch, Pipeline, PipelineError, VariationMismatch  # noqa: E402
+import prompts  # noqa: E402
 from content_generator import HASHTAGS, fit_caption  # noqa: E402
 from sub_id import nome_do_sub_id, novo_sub_id, prefixo  # noqa: E402
 from shopee_affiliate import commission_value  # noqa: E402
@@ -61,6 +62,7 @@ POSTADOS = topic('TELEGRAM_TOPIC_POSTADOS')
 PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
 RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
+PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
 LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # sem confirmação: avisa                          # ideia sugerida não volta antes disso
@@ -146,7 +148,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -276,9 +278,12 @@ class Bot:
                 logger.exception("Falha ao preparar vídeo")
             reason = str(e) if isinstance(e, PipelineError) else f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
-            markup = keyboard([('✅ Pode seguir', f"vk:{msg_id}")]) if isinstance(e, VariationMismatch) else None
+            rows = [[('✅ Pode seguir', f"vk:{msg_id}")]] if isinstance(e, VariationMismatch) else []
+            if PROMPTS and isinstance(e, (VariationMismatch, DetailMismatch)):
+                rows.append([('🎬 Prompt corrigido', f"pc:{msg_id}")])
+            markup = keyboard(*rows) if rows else None
             err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id, markup=markup)
-            self.db.add_failure(msg_id, err_id, file_id, text, link)
+            self.db.add_failure(msg_id, err_id, file_id, text, link, reason)
             return
         post_id = self.db.create_post(source_msg_id=msg_id, **result)
         self.db.add_headline(result['product_key'], result['metadata']['cover_title'])
@@ -869,6 +874,15 @@ class Bot:
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
             return
+        if action == 'pc' and raw_id.isdigit():
+            failure = self.db.find_failure(int(raw_id), 0)
+            if not failure or not failure.get('link'):
+                self.tg.answer_callback(cb['id'], 'Não achei o link desse vídeo')
+                return
+            self.tg.answer_callback(cb['id'], 'Gerando o prompt corrigido em 🎬 Prompts…')
+            self.submit(('prompt', failure['link'], f"O vídeo anterior saiu com o produto diferente do anúncio; corrija: {(failure.get('reason') or '')[:600]}",
+                         None, None))
+            return
         post = self.db.get_post(int(raw_id)) if raw_id.isdigit() else None
         if not post:
             self.tg.answer_callback(cb['id'], 'Post não encontrado')
@@ -1167,6 +1181,41 @@ class Bot:
             return
         self.submit(('report', thread or RELATORIO, day))
 
+    # ---------- Prompts de vídeo ----------
+
+    def on_prompts(self, msg: Dict):
+        """Link de produto (+ observação) = prompt novo; resposta a um prompt = ajuste dele."""
+        text = (msg.get('text') or msg.get('caption') or '').strip()
+        replied = (msg.get('reply_to_message') or {}).get('message_id')
+        previous = json.loads(self.db.get_meta(f"prompt:{replied}", 'null')) if replied else None
+        links = extract_shopee_links(text)
+        if links:
+            notes = text.replace(links[0], '').strip()
+            self.tg.react(msg['message_id'], '👀')
+            self.submit(('prompt', links[0], notes, None, msg['message_id']))
+        elif previous and text:
+            self.tg.react(msg['message_id'], '✍')
+            self.submit(('prompt', previous['link'], previous.get('notes', ''), {**previous, 'pedido': text},
+                         msg['message_id']))
+        elif text:
+            self.tg.send_text(PROMPTS, "Mande o <b>link do produto</b> (pode escrever uma observação junto), ou "
+                                       "responda um prompt meu para ajustar.", reply_to=msg['message_id'])
+
+    def job_prompt(self, link: str, notes: str, previous: Optional[Dict], reply_to: Optional[int]):
+        found = self.pipeline.shopee.find_candidates(link)
+        if not found:
+            self.tg.send_text(PROMPTS, "⚠️ Não achei o produto desse link. Mande o link do anúncio.", reply_to=reply_to)
+            return
+        product = found[0]
+        try:
+            data = prompts.build(product, notes, previous, (previous or {}).get('pedido', ''))
+        except Exception as e:
+            logger.exception("Prompt falhou")
+            self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar o prompt: {html.escape(str(e)[:200])}", reply_to=reply_to)
+            return
+        msg_id = self.tg.send_text(PROMPTS, prompts.render(product, data, link), reply_to=reply_to)
+        self.db.set_meta(f"prompt:{msg_id}", json.dumps({'link': link, 'notes': notes, 'prompt': data['prompt']}))
+
     def job_ideas(self, thread: Optional[int]):
         """
         Lista de ideias sem repetir: nada já postado/agendado (nem parecido) e nada sugerido nos últimos
@@ -1261,6 +1310,8 @@ class Bot:
                     self.job_switch(*job[1:])
                 elif job[0] == 'report':
                     self.tg.send_text(job[1], self.report_text(job[2]))
+                elif job[0] == 'prompt':
+                    self.job_prompt(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
                 elif job[0] == 'sales':
@@ -1306,6 +1357,9 @@ class Bot:
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
+            return
+        if thread == PROMPTS and PROMPTS and not msg.get('from', {}).get('is_bot'):
+            self.on_prompts(msg)
             return
         if thread == ENVIOS:
             self.on_envios(msg)
