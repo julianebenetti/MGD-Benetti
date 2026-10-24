@@ -7,6 +7,7 @@ fidelidade visual à imagem do anúncio, movimentos POV naturais e nenhuma escri
 import base64
 import html
 import io
+import re
 from typing import Dict, Optional
 
 import requests
@@ -15,6 +16,9 @@ from PIL import Image
 from ai_client import ask_json
 
 MAX_CHARS = 900   # limite do YouTube Create (instruções + narração)
+NARRATION_MAX = 320   # a narração precisa caber inteira (até o CTA); o resto fica para as instruções do vídeo
+CTA_WORDS = ('carrinho', 'garanta', 'garante', 'confira', 'confere', 'aproveite', 'aproveita', 'compre', 'compra',
+             'link', 'sacolinha', 'toque', 'toca', 'clique')
 
 SCHEMA = {
     'type': 'object',
@@ -44,7 +48,8 @@ REGRAS OBRIGATÓRIAS DO PROMPT
    estampa/flores, cores de cada parte, formato).
 8. Movimentos POV suaves, realistas e coerentes com o uso do produto; sem gestos artificiais nem mudanças bruscas.
 9. Nenhuma escrita na tela: proibir legendas, títulos, palavras, preços, logotipos ou texto sobreposto.
-10. Mostrar benefícios práticos (como facilita a rotina), sem promessas exageradas.
+10. Mostrar e citar 2 ou 3 benefícios práticos REAIS do produto (ex.: antiaderente, usa menos óleo, fácil de
+    limpar, monta sem ferramenta), na cena e na narração, sem promessas exageradas.
 11. Simples e direto: poucas cenas, nada contraditório, sem efeitos desnecessários.
 
 ESTRUTURA DA NARRAÇÃO: 1) gancho; 2) quebra de objeção com um diferencial verdadeiro; 3) benefício e curiosidade;
@@ -71,6 +76,9 @@ carrinho e garanta seu conjunto!”
 Se houver PRINTS DO ANÚNCIO anexos (depois da foto principal), use os dados deles (medidas, materiais, garantia,
 certificações, itens do kit) como fatos reais para descrever o produto e quebrar objeções. Nunca use preço.
 
+TAMANHO: instruções do vídeo com até 550 caracteres e narração com até 300 (as duas juntas nunca passam de
+{MAX_CHARS}). A narração tem que vir INTEIRA, com as 5 partes, terminando no CTA e fechando as aspas.
+
 CAMPOS
 - detalhes_fixos: os detalhes da foto que não podem mudar no vídeo (para a Juliane conferir), em português.
 - prompt: o prompt final, pronto para copiar e colar, em português, com até {MAX_CHARS} caracteres.
@@ -96,13 +104,61 @@ def _facts(product: Dict) -> str:
     return '\n'.join(facts)
 
 
-def _trim(prompt: str) -> str:
-    """Último recurso: corta no fim de uma frase para caber nos 900 caracteres."""
+def _split(prompt: str):
+    """(instruções do vídeo, narração) — a narração começa em "Narração"."""
+    i = prompt.find('Narração')
+    return (prompt, '') if i < 0 else (prompt[:i].rstrip(), prompt[i:].strip())
+
+
+def problems(prompt: str) -> list:
+    """O que está errado no prompt: tamanho, narração faltando, sem CTA ou cortada."""
+    found = []
+    _, narration = _split(prompt)
+    if len(prompt) > MAX_CHARS:
+        found.append(f"tem {len(prompt)} caracteres (máximo {MAX_CHARS})")
+    if not narration:
+        found.append('falta a narração ("Narração feminina em português brasileiro: “…”")')
+    else:
+        quote = narration.split(':', 1)[-1]
+        if not quote.rstrip().endswith(('”', '"')):
+            found.append('a narração não termina fechando as aspas (está cortada)')
+        if not any(w in quote.lower()[-160:] for w in CTA_WORDS):
+            found.append('a narração não termina com um CTA (ex.: "Toque no carrinho e garanta o seu!")')
+    return found
+
+
+def _fit(prompt: str) -> str:
+    """
+    Último recurso para caber em MAX_CHARS sem nunca cortar a narração: encurta as instruções do vídeo (no fim de
+    uma frase) e mantém a narração inteira, com o CTA.
+    """
     if len(prompt) <= MAX_CHARS:
         return prompt
-    cut = prompt[:MAX_CHARS]
-    end = max(cut.rfind('. '), cut.rfind('! '), cut.rfind('? '))
-    return cut[:end + 1] if end > MAX_CHARS // 2 else cut.rstrip()
+    instructions, narration = _split(prompt)
+    budget = MAX_CHARS - len(narration) - 1
+    if not narration or budget < 200:
+        cut = prompt[:MAX_CHARS]
+        end = max(cut.rfind('. '), cut.rfind('! '), cut.rfind('? '))
+        return cut[:end + 1] if end > MAX_CHARS // 2 else cut.rstrip()
+    sentences = re.split(r'(?<=[.!?])\s+', instructions)
+
+    def priority(sentence: str) -> int:
+        low = sentence.lower()
+        if 'imagem enviada' in low or 'não adicione' in low or 'escrita' in low:
+            return 0   # fidelidade ao produto e nada escrito na tela: nunca sai
+        if low.startswith('mostre'):
+            return 1   # a cena de uso: a última a sair
+        if low.startswith('crie'):
+            return 2   # abertura (tipo de vídeo)
+        return 3       # o resto (ambiente, reforços) sai primeiro
+    chosen = set(range(len(sentences)))
+    for i in sorted(range(len(sentences)), key=lambda i: (-priority(sentences[i]), -i)):
+        if len(' '.join(sentences[j] for j in sorted(chosen))) <= budget:
+            break
+        if priority(sentences[i]) > 0:
+            chosen.discard(i)
+    kept = [sentences[j] for j in sorted(chosen)]
+    return f"{' '.join(kept)} {narration}"
 
 
 def _file_b64(path: str) -> str:
@@ -133,11 +189,15 @@ def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, reque
     if len(images) > 1:
         text += f"\n\n(As {len(images) - 1} imagem(ns) depois da foto principal são PRINTS DO ANÚNCIO.)"
     data = ask_json([*images, {'type': 'text', 'text': text}], SCHEMA, name='prompt_video')
-    if len(data['prompt']) > MAX_CHARS:   # passou do limite: pede para encurtar uma vez
-        data = ask_json([*images, {'type': 'text', 'text': text + f"\n\nO prompt abaixo tem {len(data['prompt'])} "
-                                 f"caracteres. Reescreva com no máximo {MAX_CHARS - 40}, mantendo todas as regras:\n"
-                                 f"{data['prompt']}"}], SCHEMA, name='prompt_video')
-    data['prompt'] = _trim(data['prompt'].strip())
+    for _ in range(2):   # passou do limite ou a narração veio sem CTA/cortada: pede para corrigir
+        issues = problems(data['prompt'].strip())
+        if not issues:
+            break
+        data = ask_json([*images, {'type': 'text', 'text': text + "\n\nO prompt abaixo tem problemas: "
+                                   + '; '.join(issues) + f". Reescreva com no máximo {MAX_CHARS - 80} caracteres, "
+                                   "instruções do vídeo mais curtas e a narração INTEIRA (gancho, objeção, benefício, "
+                                   f"urgência e CTA, fechando as aspas):\n{data['prompt']}"}], SCHEMA, name='prompt_video')
+    data['prompt'] = _fit(data['prompt'].strip())
     return data
 
 
