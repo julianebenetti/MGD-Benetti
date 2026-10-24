@@ -142,6 +142,7 @@ class Bot:
         self.pending: List[Dict] = []
         self.album_links: Dict[str, Dict] = {}
         self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
+        self.prompt_review_files: List[tuple] = []   # (quando, file_id) de JSON/CSV de avaliações (extensão)
         self.batch_link: Optional[Dict] = None
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
@@ -1207,12 +1208,28 @@ class Bot:
         previous = json.loads(self.db.get_meta(f"prompt:{replied}", 'null')) if replied else None
         options = json.loads(self.db.get_meta(f"narr:{replied}", 'null')) if replied else None
         links = extract_shopee_links(text)
+        doc = msg.get('document') or {}
+        if (doc.get('file_name') or '').lower().endswith(('.json', '.csv')):
+            # avaliações baixadas pela extensão "Shopee Reviews Grabber" (JSON ou CSV)
+            if options and not links:   # respondendo as opções: refaz as 4 com as avaliações do arquivo
+                self.tg.react(msg['message_id'], '✍')
+                self.submit(('narrations', options['link'], options.get('notes', ''), msg['message_id'], None, None,
+                             {**options, 'pedido': text or 'refaça usando as avaliações do arquivo'},
+                             [doc['file_id']]))
+                return
+            self.prompt_review_files = [f for f in self.prompt_review_files if time.time() - f[0] < 300]
+            self.prompt_review_files.append((time.time(), doc['file_id']))
+            if not links:
+                self.tg.react(msg['message_id'], '👌')
+                return
         if links:
             notes = text.replace(links[0], '').strip()
             self.tg.react(msg['message_id'], '👀')
             prints, self.prompt_prints = [p[2] for p in self.prompt_prints], []
+            files, self.prompt_review_files = [f[1] for f in self.prompt_review_files], []
             # o resto do álbum pode chegar logo depois da foto com o link: espera uns segundos
-            self.submit(('narrations', links[0], notes, msg['message_id'], prints, msg.get('media_group_id')))
+            self.submit(('narrations', links[0], notes, msg['message_id'], prints, msg.get('media_group_id'), None,
+                         files))
         elif options and text:
             own = re.match(r'\s*minha\s*:\s*(.+)', text, re.IGNORECASE | re.DOTALL)
             self.tg.react(msg['message_id'], '✍')
@@ -1251,10 +1268,26 @@ class Bot:
         return keyboard([(f"{'✅ ' if i == chosen else ''}{i}", f"nv:{msg_id}.{i}") for i in range(1, count + 1)],
                         [('🔄 Outras 4', f"nv:{msg_id}.0")])
 
+    def _read_review_files(self, file_ids: Optional[List[str]], reply_to: Optional[int]) -> List[str]:
+        found = []
+        for file_id in file_ids or []:
+            try:
+                found += reviews.parse_file(str(self.tg.download(file_id, BASE / 'downloads' / 'avaliacoes')))
+            except Exception as e:
+                logger.warning(f"Arquivo de avaliações não leu: {e}")
+        if file_ids and not found:
+            self.tg.send_text(PROMPTS, "⚠️ Não achei avaliações com texto nesse arquivo (use o JSON ou CSV que a "
+                                       "extensão baixa). Sigo sem elas.", reply_to=reply_to)
+        return found[:30]
+
     def job_narrations(self, link: str, notes: str, reply_to: Optional[int], prints: Optional[List[str]] = None,
-                       album: Optional[str] = None, previous: Optional[Dict] = None):
-        """4 opções de narração para a Juliane escolher (os prints, quando vierem, são lidos como fatos reais)."""
-        reviews_read = None
+                       album: Optional[str] = None, previous: Optional[Dict] = None,
+                       review_files: Optional[List[str]] = None):
+        """
+        4 opções de narração para a Juliane escolher. Avaliações: do arquivo da extensão, se ela mandou; senão,
+        a leitura anônima na Shopee. Os prints, quando vierem, são lidos como fatos reais.
+        """
+        reviews_read, from_file = None, False
         if previous:
             paths, product, comments = previous.get('prints') or [], previous['product'], previous.get('reviews') or []
         else:
@@ -1265,6 +1298,10 @@ class Bot:
                                   reply_to=reply_to)
                 return
             product = found[0]
+        file_comments = self._read_review_files(review_files, reply_to)
+        if file_comments:
+            comments, reviews_read, from_file = file_comments, len(file_comments), True
+        elif not previous:
             comments = reviews.fetch(product)   # sem a conta da Juliane
             reviews_read = len(comments)
         try:
@@ -1275,7 +1312,7 @@ class Bot:
             self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar as narrações: {html.escape(str(e)[:200])}",
                               reply_to=reply_to)
             return
-        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link, reviews_read),
+        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link, reviews_read, from_file),
                                    reply_to=reply_to)
         self.tg.edit_markup(msg_id, self._narration_markup(msg_id, count=len(data['opcoes'])))
         self.db.set_meta(f"narr:{msg_id}", json.dumps({

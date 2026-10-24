@@ -50,3 +50,56 @@ def fetch(product: Dict, limit: int = 10) -> List[str]:
         if len(found) >= limit:
             break
     return found
+
+
+COMMENT_KEYS = ('comentario', 'comentário', 'comment', 'texto', 'text', 'review', 'avaliacao', 'avaliação')
+STAR_KEYS = ('estrelas', 'stars', 'star', 'rating_star', 'rating', 'nota')
+VARIATION_KEYS = ('variacao', 'variação', 'variation', 'model', 'modelo')
+
+
+def _pick(row: Dict, keys) -> str:
+    low = {str(k).strip().lower(): v for k, v in row.items()}
+    for key in keys:
+        if low.get(key) not in (None, ''):
+            return ' '.join(str(low[key]).split())
+    return ''
+
+
+def _rows(data) -> List[Dict]:
+    """A lista de avaliações dentro do JSON (lista solta ou dentro de "reviews"/"avaliacoes"/"ratings"/…)."""
+    if isinstance(data, list):
+        return [r for r in data if isinstance(r, dict)]
+    if isinstance(data, dict):
+        for value in data.values():
+            rows = _rows(value) if isinstance(value, (list, dict)) else []
+            if rows and any(_pick(r, COMMENT_KEYS) for r in rows):
+                return rows
+    return []
+
+
+def parse_file(path: str, limit: int = 30) -> List[str]:
+    """
+    Avaliações do arquivo que a extensão "Shopee Reviews Grabber" baixa (JSON ou CSV: autor, estrelas,
+    comentário, data, variação…), no mesmo formato de `fetch`: "★5 texto (variação)". Só as que têm texto.
+    """
+    import csv
+    import io
+    import json
+    raw = open(path, 'rb').read().decode('utf-8-sig', errors='replace')
+    if path.lower().endswith('.json') or raw.lstrip().startswith(('[', '{')):
+        rows = _rows(json.loads(raw))
+    else:
+        sample = raw[:2000]
+        delimiter = ';' if sample.count(';') > sample.count(',') else ','
+        rows = list(csv.DictReader(io.StringIO(raw), delimiter=delimiter))
+    found = []
+    for row in rows:
+        text = _pick(row, COMMENT_KEYS)
+        if not text:
+            continue
+        stars = _pick(row, STAR_KEYS)
+        variation = _pick(row, VARIATION_KEYS)
+        found.append(f"★{stars} {text[:300]}" + (f" ({variation[:60]})" if variation else ''))
+        if len(found) >= limit:
+            break
+    return found

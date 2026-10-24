@@ -82,7 +82,8 @@ POV suaves; **nenhuma escrita na tela**; benefícios práticos; simples e direto
 formato dos prompts da Juliane ("Crie um vídeo POV vertical 9:16… Use a imagem enviada como referência fiel e preserve
 <detalhes>… Não adicione textos… Narração feminina em português brasileiro: “…”"). Mande o **link do produto** (e uma
 observação, se quiser) — com prints (do anúncio e das **avaliações**: o robô não abre a página da Shopee, então as
-avaliações vêm do print), mande-os em álbum com o link na legenda ou antes do link. Primeiro chegam **4 opções de
+avaliações vêm do print ou do **JSON/CSV da extensão Shopee Reviews Grabber**, que lê as avaliações no seu Chrome
+logado; sem nada disso o robô tenta ler as avaliações sem conta, o que a Shopee costuma barrar), mande-os em álbum com o link na legenda ou antes do link. Primeiro chegam **4 opções de
 narração** (botões 1–4 e 🔄 Outras 4; responder a mensagem pede ajuste; "minha: …" usa uma narração sua); escolhida a
 narração, vem o prompt completo com ela intacta. **Responda o prompt** para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
