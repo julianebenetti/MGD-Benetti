@@ -146,7 +146,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -634,6 +634,85 @@ class Bot:
                     reply_to=reply_to, markup=self.agenda_markup(post['id']))
                 self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
 
+    def on_pause_command(self, thread: Optional[int], command: str):
+        """/pausar (até /retomar) ou /pausar 25/10 18:30: nada vai para a LiA até lá; depois a Agenda é refeita."""
+        parts = command.split()[1:]
+        if not parts:
+            self.db.set_meta('pausa_ate', 'indefinida')
+            self.tg.send_text(thread, "⏸️ Postagens pausadas: nada vai para a LiA até você mandar /retomar.")
+            return
+        try:
+            d, m = (int(x) for x in parts[0].split('/')[:2])
+            hh, mm = (int(x) for x in (parts[1] if len(parts) > 1 else '00:00').split(':'))
+            now = scheduler.now()
+            until = datetime(now.year + (1 if m < now.month else 0), m, d, hh, mm, tzinfo=scheduler.TZ)
+        except (ValueError, IndexError):
+            self.tg.send_text(thread, "Use /pausar 25/10 18:30 (ou só /pausar, até /retomar).")
+            return
+        self.db.set_meta('pausa_ate', until.isoformat())
+        self.tg.send_text(thread, f"⏸️ Postagens pausadas até {fmt_when(until.isoformat())}. Os vídeos agendados nesse "
+                                  "período ganham novos horários quando a pausa acabar.")
+
+    def job_replan(self, thread: Optional[int]):
+        """Posts que ficaram para trás (pausa): novos horários em sequência, com as regras da agenda."""
+        now = scheduler.now()
+        late = sorted((p for p in self.db.with_status('agendado')
+                       if p['scheduled_at'] and datetime.fromisoformat(p['scheduled_at']) < now + timedelta(minutes=5)),
+                      key=lambda p: p['scheduled_at'])
+        moved = []
+        for post in late:
+            slot = self.next_slot(post)
+            self.db.update_post(post['id'], scheduled_at=slot.isoformat())
+            self.resubid(self.db.get_post(post['id']))
+            post = self.db.get_post(post['id'])
+            if len(post['agenda_msgs']) > 2:
+                self.tg.edit_text(post['agenda_msgs'][2], f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
+                                  markup=self.agenda_markup(post['id']))
+            moved.append(f"{fmt_when(post['scheduled_at'])}: {html.escape(post['product_name'][:45])}")
+        self.tg.send_text(thread, ("🗓️ Novos horários:\n" + '\n'.join(moved)) if moved
+                          else "🗓️ Nenhum post precisou de novo horário.")
+
+    def job_validate_agenda(self, thread: Optional[int]):
+        """
+        Validação rigorosa dos posts que já estão na Agenda (montados antes dela): tira lojas extras que não são o
+        produto do vídeo; se o divulgado não bater, o post fica retido (não vai para a LiA) até você decidir.
+        """
+        e = html.escape
+        kept, fixed, held = 0, [], []
+        for post in self.db.with_status('agendado', 'avisado'):
+            try:
+                v = self.pipeline.validate(post)
+            except Exception as err:
+                logger.warning(f"Validação do post {post['id']} falhou: {err}")
+                continue
+            result, reason = v['main']
+            confirmed = post['metadata'].get('principal_confirmado') or post['products'][0].get('escolhido')
+            meta = {**post['metadata'], 'validacao': f"{len(v['products'])} link(s) validados (mesmo modelo do vídeo)"}
+            self.db.update_post(post['id'], products=v['products'], links=v['links'], metadata=meta)
+            if result in ('nao', 'incerto') and not confirmed:
+                self.db.update_post(post['id'], status='avisado')
+                held.append(f"{e(post['product_name'][:45])}: {e(reason)}")
+                msg = self.tg.send_text(
+                    AGENDA, f"⛔ <b>Retido: o produto divulgado não bate com o vídeo</b>\n{e(post['product_name'][:80])}\n"
+                            f"{e(reason)}\n\nNão vai para a LiA. Toque ❌ Descartar, ou 📤 Enviar à LiA se tiver certeza.",
+                    reply_to=post['agenda_msgs'][-1] if post['agenda_msgs'] else None,
+                    markup=self.agenda_markup(post['id']))
+                self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg])
+            elif v['removed'] or v['added']:
+                fixed.append(f"{e(post['product_name'][:45])}: tirei {len(v['removed'])}, pus {len(v['added'])}")
+            else:
+                kept += 1
+            post = self.db.get_post(post['id'])
+            if len(post['agenda_msgs']) > 2:
+                self.tg.edit_text(post['agenda_msgs'][2], f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
+                                  markup=self.agenda_markup(post['id']))
+        parts = [f"🔎 <b>Validação da Agenda</b>\n✅ {kept} post(s) ok"]
+        if fixed:
+            parts.append(f"🔧 {len(fixed)} com lojas extras trocadas:\n" + '\n'.join(f"• {f}" for f in fixed))
+        if held:
+            parts.append(f"⛔ {len(held)} retido(s), não vão para a LiA:\n" + '\n'.join(f"• {h}" for h in held))
+        self.tg.send_text(thread, '\n\n'.join(parts))
+
     def job_lia_retro(self, thread: Optional[int] = None):
         """
         Confere a conversa toda com a LiA e acerta cada vídeo pelo resultado da ÚLTIMA tentativa:
@@ -874,6 +953,13 @@ class Bot:
                                           "produto.", reply_to=p['msg_id'])
 
         current = scheduler.now()
+        paused_until = self.db.get_meta('pausa_ate')
+        if paused_until:
+            if paused_until == 'indefinida' or current < datetime.fromisoformat(paused_until):
+                return   # postagens pausadas: nada vai para a LiA
+            self.db.set_meta('pausa_ate', '')
+            self.submit(('replan', AGENDA))
+            return
         for post in self.db.scheduled():
             if post['status'] == 'agendado' and datetime.fromisoformat(post['scheduled_at']) <= current:
                 if self.lia and self.lia_when == 'agenda':
@@ -1126,6 +1212,10 @@ class Bot:
                     self.job_lia_check()
                 elif job[0] == 'lia_retro':
                     self.job_lia_retro(*job[1:])
+                elif job[0] == 'replan':
+                    self.job_replan(*job[1:])
+                elif job[0] == 'validate_agenda':
+                    self.job_validate_agenda(*job[1:])
                 elif job[0] == 'resubid_agenda':
                     self.job_resubid_agenda()
                 elif job[0] == 'replace_link':
@@ -1168,6 +1258,18 @@ class Bot:
         if command.lower().startswith('/verificarlia'):
             self.tg.send_text(thread or AGENDA, "🔎 Conferindo a conversa com a LiA…")
             self.submit(('lia_retro', thread or AGENDA))
+            return
+        if command.lower().startswith('/pausar'):
+            self.on_pause_command(thread or AGENDA, command)
+            return
+        if command.lower().startswith('/retomar'):
+            self.db.set_meta('pausa_ate', '')
+            self.tg.send_text(thread or AGENDA, "▶️ Postagens retomadas. Reorganizando os horários da Agenda…")
+            self.submit(('replan', thread or AGENDA))
+            return
+        if command.lower().startswith('/validaragenda'):
+            self.tg.send_text(thread or AGENDA, "🔎 Validando os posts da Agenda (produto × vídeo)… pode levar alguns minutos.")
+            self.submit(('validate_agenda', thread or AGENDA))
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
@@ -1223,6 +1325,9 @@ class Bot:
             ('vendas', 'Vendas reais por vídeo: 7 dias (ou /vendas hoje, /vendas 30)'),
             ('sugestoes', 'Ideias de produtos para gravar (comissão ≥ R$ 9)'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
+            ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
+            ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
+            ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})
         self.tg.set_commands([

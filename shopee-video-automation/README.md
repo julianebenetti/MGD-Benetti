@@ -79,6 +79,14 @@ comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/ven
 vídeo (pelo sub_id de cada um), pendente × concluída, cancelados e o que veio de links fora do robô. A
 Shopee pode levar algumas horas para mostrar uma venda, e só deixa consultar de novo depois de 30 segundos.
 
+**Proteção da conta (Produto Irrelevante):**
+- **`/pausar 25/10 18:30`** (ou só `/pausar`, até **`/retomar`**): nada vai para a LiA; ao fim, os vídeos que ficaram para
+  trás ganham novos horários em sequência, com as regras da agenda.
+- **`/validaragenda`**: validação rigorosa (6 quadros, mesmo modelo) de todos os posts da Agenda; tira lojas extras que
+  não batem e **retém** (não manda para a LiA) o post cujo produto divulgado não bate com o vídeo.
+- **`LIA_MAX_LINKS`** (padrão 2): quantos links vão para a LiA (o divulgado + os extras de maior comissão). Cada link
+  extra é mais um produto que a Shopee pode julgar irrelevante.
+
 ## LiA (bot que posta no Shopee Video)
 
 Bot não conversa com bot no Telegram, então o envio sai **pela sua conta** (o que você faria à mão).
