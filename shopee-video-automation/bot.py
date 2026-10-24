@@ -29,6 +29,7 @@ import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import DetailMismatch, Pipeline, PipelineError, VariationMismatch  # noqa: E402
 import prompts  # noqa: E402
+import reviews  # noqa: E402
 from content_generator import HASHTAGS, fit_caption  # noqa: E402
 from sub_id import nome_do_sub_id, novo_sub_id, prefixo  # noqa: E402
 from shopee_affiliate import commission_value  # noqa: E402
@@ -1253,8 +1254,9 @@ class Bot:
     def job_narrations(self, link: str, notes: str, reply_to: Optional[int], prints: Optional[List[str]] = None,
                        album: Optional[str] = None, previous: Optional[Dict] = None):
         """4 opções de narração para a Juliane escolher (os prints, quando vierem, são lidos como fatos reais)."""
+        reviews_read = None
         if previous:
-            paths, product = previous.get('prints') or [], previous['product']
+            paths, product, comments = previous.get('prints') or [], previous['product'], previous.get('reviews') or []
         else:
             paths = self._download_prints(self._album_prints(prints, album))
             found = self.pipeline.shopee.find_candidates(link)
@@ -1263,19 +1265,22 @@ class Bot:
                                   reply_to=reply_to)
                 return
             product = found[0]
+            comments = reviews.fetch(product)   # sem a conta da Juliane
+            reviews_read = len(comments)
         try:
             data = prompts.narrations(product, notes, paths, (previous or {}).get('pedido', ''),
-                                      (previous or {}).get('opcoes'))
+                                      (previous or {}).get('opcoes'), comments)
         except Exception as e:
             logger.exception("Narrações falharam")
             self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar as narrações: {html.escape(str(e)[:200])}",
                               reply_to=reply_to)
             return
-        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link), reply_to=reply_to)
+        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link, reviews_read),
+                                   reply_to=reply_to)
         self.tg.edit_markup(msg_id, self._narration_markup(msg_id, count=len(data['opcoes'])))
         self.db.set_meta(f"narr:{msg_id}", json.dumps({
             'link': link, 'notes': notes, 'product': product, 'prints': paths, 'opcoes': data['opcoes'],
-            'beneficios': data.get('beneficios') or []}, default=str))
+            'beneficios': data.get('beneficios') or [], 'reviews': comments}, default=str))
 
     def on_narration_button(self, cb: Dict, raw: str):
         msg_id, _, n = raw.partition('.')

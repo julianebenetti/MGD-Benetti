@@ -286,7 +286,7 @@ estrutura da narração acima (curiosidade → objeção → benefício → urg�
 gancho: 1) pergunta; 2) dor/situação do dia a dia; 3) "Já pensou…"/curiosidade; 4) prova social (o que dizem as
 avaliações, nota e vendidos). Todas falam do benefício principal. Só a fala, sem aspas e sem "Narração:".
 CAMPOS: beneficios (2 ou 3, do mais forte ao menos forte); avaliacoes (1 frase com o que os compradores mais elogiam
-nos prints das avaliações, ou "" se não vieram prints de avaliações); opcoes (as 4 falas)."""
+nas avaliações/prints das avaliações, ou "" se não vieram avaliações); opcoes (as 4 falas)."""
 
 
 def _clean_speech(text: str) -> str:
@@ -322,10 +322,14 @@ def _context(product: Dict, notes: str, images: list) -> str:
 
 
 def narrations(product: Dict, notes: str = '', prints: Optional[list] = None, request: str = '',
-               previous: Optional[list] = None) -> Dict:
+               previous: Optional[list] = None, reviews: Optional[list] = None) -> Dict:
     """4 opções de narração (com os benefícios e o resumo das avaliações) para a Juliane escolher."""
     images = _images(product, prints)
-    text = f"{_context(product, notes, images)}\n\n{NARRATIONS_TASK}"
+    text = _context(product, notes, images)
+    if reviews:
+        text += ("\n\nAVALIAÇÕES DOS COMPRADORES (texto real, use como os prints das avaliações):\n"
+                 + '\n'.join(f"- {r}" for r in reviews))
+    text += f"\n\n{NARRATIONS_TASK}"
     if previous:
         text += ("\n\nOPÇÕES ANTERIORES (não repita):\n" + '\n'.join(f"- {o}" for o in previous)
                  + f"\nAJUSTE PEDIDO: {request or 'outras 4 opções, com ganchos diferentes'}")
@@ -342,9 +346,12 @@ def narrations(product: Dict, notes: str = '', prints: Optional[list] = None, re
     return data
 
 
-def render_narrations(product: Dict, data: Dict, url: str) -> str:
+def render_narrations(product: Dict, data: Dict, url: str, reviews_read: Optional[int] = None) -> str:
     e = html.escape
     lines = [f"🎙 <b>Escolha a narração</b> — {e(product['productName'][:80])}", e(url), '']
+    if reviews_read is not None:
+        lines.append(f"📝 Li {reviews_read} avaliação(ões) na Shopee" if reviews_read else
+                     "📝 A Shopee não deixou ler as avaliações: se quiser, mande prints delas junto com o link")
     if data.get('beneficios'):
         lines.append('💪 ' + e(' · '.join(data['beneficios'])))
     if data.get('avaliacoes'):
