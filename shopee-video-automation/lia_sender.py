@@ -28,11 +28,18 @@ class LiaError(Exception):
     pass
 
 
+def _organized_only(text: str) -> bool:
+    """A LiA só guardou o vídeo para publicar pelo app ("1 vídeo(s) organizado(s) na Lia. Abra o app…")."""
+    low = (text or '').lower()
+    return 'organizad' in low and ('abra o app' in low or 'nova postagem' in low)
+
+
 @dataclass
 class LiaResult:
     published: bool
     summary: str
     sent_id: int = 0          # mensagem do vídeo na conversa com a LiA (para acompanhar o resultado)
+    organized: bool = False   # ficou no app da LiA esperando ela publicar (não reenviar)
 
 
 def _setting(name: str, default: str) -> str:
@@ -99,6 +106,9 @@ async def _send(video_path: str, text: str) -> LiaResult:
             if replies:
                 last_text = replies[0].message or last_text   # a mais recente vem primeiro
             for message in replies:
+                if _organized_only(message.message):
+                    logger.info("A LiA só organizou o vídeo (publicar pelo app)")
+                    return LiaResult(False, message.message or '', sent.id, organized=True)
                 button = _publish_button(message)
                 if not button:
                     continue

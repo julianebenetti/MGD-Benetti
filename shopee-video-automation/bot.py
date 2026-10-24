@@ -638,6 +638,13 @@ class Bot:
             self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
             return
         self.db.update_post(post_id, status='avisado')
+        if result.organized:   # não reenvia: ficaria repetido no app dela
+            msg_id = self.tg.send_text(
+                AGENDA, f"📲 <b>{html.escape(post['product_name'][:60])}</b>: a LiA não publicou, só deixou o vídeo "
+                        "organizado no app dela. Abra o app da LiA → Nova postagem e publique; depois toque "
+                        "✅ Postei aqui.", reply_to=reply_to, markup=self.agenda_markup(post_id))
+            self.db.update_post(post_id, agenda_msgs=post['agenda_msgs'] + [msg_id])
+            return
         msg_id = self.tg.send_text(
             AGENDA, f"📤 Enviado à LiA: falta tocar <b>Publicar</b> na conversa com ela. Depois toque ✅ Postei."
                     f"\n\n{lia_sender.summary_html(result)}", reply_to=reply_to, markup=self.agenda_markup(post_id))
