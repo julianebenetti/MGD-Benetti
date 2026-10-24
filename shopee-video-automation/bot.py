@@ -444,30 +444,58 @@ class Bot:
         e = html.escape
         v = self.pipeline.validate(post)
         result, reason = v['main']
-        confirmed = (post['metadata'].get('principal_confirmado') or post['products'][0].get('escolhido')
-                     or post['metadata'].get('validacao_forcada'))   # "Agendar mesmo assim" vale só para o divulgado
-        if result in ('nao', 'incerto') and not confirmed:
+        # A Shopee pune o DIVULGADO como "irrelevante" quando o vídeo não mostra exatamente o item da foto do
+        # anúncio (inclusive outra cor/estampa/modelo). Só passa idêntico; o resto só com "Agendar mesmo assim".
+        confirmed = post['metadata'].get('validacao_forcada')
+        if result != 'sim' and not confirmed:
             self.db.update_post(post['id'], status='editado')
             post = self.db.get_post(post['id'])
             self.refresh_buttons(post)
+            what = {'variacao': 'Outra variação (cor/estampa/modelo) da foto do anúncio',
+                    'nao': 'Diferente'}.get(result, 'Não deu para confirmar')
+            alt = self.pipeline.find_identical(post)
+            buttons = []
+            if alt:
+                self.db.update_post(post['id'], metadata={**post['metadata'], 'alternativa_identica': alt})
+                buttons.append([(f"🔁 Usar {alt.get('shopName', '')[:22]} (idêntico)", f"vm:{post['id']}")])
+            buttons.append([('📅 Agendar mesmo assim (risco)', f"af:{post['id']}")])
+            alt_text = (f"\n\n✅ Achei um anúncio <b>idêntico ao vídeo</b>: {e(alt.get('shopName', ''))} · "
+                        f"{details(alt)}\n{e(product_url(alt))}") if alt else \
+                "\n\nNão achei outro anúncio idêntico. Responda os textos com <code>1 https://…</code> de um anúncio " \
+                "cuja foto seja igual ao vídeo, ou descarte."
             self.tg.send_text(
-                EDITADOS, f"🔎 <b>Validação: o produto divulgado não bate com o vídeo</b>\n"
-                          f"{e(post['product_name'][:80])}\n{'Diferente' if result == 'nao' else 'Não deu para confirmar'}: "
-                          f"{e(reason)}\n\nPara não arriscar \"produto irrelevante\", não agendei. Troque o link 1 "
-                          "(responda os textos com <code>1 https://…</code>) ou, se tiver certeza, toque abaixo.",
+                EDITADOS, f"🔎 <b>Validação: o produto divulgado não é idêntico ao vídeo</b>\n"
+                          f"{e(post['product_name'][:80])}\n{what}: {e(reason)}\n\n"
+                          f"A Shopee pune isso como \"produto irrelevante\" (o produto divulgado é o que ela confere), "
+                          f"então não agendei.{alt_text}",
                 reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
-                markup=keyboard([('📅 Agendar mesmo assim', f"af:{post['id']}")]))
+                markup=keyboard(*buttons))
             return None
         lines = [f"🔎 <b>Validação antes da Agenda:</b> {len(v['products'])} link(s) idênticos ao vídeo"]
         if result != 'sim':
-            lines.append(f"• Divulgado: {e(reason)} (confirmado por você)" if confirmed
-                         else f"• Divulgado em outra variação do mesmo anúncio: {e(reason)}")
+            lines.append(f"• ⚠️ Divulgado agendado mesmo assim (risco de irrelevante): {e(reason)}")
         lines += [f"• ❌ Tirei {e(shop)}: {e(why)}" for shop, _, why in v['removed']]
         lines += [f"• ➕ Pus {e(shop)} no lugar (validado)" for shop in v['added']]
         lines += [f"• ⚠️ {e(shop)} (escolhido por você) pode não ser idêntico: {e(why)}" for shop, _, why in v['warnings']]
         metadata = {**post['metadata'], 'validacao': f"{len(v['products'])} link(s) validados (mesmo modelo do vídeo)"}
         self.db.update_post(post['id'], products=v['products'], links=v['links'], metadata=metadata)
         return {'note': '\n'.join(lines)}
+
+    def job_use_identical(self, post_id: int):
+        """Põe o anúncio idêntico ao vídeo como divulgado (1º link, mesmo sub_id) e agenda de novo."""
+        post = self.db.get_post(post_id)
+        alt = post['metadata'].get('alternativa_identica') if post else None
+        if not alt or post['status'] != 'editado':
+            return
+        alt['commissionValue'] = commission_value(alt)
+        rest = [(p, l) for p, l in zip(post['products'][1:], post['links'][1:])
+                if f"{p['shopId']}:{p['itemId']}" != f"{alt['shopId']}:{alt['itemId']}"]
+        products = [alt] + [p for p, _ in rest]
+        links = [self.pipeline.shopee.affiliate_link(alt, post['sub_id'])] + [l for _, l in rest]
+        meta = {k: v for k, v in post['metadata'].items() if k != 'alternativa_identica'}
+        self.db.update_post(post_id, products=products, links=links, product_key=f"{alt['shopId']}:{alt['itemId']}",
+                            product_name=alt['productName'], metadata=meta, status='agendando')
+        self.job_approve(post_id)
 
     def job_approve(self, post_id: int):
         """Valida os produtos, junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
@@ -686,10 +714,9 @@ class Bot:
                 logger.warning(f"Validação do post {post['id']} falhou: {err}")
                 continue
             result, reason = v['main']
-            confirmed = post['metadata'].get('principal_confirmado') or post['products'][0].get('escolhido')
             meta = {**post['metadata'], 'validacao': f"{len(v['products'])} link(s) validados (mesmo modelo do vídeo)"}
             self.db.update_post(post['id'], products=v['products'], links=v['links'], metadata=meta)
-            if result in ('nao', 'incerto') and not confirmed:
+            if result != 'sim' and not post['metadata'].get('validacao_forcada'):   # divulgado: só idêntico
                 self.db.update_post(post['id'], status='avisado')
                 held.append(f"{e(post['product_name'][:45])}: {e(reason)}")
                 msg = self.tg.send_text(
@@ -909,6 +936,10 @@ class Bot:
                 return
             self.tg.answer_callback(cb['id'], f"Trocando o link {index + 1} (esgotado)…")
             self.submit(('soldout', post['id'], index))
+
+        elif action == 'vm' and post['status'] == 'editado' and post['metadata'].get('alternativa_identica'):
+            self.tg.answer_callback(cb['id'], 'Trocando pelo anúncio idêntico e agendando…')
+            self.submit(('use_identical', post['id']))
 
         elif action == 'af' and post['status'] == 'editado':
             self.db.update_post(post['id'], status='agendando',
@@ -1212,6 +1243,8 @@ class Bot:
                     self.job_lia_check()
                 elif job[0] == 'lia_retro':
                     self.job_lia_retro(*job[1:])
+                elif job[0] == 'use_identical':
+                    self.job_use_identical(*job[1:])
                 elif job[0] == 'replan':
                     self.job_replan(*job[1:])
                 elif job[0] == 'validate_agenda':

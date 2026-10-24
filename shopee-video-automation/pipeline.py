@@ -115,7 +115,9 @@ class Pipeline:
             main_found, reasons, variations = self._confirmed(video_file, candidates[:3], wanted=1)
         if not main_found and variations:
             raise VariationMismatch("O produto do vídeo é o mesmo do link, mas em OUTRA VARIAÇÃO:\n"
-                                    + "\n".join(variations) + "\n\nToque ✅ Pode seguir para usar este link "
+                                    + "\n".join(variations) + "\n\n⚠️ A Shopee costuma punir como \"produto irrelevante\" "
+                                    "quando o vídeo mostra outra variação da foto do anúncio. O melhor é responder esta "
+                                    "mensagem com o link de um anúncio cuja foto seja igual ao vídeo. Toque ✅ Pode seguir para usar este link "
                                     "assim mesmo, ou responda esta mensagem com o link da variação certa.")
         if not main_found:
             raise PipelineError("A conferência não confirmou que o produto é o do vídeo:\n"
@@ -215,6 +217,27 @@ class Pipeline:
                     added.append(product.get('shopName', ''))
         return {'main': main_result, 'products': products, 'links': links, 'removed': removed, 'added': added,
                 'warnings': warnings}
+
+    def find_identical(self, post: Dict) -> Optional[Dict]:
+        """
+        Outro anúncio do mesmo produto cuja foto mostra EXATAMENTE o que aparece no vídeo (mesma variação), para
+        substituir um divulgado que só bate como "outra variação". Procura nas reservas e em outras lojas.
+        """
+        clean = Path(post['video_path']).with_name(Path(post['video_path']).name.replace('watermarked_', '', 1))
+        video = str(clean) if clean.exists() else post['video_path']
+        used = {product_key(p) for p in post['products'][:1]}
+        pool = {product_key(p): p for p in (post['metadata'].get('reservas') or []) + post['products'][1:]}
+        try:
+            for p in self.shopee.other_sellers(post['products'][0]):
+                pool.setdefault(product_key(p), p)
+        except Exception as e:
+            logger.warning(f"Busca de anúncio idêntico falhou: {e}")
+        candidates = [p for k, p in pool.items() if k not in used and not self.is_sold_out(k)]
+        candidates.sort(key=lambda p: (int(p.get('sales') or 0) >= 100, commission_value(p)), reverse=True)
+        for product, result, _ in self._check_all(video, candidates[:MAX_EXTRA_CHECKS], strict=True):
+            if result == 'sim':
+                return product
+        return None
 
     def switch_to(self, post: Dict, index: int) -> Dict:
         """
