@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792828539,
-  "updated_at_br": "24/10/2026 04:50",
+  "updated_at": 1792833606,
+  "updated_at_br": "24/10/2026 06:14",
   "period_days": 90,
-  "total_orders": 6140,
-  "total_conversions": 5898,
+  "total_orders": 6139,
+  "total_conversions": 5897,
   "orders": [
     {
       "ID do pedido": "261023C9CJ1M9D",
@@ -153477,31 +153477,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238759134125013",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-26"
-    },
-    {
-      "ID do pedido": "260726NWJ03TAD",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-26 08:21:37",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "25.99",
-      "Comissao liquida do afiliado(R$)": "0.98762",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.0396",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.0396",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bolsa Organizadora Sapatos Viagem P 30x23x09 Travel Bag Shoe YB-928 bosco",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18499702348",
-      "ID da loja": "1477444349",
-      "Nome da loja": "maxbel.loja",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238753297126479",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-26"
     }
