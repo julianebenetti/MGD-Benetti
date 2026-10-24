@@ -76,6 +76,10 @@ carrinho e garanta seu conjunto!”
 Se houver PRINTS DO ANÚNCIO anexos (depois da foto principal), use os dados deles (medidas, materiais, garantia,
 certificações, itens do kit) como fatos reais para descrever o produto e quebrar objeções. Nunca use preço.
 
+ESTILO ENXUTO: nas instruções do vídeo use abreviações claras para economizar caracteres (ex.: "Vídeo POV 9:16",
+"ref. fiel", "mov. suaves", "luz natural", "nº de peças", "Sem textos/legendas/preços na tela", "Narração fem.
+PT/BR:"). NUNCA abrevie dentro da narração (ela é falada em voz alta).
+
 TAMANHO: instruções do vídeo com até 550 caracteres e narração com até 300 (as duas juntas nunca passam de
 {MAX_CHARS}). A narração tem que vir INTEIRA, com as 5 partes, terminando no CTA e fechando as aspas.
 
@@ -102,6 +106,37 @@ def _facts(product: Dict) -> str:
     if product.get('sales'):
         facts.append(f"Vendidos: {product['sales']}")
     return '\n'.join(facts)
+
+
+# Abreviações nas INSTRUÇÕES do vídeo (nunca dentro da narração, que é falada): economizam caracteres sem
+# perder o sentido. (padrão, troca)
+ABBREVIATIONS = [
+    (r'narra[çc][ãa]o feminina em portugu[êe]s (do )?brasileiro', 'Narração fem. PT/BR'),
+    (r'narra[çc][ãa]o feminina em portugu[êe]s do brasil', 'Narração fem. PT/BR'),
+    (r'crie um v[íi]deo (promocional )?(pov )?vertical 9:16', 'Vídeo POV 9:16'),
+    (r'crie um v[íi]deo (promocional )?vertical 9:16, estilo pov', 'Vídeo POV 9:16'),
+    (r'use a imagem enviada como refer[êe]ncia (obrigat[óo]ria|fiel)', 'Use a imagem enviada como ref. fiel'),
+    (r'preserve a fidelidade visual absoluta d[oa]', 'preserve'),
+    (r'n[ãa]o adicione textos?, legendas?, t[íi]tulos?, pre[çc]os?, logotipos? ou qualquer escrita na tela',
+     'Sem textos/legendas/preços/logos na tela'),
+    (r'n[ãa]o adicione textos?, legendas?, t[íi]tulos?, pre[çc]os? ou qualquer escrita na tela',
+     'Sem textos/legendas/preços na tela'),
+    (r'quantidade de pe[çc]as', 'nº de peças'),
+    (r'movimentos suaves( de c[âa]mera| e realistas)?', 'mov. suaves'),
+    (r'movimentos realistas', 'mov. realistas'),
+    (r'ilumina[çc][ãa]o natural', 'luz natural'),
+    (r'\bcent[íi]metros\b', 'cm'),
+    (r'\bcom\b (?=\d)', 'c/ '),
+]
+
+
+def compact(prompt: str) -> str:
+    """Aplica as abreviações nas instruções (e no rótulo da narração); a fala entre aspas fica intacta."""
+    i = re.search(r'narra[çc][ãa]o[^:“"]*:', prompt, re.IGNORECASE)
+    head, speech = (prompt[:i.end()], prompt[i.end():]) if i else (prompt, '')
+    for pattern, short in ABBREVIATIONS:
+        head = re.sub(pattern, short, head, flags=re.IGNORECASE)
+    return (head + speech).strip()
 
 
 def _split(prompt: str):
@@ -189,6 +224,7 @@ def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, reque
     if len(images) > 1:
         text += f"\n\n(As {len(images) - 1} imagem(ns) depois da foto principal são PRINTS DO ANÚNCIO.)"
     data = ask_json([*images, {'type': 'text', 'text': text}], SCHEMA, name='prompt_video')
+    data['prompt'] = compact(data['prompt'])
     for _ in range(2):   # passou do limite ou a narração veio sem CTA/cortada: pede para corrigir
         issues = problems(data['prompt'].strip())
         if not issues:
@@ -197,6 +233,7 @@ def build(product: Dict, notes: str = '', previous: Optional[Dict] = None, reque
                                    + '; '.join(issues) + f". Reescreva com no máximo {MAX_CHARS - 80} caracteres, "
                                    "instruções do vídeo mais curtas e a narração INTEIRA (gancho, objeção, benefício, "
                                    f"urgência e CTA, fechando as aspas):\n{data['prompt']}"}], SCHEMA, name='prompt_video')
+        data['prompt'] = compact(data['prompt'])
     data['prompt'] = _fit(data['prompt'].strip())
     return data
 
