@@ -192,6 +192,8 @@ def _mentions(benefit: str, speech: str) -> bool:
 
 
 SPEC_BENEFIT = re.compile(r'tamanh|medida|pe[çc]as|\bcores\b|modelos|variedade|organiza|praticidade', re.IGNORECASE)
+GENDERED = re.compile(r'\b(cansad|preocupad|ocupad|apaixonad|frustrad|estressad|desanimad|atrasad)[oa]s?\b',
+                      re.IGNORECASE)
 SPEC_SPEECH = re.compile(r'tamanh|medida|\bcm\b|cent[íi]metro', re.IGNORECASE)
 
 
@@ -207,6 +209,9 @@ def problems(prompt: str, benefits: Optional[list] = None) -> list:
         quote = narration.split(':', 1)[-1]
         if not quote.rstrip().endswith(('”', '"')):
             found.append('a narração não termina fechando as aspas (está cortada)')
+        if GENDERED.search(quote):
+            found.append(f'a narração usa adjetivo de gênero para a pessoa ("{GENDERED.search(quote).group(0)}"): '
+                         'troque por "Sabe quando…" / "Já pensou…"')
         if len(SPEC_SPEECH.findall(quote)) > 1:
             found.append('a narração gasta tempo com tamanhos/medidas: fale do benefício de usar o produto')
         if not any(w in quote.lower()[-160:] for w in CTA_WORDS):
