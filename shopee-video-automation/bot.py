@@ -149,7 +149,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -875,6 +875,9 @@ class Bot:
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
             return
+        if action == 'nv':   # 🎙 narração escolhida (nv:<mensagem>.<n>) ou outras 4 (nv:<mensagem>.0)
+            self.on_narration_button(cb, raw_id)
+            return
         if action == 'pc' and raw_id.isdigit():
             failure = self.db.find_failure(int(raw_id), 0)
             if not failure or not failure.get('link'):
@@ -1186,8 +1189,10 @@ class Bot:
 
     def on_prompts(self, msg: Dict):
         """
-        Link de produto (+ observação) = prompt novo; resposta a um prompt = ajuste dele. Prints do anúncio
-        (fotos, em álbum ou soltas, até 5 min antes do link ou com o link na legenda) entram como fatos reais.
+        Link de produto (+ observação) = 4 opções de narração para escolher; depois da escolha vem o prompt.
+        Resposta às opções = outras 4 com o ajuste ("minha: …" = usar a narração dela); resposta a um prompt =
+        ajuste dele. Prints do anúncio e das avaliações (fotos, em álbum ou soltas, até 5 min antes do link ou com
+        o link na legenda) entram como fatos reais.
         """
         text = (msg.get('text') or msg.get('caption') or '').strip()
         if msg.get('photo'):
@@ -1199,33 +1204,124 @@ class Bot:
                 return
         replied = (msg.get('reply_to_message') or {}).get('message_id')
         previous = json.loads(self.db.get_meta(f"prompt:{replied}", 'null')) if replied else None
+        options = json.loads(self.db.get_meta(f"narr:{replied}", 'null')) if replied else None
         links = extract_shopee_links(text)
         if links:
             notes = text.replace(links[0], '').strip()
             self.tg.react(msg['message_id'], '👀')
             prints, self.prompt_prints = [p[2] for p in self.prompt_prints], []
             # o resto do álbum pode chegar logo depois da foto com o link: espera uns segundos
-            self.submit(('prompt', links[0], notes, None, msg['message_id'], prints, msg.get('media_group_id')))
+            self.submit(('narrations', links[0], notes, msg['message_id'], prints, msg.get('media_group_id')))
+        elif options and text:
+            own = re.match(r'\s*minha\s*:\s*(.+)', text, re.IGNORECASE | re.DOTALL)
+            self.tg.react(msg['message_id'], '✍')
+            if own:
+                self.submit(('prompt_narr', replied, own.group(1).strip(), msg['message_id']))
+            else:
+                self.submit(('narrations', options['link'], options.get('notes', ''), msg['message_id'], None, None,
+                             {**options, 'pedido': text}))
         elif previous and text:
             self.tg.react(msg['message_id'], '✍')
             self.submit(('prompt', previous['link'], previous.get('notes', ''), {**previous, 'pedido': text},
                          msg['message_id']))
         elif text:
-            self.tg.send_text(PROMPTS, "Mande o <b>link do produto</b> (pode escrever uma observação junto), ou "
-                                       "responda um prompt meu para ajustar.", reply_to=msg['message_id'])
+            self.tg.send_text(PROMPTS, "Mande o <b>link do produto</b> (pode escrever uma observação junto e mandar "
+                                       "prints do anúncio e das avaliações antes), ou responda uma mensagem minha "
+                                       "para ajustar.", reply_to=msg['message_id'])
 
-    def job_prompt(self, link: str, notes: str, previous: Optional[Dict], reply_to: Optional[int],
-                   prints: Optional[List[str]] = None, album: Optional[str] = None):
-        if album:   # fotos do mesmo álbum que chegaram depois da que tinha o link
-            time.sleep(4)
-            prints = (prints or []) + [p[2] for p in self.prompt_prints if p[1] == album]
-            self.prompt_prints = [p for p in self.prompt_prints if p[1] != album]
+    def _download_prints(self, prints: Optional[List[str]]) -> List[str]:
         paths = []
-        for file_id in (prints or [])[:4]:
+        for file_id in (prints or [])[:6]:
             try:
                 paths.append(str(self.tg.download(file_id, BASE / 'downloads' / 'prints')))
             except Exception as e:
                 logger.warning(f"Print do anúncio não baixou: {e}")
+        return paths
+
+    def _album_prints(self, prints: Optional[List[str]], album: Optional[str]) -> List[str]:
+        if album:   # fotos do mesmo álbum que chegaram depois da que tinha o link
+            time.sleep(4)
+            prints = (prints or []) + [p[2] for p in self.prompt_prints if p[1] == album]
+            self.prompt_prints = [p for p in self.prompt_prints if p[1] != album]
+        return prints or []
+
+    @staticmethod
+    def _narration_markup(msg_id: int, chosen: int = 0, count: int = 4) -> str:
+        return keyboard([(f"{'✅ ' if i == chosen else ''}{i}", f"nv:{msg_id}.{i}") for i in range(1, count + 1)],
+                        [('🔄 Outras 4', f"nv:{msg_id}.0")])
+
+    def job_narrations(self, link: str, notes: str, reply_to: Optional[int], prints: Optional[List[str]] = None,
+                       album: Optional[str] = None, previous: Optional[Dict] = None):
+        """4 opções de narração para a Juliane escolher (os prints, quando vierem, são lidos como fatos reais)."""
+        if previous:
+            paths, product = previous.get('prints') or [], previous['product']
+        else:
+            paths = self._download_prints(self._album_prints(prints, album))
+            found = self.pipeline.shopee.find_candidates(link)
+            if not found:
+                self.tg.send_text(PROMPTS, "⚠️ Não achei o produto desse link. Mande o link do anúncio.",
+                                  reply_to=reply_to)
+                return
+            product = found[0]
+        try:
+            data = prompts.narrations(product, notes, paths, (previous or {}).get('pedido', ''),
+                                      (previous or {}).get('opcoes'))
+        except Exception as e:
+            logger.exception("Narrações falharam")
+            self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar as narrações: {html.escape(str(e)[:200])}",
+                              reply_to=reply_to)
+            return
+        msg_id = self.tg.send_text(PROMPTS, prompts.render_narrations(product, data, link), reply_to=reply_to)
+        self.tg.edit_markup(msg_id, self._narration_markup(msg_id, count=len(data['opcoes'])))
+        self.db.set_meta(f"narr:{msg_id}", json.dumps({
+            'link': link, 'notes': notes, 'product': product, 'prints': paths, 'opcoes': data['opcoes'],
+            'beneficios': data.get('beneficios') or []}, default=str))
+
+    def on_narration_button(self, cb: Dict, raw: str):
+        msg_id, _, n = raw.partition('.')
+        state = json.loads(self.db.get_meta(f"narr:{msg_id}", 'null')) if msg_id.isdigit() else None
+        if not state or not n.isdigit():
+            self.tg.answer_callback(cb['id'], 'Essas opções expiraram: mande o link de novo')
+            return
+        n = int(n)
+        if n == 0:
+            self.tg.answer_callback(cb['id'], 'Criando outras 4 opções…')
+            self.submit(('narrations', state['link'], state.get('notes', ''), int(msg_id), None, None, state))
+            return
+        if n > len(state['opcoes']):
+            self.tg.answer_callback(cb['id'], 'Opção não encontrada')
+            return
+        self.tg.answer_callback(cb['id'], f'Montando o prompt com a narração {n}…')
+        self.tg.edit_markup(int(msg_id), self._narration_markup(int(msg_id), n, len(state['opcoes'])))
+        self.submit(('prompt_narr', int(msg_id), state['opcoes'][n - 1], int(msg_id)))
+
+    def job_prompt_narration(self, narr_msg: int, narration: str, reply_to: Optional[int]):
+        """Prompt completo com a narração escolhida (ou escrita por ela com "minha:")."""
+        state = json.loads(self.db.get_meta(f"narr:{narr_msg}", 'null'))
+        if not state:
+            self.tg.send_text(PROMPTS, "⚠️ Essas opções expiraram: mande o link de novo.", reply_to=reply_to)
+            return
+        prints = [p for p in state.get('prints') or [] if Path(p).exists()]
+        try:
+            data = prompts.build_with_narration(state['product'], narration, state.get('notes', ''), prints,
+                                                state.get('beneficios'))
+        except Exception as e:
+            logger.exception("Prompt falhou")
+            self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar o prompt: {html.escape(str(e)[:200])}",
+                              reply_to=reply_to)
+            return
+        self._send_prompt(state['product'], data, state['link'], state.get('notes', ''), reply_to)
+
+    def _send_prompt(self, product: Dict, data: Dict, link: str, notes: str, reply_to: Optional[int]):
+        info_id = self.tg.send_text(PROMPTS, prompts.render(product, data, link), reply_to=reply_to)
+        prompt_id = self.tg.send_text(PROMPTS, prompts.prompt_only(data))   # sozinho: copiar = só o prompt
+        state = json.dumps({'link': link, 'notes': notes, 'prompt': data['prompt']})
+        for msg_id in (info_id, prompt_id):   # responder qualquer uma das duas ajusta o prompt
+            self.db.set_meta(f"prompt:{msg_id}", state)
+
+    def job_prompt(self, link: str, notes: str, previous: Optional[Dict], reply_to: Optional[int],
+                   prints: Optional[List[str]] = None, album: Optional[str] = None):
+        paths = self._download_prints(self._album_prints(prints, album))
         found = self.pipeline.shopee.find_candidates(link)
         if not found:
             self.tg.send_text(PROMPTS, "⚠️ Não achei o produto desse link. Mande o link do anúncio.", reply_to=reply_to)
@@ -1237,11 +1333,7 @@ class Bot:
             logger.exception("Prompt falhou")
             self.tg.send_text(PROMPTS, f"⚠️ Não consegui criar o prompt: {html.escape(str(e)[:200])}", reply_to=reply_to)
             return
-        info_id = self.tg.send_text(PROMPTS, prompts.render(product, data, link), reply_to=reply_to)
-        prompt_id = self.tg.send_text(PROMPTS, prompts.prompt_only(data))   # sozinho: copiar = só o prompt
-        state = json.dumps({'link': link, 'notes': notes, 'prompt': data['prompt']})
-        for msg_id in (info_id, prompt_id):   # responder qualquer uma das duas ajusta o prompt
-            self.db.set_meta(f"prompt:{msg_id}", state)
+        self._send_prompt(product, data, link, notes, reply_to)
 
     def job_ideas(self, thread: Optional[int]):
         """
@@ -1339,6 +1431,10 @@ class Bot:
                     self.tg.send_text(job[1], self.report_text(job[2]))
                 elif job[0] == 'prompt':
                     self.job_prompt(*job[1:])
+                elif job[0] == 'narrations':
+                    self.job_narrations(*job[1:])
+                elif job[0] == 'prompt_narr':
+                    self.job_prompt_narration(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
                 elif job[0] == 'sales':

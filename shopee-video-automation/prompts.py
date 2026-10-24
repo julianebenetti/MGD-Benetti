@@ -95,8 +95,10 @@ aconchegante. Narração feminina em português brasileiro: “Três frigideiras
 panquecas e muito mais com revestimento antiaderente e limpeza prática. Mais praticidade na sua cozinha! Toque no
 carrinho e garanta seu conjunto!”
 
-Se houver PRINTS DO ANÚNCIO anexos (depois da foto principal), use os dados deles (medidas, materiais, garantia,
-certificações, itens do kit) como fatos reais para descrever o produto e quebrar objeções. Nunca use preço.
+Se houver PRINTS anexos (depois da foto principal), use-os como fatos reais. PRINTS DO ANÚNCIO: medidas,
+materiais, garantia, certificações, itens do kit. PRINTS DAS AVALIAÇÕES: o que os compradores elogiam (o resultado
+no uso, as dúvidas que tinham e foram resolvidas, "chegou certinho", "não gruda mesmo"…); são a melhor fonte para o
+benefício principal e para quebrar objeções na narração, com as palavras de quem comprou. Nunca use preço.
 
 ESTILO ENXUTO: nas instruções do vídeo use abreviações claras para economizar caracteres (ex.: "Vídeo POV 9:16",
 "ref. fiel", "mov. suaves", "luz natural", "nº de peças", "Sem textos/legendas/preços na tela", "Narração fem.
@@ -263,6 +265,130 @@ def _fit(prompt: str) -> str:
             chosen.discard(i)
     kept = [sentences[j] for j in sorted(chosen)]
     return f"{' '.join(kept)} {narration}"
+
+
+LABEL = 'Narração fem. PT/BR: '
+
+NARRATIONS_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'beneficios': {'type': 'array', 'items': {'type': 'string'}},
+        'avaliacoes': {'type': 'string'},
+        'opcoes': {'type': 'array', 'items': {'type': 'string'}},
+    },
+    'required': ['beneficios', 'avaliacoes', 'opcoes'],
+    'additionalProperties': False,
+}
+
+NARRATIONS_TASK = f"""TAREFA AGORA: só a NARRAÇÃO (a Juliane escolhe uma antes de montar o prompt do vídeo).
+Escreva 4 opções de narração diferentes entre si, cada uma com até {NARRATION_MAX} caracteres, seguindo as regras e a
+estrutura da narração acima (curiosidade → objeção → benefício → urgência verdadeira → CTA no final). Varie o
+gancho: 1) pergunta; 2) dor/situação do dia a dia; 3) "Já pensou…"/curiosidade; 4) prova social (o que dizem as
+avaliações, nota e vendidos). Todas falam do benefício principal. Só a fala, sem aspas e sem "Narração:".
+CAMPOS: beneficios (2 ou 3, do mais forte ao menos forte); avaliacoes (1 frase com o que os compradores mais elogiam
+nos prints das avaliações, ou "" se não vieram prints de avaliações); opcoes (as 4 falas)."""
+
+
+def _clean_speech(text: str) -> str:
+    text = re.sub(r'^\s*(narra[çc][ãa]o[^:]*:)\s*', '', text.strip(), flags=re.IGNORECASE)
+    return text.strip().strip('“”"').strip()
+
+
+def narration_problems(speech: str, benefits: Optional[list] = None) -> list:
+    """Problemas de uma opção de narração (mesmas checagens do prompt completo)."""
+    found = problems(f"Vídeo. {LABEL}“{speech}”", benefits)
+    if len(speech) > NARRATION_MAX:
+        found.append(f"tem {len(speech)} caracteres (máximo {NARRATION_MAX})")
+    return [f for f in found if 'máximo ' + str(MAX_CHARS) not in f]
+
+
+def _images(product: Dict, prints: Optional[list]) -> list:
+    images = [{'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                                           'data': _photo_b64(product['imageUrl'])}}]
+    for path in (prints or [])[:6]:
+        images.append({'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg',
+                                                   'data': _file_b64(path)}})
+    return images
+
+
+def _context(product: Dict, notes: str, images: list) -> str:
+    text = f"{RULES}\n\n{_facts(product)}"
+    if notes:
+        text += f"\nOBSERVAÇÕES DA JULIANE: {notes}"
+    if len(images) > 1:
+        text += (f"\n\n(As {len(images) - 1} imagem(ns) depois da foto principal são PRINTS do anúncio e/ou das "
+                 "avaliações.)")
+    return text
+
+
+def narrations(product: Dict, notes: str = '', prints: Optional[list] = None, request: str = '',
+               previous: Optional[list] = None) -> Dict:
+    """4 opções de narração (com os benefícios e o resumo das avaliações) para a Juliane escolher."""
+    images = _images(product, prints)
+    text = f"{_context(product, notes, images)}\n\n{NARRATIONS_TASK}"
+    if previous:
+        text += ("\n\nOPÇÕES ANTERIORES (não repita):\n" + '\n'.join(f"- {o}" for o in previous)
+                 + f"\nAJUSTE PEDIDO: {request or 'outras 4 opções, com ganchos diferentes'}")
+    data = ask_json([*images, {'type': 'text', 'text': text}], NARRATIONS_SCHEMA, name='narracoes')
+    data['opcoes'] = [_clean_speech(o) for o in data['opcoes']][:4]
+    issues = {i: narration_problems(o, data['beneficios']) for i, o in enumerate(data['opcoes'])}
+    issues = {i: v for i, v in issues.items() if v}
+    if issues:   # uma rodada de correção só das opções com problema
+        fix = '\n'.join(f"Opção {i + 1}: {data['opcoes'][i]}\nProblemas: {'; '.join(v)}" for i, v in issues.items())
+        again = ask_json([*images, {'type': 'text', 'text': text + "\n\nCorrija estas opções (devolva as 4 "
+                                    f"opções, as boas iguais):\n{fix}\nTODAS: {data['opcoes']}"}],
+                         NARRATIONS_SCHEMA, name='narracoes')
+        data = {**again, 'opcoes': [_clean_speech(o) for o in again['opcoes']][:4]}
+    return data
+
+
+def render_narrations(product: Dict, data: Dict, url: str) -> str:
+    e = html.escape
+    lines = [f"🎙 <b>Escolha a narração</b> — {e(product['productName'][:80])}", e(url), '']
+    if data.get('beneficios'):
+        lines.append('💪 ' + e(' · '.join(data['beneficios'])))
+    if data.get('avaliacoes'):
+        lines.append(f"⭐ Avaliações: {e(data['avaliacoes'])}")
+    lines.append('')
+    for i, option in enumerate(data['opcoes'], 1):
+        lines += [f"<b>{i})</b> {e(option)} <i>({len(option)} carac.)</i>", '']
+    lines.append("<i>Toque no número para montar o prompt com ela, ou responda esta mensagem pedindo ajuste "
+                 "(ex.: \"mais curtas\", \"fale que não precisa de óleo\"). Para usar uma narração sua, responda "
+                 "começando com \"minha:\".</i>")
+    return '\n'.join(lines)[:4000]
+
+
+INSTRUCTIONS_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'detalhes_fixos': {'type': 'array', 'items': {'type': 'string'}},
+        'instrucoes': {'type': 'string'},
+        'conferir': {'type': 'string'},
+    },
+    'required': ['detalhes_fixos', 'instrucoes', 'conferir'],
+    'additionalProperties': False,
+}
+
+
+def build_with_narration(product: Dict, narration: str, notes: str = '', prints: Optional[list] = None,
+                         benefits: Optional[list] = None) -> Dict:
+    """Prompt completo com a narração que a Juliane escolheu (a fala fica exatamente como ela aprovou)."""
+    narration = _clean_speech(narration)
+    tail = f"{LABEL}“{narration}”"
+    budget = MAX_CHARS - len(tail) - 1
+    images = _images(product, prints)
+    text = (f"{_context(product, notes, images)}\n\nTAREFA AGORA: a narração já foi escolhida e NÃO muda:\n{tail}\n"
+            f"Escreva só as INSTRUÇÕES DO VÍDEO (tudo que vem antes da narração, no FORMATO acima), com no máximo "
+            f"{budget} caracteres, e com a cena de uso mostrando o que a narração fala"
+            + (f" (benefícios: {', '.join(benefits)})" if benefits else '') + ". Termine com a frase de nenhuma "
+            "escrita na tela. Não inclua a narração.")
+    data = ask_json([*images, {'type': 'text', 'text': text}], INSTRUCTIONS_SCHEMA, name='instrucoes_video')
+    instructions = compact(_split(data['instrucoes'])[0].strip())
+    if 'tela' not in instructions.lower():
+        instructions += ' Sem textos/legendas/preços na tela.'
+    prompt = _fit(f"{instructions} {tail}")
+    return {'beneficios': benefits or [], 'detalhes_fixos': data['detalhes_fixos'], 'prompt': prompt,
+            'conferir': data['conferir'], 'narracao': narration}
 
 
 def _file_b64(path: str) -> str:

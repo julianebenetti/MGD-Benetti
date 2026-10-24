@@ -81,8 +81,10 @@ POV suaves; **nenhuma escrita na tela**; benefícios práticos; simples e direto
 (nota e vendas do anúncio, e dos **prints do anúncio** que você mandar: medidas, garantia, itens do kit). Mesmo
 formato dos prompts da Juliane ("Crie um vídeo POV vertical 9:16… Use a imagem enviada como referência fiel e preserve
 <detalhes>… Não adicione textos… Narração feminina em português brasileiro: “…”"). Mande o **link do produto** (e uma
-observação, se quiser) — com prints, mande-os em álbum com o link na legenda ou antes do link; **responda o prompt**
-para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
+observação, se quiser) — com prints (do anúncio e das **avaliações**: o robô não abre a página da Shopee, então as
+avaliações vêm do print), mande-os em álbum com o link na legenda ou antes do link. Primeiro chegam **4 opções de
+narração** (botões 1–4 e 🔄 Outras 4; responder a mensagem pede ajuste; "minha: …" usa uma narração sua); escolhida a
+narração, vem o prompt completo com ela intacta. **Responda o prompt** para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por
