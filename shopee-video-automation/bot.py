@@ -1103,28 +1103,56 @@ class Bot:
                 lines.append(f"… e mais {len(group) - MAX_PENDING_LINES}")
         return '\n'.join(lines)[:4000]
 
-    AGENDA_ICONS = {'agendado': '⏰', 'enviando': '📤', 'na_lia': '🤖', 'avisado': '⚠️'}
-
     def agenda_summary_text(self) -> str:
-        """Resumo da Agenda em ordem de horário: o que vai sair sozinho e o que precisa de você."""
+        """
+        Resumo da Agenda: primeiro o que precisa de você, depois o que espera a pausa acabar, depois os próximos
+        horários por dia (o que vai sair sozinho).
+        """
+        e = html.escape
         posts = [p for p in self.db.scheduled() if p['scheduled_at']]
         if not posts:
             return "🗓️ <b>Agenda</b>\n\nNenhum vídeo agendado."
-        lines = ["🗓️ <b>Agenda</b> · em ordem de horário (toque no nome para ir até o vídeo)",
-                 "⏰ agendado · 📤 indo para a LiA · 🤖 LiA publicando · ⚠️ precisa de você"]
+        now = scheduler.now()
         pause = self.db.get_meta('pausa_ate')
-        if pause:
-            lines.append("⏸️ Postagens pausadas" + ('' if pause == 'indefinida' else f" até {fmt_when(pause)}"))
+        paused = bool(pause) and (pause == 'indefinida' or now < datetime.fromisoformat(pause))
+
+        def item(p, icon, show_day=False):
+            when = datetime.fromisoformat(p['scheduled_at']).astimezone(scheduler.TZ)
+            name = e(p['product_name'][:45])
+            if p['agenda_msgs']:
+                name = f"<a href=\"{self.tg.message_link(AGENDA, p['agenda_msgs'][-1])}\">{name}</a>"
+            stamp = f"{when:%d/%m %H:%M}" if show_day else f"{when:%H:%M}"
+            return f"{icon} {stamp} · {name}"
+
+        need = [p for p in posts if p['status'] == 'avisado']
+        late = [p for p in posts if p['status'] == 'agendado' and datetime.fromisoformat(p['scheduled_at']) <= now]
+        going = [p for p in posts if p['status'] in ('enviando', 'na_lia')]
+        upcoming = [p for p in posts if p['status'] == 'agendado' and datetime.fromisoformat(p['scheduled_at']) > now]
+        lines = ["🗓️ <b>Agenda</b> (toque no nome para ir até o vídeo)"]
+        if paused:
+            lines.append("⏸️ <b>Postagens pausadas</b>" + ('' if pause == 'indefinida' else f" até {fmt_when(pause)}")
+                         + ": nada vai para a LiA até lá.")
+        if need:
+            lines.append(f"\n⚠️ <b>Precisa de você ({len(need)})</b>: publique (ou toque 📤 Enviar à LiA) e depois "
+                         "✅ Postei; ou ↩️ Voltar p/ Editados / ❌ Descartar")
+            lines += [item(p, '⚠️', True) for p in need]
+        if late:
+            why = ("ganham horário novo quando a pausa acabar" if paused
+                   else "vão para a LiA em instantes")
+            lines.append(f"\n⏸️ <b>Horário já passou ({len(late)})</b>: {why}")
+            lines += [item(p, '⏸️', True) for p in late]
+        if going:
+            lines.append(f"\n🤖 <b>Com a LiA ({len(going)})</b>")
+            lines += [item(p, '🤖', True) for p in going]
         day = None
-        for p in posts:
+        if upcoming:
+            lines.append(f"\n⏰ <b>Próximos ({len(upcoming)})</b>: saem sozinhos no horário")
+        for p in upcoming:
             when = datetime.fromisoformat(p['scheduled_at']).astimezone(scheduler.TZ)
             if when.date() != day:
                 day = when.date()
-                lines.append(f"\n<b>{DIAS[when.weekday()]}, {when:%d/%m}</b>")
-            name = html.escape(p['product_name'][:45])
-            if p['agenda_msgs']:
-                name = f"<a href=\"{self.tg.message_link(AGENDA, p['agenda_msgs'][-1])}\">{name}</a>"
-            lines.append(f"{self.AGENDA_ICONS.get(p['status'], '•')} {when:%H:%M} · {name}")
+                lines.append(f"<b>{DIAS[when.weekday()]}, {when:%d/%m}</b>")
+            lines.append(item(p, '⏰'))
         return '\n'.join(lines)[:4000]
 
     def refresh_agenda_summary(self, repost: bool = False):
