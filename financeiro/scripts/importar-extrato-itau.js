@@ -68,12 +68,21 @@ const REGRAS = [
     descricao: 'Crédito do salário (já lançado pelo holerite)',
     nota: 'O holerite lança o provento bruto e cada desconto. Contar o crédito de novo dobraria a renda.',
   },
-  // O 0442 (Infinite) e o cartao de trafego pago da Benetti UP. Essa descricao
-  // especifica e a unica, entre as variacoes de "fatura" que aparecem nesta
-  // conta pessoal, que paga o cartao da empresa — as demais (Black, Azul) sao
-  // pessoais. Tem de vir antes da regra generica abaixo (Juliane, 23/08).
+  // O 0442 (Infinite) e o cartao de trafego pago da Benetti UP, e esta regra
+  // existia para mandar esse pagamento para o ambito da empresa. Ela foi escrita
+  // (23/08) quando o criterio era o "S" final de UNICLAS**S** — mas o PDF do
+  // extrato CORTA a descricao na largura da coluna, e `FATURA PAGA Itau Uniclas`
+  // e o maximo que chega. O Black tambem e "Itau Uniclas**s** Black", entao o
+  // texto truncado NAO distingue os dois: em 22/10/26 um pagamento de
+  // R$ 4.550,14 foi carimbado como sendo do 0442 sem nada provar isso — e a
+  // fatura do 0442 daquele ciclo era de R$ 1.604,01, menos de metade.
+  //
+  // Enquanto o texto nao identificar o cartao, o pagamento entra como generico
+  // (Familia), que e o que ele de fato e: pagamento de fatura, cartao a
+  // confirmar. Nao saber de qual cartao e um resultado; chutar o ambito nao.
+  // Esta regra so volta a valer onde o nome vem inteiro.
   {
-    padrao: /^FATURA PAGA ITAU UNICLAS/i,
+    padrao: /^FATURA PAGA ITAU UNICLASS (INFINITE|VISA|I\b)/i,
     natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Benetti UP',
     descricao: 'Pagamento da fatura do 0442 (Infinite, tráfego pago)',
     nota: 'As demais faturas pagas por esta conta são pessoais; só esta é da empresa.',
@@ -89,6 +98,27 @@ const REGRAS = [
     natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Juliane',
     descricao: 'Pagamento da fatura do cartão Amazon (0013)',
     nota: 'As compras já estão lançadas uma a uma pela fatura do 0013.',
+  },
+  {
+    // A DEVOLUCAO de um pagamento de fatura, que o Itau credita de volta na
+    // conta. Nao e renda: e o mesmo dinheiro voltando, e contar como receita
+    // inflaria o rendimento tributavel do IRPF. Por isso entra com a mesma
+    // natureza do pagamento que ela desfaz -- `transferencia` -- e nao como
+    // `receita`.
+    //
+    // O caso que a revelou: `PGTO MIN ITAU UNICLASS MC BLA -4.559,34` em 07/10
+    // e `SISPAG PIX ITAU UNIBANCO HOLDI +4.559,34` em 13/10, e a propria fatura
+    // do 4846 de 26/10 imprime `Ajuste Debito 4.559,34` na mesma data da volta.
+    // Tres fontes dizendo o mesmo.
+    //
+    // Presa na ENTRADA: `SISPAG` e o servico de pagamentos do Itau, e dinheiro
+    // SAINDO para o Itau Holding e outra coisa (e ja casa na regra de pagamento
+    // de fatura abaixo). `saida: true` seria ignorado em silencio -- o casador
+    // so conhece `entrada`.
+    padrao: /SISPAG PIX ITAU UNIBANCO HOLDI/i, entrada: true,
+    natureza: 'transferencia', categoria: 'pagamento_fatura', pessoa: 'Família',
+    descricao: 'Devolução de pagamento de fatura (Itaú)',
+    nota: 'O banco devolveu um pagamento de fatura. Mexe no saldo; não é receita.',
   },
   {
     // "FATURA PAGA AZUL ITAU IN" (21/08, R$14.270,31) escapava: a regra pedia
@@ -188,10 +218,29 @@ const REGRAS = [
   },
 
   // --- boletos identificáveis pelo nome ---
-  { padrao: /ESC INF NO MUND|MUNDO CORES/i, natureza: 'despesa', categoria: 'educacao', pessoa: 'Valentina', descricao: 'Escola Mundo Cores' },
+  {
+    // UMA conta, UM nome. O Itau cobra a mesma escola por tres linhas diferentes
+    // (boleto `PAG TIT INT`, boleto nominal da escola, Pix), e cada uma tinha aqui
+    // uma descricao propria. Como CHAVE_RECORRENTE sai da descricao JA REESCRITA,
+    // tres nomes viravam tres contas: a projecao vinha da familia do `PAG TIT INT` e
+    // nao enxergava o pagamento que chegou pela outra linha. Em 25/10 o alerta
+    // acusou as duas escolas de "ja venceu e nao apareceu no extrato" com os dois
+    // boletos pagos no extrato (13/10 e 15/10).
+    //
+    // E o espelho do erro de 23/09: la uma regra apagava a distincao entre DUAS
+    // contas; aqui tres nomes escondiam que e UMA. A separacao por linha de banco
+    // (`agruparPorLinhaDeBanco`) continua valendo DENTRO da familia e e ela que
+    // decide se sao mesmo a mesma conta — mas so roda se a familia for uma so.
+    padrao: /ESC INF NO MUND|MUNDO CORES/i, natureza: 'despesa', categoria: 'educacao',
+    pessoa: 'Valentina', descricao: 'Escola da Valentina',
+  },
   { padrao: /SOCIUM CONDOMIN|CONDOMINIO/i,  natureza: 'despesa', categoria: 'moradia',  pessoa: 'Família',   descricao: 'Condomínio' },
   { padrao: /AVANTRA BASKET/i,              natureza: 'despesa', categoria: 'esportes', pessoa: 'Filhos',    descricao: 'Basquete' },
-  { padrao: /SERVICO SOCIAL|SESI/i,         natureza: 'despesa', categoria: 'educacao', pessoa: 'Luca',      descricao: 'Sesi' },
+  {
+    // Mesmo caso da escola da Valentina logo acima: um nome so para a conta.
+    padrao: /SERVICO SOCIAL|SESI/i, natureza: 'despesa', categoria: 'educacao',
+    pessoa: 'Luca', descricao: 'Escola do Luca',
+  },
 
   // --- boletos sem nome de beneficiário, so o codigo do banco liquidante ---
   //
@@ -357,7 +406,7 @@ const REGRAS = [
     // ignorado em silencio e a regra casaria nos dois sentidos.
     padrao: /PIX (TRANSF|QRS) SERVICO SOC/i, entrada: false,
     natureza: 'despesa', categoria: 'educacao', pessoa: 'Luca',
-    descricao: 'Escola do Luca (SESI)',
+    descricao: 'Escola do Luca',
     nota: 'Mesma classificação que "Sesi / Editora Sesi" já tinha na fatura (Juliane, 23/08).',
   },
   // Mesmo caso do Transurc: "Tokio Marine -> seguro do carro / Familia" ja era

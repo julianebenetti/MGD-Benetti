@@ -63,7 +63,19 @@ const herdadoPor = {};
 // como se ninguem soubesse o que era. E a mesma armadilha ja documentada com
 // `PARCELA DE REF`, que por isso ja estava escrita truncada aqui.
 const DIVIDA_PARCELADA =
-  /(parc fatura|parc\.? ?automatic|parcela de ref|credito por parcelament|canc credito parc|canc parc de ref|cred parc fat)/i;
+  /(parc fatura|parc\.? ?automatic|parcela de ref|credito por parcelament|canc credito parc|canc parc de r|cred parc fat)/i;
+
+// `Ajuste Débito` é a DEVOLUÇÃO de um pagamento, não compra nenhuma. Na fatura
+// do 4846 de 26/10/2026 ele vem com R$ 4.559,34 — exatamente o
+// `Pagamento efetuado em 07/10/2026` do cabeçalho — e o extrato da conta prova
+// os dois lados: `PGTO MIN ITAU UNICLASS MC BLA -4.559,34` em 07/10 e
+// `SISPAG PIX ITAU UNIBANCO HOLDI +4.559,34` em 13/10. O dinheiro saiu e voltou.
+//
+// Como `despesa` ele inflaria outubro em R$ 4.559,34 de gasto que não existe.
+// `natureza: ajuste` é o que a base já usa para a linha que lança o outro lado
+// de um mesmo fato e não é consumo — e, diferente de `pagamento`, ela CONTINUA
+// no `cobrado`, que é o que mantém a tela batendo com o valor que a fatura cobra.
+const AJUSTE_DE_FATURA = /^ajuste (d[ée]bito|cr[ée]dito)/i;
 
 const lidas = alvos.map(a => ler(a));
 const ruins = lidas.filter(f => f.erros.length);
@@ -92,11 +104,13 @@ lidas.forEach(f => {
 
   const novas = f.itens.map(item => {
     const natureza = DIVIDA_PARCELADA.test(item.descricao) ? 'divida_parcelada'
+                   : AJUSTE_DE_FATURA.test(item.descricao) ? 'ajuste'
                    : item.valor < 0 ? 'estorno' : 'despesa';
     const regra = aplicarRegra(item.descricao, item.valor);
     const herdado = herdadoPor[normalizar(item.descricao)] || {};
     const pessoa = (regra && regra.pessoa) || herdado.pessoa || 'Juliane';
     const categoria = natureza === 'divida_parcelada' ? 'divida_parcelada'
+                    : natureza === 'ajuste' ? 'ajuste_fatura'
                     : (regra && regra.categoria) || herdado.categoria || 'nao_classificado';
     return {
       id: `txn_pdf_${c.cartao}_${mes.replace('/', '')}_${String(++seq).padStart(4, '0')}`,
@@ -181,6 +195,23 @@ lidas.forEach(f => {
     lancamentos: novas.length,
     fonte: path.basename(f.arquivo),
   };
+
+  // Quando o resumo do Itau nao fecha consigo mesmo e o leitor provou que a
+  // culpa NAO e da leitura (o total esta confirmado pelo boleto e pela linha
+  // digitavel), a divergencia fica DECLARADA no dado, como o `total_fonte` do
+  // 3711 ficou. Sem isso, `saldo_anterior = total - cobrado` nao fecha e ninguem
+  // sabe por que; com ela, a diferenca tem nome, valor e motivo.
+  const divergencia = Math.round(
+    (c.total_fatura - ((cab.saldo_anterior || 0) + cobrado)) * 100) / 100;
+  if (Math.abs(divergencia) > 0.01 && (f.avisos || []).length) {
+    cab.divergencia_documento = {
+      valor: divergencia,
+      campo: 'Pagamentos efetuados',
+      nota: (f.avisos || []).join(' '),
+    };
+  } else {
+    cab.divergencia_documento = null;
+  }
 
   const i = faturas.findIndex(x => x.cartao === c.cartao && x.mes === mes);
   const anterior = i >= 0 ? faturas[i] : null;
@@ -270,7 +301,8 @@ console.log(`\n${purgados} lançamento(s) da leitura anterior substituídos, ${t
 
 const semRegra = lidas.flatMap(f => f.itens).filter(i => {
   const r = aplicarRegra(i.descricao, i.valor);
-  return !r && !herdadoPor[normalizar(i.descricao)] && !DIVIDA_PARCELADA.test(i.descricao);
+  return !r && !herdadoPor[normalizar(i.descricao)] && !DIVIDA_PARCELADA.test(i.descricao)
+      && !AJUSTE_DE_FATURA.test(i.descricao);
 });
 if (semRegra.length) {
   console.log(`\n${semRegra.length} lançamento(s) sem regra, em "nao_classificado":`);

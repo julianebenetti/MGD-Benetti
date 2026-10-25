@@ -123,6 +123,12 @@ function noEscopo(mv) {
   const todas = todosLancamentos.filter(t => !NAO_E_CONSUMO.includes(t.natureza));
   const pagamentos = todosLancamentos.filter(t => t.natureza === 'pagamento');
   const dividaParcelada = todosLancamentos.filter(t => t.natureza === 'divida_parcelada');
+  // Terceira natureza que a fatura COBRA sem ser gasto: o `ajuste`, que é a
+  // devolução de um pagamento (`Ajuste Débito`, R$ 4.559,34 na fatura do 4846 de
+  // 26/10/26 — o pagamento de 07/10 que o banco mandou de volta em 13/10). Ele
+  // entra no `cobrado` do cabeçalho, como a parcela de refinanciamento, e tem de
+  // sair do gasto pelo mesmo motivo: não é compra nenhuma.
+  const ajusteNoCartao = todosLancamentos.filter(t => t.natureza === 'ajuste');
   const escopo = todas.filter(t => noEscopo(t.mes_vencimento));
 
   // A aba Lançamentos é o razão completo (equivalente a transacoesDoAno no
@@ -153,7 +159,9 @@ function noEscopo(mv) {
   // a fatura cobra ela, e o 'cobrado' do cabecalho a inclui. Ela sai dos totais
   // de gasto, nao do que o cartao esta cobrando.
   const veioDoCartao = t => (t.origem || '').startsWith('cartao_credito');
-  [...escopo, ...dividaParcelada.filter(t => noEscopo(t.mes_vencimento))].filter(veioDoCartao).forEach(t => {
+  [...escopo,
+   ...dividaParcelada.filter(t => noEscopo(t.mes_vencimento)),
+   ...ajusteNoCartao.filter(t => noEscopo(t.mes_vencimento))].filter(veioDoCartao).forEach(t => {
     const chaveFatura = `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
     ref.porFatura[chaveFatura] = Math.round(((ref.porFatura[chaveFatura] || 0) + t.valor) * 100) / 100;
   });
@@ -183,8 +191,10 @@ function noEscopo(mv) {
   if (foraDoCartao.length) {
     console.log(`    (${foraDoCartao.length} lançamentos fora do cartão — desconto em folha, ${brl(somar(foraDoCartao))})`);
   }
-  igual('Gasto no cartão bate com o cobrado, fora a dívida parcelada',
-        gastoNoCartao, Math.round((cobradoTotal - dividaTotal) * 100) / 100);
+  const ajusteTotal = Math.round(
+    somar(ajusteNoCartao.filter(t => noEscopo(t.mes_vencimento) && veioDoCartao(t))) * 100) / 100;
+  igual('Gasto no cartão bate com o cobrado, fora a dívida parcelada e o ajuste',
+        gastoNoCartao, Math.round((cobradoTotal - dividaTotal - ajusteTotal) * 100) / 100);
   // Fatura marcada `sem_itemizacao` nao tem lancamento nenhum de proposito —
   // e o cabecalho de um ciclo cujo total se conhece e cujo extrato ainda nao
   // chegou. Ela nao pode ser cobrada por nao ter pagamento lancado.
@@ -348,16 +358,28 @@ function noEscopo(mv) {
     base: normalizarDescricao(ps[0].descricao),
     total: Math.round(ps.reduce((s, p) => s + p.valor, 0) * 100) / 100,
     parcelas: ps[0].parcela_total,
+    cartao: ps[0].cartao_final || '',
   }));
 
   const foiEstornada = ps => {
     const base = normalizarDescricao(ps[0].descricao);
     const total = Math.round(ps.reduce((s, p) => s + p.valor, 0) * 100) / 100;
+    const cartao = ps[0].cartao_final || '';
+    const zeram = g => Math.abs(g.total + total) < 0.05 && Math.abs(g.total) > 0.05;
     // Existe um grupo espelho: mesma descricao, mesmo numero de parcelas, valor oposto
-    return grupos.some(g => g.base === base
+    if (grupos.some(g => g.base === base && g.parcelas === ps[0].parcela_total && zeram(g))) return true;
+
+    // E quando o espelho vem do PDF, o nome do lojista nao existe para casar: o
+    // XLSX escreve `Canc Parcela Sem Juros - PG *Applyfy Di`, e o PDF corta na
+    // largura da coluna e entrega so `CANC PARCELA S`. Ai o que identifica o
+    // espelho e a ESTRUTURA, nao o texto — e ela e estreita: mesmo cartao, mesmo
+    // numero de parcelas, e os dois totais zerando ao centavo. Duas compras
+    // diferentes coincidirem nas tres coisas, com uma delas sendo linha de
+    // cancelamento, nao e algo que aconteca por acaso.
+    return grupos.some(g => /^canc/i.test(g.base)
+                         && g.cartao === cartao
                          && g.parcelas === ps[0].parcela_total
-                         && Math.abs(g.total + total) < 0.05
-                         && Math.abs(g.total) > 0.05);
+                         && zeram(g));
   };
 
   const canceladosNaSequencia = Object.entries(compras)
@@ -1071,6 +1093,60 @@ function noEscopo(mv) {
     ok('Conta paga por outro caixa não é acusada de não ter aparecido no extrato',
        !foraAcusadas.length,
        foraAcusadas.map(l => `${l.titulo}: "${l.situacao}"`).join(' · '));
+
+    // Acusar de "não apareceu no extrato" uma conta que ESTÁ no extrato é o pior
+    // caso desta tabela: é dizer à Juliane que ela não pagou o que pagou. Em
+    // 25/10 aconteceu com as DUAS escolas. A causa não estava aqui, estava no
+    // importador: a mesma conta era reescrita com nomes diferentes conforme a
+    // linha do banco (`Sesi` x `Escola do Luca`, `Escola Mundo Cores` x
+    // `Escola da Valentina`), e como a chave da recorrente sai da descrição JÁ
+    // REESCRITA, a projeção vinha de uma família e o pagamento caía em outra.
+    //
+    // O teste é a forma genérica, e de propósito NÃO olha texto nenhum — que é
+    // justamente a lição que este arquivo já registra duas vezes ("filtro por
+    // descrição não responde 'esta conta foi paga?' nesta base; o que responde é
+    // valor e data"): nenhuma conta projetada pode ter, no mês projetado, um
+    // lançamento de caixa da mesma categoria e pessoa com exatamente o valor
+    // previsto. Vale para qualquer conta, não só as duas escolas.
+    {
+      const previstas = await pagina.evaluate(mm => (recorrentesFaltandoEm(mm) || [])
+        .map(r => ({ descricao: r.descricao, categoria: r.categoria, pessoa: r.pessoa,
+                     valor: r.valor, minimo: r.minimo, maximo: r.maximo })), mes);
+
+      // Só lançamento de CONTA, nunca de fatura. A projeção de recorrente nasce
+      // do histórico do extrato — conta de luz, escola, condomínio —, então é no
+      // extrato que o pagamento dela tem de aparecer. Sem este filtro o teste
+      // acusava falso: `encargos_financeiros`/Família existe nos dois lugares, e
+      // os R$ 217,97 de juros do rotativo do 4846 caíam dentro da faixa do juro
+      // do cheque especial (R$ 44,08 a R$ 233,75) sem ter nada a ver com ele.
+      const caixaDoMes = {};
+      todosLancamentos
+        .filter(t => t.mes_vencimento === mes && ['despesa', 'divida_parcelada'].includes(t.natureza))
+        .filter(t => !(t.origem || '').startsWith('cartao_credito'))
+        .forEach(t => {
+          const k = `${t.categoria}|${t.pessoa}`;
+          (caixaDoMes[k] = caixaDoMes[k] || []).push(t);
+        });
+
+      // A FAIXA histórica, não só o valor previsto. A projeção é a mediana, e a
+      // conta que chega quase nunca vem na mediana exata: a escola da Valentina
+      // foi paga em R$ 1.156,10 numa projeção de R$ 1.086,60, dentro da faixa de
+      // R$ 1.076,10 a R$ 1.249,10 que o próprio perfil declara. Exigir igualdade
+      // deixava esse caso passar — e foi um dos dois que a Juliane levou no
+      // bolso como "você não pagou".
+      const bate = (r, v) => (r.minimo != null && r.maximo != null)
+        ? v >= r.minimo - 0.01 && v <= r.maximo + 0.01
+        : Math.abs(v - r.valor) < 0.01;
+      const projetadaComPagamento = previstas.filter(r => (caixaDoMes[`${r.categoria}|${r.pessoa}`] || [])
+        .some(t => bate(r, Math.abs(t.valor))));
+
+      ok(`Nenhuma conta projetada em ${mes} já está paga no mês com o mesmo valor`,
+         projetadaComPagamento.length === 0,
+         projetadaComPagamento.map(r => `${r.descricao} ${brl(r.valor)} (${r.categoria}/${r.pessoa})`).join(' · '));
+
+      ok(`Existe conta projetada em ${mes} para esse teste ter o que provar`,
+         previstas.length > 0, `${previstas.length} projetadas`);
+    }
 
     // Sem nenhuma conta vencida e prevista, os testes acima passam vazios.
     ok('Existe conta vencida e prevista para este bloco ter o que provar',
@@ -2293,10 +2369,98 @@ function noEscopo(mv) {
           Math.round((f.saldo_anterior + f.cobrado - f.pagamentos) * 100) / 100,
           Math.round(f.total_fatura * 100) / 100);
   });
+  // A identidade vale salvo divergencia DECLARADA do proprio documento. O 3794
+  // de Nov/26 imprime `Pagamentos efetuados -144,99` e `Saldo financiado
+  // 14.983,19`, mas o `Total desta fatura` e `anterior + atuais + encargos` SEM
+  // abater os 144,99 — e esse total esta confirmado pelo boleto e pela linha
+  // digitavel, as duas outras impressoes do mesmo numero. A tolerancia sai do
+  // campo `divergencia_documento`, que so e gravado quando o leitor provou que o
+  // erro e do documento; usa-la para calar uma leitura errada exigiria mentir
+  // nesse campo, e ele tem guarda propria logo abaixo.
   faturas.filter(f => Math.abs(f.saldo_anterior) > 0.05 && !((f.pagamentos || 0) > 0.05)).forEach(f => {
-    igual(`${f.cartao} ${f.mes}: saldo anterior = total − lançamentos do período`,
-          Math.round((f.total_fatura - f.cobrado) * 100) / 100, f.saldo_anterior);
+    const folga = Math.abs((f.divergencia_documento || {}).valor || 0);
+    const calculado = Math.round((f.total_fatura - f.cobrado) * 100) / 100;
+    ok(`${f.cartao} ${f.mes}: saldo anterior = total − lançamentos do período`
+       + (folga ? ' (fora a divergência declarada do documento)' : ''),
+       Math.abs(calculado - f.saldo_anterior) <= folga + 0.02,
+       `calculado ${calculado} · gravado ${f.saldo_anterior}`
+       + (folga ? ` · divergência declarada ${folga}` : ''));
   });
+
+  // E a declaracao nao pode virar a forma de calar o teste: ela so existe onde o
+  // documento realmente se contradiz, e o valor dela tem de ser exatamente a
+  // diferenca — nao um numero folgado que cobriria qualquer erro de leitura.
+  faturas.filter(f => f.divergencia_documento).forEach(f => {
+    const d = f.divergencia_documento;
+    const calculado = Math.round((f.total_fatura - f.cobrado) * 100) / 100;
+    ok(`${f.cartao} ${f.mes}: a divergência declarada é exatamente a diferença, e diz o motivo`,
+       Math.abs(Math.abs(calculado - f.saldo_anterior) - Math.abs(d.valor)) <= 0.02
+       && typeof d.nota === 'string' && d.nota.length > 20 && !!d.campo,
+       `declarada ${d.valor} · diferença real ${Math.round((calculado - f.saldo_anterior) * 100) / 100}`);
+  });
+
+  // Forma generica do erro que o `Ajuste Debito` introduziu: a DEVOLUCAO de um
+  // pagamento vem dentro da itemizacao, com o mesmo valor do pagamento, e se
+  // entrar como `despesa` ela vira gasto que nao existe (R$ 4.559,34 em Out/26,
+  // no 4846). E o espelho do teste que ja existe do lado do extrato — "nenhum
+  // lancamento de extrato com natureza despesa pode ter o valor exato de uma
+  // fatura vencendo na mesma semana" — so que dentro da propria fatura.
+  //
+  // Sem isto, a correcao passaria despercebida se um dia se perder: o recalculo
+  // da suite e o `cobrado` excluiriam a linha dos dois lados e a conta fecharia
+  // com um gasto fantasma dentro.
+  {
+    const pagoPorFatura = {};
+    pagamentos.filter(t => veioDoCartao(t)).forEach(t => {
+      const k = `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
+      (pagoPorFatura[k] = pagoPorFatura[k] || []).push(Math.abs(t.valor));
+    });
+    // Duas exclusoes, e as duas vieram de casos reais que o teste pegou na
+    // primeira rodada — ele estava largo demais:
+    //
+    //  1. COMPRA CANCELADA. `CTK*MGDASH 144,99` tem `CANCELAMENTO DE COMPRA
+    //     -144,99` ao lado, na mesma fatura: ja esta neutralizada, nao e gasto
+    //     fantasma. (De quebra, foi esse teste que explicou a divergencia de
+    //     R$ 144,99 do 3794: o Itau contou esse cancelamento como "Pagamentos
+    //     efetuados" alem de lista-lo na itemizacao.)
+    //  2. COBRANCA RECORRENTE. `SEGURO SUPERPROTEGIDO R$ 9,99` cai todo mes no
+    //     3987, e as faturas de Jun e Jul/26 foram de R$ 9,99 cravados — o
+    //     pagamento coincidiu com a mensalidade. Devolucao de pagamento e
+    //     evento unico; o que a fatura cobra todo mes nao e devolucao.
+    const creditoNaMesmaFatura = {};
+    // Fora o proprio pagamento: ele e negativo e tem exatamente o valor
+    // procurado, entao contaria como o credito que neutraliza a linha e
+    // desarmaria o teste inteiro. O que neutraliza uma compra e o estorno dela,
+    // nao a quitacao da fatura passada. (Furo da primeira versao deste teste:
+    // sem esta linha ele passava mesmo com a devolucao lancada como despesa.)
+    todosLancamentos.filter(t => veioDoCartao(t) && t.valor < 0 && t.natureza !== 'pagamento').forEach(t => {
+      const k = `${t.cartao_final || '4846'}|${t.mes_vencimento}`;
+      (creditoNaMesmaFatura[k] = creditoNaMesmaFatura[k] || []).push(Math.abs(t.valor));
+    });
+    const mesesComEsseValor = t => new Set(todosLancamentos
+      .filter(x => veioDoCartao(x) && (x.cartao_final || '4846') === (t.cartao_final || '4846')
+                && Math.abs(x.valor - t.valor) < 0.01)
+      .map(x => x.mes_vencimento)).size;
+
+    const gastoQueEDevolucao = todosLancamentos.filter(t =>
+      t.natureza === 'despesa' && veioDoCartao(t) && t.valor > 0
+      && (pagoPorFatura[`${t.cartao_final || '4846'}|${t.mes_vencimento}`] || [])
+           .some(v => Math.abs(v - t.valor) < 0.01)
+      && !(creditoNaMesmaFatura[`${t.cartao_final || '4846'}|${t.mes_vencimento}`] || [])
+            .some(v => Math.abs(v - t.valor) < 0.01)
+      && mesesComEsseValor(t) < 2);
+    ok('Nenhuma despesa de cartão tem o valor exato de um pagamento da mesma fatura',
+       gastoQueEDevolucao.length === 0,
+       gastoQueEDevolucao.slice(0, 3)
+         .map(t => `${t.cartao_final} ${t.mes_vencimento} ${brl(t.valor)} ${t.descricao.trim()}`).join(' | '));
+
+    // E o par de sempre: tem de existir devolucao de pagamento lancada, senao o
+    // teste acima passa vazio e deixa de vigiar o que foi feito para vigiar.
+    const devolucoes = todosLancamentos.filter(t => t.natureza === 'ajuste' && veioDoCartao(t));
+    ok('Existe devolução de pagamento dentro de fatura para o teste ter o que provar',
+       devolucoes.length > 0,
+       `${devolucoes.length} lançamento(s) de ajuste de fatura`);
+  }
 
   const comReferencia = cartao.linhas.filter(l => l.conferencia && !/sem referência/i.test(l.conferencia));
   igual('Toda fatura importada é conferida na tela', comReferencia.length, faturas.length);
@@ -2409,7 +2573,9 @@ function noEscopo(mv) {
   // porque foram canceladas juntas — e somam zero com os estornos ao lado.
   // Isso não é duplicação: é a reversão, e ela tem de caber no dado.
   const canceladoNoMes = {};
-  todosLancamentos.filter(t => /^canc\s+parc\s+de\s+ref/i.test(t.descricao || ''))
+  // O PDF corta a descricao na largura da coluna: `Canc Parc De Ref Cp` do XLSX
+  // chega como `CANC PARC DE R`. Terceira vez que essa armadilha aparece.
+  todosLancamentos.filter(t => /^canc\s+parc\s+de\s+r/i.test(t.descricao || ''))
     .forEach(t => {
       const k = [t.cartao_final || '', t.parcela_total || '', t.mes_vencimento].join('|');
       canceladoNoMes[k] = (canceladoNoMes[k] || 0) + 1;

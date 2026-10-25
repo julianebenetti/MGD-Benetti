@@ -265,9 +265,25 @@ function ler(arquivo) {
     saldo_financiado:   acha(String.raw`Saldo financiado`),
     lancamentos_atuais: acha(String.raw`Lan[çc]amentos atuais`),
     total_lancamentos:  acha(String.raw`Total dos lan[çc]amentos atuais`),
-    pagamento_anterior: acha(String.raw`Pagamento efetuado em \d{2}\/\d{2}\/\d{4}`),
+    // O Itau imprime DOIS rotulos diferentes nesse mesmo campo: `Pagamento
+    // efetuado em DD/MM/AAAA` quando houve um pagamento so, e `Pagamentos
+    // efetuados` (plural, sem data) quando houve mais de um. Conhecer so o
+    // primeiro fazia o segundo ser lido como R$ 0,00 -- e entao `saldo
+    // financiado = anterior + pagamento` nao fechava e o importador RECUSAVA
+    // uma fatura perfeita. A data continua saindo so do rotulo datado: no
+    // plural ela nao existe no documento, e inventar uma seria pior que nao ter.
+    pagamento_anterior: acha(String.raw`Pagamentos? efetuados?(?: em \d{2}\/\d{2}\/\d{4})?`),
     encargos:           acha(String.raw`E?\s*Total de encargos em R\$`),
+    // O BOLETO imprime o mesmo total de novo, e ele é a obrigação de verdade:
+    // é o que vai ser cobrado. Serve de conferência independente do resumo.
+    total_boleto:       acha(String.raw`Valor do Documento R\$`),
   };
+
+  // E a linha digitável traz o valor uma TERCEIRA vez, codificado: nos 47
+  // dígitos do Itaú, os 10 últimos são o valor em centavos. É a prova mais
+  // forte do total, porque não depende de nenhum rótulo ter sido lido certo.
+  const mld = texto.match(/341-7\s*(\d{47})/);
+  cabecalho.total_linha_digitavel = mld ? parseInt(mld[1].slice(-10), 10) / 100 : null;
   // O rótulo também pode vir quebrado ("Car tã o", "Vencime nto"), e aí a busca
   // é feita num texto sem espaço nenhum. Só os RÓTULOS são procurados assim; os
   // valores continuam vindo do texto já reparado, para não colar dois números
@@ -418,14 +434,50 @@ function ler(arquivo) {
     erros.push(`o saldo financiado não fecha: anterior ${brl(cabecalho.fatura_anterior || 0)} + pagamento ${brl(cabecalho.pagamento_anterior || 0)} = ${brl(financiadoEsperado)}, e a fatura diz ${brl(cabecalho.saldo_financiado)}`);
   }
 
+  // O total é impresso TRÊS vezes: no resumo, no boleto e dentro da linha
+  // digitável. Se duas delas divergem, a leitura errou um número — isso é
+  // recusa, não aviso.
+  [['o boleto', cabecalho.total_boleto], ['a linha digitável', cabecalho.total_linha_digitavel]]
+    .forEach(([onde, v]) => {
+      if (v != null && Math.abs(v - cabecalho.total_fatura) > 0.01) {
+        erros.push(`o total do resumo (${brl(cabecalho.total_fatura)}) não bate com ${onde} (${brl(v)})`);
+      }
+    });
+
   const fecha = (cabecalho.saldo_financiado != null ? cabecalho.saldo_financiado : financiadoEsperado)
               + (cabecalho.lancamentos_atuais || 0)
               + (cabecalho.encargos || 0);
+  const avisos = [];
   if (Math.abs(fecha - cabecalho.total_fatura) > 0.01) {
-    erros.push(`o resumo não fecha: saldo financiado + lançamentos atuais + encargos = ${brl(fecha)}, e o total impresso é ${brl(cabecalho.total_fatura)}`);
+    // O resumo do Itaú nem sempre fecha consigo mesmo, e já vi um caso em que
+    // a culpa NÃO é da leitura: o 3794 de 01/11/26 imprime
+    // `Pagamentos efetuados -144,99` e `Saldo financiado 14.983,19`, mas o
+    // total impresso é `anterior + atuais + encargos` SEM abater os 144,99.
+    //
+    // Recusar aí seria jogar fora uma fatura cujo número que importa está
+    // provado: a obrigação é o que o boleto cobra, e o boleto e a linha
+    // digitável concordam com o total do resumo. Então, quando (a) a diferença
+    // é exatamente o valor da linha de pagamento e (b) as outras duas
+    // impressões do total confirmam o resumo, isto vira AVISO -- a divergência
+    // é do documento, não da leitura, e fica dita em vez de sumir.
+    const confirmado = [cabecalho.total_boleto, cabecalho.total_linha_digitavel]
+      .filter(v => v != null);
+    const pag = Math.abs(cabecalho.pagamento_anterior || 0);
+    const divergenciaDoDocumento =
+      pag > 0
+      && Math.abs(Math.abs(fecha - cabecalho.total_fatura) - pag) <= 0.01
+      && confirmado.length > 0
+      && confirmado.every(v => Math.abs(v - cabecalho.total_fatura) <= 0.01);
+
+    const frase = `o resumo não fecha: saldo financiado + lançamentos atuais + encargos = ${brl(fecha)}, e o total impresso é ${brl(cabecalho.total_fatura)}`;
+    if (divergenciaDoDocumento) {
+      avisos.push(`${frase} — a diferença é exatamente a linha "Pagamentos efetuados" (${brl(cabecalho.pagamento_anterior)}), que o total impresso não abate. O total está confirmado pelo boleto e pela linha digitável, então a divergência é do documento, não da leitura.`);
+    } else {
+      erros.push(frase);
+    }
   }
 
-  return { arquivo, cabecalho, itens, soma, erros };
+  return { arquivo, cabecalho, itens, soma, erros, avisos };
 }
 
 module.exports = { ler, brl };
@@ -447,8 +499,9 @@ if (require.main === module) {
     const porSecao = {};
     f.itens.forEach(i => { porSecao[i.secao] = (porSecao[i.secao] || 0) + i.valor; });
     Object.entries(porSecao).forEach(([s, v]) => console.log(`      ${s.padEnd(14)} ${brl(v)}`));
+    (f.avisos || []).forEach(a => console.log(`   ⚠ ${a}`));
     if (f.erros.length) { ruim++; f.erros.forEach(e => console.log(`   ❌ ${e}`)); }
-    else console.log('   ✓ fecha: a soma dos lançamentos bate com o total impresso, e o resumo fecha consigo mesmo');
+    else console.log('   ✓ fecha: a soma dos lançamentos bate com o total impresso, e o total confere com o boleto e a linha digitável');
   });
   process.exit(ruim ? 1 : 0);
 }

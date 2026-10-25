@@ -35,10 +35,10 @@
       "nota": "Material escolar dos dois filhos (Juliane, 22/08)"
     },
     {
-      "padrao": "omega +campinas|natacao|natação",
+      "padrao": "omega +campinas|^omega\\b|natacao|natação",
       "categoria": "esportes",
       "pessoa": "Valentina",
-      "nota": "Natacao da Valentina (Juliane, revisao 22/08)"
+      "nota": "Natacao da Valentina (Juliane, revisao 22/08) · O PDF da fatura imprime o nome do estabelecimento SEM os espacos que o XLSX tem (\"DENTALKIDSCAMPINASBRA\" em vez de \"Dental Kidscampinasbra\") e cortado na largura da coluna (\"OMEGA\" em vez de \"Omega Campinas Bra\"), entao a regra escrita para o XLSX nao casava e o lancamento caia em nao_classificado. Mesma armadilha ja documentada com \"PARCELA DE REF\". Nenhuma decisao nova aqui: e a mesma classificacao que esses estabelecimentos ja tem na base (25/10)."
     },
     {
       "padrao": "transurc|emdec|bilhete unico|vale transporte",
@@ -123,7 +123,7 @@
       "nota": "Ortodontia do Luca (Juliane, 23/08)"
     },
     {
-      "padrao": "drogal|droga ?raia|drogasil|farmacia|pague menos|panvel|laborator|clinica|hospital|consultorio|unimed|odonto|dentista",
+      "padrao": "drogal|droga ?raia|drogasil|drogaria|farmacia|pague menos|panvel|laborator|clinica|hospital|consultorio|unimed|odonto|dentista",
       "categoria": "saude",
       "nota": "Saúde: fica com quem foi atendido"
     },
@@ -265,10 +265,10 @@
       "nota": "Aplicativo de trabalho da Benetti UP (Juliane, 29/08)"
     },
     {
-      "padrao": "dental kids",
+      "padrao": "dental ?kids",
       "categoria": "saude",
       "pessoa": "Valentina",
-      "nota": "Dentista da Valentina (Juliane, 29/08)"
+      "nota": "Dentista da Valentina (Juliane, 29/08) · O PDF da fatura imprime o nome do estabelecimento SEM os espacos que o XLSX tem (\"DENTALKIDSCAMPINASBRA\" em vez de \"Dental Kidscampinasbra\") e cortado na largura da coluna (\"OMEGA\" em vez de \"Omega Campinas Bra\"), entao a regra escrita para o XLSX nao casava e o lancamento caia em nao_classificado. Mesma armadilha ja documentada com \"PARCELA DE REF\". Nenhuma decisao nova aqui: e a mesma classificacao que esses estabelecimentos ja tem na base (25/10)."
     },
     {
       "padrao": "cinepolis",
@@ -341,6 +341,12 @@
       "categoria": "encargos_financeiros",
       "pessoa": "Família",
       "nota": "Rótulos da secao 'Encargos cobrados nesta fatura' do PDF do Itau. Mesma natureza dos encargos ja cadastrados (Juliane, 23/08) — so os textos do PDF diferem dos do XLSX."
+    },
+    {
+      "padrao": "tagelatto",
+      "categoria": "alimentacao",
+      "pessoa": "Família",
+      "nota": "Sorveteria. Mesma classificacao dos 3 ja gravados na base. O PDF da fatura imprime o nome do estabelecimento SEM os espacos que o XLSX tem (\"DENTALKIDSCAMPINASBRA\" em vez de \"Dental Kidscampinasbra\") e cortado na largura da coluna (\"OMEGA\" em vez de \"Omega Campinas Bra\"), entao a regra escrita para o XLSX nao casava e o lancamento caia em nao_classificado. Mesma armadilha ja documentada com \"PARCELA DE REF\". Nenhuma decisao nova aqui: e a mesma classificacao que esses estabelecimentos ja tem na base (25/10)."
     }
   ]
 }

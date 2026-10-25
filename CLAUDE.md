@@ -2471,6 +2471,188 @@ salário compensar.
 
 `conciliar.js` íntegro, suíte em **475 testes**.
 
+### Três nomes para a mesma escola, e o alerta acusando ela de não pagar (25/10)
+A Juliane mandou as faturas do **4846 (venc. 26/10)** e do **3794 (venc. 01/11)** e o
+**extrato de 26/08 a 25/10**. O extrato fecha nos 34 intervalos de saldo, sem
+resíduo — e foi ele que expôs o pior defeito desta rodada.
+
+**O alerta do celular estava dizendo que ela não pagou as duas escolas, com os
+dois boletos pagos no extrato:** `PAG BOLETO ESC INF NO MUNDO CORES LTDA`
+R$ 1.156,10 em 13/10 e `PAG BOLETO SERVICO SOCIAL DA INDUSTRIA` R$ 545,66 em
+15/10.
+
+A causa não estava no alerta: **o importador do extrato reescrevia a mesma conta
+com nomes diferentes conforme a linha do banco.** A escola da Valentina saía como
+`Escola Mundo Cores` ou `Escola da Valentina`; a do Luca, como `Sesi`,
+`Escola do Luca` ou `Escola do Luca (SESI)`. Como `CHAVE_RECORRENTE` sai da
+descrição **já reescrita**, três nomes viravam três contas: a projeção nascia da
+família do `PAG TIT INT` e não enxergava o pagamento que chegou pela outra linha.
+
+**É o espelho exato do erro de 23/09.** Lá uma regra apagava a distinção entre
+**duas** contas (as duas Claro); aqui três nomes escondiam que é **uma**. E
+`agruparPorLinhaDeBanco()`, que existe justamente para decidir isso pela linha do
+banco, **só roda dentro de uma família** — com a família já partida em três, ela
+nunca tem chance.
+
+Corrigido onde é a causa: **uma conta, um nome.** As três regras de cada escola
+passaram a escrever `Escola da Valentina` e `Escola do Luca` — que são as chaves
+que `plano_do_mes` já guarda (`prev|escola da valentina`, `prev|escola do luca`),
+então nenhuma decisão dela foi apagada. Os 6 lançamentos já gravados foram
+renomeados junto; sem isso Jun/26 continuaria numa família própria, e a
+reimportação não alcança mês cujo arquivo não existe mais.
+
+**Teste novo, e ele de propósito não olha texto nenhum** — que é a lição que este
+arquivo já registra duas vezes (*"filtro por descrição não responde 'esta conta
+foi paga?' nesta base; o que responde é valor e data"*): **nenhuma conta projetada
+pode ter, no mês projetado, um lançamento de caixa da mesma categoria e pessoa com
+valor dentro da faixa histórica daquele perfil.**
+
+- **A faixa, não o valor previsto.** A projeção é a mediana e a conta quase nunca
+  chega na mediana: a Valentina foi paga em R$ 1.156,10 numa projeção de
+  R$ 1.086,60. Exigir igualdade deixava passar justamente um dos dois casos.
+- **Só lançamento de conta, nunca de fatura.** A primeira versão acusou falso:
+  `encargos_financeiros`/Família existe nos dois lugares, e os R$ 217,97 de juros
+  do rotativo do 4846 caíam dentro da faixa do juro do cheque especial
+  (R$ 44,08 a R$ 233,75) sem ter nada a ver com ele. Recorrente nasce do extrato,
+  então é no extrato que o pagamento dela tem de aparecer.
+
+**Verificado revertendo os nomes**: o teste falha e nomeia as duas escolas.
+
+### A devolução de um pagamento, provada pelas três fontes ao mesmo tempo (25/10)
+A fatura do 4846 traz `Ajuste Débito R$ 4.559,34` dentro das compras, e o extrato
+traz os dois lados: **`PGTO MIN ITAU UNICLASS MC BLA −4.559,34` em 07/10** e
+**`SISPAG PIX ITAU UNIBANCO HOLDI +4.559,34` em 13/10**. Ela pagou o mínimo do
+Black e **o banco devolveu o dinheiro seis dias depois** — e ainda assim a fatura
+cobrou R$ 340,36 de juros, mora e multa. Por que a devolução aconteceu, só o Itaú
+responde.
+
+Isso são duas classificações, e as duas estavam erradas por omissão:
+
+- **No cartão, `Ajuste Débito` caía como `despesa`** e inflava outubro em
+  R$ 4.559,34 de gasto que não existe. Virou `natureza: ajuste` — que é o que a
+  base já usa para a linha que lança o outro lado de um mesmo fato — e **continua
+  no `cobrado`**, diferente de `pagamento`, que é o que mantém a tela batendo com
+  o valor que a fatura cobra.
+- **No extrato, `SISPAG PIX ITAU UNIBANCO HOLDI` caía como `receita`**, inflando
+  o rendimento tributável do IRPF em R$ 4.559,34. Virou `transferencia` /
+  `pagamento_fatura`, a mesma natureza do pagamento que ela desfaz. Regra presa na
+  **entrada**: dinheiro saindo para o Itaú Holding é outra coisa.
+
+**A suíte não pegaria a primeira sozinha, e isso era um buraco.** Com o recálculo
+também excluindo `ajuste`, os dois lados passariam a concordar com um gasto
+fantasma dentro. Teste novo, na forma genérica: **nenhuma despesa de cartão pode
+ter o valor exato de um pagamento da mesma fatura.** É o espelho do teste que já
+existia do lado do extrato, só que dentro da própria fatura.
+
+Ele pegou três casos na primeira rodada e **dois eram falso positivo meu**, cada
+um virando uma exclusão com motivo próprio:
+
+1. **Compra cancelada** — `CTK*MGDASH 144,99` tem `CANCELAMENTO DE COMPRA
+   −144,99` ao lado, na mesma fatura: já está neutralizada.
+2. **Cobrança recorrente** — `SEGURO SUPERPROTEGIDO R$ 9,99` cai todo mês no
+   3987, e as faturas de Jun e Jul/26 foram de R$ 9,99 cravados. Devolução de
+   pagamento é evento único; o que a fatura cobra todo mês não é devolução.
+
+E tinha um furo meu dentro do próprio teste: **o pagamento contava como o crédito
+que neutraliza a linha**, e assim desarmava tudo. O que neutraliza uma compra é o
+estorno dela, não a quitação da fatura passada. Sem essa linha o teste passava
+mesmo com a devolução lançada como despesa — verificado revertendo a correção.
+
+### `Pagamentos efetuados`: o mesmo campo com dois rótulos, e o total provado três vezes (25/10)
+O leitor do PDF recusou a fatura do 3794. **Estava certo em recusar e errado no
+motivo**: o Itaú imprime **dois rótulos diferentes** naquele campo do resumo —
+`Pagamento efetuado em DD/MM/AAAA` quando houve um pagamento só, e **`Pagamentos
+efetuados`** (plural, sem data) quando houve mais de um. O leitor só conhecia o
+primeiro, então lia R$ 0,00, o saldo financiado não fechava e **uma fatura
+perfeita era barrada**. A data continua saindo só do rótulo datado: no plural ela
+não existe no documento.
+
+**Mesmo com isso corrigido o resumo não fecha — e a culpa é do documento.** O
+3794 imprime `Pagamentos efetuados −144,99` e `Saldo financiado 14.983,19`, mas o
+`Total desta fatura` é `anterior + atuais + encargos` **sem abater os R$ 144,99**.
+O 4846, com pagamento datado de verdade, abate.
+
+**O que destrava é que o total é impresso três vezes.** Além do resumo, ele está
+no boleto (`Valor do Documento`) e **dentro da linha digitável** — nos 47 dígitos
+do Itaú, os 10 últimos são o valor em centavos. A linha digitável é a prova mais
+forte, porque não depende de nenhum rótulo ter sido lido certo.
+
+- **Duas impressões do total divergindo = recusa**, porque aí a leitura errou.
+- **O resumo não fechar por exatamente o valor da linha de pagamento, com as
+  outras duas impressões confirmando o total, vira AVISO** — e a divergência fica
+  **declarada no dado** (`divergencia_documento`), como o `total_fonte` do 3711
+  ficou. Sem isso, `saldo anterior = total − cobrado` não fecha e ninguém sabe por
+  quê; com ela, a diferença tem nome, valor e motivo.
+- **A declaração tem guarda própria para não virar a forma de calar o teste:** o
+  valor dela precisa ser exatamente a diferença e precisa dizer o motivo.
+  Verificado gravando o valor errado de propósito.
+
+**De quebra, o teste da devolução explicou a divergência:** os R$ 144,99 dos
+`Pagamentos efetuados` são exatamente a compra `CTK*MGDASH` cancelada em 29/09. O
+Itaú parece ter contado esse cancelamento como pagamento **além** de listá-lo na
+itemização; o total impresso credita uma vez só. É leitura, não fato — mas o
+boleto manda, e ele cobra R$ 23.430,98.
+
+### A truncagem do PDF, de novo, em três lugares (25/10)
+A terceira, quarta e quinta vez que o mesmo defeito aparece. **Quando uma regra
+casa texto da fatura, ela tem de casar também o texto cortado na largura da
+coluna.**
+
+- **`CANC PARC DE R`** (de `Canc Parc De Ref Cp`) não casava em
+  `DIVIDA_PARCELADA`: **12 × −R$ 1.734,19 = −R$ 20.810,28** entravam como consumo.
+  É o cancelamento do parcelamento automático que o próprio Itaú fez em 21/09.
+  O mesmo texto também derrubava a exceção da suíte que permite as 11 parcelas
+  antecipadas caírem juntas em Out/26.
+- **`CANC PARCELA S`** (de `Canc Parcela Sem Juros - <lojista>`) perde o nome do
+  lojista inteiro, e `foiEstornada()` casava o espelho **pelo nome**. Agora, em
+  segundo lugar, casa pela **estrutura**: mesmo cartão, mesmo número de parcelas,
+  e os dois totais zerando ao centavo. Duas compras diferentes coincidirem nas
+  três coisas, com uma delas sendo linha de cancelamento, não acontece por acaso.
+- **`DENTALKIDSCAMPINASBRA` e `OMEGA`** — o PDF imprime o estabelecimento **sem
+  os espaços** que o XLSX tem e cortado. Nenhuma decisão nova: é a mesma
+  classificação que esses estabelecimentos já têm na base (`dental ?kids`,
+  `^omega\b`, mais `drogaria` na família de farmácia e `tagelatto`). Os sem
+  regra caíram de 38 para 20.
+
+**E a truncagem derrubou um discriminador que este arquivo documentava.** A regra
+que mandava o pagamento do 0442 para o âmbito da Benetti UP nasceu (23/08) do
+**"S" final de UNICLAS*S*** — mas o PDF entrega `FATURA PAGA Itau Uniclas`, e o
+Black também é "Itau Uniclas*s* Black". Em 22/10 um pagamento de **R$ 4.550,14**
+foi carimbado como do 0442 sem nada provar isso, e a fatura do 0442 daquele ciclo
+era de R$ 1.604,01 — **menos de metade**. A regra agora exige o nome inteiro; o
+texto truncado entra como pagamento de fatura genérico, Família. **Não saber de
+qual cartão é um resultado; chutar o âmbito não é.**
+
+### O que os três arquivos resolveram, e o que ficou aberto (25/10)
+- **4846 Out/26 era R$ 11.911,63 (foto de ciclo aberto) e é R$ 18.358,98**, vence
+  **26/10**. O 3794 ganhou **Nov/26 com R$ 23.430,98**, vence 01/11 — rolou
+  R$ 14.983,19 e levou **R$ 2.959,73 de juros, mora e multa num mês só**.
+- **0013 Out/26 marcada paga**: o extrato debita `PAG BOLETO BANCO BRADESCARD
+  S A` de R$ 193,08 em 15/10 — exatamente o total, no dia do vencimento.
+- **As duas escolas de outubro foram pagas** (13/10 e 15/10), e o boleto do SESI
+  de R$ 545,66 em 15/10 responde a pergunta que estava aberta desde 23/09: **a
+  parcela de outubro do carnê existe**.
+- **Encargos financeiros de 2026 em R$ 6.036,87**, sendo R$ 3.061,42 no 3794 e
+  R$ 2.061,65 no 4846.
+- **Em aberto no cartão: R$ 49.305,39**, descontando o que rolou de uma fatura
+  para a outra.
+
+Em aberto, e nenhuma decidida por dedução:
+
+1. **`PIX TRANSF COLEGIO19/10` de R$ 2.627,00.** "COLEGIO" já bateu mensalidade e
+   ballet, então fica manual por decisão antiga deste arquivo. Não é a escola da
+   Valentina nem a do Luca de outubro — as duas foram pagas por boleto dias antes.
+2. **`FATURA PAGA Itau Uniclas` de R$ 4.550,14 (22/10): de qual cartão?** A
+   aritmética aponta o Black (o 0442 daquele ciclo era R$ 1.604,01, e R$ 4.550,14
+   é parcial plausível dos R$ 18.358,98), mas é inferência. A próxima fatura de
+   qualquer um dos dois resolve.
+3. **Por que o Itaú devolveu os R$ 4.559,34** do pagamento de 07/10.
+4. **Holerite de outubro.** O extrato traz R$ 3.782,14 de salário (R$ 421,91 em
+   15/10 + R$ 3.360,23 em 23/10) contando como receita sem o detalhe dos
+   descontos; o Painel ainda projeta outubro pelo líquido de Set/26.
+5. **10 lançamentos de extrato sem regra, R$ 3.418,32**, entre eles o
+   `CRED CONSIGNAD` de −R$ 253,61 em 28/09 que volta no dia seguinte.
+
 ### Pendências de dado que a dashboard não tem como resolver sozinha (31/08)
 1. **Extrato Itaú fechado de agosto/26** — o arquivo importado vai só até 28/08
    e não traz o crédito do salário nem ~6 débitos que existem em todos os meses
