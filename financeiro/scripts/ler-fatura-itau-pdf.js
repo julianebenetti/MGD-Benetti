@@ -311,6 +311,10 @@ function ler(arquivo) {
 
   const itens = [];
   let secao = null;
+  // Quantos cabeçalhos de seção só foram reconhecidos SEM espaço. É a medida
+  // honesta de camada de texto degradada: não é um palpite sobre o arquivo, é o
+  // próprio leitor registrando que precisou do conserto para achar o rótulo.
+  let secoesSoSemEspaco = 0;
   linearizar(texto).forEach(linha => {
     const t = linha.trim();
     if (!t) return;
@@ -318,7 +322,7 @@ function ler(arquivo) {
     // é reconhecido pela linha sem espaço nenhum.
     const semEspaco = t.replace(/\s+/g, '');
     const s = SECOES.find(x => x.re.test(t) || x.reSemEspaco.test(semEspaco));
-    if (s) { secao = s; return; }
+    if (s) { if (!s.re.test(t)) secoesSoSemEspaco++; secao = s; return; }
     if (!secao || secao.futuro || secao.nome === 'pagamento') return;
 
     // O repasse de IOF da compra internacional vem sem data — é a única linha
@@ -413,7 +417,20 @@ function ler(arquivo) {
   if (alvo == null) {
     erros.push('a fatura não imprime o total dos lançamentos — não há contra o que conferir a leitura');
   } else if (Math.abs(soma - alvo) > 0.01) {
-    erros.push(`a soma dos ${itens.filter(i => i.secao !== 'encargos').length} lançamentos lidos dá ${brl(soma)}, e a fatura diz ${brl(alvo)} (${brl(soma - alvo)} de diferença)`);
+    // Quando a itemização não fecha, a primeira pergunta é se o PDF está legível.
+    // Dois dos arquivos que a Juliane mandou vieram com a CAMADA DE TEXTO
+    // DEGRADADA — o pdftotext injeta espaço dentro de palavra e de número
+    // ("La nça me nt os", "AP PLE.CO M", "199 ,90", "-14 .270,31") — e aí a linha
+    // de lançamento não casa com padrão nenhum. O cabeçalho sobrevive (ele é
+    // procurado num texto sem espaço), a itemização não.
+    //
+    // Dizer isso aqui importa porque a mensagem é lida no momento em que ninguém
+    // lembra o que fazer: a saída não é insistir no PDF (o `-raw` funde as duas
+    // colunas na mesma linha), é pedir a fatura em XLS.
+    erros.push(`a soma dos ${itens.filter(i => i.secao !== 'encargos').length} lançamentos lidos dá ${brl(soma)}, e a fatura diz ${brl(alvo)} (${brl(soma - alvo)} de diferença)`
+      + (secoesSoSemEspaco
+          ? `. A camada de texto deste PDF está degradada: ${secoesSoSemEspaco} cabeçalho(s) de seção só foram achados ignorando os espaços ("Lan ça men tos"). O cabeçalho da fatura ainda fecha, a itemização não — e o \`-raw\` não resolve, ele funde as duas colunas. Peça esta fatura em XLS.`
+          : ''));
   }
 
   // A identidade do resumo, lida certo.

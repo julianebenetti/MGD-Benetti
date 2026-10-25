@@ -2471,6 +2471,37 @@ salário compensar.
 
 `conciliar.js` íntegro, suíte em **475 testes**.
 
+### A fatura que não traz dado novo, e o leitor dizendo por que recusou (25/10)
+Logo depois, a Juliane mandou mais uma: a fatura do **3794 de 01/10**, que já
+estava gravada desde 21/09. Arquivo diferente dos dois anteriores (md5 próprio),
+então não é cópia repetida — é outra visão da mesma fatura.
+
+**O leitor recusou, e estava certo:** a itemização lida dá R$ 14.774,63 contra os
+R$ 15.128,18 impressos. A causa é a **camada de texto degradada**, a mesma já
+documentada em 21/09: o `pdftotext` injeta espaço dentro de palavra
+(`La nça me nt os`, `AP PLE.CO M /B ILLSAO PAU LO`), e aí a linha de lançamento não
+casa com padrão nenhum. Quatro compras da Apple e uma da NanoNoble ficaram de
+fora. Este PDF também não traz boleto nem linha digitável — são 5 páginas, sem a
+ficha de compensação —, então as duas conferências novas do total não tinham onde
+se apoiar.
+
+**E ele não traz dado novo: todos os campos que imprime batem com o que já está
+gravado** — vencimento, total, fatura anterior, pagamento de R$ 14.270,31, saldo
+financiado zero, e o `Total dos lançamentos atuais` igual à soma dos **27
+lançamentos** que já estão na base (vindos do XLSX, fonte independente). O
+repasse de IOF de R$ 13,31 inclusive.
+
+**O que mudou foi a mensagem de erro.** Era a segunda vez que esta mesma recusa
+aparecia sem dizer o motivo, e a mensagem é lida exatamente quando ninguém lembra
+o que fazer. Agora ela conta: quantos cabeçalhos de seção só foram achados
+ignorando os espaços, que o cabeçalho da fatura fecha mas a itemização não, que
+`-raw` não resolve (funde as duas colunas) e que **o caminho é pedir em XLS**.
+
+O medidor não é um palpite sobre o arquivo: é o **próprio leitor registrando que
+precisou do conserto** para achar cada rótulo (`reSemEspaco`, que já existia).
+Nas duas faturas boas de hoje o contador fica em zero e nenhum aviso falso
+aparece.
+
 ### Três nomes para a mesma escola, e o alerta acusando ela de não pagar (25/10)
 A Juliane mandou as faturas do **4846 (venc. 26/10)** e do **3794 (venc. 01/11)** e o
 **extrato de 26/08 a 25/10**. O extrato fecha nos 34 intervalos de saldo, sem
