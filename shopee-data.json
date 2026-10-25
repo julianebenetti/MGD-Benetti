@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792915718,
-  "updated_at_br": "25/10/2026 05:03",
+  "updated_at": 1792921000,
+  "updated_at_br": "25/10/2026 06:31",
   "period_days": 90,
-  "total_orders": 6114,
-  "total_conversions": 5869,
+  "total_orders": 6113,
+  "total_conversions": 5868,
   "orders": [
     {
       "ID do pedido": "261024ETW9X995",
@@ -152827,31 +152827,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "238844104190374",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-27"
-    },
-    {
-      "ID do pedido": "260727RGPKD7VW",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-27 09:09:32",
-      "Sub_id1": "25Jul26SacoHermeticoVs3",
-      "Valor de Compra(R$)": "56.24",
-      "Comissao liquida do afiliado(R$)": "2.13712",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "2.2496",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.2496",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Sapatilha Casual Tênis Feminino Branco Slip on Confortável Sapatênis Leve Envio Imediato",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18099779841",
-      "ID da loja": "1338420352",
-      "Nome da loja": "Pink.Company",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238842572146471",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-27"
     }
