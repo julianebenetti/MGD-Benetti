@@ -1,9 +1,9 @@
 {
-  "updated_at": 1792994260,
-  "updated_at_br": "26/10/2026 02:52",
+  "updated_at": 1793003513,
+  "updated_at_br": "26/10/2026 05:26",
   "period_days": 90,
-  "total_orders": 6095,
-  "total_conversions": 5851,
+  "total_orders": 6094,
+  "total_conversions": 5850,
   "orders": [
     {
       "ID do pedido": "261025H9A1BC3B",
@@ -152352,31 +152352,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "238930499134905",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-28"
-    },
-    {
-      "ID do pedido": "260728TT4637F7",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-28 07:03:31",
-      "Sub_id1": "17Jul26CalcaJogger",
-      "Valor de Compra(R$)": "16.95",
-      "Comissao liquida do afiliado(R$)": "0.6441",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.678",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.678",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Cola Branca De 1kg Cascorez Extra Forte Adesivo",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19497747157",
-      "ID da loja": "1270088146",
-      "Nome da loja": "Henkel Oficial",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238921411107717",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-28"
     }
