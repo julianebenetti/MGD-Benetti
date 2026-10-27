@@ -1,6 +1,6 @@
 {
-  "updated_at": 1793081456,
-  "updated_at_br": "27/10/2026 03:05",
+  "updated_at": 1793090432,
+  "updated_at_br": "27/10/2026 05:35",
   "period_days": 90,
   "total_orders": 6045,
   "total_conversions": 5803,
@@ -16082,7 +16082,7 @@
     },
     {
       "ID do pedido": "261011A91PD6G9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-10 17:41:59",
       "Sub_id1": "10Out26VEABodySplashAyra",
       "Valor de Compra(R$)": "85.5",
@@ -16094,7 +16094,7 @@
       "Comissao total do pedido(R$)": "5.13",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "YKAS ESCOVA PROGRESSIVA CITRIC REDUTOR DE VOLUME 1L",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18399870562",
       "ID da loja": "1573327715",
       "Nome da loja": "Ykas Cosméticos",
@@ -16102,7 +16102,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245353318119348",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-10"
     },
     {
