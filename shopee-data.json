@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793055836,
-  "updated_at_br": "26/10/2026 19:58",
+  "updated_at": 1793060463,
+  "updated_at_br": "26/10/2026 21:15",
   "period_days": 90,
-  "total_orders": 6055,
-  "total_conversions": 5813,
+  "total_orders": 6053,
+  "total_conversions": 5811,
   "orders": [
     {
       "ID do pedido": "261026KS22AERV",
@@ -1682,7 +1682,7 @@
     },
     {
       "ID do pedido": "261023DFJ9XSVH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-23 14:03:18",
       "Sub_id1": "20Out26VEAmacacaocinto",
       "Valor de Compra(R$)": "66.87",
@@ -1694,7 +1694,7 @@
       "Comissao total do pedido(R$)": "14.0427",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Macacão Feminino Longo tecido  duna Regata con cinto",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23393236986",
       "ID da loja": "1324889127",
       "Nome da loja": "Hester Chic",
@@ -1702,7 +1702,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "246463397158643",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-23"
     },
     {
@@ -5507,7 +5507,7 @@
     },
     {
       "ID do pedido": "261018VDQ2WS8H",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-17 22:53:26",
       "Sub_id1": "09Out26VestidoMidiFloral",
       "Valor de Compra(R$)": "20.89",
@@ -5519,7 +5519,7 @@
       "Comissao total do pedido(R$)": "0.87738",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Dino interativo body + shorts para bebê Meninos Recém Nascido RN até 5 meses",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "27344172827",
       "ID da loja": "353301393",
       "Nome da loja": "Stazzy",
@@ -5527,7 +5527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245976806143965",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-17"
     },
     {
@@ -151329,56 +151329,6 @@
       "conversionId": "238984728139467",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-29"
-    },
-    {
-      "ID do pedido": "260729VHWY7HUT",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-28 23:42:12",
-      "Sub_id1": "25Jul26TapeteHigienicoVs1",
-      "Valor de Compra(R$)": "15.9",
-      "Comissao liquida do afiliado(R$)": "1.28393",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "4.50%",
-      "Comissao Shopee(R$)": "0.636",
-      "Comissao do vendedor(R$)": "0.7155",
-      "Comissao total do pedido(R$)": "1.3515",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit Educador Sanitário Xixi Sim + Xixi Não Mypetone",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23893581948",
-      "ID da loja": "290073877",
-      "Nome da loja": "mypetone",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238981332111137",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-28"
-    },
-    {
-      "ID do pedido": "260729VGE7E9XG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-28 23:15:30",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "55.85",
-      "Comissao liquida do afiliado(R$)": "2.1223",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "2.234",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "2.234",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Mochila Bolsa Reforçada Cabo de Aço Notebook Faculdade Trabalho Escola Impermeável Resistente Grande",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19152206093",
-      "ID da loja": "409354083",
-      "Nome da loja": "Isic Fast",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "238979730116563",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-28"
     }
   ]
 }
