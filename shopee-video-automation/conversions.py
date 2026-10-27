@@ -135,4 +135,10 @@ def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int
         other = groups['']
         lines.append(f"\n🔗 Outros links (fora do robô): {len({i['order_id'] for i in other})} pedido(s) · "
                      f"{brl(sum(i['commission'] for i in other))}")
+        # produto e sub_id de cada um, para achar a venda que outro app (ex.: o da LiA) mostra
+        for i in sorted(other, key=lambda i: i['commission'], reverse=True)[:top]:
+            sub = f" <code>{e(i['sub_id'])}</code>" if i['sub_id'] else ' (sem sub_id)'
+            lines.append(f"• {e(i['item'][:40])}: {brl(i['commission'])}{sub}")
+        if len(other) > top:
+            lines.append(f"… e mais {len(other) - top}")
     return '\n'.join(lines)
