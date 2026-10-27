@@ -13,7 +13,7 @@ import threading
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +112,7 @@ def fetch(client, start: datetime, end: datetime) -> List[Dict]:
                             'order_id': order.get('orderId'),
                             'status': _status(order.get('orderStatus')),
                             'item': item.get('itemName') or '',
+                            'item_id': str(item.get('itemId') or ''),
                             'shop': item.get('shopName') or '',
                             'qty': int(item.get('qty') or 1),
                             'commission': _money(item.get('itemTotalCommission')),
@@ -157,9 +158,14 @@ def with_known_subs(posts_by_sub: Dict[str, str], items: List[Dict]) -> Dict[str
     return {**posts_by_sub, **extra}
 
 
-def new_sales_text(items: List[Dict], posts_by_sub: Dict[str, str]) -> str:
+def new_sales_text(items: List[Dict], posts_by_sub: Dict[str, str],
+                   posts_by_item: Optional[Dict[str, str]] = None) -> str:
     """Aviso das vendas novas: produto, comissão e de onde veio (vídeo do robô, app da LiA ou outro link)."""
     e = html.escape
+    if has_channel(items):
+        videos = [i for i in items if 'video' in (i.get('channel') or '').lower()]
+        linked, posts_by_sub = by_product(videos, posts_by_sub, posts_by_item)
+        items = linked + [i for i in items if i not in videos]
     total = sum(i['commission'] for i in items)
     lines = [f"🛒 <b>{'Venda nova' if len(items) == 1 else f'{len(items)} vendas novas'}!</b> · comissão "
              f"<b>{brl(total)}</b> (⏳ pendente até a Shopee confirmar)"]
@@ -191,6 +197,25 @@ def summary_line(items: List[Dict]) -> str:
             + (f" · ❌ {cancelled} cancelado(s)" if cancelled else ''))
 
 
+def by_product(items: List[Dict], posts_by_sub: Dict[str, str],
+               posts_by_item: Optional[Dict[str, str]]) -> Tuple[List[Dict], Dict[str, str]]:
+    """
+    Venda do canal vídeo sem sub_id (a compra pelo produto marcado no vídeo não leva o sub_id do link): liga ao vídeo
+    que divulgou aquele produto (mesmo ID do item). Só para vendas que a Shopee já marcou como do canal vídeo.
+    """
+    if not posts_by_item:
+        return items, posts_by_sub
+    known = with_known_subs(posts_by_sub, items)
+    out, extra = [], {}
+    for i in items:
+        if i['sub_id'] not in known and i.get('item_id') in posts_by_item:
+            key = f"produto {i['item_id']}"
+            extra[key] = f"{posts_by_item[i['item_id']][:30]} (pelo produto)"
+            i = {**i, 'sub_id': key}
+        out.append(i)
+    return out, {**posts_by_sub, **extra}
+
+
 def has_channel(items: List[Dict]) -> bool:
     return any(i.get('channel') for i in items)
 
@@ -207,12 +232,14 @@ def from_videos(items: List[Dict], posts_by_sub: Dict[str, str]) -> List[Dict]:
 
 
 def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int = 15,
-           only_videos: bool = True) -> str:
+           only_videos: bool = True, posts_by_item: Optional[Dict[str, str]] = None) -> str:
     """Vendas por vídeo (sub_id). `only_videos`: só as do Shopee Vídeo; senão também as de outros links."""
     e = html.escape
     if only_videos:
         videos = from_videos(items, posts_by_sub)
         others = [i for i in items if i not in videos and i['status'] != 'cancelado']
+        if has_channel(items):
+            videos, posts_by_sub = by_product(videos, posts_by_sub, posts_by_item)
         how = ('pelo canal "vídeo" da Shopee' if has_channel(items)
                else 'vídeos do robô e do app da LiA, pelo sub_id do link')
         lines = [f"🎬 <b>{title} · Shopee Vídeo</b>",
@@ -248,7 +275,7 @@ def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int
     if ranked:
         lines += ["", "<b>Por vídeo</b>"]
         for sub, g in ranked[:top]:
-            lines.append(f"• {e(posts_by_sub[sub][:40])}: {len({i['order_id'] for i in g})} pedido(s) · "
+            lines.append(f"• {e(posts_by_sub[sub][:45])}: {len({i['order_id'] for i in g})} pedido(s) · "
                          f"<b>{brl(sum(i['commission'] for i in g))}</b> <code>{e(sub)}</code>")
         if len(ranked) > top:
             lines.append(f"… e mais {len(ranked) - top} vídeo(s)")

@@ -1242,6 +1242,14 @@ class Bot:
         lines.append(f"Total: <b>{sum(counts)}</b> · média {sum(counts) / 7:.1f} por dia".replace('.', ','))
         return '\n'.join(lines)[:4000]
 
+    def posts_by_item(self) -> Dict[str, str]:
+        """ID do item divulgado (1º link) → nome do post, dos vídeos que já foram para a Shopee ou estão indo."""
+        out = {}
+        for p in self.db.with_status('agendado', 'enviando', 'na_lia', 'avisado', 'postado'):
+            if p['products']:
+                out[str(p['products'][0].get('itemId', ''))] = p['product_name']
+        return out
+
     def posts_by_sub(self) -> Dict[str, str]:
         return {p['sub_id']: p['product_name'] for p in
                 self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'avisado', 'postado', 'descartado')
@@ -1267,8 +1275,8 @@ class Bot:
             self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas na Shopee: {html.escape(str(e)[:300])}")
             return
         title = 'Vendas de hoje' if days == 1 else f"Vendas dos últimos {days} dias ({start:%d/%m} a {end:%d/%m})"
-        self.tg.send_text(thread, conversions.report(items, self.posts_by_sub(), title,
-                                                     only_videos=not everything)[:4000])
+        self.tg.send_text(thread, conversions.report(items, self.posts_by_sub(), title, only_videos=not everything,
+                                                     posts_by_item=self.posts_by_item())[:4000])
 
     def on_sales_command(self, thread: Optional[int], command: str):
         """
@@ -1693,7 +1701,7 @@ class Bot:
                 new = conversions.from_videos(new, posts) if not conversions.has_channel(items) else \
                     [i for i in conversions.from_videos(items, posts) if i in new]
             if new:
-                self.tg.send_text(RELATORIO or POSTADOS, conversions.new_sales_text(new, posts))
+                self.tg.send_text(RELATORIO or POSTADOS, conversions.new_sales_text(new, posts, self.posts_by_item()))
         self.db.set_meta('vendas_vistas', json.dumps((seen + [k for k in keys if k not in set(seen)])[-3000:]))
 
     def daily_report(self):
