@@ -295,3 +295,47 @@ def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today
     if current:
         messages.append(current)
     return messages
+
+
+def export_rows(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict]) -> List[Dict]:
+    """As ideias do dia na mesma numeração da lista, para o CSV (o link de afiliado entra depois)."""
+    rows = []
+    for section, items in (('Datas chegando', seasonal), ('Vende o ano todo', evergreen), ('Preço acessível', cheap)):
+        for p in items:
+            rows.append({'n': len(rows) + 1, 'secao': section, 'produto': p['productName'][:150],
+                         'loja': p.get('shopName', ''), 'preco': f"{float(p.get('priceMin') or 0):.2f}".replace('.', ','),
+                         'comissao': f"{commission_value(p):.2f}".replace('.', ','), 'vendas': int(p.get('sales') or 0),
+                         'nota': p.get('ratingStar') or '', 'tema': p.get('tema', ''),
+                         'link_produto': f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"})
+    return rows
+
+
+def export_csv(rows: List[Dict]) -> bytes:
+    """CSV separado por ";" (abre direto no Excel em português), com o link de afiliado de cada ideia."""
+    import csv
+    import io
+    cols = ['n', 'link', 'produto', 'secao', 'tema', 'loja', 'preco', 'comissao', 'vendas', 'nota', 'sub_id',
+            'link_produto']
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=cols, delimiter=';', extrasaction='ignore')
+    writer.writeheader()
+    writer.writerows(rows)
+    return buf.getvalue().encode('utf-8-sig')
+
+
+def export_text(rows: List[Dict], today: date) -> str:
+    """Os links um após o outro, separados por ";" (para colar no app da LiA)."""
+    links = ';'.join(r['link'] for r in rows)
+    return (f"🔗 <b>Links das {len(rows)} ideias de {today:%d/%m}</b>, separados por ; (toque para copiar)\n\n"
+            f"<code>{html.escape(links)}</code>")
+
+
+STOP_NAME = {'de', 'da', 'do', 'das', 'dos', 'com', 'para', 'e', 'em', 'kit', 'a', 'o', 'para'}
+
+
+def short_name(name: str) -> str:
+    """2 palavras do nome do produto para o sub_id ("Frigideira Antiaderente…" -> "FrigideiraAntiaderente")."""
+    words = [w for w in re.findall(r'[A-Za-zÀ-ú0-9]+', name) if w.lower() not in STOP_NAME]
+    import unicodedata
+    text = ''.join(w.capitalize() for w in words[:2])
+    return ''.join(c for c in unicodedata.normalize('NFKD', text) if not unicodedata.combining(c))

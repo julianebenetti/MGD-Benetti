@@ -152,7 +152,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'idea_links') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -1532,11 +1532,44 @@ class Bot:
             return
         for message in ideas.render(seasonal, evergreen, cheap, today):
             self.tg.send_text(thread, message)
+        self.send_idea_links(thread, ideas.export_rows(seasonal, evergreen, cheap), today)
         for p in seasonal + evergreen + cheap:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
             types[ideas.similar_key(p['productName'])] = today.isoformat()
         self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
         self.db.set_meta('ideias_tipos', json.dumps(types))
+
+    def send_idea_links(self, thread: Optional[int], rows: List[Dict], today: date):
+        """
+        Os links de afiliado das ideias do dia (sub_id LIA-<data>-<produto>, para ver as vendas dos vídeos feitos no
+        app da LiA): arquivo CSV e mensagem com os links separados por ";".
+        """
+        if not rows:
+            return
+        tag = prefixo(today).split('-', 1)[1]          # "27Out26-"
+        for r in rows:
+            if r.get('link') and r.get('sub_id'):
+                continue
+            r['sub_id'] = f"LIA-{tag}{re.sub(r'[^A-Za-z0-9]', '', ideas.short_name(r['produto']))[:20] or 'Produto'}"
+            shop_id, item_id = r['link_produto'].rstrip('/').split('/')[-2:]
+            try:
+                r['link'] = self.pipeline.shopee.affiliate_link({'shopId': shop_id, 'itemId': item_id}, r['sub_id'])
+            except Exception as e:
+                logger.warning(f"Link de afiliado da ideia {r['n']} falhou: {e}")
+                r['link'], r['sub_id'] = r['link_produto'], ''
+        self.db.set_meta('ideias_links', json.dumps({'dia': today.isoformat(), 'rows': rows}))
+        self.tg.send_document(thread, f"ideias-{today:%d-%m}.csv", ideas.export_csv(rows),
+                              f"📄 <b>{len(rows)} ideias de {today:%d/%m}</b> em CSV (abre no Excel), na mesma "
+                              "numeração da lista, com o link de afiliado de cada uma.")
+        self.tg.send_text(thread, ideas.export_text(rows, today))
+
+    def on_idea_links_command(self, thread: Optional[int]):
+        """/linksideias: manda de novo o CSV e os links da última lista de ideias."""
+        saved = json.loads(self.db.get_meta('ideias_links', 'null') or 'null')
+        if not saved:
+            self.tg.send_text(thread, "Ainda não há lista de ideias. Mande /sugestoes para buscar agora.")
+            return
+        self.send_idea_links(thread, saved['rows'], date.fromisoformat(saved['dia']))
 
     def daily_ideas(self):
         """No horário IDEIAS_HORA, a lista do dia vai sozinha para 💡 Ideias (uma vez por dia)."""
@@ -1600,6 +1633,8 @@ class Bot:
                     self.tg.send_text(job[1], self.report_text(job[2]))
                 elif job[0] == 'prompt':
                     self.job_prompt(*job[1:])
+                elif job[0] == 'idea_links':
+                    self.on_idea_links_command(*job[1:])
                 elif job[0] == 'back':
                     self.back_to_editados(self.db.get_post(job[1]))
                 elif job[0] == 'extension':
@@ -1653,6 +1688,9 @@ class Bot:
             return
         if command.lower().startswith('/extensao') or command.lower().startswith('/extensão'):
             self.submit(('extension', thread or PROMPTS))
+            return
+        if command.lower().startswith('/linksideias'):
+            self.submit(('idea_links', thread or IDEIAS))
             return
         if command.lower().startswith('/agenda'):
             self.refresh_agenda_summary(repost=True)
@@ -1718,6 +1756,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
+            ('linksideias', 'Links das ideias do dia em CSV e separados por ; (app da LiA)'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
             ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})

@@ -112,6 +112,9 @@ def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int
         lines.append("\nNenhuma venda nesse período.")
         return '\n'.join(lines)
 
+    # vídeos feitos no app da LiA com os links das ideias (sub_id LIA-<data>-<produto>) também contam como do robô
+    posts_by_sub = {**posts_by_sub, **{i['sub_id']: f"🤖 LiA app: {i['sub_id'].split('-')[-1]}" for i in valid
+                                       if i['sub_id'].startswith('LIA-')}}
     groups = defaultdict(list)
     for i in valid:
         groups[i['sub_id'] if i['sub_id'] in posts_by_sub else ''].append(i)
