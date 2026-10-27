@@ -310,24 +310,24 @@ def export_rows(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict]) 
     return rows
 
 
+LIA_BATCH = 20   # o app da LiA aceita até 20 produtos por lote
+
+
 def export_csv(rows: List[Dict]) -> bytes:
-    """CSV separado por ";" (abre direto no Excel em português), com o link de afiliado de cada ideia."""
-    import csv
-    import io
-    cols = ['n', 'link', 'produto', 'secao', 'tema', 'loja', 'preco', 'comissao', 'vendas', 'nota', 'sub_id',
-            'link_produto']
-    buf = io.StringIO()
-    writer = csv.DictWriter(buf, fieldnames=cols, delimiter=';', extrasaction='ignore')
-    writer.writeheader()
-    writer.writerows(rows)
-    return buf.getvalue().encode('utf-8-sig')
+    """CSV para a "Planilha CSV" do app da LiA: uma coluna "link", um link por linha, na ordem da lista."""
+    return ('link\n' + '\n'.join(r['link'] for r in rows) + '\n').encode('utf-8')
 
 
-def export_text(rows: List[Dict], today: date) -> str:
-    """Os links um após o outro, separados por ";" (para colar no app da LiA)."""
-    links = ';'.join(r['link'] for r in rows)
-    return (f"🔗 <b>Links das {len(rows)} ideias de {today:%d/%m}</b>, separados por ; (toque para copiar)\n\n"
-            f"<code>{html.escape(links)}</code>")
+def export_texts(rows: List[Dict], today: date) -> List[str]:
+    """Os links um por linha (como o app da LiA pede), em lotes de até 20, cada lote numa mensagem para copiar."""
+    batches = [rows[i:i + LIA_BATCH] for i in range(0, len(rows), LIA_BATCH)]
+    texts = []
+    for k, batch in enumerate(batches, 1):
+        part = f" · lote {k}/{len(batches)}" if len(batches) > 1 else ''
+        texts.append(f"🔗 <b>Links das ideias {batch[0]['n']} a {batch[-1]['n']} de {today:%d/%m}</b>{part}, um por linha "
+                     f"(toque para copiar e cole em \"Colar links de produtos\" no app da LiA)\n\n"
+                     f"<code>{html.escape(chr(10).join(r['link'] for r in batch))}</code>")
+    return texts
 
 
 STOP_NAME = {'de', 'da', 'do', 'das', 'dos', 'com', 'para', 'e', 'em', 'kit', 'a', 'o', 'para'}

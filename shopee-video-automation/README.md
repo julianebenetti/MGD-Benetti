@@ -73,8 +73,8 @@ afiliados não informa "mais buscados", o sinal de procura é o total de vendas)
 comissão, vendas, nota, a data/categoria e o link do produto para gravar.
 Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira no Shopee Vídeo): até R$ 60
 (`IDEIAS_PRECO_ACESSIVEL`), comissão ≥ R$ 3 por venda (`IDEIAS_COMISSAO_ACESSIVEL`), 500+ vendas, nota ≥ 4,7.
-Junto com a lista vêm os **links de afiliado das ideias** em CSV (separado por `;`, abre no Excel) e numa
-mensagem com os links separados por `;`, para criar os vídeos no app da LiA. O sub_id é `LIA-<data>-<produto>`, e
+Junto com a lista vêm os **links de afiliado das ideias** para criar os vídeos no app da LiA: um CSV para a
+"Planilha CSV" dela (coluna `link`) e mensagens com os links um por linha, em lotes de até 20 (limite do app). O sub_id é `LIA-<data>-<produto>`, e
 as vendas desses vídeos aparecem no `/vendas` como "🤖 LiA app". **`/linksideias`** manda de novo os da última lista.
 
 **🎬 Prompts** — prompts para o YouTube Create (usando a mesma OpenAI do robô), com as regras da Juliane: **até 900

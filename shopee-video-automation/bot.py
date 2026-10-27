@@ -1542,7 +1542,7 @@ class Bot:
     def send_idea_links(self, thread: Optional[int], rows: List[Dict], today: date):
         """
         Os links de afiliado das ideias do dia (sub_id LIA-<data>-<produto>, para ver as vendas dos vídeos feitos no
-        app da LiA): arquivo CSV e mensagem com os links separados por ";".
+        app da LiA): arquivo CSV e mensagens com os links um por linha, em lotes de 20.
         """
         if not rows:
             return
@@ -1559,9 +1559,10 @@ class Bot:
                 r['link'], r['sub_id'] = r['link_produto'], ''
         self.db.set_meta('ideias_links', json.dumps({'dia': today.isoformat(), 'rows': rows}))
         self.tg.send_document(thread, f"ideias-{today:%d-%m}.csv", ideas.export_csv(rows),
-                              f"📄 <b>{len(rows)} ideias de {today:%d/%m}</b> em CSV (abre no Excel), na mesma "
-                              "numeração da lista, com o link de afiliado de cada uma.")
-        self.tg.send_text(thread, ideas.export_text(rows, today))
+                              f"📄 <b>{len(rows)} links das ideias de {today:%d/%m}</b> para a \"Planilha CSV\" do app "
+                              "da LiA (um por linha, na ordem da lista; o app aceita até 20 por lote).")
+        for text in ideas.export_texts(rows, today):
+            self.tg.send_text(thread, text)
 
     def on_idea_links_command(self, thread: Optional[int]):
         """/linksideias: manda de novo o CSV e os links da última lista de ideias."""
@@ -1756,7 +1757,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
-            ('linksideias', 'Links das ideias do dia em CSV e separados por ; (app da LiA)'),
+            ('linksideias', 'Links das ideias do dia para o app da LiA (CSV e um por linha)'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
             ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})
