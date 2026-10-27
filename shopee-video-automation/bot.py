@@ -1558,19 +1558,72 @@ class Bot:
                 logger.warning(f"Link de afiliado da ideia {r['n']} falhou: {e}")
                 r['link'], r['sub_id'] = r['link_produto'], ''
         self.db.set_meta('ideias_links', json.dumps({'dia': today.isoformat(), 'rows': rows}))
+        exported = json.loads(self.db.get_meta('ideias_exportadas', '{}'))
+        for r in rows:
+            exported[r['link_produto']] = scheduler.now().date().isoformat()
+        cutoff = (scheduler.now().date() - timedelta(days=ideas.REPEAT_DAYS)).isoformat()
+        self.db.set_meta('ideias_exportadas', json.dumps({k: d for k, d in exported.items() if d > cutoff}))
         self.tg.send_document(thread, f"ideias-{today:%d-%m}.csv", ideas.export_csv(rows),
                               f"📄 <b>{len(rows)} links das ideias de {today:%d/%m}</b> para a \"Planilha CSV\" do app "
                               "da LiA (um por linha, na ordem da lista; o app aceita até 20 por lote).")
         for text in ideas.export_texts(rows, today):
             self.tg.send_text(thread, text)
 
-    def on_idea_links_command(self, thread: Optional[int]):
-        """/linksideias: manda de novo o CSV e os links da última lista de ideias."""
-        saved = json.loads(self.db.get_meta('ideias_links', 'null') or 'null')
-        if not saved:
-            self.tg.send_text(thread, "Ainda não há lista de ideias. Mande /sugestoes para buscar agora.")
+    def on_idea_links_command(self, thread: Optional[int], arg: str = ''):
+        """
+        /linksideias: links da última lista · /linksideias 25/10: as ideias daquele dia · /linksideias 40: 40 ideias
+        dos últimos dias que ainda não saíram em links (as mais recentes primeiro), para o limite diário do app da LiA.
+        """
+        today = scheduler.now().date()
+        arg = arg.strip()
+        if not arg:
+            saved = json.loads(self.db.get_meta('ideias_links', 'null') or 'null')
+            if not saved:
+                self.tg.send_text(thread, "Ainda não há lista de ideias. Mande /sugestoes para buscar agora.")
+                return
+            self.send_idea_links(thread, saved['rows'], date.fromisoformat(saved['dia']))
             return
-        self.send_idea_links(thread, saved['rows'], date.fromisoformat(saved['dia']))
+        suggested = json.loads(self.db.get_meta('ideias_sugeridas', '{}'))   # "loja:item" -> dia sugerido
+        active = self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'na_lia', 'avisado', 'postado')
+        used = {p['product_key'] for p in active}
+        if re.fullmatch(r'\d{1,2}/\d{1,2}', arg):
+            d, m = (int(x) for x in arg.split('/'))
+            day = date(today.year - (1 if m > today.month else 0), m, d)
+            keys = [k for k, when in suggested.items() if when == day.isoformat()]
+            wanted, label = len(keys), f"de {day:%d/%m}"
+        elif arg.isdigit():
+            exported = json.loads(self.db.get_meta('ideias_exportadas', '{}'))
+            keys = sorted((k for k in suggested if k not in used and
+                           f"https://shopee.com.br/product/{k.replace(':', '/')}" not in exported),
+                          key=lambda k: suggested[k], reverse=True)
+            wanted, label = min(int(arg), 60), "dos últimos dias que ainda não tinham saído"
+        else:
+            self.tg.send_text(thread, "Use /linksideias (última lista), /linksideias 25/10 (um dia) ou "
+                                      "/linksideias 40 (40 ideias novas dos últimos dias).")
+            return
+        if not keys:
+            self.tg.send_text(thread, f"Não achei ideias {label}. (O robô guarda as sugestões dos últimos "
+                                      f"{ideas.REPEAT_DAYS} dias.)")
+            return
+        self.tg.send_text(thread, f"🔎 Conferindo {min(len(keys), wanted)} ideia(s) {label} na Shopee (anúncio ativo e "
+                                  "comissão)… um instante.")
+        rows = []
+        for key in keys:
+            if len(rows) >= wanted:
+                break
+            shop_id, item_id = key.split(':')
+            try:
+                p = self.pipeline.shopee.product_by_ids(int(shop_id), int(item_id))
+            except Exception as e:
+                logger.warning(f"Ideia {key} não carregou: {e}")
+                continue
+            if key in used or not ideas.still_good(p):
+                continue
+            rows.append(ideas.row_for(p, f"Ideia de {date.fromisoformat(suggested[key]):%d/%m}", len(rows) + 1))
+        if not rows:
+            self.tg.send_text(thread, f"As ideias {label} já foram usadas ou saíram do ar.")
+            return
+        self.send_idea_links(thread, rows, today)
 
     def daily_ideas(self):
         """No horário IDEIAS_HORA, a lista do dia vai sozinha para 💡 Ideias (uma vez por dia)."""
@@ -1691,7 +1744,7 @@ class Bot:
             self.submit(('extension', thread or PROMPTS))
             return
         if command.lower().startswith('/linksideias'):
-            self.submit(('idea_links', thread or IDEIAS))
+            self.submit(('idea_links', thread or IDEIAS, command.split(maxsplit=1)[1] if ' ' in command else ''))
             return
         if command.lower().startswith('/agenda'):
             self.refresh_agenda_summary(repost=True)
@@ -1757,7 +1810,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
-            ('linksideias', 'Links das ideias do dia para o app da LiA (CSV e um por linha)'),
+            ('linksideias', 'Links das ideias para o app da LiA: /linksideias, /linksideias 25/10 ou /linksideias 40'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
             ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),
         ], {'type': 'chat', 'chat_id': self.tg.chat_id})

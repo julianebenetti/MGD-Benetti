@@ -75,7 +75,9 @@ Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira 
 (`IDEIAS_PRECO_ACESSIVEL`), comissão ≥ R$ 3 por venda (`IDEIAS_COMISSAO_ACESSIVEL`), 500+ vendas, nota ≥ 4,7.
 Junto com a lista vêm os **links de afiliado das ideias** para criar os vídeos no app da LiA: um CSV para a
 "Planilha CSV" dela (coluna `link`) e mensagens com os links um por linha, em lotes de até 20 (limite do app). O sub_id é `LIA-<data>-<produto>`, e
-as vendas desses vídeos aparecem no `/vendas` como "🤖 LiA app". **`/linksideias`** manda de novo os da última lista.
+as vendas desses vídeos aparecem no `/vendas` como "🤖 LiA app". **`/linksideias`** manda de novo os da última lista; **`/linksideias 25/10`** os de um dia; **`/linksideias 40`**
+40 ideias dos últimos 30 dias que ainda não saíram em links (confere de novo anúncio ativo, comissão e nada de
+suplementos; pula o que já foi postado/agendado).
 
 **🎬 Prompts** — prompts para o YouTube Create (usando a mesma OpenAI do robô), com as regras da Juliane: **até 900
 caracteres**; narração feminina em PT-BR (gancho → quebra de objeção → benefício → urgência sem falsa escassez → CTA);

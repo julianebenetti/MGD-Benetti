@@ -302,12 +302,21 @@ def export_rows(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict]) 
     rows = []
     for section, items in (('Datas chegando', seasonal), ('Vende o ano todo', evergreen), ('Preço acessível', cheap)):
         for p in items:
-            rows.append({'n': len(rows) + 1, 'secao': section, 'produto': p['productName'][:150],
-                         'loja': p.get('shopName', ''), 'preco': f"{float(p.get('priceMin') or 0):.2f}".replace('.', ','),
-                         'comissao': f"{commission_value(p):.2f}".replace('.', ','), 'vendas': int(p.get('sales') or 0),
-                         'nota': p.get('ratingStar') or '', 'tema': p.get('tema', ''),
-                         'link_produto': f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"})
+            rows.append(row_for(p, section, len(rows) + 1))
     return rows
+
+
+def row_for(p: Dict, section: str, n: int) -> Dict:
+    return {'n': n, 'secao': section, 'produto': p['productName'][:150],
+            'loja': p.get('shopName', ''), 'preco': f"{float(p.get('priceMin') or 0):.2f}".replace('.', ','),
+            'comissao': f"{commission_value(p):.2f}".replace('.', ','), 'vendas': int(p.get('sales') or 0),
+            'nota': p.get('ratingStar') or '', 'tema': p.get('tema', ''),
+            'link_produto': f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"}
+
+
+def still_good(p: Dict) -> bool:
+    """Ideia de outro dia ainda vale: anúncio ativo, não é suplemento e a comissão não caiu abaixo do piso."""
+    return bool(p) and not BLOCKED.search(p.get('productName', '')) and commission_value(p) >= CHEAP_MIN_COMMISSION
 
 
 LIA_BATCH = 20   # o app da LiA aceita até 20 produtos por lote
