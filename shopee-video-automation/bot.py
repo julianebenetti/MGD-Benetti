@@ -1690,7 +1690,8 @@ class Bot:
         if new:
             posts = conversions.with_known_subs(self.posts_by_sub(), new)
             if SALES_WATCH == 'videos':
-                new = [i for i in new if i['sub_id'] in posts]
+                new = conversions.from_videos(new, posts) if not conversions.has_channel(items) else \
+                    [i for i in conversions.from_videos(items, posts) if i in new]
             if new:
                 self.tg.send_text(RELATORIO or POSTADOS, conversions.new_sales_text(new, posts))
         self.db.set_meta('vendas_vistas', json.dumps((seen + [k for k in keys if k not in set(seen)])[-3000:]))

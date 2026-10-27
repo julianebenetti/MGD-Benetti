@@ -19,6 +19,45 @@ logger = logging.getLogger(__name__)
 
 FIELDS = ('purchaseTime utmContent orders { orderId orderStatus items { itemId itemName shopName qty '
           'actualAmount itemTotalCommission displayItemStatus } }')
+_channel = None   # (nível, campo) do "Canal" do relatório da Shopee (ex.: vídeo), descoberto na API; () = não há
+
+
+def channel_field(client):
+    """
+    O relatório de vendas do site tem o filtro "Canal" (vídeo, live, redes sociais…). Procura na API um campo de
+    canal nas conversões (no pedido, no item ou na conversão) uma vez só.
+    """
+    global _channel
+    if _channel is not None:
+        return _channel
+    _channel = ()
+    try:
+        types = client._graphql('{__schema{types{name fields{name}}}}')['__schema']['types']
+    except Exception as e:
+        logger.info(f"Conversões: não deu para listar os campos da API ({e}); vendas do vídeo pelo sub_id")
+        return _channel
+    for t in types:
+        name = t['name'] or ''
+        if 'conversion' not in name.lower() or not t.get('fields'):
+            continue
+        for f in t['fields']:
+            if 'channel' in f['name'].lower():
+                level = 'item' if 'item' in name.lower() else 'order' if 'order' in name.lower() else 'node'
+                if not _channel or {'item': 0, 'order': 1, 'node': 2}[level] < {'item': 0, 'order': 1, 'node': 2}[_channel[0]]:
+                    _channel = (level, f['name'])
+    logger.info(f"Conversões: campo de canal {'= ' + '.'.join(_channel) if _channel else 'não existe na API'}")
+    return _channel
+
+
+def _fields(channel) -> str:
+    if not channel:
+        return FIELDS
+    level, name = channel
+    if level == 'item':
+        return FIELDS.replace('displayItemStatus }', f'displayItemStatus {name} }}')
+    if level == 'order':
+        return FIELDS.replace('orderStatus items', f'orderStatus {name} items')
+    return f"{name} {FIELDS}"
 PAGE = 500
 MAX_PAGES = 20
 _lock = threading.Lock()
@@ -48,6 +87,7 @@ def fetch(client, start: datetime, end: datetime) -> List[Dict]:
     precisam vir em até 30 s, com o scrollId da anterior.
     """
     global _last_call
+    channel = channel_field(client)
     with _lock:
         wait = 31 - (time.time() - _last_call)
         if wait > 0:
@@ -58,13 +98,15 @@ def fetch(client, start: datetime, end: datetime) -> List[Dict]:
             if scroll:
                 args += f",scrollId:{_gql(scroll)}"
             data = client._graphql(
-                f"{{conversionReport({args}){{nodes{{{FIELDS}}} pageInfo{{hasNextPage scrollId}}}}}}")
+                f"{{conversionReport({args}){{nodes{{{_fields(channel)}}} pageInfo{{hasNextPage scrollId}}}}}}")
             report = data['conversionReport']
             for node in report.get('nodes') or []:
                 sub_id = sub_id_of(node.get('utmContent'))
                 for order in node.get('orders') or []:
                     for item in order.get('items') or []:
+                        where = {'item': item, 'order': order, 'node': node}[channel[0]] if channel else {}
                         items.append({
+                            'channel': str(where.get(channel[1]) or '') if channel else None,
                             'time': node.get('purchaseTime'),
                             'sub_id': sub_id,
                             'order_id': order.get('orderId'),
@@ -99,8 +141,6 @@ def source(sub_id: str, posts_by_sub: Dict[str, str]) -> str:
         return f"🎬 vídeo: {posts_by_sub[sub_id][:45]}"
     if sub_id.startswith('SV-') or OLD_SUB.match(sub_id):
         return f"🎬 vídeo do robô ({sub_id.split('-')[-1] if '-' in sub_id else sub_id})"
-    if sub_id.startswith('LIA-'):
-        return f"🤖 vídeo do app da LiA ({sub_id.split('-')[-1]})"
     return f"🔗 outro link{f' ({sub_id})' if sub_id else ''}"
 
 
@@ -126,8 +166,11 @@ def new_sales_text(items: List[Dict], posts_by_sub: Dict[str, str]) -> str:
     for i in sorted(items, key=lambda i: i['time'] or 0)[:25]:
         when = datetime.fromtimestamp(int(i['time'])).strftime('%d/%m %H:%M') if i.get('time') else ''
         qty = f"{i['qty']}× " if i.get('qty', 1) > 1 else ''
+        where = source(i['sub_id'], posts_by_sub)
+        if where.startswith('🔗') and 'video' in (i.get('channel') or '').lower():
+            where = '🎬 Shopee Vídeo' + (f" ({i['sub_id']})" if i['sub_id'] else '')
         lines.append(f"• {qty}{e(i['item'][:50])} · <b>{brl(i['commission'])}</b> · {when}\n"
-                     f"  {e(source(i['sub_id'], posts_by_sub))}")
+                     f"  {e(where)}")
     if len(items) > 25:
         lines.append(f"… e mais {len(items) - 25}")
     return '\n'.join(lines)[:4000]
@@ -148,8 +191,17 @@ def summary_line(items: List[Dict]) -> str:
             + (f" · ❌ {cancelled} cancelado(s)" if cancelled else ''))
 
 
+def has_channel(items: List[Dict]) -> bool:
+    return any(i.get('channel') for i in items)
+
+
 def from_videos(items: List[Dict], posts_by_sub: Dict[str, str]) -> List[Dict]:
-    """Só as vendas dos vídeos do Shopee Vídeo (robô SV-… e app da LiA LIA-…), pelo sub_id do link."""
+    """
+    Só as vendas do Shopee Vídeo: pelo "Canal" da Shopee (= vídeo), quando a API informa; senão pelo sub_id do
+    link (vídeos do robô SV-… e do app da LiA LIA-…).
+    """
+    if has_channel(items):
+        return [i for i in items if 'video' in (i.get('channel') or '').lower() or 'vídeo' in (i.get('channel') or '').lower()]
     known = with_known_subs(posts_by_sub, items)
     return [i for i in items if i['sub_id'] in known]
 
@@ -161,13 +213,17 @@ def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int
     if only_videos:
         videos = from_videos(items, posts_by_sub)
         others = [i for i in items if i not in videos and i['status'] != 'cancelado']
+        how = ('pelo canal "vídeo" da Shopee' if has_channel(items)
+               else 'vídeos do robô e do app da LiA, pelo sub_id do link')
         lines = [f"🎬 <b>{title} · Shopee Vídeo</b>",
-                 "(vídeos do robô e do app da LiA, pelo sub_id do link; pela data da compra)", "",
+                 f"({how}; pela data da compra)", "",
                  f"Total: {summary_line(videos)}"]
         if not [i for i in videos if i['status'] != 'cancelado']:
             lines.append("\nNenhuma venda dos vídeos nesse período.")
         else:
-            lines += report(videos, posts_by_sub, title, top, only_videos=False).split('\n')[5:]
+            body = report(videos, posts_by_sub, title, top, only_videos=False).split('\n')[5:]
+            lines += [l.replace('🔗 Outros links (fora do robô)', '🎬 Outros vídeos (link sem sub_id do robô)')
+                      for l in body]
         if others:
             lines.append(f"\n<i>Fora do Shopee Vídeo: {len({i['order_id'] for i in others})} pedido(s) · "
                          f"{brl(sum(i['commission'] for i in others))} (/vendas todas para ver)</i>")

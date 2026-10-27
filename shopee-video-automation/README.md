@@ -100,7 +100,8 @@ narração, vem o prompt completo com ela intacta. **Responda o prompt** para aj
 
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia dos vídeos; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram só as
-vendas do **Shopee Vídeo** (vídeos do robô e do app da LiA, pelo sub_id), por vídeo, pendente × concluída e
+vendas do **Shopee Vídeo** — pelo campo **Canal = vídeo** da Shopee (o mesmo filtro do relatório do site),
+quando a API informa; senão, pelo sub_id dos vídeos do robô e do app da LiA —, por vídeo, pendente × concluída e
 cancelados, com uma linha do total de fora; **`/vendas todas`** (ou `/vendas 30 todas`) mostra também as de outros links. A
 Shopee pode levar algumas horas para mostrar uma venda, e só deixa consultar de novo depois de 30 segundos.
 Os links de fora do robô aparecem um a um (produto, comissão e sub_id). Contam como vídeos do robô também os sub_ids
