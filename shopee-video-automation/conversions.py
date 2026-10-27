@@ -8,6 +8,7 @@ itemTotalCommission.
 
 import html
 import logging
+import re
 import threading
 import time
 from collections import defaultdict
@@ -87,6 +88,51 @@ def _gql(value: str) -> str:
     return _gql_str(value)
 
 
+OLD_SUB = re.compile(r'^\d{2}[A-Za-z]{3}\d{2}SV')
+
+
+def source(sub_id: str, posts_by_sub: Dict[str, str]) -> str:
+    """De onde veio a venda: o vídeo do robô (pelo sub_id), um vídeo do app da LiA (LIA-…) ou outro link."""
+    if sub_id.startswith('LIA-'):
+        return f"🤖 vídeo do app da LiA ({sub_id.split('-')[-1]})"
+    if sub_id in posts_by_sub:
+        return f"🎬 vídeo: {posts_by_sub[sub_id][:45]}"
+    if sub_id.startswith('SV-') or OLD_SUB.match(sub_id):
+        return f"🎬 vídeo do robô ({sub_id.split('-')[-1] if '-' in sub_id else sub_id})"
+    if sub_id.startswith('LIA-'):
+        return f"🤖 vídeo do app da LiA ({sub_id.split('-')[-1]})"
+    return f"🔗 outro link{f' ({sub_id})' if sub_id else ''}"
+
+
+def with_known_subs(posts_by_sub: Dict[str, str], items: List[Dict]) -> Dict[str, str]:
+    """
+    Também contam como do robô os sub_ids SV-… (inclusive de links antigos, de antes de o sub_id mudar com a data)
+    e os LIA-… (vídeos do app da LiA feitos com os links das ideias).
+    """
+    extra = {}
+    for i in items:
+        sub = i['sub_id']
+        if sub and sub not in posts_by_sub and (sub.startswith(('SV-', 'LIA-')) or OLD_SUB.match(sub)):
+            extra[sub] = ('🤖 LiA app: ' if sub.startswith('LIA-') else '') + (sub.split('-')[-1] if '-' in sub else sub)
+    return {**posts_by_sub, **extra}
+
+
+def new_sales_text(items: List[Dict], posts_by_sub: Dict[str, str]) -> str:
+    """Aviso das vendas novas: produto, comissão e de onde veio (vídeo do robô, app da LiA ou outro link)."""
+    e = html.escape
+    total = sum(i['commission'] for i in items)
+    lines = [f"🛒 <b>{'Venda nova' if len(items) == 1 else f'{len(items)} vendas novas'}!</b> · comissão "
+             f"<b>{brl(total)}</b> (⏳ pendente até a Shopee confirmar)"]
+    for i in sorted(items, key=lambda i: i['time'] or 0)[:25]:
+        when = datetime.fromtimestamp(int(i['time'])).strftime('%d/%m %H:%M') if i.get('time') else ''
+        qty = f"{i['qty']}× " if i.get('qty', 1) > 1 else ''
+        lines.append(f"• {qty}{e(i['item'][:50])} · <b>{brl(i['commission'])}</b> · {when}\n"
+                     f"  {e(source(i['sub_id'], posts_by_sub))}")
+    if len(items) > 25:
+        lines.append(f"… e mais {len(items) - 25}")
+    return '\n'.join(lines)[:4000]
+
+
 def brl(value: float) -> str:
     return f"R$ {value:.2f}".replace('.', ',')
 
@@ -112,9 +158,7 @@ def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int
         lines.append("\nNenhuma venda nesse período.")
         return '\n'.join(lines)
 
-    # vídeos feitos no app da LiA com os links das ideias (sub_id LIA-<data>-<produto>) também contam como do robô
-    posts_by_sub = {**posts_by_sub, **{i['sub_id']: f"🤖 LiA app: {i['sub_id'].split('-')[-1]}" for i in valid
-                                       if i['sub_id'].startswith('LIA-')}}
+    posts_by_sub = with_known_subs(posts_by_sub, valid)
     groups = defaultdict(list)
     for i in valid:
         groups[i['sub_id'] if i['sub_id'] in posts_by_sub else ''].append(i)

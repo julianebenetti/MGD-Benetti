@@ -70,6 +70,10 @@ LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # se
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
 MAX_PENDING_LINES = 40
+# Aviso de venda nova em 📊 Relatório: todas | videos (só dos vídeos do robô e do app da LiA) | nao
+SALES_WATCH = (os.getenv('VENDAS_AVISO') or 'todas').strip().lower()
+SALES_WATCH = '' if SALES_WATCH == 'nao' else SALES_WATCH
+SALES_WATCH_MINUTES = int(os.getenv('VENDAS_AVISO_MINUTOS', '60'))
 
 
 def fmt_when(iso: str) -> str:
@@ -148,11 +152,12 @@ class Bot:
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
         self.pending_last = ''
         self.agenda_last = ''
+        self.sales_checked = 0.0
         self.lia_checked = 0.0
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'idea_links') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'idea_links', 'sales_watch') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -1652,6 +1657,35 @@ class Bot:
         self.db.set_meta('ideias_dia', today)
         self.submit(('ideas', IDEIAS))
 
+    def watch_sales(self):
+        """A cada SALES_WATCH_MINUTES, confere as vendas das últimas 48 h e avisa as novas em 📊 Relatório."""
+        if not SALES_WATCH or time.time() - self.sales_checked < SALES_WATCH_MINUTES * 60:
+            return
+        self.sales_checked = time.time()
+        self.submit(('sales_watch',))
+
+    def job_sales_watch(self):
+        end = scheduler.now()
+        try:
+            items = conversions.fetch(self.pipeline.shopee, end - timedelta(hours=48), end)
+        except Exception as e:
+            logger.warning(f"Aviso de vendas: consulta falhou ({e})")
+            return
+        seen = json.loads(self.db.get_meta('vendas_vistas', 'null') or 'null')
+        keys = {f"{i['order_id']}:{i['item']}:{i['sub_id']}": i for i in items if i['status'] != 'cancelado'}
+        if seen is None:   # primeira vez: o que já existia não vira aviso
+            self.db.set_meta('vendas_vistas', json.dumps(list(keys)))
+            logger.info(f"Aviso de vendas ligado ({len(keys)} venda(s) das últimas 48 h marcadas como vistas)")
+            return
+        new = [i for k, i in keys.items() if k not in set(seen)]
+        if new:
+            posts = conversions.with_known_subs(self.posts_by_sub(), new)
+            if SALES_WATCH == 'videos':
+                new = [i for i in new if i['sub_id'] in posts]
+            if new:
+                self.tg.send_text(RELATORIO or POSTADOS, conversions.new_sales_text(new, posts))
+        self.db.set_meta('vendas_vistas', json.dumps((seen + [k for k in keys if k not in set(seen)])[-3000:]))
+
     def daily_report(self):
         """No horário RELATORIO_HORA, o relatório do dia vai sozinho para 📊 Relatório (uma vez por dia)."""
         current = scheduler.now()
@@ -1714,6 +1748,8 @@ class Bot:
                     self.job_prompt_narration(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
+                elif job[0] == 'sales_watch':
+                    self.job_sales_watch()
                 elif job[0] == 'sales':
                     self.job_sales(*job[1:])
             except Exception:
@@ -1877,6 +1913,7 @@ class Bot:
                 self.refresh_pending()
                 self.refresh_agenda_summary()
                 self.daily_report()
+                self.watch_sales()
                 self.daily_ideas()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
                     self.lia_checked = time.time()
