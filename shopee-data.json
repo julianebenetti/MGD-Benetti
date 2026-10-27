@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793131430,
-  "updated_at_br": "27/10/2026 16:58",
+  "updated_at": 1793135514,
+  "updated_at_br": "27/10/2026 18:06",
   "period_days": 90,
-  "total_orders": 6019,
-  "total_conversions": 5784,
+  "total_orders": 6018,
+  "total_conversions": 5783,
   "orders": [
     {
       "ID do pedido": "261027P8JK0TH3",
@@ -150453,31 +150453,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239058889181844",
       "conversionStatus": "COMPLETED",
-      "data": "2026-07-29"
-    },
-    {
-      "ID do pedido": "2607301N8KFC1F",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-07-29 20:46:37",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Fita Dupla Face Extra Forte Transparente NanoGel Silicone Mágica Adesiva Cola na Parede Móvel Porta",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22893829344",
-      "ID da loja": "1097148583",
-      "Nome da loja": "jvch21my_o",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "239057197170676",
-      "conversionStatus": "CANCELLED",
       "data": "2026-07-29"
     }
   ]
