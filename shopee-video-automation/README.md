@@ -114,8 +114,9 @@ Shopee pode levar algumas horas para mostrar uma venda, e só deixa consultar de
 Bot não conversa com bot no Telegram, então o envio sai **pela sua conta** (o que você faria à mão).
 O que vai para a LiA:
 - o vídeo final (capa na abertura + logo) com `#semcapa #semmarca`, para ela não colocar de novo;
-- os 5 links (`LINKS_POR_VIDEO`) do **menor para o maior** comissionamento e, por último (em destaque), a loja que você escolheu divulgar;
-- a descrição + hashtags do robô com `#semia` (`LIA_LEGENDA=ia` deixa a LiA escrever);
+- o link do produto divulgado (`LIA_MAX_LINKS=1`; com mais, do **menor para o maior** comissionamento e o divulgado por último);
+- a descrição + hashtags do robô (na LiA, `/opcoes` → Legenda Manual; `LIA_LEGENDA=ia` deixa a LiA escrever);
+- `#ia` (vídeo feito por IA: aviso discreto + rótulo de IA na Shopee) ou `#semia` com `LIA_VIDEO_IA=nao`;
 - `#postar` (ou `#rascunho` com `LIA_MODO=rascunho`).
 
 Configuração (uma vez):

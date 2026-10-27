@@ -67,8 +67,10 @@ def links_for_lia(post: Dict) -> List[str]:
 
 def caption(post: Dict) -> str:
     tags = ['#postar' if _setting('LIA_MODO', 'postar') == 'postar' else '#rascunho', '#semcapa', '#semmarca']
+    # #ia/#semia na LiA = o VÍDEO foi feito por IA (aviso no vídeo + rótulo de IA na Shopee), não a legenda; a legenda
+    # dela segue o /opcoes (Legenda Manual = usa a nossa)
+    tags.append('#semia' if _setting('LIA_VIDEO_IA', 'sim') == 'nao' else '#ia')
     nossa = _setting('LIA_LEGENDA', 'nossa') == 'nossa'
-    tags.append('#semia' if nossa else '#ia')
     tail = '\n\n' + '\n'.join(links_for_lia(post)) + '\n\n' + ' '.join(tags)
     if not nossa:
         return tail.strip()
