@@ -99,14 +99,15 @@ narração** (botões 1–4 e 🔄 Outras 4; responder a mensagem pede ajuste; "
 narração, vem o prompt completo com ela intacta. **Responda o prompt** para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
-comissão do dia; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram as vendas por
-vídeo (pelo sub_id de cada um), pendente × concluída, cancelados e o que veio de links fora do robô. A
+comissão do dia dos vídeos; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram só as
+vendas do **Shopee Vídeo** (vídeos do robô e do app da LiA, pelo sub_id), por vídeo, pendente × concluída e
+cancelados, com uma linha do total de fora; **`/vendas todas`** (ou `/vendas 30 todas`) mostra também as de outros links. A
 Shopee pode levar algumas horas para mostrar uma venda, e só deixa consultar de novo depois de 30 segundos.
 Os links de fora do robô aparecem um a um (produto, comissão e sub_id). Contam como vídeos do robô também os sub_ids
 `SV-…` de links antigos e os `LIA-…` (vídeos do app da LiA). **Aviso de venda nova**: a cada hora
 (`VENDAS_AVISO_MINUTOS`) o robô confere as vendas das últimas 48 h e manda em 📊 Relatório as novas, com produto,
-comissão e de onde veio (🎬 vídeo do robô, 🤖 app da LiA ou 🔗 outro link); `VENDAS_AVISO=videos` avisa só as dos
-vídeos, `nao` desliga. Na primeira conferência ele só marca as vendas que já existiam (não avisa as antigas).
+comissão e de qual vídeo veio (🎬 robô ou 🤖 app da LiA); por padrão só as do Shopee Vídeo (`VENDAS_AVISO=todas`
+avisa também as de outros links, `nao` desliga). Na primeira conferência ele só marca as vendas que já existiam (não avisa as antigas).
 
 **Proteção da conta (Produto Irrelevante):**
 - **`/pausar 25/10 18:30`** (ou só `/pausar`, até **`/retomar`**): nada vai para a LiA; ao fim, os vídeos que ficaram para

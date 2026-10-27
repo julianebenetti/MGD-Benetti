@@ -148,9 +148,30 @@ def summary_line(items: List[Dict]) -> str:
             + (f" · ❌ {cancelled} cancelado(s)" if cancelled else ''))
 
 
-def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int = 15) -> str:
-    """Resumo das vendas por vídeo (sub_id do robô) e o que veio de outros links."""
+def from_videos(items: List[Dict], posts_by_sub: Dict[str, str]) -> List[Dict]:
+    """Só as vendas dos vídeos do Shopee Vídeo (robô SV-… e app da LiA LIA-…), pelo sub_id do link."""
+    known = with_known_subs(posts_by_sub, items)
+    return [i for i in items if i['sub_id'] in known]
+
+
+def report(items: List[Dict], posts_by_sub: Dict[str, str], title: str, top: int = 15,
+           only_videos: bool = True) -> str:
+    """Vendas por vídeo (sub_id). `only_videos`: só as do Shopee Vídeo; senão também as de outros links."""
     e = html.escape
+    if only_videos:
+        videos = from_videos(items, posts_by_sub)
+        others = [i for i in items if i not in videos and i['status'] != 'cancelado']
+        lines = [f"🎬 <b>{title} · Shopee Vídeo</b>",
+                 "(vídeos do robô e do app da LiA, pelo sub_id do link; pela data da compra)", "",
+                 f"Total: {summary_line(videos)}"]
+        if not [i for i in videos if i['status'] != 'cancelado']:
+            lines.append("\nNenhuma venda dos vídeos nesse período.")
+        else:
+            lines += report(videos, posts_by_sub, title, top, only_videos=False).split('\n')[5:]
+        if others:
+            lines.append(f"\n<i>Fora do Shopee Vídeo: {len({i['order_id'] for i in others})} pedido(s) · "
+                         f"{brl(sum(i['commission'] for i in others))} (/vendas todas para ver)</i>")
+        return '\n'.join(lines)
     lines = [f"💵 <b>{title}</b>", "(pela data da compra; a Shopee pode levar algumas horas para mostrar)", "",
              f"Total: {summary_line(items)}"]
     valid = [i for i in items if i['status'] != 'cancelado']

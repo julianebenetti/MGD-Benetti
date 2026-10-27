@@ -70,8 +70,8 @@ LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # se
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
 MAX_PENDING_LINES = 40
-# Aviso de venda nova em 📊 Relatório: todas | videos (só dos vídeos do robô e do app da LiA) | nao
-SALES_WATCH = (os.getenv('VENDAS_AVISO') or 'todas').strip().lower()
+# Aviso de venda nova em 📊 Relatório: videos (só Shopee Vídeo: robô e app da LiA) | todas | nao
+SALES_WATCH = (os.getenv('VENDAS_AVISO') or 'videos').strip().lower()
 SALES_WATCH = '' if SALES_WATCH == 'nao' else SALES_WATCH
 SALES_WATCH_MINUTES = int(os.getenv('VENDAS_AVISO_MINUTOS', '60'))
 
@@ -1254,9 +1254,10 @@ class Bot:
         except Exception as e:
             logger.warning(f"Relatório de conversões falhou: {e}")
             return f"não consegui consultar ({html.escape(str(e)[:120])})"
-        return conversions.summary_line(items)
+        videos = conversions.from_videos(items, self.posts_by_sub())
+        return conversions.summary_line(videos) + " (Shopee Vídeo)"
 
-    def job_sales(self, thread: Optional[int], days: int):
+    def job_sales(self, thread: Optional[int], days: int, everything: bool = False):
         end = scheduler.now()
         start = datetime.combine((end - timedelta(days=days - 1)).date(), datetime.min.time(), scheduler.TZ)
         try:
@@ -1266,17 +1267,25 @@ class Bot:
             self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas na Shopee: {html.escape(str(e)[:300])}")
             return
         title = 'Vendas de hoje' if days == 1 else f"Vendas dos últimos {days} dias ({start:%d/%m} a {end:%d/%m})"
-        self.tg.send_text(thread, conversions.report(items, self.posts_by_sub(), title)[:4000])
+        self.tg.send_text(thread, conversions.report(items, self.posts_by_sub(), title,
+                                                     only_videos=not everything)[:4000])
 
     def on_sales_command(self, thread: Optional[int], command: str):
-        """/vendas (últimos 7 dias), /vendas hoje ou /vendas 30."""
-        arg = command.split()[1].lower() if len(command.split()) > 1 else '7'
+        """
+        /vendas (últimos 7 dias), /vendas hoje ou /vendas 30: só as vendas do Shopee Vídeo (vídeos do robô e do app
+        da LiA). Com "todas" (/vendas todas, /vendas 30 todas), também as de outros links.
+        """
+        args = [a.lower() for a in command.split()[1:]]
+        everything = 'todas' in args
+        args = [a for a in args if a != 'todas']
+        arg = args[0] if args else '7'
         days = 1 if arg == 'hoje' else int(arg) if arg.isdigit() else 0
         if not 1 <= days <= 90:
-            self.tg.send_text(thread, "Use /vendas, /vendas hoje ou /vendas 30 (até 90 dias).")
+            self.tg.send_text(thread, "Use /vendas, /vendas hoje ou /vendas 30 (até 90 dias); com \"todas\" no fim, "
+                                      "também as vendas de fora do Shopee Vídeo.")
             return
         self.tg.send_text(thread or RELATORIO, "💵 Consultando as vendas na Shopee… (leva até 1 minuto)")
-        self.submit(('sales', thread or RELATORIO, days))
+        self.submit(('sales', thread or RELATORIO, days, everything))
 
     def on_report_command(self, thread: Optional[int], command: str):
         """/relatorio (hoje) ou /relatorio 10/10 (outro dia), respondido no tópico em que foi pedido."""
@@ -1854,7 +1863,7 @@ class Bot:
         """Menu do / : no grupo do robô, os comandos dele; nos outros grupos, só o /brutos."""
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
-            ('vendas', 'Vendas reais por vídeo: 7 dias (ou /vendas hoje, /vendas 30)'),
+            ('vendas', 'Vendas do Shopee Vídeo: 7 dias (/vendas hoje, /vendas 30, /vendas todas)'),
             ('sugestoes', 'Ideias para gravar: buscas em alta, datas e nichos'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
             ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
