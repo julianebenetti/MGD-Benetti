@@ -62,14 +62,19 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 últimos 7 dias. A qualquer hora: **`/relatorio`** (hoje) ou **`/relatorio 10/10`** (outro dia), em
 qualquer tópico do grupo.
 
-**💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`**: pelo menos 15 produtos
-para gravar, das datas comemorativas dos próximos 90 dias e de **20 nichos** (cozinha, organização,
+**💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`**. Primeiro vem
+**🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
+gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em
+`BUSCAS_ALTA_URL`; sem lista de hoje, usa a mais recente com o aviso "lista de dd/mm"; fora do ar, a seção só não
+aparece). Para o **orgânico**, sem piso de comissão: 1 produto por termo (o de mais vendas), com o termo no nome
+(sem acento, plural opcional; "Teclado" não traz "Tablet com Teclado"), nota ≥ 4,7, 100+ vendas e com oferta de
+afiliado; até 15, na ordem da lista da Shopee; pula termos adultos, suplementos e pod/vape/narguilé.
+Depois, pelo menos 15 produtos para gravar, das datas comemorativas dos próximos 90 dias e de **20 nichos** (cozinha, organização,
 banheiro, limpeza, decoração, quarto, pet, bebê, beleza, moda, calçados/roupas, tecnologia, casa inteligente,
 escritório, fitness, carro, jardim, ferramentas, viagem, festa/presentes), 12 por dia em rodízio, com uma
 palavra-chave diferente por dia e no máximo 2 ideias por nicho. Regras do Garimpo: comissão ≥ R$ 9 por venda, nota ≥ 4,7, ≥ 100 vendas, nunca suplementos; sem
 produtos já postados/agendados nem sugeridos nos últimos 30 dias, nem o mesmo tipo de produto de outra loja
-(ex.: "capa de almofada natal" de lojas diferentes conta como repetido). Ordenadas por comissão × vendas (a API de
-afiliados não informa "mais buscados", o sinal de procura é o total de vendas). Cada ideia traz preço,
+(ex.: "capa de almofada natal" de lojas diferentes conta como repetido). Essas seções são ordenadas por comissão × vendas. Cada ideia traz preço,
 comissão, vendas, nota, a data/categoria e o link do produto para gravar.
 Além das 15 principais, até 10 de **💸 Preço acessível** (o que mais gira no Shopee Vídeo): até R$ 60
 (`IDEIAS_PRECO_ACESSIVEL`), comissão ≥ R$ 3 por venda (`IDEIAS_COMISSAO_ACESSIVEL`), 500+ vendas, nota ≥ 4,7.

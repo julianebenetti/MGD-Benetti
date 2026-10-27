@@ -1,8 +1,9 @@
 """
 Ideias de produtos para gravar (💡 Ideias e /sugestoes).
 
-A API de afiliados não informa "mais buscados do dia"; o sinal de procura é o total de vendas do anúncio.
-Busca em nichos que vendem o ano todo (rodízio diário) e nas datas comemorativas dos próximos 90 dias, e aplica as
+🔥 Buscas em alta: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé, gravada às 07:15 pelo
+buscas-alta.js da AfiliDash na tabela garimpo_buscas_alta do Postgres da VPS); para o orgânico, sem piso de comissão.
+Nas outras seções o sinal de procura é o total de vendas do anúncio. Busca em nichos que vendem o ano todo (rodízio diário) e nas datas comemorativas dos próximos 90 dias, e aplica as
 regras do Garimpo: comissão de pelo menos R$ 9 por venda, nota ≥ 4,7, nunca suplementos.
 """
 
@@ -12,7 +13,7 @@ import math
 import os
 import re
 from datetime import date, timedelta
-from typing import Callable, Dict, List, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from shopee_affiliate import commission_value
 
@@ -244,6 +245,141 @@ def collect(client, today: date, skip: Callable[[Dict], bool]) -> Tuple[List[Dic
     return seasonal, evergreen, cheap
 
 
+# 🔥 Buscas em alta (orgânico: sem piso de R$ por venda)
+TRENDING_URL = os.getenv('BUSCAS_ALTA_URL', 'http://localhost:3000/garimpo_buscas_alta')
+TRENDING_MAX = 15
+TRENDING_MIN_SALES = 100
+# venda proibida (o termo "Pod Recarregável" apareceu em 26/10)
+FORBIDDEN = re.compile(r'\bpods?\b|vape|vaper|cigarr?o eletr|e-?cig|narguil|ess[eê]ncia (de |para )?narg|'
+                       r'\bjuul\b|\bignite\b|tabaco|fumo', re.IGNORECASE)
+TERM_STOP = {'de', 'da', 'do', 'das', 'dos', 'para', 'pra', 'com', 'e', 'em', 'a', 'o', 'p'}
+
+
+def trending_terms(today: date) -> Tuple[List[Dict], date]:
+    """
+    Termos da lista "Buscas em alta" de hoje (ou da data mais recente, se o robô das 07:15 falhou), pelo PostgREST
+    local. ([], None) se estiver fora do ar: a seção some e o resto das Ideias sai normal.
+    """
+    import requests
+    session = requests.Session()
+    session.trust_env = False          # localhost: sem proxy
+    try:
+        rows = session.get(TRENDING_URL, params={'data': f'eq.{today.isoformat()}', 'order': 'posicao.asc'},
+                           timeout=10).json()
+        if not rows:
+            latest = session.get(TRENDING_URL, params={'select': 'data', 'order': 'data.desc', 'limit': 1},
+                                 timeout=10).json()
+            if not latest:
+                return [], None
+            rows = session.get(TRENDING_URL, params={'data': f"eq.{latest[0]['data']}", 'order': 'posicao.asc'},
+                               timeout=10).json()
+    except Exception as e:
+        logger.warning(f"Buscas em alta indisponíveis ({e}); Ideias sem essa seção")
+        return [], None
+    if not isinstance(rows, list) or not rows:
+        return [], None
+    return rows, date.fromisoformat(str(rows[0]['data'])[:10])
+
+
+def _plain(text: str) -> List[str]:
+    import unicodedata
+    text = unicodedata.normalize('NFKD', (text or '').lower())
+    text = ''.join(c for c in text if not unicodedata.combining(c))
+    return re.findall(r'[a-z0-9]+', text)
+
+
+def _stem(word: str) -> str:
+    """Para comparar com plural opcional: "arvores"/"arvore", "flores"/"flor", "botoes"/"botao" ficam iguais."""
+    if len(word) <= 3:
+        return word
+    for suffix, repl in (('oes', 'ao'), ('aes', 'ao'), ('ais', 'al'), ('eis', 'el')):
+        if word.endswith(suffix):
+            return word[:-3] + repl
+    if word.endswith('s'):
+        word = word[:-1]
+    return word[:-1] if word.endswith('e') and len(word) > 3 else word
+
+
+FILLER = {'kit', 'jogo', 'conjunto', 'par', 'combo', 'pcs', 'pecas', 'unidades', 'un', 'und', 'novo', 'nova',
+          'lancamento', 'promocao', 'original', 'atacado'}
+
+
+def name_has_term(name: str, term: str) -> bool:
+    """
+    O produto É o que a pessoa buscou: o nome começa pelo termo (depois de "Kit 2", "Jogo"…, no máximo uma palavra
+    antes, ex.: "Sandália Rasteirinha") e tem todas as palavras dele na ordem, sem acento e com plural opcional.
+    "Teclado" não pega "Tablet com Teclado" (o termo vem depois de "com": é acessório de outro produto).
+    """
+    words = [_stem(w) for w in _plain(term) if w not in TERM_STOP]
+    if not words:
+        return False
+    raw = _plain(name)
+    while raw and (raw[0] in FILLER or raw[0].isdigit() or raw[0] in TERM_STOP):
+        raw = raw[1:]
+    name_words = [_stem(w) for w in raw]
+    joined = ''.join(w for w in _plain(term) if w not in TERM_STOP)          # "Mouse Pad" = "Mousepad"
+    starts = [k for k, w in enumerate(name_words[:2]) if w == words[0] or raw[k].startswith(joined)]
+    if not starts:
+        return False
+    k = starts[0]
+    if any(w in ('com', 'mais', 'e') for w in raw[:k]):
+        return False
+    if raw[k].startswith(joined):
+        return True
+    i = 0
+    for w in name_words[k:]:
+        if i < len(words) and (w == words[i] or (len(words[i]) > 3 and w.startswith(words[i]))):
+            i += 1
+    return i == len(words)
+
+
+def singular(term: str) -> str:
+    """O termo no singular, para buscar também ("Arvores Natal" -> "arvore natal")."""
+    out = []
+    for w in _plain(term):
+        if len(w) > 3 and w not in TERM_STOP:
+            w = w[:-3] + 'ao' if w.endswith(('oes', 'aes')) else \
+                w[:-1] if w.endswith('s') and not w.endswith(('is', 'us')) else w
+        out.append(w)
+    return ' '.join(out)
+
+
+def trending(client, terms: List[Dict], skip: Callable[[Dict], bool]) -> Tuple[List[Dict], int]:
+    """
+    1 produto por termo (o de mais vendas), na ordem da lista da Shopee, até TRENDING_MAX: nome com o termo,
+    nota ≥ MIN_RATING, ≥ TRENDING_MIN_SALES vendas, com comissão (sem piso). (ideias, termos sem produto bom)
+    """
+    chosen, missing, kinds, keys = [], 0, set(), set()
+    for row in terms:
+        if len(chosen) >= TRENDING_MAX:
+            break
+        term = (row.get('termo') or '').strip()
+        if not term or row.get('adulto') or BLOCKED.search(term) or FORBIDDEN.search(term):
+            continue
+        found = {}
+        queries = [term] + ([singular(term)] if singular(term) != ' '.join(_plain(term)) else [])
+        for query in queries:
+            try:
+                for p in client.search(query, limit=PER_KEYWORD, sort_type=2):
+                    found[f"{p['shopId']}:{p['itemId']}"] = p
+            except Exception as e:
+                logger.warning(f"Buscas em alta: busca '{query}' falhou ({e})")
+        ok = [p for k, p in found.items()
+              if name_has_term(p.get('productName', ''), term)
+              and float(p.get('ratingStar') or 0) >= MIN_RATING and int(p.get('sales') or 0) >= TRENDING_MIN_SALES
+              and commission_value(p) > 0 and not BLOCKED.search(p.get('productName', ''))
+              and not FORBIDDEN.search(p.get('productName', '')) and k not in keys
+              and similar_key(p.get('productName', '')) not in kinds and not skip(p)]
+        if not ok:
+            missing += 1
+            continue
+        best = max(ok, key=lambda p: int(p.get('sales') or 0))
+        keys.add(f"{best['shopId']}:{best['itemId']}")
+        kinds.add(similar_key(best.get('productName', '')))
+        chosen.append({**best, 'tema': f'busca nº {row.get("posicao")}: "{term}"', 'busca': term})
+    return chosen, missing
+
+
 def _brl(v: float) -> str:
     return f"R$ {v:.2f}".replace('.', ',')
 
@@ -252,8 +388,10 @@ def _milhar(n: int) -> str:
     return f"{n:,}".replace(',', '.')
 
 
-def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today: date) -> List[str]:
-    """Mensagens (cada uma abaixo do limite do Telegram) com a lista numerada."""
+def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today: date,
+           hot: Optional[List[Dict]] = None, hot_missing: int = 0, hot_day: Optional[date] = None) -> List[str]:
+    """Mensagens (cada uma abaixo do limite do Telegram) com a lista numerada (🔥 Buscas em alta primeiro)."""
+    hot = hot or []
     e = html.escape
 
     def line(i: int, p: Dict) -> str:
@@ -261,14 +399,22 @@ def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today
         return (f"<b>{i}. {e(p['productName'][:90])}</b>\n"
                 f"   {_brl(float(p.get('priceMin') or 0))} · comissão <b>{_brl(commission_value(p))}</b> · "
                 f"{_milhar(int(p.get('sales') or 0))} vendas · nota {p.get('ratingStar')}" +
-                f"\n   🏷️ {e(p['tema'])} · {e(p.get('shopName', '')[:30])}\n   🔗 {url}")
+                f"\n   {'🔎' if p.get('busca') else '🏷️'} {e(p['tema'])} · {e(p.get('shopName', '')[:30])}\n   🔗 {url}")
 
     main_total = len(seasonal) + len(evergreen)
-    blocks = [f"💡 <b>{main_total + len(cheap)} ideias para gravar</b> · {today:%d/%m}\n"
-              f"Nota ≥ {MIN_RATING}, ordenadas por comissão × vendas. Grave e mande em 📥 Envios com o link."]
+    blocks = [f"💡 <b>{main_total + len(cheap) + len(hot)} ideias para gravar</b> · {today:%d/%m}\n"
+              f"Nota ≥ {MIN_RATING}. Grave e mande em 📥 Envios com o link."]
     i = 1
+    if hot:
+        when = 'hoje na Shopee' if hot_day in (None, today) else f"na Shopee (lista de {hot_day:%d/%m})"
+        blocks.append(f"🔥 <b>Buscas em alta {when}</b> (orgânico: sem piso de comissão)")
+        for p in hot:
+            blocks.append(line(i, p))
+            i += 1
+        if hot_missing:
+            blocks.append(f"<i>{hot_missing} termo(s) em alta sem produto bom hoje.</i>")
     if seasonal:
-        blocks.append(f"📅 <b>Datas que estão chegando</b> (comissão ≥ {_brl(MIN_COMMISSION)})")
+        blocks.append(f"📅 <b>Datas que estão chegando</b> (comissão ≥ {_brl(MIN_COMMISSION)}, por comissão × vendas)")
         for p in seasonal:
             blocks.append(line(i, p))
             i += 1
@@ -297,10 +443,12 @@ def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today
     return messages
 
 
-def export_rows(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict]) -> List[Dict]:
+def export_rows(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict],
+                hot: Optional[List[Dict]] = None) -> List[Dict]:
     """As ideias do dia na mesma numeração da lista, para o CSV (o link de afiliado entra depois)."""
     rows = []
-    for section, items in (('Datas chegando', seasonal), ('Vende o ano todo', evergreen), ('Preço acessível', cheap)):
+    for section, items in (('Buscas em alta', hot or []), ('Datas chegando', seasonal),
+                           ('Vende o ano todo', evergreen), ('Preço acessível', cheap)):
         for p in items:
             rows.append(row_for(p, section, len(rows) + 1))
     return rows

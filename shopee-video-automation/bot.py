@@ -1524,16 +1524,31 @@ class Bot:
             key = f"{p['shopId']}:{p['itemId']}"
             return key in used or key in suggested or kind in types or kind in used_types
 
+        # 🔥 Buscas em alta (orgânico): se a lista não estiver disponível, a seção só não aparece
+        hot, hot_missing, hot_day = [], 0, None
         try:
-            seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today, skip)
+            terms, hot_day = ideas.trending_terms(today)
+            if terms:
+                hot, hot_missing = ideas.trending(self.pipeline.shopee, terms, skip)
+        except Exception as e:
+            logger.warning(f"Buscas em alta falharam: {e}")
+        hot_keys = {f"{p['shopId']}:{p['itemId']}" for p in hot}
+        hot_kinds = {ideas.similar_key(p['productName']) for p in hot}
+
+        def skip_all(p: Dict) -> bool:   # as outras seções não repetem o que já entrou em alta
+            return skip(p) or f"{p['shopId']}:{p['itemId']}" in hot_keys or \
+                ideas.similar_key(p.get('productName', '')) in hot_kinds
+
+        try:
+            seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today, skip_all)
         except Exception as e:
             logger.exception("Ideias falharam")
             self.tg.send_text(thread, f"⚠️ Não consegui buscar ideias agora: {html.escape(str(e)[:200])}")
             return
-        for message in ideas.render(seasonal, evergreen, cheap, today):
+        for message in ideas.render(seasonal, evergreen, cheap, today, hot, hot_missing, hot_day):
             self.tg.send_text(thread, message)
-        self.send_idea_links(thread, ideas.export_rows(seasonal, evergreen, cheap), today)
-        for p in seasonal + evergreen + cheap:
+        self.send_idea_links(thread, ideas.export_rows(seasonal, evergreen, cheap, hot), today)
+        for p in hot + seasonal + evergreen + cheap:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
             types[ideas.similar_key(p['productName'])] = today.isoformat()
         self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
@@ -1804,7 +1819,7 @@ class Bot:
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('vendas', 'Vendas reais por vídeo: 7 dias (ou /vendas hoje, /vendas 30)'),
-            ('sugestoes', 'Ideias de produtos para gravar (comissão ≥ R$ 9)'),
+            ('sugestoes', 'Ideias para gravar: buscas em alta, datas e nichos'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
             ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
