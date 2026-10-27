@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793113356,
-  "updated_at_br": "27/10/2026 11:57",
+  "updated_at": 1793117411,
+  "updated_at_br": "27/10/2026 13:05",
   "period_days": 90,
-  "total_orders": 6028,
-  "total_conversions": 5793,
+  "total_orders": 6027,
+  "total_conversions": 5792,
   "orders": [
     {
       "ID do pedido": "261027P8JK0TH3",
@@ -2532,7 +2532,7 @@
     },
     {
       "ID do pedido": "261023B6H6TR5P",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-22 16:16:17",
       "Sub_id1": "22Out26VEAtapetehigienicoV4",
       "Valor de Compra(R$)": "49.99",
@@ -2544,7 +2544,7 @@
       "Comissao total do pedido(R$)": "16.4967",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "50 unid - Tapete Higiênico PetCharm Slim -Tamanho 50cm x 60cm Para Cachorros",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18899838992",
       "ID da loja": "908280603",
       "Nome da loja": "Pet Charm",
@@ -2552,7 +2552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "246384977165750",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-22"
     },
     {
@@ -2757,7 +2757,7 @@
     },
     {
       "ID do pedido": "261022AWD2WWAT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-22 13:32:55",
       "Sub_id1": "20Out26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "47",
@@ -2769,7 +2769,7 @@
       "Comissao total do pedido(R$)": "2.115",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Presépio de Natal Minimalista Decorativo com Bandeja e Vela de LED",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "55418787059",
       "ID da loja": "1423669138",
       "Nome da loja": "Cs_arte",
@@ -2777,7 +2777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "246375175184175",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-22"
     },
     {
@@ -6332,7 +6332,7 @@
     },
     {
       "ID do pedido": "261017T968JKTQ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-17 02:27:09",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "41.9",
@@ -6344,7 +6344,7 @@
       "Comissao total do pedido(R$)": "9.218",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Kit 10 Calcinhas Femininas de Algodão Cotton Adulto Lisas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22399130131",
       "ID da loja": "597534350",
       "Nome da loja": "Amazile Store",
@@ -6352,7 +6352,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245903227191860",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-17"
     },
     {
@@ -7532,7 +7532,7 @@
     },
     {
       "ID do pedido": "261016QGMWRSXS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-16 00:02:36",
       "Sub_id1": "09Out26VEAcalcinhaalgodaonew",
       "Valor de Compra(R$)": "34.25",
@@ -7544,7 +7544,7 @@
       "Comissao total do pedido(R$)": "2.055",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 5 Calcinhas Feminina Básica Tanga Canelada Conforto Cós Elástico Firme",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23093826685",
       "ID da loja": "434905093",
       "Nome da loja": "Donna Nane Moda Intima",
@@ -7552,7 +7552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "245808156161509",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-16"
     },
     {
@@ -9757,7 +9757,7 @@
     },
     {
       "ID do pedido": "261014JP37FTDY",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-14 01:56:46",
       "Sub_id1": "10Out26VEAcalcinhareforcada",
       "Valor de Compra(R$)": "68.99",
@@ -9769,7 +9769,7 @@
       "Comissao total do pedido(R$)": "17.9374",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Kit Calcinha Cós Alto Microfibra Cintura Alta Reforçada Confortável Lingerie Sexy",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22393190986",
       "ID da loja": "939398428",
       "Nome da loja": "Mawest Lingerie",
@@ -9777,7 +9777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "245642206132002",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-14"
     },
     {
@@ -150677,31 +150677,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239044668113992",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-29"
-    },
-    {
-      "ID do pedido": "26072913ARF3CG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-29 15:25:42",
-      "Sub_id1": "25Jul26TapeteHigienicoVs4",
-      "Valor de Compra(R$)": "73.9",
-      "Comissao liquida do afiliado(R$)": "3.65066",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "1.20%",
-      "Comissao Shopee(R$)": "2.956",
-      "Comissao do vendedor(R$)": "0.8868",
-      "Comissao total do pedido(R$)": "3.8428",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Macacão Pantalona Feminino Com Bolso Faixa na Cintura e Zíper Tecido Crepe Dunas Envio Imediato",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58201279863",
-      "ID da loja": "1677263401",
-      "Nome da loja": "CleoModaFeminina",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "239037942163266",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-29"
     }
