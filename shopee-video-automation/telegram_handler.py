@@ -24,6 +24,18 @@ SHOPEE_LINK_RE = re.compile(
     r'https?://(?:[\w-]+\.)?(?:shopee\.com\.br|shp\.ee)/\S+', re.IGNORECASE)
 
 
+def placeholder() -> Path:
+    """Imagem pequena que substitui capa/vídeo que o Telegram não deixou apagar."""
+    path = Path(__file__).parent / 'assets' / 'resolvido.png'
+    if not path.exists():
+        from PIL import Image, ImageDraw
+        img = Image.new('RGB', (320, 80), (34, 139, 34))
+        ImageDraw.Draw(img).text((20, 30), 'OK - resolvido', fill=(255, 255, 255))
+        path.parent.mkdir(exist_ok=True)
+        img.save(path)
+    return path
+
+
 def extract_shopee_links(text: str) -> List[str]:
     return SHOPEE_LINK_RE.findall(text or '')
 
@@ -38,12 +50,21 @@ class TelegramBot:
         self.token = token
         self.chat_id = int(chat_id)
         self.api_url = f"https://api.telegram.org/bot{token}"
+        self.on_sent = None   # (tópico, [ids]) de cada mensagem enviada: o robô anota as da Agenda para limpar depois
 
     def call(self, method: str, timeout: int = 30, **kwargs):
         resp = requests.post(f"{self.api_url}/{method}", timeout=timeout, **kwargs)
         data = resp.json()
         if not data.get('ok'):
             raise RuntimeError(f"Telegram {method}: {data.get('description')}")
+        thread = (kwargs.get('data') or {}).get('message_thread_id')
+        if self.on_sent and thread and method in ('sendMessage', 'sendMediaGroup', 'sendPhoto', 'sendDocument'):
+            result = data['result']
+            try:
+                self.on_sent(int(thread), [m['message_id'] for m in result] if isinstance(result, list)
+                             else [result['message_id']])
+            except Exception as e:
+                logger.warning(f"Não anotei a mensagem enviada: {e}")
         return data['result']
 
     def get_updates(self, offset: int, timeout: int = 30) -> List[Dict]:
@@ -140,13 +161,55 @@ class TelegramBot:
             if 'not modified' not in str(e):
                 logger.warning(f"Não consegui atualizar os botões: {e}")
 
-    def delete(self, message_ids: List[int]):
+    def delete(self, message_ids: List[int]) -> List[int]:
+        """Apaga as mensagens; devolve as que o Telegram não deixou apagar (o lote falhou: tenta uma a uma)."""
+        failed = []
         for chunk in range(0, len(message_ids), 100):
+            ids = message_ids[chunk:chunk + 100]
             try:
-                self.call('deleteMessages', data={
-                    'chat_id': self.chat_id, 'message_ids': json.dumps(message_ids[chunk:chunk + 100])})
+                self.call('deleteMessages', data={'chat_id': self.chat_id, 'message_ids': json.dumps(ids)})
+                continue
+            except (RuntimeError, requests.RequestException) as e:
+                logger.warning(f"Não consegui apagar {len(ids)} mensagem(ns) de uma vez: {e}")
+            for msg_id in ids:
+                try:
+                    self.call('deleteMessage', data={'chat_id': self.chat_id, 'message_id': msg_id})
+                except RuntimeError as e:
+                    if 'not found' not in str(e).lower():
+                        failed.append(msg_id)
+                        logger.warning(f"Não consegui apagar a mensagem {msg_id}: {e}")
+                except requests.RequestException:
+                    failed.append(msg_id)
+        return failed
+
+    def tidy(self, message_ids: List[int], note: str) -> List[int]:
+        """
+        Tira as mensagens do caminho: apaga; se o Telegram não deixar, vira uma linha curta (`note`) sem botões
+        (texto) ou uma imagem pequena com a `note` (capa/vídeo). Devolve as que nem isso deu.
+        """
+        left = []
+        for msg_id in self.delete(message_ids):
+            empty = json.dumps({'inline_keyboard': []})
+            try:
+                self.call('editMessageText', data={'chat_id': self.chat_id, 'message_id': msg_id, 'text': note,
+                                                   'reply_markup': empty})
+                continue
             except RuntimeError as e:
-                logger.warning(f"Não consegui apagar mensagens: {e}")
+                if 'not modified' in str(e):
+                    continue
+            try:   # foto/vídeo: troca pela imagem pequena
+                with open(placeholder(), 'rb') as img:
+                    self.call('editMessageMedia', timeout=60, data={
+                        'chat_id': self.chat_id, 'message_id': msg_id, 'reply_markup': empty,
+                        'media': json.dumps({'type': 'photo', 'media': 'attach://img', 'caption': note})},
+                        files={'img': img})
+                continue
+            except (RuntimeError, requests.RequestException, OSError) as e:
+                if 'not modified' in str(e):
+                    continue
+                logger.warning(f"Não consegui apagar nem resumir a mensagem {msg_id}: {e}")
+            left.append(msg_id)
+        return left
 
     def react(self, message_id: int, emoji: str):
         try:

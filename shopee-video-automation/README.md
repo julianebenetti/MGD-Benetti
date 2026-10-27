@@ -118,7 +118,9 @@ avisa também as de outros links, `nao` desliga). Na primeira conferência ele s
   vídeo, com as opções: anúncio idêntico, agendar mesmo assim ou descartar.
 - **Resumo fixado na Agenda**: os vídeos em ordem de horário, por dia (⏰ agendado · 📤 indo para a LiA · 🤖 LiA
   publicando · ⚠️ precisa de você), atualizado sozinho; `/agenda` manda o resumo de novo no fim do tópico. Cada post da
-  Agenda tem **↩️ Voltar p/ Editados**.
+  Agenda tem **↩️ Voltar p/ Editados**. Ao tocar ✅ Postei / ❌ Descartar, as mensagens daquele vídeo saem da Agenda (se o
+Telegram não deixar apagar, viram uma linha curta "✅ postado" sem botões); **`/limparagenda`** tira as que
+sobraram de vídeos já resolvidos (o robô precisa ser administrador com a permissão "Apagar mensagens").
 - **`LIA_MAX_LINKS`** (padrão 1): quantos links vão para a LiA (o divulgado + os extras de maior comissão). A regra
   da Shopee pune vídeos que divulgam produtos "diferentes, **adicionais** ou não relacionados" ao anúncio vinculado,
   então o padrão é só o link do produto mostrado no vídeo.

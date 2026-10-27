@@ -139,6 +139,7 @@ class Bot:
     def __init__(self):
         self.tg = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
         self.db = Storage()
+        self.tg.on_sent = lambda thread, ids: self.db.log_sent(thread, ids) if thread == AGENDA else None
         self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
         self.pipeline.is_sold_out = self.db.is_sold_out
         # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
@@ -502,9 +503,40 @@ class Bot:
             reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
             markup=keyboard(*buttons))
 
+    def clear_agenda(self, ids: List[int], note: str):
+        """Tira da Agenda as mensagens de um post resolvido (em segundo plano: pode levar alguns segundos)."""
+        if ids:
+            self.submit(('tidy', list(ids), note))
+
+    def job_tidy(self, ids: List[int], note: str) -> List[int]:
+        left = self.tg.tidy(ids, note)
+        self.db.forget_sent([i for i in ids if i not in left])
+        return left
+
+    def job_clean_agenda(self, thread: Optional[int]):
+        """
+        /limparagenda: tudo que o robô mandou na Agenda e não é de um vídeo que ainda está lá (nem o resumo) sai:
+        apagado ou, se o Telegram não deixar, vira uma linha curta "resolvido".
+        """
+        keep = {int(self.db.get_meta('agenda_resumo_msg', '0'))}
+        for p in self.db.scheduled():
+            keep |= set(p['agenda_msgs'])
+        stale = [i for i in self.db.sent_in(AGENDA) if i not in keep]
+        left = self.job_tidy(stale, "✅ resolvido") if stale else []
+        self.refresh_agenda_summary(repost=True)
+        text = f"🧹 Agenda limpa: tirei {len(stale) - len(left)} mensagem(ns) de vídeos já resolvidos."
+        if left:
+            text += (f" {len(left)} o Telegram não deixou mexer: confira se o robô é administrador com a permissão "
+                     "<b>Apagar mensagens</b> no grupo.")
+        if not stale:
+            text = "🧹 Nada para limpar nas mensagens que o robô conhece."
+        text += ("\n<i>Mensagens de antes desta atualização o robô não tem anotadas: essas, apague à mão "
+                 "(segure numa, toque em Selecionar e marque as outras).</i>")
+        self.tg.send_text(thread or AGENDA, text)
+
     def back_to_editados(self, post: Dict, result: Optional[str] = None, reason: str = ''):
         """Tira o post da Agenda (apaga as mensagens dele lá) e manda de novo para Editados, sem horário."""
-        self.tg.delete(post['agenda_msgs'])
+        self.clear_agenda(post['agenda_msgs'], f"↩️ {post['product_name'][:50]}: voltou para ✅ Editados")
         meta = {k: v for k, v in post['metadata'].items() if k not in ('validacao_forcada', 'lia_alertado')}
         self.db.update_post(post['id'], status='editado', scheduled_at=None, agenda_msgs=[], metadata=meta)
         post = self.db.get_post(post['id'])
@@ -826,7 +858,7 @@ class Bot:
                          when: Optional[str] = None):
         """`when`: horário real da publicação (ex.: a mensagem "Vídeo salvo na Shopee" da LiA); sem ele, agora."""
         posted_at = (datetime.fromisoformat(when).astimezone(scheduler.TZ) if when else scheduler.now())
-        self.tg.delete(post['agenda_msgs'])
+        self.clear_agenda(post['agenda_msgs'], f"✅ {post['product_name'][:50]}: postado (está em 🚀 Postados)")
         self.db.update_post(post['id'], status='postado', agenda_msgs=[],
                             posted_at=posted_at.isoformat(timespec='seconds'), posted_via=via)
         self.tg.send_photo(POSTADOS, post['cover_path'], postados_caption(post, label))
@@ -1002,7 +1034,8 @@ class Bot:
             self.submit(('headline', post['id'], None))
 
         elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado', 'na_lia'):
-            self.tg.delete(post['editados_msgs'] + post['agenda_msgs'])
+            self.tg.delete(post['editados_msgs'])
+            self.clear_agenda(post['agenda_msgs'], f"❌ {post['product_name'][:50]}: descartado")
             self.db.update_post(post['id'], status='descartado',
                                 discarded_at=scheduler.now().isoformat(timespec='seconds'))
             self.tg.answer_callback(cb['id'], 'Descartado')
@@ -1756,6 +1789,10 @@ class Bot:
                     self.job_prompt(*job[1:])
                 elif job[0] == 'idea_links':
                     self.on_idea_links_command(*job[1:])
+                elif job[0] == 'tidy':
+                    self.job_tidy(*job[1:])
+                elif job[0] == 'clean_agenda':
+                    self.job_clean_agenda(*job[1:])
                 elif job[0] == 'back':
                     self.back_to_editados(self.db.get_post(job[1]))
                 elif job[0] == 'extension':
@@ -1814,6 +1851,10 @@ class Bot:
             return
         if command.lower().startswith('/linksideias'):
             self.submit(('idea_links', thread or IDEIAS, command.split(maxsplit=1)[1] if ' ' in command else ''))
+            return
+        if command.lower().startswith('/limparagenda'):
+            self.tg.send_text(thread or AGENDA, "🧹 Limpando a Agenda…")
+            self.submit(('clean_agenda', thread or AGENDA))
             return
         if command.lower().startswith('/agenda'):
             self.refresh_agenda_summary(repost=True)
@@ -1879,6 +1920,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
+            ('limparagenda', 'Tira da Agenda as mensagens de vídeos já postados/descartados'),
             ('linksideias', 'Links das ideias para o app da LiA: /linksideias, /linksideias 25/10 ou /linksideias 40'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
             ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),

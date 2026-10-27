@@ -49,6 +49,9 @@ CREATE TABLE IF NOT EXISTS esgotados (product_key TEXT PRIMARY KEY, at REAL);  -
 CREATE TABLE IF NOT EXISTS video_jobs (    -- vídeos na fila: sobrevivem a reinícios do robô
     msg_id INTEGER PRIMARY KEY, file_id TEXT, link TEXT, text TEXT, trust INTEGER, at REAL
 );
+CREATE TABLE IF NOT EXISTS sent_msgs (    -- mensagens do robô na Agenda (para /limparagenda achar as que sobraram)
+    msg_id INTEGER PRIMARY KEY, thread INTEGER, at REAL
+);
 CREATE TABLE IF NOT EXISTS failures (      -- vídeos que falharam, para refazer com um link novo
     msg_id INTEGER PRIMARY KEY, err_msg_id INTEGER, file_id TEXT, text TEXT, at REAL, link TEXT
 );
@@ -203,6 +206,22 @@ class Storage:
         with self.lock:
             return self.conn.execute("SELECT 1 FROM esgotados WHERE product_key = ? AND at > ?",
                                      (product_key, time.time() - max_age)).fetchone() is not None
+
+    def log_sent(self, thread: int, ids: List[int]):
+        with self.lock:
+            self.conn.executemany("INSERT OR IGNORE INTO sent_msgs (msg_id, thread, at) VALUES (?, ?, ?)",
+                                  [(i, thread, time.time()) for i in ids])
+            self.conn.commit()
+
+    def sent_in(self, thread: int) -> List[int]:
+        with self.lock:
+            return [r[0] for r in self.conn.execute("SELECT msg_id FROM sent_msgs WHERE thread = ? ORDER BY msg_id",
+                                                    (thread,))]
+
+    def forget_sent(self, ids: List[int]):
+        with self.lock:
+            self.conn.executemany("DELETE FROM sent_msgs WHERE msg_id = ?", [(i,) for i in ids])
+            self.conn.commit()
 
     def get_meta(self, key: str, default: str = '') -> str:
         with self.lock:
