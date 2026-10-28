@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793179168,
-  "updated_at_br": "28/10/2026 06:14",
+  "updated_at": 1793185237,
+  "updated_at_br": "28/10/2026 07:55",
   "period_days": 90,
-  "total_orders": 5988,
-  "total_conversions": 5754,
+  "total_orders": 5987,
+  "total_conversions": 5753,
   "orders": [
     {
       "ID do pedido": "261027P8JK0TH3",
@@ -149678,31 +149678,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239108836139813",
       "conversionStatus": "CANCELLED",
-      "data": "2026-07-30"
-    },
-    {
-      "ID do pedido": "26073031A961EU",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-30 09:54:58",
-      "Sub_id1": "30Jul26VEAcalcinhaplussize",
-      "Valor de Compra(R$)": "39.47",
-      "Comissao liquida do afiliado(R$)": "1.49986",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.5788",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.5788",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Capa de Porta Decoração Natal Em Tecido Premium Sublimado Retangular Veste Porta C/Elástico",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "54763262868",
-      "ID da loja": "1720116020",
-      "Nome da loja": "OMENA SUBLIME",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "239104498134848",
-      "conversionStatus": "COMPLETED",
       "data": "2026-07-30"
     }
   ]
