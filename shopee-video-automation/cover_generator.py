@@ -11,6 +11,8 @@ from typing import List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps, ImageStat
 
+from video_processor import ROBOT_LOGO
+
 logger = logging.getLogger(__name__)
 
 ASSETS = Path(__file__).parent / 'assets'
@@ -228,11 +230,12 @@ class CoverGenerator:
         """`video_path` deve ser o vídeo SEM o logo: a capa coloca o logo na posição segura da grade."""
         try:
             frame = self.pick_frame(video_path).convert('RGBA')
-            logo = Image.open(COVER_LOGO).convert('RGBA')
-            logo_w = int(self.width * COVER_LOGO_WIDTH_RATIO)
-            logo = logo.resize((logo_w, round(logo.height * logo_w / logo.width)), Image.LANCZOS)
-            frame.alpha_composite(logo, (int(self.width * COVER_LOGO_LEFT_RATIO),
-                                         int(self.height * COVER_LOGO_TOP_RATIO)))
+            if ROBOT_LOGO:   # desligado por padrão: a LiA põe a marca d'água no Shopee Vídeo
+                logo = Image.open(COVER_LOGO).convert('RGBA')
+                logo_w = int(self.width * COVER_LOGO_WIDTH_RATIO)
+                logo = logo.resize((logo_w, round(logo.height * logo_w / logo.width)), Image.LANCZOS)
+                frame.alpha_composite(logo, (int(self.width * COVER_LOGO_LEFT_RATIO),
+                                             int(self.height * COVER_LOGO_TOP_RATIO)))
             lines = self._wrap(title)
             ascent, descent = self.font.getmetrics()
             pill_h = ascent + descent + 2 * int(self.font_size * PILL_PAD_Y_RATIO)

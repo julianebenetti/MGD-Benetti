@@ -129,7 +129,9 @@ sobraram de vídeos já resolvidos (o robô precisa ser administrador com a perm
 
 Bot não conversa com bot no Telegram, então o envio sai **pela sua conta** (o que você faria à mão).
 O que vai para a LiA:
-- o vídeo final (capa na abertura + logo) com `#semcapa #semmarca`, para ela não colocar de novo;
+- o vídeo final (capa na abertura, sem logo) com `#semcapa` (a capa é a do robô) e `#marca` (a LiA põe a marca
+  d'água no Shopee Vídeo, com o texto do `/marca` dela). `LOGO_ROBO=sim` volta o logo do robô no vídeo e na capa (e
+  manda `#semmarca`);
 - o link do produto divulgado (`LIA_MAX_LINKS=1`; com mais, do **menor para o maior** comissionamento e o divulgado por último);
 - a descrição + hashtags do robô (na LiA, `/opcoes` → Legenda Manual; `LIA_LEGENDA=ia` deixa a LiA escrever);
 - `#ia` (vídeo feito por IA: aviso discreto + rótulo de IA na Shopee) ou `#semia` com `LIA_VIDEO_IA=nao`;

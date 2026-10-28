@@ -18,6 +18,8 @@ LOGO_WIDTH_RATIO = 0.25
 # e abaixo da seta de voltar/barra de busca
 LOGO_MARGIN_X_RATIO = 0.11
 LOGO_TOP_RATIO = 0.12
+# Logo do robô no vídeo e na capa: desligado por padrão (a LiA põe a marca d'água no Shopee Vídeo, com #marca)
+ROBOT_LOGO = (os.getenv('LOGO_ROBO') or 'nao').strip().lower() == 'sim'
 
 
 class VideoProcessor:
@@ -104,13 +106,17 @@ class VideoProcessor:
         margin_x = int(self.width * LOGO_MARGIN_X_RATIO)
         margin_y = int(self.height * LOGO_TOP_RATIO)
         graph = (f"[0:v]scale={self.width}:{self.height}:force_original_aspect_ratio=decrease,"
-                 f"pad={self.width}:{self.height}:(ow-iw)/2:(oh-ih)/2:color=black,fps={self.fps},"
-                 f"split=2[clean][w0];[1:v]scale={logo_w}:-1[logo];[w0][logo]overlay={margin_x}:{margin_y}")
-        inputs = ['-i', input_video, '-i', logo_path]
+                 f"pad={self.width}:{self.height}:(ow-iw)/2:(oh-ih)/2:color=black,fps={self.fps},split=2[clean][w0];")
+        inputs = ['-i', input_video]
+        if ROBOT_LOGO:
+            inputs += ['-i', logo_path]
+            graph += f"[1:v]scale={logo_w}:-1[logo];[w0][logo]overlay={margin_x}:{margin_y}"
+        else:
+            graph += "[w0]null"
         if cta_path:
             start = max(0.0, self.get_video_info(input_video).get('duration', 0) - cta_seconds)
             inputs += ['-i', cta_path]
-            graph += f"[w1];[w1][2:v]overlay=0:0:enable='gte(t,{start:.2f})'"
+            graph += f"[w1];[w1][{len(inputs) // 2 - 1}:v]overlay=0:0:enable='gte(t,{start:.2f})'"
         graph += "[final]"
         audio = ['-map', '0:a?', '-c:a', 'aac', '-b:a', '128k']
         cmd = ['ffmpeg', '-loglevel', 'error', *inputs, '-filter_complex', graph,
