@@ -1057,7 +1057,29 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Enviando à LiA…')
 
         else:
-            self.tg.answer_callback(cb['id'], 'Já resolvido')
+            self.answer_resolved(cb, post, action)
+
+    STATUS_TEXT = {
+        'postado': 'Este vídeo já está em 🚀 Postados', 'descartado': 'Este vídeo já foi descartado',
+        'editado': 'Este vídeo está em ✅ Editados (não está na Agenda)', 'enviando': 'Este vídeo está indo para a LiA agora',
+        'agendando': 'Este vídeo está sendo agendado', 'voltando': 'Este vídeo está voltando para ✅ Editados',
+        'na_lia': 'A LiA está publicando este vídeo',
+    }
+
+    def answer_resolved(self, cb: Dict, post: Dict, action: str):
+        """
+        Botão de um post que já mudou de lugar: diz onde ele está e, se já foi postado/descartado, tira da Agenda a
+        mensagem que sobrou (a do botão tocado).
+        """
+        text = self.STATUS_TEXT.get(post['status'], 'Já resolvido')
+        if post['status'] == 'postado' and post.get('posted_at'):
+            text += f" (desde {fmt_when(post['posted_at'])})"
+        msg = (cb.get('message') or {}).get('message_id')
+        if post['status'] in ('postado', 'descartado') and msg and action in ('ok', 'la', 'dc', 'bk'):
+            text += ". Tirei esta mensagem da Agenda; as outras dele você pode apagar."
+            self.clear_agenda([msg], f"✅ {post['product_name'][:50]}: "
+                                     f"{'postado (está em 🚀 Postados)' if post['status'] == 'postado' else 'descartado'}")
+        self.tg.answer_callback(cb['id'], text[:200])
 
     # ---------- Relógio ----------
 
