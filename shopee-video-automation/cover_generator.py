@@ -230,7 +230,7 @@ class CoverGenerator:
         """`video_path` deve ser o vídeo SEM o logo: a capa coloca o logo na posição segura da grade."""
         try:
             frame = self.pick_frame(video_path).convert('RGBA')
-            if ROBOT_LOGO:   # desligado por padrão: a LiA põe a marca d'água no Shopee Vídeo
+            if ROBOT_LOGO:   # desligado por padrão: o logo é habilitado direto na Shopee
                 logo = Image.open(COVER_LOGO).convert('RGBA')
                 logo_w = int(self.width * COVER_LOGO_WIDTH_RATIO)
                 logo = logo.resize((logo_w, round(logo.height * logo_w / logo.width)), Image.LANCZOS)

@@ -18,7 +18,7 @@ LOGO_WIDTH_RATIO = 0.25
 # e abaixo da seta de voltar/barra de busca
 LOGO_MARGIN_X_RATIO = 0.11
 LOGO_TOP_RATIO = 0.12
-# Logo do robô no vídeo e na capa: desligado por padrão (a LiA põe a marca d'água no Shopee Vídeo, com #marca)
+# Logo do robô no vídeo e na capa: desligado por padrão (o logo é habilitado direto na Shopee)
 ROBOT_LOGO = (os.getenv('LOGO_ROBO') or 'nao').strip().lower() == 'sim'
 
 

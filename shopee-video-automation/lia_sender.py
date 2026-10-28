@@ -66,9 +66,8 @@ def links_for_lia(post: Dict) -> List[str]:
 
 
 def caption(post: Dict) -> str:
-    # #marca: a LiA põe a marca d'água (o texto do /marca); o robô não põe mais o logo (LOGO_ROBO=sim volta)
-    marca = '#semmarca' if _setting('LOGO_ROBO', 'nao') == 'sim' else '#marca'
-    tags = ['#postar' if _setting('LIA_MODO', 'postar') == 'postar' else '#rascunho', '#semcapa', marca]
+    # #semmarca: nem a LiA põe marca d'água (o logo é habilitado de outra forma na Shopee); o robô também não põe
+    tags = ['#postar' if _setting('LIA_MODO', 'postar') == 'postar' else '#rascunho', '#semcapa', '#semmarca']
     # #ia/#semia na LiA = o VÍDEO foi feito por IA (aviso no vídeo + rótulo de IA na Shopee), não a legenda; a legenda
     # dela segue o /opcoes (Legenda Manual = usa a nossa)
     tags.append('#semia' if _setting('LIA_VIDEO_IA', 'sim') == 'nao' else '#ia')
