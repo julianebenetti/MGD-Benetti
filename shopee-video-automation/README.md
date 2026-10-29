@@ -111,6 +111,9 @@ comissão e de qual vídeo veio (🎬 robô ou 🤖 app da LiA); por padrão só
 avisa também as de outros links, `nao` desliga). Na primeira conferência ele só marca as vendas que já existiam (não avisa as antigas).
 
 **Proteção da conta (Produto Irrelevante):**
+- **Quantidade do kit**: quando o título diz "Kit 10", "Jogo 3", "6 unidades", "c/ 4"…, a conferência do vídeo exige
+  que ele mostre todas as unidades (um balde num kit de 10 foi punido em 28/10); kit de peças/acessórios de um produto
+  só (ex.: parafusadeira 48 peças) precisa mostrar o conjunto completo. Os prompts do 🎬 Prompts pedem as N unidades juntas.
 - **`/pausar 25/10 18:30`** (ou só `/pausar`, até **`/retomar`**): nada vai para a LiA; ao fim, os vídeos que ficaram para
   trás ganham novos horários em sequência, com as regras da agenda.
 - **`/validaragenda`**: validação rigorosa (6 quadros, mesmo modelo) de todos os posts da Agenda; tira lojas extras que

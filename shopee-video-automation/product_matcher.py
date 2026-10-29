@@ -4,6 +4,7 @@ Conferência vídeo × produto por IA: quadros do vídeo + foto e nome do produt
 
 import base64
 import io
+import re
 import logging
 import subprocess
 from typing import Dict, List, Tuple
@@ -54,6 +55,32 @@ cor/estampa que o anúncio também vende, "variacao"). Produto "parecido" ou de 
 "incerto". No motivo, diga QUAL detalhe difere (ex.: "vídeo: 4 barras embaixo; anúncio: 2")."""
 
 
+QUANTITY_RE = [
+    re.compile(r'\b(?:kit|jogo|conjunto|combo)\s*(?:de|com|c/)?\s*(\d{1,3})\b', re.IGNORECASE),
+    re.compile(r'\b(\d{1,3})\s*(?:unidades|unidade|unid\.?|und\.?|un\.?|u\.?|pe[çc]as|p[çc]s|pcs|pares|itens)\b',
+               re.IGNORECASE),
+    re.compile(r'\bc/\s*(\d{1,3})\b', re.IGNORECASE),
+]
+
+QUANTITY_NOTE = """
+
+QUANTIDADE: pelo título, o anúncio vende {n} itens juntos ("{txt}"). A Shopee pune quando o vídeo mostra MENOS
+do que o anúncio vende (ex.: kit de 10 baldes e o vídeo mostra 1 balde; jogo de 3 frigideiras e o vídeo mostra 1).
+Conte quantas unidades do produto aparecem no vídeo (juntas, ou a embalagem do kit com elas). Se aparecerem menos de
+{n}, responda "nao" e no motivo diga "vídeo: X unidade(s); anúncio: {txt}". Exceção: se os {n} itens são peças ou
+acessórios de UM produto (ex.: parafusadeira com 48 peças), basta o vídeo mostrar o conjunto completo (o produto com
+a maleta/embalagem das peças)."""
+
+
+def kit_quantity(name: str) -> Tuple[int, str]:
+    """Quantidade que o anúncio vende junta, pelo título ("Kit 10 baldes", "5 unidades", "c/ 3"); (0, '') se não diz."""
+    for pattern in QUANTITY_RE:
+        m = pattern.search(name or '')
+        if m and 1 < int(m.group(1)) <= 500:
+            return int(m.group(1)), m.group(0).strip()
+    return 0, ''
+
+
 def _jpeg_b64(img: Image.Image, max_side: int = 768) -> str:
     img = img.convert('RGB')
     img.thumbnail((max_side, max_side))
@@ -91,7 +118,9 @@ def check_match(video_path: str, product: Dict, strict: bool = False) -> Tuple[s
         photo = requests.get(product['imageUrl'], timeout=30)
         photo.raise_for_status()
         content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)), side)))
-        content.append({'type': 'text', 'text': PROMPT.format(name=product['productName']) + (STRICT_NOTE if strict else '')})
+        n, txt = kit_quantity(product['productName'])
+        content.append({'type': 'text', 'text': PROMPT.format(name=product['productName']) + (STRICT_NOTE if strict else '')
+                        + (QUANTITY_NOTE.format(n=n, txt=txt) if n else '')})
         data = ask_json(content, SCHEMA)
         logger.info(f"Conferência '{product['productName']}': {data['resultado']} ({data['motivo']})")
         return data['resultado'], data['motivo']

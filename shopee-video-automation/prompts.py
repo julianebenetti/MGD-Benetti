@@ -50,6 +50,9 @@ REGRAS OBRIGATÓRIAS DO PROMPT
    detalhes e características; não inventar nem modificar o produto. Na frase "preserve …", cite os detalhes
    concretos que um gerador de vídeo mais costuma mudar neste produto (quantidade de peças/barras, tamanhos,
    estampa/flores, cores de cada parte, formato).
+   QUANTIDADE: se o título vende várias unidades juntas ("Kit 10", "Jogo 3", "6 unidades", "c/ 4"), o vídeo
+   precisa mostrar TODAS juntas (ex.: os 10 baldes lado a lado), nunca uma só: a Shopee pune isso como produto
+   irrelevante. Escreva no prompt "mostre as N unidades juntas".
 8. Movimentos POV suaves, realistas e coerentes com o uso do produto; sem gestos artificiais nem mudanças bruscas.
 9. Nenhuma escrita na tela: proibir legendas, títulos, palavras, preços, logotipos ou texto sobreposto.
 10. Mostrar e citar 2 ou 3 benefícios práticos REAIS do produto (ex.: antiaderente, usa menos óleo, fácil de
