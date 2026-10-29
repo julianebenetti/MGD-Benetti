@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793256967,
-  "updated_at_br": "29/10/2026 03:51",
+  "updated_at": 1793265631,
+  "updated_at_br": "29/10/2026 06:15",
   "period_days": 90,
-  "total_orders": 5920,
-  "total_conversions": 5691,
+  "total_orders": 5919,
+  "total_conversions": 5690,
   "orders": [
     {
       "ID do pedido": "261028RUBP7HVR",
@@ -147977,31 +147977,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "239190058129823",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-07-31"
-    },
-    {
-      "ID do pedido": "2607315DCP1Q1U",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-07-31 08:36:23",
-      "Sub_id1": "30Jul26VIPcalcajogger",
-      "Valor de Compra(R$)": "54.9",
-      "Comissao liquida do afiliado(R$)": "17.7327",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "30.00%",
-      "Comissao Shopee(R$)": "2.196",
-      "Comissao do vendedor(R$)": "16.47",
-      "Comissao total do pedido(R$)": "18.666",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Masculina Com Elastano Esportiva Fitness Slim Fit",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22493540968",
-      "ID da loja": "318968967",
-      "Nome da loja": "Envoy For Men",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "239186183119044",
       "conversionStatus": "COMPLETED",
       "data": "2026-07-31"
     }
