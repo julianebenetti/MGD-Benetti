@@ -208,30 +208,33 @@ class AutomationTester:
         from datetime import datetime
         import scheduler
 
-        rng = random.Random(1)
         start = datetime(2026, 10, 13, 8, 0, tzinfo=scheduler.TZ)
         posts = []
-        for i in range(12):
+        for i in range(40):
             key = 'A' if i < 3 else f'P{i}'
-            slot = scheduler.next_slot(key, posts, start, rng)
+            slot = scheduler.next_slot(key, posts, start)
             posts.append({'scheduled_at': slot.isoformat(), 'product_key': key})
 
         days_a = [p['scheduled_at'][:10] for p in posts if p['product_key'] == 'A']
-        per_day = {}
+        per_day, per_slot = {}, {}
         for p in posts:
             per_day[p['scheduled_at'][:10]] = per_day.get(p['scheduled_at'][:10], 0) + 1
+            per_slot[p['scheduled_at']] = per_slot.get(p['scheduled_at'], 0) + 1
         times = [datetime.fromisoformat(p['scheduled_at']) for p in posts]
+        first_day = [t for t in times if t.date() == start.date()]
+        periods = [scheduler.period(t) for t in first_day]
         checks = [
             len(set(days_a)) == 3,
             max(per_day.values()) <= scheduler.POSTS_PER_DAY,
-            all(scheduler.START_HOUR <= t.hour < scheduler.END_HOUR for t in times),
+            per_day[start.date().isoformat()] == 30,
+            max(per_slot.values()) <= scheduler.BATCH_SIZE,
+            len(set(first_day)) == 6,
+            periods.count('manhã') == periods.count('tarde') == periods.count('noite') == 10,
             all(t.minute % 5 for t in times),
-            # mesma data: de 1 a 2 horas (com folga do minuto quebrado) entre um post e o seguinte
-            all(55 <= (b - a).total_seconds() / 60 <= scheduler.GAP_MAX + 5
-                for a, b in zip(sorted(times), sorted(times)[1:]) if a.date() == b.date()),
         ]
         if all(checks):
-            print(f"✅ Sequência de 1 a 2 h, mesmo produto em dias diferentes, ≤{scheduler.POSTS_PER_DAY}/dia, horários quebrados")
+            print(f"✅ Lotes de {scheduler.BATCH_SIZE}, {scheduler.POSTS_PER_DAY}/dia (10 manhã, 10 tarde, 10 noite), "
+                  "mesmo produto em dias diferentes, horários quebrados")
             self.passed += 1
             return True
         print(f"❌ Falhou: {checks}")

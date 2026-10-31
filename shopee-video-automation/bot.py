@@ -65,6 +65,8 @@ RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
+IDEAS_TRIES = 6                 # tentativas por dia da lista diária (se a Shopee falhar)
+IDEAS_RETRY_MINUTES = 30
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
 LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # sem confirmação: avisa                          # ideia sugerida não volta antes disso
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
@@ -143,7 +145,8 @@ class Bot:
         self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
         self.pipeline.is_sold_out = self.db.is_sold_out
         # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
-        self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue()}
+        self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue(),
+                       'ideas': queue.Queue()}   # ideias numa fila só delas: nada trava a lista do dia
         self.pending: List[Dict] = []
         self.album_links: Dict[str, Dict] = {}
         self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
@@ -158,7 +161,8 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else 'report' if kind in ('report', 'sales', 'ideas', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'idea_links', 'sales_watch') \
+        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
+            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -752,23 +756,42 @@ class Bot:
                                   "período ganham novos horários quando a pausa acabar.")
 
     def job_replan(self, thread: Optional[int]):
-        """Posts que ficaram para trás (pausa): novos horários em sequência, com as regras da agenda."""
+        """
+        Refaz os horários de todos os posts agendados (depois de uma pausa, ou com /reorganizar): em ordem, nos
+        próximos lotes livres (5 por lote, 30 por dia). Os que já estão com a LiA ou esperando você não mudam.
+        """
         now = scheduler.now()
-        late = sorted((p for p in self.db.with_status('agendado')
-                       if p['scheduled_at'] and datetime.fromisoformat(p['scheduled_at']) < now + timedelta(minutes=5)),
-                      key=lambda p: p['scheduled_at'])
-        moved = []
-        for post in late:
-            slot = self.next_slot(post)
+        since = (now - timedelta(days=2)).isoformat()
+        posted = [p for p in self.db.with_status('postado') if p['posted_at'] and p['posted_at'] >= since]
+        fixed = [p for p in self.db.scheduled() if p['status'] != 'agendado' and p['scheduled_at']]
+        movable = sorted((p for p in self.db.with_status('agendado') if p['scheduled_at']),
+                         key=lambda p: (p['scheduled_at'], p['id']))
+        assigned, plan = [], []
+        for post in movable:
+            slot = scheduler.next_slot(post['product_key'], fixed + assigned, now, posted=posted)
+            assigned.append({'scheduled_at': slot.isoformat(), 'product_key': post['product_key']})
+            plan.append((post, slot))
+        moved = 0
+        for post, slot in plan:
+            if post['scheduled_at'] == slot.isoformat():
+                continue
+            moved += 1
             self.db.update_post(post['id'], scheduled_at=slot.isoformat())
             self.resubid(self.db.get_post(post['id']))
             post = self.db.get_post(post['id'])
             if len(post['agenda_msgs']) > 2:
                 self.tg.edit_text(post['agenda_msgs'][2], f"⏰ <b>{fmt_when(post['scheduled_at'])}</b>\n\n{post_text(post)}",
                                   markup=self.agenda_markup(post['id']))
-            moved.append(f"{fmt_when(post['scheduled_at'])}: {html.escape(post['product_name'][:45])}")
-        self.tg.send_text(thread, ("🗓️ Novos horários:\n" + '\n'.join(moved)) if moved
-                          else "🗓️ Nenhum post precisou de novo horário.")
+        lines = []
+        for slot in sorted({s for _, s in plan}):
+            names = [html.escape(p['product_name'][:30]) for p, s in plan if s == slot]
+            lines.append(f"<b>{fmt_when(slot.isoformat())}</b> ({scheduler.period(slot)}, {len(names)}): "
+                         + ' · '.join(names))
+        text = (f"🗓️ <b>Agenda reorganizada</b>: {len(plan)} vídeo(s) em lotes de até {scheduler.BATCH_SIZE}, "
+                f"{scheduler.POSTS_PER_DAY} por dia (manhã, tarde e noite); {moved} mudaram de horário.\n\n"
+                + '\n'.join(lines)) if plan else "🗓️ Nenhum vídeo agendado para reorganizar."
+        self.tg.send_text(thread, text[:4000])
+        self.agenda_last = ''
 
     def job_validate_agenda(self, thread: Optional[int]):
         """
@@ -1581,7 +1604,23 @@ class Bot:
             return
         self._send_prompt(product, data, link, notes, reply_to)
 
-    def job_ideas(self, thread: Optional[int]):
+    def job_ideas(self, thread: Optional[int], daily: bool = False):
+        """A lista de ideias; `daily`: a do dia (só marca o dia como feito quando a lista sai; senão tenta de novo)."""
+        today = scheduler.now().date().isoformat()
+        try:
+            self._ideas(thread)
+        except Exception as e:
+            logger.exception("Ideias falharam")
+            tries = json.loads(self.db.get_meta('ideias_tentativas', '{}'))
+            again = daily and tries.get(today, 0) < IDEAS_TRIES
+            self.tg.send_text(thread, f"⚠️ Não consegui montar as ideias agora ({html.escape(str(e)[:150])})."
+                              + (f" Tento de novo em {IDEAS_RETRY_MINUTES} min." if again else
+                                 " Mande /sugestoes para tentar de novo."))
+            return
+        if daily:
+            self.db.set_meta('ideias_dia', today)
+
+    def _ideas(self, thread: Optional[int]):
         """
         Lista de ideias sem repetir: nada já postado/agendado (nem parecido) e nada sugerido nos últimos
         ideas.REPEAT_DAYS dias, nem o mesmo anúncio nem o mesmo tipo de produto de outra loja.
@@ -1616,20 +1655,22 @@ class Bot:
             return skip(p) or f"{p['shopId']}:{p['itemId']}" in hot_keys or \
                 ideas.similar_key(p.get('productName', '')) in hot_kinds
 
-        try:
-            seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today, skip_all)
-        except Exception as e:
-            logger.exception("Ideias falharam")
-            self.tg.send_text(thread, f"⚠️ Não consegui buscar ideias agora: {html.escape(str(e)[:200])}")
-            return
+        seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today, skip_all)
+        if not (hot or seasonal or evergreen or cheap):
+            raise RuntimeError("a Shopee não devolveu produtos (API fora do ar?)")
         for message in ideas.render(seasonal, evergreen, cheap, today, hot, hot_missing, hot_day):
             self.tg.send_text(thread, message)
-        self.send_idea_links(thread, ideas.export_rows(seasonal, evergreen, cheap, hot), today)
         for p in hot + seasonal + evergreen + cheap:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
             types[ideas.similar_key(p['productName'])] = today.isoformat()
         self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
         self.db.set_meta('ideias_tipos', json.dumps(types))
+        try:   # os links da LiA não podem derrubar a lista, que já saiu
+            self.send_idea_links(thread, ideas.export_rows(seasonal, evergreen, cheap, hot), today)
+        except Exception as e:
+            logger.exception("Links das ideias falharam")
+            self.tg.send_text(thread, f"⚠️ A lista saiu, mas os links para a LiA falharam ({html.escape(str(e)[:120])}). "
+                                      "Mande /linksideias para tentar de novo.")
 
     def send_idea_links(self, thread: Optional[int], rows: List[Dict], today: date):
         """
@@ -1726,8 +1767,14 @@ class Bot:
         today = current.date().isoformat()
         if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('ideias_dia') == today:
             return
-        self.db.set_meta('ideias_dia', today)
-        self.submit(('ideas', IDEIAS))
+        # o dia só fica "feito" quando a lista sai; se falhar (ou o robô reiniciar no meio), tenta de novo
+        tries = json.loads(self.db.get_meta('ideias_tentativas', '{}'))
+        last = float(self.db.get_meta('ideias_ultima_tentativa', '0') or 0)
+        if tries.get(today, 0) > IDEAS_TRIES or time.time() - last < IDEAS_RETRY_MINUTES * 60:
+            return
+        self.db.set_meta('ideias_tentativas', json.dumps({today: tries.get(today, 0) + 1}))
+        self.db.set_meta('ideias_ultima_tentativa', str(time.time()))
+        self.submit(('ideas', IDEIAS, True))
 
     def watch_sales(self):
         """A cada SALES_WATCH_MINUTES, confere as vendas das últimas 48 h e avisa as novas em 📊 Relatório."""
@@ -1878,6 +1925,10 @@ class Bot:
             self.tg.send_text(thread or AGENDA, "🧹 Limpando a Agenda…")
             self.submit(('clean_agenda', thread or AGENDA))
             return
+        if command.lower().startswith('/reorganizar'):
+            self.tg.send_text(thread or AGENDA, "🗓️ Reorganizando a Agenda nos lotes…")
+            self.submit(('replan', thread or AGENDA))
+            return
         if command.lower().startswith('/agenda'):
             self.refresh_agenda_summary(repost=True)
             return
@@ -1942,6 +1993,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
+            ('reorganizar', 'Refaz os horários da Agenda: lotes de 5, 30 por dia (manhã, tarde, noite)'),
             ('limparagenda', 'Tira da Agenda as mensagens de vídeos já postados/descartados'),
             ('linksideias', 'Links das ideias para o app da LiA: /linksideias, /linksideias 25/10 ou /linksideias 40'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
@@ -1967,6 +2019,9 @@ class Bot:
         self.register_commands()
         self.resume_after_restart()
         self.submit(('resubid_agenda',))
+        if self.db.get_meta('agenda_lotes') != '1':   # uma vez: a agenda antiga passa para os lotes de 5 (30/dia)
+            self.db.set_meta('agenda_lotes', '1')
+            self.submit(('replan', AGENDA))
         if self.lia and self.db.get_meta('lia_retro_feito') != '2':   # uma vez: acerta os vídeos antigos
             self.db.set_meta('lia_retro_feito', '2')
             self.submit(('lia_retro',))

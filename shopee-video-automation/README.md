@@ -62,7 +62,8 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 últimos 7 dias. A qualquer hora: **`/relatorio`** (hoje) ou **`/relatorio 10/10`** (outro dia), em
 qualquer tópico do grupo.
 
-**💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`**. Primeiro vem
+**💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
+Shopee falhar, o robô avisa e tenta de novo a cada 30 min, até 6 vezes no dia). Primeiro vem
 **🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
 gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em
 `BUSCAS_ALTA_URL`; sem lista de hoje, usa a mais recente com o aviso "lista de dd/mm"; fora do ar, a seção só não
@@ -178,9 +179,9 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | CTA | Laranja Shopee com letra branca e sombra (aparece em vídeo claro ou escuro), na área segura da tela cheia: longe do corte lateral (~9% de cada lado), dos botões da direita e do card do produto |
 | Logo no vídeo | 11% da borda esquerda e 12% do topo: inteiro na tela cheia (o app corta as laterais) e abaixo da seta/busca |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
-| Agenda | Em sequência, entre 9h e 22h, até 10 por dia (os já postados contam), horários quebrados (ex.: 14:37). Cada vídeo entra de 1 a 2 h depois do anterior; quando é preciso para caberem os 10 do dia, o intervalo encurta, nunca abaixo de 1 h. Nunca o mesmo produto no mesmo dia (vai para a manhã seguinte e os outros seguem o dia). `AGENDA_INTERVALO_MIN`/`MAX` mudam o intervalo |
+| Agenda | Em **lotes de 5 vídeos no mesmo horário** (a LiA publica um atrás do outro), **30 por dia**: 10 de manhã, 10 à tarde e 10 à noite, nos lotes das 9h, 11h, 14h, 16h, 19h e 21h, com minuto quebrado sorteado por dia (ex.: 9:27, 11:24). Os já postados contam no limite do dia; nunca o mesmo produto no mesmo dia. **`/reorganizar`** refaz os horários de toda a Agenda nos lotes (feito sozinho uma vez ao atualizar). `AGENDA_LOTES` (horas), `AGENDA_POR_LOTE` e `AGENDA_POSTS_POR_DIA` mudam isso |
 
-Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_POSTS_POR_DIA`, `AGENDA_INICIO`, `AGENDA_FIM`, `AGENDA_INTERVALO_MIN`, `AGENDA_INTERVALO_MAX`.
+Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_LOTES` (ex.: `9,11,14,16,19,21`), `AGENDA_POR_LOTE`, `AGENDA_POSTS_POR_DIA`.
 
 ## Instalação no VPS
 

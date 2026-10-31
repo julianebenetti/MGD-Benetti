@@ -1,19 +1,23 @@
 """
-Agenda em sequência: cada post entra de 1 a 2 horas depois do anterior (menos, se for preciso para caberem
-os N do dia; nunca menos de 1 hora), dentro da janela do dia,
-em horários quebrados, no máximo N por dia e nunca o mesmo produto duas vezes no mesmo dia.
+Agenda em lotes: 30 vídeos por dia, 10 de manhã, 10 à tarde e 10 à noite, em lotes de 5 vídeos no mesmo horário
+(a LiA publica um atrás do outro). Cada lote tem um horário quebrado (ex.: 9:13, nunca 9:00), o mesmo para os 5
+vídeos dele; nunca o mesmo produto duas vezes no mesmo dia.
 """
 
 import os
 import random
 from datetime import datetime, timedelta, time
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo(os.getenv('AGENDA_TIMEZONE', 'America/Sao_Paulo'))
-POSTS_PER_DAY = int(os.getenv('AGENDA_POSTS_POR_DIA', '10'))
-START_HOUR = int(os.getenv('AGENDA_INICIO', '9'))
-END_HOUR = int(os.getenv('AGENDA_FIM', '22'))
+# Horas dos lotes (2 de manhã, 2 à tarde, 2 à noite); o minuto é sorteado por dia, sempre quebrado
+BATCH_HOURS = [int(h) for h in (os.getenv('AGENDA_LOTES') or '9,11,14,16,19,21').split(',') if h.strip()]
+BATCH_SIZE = int(os.getenv('AGENDA_POR_LOTE', '5'))
+POSTS_PER_DAY = int(os.getenv('AGENDA_POSTS_POR_DIA', str(len(BATCH_HOURS) * BATCH_SIZE)))
+START_HOUR = min(BATCH_HOURS)
+END_HOUR = max(BATCH_HOURS) + 1
+PERIODS = {'manhã': range(0, 12), 'tarde': range(12, 18), 'noite': range(18, 24)}
 MIN_LEAD = timedelta(minutes=5)
 MAX_DAYS_AHEAD = 60
 
@@ -22,57 +26,43 @@ def now() -> datetime:
     return datetime.now(TZ)
 
 
-GAP_MIN = int(os.getenv('AGENDA_INTERVALO_MIN', '60'))    # minutos entre um post e o próximo
-GAP_MAX = int(os.getenv('AGENDA_INTERVALO_MAX', '120'))
+def period(t: datetime) -> str:
+    return next((name for name, hours in PERIODS.items() if t.astimezone(TZ).hour in hours), '')
 
 
-def _broken(t: datetime) -> datetime:
-    """Foge de minutos redondos (ex: 17:34, não 17:30)."""
-    t = t.replace(second=0, microsecond=0)
-    while t.minute % 5 == 0:
-        t += timedelta(minutes=1)
-    return t
-
-
-def _day_start(day, rng: random.Random) -> datetime:
-    return _broken(datetime.combine(day, time(START_HOUR), TZ) + timedelta(minutes=rng.randint(2, 25)))
+def batches(day) -> List[datetime]:
+    """Os horários dos lotes do dia: minuto quebrado (3 a 27, nunca múltiplo de 5), sorteado pela data."""
+    rng = random.Random(day.toordinal())
+    out = []
+    for hour in BATCH_HOURS:
+        minute = rng.choice([m for m in range(3, 28) if m % 5])
+        out.append(datetime.combine(day, time(hour, minute), TZ))
+    return out
 
 
 def next_slot(product_key: str, scheduled: Iterable[dict], current: Optional[datetime] = None,
               rng: Optional[random.Random] = None, last_posted: Optional[datetime] = None,
               posted: Iterable[dict] = ()) -> datetime:
     """
-    Sequência por dia: o post entra depois do último daquele dia (ou do último postado, ou de agora), dentro da
-    janela START_HOUR–END_HOUR, em minuto quebrado. O intervalo é de GAP_MIN a GAP_MAX minutos, encurtado (nunca
-    abaixo de GAP_MIN) quando é preciso para caberem os POSTS_PER_DAY do dia até END_HOUR. Dia cheio, sem espaço
-    ou que já tem o mesmo produto: vai para o dia seguinte, logo depois de START_HOUR.
-    `scheduled`: posts agendados ('scheduled_at', 'product_key'); `posted`: já postados ('posted_at',
-    'product_key'), que também contam no limite do dia e na regra do mesmo produto.
+    O próximo lote com vaga: ainda não passou, tem menos de BATCH_SIZE vídeos, o dia tem menos de POSTS_PER_DAY e
+    ainda não tem esse produto. `scheduled`: posts agendados ('scheduled_at', 'product_key'); `posted`: já postados
+    ('posted_at', 'product_key'), que contam no limite do dia e na regra do mesmo produto.
+    (`rng` e `last_posted` ficam por compatibilidade: os horários dos lotes já vêm da data.)
     """
     current = current or now()
-    rng = rng or random.Random()
-    items = [(datetime.fromisoformat(p['scheduled_at']).astimezone(TZ), p['product_key'])
+    items = [(datetime.fromisoformat(p['scheduled_at']).astimezone(TZ), p['product_key'], True)
              for p in scheduled if p.get('scheduled_at')]
-    items += [(datetime.fromisoformat(p['posted_at']).astimezone(TZ), p['product_key'])
+    items += [(datetime.fromisoformat(p['posted_at']).astimezone(TZ), p['product_key'], False)
               for p in posted if p.get('posted_at')]
     for offset in range(MAX_DAYS_AHEAD):
         day = (current + timedelta(days=offset)).date()
-        day_items = [(w, k) for w, k in items if w.date() == day]
-        if len(day_items) >= POSTS_PER_DAY or any(k == product_key for _, k in day_items):
+        day_items = [(w, k, s) for w, k, s in items if w.date() == day]
+        if len(day_items) >= POSTS_PER_DAY or any(k == product_key for _, k, _ in day_items):
             continue
-        refs = [w for w, _ in day_items]
-        if offset == 0:
-            refs += [current] + ([last_posted.astimezone(TZ)] if last_posted else [])
-        if refs and max(refs) >= datetime.combine(day, time(START_HOUR), TZ):
-            base = max(refs)
-            left = POSTS_PER_DAY - len(day_items)                       # posts que ainda cabem no dia
-            room = (datetime.combine(day, time(END_HOUR), TZ) - base).total_seconds() / 60
-            top = max(GAP_MIN, min(GAP_MAX, int(room / left)))           # encurta para caberem os do dia
-            slot = _broken(base + timedelta(minutes=rng.randint(GAP_MIN, top)))
-        else:
-            slot = _day_start(day, rng)
-        if slot.time() < time(START_HOUR):
-            slot = _day_start(day, rng)
-        if slot.date() == day and slot.time() <= time(END_HOUR):
-            return slot
+        for slot in batches(day):
+            if slot < current + MIN_LEAD:
+                continue
+            in_batch = sum(1 for w, _, s in day_items if s and w.replace(second=0, microsecond=0) == slot)
+            if in_batch < BATCH_SIZE:
+                return slot
     raise RuntimeError('Agenda cheia nos próximos 60 dias')
