@@ -1618,7 +1618,7 @@ class Bot:
                                  " Mande /sugestoes para tentar de novo."))
             return
         if daily:
-            self.db.set_meta('ideias_dia', today)
+            self.db.set_meta('ideias_ok_dia', today)
 
     def _ideas(self, thread: Optional[int]):
         """
@@ -1765,7 +1765,7 @@ class Bot:
         current = scheduler.now()
         hour, minute = (int(x) for x in IDEAS_TIME.split(':'))
         today = current.date().isoformat()
-        if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('ideias_dia') == today:
+        if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('ideias_ok_dia') == today:
             return
         # o dia só fica "feito" quando a lista sai; se falhar (ou o robô reiniciar no meio), tenta de novo
         tries = json.loads(self.db.get_meta('ideias_tentativas', '{}'))
