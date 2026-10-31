@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793429620,
-  "updated_at_br": "31/10/2026 03:48",
+  "updated_at": 1793438284,
+  "updated_at_br": "31/10/2026 06:13",
   "period_days": 90,
-  "total_orders": 5746,
-  "total_conversions": 5517,
+  "total_orders": 5745,
+  "total_conversions": 5516,
   "orders": [
     {
       "ID do pedido": "2610300SYAWFCD",
@@ -1482,7 +1482,7 @@
     },
     {
       "ID do pedido": "261027Q12342D5",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-27 09:10:19",
       "Sub_id1": "20Out26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "54.99",
@@ -1494,7 +1494,7 @@
       "Comissao total do pedido(R$)": "2.47455",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Conjunto Feminino Plus Size Com Bolso 100% Algodão Silk Premium",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58207617192",
       "ID da loja": "1777717496",
       "Nome da loja": "MINA_PLUS",
@@ -1502,7 +1502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "246791418113176",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-27"
     },
     {
@@ -143627,31 +143627,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239363257134289",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-02"
-    },
-    {
-      "ID do pedido": "260802ADAPH1N8",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-02 08:18:36",
-      "Sub_id1": "01Ago26VEAescorredor",
-      "Valor de Compra(R$)": "30.64",
-      "Comissao liquida do afiliado(R$)": "1.51362",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "1.20%",
-      "Comissao Shopee(R$)": "1.2256",
-      "Comissao do vendedor(R$)": "0.36768",
-      "Comissao total do pedido(R$)": "1.59328",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Sapateira Suspenso de Porta Organizador Multiuso Divisória Vertical Chinelo",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22394707537",
-      "ID da loja": "1619826799",
-      "Nome da loja": "youlongzhang092",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "239357915195451",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-02"
     }
