@@ -1604,11 +1604,11 @@ class Bot:
             return
         self._send_prompt(product, data, link, notes, reply_to)
 
-    def job_ideas(self, thread: Optional[int], daily: bool = False):
+    def job_ideas(self, thread: Optional[int], daily: bool = False, only: Optional[str] = None):
         """A lista de ideias; `daily`: a do dia (só marca o dia como feito quando a lista sai; senão tenta de novo)."""
         today = scheduler.now().date().isoformat()
         try:
-            self._ideas(thread)
+            self._ideas(thread, only)
         except Exception as e:
             logger.exception("Ideias falharam")
             tries = json.loads(self.db.get_meta('ideias_tentativas', '{}'))
@@ -1620,10 +1620,10 @@ class Bot:
         if daily:
             self.db.set_meta('ideias_ok_dia', today)
 
-    def _ideas(self, thread: Optional[int]):
+    def _ideas(self, thread: Optional[int], only: Optional[str] = None):
         """
-        Lista de ideias sem repetir: nada já postado/agendado (nem parecido) e nada sugerido nos últimos
-        ideas.REPEAT_DAYS dias, nem o mesmo anúncio nem o mesmo tipo de produto de outra loja.
+        A lista do dia: 🔥 20 mais buscados + 👗 10 moda feminina + 🐾 10 pet (5 de tapete higiênico). `only`: só uma
+        parte ('alta', 'moda', 'pet', 'tapete'). Nada já postado/agendado nem sugerido nos últimos ideas.REPEAT_DAYS dias.
         """
         today = scheduler.now().date()
         active = self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'na_lia', 'avisado', 'postado')
@@ -1635,38 +1635,40 @@ class Bot:
         suggested = {k: d for k, d in json.loads(self.db.get_meta('ideias_sugeridas', '{}')).items() if d > cutoff}
         types = {k: d for k, d in json.loads(self.db.get_meta('ideias_tipos', '{}')).items() if d > cutoff}
 
-        def skip(p: Dict) -> bool:
-            kind = ideas.similar_key(p.get('productName', ''))
+        def skip_key(p: Dict) -> bool:
             key = f"{p['shopId']}:{p['itemId']}"
-            return key in used or key in suggested or kind in types or kind in used_types
+            return key in used or key in suggested
 
-        # 🔥 Buscas em alta (orgânico): se a lista não estiver disponível, a seção só não aparece
-        hot, hot_missing, hot_day = [], 0, None
-        try:
-            terms, hot_day = ideas.trending_terms(today)
-            if terms:
-                hot, hot_missing = ideas.trending(self.pipeline.shopee, terms, skip)
-        except Exception as e:
-            logger.warning(f"Buscas em alta falharam: {e}")
-        hot_keys = {f"{p['shopId']}:{p['itemId']}" for p in hot}
-        hot_kinds = {ideas.similar_key(p['productName']) for p in hot}
+        def skip_type(p: Dict) -> bool:
+            kind = ideas.similar_key(p.get('productName', ''))
+            return kind in types or kind in used_types
 
-        def skip_all(p: Dict) -> bool:   # as outras seções não repetem o que já entrou em alta
-            return skip(p) or f"{p['shopId']}:{p['itemId']}" in hot_keys or \
-                ideas.similar_key(p.get('productName', '')) in hot_kinds
-
-        seasonal, evergreen, cheap = ideas.collect(self.pipeline.shopee, today, skip_all)
-        if not (hot or seasonal or evergreen or cheap):
-            raise RuntimeError("a Shopee não devolveu produtos (API fora do ar?)")
-        for message in ideas.render(seasonal, evergreen, cheap, today, hot, hot_missing, hot_day):
+        sections, hot_missing, hot_day = [], 0, None
+        if only in (None, 'alta'):
+            hot = []
+            try:
+                terms, hot_day = ideas.trending_terms(today)
+                if terms:
+                    hot, hot_missing = ideas.trending(self.pipeline.shopee, terms, lambda p: skip_key(p) or skip_type(p))
+            except Exception as e:
+                logger.warning(f"Buscas em alta falharam: {e}")
+            sections.append(('alta', '🔥 Mais buscados', hot))
+        taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
+        if only != 'alta':
+            sections += ideas.focus(self.pipeline.shopee, today, lambda p: skip_key(p) or
+                                    f"{p['shopId']}:{p['itemId']}" in taken, skip_type, only)
+        found = [p for _, _, items in sections for p in items]
+        if not found:
+            raise RuntimeError("nenhum produto passou nas regras (a Shopee respondeu?)")
+        for message in ideas.render_sections(sections, today, hot_missing, hot_day, ideas.TRENDING_MAX):
             self.tg.send_text(thread, message)
-        for p in hot + seasonal + evergreen + cheap:
+        for p in found:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
             types[ideas.similar_key(p['productName'])] = today.isoformat()
         self.db.set_meta('ideias_sugeridas', json.dumps(suggested))
         self.db.set_meta('ideias_tipos', json.dumps(types))
         try:   # os links da LiA não podem derrubar a lista, que já saiu
-            self.send_idea_links(thread, ideas.export_rows(seasonal, evergreen, cheap, hot), today)
+            self.send_idea_links(thread, ideas.section_rows(sections), today)
         except Exception as e:
             logger.exception("Links das ideias falharam")
             self.tg.send_text(thread, f"⚠️ A lista saiu, mas os links para a LiA falharam ({html.escape(str(e)[:120])}). "
@@ -1896,8 +1898,18 @@ class Bot:
             return
         if command.lower().startswith('/sugestoes') or command.lower().startswith('/sugestões'):
             target = thread or IDEIAS
-            self.tg.send_text(target, "💡 Buscando ideias na Shopee… (leva 1 a 2 minutos)")
-            self.submit(('ideas', target))
+            arg = (command.split(maxsplit=1)[1].strip().lower() if ' ' in command else '')
+            arg = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
+                   'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
+            if arg and arg not in ('alta', 'moda', 'pet', 'tapete'):
+                self.tg.send_text(target, "Use /sugestoes (a lista toda: 20 mais buscados, 10 moda feminina, 10 pet) "
+                                          "ou só uma parte: /sugestoes alta · /sugestoes moda · /sugestoes pet · "
+                                          "/sugestoes tapete")
+                return
+            what = {'alta': 'os mais buscados', 'moda': 'moda feminina', 'pet': 'pet',
+                    'tapete': 'tapete higiênico'}.get(arg, 'a lista do dia')
+            self.tg.send_text(target, f"💡 Buscando {what} na Shopee agora… (leva 1 a 3 minutos)")
+            self.submit(('ideas', target, False, arg or None))
             return
         if command.lower().startswith('/verificarlia'):
             self.tg.send_text(thread or AGENDA, "🔎 Conferindo a conversa com a LiA…")
@@ -1987,7 +1999,7 @@ class Bot:
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('vendas', 'Vendas do Shopee Vídeo: 7 dias (/vendas hoje, /vendas 30, /vendas todas)'),
-            ('sugestoes', 'Ideias para gravar: buscas em alta, datas e nichos'),
+            ('sugestoes', 'Ideias agora: 20 buscados + 10 moda + 10 pet (ou /sugestoes alta|moda|pet|tapete)'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
             ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),

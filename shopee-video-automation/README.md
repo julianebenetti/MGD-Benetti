@@ -63,6 +63,12 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 qualquer tópico do grupo.
 
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
+**A lista do dia (40, o limite diário de criações do app da LiA):** 🔥 **20 mais buscados** na Shopee (a seção de
+buscas em alta abaixo) · 👗 **10 de moda feminina** · 🐾 **10 de pet, 5 deles de tapete higiênico** (de lojas
+diferentes). Moda e pet: nota ≥ 4,7, 100+ vendas, com comissão (sem piso, vídeo orgânico), ordenados por comissão ×
+vendas, palavras-chave em rodízio por dia, nada de remédio/antipulgas no pet. Pedir na hora: **`/sugestoes`** (tudo)
+ou só uma parte: **`/sugestoes alta`**, **`/sugestoes moda`**, **`/sugestoes pet`**, **`/sugestoes tapete`**.
+(As seções antigas de datas/nichos/preço acessível saíram da lista do dia.)
 Shopee falhar, o robô avisa e tenta de novo a cada 30 min, até 6 vezes no dia). Primeiro vem
 **🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
 gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em
