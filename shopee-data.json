@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793604860,
-  "updated_at_br": "02/11/2026 04:29",
+  "updated_at": 1793615561,
+  "updated_at_br": "02/11/2026 07:28",
   "period_days": 90,
-  "total_orders": 5583,
-  "total_conversions": 5360,
+  "total_orders": 5582,
+  "total_conversions": 5359,
   "orders": [
     {
       "ID do pedido": "2611015N53V1U9",
@@ -139553,31 +139553,6 @@
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "239539404136075",
       "conversionStatus": "CANCELLED",
-      "data": "2026-08-04"
-    },
-    {
-      "ID do pedido": "260804FJXWN1TM",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-04 09:42:41",
-      "Sub_id1": "29Jul26VIPtapetehigienicovs1",
-      "Valor de Compra(R$)": "44.51",
-      "Comissao liquida do afiliado(R$)": "2.57936",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "2.10%",
-      "Comissao Shopee(R$)": "1.7804",
-      "Comissao do vendedor(R$)": "0.93471",
-      "Comissao total do pedido(R$)": "2.71511",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Tapete Higienico Good Pad 50 Unidades Envio Imediato",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "17463955532",
-      "ID da loja": "279375549",
-      "Nome da loja": "Jacartta ",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "239535761169589",
-      "conversionStatus": "COMPLETED",
       "data": "2026-08-04"
     }
   ]
