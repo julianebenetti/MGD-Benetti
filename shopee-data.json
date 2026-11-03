@@ -1,9 +1,9 @@
 {
-  "updated_at": 1793678123,
-  "updated_at_br": "03/11/2026 00:50",
+  "updated_at": 1793692111,
+  "updated_at_br": "03/11/2026 04:43",
   "period_days": 90,
-  "total_orders": 5498,
-  "total_conversions": 5280,
+  "total_orders": 5497,
+  "total_conversions": 5279,
   "orders": [
     {
       "ID do pedido": "261102847MCGBA",
@@ -137427,31 +137427,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239619385115331",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-05"
-    },
-    {
-      "ID do pedido": "260805HKP7XP9Q",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-05 05:01:04",
-      "Sub_id1": "30Jul26VIPKokeshi",
-      "Valor de Compra(R$)": "12.79",
-      "Comissao liquida do afiliado(R$)": "0.48602",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.5116",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.5116",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "1Un Dermaroller Microagulhamento Rolo Agulha System 540 Original com Anvisa Preencher Falha Cabelo Barba Cicatriz Mancha",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23093043705",
-      "ID da loja": "1180815264",
-      "Nome da loja": "oPatrocinio",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "239605263196828",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-05"
     }
