@@ -23,3 +23,16 @@
 - Essa rotina busca em duas frentes todo dia: categorias gerais (evergreen) e, sempre que
   houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
   a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
+
+## Card da Central de Post (campanhas de anúncio)
+- Formato do card:
+  ```
+  VEA
+  Sub_id: <subid>
+  Link: <link completo do produto>
+  ID:
+  Data campanha: <dd/mm>
+  Orçamento: 16,44
+  ```
+- A primeira linha é sempre **VEA** (nome da página do Instagram onde o anúncio roda).
+- O orçamento é sempre **16,44**.
