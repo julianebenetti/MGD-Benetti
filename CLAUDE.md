@@ -36,3 +36,8 @@
   ```
 - A primeira linha é sempre **VEA** (nome da página do Instagram onde o anúncio roda).
 - O orçamento é sempre **16,44**.
+- Regras de lançamento: seguir sempre o artifact **Plano de Lançamentos**
+  (https://claude.ai/artifact/Rap9A29zk1wK59LhXMGgrc), com a régua do Sherman, os dias bons
+  e o piso de comissão (R$ 15+ por venda com orçamento de 16,44; ideal R$ 20+).
+- No campo Sub_id vai só o nome curto do produto: o Central Post acrescenta data + conta
+  sozinho (ex.: 05Nov26VEAvestidobabado).
