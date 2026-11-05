@@ -105,6 +105,16 @@ página já carregou, sem fazer pedidos à Shopee — ou de prints / do JSON/CSV
 narração** (botões 1–4 e 🔄 Outras 4; responder a mensagem pede ajuste; "minha: …" usa uma narração sua); escolhida a
 narração, vem o prompt completo com ela intacta. **Responda o prompt** para ajustar. Vídeo barrado por detalhe diferente tem **🎬 Prompt corrigido** em 📥 Envios.
 
+**🏆 Vencedores do Shopee Vídeo** — todo dia às 7:45 (`VENCEDORES_HORA`) em 📊 Relatório, ou com **`/vencedores`**
+(`/vencedores 14` = 14 dias): as vendas do canal vídeo dos últimos 7 dias agrupadas por produto (ligadas ao vídeo
+do robô pelo produto). **📌 Fixe hoje** = o que mais rendeu; **🔁 Faça mais versões** = os que venderam, com botões
+🎬 1, 🎬 2… que montam a nova versão em 🎬 Prompts (4 narrações, outro gancho e outra cena, mesmo produto). O link do
+produto vai direto pela API, sem abrir página da Shopee.
+
+**🌱 Oportunidades (teste)** — 5 ideias a mais na lista do dia (ou **`/sugestoes oportunidades`**): a API não diz
+quantos afiliados divulgam um produto, então são sinais de pouca concorrência: nota ≥ 4,7, de 100 a 3.000 vendas
+e, quando a API informa, comissão extra da loja; da maior comissão para a menor.
+
 **💵 Vendas reais** (relatório de conversões da API de afiliados): o relatório do dia traz os pedidos e a
 comissão do dia dos vídeos; **`/vendas`** (últimos 7 dias), **`/vendas hoje`** ou **`/vendas 30`** mostram só as
 vendas do **Shopee Vídeo** — pelo campo **Canal = vídeo** da Shopee (o mesmo filtro do relatório do site),

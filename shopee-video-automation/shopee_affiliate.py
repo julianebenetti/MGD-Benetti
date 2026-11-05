@@ -106,11 +106,12 @@ class ShopeeAffiliateClient:
         nodes = self._graphql(query)['productOfferV2']['nodes']
         return nodes[0] if nodes else None
 
-    def search(self, keyword: str, limit: int = 20, sort_type: Optional[int] = None) -> List[Dict]:
+    def search(self, keyword: str, limit: int = 20, sort_type: Optional[int] = None,
+               extra_fields: str = '') -> List[Dict]:
         """`sort_type` da API: 2 = mais vendidos, 5 = maior comissão (sem ele, relevância)."""
         sort = f',sortType:{int(sort_type)}' if sort_type else ''
         query = (f'{{productOfferV2(keyword:{_gql_str(keyword)},limit:{int(limit)}{sort})'
-                 f'{{nodes{{{PRODUCT_FIELDS}}}}}}}')
+                 f'{{nodes{{{PRODUCT_FIELDS} {extra_fields}}}}}}}')
         return self._graphql(query)['productOfferV2']['nodes']
 
     def short_link(self, origin_url: str, sub_ids: Optional[List[str]] = None) -> str:
@@ -163,6 +164,11 @@ class ShopeeAffiliateClient:
         Produtos possíveis para o link recebido, em ordem de prioridade.
         Link de produto: 1 candidato. Link de vídeo: os produtos vinculados ao vídeo.
         """
+        if extract_ids(url):   # link completo de produto: direto pela API, sem abrir a página
+            ids = extract_ids(url)
+            self.last_final_url = url
+            product = self.product_by_ids(ids['shop_id'], ids['item_id'])
+            return [product] if product else []
         final_url = self.resolve_url(url)
         self.last_final_url = final_url
         logger.info(f"Link {url} abriu em {final_url}")

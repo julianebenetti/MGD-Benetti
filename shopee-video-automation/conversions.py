@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 FIELDS = ('purchaseTime utmContent orders { orderId orderStatus items { itemId itemName shopName qty '
           'actualAmount itemTotalCommission displayItemStatus } }')
 _channel = None   # (nível, campo) do "Canal" do relatório da Shopee (ex.: vídeo), descoberto na API; () = não há
+_item_shop = None  # o item da conversão tem shopId? (para montar o link do produto vendido)
 
 
 def channel_field(client):
@@ -27,10 +28,10 @@ def channel_field(client):
     O relatório de vendas do site tem o filtro "Canal" (vídeo, live, redes sociais…). Procura na API um campo de
     canal nas conversões (no pedido, no item ou na conversão) uma vez só.
     """
-    global _channel
+    global _channel, _item_shop
     if _channel is not None:
         return _channel
-    _channel = ()
+    _channel, _item_shop = (), False
     try:
         types = client._graphql('{__schema{types{name fields{name}}}}')['__schema']['types']
     except Exception as e:
@@ -40,6 +41,8 @@ def channel_field(client):
         name = t['name'] or ''
         if 'conversion' not in name.lower() or not t.get('fields'):
             continue
+        if 'item' in name.lower() and any(f['name'] == 'shopId' for f in t['fields']):
+            _item_shop = True
         for f in t['fields']:
             if 'channel' in f['name'].lower():
                 level = 'item' if 'item' in name.lower() else 'order' if 'order' in name.lower() else 'node'
@@ -50,14 +53,15 @@ def channel_field(client):
 
 
 def _fields(channel) -> str:
+    base = FIELDS.replace('items { itemId', 'items { shopId itemId') if _item_shop else FIELDS
     if not channel:
-        return FIELDS
+        return base
     level, name = channel
     if level == 'item':
-        return FIELDS.replace('displayItemStatus }', f'displayItemStatus {name} }}')
+        return base.replace('displayItemStatus }', f'displayItemStatus {name} }}')
     if level == 'order':
-        return FIELDS.replace('orderStatus items', f'orderStatus {name} items')
-    return f"{name} {FIELDS}"
+        return base.replace('orderStatus items', f'orderStatus {name} items')
+    return f"{name} {base}"
 PAGE = 500
 MAX_PAGES = 20
 _lock = threading.Lock()
@@ -113,6 +117,7 @@ def fetch(client, start: datetime, end: datetime) -> List[Dict]:
                             'status': _status(order.get('orderStatus')),
                             'item': item.get('itemName') or '',
                             'item_id': str(item.get('itemId') or ''),
+                            'shop_id': str(item.get('shopId') or ''),
                             'shop': item.get('shopName') or '',
                             'qty': int(item.get('qty') or 1),
                             'commission': _money(item.get('itemTotalCommission')),
@@ -156,6 +161,49 @@ def with_known_subs(posts_by_sub: Dict[str, str], items: List[Dict]) -> Dict[str
         if sub and sub not in posts_by_sub and (sub.startswith(('SV-', 'LIA-')) or OLD_SUB.match(sub)):
             extra[sub] = ('🤖 LiA app: ' if sub.startswith('LIA-') else '') + (sub.split('-')[-1] if '-' in sub else sub)
     return {**posts_by_sub, **extra}
+
+
+def winners(items: List[Dict], posts_by_sub: Dict[str, str],
+            posts_by_item: Optional[Dict[str, str]] = None) -> List[Dict]:
+    """
+    Os produtos que venderam pelo Shopee Vídeo (canal vídeo, ou sub_id dos vídeos), do que mais rendeu ao que menos:
+    {item_id, shop_id, name, video (nome do post do robô ou ''), orders, commission}. Sem os cancelados.
+    """
+    valid = [i for i in from_videos(items, posts_by_sub) if i['status'] != 'cancelado']
+    known = with_known_subs(posts_by_sub, valid)
+    groups: Dict[str, Dict] = {}
+    for i in valid:
+        key = i.get('item_id') or i['item']
+        g = groups.setdefault(key, {'item_id': i.get('item_id', ''), 'shop_id': i.get('shop_id', ''),
+                                    'name': i['item'], 'video': '', 'orders': set(), 'commission': 0.0})
+        g['orders'].add(i['order_id'])
+        g['commission'] += i['commission']
+        g['shop_id'] = g['shop_id'] or i.get('shop_id', '')
+        if not g['video']:
+            g['video'] = (posts_by_item or {}).get(i.get('item_id', '')) or \
+                (known.get(i['sub_id'], '') if i['sub_id'] else '')
+    rows = [{**g, 'orders': len(g['orders'])} for g in groups.values()]
+    return sorted(rows, key=lambda g: (g['commission'], g['orders']), reverse=True)
+
+
+def winners_text(rows: List[Dict], days: int, top: int = 8) -> str:
+    e = html.escape
+    lines = [f"🏆 <b>Vencedores do Shopee Vídeo</b> · últimos {days} dias",
+             "(vendas do canal vídeo, pelo produto; sem cancelados)"]
+    if not rows:
+        lines.append("\nNenhuma venda pelo vídeo nesse período ainda.")
+        return '\n'.join(lines)
+    best = rows[0]
+    lines += ["", f"📌 <b>Fixe hoje no seu perfil:</b> {e(best['video'] or best['name'])[:70]}",
+              f"   {best['orders']} pedido(s) · <b>{brl(best['commission'])}</b>"
+              + ("" if best['video'] else " · (vídeo não passou pelo robô: fixe o vídeo deste produto)")]
+    lines += ["", "🔁 <b>Faça mais versões</b> (outro gancho e outra cena, mesmo produto idêntico ao anúncio):"]
+    for n, g in enumerate(rows[:top], 1):
+        lines.append(f"{n}. {e(g['name'][:55])} · {g['orders']} pedido(s) · <b>{brl(g['commission'])}</b>")
+    if len(rows) > top:
+        lines.append(f"… e mais {len(rows) - top}")
+    lines.append("\n<i>Toque no número para eu montar a nova versão em 🎬 Prompts (4 narrações para escolher).</i>")
+    return '\n'.join(lines)[:4000]
 
 
 def new_sales_text(items: List[Dict], posts_by_sub: Dict[str, str],

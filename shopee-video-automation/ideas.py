@@ -469,6 +469,71 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
     return out
 
 
+# 🌱 Oportunidades (TESTE): a API não diz quantos afiliados divulgam cada produto; estes são sinais de pouca
+# concorrência: nota boa, poucas vendas ainda (OPP_MIN_SALES a OPP_MAX_SALES) e, quando a API informa, comissão
+# extra da loja (o vendedor está pagando a mais para atrair afiliados).
+OPP_COUNT = int(os.getenv('IDEIAS_OPORTUNIDADES', '5'))
+OPP_MIN_SALES = 100
+OPP_MAX_SALES = 3000
+OPP_KEYWORDS = [k for _, _, _, kws, _, _ in FOCUS for k in kws] + [
+    'organizador', 'utensílios de cozinha', 'decoração quarto', 'luminária', 'kit banheiro', 'tapete sala']
+_seller_field = True   # a busca aceita sellerCommissionRate? (desliga sozinho se a API recusar)
+
+
+def _seller_rate(p: Dict) -> float:
+    try:
+        rate = float(p.get('sellerCommissionRate') or 0)
+    except (TypeError, ValueError):
+        return 0.0
+    return rate / 100 if rate > 1 else rate
+
+
+def opportunities(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable[[Dict], bool],
+                  count: int = OPP_COUNT) -> List[Dict]:
+    """Até `count` produtos com sinais de pouca concorrência, 1 por tipo, da maior comissão para a menor."""
+    global _seller_field
+    found: Dict[str, Dict] = {}
+    for keyword in _keywords_today(OPP_KEYWORDS, today, 8):
+        results = []
+        try:
+            results = client.search(keyword, limit=PER_KEYWORD, sort_type=5,
+                                    extra_fields='sellerCommissionRate' if _seller_field else '')
+        except Exception as e:
+            if _seller_field:
+                _seller_field = False   # a API não tem o campo: segue sem ele
+                logger.info(f"Oportunidades: sem comissão da loja na API ({e})")
+                try:
+                    results = client.search(keyword, limit=PER_KEYWORD, sort_type=5)
+                except Exception as e2:
+                    logger.warning(f"Oportunidades: busca '{keyword}' falhou ({e2})")
+            else:
+                logger.warning(f"Oportunidades: busca '{keyword}' falhou ({e})")
+        for p in results:
+            found.setdefault(f"{p['shopId']}:{p['itemId']}", {**p, 'kw': keyword})
+    ok = []
+    for p in found.values():
+        name = p.get('productName', '')
+        sales = int(p.get('sales') or 0)
+        if (float(p.get('ratingStar') or 0) >= MIN_RATING and OPP_MIN_SALES <= sales <= OPP_MAX_SALES
+                and commission_value(p) > 0 and not BLOCKED.search(name) and not FORBIDDEN.search(name)
+                and not PET_BLOCKED.search(name) and not skip(p) and not skip_type(p)):
+            if _seller_field and 'sellerCommissionRate' in p and _seller_rate(p) <= 0:
+                continue   # a API informa e a loja não paga extra: fica de fora
+            extra = _seller_rate(p)
+            why = f"comissão extra da loja {extra * 100:.0f}%" if extra > 0 else "poucas vendas ainda"
+            ok.append({**p, 'tema': f"Oportunidade (teste) · {why} · {p['kw']}"})
+    chosen, kinds = [], set()
+    for p in sorted(ok, key=lambda p: commission_value(p), reverse=True):
+        kind = similar_key(p.get('productName', ''))
+        if kind in kinds:
+            continue
+        chosen.append(p)
+        kinds.add(kind)
+        if len(chosen) >= count:
+            break
+    return chosen
+
+
 def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, hot_missing: int = 0,
                     hot_day: Optional[date] = None, hot_wanted: int = 0) -> List[str]:
     """A lista do dia por seção (mesma numeração do CSV/links), em mensagens abaixo do limite do Telegram."""
@@ -500,7 +565,7 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
             blocks.append(f"<i>Só {len(items)} dos termos em alta tinham produto bom"
                           + (f" ({hot_missing} sem produto)" if hot_missing else '') + ".</i>")
     blocks.append("<i>Pedir de novo: /sugestoes (tudo) · /sugestoes alta · /sugestoes moda · /sugestoes pet · "
-                  "/sugestoes tapete</i>")
+                  "/sugestoes tapete · /sugestoes oportunidades</i>")
     messages, current = [], ''
     for block in blocks:
         if len(current) + len(block) + 2 > 3800:

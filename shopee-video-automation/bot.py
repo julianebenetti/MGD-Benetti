@@ -65,6 +65,7 @@ RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
+WINNERS_TIME = os.getenv('VENCEDORES_HORA', '07:45')   # 🏆 vencedores do dia em 📊 Relatório
 IDEAS_TRIES = 6                 # tentativas por dia da lista diária (se a Shopee falhar)
 IDEAS_RETRY_MINUTES = 30
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
@@ -162,7 +163,7 @@ class Bot:
     def submit(self, job: tuple):
         kind = job[0]
         name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
-            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch') \
+            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -959,6 +960,9 @@ class Bot:
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
             return
+        if action == 'wv':   # 🏆 vencedores: nova versão do vídeo de um produto que já vende
+            self.on_new_version(cb, raw_id)
+            return
         if action == 'nv':   # 🎙 narração escolhida (nv:<mensagem>.<n>) ou outras 4 (nv:<mensagem>.0)
             self.on_narration_button(cb, raw_id)
             return
@@ -1320,6 +1324,66 @@ class Bot:
         lines.append(f"Total: <b>{sum(counts)}</b> · média {sum(counts) / 7:.1f} por dia".replace('.', ','))
         return '\n'.join(lines)[:4000]
 
+    def shop_by_item(self) -> Dict[str, str]:
+        """ID do item divulgado → ID da loja, dos posts do robô (para montar o link quando a conversão não traz)."""
+        out = {}
+        for p in self.db.with_status('agendado', 'enviando', 'na_lia', 'avisado', 'postado'):
+            if p['products'] and p['products'][0].get('shopId'):
+                out[str(p['products'][0].get('itemId', ''))] = str(p['products'][0]['shopId'])
+        return out
+
+    def job_winners(self, thread: Optional[int], days: int = 7, daily: bool = False):
+        """
+        🏆 Vencedores do Shopee Vídeo: o produto que mais vendeu pelo vídeo (📌 fixar no perfil) e os que venderam,
+        com botão para uma nova versão do vídeo em 🎬 Prompts.
+        """
+        end = scheduler.now()
+        try:
+            items = conversions.fetch(self.pipeline.shopee, end - timedelta(days=days), end)
+        except Exception as e:
+            logger.warning(f"Vencedores: consulta falhou ({e})")
+            if not daily:
+                self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas agora ({html.escape(str(e)[:150])}).")
+            return
+        rows = conversions.winners(items, self.posts_by_sub(), self.posts_by_item())
+        shops = self.shop_by_item()
+        buttons = []
+        for n, g in enumerate(rows[:8], 1):
+            shop = g['shop_id'] or shops.get(g['item_id'], '')
+            if shop and g['item_id']:
+                buttons.append((f"🎬 {n}", f"wv:{shop}.{g['item_id']}"))
+        markup = keyboard(*[buttons[i:i + 4] for i in range(0, len(buttons), 4)]) if buttons else None
+        self.tg.send_text(thread, conversions.winners_text(rows, days), markup=markup)
+        if daily:
+            self.db.set_meta('vencedores_dia', end.date().isoformat())
+
+    def daily_winners(self):
+        """No horário VENCEDORES_HORA, o relatório de vencedores vai sozinho para 📊 Relatório (uma vez por dia)."""
+        current = scheduler.now()
+        hour, minute = (int(x) for x in WINNERS_TIME.split(':'))
+        today = current.date().isoformat()
+        if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('vencedores_dia') == today:
+            return
+        last = float(self.db.get_meta('vencedores_tentativa', '0') or 0)
+        if time.time() - last < 30 * 60:
+            return
+        self.db.set_meta('vencedores_tentativa', str(time.time()))
+        self.submit(('winners', RELATORIO or POSTADOS, 7, True))
+
+    def on_new_version(self, cb: Dict, raw: str):
+        """🎬 do relatório de vencedores: 4 narrações novas para outra versão do vídeo desse produto."""
+        shop, _, item = raw.partition('.')
+        if not (shop.isdigit() and item.isdigit()):
+            self.tg.answer_callback(cb['id'], 'Produto não encontrado')
+            return
+        if not PROMPTS:
+            self.tg.answer_callback(cb['id'], 'Falta o tópico 🎬 Prompts')
+            return
+        self.tg.answer_callback(cb['id'], 'Montando a nova versão em 🎬 Prompts…')
+        notes = ("NOVA VERSÃO de um vídeo que já está vendendo: mesmo produto, idêntico ao anúncio, mas com OUTRO "
+                 "gancho nos 3 primeiros segundos, outra cena de uso e outra narração (não repita o vídeo anterior).")
+        self.submit(('narrations', f"https://shopee.com.br/product/{shop}/{item}", notes, None))
+
     def posts_by_item(self) -> Dict[str, str]:
         """ID do item divulgado (1º link) → nome do post, dos vídeos que já foram para a Shopee ou estão indo."""
         out = {}
@@ -1654,9 +1718,18 @@ class Bot:
                 logger.warning(f"Buscas em alta falharam: {e}")
             sections.append(('alta', '🔥 Mais buscados', hot))
         taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
-        if only != 'alta':
+        if only not in ('alta', 'oportunidades'):
             sections += ideas.focus(self.pipeline.shopee, today, lambda p: skip_key(p) or
                                     f"{p['shopId']}:{p['itemId']}" in taken, skip_type, only)
+        if only in (None, 'oportunidades'):   # 🌱 teste: sinais de pouca concorrência
+            taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
+            try:
+                opp = ideas.opportunities(self.pipeline.shopee, today,
+                                          lambda p: skip_key(p) or f"{p['shopId']}:{p['itemId']}" in taken, skip_type)
+            except Exception as e:
+                logger.warning(f"Oportunidades falharam: {e}")
+                opp = []
+            sections.append(('oportunidades', '🌱 Oportunidades (teste: poucas vendas ainda / comissão extra)', opp))
         found = [p for _, _, items in sections for p in items]
         if not found:
             raise RuntimeError("nenhum produto passou nas regras (a Shopee respondeu?)")
@@ -1874,6 +1947,8 @@ class Bot:
                     self.job_prompt_narration(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
+                elif job[0] == 'winners':
+                    self.job_winners(*job[1:])
                 elif job[0] == 'sales_watch':
                     self.job_sales_watch()
                 elif job[0] == 'sales':
@@ -1901,13 +1976,14 @@ class Bot:
             arg = (command.split(maxsplit=1)[1].strip().lower() if ' ' in command else '')
             arg = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
                    'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
-            if arg and arg not in ('alta', 'moda', 'pet', 'tapete'):
+            arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades'}.get(arg, arg)
+            if arg and arg not in ('alta', 'moda', 'pet', 'tapete', 'oportunidades'):
                 self.tg.send_text(target, "Use /sugestoes (a lista toda: 20 mais buscados, 10 moda feminina, 10 pet) "
                                           "ou só uma parte: /sugestoes alta · /sugestoes moda · /sugestoes pet · "
-                                          "/sugestoes tapete")
+                                          "/sugestoes tapete · /sugestoes oportunidades")
                 return
             what = {'alta': 'os mais buscados', 'moda': 'moda feminina', 'pet': 'pet',
-                    'tapete': 'tapete higiênico'}.get(arg, 'a lista do dia')
+                    'tapete': 'tapete higiênico', 'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
             self.tg.send_text(target, f"💡 Buscando {what} na Shopee agora… (leva 1 a 3 minutos)")
             self.submit(('ideas', target, False, arg or None))
             return
@@ -1943,6 +2019,12 @@ class Bot:
             return
         if command.lower().startswith('/agenda'):
             self.refresh_agenda_summary(repost=True)
+            return
+        if command.lower().startswith('/vencedores'):
+            arg = command.split()[1] if len(command.split()) > 1 else '7'
+            days = int(arg) if arg.isdigit() and 1 <= int(arg) <= 60 else 7
+            self.tg.send_text(thread or RELATORIO, f"🏆 Buscando os vencedores do Shopee Vídeo ({days} dias)…")
+            self.submit(('winners', thread or RELATORIO, days))
             return
         if command.lower().startswith('/vendas'):
             self.on_sales_command(thread, command)
@@ -1998,6 +2080,7 @@ class Bot:
         """Menu do / : no grupo do robô, os comandos dele; nos outros grupos, só o /brutos."""
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
+            ('vencedores', 'Vídeos que mais vendem: qual fixar e de quais fazer mais versões'),
             ('vendas', 'Vendas do Shopee Vídeo: 7 dias (/vendas hoje, /vendas 30, /vendas todas)'),
             ('sugestoes', 'Ideias agora: 20 buscados + 10 moda + 10 pet (ou /sugestoes alta|moda|pet|tapete)'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
@@ -2063,6 +2146,7 @@ class Bot:
                 self.refresh_agenda_summary()
                 self.daily_report()
                 self.watch_sales()
+                self.daily_winners()
                 self.daily_ideas()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
                     self.lia_checked = time.time()
