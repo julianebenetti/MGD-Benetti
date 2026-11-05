@@ -41,3 +41,7 @@
   e o piso de comissão (R$ 15+ por venda com orçamento de 16,44; ideal R$ 20+).
 - No campo Sub_id vai só o nome curto do produto: o Central Post acrescenta data + conta
   sozinho (ex.: 05Nov26VEAvestidobabado).
+
+## Busca de produtos para a Juliane
+- Sempre listar o link da Shopee de cada produto encontrado (inclusive alternativas e
+  parecidos), para ela verificar no app.
