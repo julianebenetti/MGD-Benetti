@@ -11,8 +11,10 @@ from typing import Iterable, List, Optional
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo(os.getenv('AGENDA_TIMEZONE', 'America/Sao_Paulo'))
-# Horas dos lotes (2 de manhã, 2 à tarde, 2 à noite); o minuto é sorteado por dia, sempre quebrado
-BATCH_HOURS = [int(h) for h in (os.getenv('AGENDA_LOTES') or '9,11,14,16,19,21').split(',') if h.strip()]
+# Horas dos lotes (2 de manhã, 2 à tarde, 2 à noite); o minuto é sorteado por dia, sempre quebrado. Pelo estudo de
+# 05/11 (compras pelo Shopee Vídeo, que acontecem na hora em que a pessoa assiste): picos às 13–15h, 18h e 20–21h, e
+# 10h de manhã; os lotes entram logo antes deles.
+BATCH_HOURS = [int(h) for h in (os.getenv('AGENDA_LOTES') or '9,11,13,17,19,20').split(',') if h.strip()]
 BATCH_SIZE = int(os.getenv('AGENDA_POR_LOTE', '5'))
 POSTS_PER_DAY = int(os.getenv('AGENDA_POSTS_POR_DIA', str(len(BATCH_HOURS) * BATCH_SIZE)))
 START_HOUR = min(BATCH_HOURS)

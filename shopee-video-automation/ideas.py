@@ -247,7 +247,7 @@ def collect(client, today: date, skip: Callable[[Dict], bool]) -> Tuple[List[Dic
 
 # 🔥 Buscas em alta (orgânico: sem piso de R$ por venda)
 TRENDING_URL = os.getenv('BUSCAS_ALTA_URL', 'http://localhost:3000/garimpo_buscas_alta')
-TRENDING_MAX = int(os.getenv('IDEIAS_BUSCADOS', '20'))
+TRENDING_MAX = int(os.getenv('IDEIAS_BUSCADOS', '10'))
 TRENDING_MIN_SALES = 100
 # venda proibida (o termo "Pod Recarregável" apareceu em 26/10)
 FORBIDDEN = re.compile(r'\bpods?\b|vape|vaper|cigarr?o eletr|e-?cig|narguil|ess[eê]ncia (de |para )?narg|'
@@ -380,24 +380,42 @@ def trending(client, terms: List[Dict], skip: Callable[[Dict], bool]) -> Tuple[L
     return chosen, missing
 
 
-# Lista do dia da Juliane: 20 mais buscados + 10 moda feminina + 10 pet (5 deles tapete higiênico) = 40, o limite
-# diário de criações do app da LiA. Cada nicho: (chave, título, quantos, palavras-chave em rodízio, palavra que o nome
-# precisa ter, por tipo de produto?). "por tipo": no máximo 1 de cada tipo (vestido, blusa…); tapete: vários anúncios
-# do mesmo tipo, de lojas diferentes.
+# Lista do dia pelo que VENDE NO SHOPEE VÍDEO (estudo de 05/11 com o relatório "Canal = vídeo": 93% dos pedidos
+# foram de beleza/cabelo e o Natal começou a vender; moda e pet quase não venderam pelo vídeo e ficam como teste):
+# 10 mais buscados + 12 beleza/cabelo + 8 Natal (só na temporada; fora dela, vão para beleza) + 5 moda + 3 tapete
+# higiênico + 2 pet = 40, o limite diário do app da LiA. Cada nicho: (chave, título, quantos, palavras-chave em rodízio,
+# palavra que o nome precisa ter, por tipo de produto?). "por tipo": no máximo 1 de cada tipo; tapete: vários
+# anúncios do mesmo tipo, de lojas diferentes.
 FOCUS = [
-    ('moda', '👗 Moda feminina', int(os.getenv('IDEIAS_MODA', '10')),
+    ('beleza', '💇 Beleza e cabelo', int(os.getenv('IDEIAS_BELEZA', '12')),
+     ['escova rotativa', 'escova secadora', 'secador de cabelo', 'prancha alisadora', 'chapinha', 'babyliss',
+      'modelador de cachos', 'escova alisadora', 'escova giratória', 'secador profissional', 'difusor de cabelo',
+      'kit escovas de cabelo', 'escova modeladora', 'prancha de cabelo'], '', True),
+    ('natal', '🎄 Natal', int(os.getenv('IDEIAS_NATAL', '8')),
+     ['papai noel decorativo', 'enfeite de natal', 'árvore de natal', 'guirlanda de natal', 'pisca pisca',
+      'presépio', 'naninha natal', 'toalha de mesa natal', 'bola de natal', 'decoração natalina',
+      'almofada natal', 'luzes de natal', 'boneco de neve decorativo', 'mesa posta natal'], '', True),
+    ('moda', '👗 Moda feminina (teste)', int(os.getenv('IDEIAS_MODA', '5')),
      ['vestido feminino', 'conjunto feminino', 'blusa feminina', 'calça feminina', 'saia feminina',
       'macaquinho feminino', 'cropped feminino', 'body feminino', 'short feminino', 'pijama feminino',
       'jaqueta feminina', 'legging feminina', 'camisa feminina', 'macacão feminino', 'moda praia feminina',
       'kimono feminino', 'bermuda feminina', 'camisola feminina'], 'feminin', True),
-    ('tapete', '🐾 Pet: tapete higiênico', int(os.getenv('IDEIAS_TAPETE', '5')),
+    ('tapete', '🐾 Pet: tapete higiênico (teste)', int(os.getenv('IDEIAS_TAPETE', '3')),
      ['tapete higiênico', 'tapete higiênico cachorro', 'tapete higiênico lavável', 'tapete higiênico pet 60x60',
       'tapete higiênico 30 unidades'], 'tapete higien', False),
-    ('pet', '🐾 Pet', int(os.getenv('IDEIAS_PET', '5')),
+    ('pet', '🐾 Pet (teste)', int(os.getenv('IDEIAS_PET', '2')),
      ['cama pet', 'arranhador gato', 'comedouro automático', 'brinquedo cachorro', 'coleira peitoral',
       'fonte bebedouro gato', 'roupa pet', 'caixa de areia gato', 'escova pet', 'tapete lambedor',
       'bolsa transporte pet', 'comedouro lento', 'casinha cachorro', 'guia retrátil'], '', True),
 ]
+FOCUS_KEYS = [f[0] for f in FOCUS]
+
+
+def natal_season(today: date) -> bool:
+    """Natal vende de meados de outubro até a véspera (depois disso a seção some e as vagas vão para beleza)."""
+    return (today.month, today.day) >= (10, 15) and (today.month, today.day) <= (12, 24)
+
+
 FOCUS_KEYWORDS_PER_DAY = 7
 # pet: nada de remédio/antipulgas/vermífugo (não é produto para vídeo de achadinho e tem regra própria de venda)
 PET_BLOCKED = re.compile(r'rem[eé]dio|medicament|verm[ií]fug|antipulg|carrapat|antibi[oó]tic|vacina', re.IGNORECASE)
@@ -415,22 +433,37 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
     comissão (sem piso: vídeo orgânico), por comissão × vendas, nunca suplementos. `skip`: o mesmo anúncio já
     postado/sugerido; `skip_type`: o mesmo tipo de produto (não vale para o tapete, que é sempre o mesmo tipo).
     """
+    global _seller_field
     out, seen = [], set()
-    for key, title, count, keywords, must, by_type in FOCUS:
-        if only and key != only:
+    counts = {f[0]: f[2] for f in FOCUS}
+    if not natal_season(today):   # fora da temporada: as vagas do Natal vão para beleza
+        counts['beleza'] += counts.pop('natal')
+    for key, title, _, keywords, must, by_type in FOCUS:
+        count = counts.get(key, 0)
+        if (only and key != only) or not count:
             continue
         found: Dict[str, Dict] = {}
 
         def search(batch: List[str]):
+            global _seller_field
             for keyword in batch:
-                try:
-                    results = client.search(keyword, limit=PER_KEYWORD, sort_type=2)
+                try:   # com a comissão da loja (quando a API tiver), para dar preferência à comissão extra
+                    extra_kw = {'extra_fields': 'sellerCommissionRate'} if _seller_field else {}
+                    results = client.search(keyword, limit=PER_KEYWORD, sort_type=2, **extra_kw)
                 except Exception as e:
-                    logger.warning(f"Ideias ({key}): busca '{keyword}' falhou ({e})")
-                    continue
+                    if not _seller_field:
+                        logger.warning(f"Ideias ({key}): busca '{keyword}' falhou ({e})")
+                        continue
+                    _seller_field = False
+                    try:
+                        results = client.search(keyword, limit=PER_KEYWORD, sort_type=2)
+                    except Exception as e2:
+                        logger.warning(f"Ideias ({key}): busca '{keyword}' falhou ({e2})")
+                        continue
                 for p in results:
+                    extra = ' · comissão extra da loja' if _seller_rate(p) > 0 else ''
                     found.setdefault(f"{p['shopId']}:{p['itemId']}",
-                                     {**p, 'tema': f"{title.split(' ', 1)[1]} · {keyword}"})
+                                     {**p, 'tema': f"{title.split(' ', 1)[1]} · {keyword}{extra}"})
 
         words = _plain(must) if must else []
         chosen, kinds, shops = [], set(), set()
@@ -446,7 +479,7 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
                         and all(w in name for w in words) and k not in seen and not skip(p)
                         and not (by_type and check_history and skip_type(p))):
                     ok.append(p)
-            for p in sorted(ok, key=_score, reverse=True):
+            for p in sorted(ok, key=lambda p: _score(p) * (1.5 if _seller_rate(p) > 0 else 1), reverse=True):
                 if len(chosen) >= count:
                     return
                 kind = similar_key(p.get('productName', ''))
@@ -496,8 +529,8 @@ def opportunities(client, today: date, skip: Callable[[Dict], bool], skip_type: 
     for keyword in _keywords_today(OPP_KEYWORDS, today, 8):
         results = []
         try:
-            results = client.search(keyword, limit=PER_KEYWORD, sort_type=5,
-                                    extra_fields='sellerCommissionRate' if _seller_field else '')
+            extra_kw = {'extra_fields': 'sellerCommissionRate'} if _seller_field else {}
+            results = client.search(keyword, limit=PER_KEYWORD, sort_type=5, **extra_kw)
         except Exception as e:
             if _seller_field:
                 _seller_field = False   # a API não tem o campo: segue sem ele
@@ -564,8 +597,8 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
         if key == 'alta' and hot_wanted and len(items) < hot_wanted:
             blocks.append(f"<i>Só {len(items)} dos termos em alta tinham produto bom"
                           + (f" ({hot_missing} sem produto)" if hot_missing else '') + ".</i>")
-    blocks.append("<i>Pedir de novo: /sugestoes (tudo) · /sugestoes alta · /sugestoes moda · /sugestoes pet · "
-                  "/sugestoes tapete · /sugestoes oportunidades</i>")
+    blocks.append("<i>Pedir de novo: /sugestoes (tudo) · /sugestoes alta · /sugestoes beleza · /sugestoes natal · "
+                  "/sugestoes moda · /sugestoes pet · /sugestoes tapete · /sugestoes oportunidades</i>")
     messages, current = [], ''
     for block in blocks:
         if len(current) + len(block) + 2 > 3800:

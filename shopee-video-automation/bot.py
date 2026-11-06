@@ -30,6 +30,7 @@ import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import DetailMismatch, Pipeline, PipelineError, VariationMismatch  # noqa: E402
 import prompts  # noqa: E402
 import reviews  # noqa: E402
+import estudo  # noqa: E402
 from content_generator import HASHTAGS, fit_caption  # noqa: E402
 from sub_id import nome_do_sub_id, novo_sub_id, prefixo  # noqa: E402
 from shopee_affiliate import commission_value  # noqa: E402
@@ -66,6 +67,7 @@ IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
 WINNERS_TIME = os.getenv('VENCEDORES_HORA', '07:45')   # 🏆 vencedores do dia em 📊 Relatório
+STUDY_DAYS = int(os.getenv('ESTUDO_DIAS', '14'))        # 📈 levantamento automático do Shopee Vídeo
 IDEAS_TRIES = 6                 # tentativas por dia da lista diária (se a Shopee falhar)
 IDEAS_RETRY_MINUTES = 30
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
@@ -113,6 +115,29 @@ def postados_caption(post: Dict, label: str) -> str:
             f"🔗 {len(post['links'])} link(s) · 🏷️ {e(post['sub_id'])}")[:1024]
 
 
+MODEL_MINUTES = 15
+
+
+def video_model(text: str) -> Optional[str]:
+    """O JSON de um vídeo (o Gemini descreve cenas, câmera, ritmo…), colado no 🎬 Prompts; None se não for JSON."""
+    raw = re.sub(r'```(?:json)?', '', text or '', flags=re.IGNORECASE).strip()
+    start, end = raw.find('{'), raw.rfind('}')
+    if start < 0 or end <= start or end - start < 40:
+        return None
+    try:
+        data = json.loads(raw[start:end + 1])
+    except ValueError:
+        return None
+    return json.dumps(data, ensure_ascii=False, separators=(',', ':'))[:3500] if isinstance(data, dict) else None
+
+
+def model_note(model: str) -> str:
+    return ("MODELO: JSON de um vídeo que JÁ VENDEU (análise do Gemini). Siga a mesma estrutura dele: ordem e duração "
+            "das cenas, ângulos e movimentos de câmera, ritmo, tipo de gancho nos 3 primeiros segundos e tom da "
+            "narração. Mas o produto é o DESTE anúncio (idêntico à foto, nada do produto do modelo) e respeite todas "
+            f"as regras (900 caracteres, nenhuma escrita na tela). JSON: {model}")
+
+
 def post_text(post: Dict, hint: bool = False) -> str:
     e = html.escape
     m = post['metadata']
@@ -152,6 +177,7 @@ class Bot:
         self.album_links: Dict[str, Dict] = {}
         self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
         self.prompt_review_files: List[tuple] = []   # (quando, file_id) de JSON/CSV de avaliações (extensão)
+        self.prompt_model: Optional[tuple] = None    # (quando, JSON do vídeo modelo vindo do Gemini) no 🎬 Prompts
         self.batch_link: Optional[Dict] = None
         self.lia = lia_sender.enabled()
         self.lia_when = os.getenv('LIA_ENVIAR', 'agenda').strip().lower()
@@ -163,7 +189,7 @@ class Bot:
     def submit(self, job: tuple):
         kind = job[0]
         name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
-            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners') \
+            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -1357,6 +1383,46 @@ class Bot:
         if daily:
             self.db.set_meta('vencedores_dia', end.date().isoformat())
 
+    def job_study(self, thread: Optional[int], days: int = STUDY_DAYS, auto: bool = False):
+        """📈 Levantamento do Shopee Vídeo (canal vídeo): o que vendeu, quando, cancelamentos; entra no histórico."""
+        end = scheduler.now()
+        try:
+            items = conversions.fetch(self.pipeline.shopee, end - timedelta(days=days), end)
+        except Exception as e:
+            logger.warning(f"Levantamento: consulta falhou ({e})")
+            if not auto:
+                self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas agora ({html.escape(str(e)[:150])}).")
+            return
+        videos = conversions.from_videos(items, self.posts_by_sub())
+        summary = estudo.summary(videos)
+        previous = json.loads(self.db.get_meta('estudo_anterior', 'null') or 'null')
+        if auto:
+            self.tg.send_text(thread, "🔔 <b>Hora do levantamento do Shopee Vídeo</b> (a cada "
+                                      f"{STUDY_DAYS} dias): veja como a conta está e o que ajustar.")
+        self.tg.send_text(thread, estudo.report_text(summary, days, previous))
+        if auto:   # só o automático entra no histórico (o pedido na hora é consulta)
+            self.db.set_meta('estudo_anterior', json.dumps(summary))
+            estudo.add(self.db, 'estudo', estudo.history_line(summary, days), end.date().isoformat())
+        if auto:
+            self.db.set_meta('estudo_dia', end.date().isoformat())
+
+    def periodic_study(self):
+        """A cada STUDY_DAYS dias, às 8h, o levantamento vai sozinho para 📊 Relatório e entra no histórico."""
+        current = scheduler.now()
+        if current.hour < 8:
+            return
+        last = self.db.get_meta('estudo_dia')
+        if not last:   # o 1º levantamento automático conta a partir de hoje (o estudo de 05/11 já está no histórico)
+            self.db.set_meta('estudo_dia', current.date().isoformat())
+            return
+        if (current.date() - date.fromisoformat(last)).days < STUDY_DAYS:
+            return
+        tried = float(self.db.get_meta('estudo_tentativa', '0') or 0)
+        if time.time() - tried < 60 * 60:
+            return
+        self.db.set_meta('estudo_tentativa', str(time.time()))
+        self.submit(('study', RELATORIO or POSTADOS, STUDY_DAYS, True))
+
     def daily_winners(self):
         """No horário VENCEDORES_HORA, o relatório de vencedores vai sozinho para 📊 Relatório (uma vez por dia)."""
         current = scheduler.now()
@@ -1471,6 +1537,24 @@ class Bot:
         previous = json.loads(self.db.get_meta(f"prompt:{replied}", 'null')) if replied else None
         options = json.loads(self.db.get_meta(f"narr:{replied}", 'null')) if replied else None
         links = extract_shopee_links(text)
+        model = video_model(text.replace(links[0], '') if links else text)
+        if model and not links:   # 🧩 JSON do vídeo que vendeu (Gemini): vira o modelo de cenas/câmera/ritmo
+            self.tg.react(msg['message_id'], '👌')
+            if options:   # respondendo as 4 opções: refaz no estilo do modelo
+                self.submit(('narrations', options['link'], model_note(model), msg['message_id'], None, None,
+                             {**options, 'notes': model_note(model),
+                              'pedido': 'refaça as 4 narrações no estilo do vídeo modelo (JSON)'}))
+            elif previous:   # respondendo um prompt: ajusta no estilo do modelo
+                self.submit(('prompt', previous['link'], model_note(model),
+                             {**previous, 'pedido': 'refaça seguindo a estrutura do vídeo modelo (JSON)'},
+                             msg['message_id']))
+            else:
+                self.prompt_model = (time.time(), model)
+                self.tg.send_text(PROMPTS, "🧩 <b>Modelo de vídeo guardado</b> (JSON do Gemini). Agora mande o link do "
+                                           f"produto em até {MODEL_MINUTES} min: as narrações e o prompt seguem a mesma "
+                                           "estrutura (cenas, câmera, ritmo, gancho), com o produto novo idêntico ao "
+                                           "anúncio.", reply_to=msg['message_id'])
+            return
         doc = msg.get('document') or {}
         if (doc.get('file_name') or '').lower().endswith(('.json', '.csv')):
             # avaliações baixadas pela extensão "Shopee Reviews Grabber" (JSON ou CSV)
@@ -1487,6 +1571,11 @@ class Bot:
                 return
         if links:
             notes = text.replace(links[0], '').strip()
+            if model:   # JSON do vídeo modelo junto com o link
+                notes = model_note(model)
+            elif self.prompt_model and time.time() - self.prompt_model[0] < MODEL_MINUTES * 60:
+                notes = (notes + '\n' + model_note(self.prompt_model[1])).strip()
+                self.prompt_model = None
             self.tg.react(msg['message_id'], '👀')
             prints, self.prompt_prints = [p[2] for p in self.prompt_prints], []
             files, self.prompt_review_files = [f[1] for f in self.prompt_review_files], []
@@ -1686,8 +1775,8 @@ class Bot:
 
     def _ideas(self, thread: Optional[int], only: Optional[str] = None):
         """
-        A lista do dia: 🔥 20 mais buscados + 👗 10 moda feminina + 🐾 10 pet (5 de tapete higiênico). `only`: só uma
-        parte ('alta', 'moda', 'pet', 'tapete'). Nada já postado/agendado nem sugerido nos últimos ideas.REPEAT_DAYS dias.
+        A lista do dia (ideas.FOCUS): 🔥 mais buscados + beleza/cabelo + Natal + moda/pet (teste) + 🌱 oportunidades.
+        `only`: só uma parte. Nada já postado/agendado nem sugerido nos últimos ideas.REPEAT_DAYS dias.
         """
         today = scheduler.now().date()
         active = self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'na_lia', 'avisado', 'postado')
@@ -1947,6 +2036,8 @@ class Bot:
                     self.job_prompt_narration(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
+                elif job[0] == 'study':
+                    self.job_study(*job[1:])
                 elif job[0] == 'winners':
                     self.job_winners(*job[1:])
                 elif job[0] == 'sales_watch':
@@ -1977,13 +2068,15 @@ class Bot:
             arg = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
                    'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
             arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades'}.get(arg, arg)
-            if arg and arg not in ('alta', 'moda', 'pet', 'tapete', 'oportunidades'):
-                self.tg.send_text(target, "Use /sugestoes (a lista toda: 20 mais buscados, 10 moda feminina, 10 pet) "
-                                          "ou só uma parte: /sugestoes alta · /sugestoes moda · /sugestoes pet · "
+            arg = {'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal'}.get(arg, arg)
+            if arg and arg not in ('alta', 'beleza', 'natal', 'moda', 'pet', 'tapete', 'oportunidades'):
+                self.tg.send_text(target, "Use /sugestoes (a lista toda) ou só uma parte: /sugestoes alta · "
+                                          "/sugestoes beleza · /sugestoes natal · /sugestoes moda · /sugestoes pet · "
                                           "/sugestoes tapete · /sugestoes oportunidades")
                 return
-            what = {'alta': 'os mais buscados', 'moda': 'moda feminina', 'pet': 'pet',
-                    'tapete': 'tapete higiênico', 'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
+            what = {'alta': 'os mais buscados', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
+                    'moda': 'moda feminina', 'pet': 'pet', 'tapete': 'tapete higiênico',
+                    'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
             self.tg.send_text(target, f"💡 Buscando {what} na Shopee agora… (leva 1 a 3 minutos)")
             self.submit(('ideas', target, False, arg or None))
             return
@@ -2019,6 +2112,25 @@ class Bot:
             return
         if command.lower().startswith('/agenda'):
             self.refresh_agenda_summary(repost=True)
+            return
+        if command.lower().startswith('/estudo') or command.lower().startswith('/levantamento'):
+            arg = command.split()[1] if len(command.split()) > 1 else str(STUDY_DAYS)
+            days = int(arg) if arg.isdigit() and 1 <= int(arg) <= 90 else STUDY_DAYS
+            self.tg.send_text(thread or RELATORIO, f"📈 Montando o levantamento do Shopee Vídeo ({days} dias)…")
+            self.submit(('study', thread or RELATORIO, days))
+            return
+        if command.lower().startswith('/historico') or command.lower().startswith('/histórico'):
+            self.tg.send_text(thread or RELATORIO, estudo.history_text(self.db))
+            return
+        if command.lower().startswith('/nota'):
+            text = command.split(maxsplit=1)[1].strip() if ' ' in command else ''
+            if not text:
+                self.tg.send_text(thread or RELATORIO, "Escreva o marco depois do comando, ex.: /nota levei punição "
+                                                       "no vídeo da toalha (produto diferente do anúncio)")
+                return
+            kind = 'punicao' if re.search(r'puni|banid|irrelevante|remov', text, re.IGNORECASE) else 'nota'
+            estudo.add(self.db, kind, text, scheduler.now().date().isoformat())
+            self.tg.react(msg['message_id'], '✍')
             return
         if command.lower().startswith('/vencedores'):
             arg = command.split()[1] if len(command.split()) > 1 else '7'
@@ -2080,9 +2192,12 @@ class Bot:
         """Menu do / : no grupo do robô, os comandos dele; nos outros grupos, só o /brutos."""
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
+            ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 14 dias)'),
+            ('historico', 'Histórico da conta no Shopee Vídeo (marcos, punições, levantamentos)'),
+            ('nota', 'Guarda um marco no histórico, ex.: /nota levei punição no vídeo X'),
             ('vencedores', 'Vídeos que mais vendem: qual fixar e de quais fazer mais versões'),
             ('vendas', 'Vendas do Shopee Vídeo: 7 dias (/vendas hoje, /vendas 30, /vendas todas)'),
-            ('sugestoes', 'Ideias agora: 20 buscados + 10 moda + 10 pet (ou /sugestoes alta|moda|pet|tapete)'),
+            ('sugestoes', 'Ideias agora (ou só uma parte: /sugestoes beleza, natal, alta, moda, pet, tapete)'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
             ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
@@ -2114,8 +2229,8 @@ class Bot:
         self.register_commands()
         self.resume_after_restart()
         self.submit(('resubid_agenda',))
-        if self.db.get_meta('agenda_lotes') != '1':   # uma vez: a agenda antiga passa para os lotes de 5 (30/dia)
-            self.db.set_meta('agenda_lotes', '1')
+        if self.db.get_meta('agenda_lotes') != '2':   # uma vez: a agenda passa para os lotes atuais (5 por lote)
+            self.db.set_meta('agenda_lotes', '2')
             self.submit(('replan', AGENDA))
         if self.lia and self.db.get_meta('lia_retro_feito') != '2':   # uma vez: acerta os vídeos antigos
             self.db.set_meta('lia_retro_feito', '2')
@@ -2147,6 +2262,7 @@ class Bot:
                 self.daily_report()
                 self.watch_sales()
                 self.daily_winners()
+                self.periodic_study()
                 self.daily_ideas()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
                     self.lia_checked = time.time()

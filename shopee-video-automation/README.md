@@ -63,12 +63,13 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 qualquer tópico do grupo.
 
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
-**A lista do dia (40, o limite diário de criações do app da LiA):** 🔥 **20 mais buscados** na Shopee (a seção de
-buscas em alta abaixo) · 👗 **10 de moda feminina** · 🐾 **10 de pet, 5 deles de tapete higiênico** (de lojas
-diferentes). Moda e pet: nota ≥ 4,7, 100+ vendas, com comissão (sem piso, vídeo orgânico), ordenados por comissão ×
-vendas, palavras-chave em rodízio por dia, nada de remédio/antipulgas no pet. Pedir na hora: **`/sugestoes`** (tudo)
-ou só uma parte: **`/sugestoes alta`**, **`/sugestoes moda`**, **`/sugestoes pet`**, **`/sugestoes tapete`**.
-(As seções antigas de datas/nichos/preço acessível saíram da lista do dia.)
+**A lista do dia** segue o que vende no Shopee Vídeo (estudo de 05/11, ver `HISTORICO_SHOPEE_VIDEO.md`): 🔥 **10 mais
+buscados** · 💇 **12 beleza/cabelo** · 🎄 **8 Natal** (de 15/10 a 24/12; fora disso as vagas vão para beleza) ·
+👗 **5 moda** · 🐾 **3 tapete higiênico** · 🐾 **2 pet** (moda e pet como teste) — 40, o limite diário do app da LiA —
+mais 🌱 5 oportunidades (teste). Nota ≥ 4,7, 100+ vendas, com comissão (sem piso, vídeo orgânico), por comissão ×
+vendas com preferência para **comissão extra da loja** quando a API informa; nada de remédio/antipulgas no pet.
+`IDEIAS_BUSCADOS`, `IDEIAS_BELEZA`, `IDEIAS_NATAL`, `IDEIAS_MODA`, `IDEIAS_TAPETE`, `IDEIAS_PET` mudam as quantidades.
+Pedir na hora: **`/sugestoes`** (tudo) ou só uma parte: `/sugestoes alta|beleza|natal|moda|pet|tapete|oportunidades`.
 Shopee falhar, o robô avisa e tenta de novo a cada 30 min, até 6 vezes no dia). Primeiro vem
 **🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
 gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em
@@ -110,6 +111,17 @@ narração, vem o prompt completo com ela intacta. **Responda o prompt** para aj
 do robô pelo produto). **📌 Fixe hoje** = o que mais rendeu; **🔁 Faça mais versões** = os que venderam, com botões
 🎬 1, 🎬 2… que montam a nova versão em 🎬 Prompts (4 narrações, outro gancho e outra cena, mesmo produto). O link do
 produto vai direto pela API, sem abrir página da Shopee.
+
+**📈 Levantamento e histórico do Shopee Vídeo** — a cada 14 dias (`ESTUDO_DIAS`), às 8h, o robô avisa em 📊 Relatório
+e manda o levantamento só do canal vídeo (pedidos, comissão, cancelamentos, o que vendeu, horários e melhor dia,
+comparado com o anterior, e alertas); **`/estudo`** (ou `/estudo 30`) pede na hora. O automático entra no
+histórico: **`/historico`** mostra a linha do tempo (marcos, punições, decisões, levantamentos) e **`/nota texto`**
+acrescenta um marco. A versão completa está em `HISTORICO_SHOPEE_VIDEO.md`.
+
+**🧩 Vídeo modelo (Gemini)** — mande o vídeo que vendeu ao Gemini, peça o JSON do vídeo e cole o JSON no 🎬 Prompts:
+o robô guarda como modelo e, no próximo link de produto (até 15 min) — ou junto com o link, ou respondendo as 4
+opções de narração —, faz as narrações e o prompt com a mesma estrutura (cenas, câmera, ritmo, gancho), com o
+produto novo idêntico ao anúncio.
 
 **🌱 Oportunidades (teste)** — 5 ideias a mais na lista do dia (ou **`/sugestoes oportunidades`**): a API não diz
 quantos afiliados divulgam um produto, então são sinais de pouca concorrência: nota ≥ 4,7, de 100 a 3.000 vendas
@@ -195,7 +207,7 @@ no horário da agenda: `LIA_ENVIAR=aprovar`. Para só mandar e você tocar em Pu
 | CTA | Laranja Shopee com letra branca e sombra (aparece em vídeo claro ou escuro), na área segura da tela cheia: longe do corte lateral (~9% de cada lado), dos botões da direita e do card do produto |
 | Logo no vídeo | 11% da borda esquerda e 12% do topo: inteiro na tela cheia (o app corta as laterais) e abaixo da seta/busca |
 | Compliance | Sem preço, sem falsa escassez, sem inventar características, avaliações ou descontos |
-| Agenda | Em **lotes de 5 vídeos no mesmo horário** (a LiA publica um atrás do outro), **30 por dia**: 10 de manhã, 10 à tarde e 10 à noite, nos lotes das 9h, 11h, 14h, 16h, 19h e 21h, com minuto quebrado sorteado por dia (ex.: 9:27, 11:24). Os já postados contam no limite do dia; nunca o mesmo produto no mesmo dia. **`/reorganizar`** refaz os horários de toda a Agenda nos lotes (feito sozinho uma vez ao atualizar). `AGENDA_LOTES` (horas), `AGENDA_POR_LOTE` e `AGENDA_POSTS_POR_DIA` mudam isso |
+| Agenda | Em **lotes de 5 vídeos no mesmo horário** (a LiA publica um atrás do outro), **30 por dia**: 10 de manhã, 10 à tarde e 10 à noite, nos lotes das 9h, 11h, 13h, 17h, 19h e 20h (antes dos picos de compra pelo vídeo do estudo de 05/11), com minuto quebrado sorteado por dia (ex.: 9:27, 11:24). Os já postados contam no limite do dia; nunca o mesmo produto no mesmo dia. **`/reorganizar`** refaz os horários de toda a Agenda nos lotes (feito sozinho uma vez ao atualizar). `AGENDA_LOTES` (horas), `AGENDA_POR_LOTE` e `AGENDA_POSTS_POR_DIA` mudam isso |
 
 Ajustes no `.env`: `LINKS_POR_VIDEO`, `AGENDA_LOTES` (ex.: `9,11,14,16,19,21`), `AGENDA_POR_LOTE`, `AGENDA_POSTS_POR_DIA`.
 
