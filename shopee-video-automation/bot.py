@@ -2068,13 +2068,14 @@ class Bot:
             arg = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
                    'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
             arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades'}.get(arg, arg)
-            arg = {'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal'}.get(arg, arg)
-            if arg and arg not in ('alta', 'beleza', 'natal', 'moda', 'pet', 'tapete', 'oportunidades'):
+            arg = {'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal', 'decoracao': 'casa',
+                   'decoração': 'casa'}.get(arg, arg)
+            if arg and arg not in ('alta', 'casa', 'beleza', 'natal', 'moda', 'pet', 'tapete', 'oportunidades'):
                 self.tg.send_text(target, "Use /sugestoes (a lista toda) ou só uma parte: /sugestoes alta · "
-                                          "/sugestoes beleza · /sugestoes natal · /sugestoes moda · /sugestoes pet · "
-                                          "/sugestoes tapete · /sugestoes oportunidades")
+                                          "/sugestoes casa · /sugestoes beleza · /sugestoes natal · /sugestoes moda · "
+                                          "/sugestoes pet · /sugestoes tapete · /sugestoes oportunidades")
                 return
-            what = {'alta': 'os mais buscados', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
+            what = {'alta': 'os mais buscados', 'casa': 'casa e decoração', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
                     'moda': 'moda feminina', 'pet': 'pet', 'tapete': 'tapete higiênico',
                     'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
             self.tg.send_text(target, f"💡 Buscando {what} na Shopee agora… (leva 1 a 3 minutos)")

@@ -50,6 +50,11 @@ marco, e o **levantamento automático a cada 14 dias** (`/estudo` para pedir na 
    prompts de outros produtos com a mesma estrutura.
 5. **Quantidade:** 10 a 15 vídeos/dia por conta, todos validados; metade versões do que já vendeu.
 
+## Ajuste de 06/11/2026 (Juliane)
+
+Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo, em teste)** · 5 beleza/cabelo ·
+10 Natal · 10 moda · 5 pet (tapete incluído) · 5 oportunidades = 60 ideias por dia (o app da LiA cria 40 por dia).
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar

@@ -39,6 +39,8 @@ SEED = [
                               'Ideias do dia passam a seguir o que vende no vídeo: 10 mais buscados, 12 beleza/'
                               'cabelo, 8 Natal, moda e pet como teste. Lotes às 9, 11, 13, 17, 19 e 20h. Estratégia: '
                               'fixar o vídeo que mais vende, fazer mais versões dos vencedores, testar oportunidades.'),
+    ('2026-11-06', 'decisao', 'Lista do dia ajustada: 15 mais buscados, 10 casa e decoração (nicho novo em teste), '
+                              '5 beleza/cabelo, 10 Natal, 10 moda, 5 pet, 5 oportunidades.'),
 ]
 
 

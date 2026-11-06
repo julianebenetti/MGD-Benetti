@@ -63,13 +63,14 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 qualquer tópico do grupo.
 
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
-**A lista do dia** segue o que vende no Shopee Vídeo (estudo de 05/11, ver `HISTORICO_SHOPEE_VIDEO.md`): 🔥 **10 mais
-buscados** · 💇 **12 beleza/cabelo** · 🎄 **8 Natal** (de 15/10 a 24/12; fora disso as vagas vão para beleza) ·
-👗 **5 moda** · 🐾 **3 tapete higiênico** · 🐾 **2 pet** (moda e pet como teste) — 40, o limite diário do app da LiA —
-mais 🌱 5 oportunidades (teste). Nota ≥ 4,7, 100+ vendas, com comissão (sem piso, vídeo orgânico), por comissão ×
-vendas com preferência para **comissão extra da loja** quando a API informa; nada de remédio/antipulgas no pet.
-`IDEIAS_BUSCADOS`, `IDEIAS_BELEZA`, `IDEIAS_NATAL`, `IDEIAS_MODA`, `IDEIAS_TAPETE`, `IDEIAS_PET` mudam as quantidades.
-Pedir na hora: **`/sugestoes`** (tudo) ou só uma parte: `/sugestoes alta|beleza|natal|moda|pet|tapete|oportunidades`.
+**A lista do dia** (06/11): 🔥 **15 mais buscados** · 🏠 **10 casa e decoração** (nicho novo, em teste) ·
+💇 **5 beleza/cabelo** · 🎄 **10 Natal** (de 15/10 a 24/12; fora disso as vagas vão para casa) · 👗 **10 moda** ·
+🐾 **5 pet** (tapete higiênico incluído) · 🌱 **5 oportunidades** (teste) = 60. Nota ≥ 4,7, 100+ vendas, com comissão
+(sem piso, vídeo orgânico), por comissão × vendas com preferência para **comissão extra da loja** quando a API
+informa; nada de remédio/antipulgas no pet. `IDEIAS_BUSCADOS`, `IDEIAS_CASA`, `IDEIAS_BELEZA`, `IDEIAS_NATAL`,
+`IDEIAS_MODA`, `IDEIAS_PET`, `IDEIAS_TAPETE` (0: dentro de pet) e `IDEIAS_OPORTUNIDADES` mudam as quantidades.
+Pedir na hora: **`/sugestoes`** (tudo) ou só uma parte: `/sugestoes alta|casa|beleza|natal|moda|pet|tapete|oportunidades`
+(`/sugestoes tapete` traz 5 anúncios só de tapete).
 Shopee falhar, o robô avisa e tenta de novo a cada 30 min, até 6 vezes no dia). Primeiro vem
 **🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
 gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em

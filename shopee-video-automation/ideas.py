@@ -247,7 +247,7 @@ def collect(client, today: date, skip: Callable[[Dict], bool]) -> Tuple[List[Dic
 
 # 🔥 Buscas em alta (orgânico: sem piso de R$ por venda)
 TRENDING_URL = os.getenv('BUSCAS_ALTA_URL', 'http://localhost:3000/garimpo_buscas_alta')
-TRENDING_MAX = int(os.getenv('IDEIAS_BUSCADOS', '10'))
+TRENDING_MAX = int(os.getenv('IDEIAS_BUSCADOS', '15'))
 TRENDING_MIN_SALES = 100
 # venda proibida (o termo "Pod Recarregável" apareceu em 26/10)
 FORBIDDEN = re.compile(r'\bpods?\b|vape|vaper|cigarr?o eletr|e-?cig|narguil|ess[eê]ncia (de |para )?narg|'
@@ -387,24 +387,28 @@ def trending(client, terms: List[Dict], skip: Callable[[Dict], bool]) -> Tuple[L
 # palavra que o nome precisa ter, por tipo de produto?). "por tipo": no máximo 1 de cada tipo; tapete: vários
 # anúncios do mesmo tipo, de lojas diferentes.
 FOCUS = [
-    ('beleza', '💇 Beleza e cabelo', int(os.getenv('IDEIAS_BELEZA', '12')),
+    ('casa', '🏠 Casa e decoração (teste)', int(os.getenv('IDEIAS_CASA', '10')),
+     ['organizador', 'quadro decorativo', 'luminária', 'tapete sala', 'cortina', 'vaso decorativo', 'espelho decorativo',
+      'almofada decorativa', 'porta retrato', 'prateleira', 'utensílios de cozinha', 'escorredor de louça',
+      'kit banheiro', 'cabide', 'difusor de aromas', 'jogo de cama', 'manta sofá', 'cesto organizador'], '', True),
+    ('beleza', '💇 Beleza e cabelo', int(os.getenv('IDEIAS_BELEZA', '5')),
      ['escova rotativa', 'escova secadora', 'secador de cabelo', 'prancha alisadora', 'chapinha', 'babyliss',
       'modelador de cachos', 'escova alisadora', 'escova giratória', 'secador profissional', 'difusor de cabelo',
       'kit escovas de cabelo', 'escova modeladora', 'prancha de cabelo'], '', True),
-    ('natal', '🎄 Natal', int(os.getenv('IDEIAS_NATAL', '8')),
+    ('natal', '🎄 Natal', int(os.getenv('IDEIAS_NATAL', '10')),
      ['papai noel decorativo', 'enfeite de natal', 'árvore de natal', 'guirlanda de natal', 'pisca pisca',
       'presépio', 'naninha natal', 'toalha de mesa natal', 'bola de natal', 'decoração natalina',
       'almofada natal', 'luzes de natal', 'boneco de neve decorativo', 'mesa posta natal'], '', True),
-    ('moda', '👗 Moda feminina (teste)', int(os.getenv('IDEIAS_MODA', '5')),
+    ('moda', '👗 Moda feminina', int(os.getenv('IDEIAS_MODA', '10')),
      ['vestido feminino', 'conjunto feminino', 'blusa feminina', 'calça feminina', 'saia feminina',
       'macaquinho feminino', 'cropped feminino', 'body feminino', 'short feminino', 'pijama feminino',
       'jaqueta feminina', 'legging feminina', 'camisa feminina', 'macacão feminino', 'moda praia feminina',
       'kimono feminino', 'bermuda feminina', 'camisola feminina'], 'feminin', True),
-    ('tapete', '🐾 Pet: tapete higiênico (teste)', int(os.getenv('IDEIAS_TAPETE', '3')),
+    ('tapete', '🐾 Pet: tapete higiênico', int(os.getenv('IDEIAS_TAPETE', '0')),
      ['tapete higiênico', 'tapete higiênico cachorro', 'tapete higiênico lavável', 'tapete higiênico pet 60x60',
       'tapete higiênico 30 unidades'], 'tapete higien', False),
-    ('pet', '🐾 Pet (teste)', int(os.getenv('IDEIAS_PET', '2')),
-     ['cama pet', 'arranhador gato', 'comedouro automático', 'brinquedo cachorro', 'coleira peitoral',
+    ('pet', '🐾 Pet', int(os.getenv('IDEIAS_PET', '5')),
+     ['tapete higiênico', 'cama pet', 'arranhador gato', 'comedouro automático', 'brinquedo cachorro', 'coleira peitoral',
       'fonte bebedouro gato', 'roupa pet', 'caixa de areia gato', 'escova pet', 'tapete lambedor',
       'bolsa transporte pet', 'comedouro lento', 'casinha cachorro', 'guia retrátil'], '', True),
 ]
@@ -412,7 +416,7 @@ FOCUS_KEYS = [f[0] for f in FOCUS]
 
 
 def natal_season(today: date) -> bool:
-    """Natal vende de meados de outubro até a véspera (depois disso a seção some e as vagas vão para beleza)."""
+    """Natal vende de meados de outubro até a véspera (depois disso a seção some e as vagas vão para casa)."""
     return (today.month, today.day) >= (10, 15) and (today.month, today.day) <= (12, 24)
 
 
@@ -436,10 +440,10 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
     global _seller_field
     out, seen = [], set()
     counts = {f[0]: f[2] for f in FOCUS}
-    if not natal_season(today):   # fora da temporada: as vagas do Natal vão para beleza
-        counts['beleza'] += counts.pop('natal')
+    if not natal_season(today):   # fora da temporada: as vagas do Natal vão para casa e decoração
+        counts['casa'] += counts.pop('natal')
     for key, title, _, keywords, must, by_type in FOCUS:
-        count = counts.get(key, 0)
+        count = counts.get(key, 0) or (5 if only == key else 0)   # pedido avulso de uma seção desligada: 5
         if (only and key != only) or not count:
             continue
         found: Dict[str, Dict] = {}
@@ -597,7 +601,7 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
         if key == 'alta' and hot_wanted and len(items) < hot_wanted:
             blocks.append(f"<i>Só {len(items)} dos termos em alta tinham produto bom"
                           + (f" ({hot_missing} sem produto)" if hot_missing else '') + ".</i>")
-    blocks.append("<i>Pedir de novo: /sugestoes (tudo) · /sugestoes alta · /sugestoes beleza · /sugestoes natal · "
+    blocks.append("<i>Pedir de novo: /sugestoes (tudo) · /sugestoes alta · /sugestoes casa · /sugestoes beleza · /sugestoes natal · "
                   "/sugestoes moda · /sugestoes pet · /sugestoes tapete · /sugestoes oportunidades</i>")
     messages, current = [], ''
     for block in blocks:
