@@ -70,7 +70,9 @@ qualquer tópico do grupo.
 informa; nada de remédio/antipulgas no pet. `IDEIAS_BUSCADOS`, `IDEIAS_CASA`, `IDEIAS_BELEZA`, `IDEIAS_NATAL`,
 `IDEIAS_MODA`, `IDEIAS_PET`, `IDEIAS_TAPETE` (0: dentro de pet) e `IDEIAS_OPORTUNIDADES` mudam as quantidades.
 Pedir na hora: **`/sugestoes`** (tudo) ou só uma parte: `/sugestoes alta|casa|beleza|natal|moda|pet|tapete|oportunidades`
-(`/sugestoes tapete` traz 5 anúncios só de tapete).
+(`/sugestoes tapete` traz 5 anúncios só de tapete). Os links para a LiA vêm em **lotes de 20 que juntam seções inteiras**: 15 mais buscados + 5
+beleza · 10 casa + 10 Natal · o restante (moda + pet + oportunidades); cada lote com a mensagem para copiar e o seu
+CSV. `LIA_LOTES` muda os grupos (ex.: `alta+beleza,casa+natal,moda+pet+oportunidades`).
 Shopee falhar, o robô avisa e tenta de novo a cada 30 min, até 6 vezes no dia). Primeiro vem
 **🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
 gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em

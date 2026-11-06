@@ -617,10 +617,10 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
 def section_rows(sections: List[Tuple[str, str, List[Dict]]]) -> List[Dict]:
     """As ideias na numeração da lista, para o CSV/links da LiA."""
     rows = []
-    for _, title, items in sections:
+    for key, title, items in sections:
         label = title.split(' ', 1)[1] if ' ' in title else title
         for p in items:
-            rows.append(row_for(p, label, len(rows) + 1))
+            rows.append({**row_for(p, label, len(rows) + 1), 'grupo': key})
     return rows
 
 
@@ -719,13 +719,53 @@ def export_csv(rows: List[Dict]) -> bytes:
     return ('link\n' + '\n'.join(r['link'] for r in rows) + '\n').encode('utf-8')
 
 
+# Lotes da LiA (até 20 cada) juntando seções inteiras: 15 mais buscados + 5 beleza · 10 casa + 10 Natal · o restante
+# (moda + pet + oportunidades). Seções que não estão aqui vão para lotes no fim. LIA_LOTES no .env muda isso.
+LIA_GROUPS = [g.split('+') for g in
+              (os.getenv('LIA_LOTES') or 'alta+beleza,casa+natal,moda+pet+tapete+oportunidades').split(',') if g]
+
+
+def batches(rows: List[Dict]) -> List[List[Dict]]:
+    """Os lotes para o app da LiA: pelas seções de LIA_GROUPS (sem cortar seção), cada um com no máximo 20."""
+    if not any(r.get('grupo') for r in rows):   # links avulsos (/linksideias 40): de 20 em 20, na ordem
+        return [rows[i:i + LIA_BATCH] for i in range(0, len(rows), LIA_BATCH)]
+    out, used = [], set()
+    for group in LIA_GROUPS:
+        part = [r for r in rows if r.get('grupo') in group]
+        used |= {id(r) for r in part}
+        out += [part[i:i + LIA_BATCH] for i in range(0, len(part), LIA_BATCH)]
+    rest = [r for r in rows if id(r) not in used]
+    out += [rest[i:i + LIA_BATCH] for i in range(0, len(rest), LIA_BATCH)]
+    return [b for b in out if b]
+
+
+def batch_title(batch: List[Dict]) -> str:
+    names = list(dict.fromkeys(r['secao'].split(' (')[0] for r in batch))
+    return ' + '.join(names)
+
+
+def _ranges(numbers: List[int]) -> str:
+    """[1..15, 26..30] -> "1–15 e 26–30" (a numeração da lista do dia)."""
+    parts, start, prev = [], None, None
+    for n in numbers + [None]:
+        if start is None:
+            start = prev = n
+        elif n is not None and n == prev + 1:
+            prev = n
+        else:
+            parts.append(f"{start}–{prev}" if prev != start else str(start))
+            start = prev = n
+    return ', '.join(parts[:-1]) + (' e ' if len(parts) > 1 else '') + parts[-1] if parts else ''
+
+
 def export_texts(rows: List[Dict], today: date) -> List[str]:
-    """Os links um por linha (como o app da LiA pede), em lotes de até 20, cada lote numa mensagem para copiar."""
-    batches = [rows[i:i + LIA_BATCH] for i in range(0, len(rows), LIA_BATCH)]
+    """Os links um por linha (como o app da LiA pede), um lote por mensagem para copiar."""
+    lots = batches(rows)
     texts = []
-    for k, batch in enumerate(batches, 1):
-        part = f" · lote {k}/{len(batches)}" if len(batches) > 1 else ''
-        texts.append(f"🔗 <b>Links das ideias {batch[0]['n']} a {batch[-1]['n']} de {today:%d/%m}</b>{part}, um por linha "
+    for k, batch in enumerate(lots, 1):
+        part = f"Lote {k}/{len(lots)} · " if len(lots) > 1 else ''
+        texts.append(f"🔗 <b>{part}{html.escape(batch_title(batch))}</b> ({len(batch)} links: ideias "
+                     f"{_ranges([r['n'] for r in batch])} de {today:%d/%m}), um por linha "
                      f"(toque para copiar e cole em \"Colar links de produtos\" no app da LiA)\n\n"
                      f"<code>{html.escape(chr(10).join(r['link'] for r in batch))}</code>")
     return texts

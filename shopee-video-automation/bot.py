@@ -1860,11 +1860,14 @@ class Bot:
             exported[r['link_produto']] = scheduler.now().date().isoformat()
         cutoff = (scheduler.now().date() - timedelta(days=ideas.REPEAT_DAYS)).isoformat()
         self.db.set_meta('ideias_exportadas', json.dumps({k: d for k, d in exported.items() if d > cutoff}))
-        self.tg.send_document(thread, f"ideias-{today:%d-%m}.csv", ideas.export_csv(rows),
-                              f"📄 <b>{len(rows)} links das ideias de {today:%d/%m}</b> para a \"Planilha CSV\" do app "
-                              "da LiA (um por linha, na ordem da lista; o app aceita até 20 por lote).")
-        for text in ideas.export_texts(rows, today):
+        lots = ideas.batches(rows)
+        for k, (batch, text) in enumerate(zip(lots, ideas.export_texts(rows, today)), 1):
             self.tg.send_text(thread, text)
+            name = f"ideias-{today:%d-%m}" + (f"-lote{k}" if len(lots) > 1 else '') + ".csv"
+            self.tg.send_document(thread, name, ideas.export_csv(batch),
+                                  f"📄 {'Lote ' + str(k) + ' · ' if len(lots) > 1 else ''}"
+                                  f"{html.escape(ideas.batch_title(batch))}: {len(batch)} links para a \"Planilha CSV\" "
+                                  "do app da LiA")
 
     def on_idea_links_command(self, thread: Optional[int], arg: str = ''):
         """
