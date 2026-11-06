@@ -117,7 +117,8 @@ produto vai direto pela API, sem abrir página da Shopee.
 
 **📊 Painel do Shopee Vídeo** — todo dia às 8:05 (`PAINEL_HORA`), fixado em 📊 Relatório, ou com **`/painel`**: os
 últimos 30 dias do canal vídeo (pedidos, comissão, R$/pedido, cancelamento), ontem × média de 7 dias, o dia a dia
-dos últimos 14 (pedidos pelo vídeo × vídeos postados pelo robô), o que mais vende, horários de compra, alertas e o
+dos últimos 14 (pedidos pelo vídeo × vídeos registrados: os do robô postados/enviados à LiA + os postados por fora,
+registrados com **`/postei 12 04/11`**; `/postei 0 04/11` zera), o que mais vende, horários de compra, alertas e o
 último marco do histórico. As **vendas novas** do vídeo chegam em 📊 Relatório assim que aparecem (conferência a cada
 30 min, `VENDAS_AVISO_MINUTOS`).
 

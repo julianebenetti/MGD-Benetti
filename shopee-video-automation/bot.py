@@ -1407,6 +1407,61 @@ class Bot:
         if auto:
             self.db.set_meta('estudo_dia', end.date().isoformat())
 
+    def manual_videos(self) -> Dict[str, int]:
+        """Vídeos postados fora do robô (app da LiA, outra conta), registrados com /postei: {AAAA-MM-DD: n}."""
+        try:
+            return json.loads(self.db.get_meta('videos_manuais') or '{}')
+        except ValueError:
+            return {}
+
+    def videos_per_day(self) -> Dict[str, int]:
+        """
+        Vídeos por dia: os do robô que foram postados ou enviados à LiA (pela data de postagem; sem ela, pelo horário
+        agendado) + os registrados com /postei.
+        """
+        out: Dict[str, int] = {}
+        for p in self.db.with_status('postado', 'na_lia', 'avisado'):
+            when = p.get('posted_at') or p.get('scheduled_at')
+            if not when or (p['status'] != 'postado' and datetime.fromisoformat(when) > scheduler.now()):
+                continue
+            d = datetime.fromisoformat(when).astimezone(scheduler.TZ).date().isoformat()
+            out[d] = out.get(d, 0) + 1
+        for d, n in self.manual_videos().items():
+            out[d] = out.get(d, 0) + int(n)
+        return out
+
+    def on_posted_command(self, thread: Optional[int], command: str):
+        """/postei N [DD/MM]: registra vídeos postados fora do robô naquele dia (soma). /postei 0 DD/MM zera o dia."""
+        parts = command.split()[1:]
+        n = next((int(p) for p in parts if p.isdigit()), None)
+        day_arg = next((p for p in parts if re.fullmatch(r'\d{1,2}/\d{1,2}', p)), None)
+        if n is None or n > 500:
+            self.tg.send_text(thread or RELATORIO, "Use assim: <b>/postei 12</b> (12 vídeos hoje) ou "
+                                                   "<b>/postei 12 04/11</b> (no dia 04/11). /postei 0 04/11 zera o dia.")
+            return
+        today = scheduler.now().date()
+        day = today
+        if day_arg:
+            dd, mm = (int(x) for x in day_arg.split('/'))
+            try:
+                day = today.replace(month=mm, day=dd)
+            except ValueError:
+                self.tg.send_text(thread or RELATORIO, "Data inválida. Ex.: /postei 12 04/11")
+                return
+            if day > today:
+                day = day.replace(year=day.year - 1)
+        manual = self.manual_videos()
+        key = day.isoformat()
+        manual[key] = 0 if n == 0 else manual.get(key, 0) + n
+        if not manual[key]:
+            manual.pop(key)
+        self.db.set_meta('videos_manuais', json.dumps(manual))
+        total = self.videos_per_day().get(key, 0)
+        self.tg.send_text(thread or RELATORIO,
+                          f"✍️ Registrado: {day:%d/%m} agora tem <b>{total}</b> vídeo(s) no painel "
+                          f"({manual.get(key, 0)} postado(s) fora do robô). Errou? /postei 0 {day:%d/%m} zera "
+                          f"os registrados à mão desse dia.")
+
     def job_panel(self, thread: Optional[int], daily: bool = False):
         """📊 Painel da operação no Shopee Vídeo (30 dias + dia a dia), fixado em 📊 Relatório; sai todo dia."""
         end = scheduler.now()
@@ -1418,11 +1473,7 @@ class Bot:
                 self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas agora ({html.escape(str(e)[:150])}).")
             return
         videos = conversions.from_videos(items, self.posts_by_sub())
-        posted = {}
-        for p in self.db.with_status('postado'):
-            if p.get('posted_at'):
-                d = datetime.fromisoformat(p['posted_at']).astimezone(scheduler.TZ).date().isoformat()
-                posted[d] = posted.get(d, 0) + 1
+        posted = self.videos_per_day()
         marks = [h for h in estudo.history(self.db) if h['tipo'] in ('decisao', 'punicao', 'nota')]
         text = estudo.panel_text(videos, posted, end.date(), 30, marks[-1]['texto'] if marks else '')
         msg_id = self.tg.send_text(thread, text)
@@ -2160,6 +2211,9 @@ class Bot:
             self.tg.send_text(thread or RELATORIO, "📊 Montando o painel do Shopee Vídeo…")
             self.submit(('panel', thread or RELATORIO))
             return
+        if command.lower().startswith('/postei'):
+            self.on_posted_command(thread, command)
+            return
         if command.lower().startswith('/historico') or command.lower().startswith('/histórico'):
             self.tg.send_text(thread or RELATORIO, estudo.history_text(self.db))
             return
@@ -2235,6 +2289,7 @@ class Bot:
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
             ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
+            ('postei', 'Registra vídeos postados fora do robô, ex.: /postei 12 04/11'),
             ('historico', 'Histórico da conta no Shopee Vídeo (marcos, punições, levantamentos)'),
             ('nota', 'Guarda um marco no histórico, ex.: /nota levei punição no vídeo X'),
             ('vencedores', 'Vídeos que mais vendem: qual fixar e de quais fazer mais versões'),

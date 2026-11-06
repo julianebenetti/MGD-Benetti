@@ -181,14 +181,18 @@ def panel_text(items: List[Dict], posted: Dict[str, int], today, days: int = 30,
     trend = '📈' if y_orders > avg7 else '📉' if y_orders < avg7 else '➡️'
     lines.append(f"{trend} <b>Ontem:</b> {y_orders} pedido(s) · {brl(per_day[yesterday][1])} "
                  f"(média dos últimos 7 dias: {avg7:.1f}/dia)")
-    lines += ["", "<b>Dia a dia</b> (pedidos pelo vídeo · vídeos postados pelo robô)", "<code>"]
+    lines += ["", "<b>Dia a dia</b> (pedidos pelo vídeo · vídeos registrados)", "<code>"]
     peak = max([len(per_day[(today - timedelta(days=k)).isoformat()][0]) for k in range(14)] + [1])
     for k in range(13, -1, -1):
         d = today - timedelta(days=k)
         n = len(per_day[d.isoformat()][0])
         bar = '█' * round(10 * n / peak) if n else '·'
-        lines.append(f"{d:%d/%m} {bar:<10} {n:>3} ped · {posted.get(d.isoformat(), 0):>2} víd")
+        v = posted.get(d.isoformat(), 0)
+        lines.append(f"{d:%d/%m} {bar:<10} {n:>3} ped · " + (f"{v:>2} víd" if v else " — víd"))
     lines.append("</code>")
+    lines.append("<i>víd = vídeos que passaram pelo robô (agendados/enviados à LiA) + os registrados com /postei. "
+                 "\"—\" = nenhum registrado (não quer dizer que não postou). Postou direto no app da LiA ou na "
+                 "outra conta? Registre: /postei 12 04/11</i>")
     if s['top']:
         lines += ["<b>O que mais vende</b> (30 dias)"]
         for name, orders, commission in s['top'][:5]:
