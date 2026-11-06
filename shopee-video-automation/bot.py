@@ -173,7 +173,11 @@ class Bot:
         self.pipeline.is_sold_out = self.db.is_sold_out
         # vídeos novos numa fila; botões e respostas em outra (não esperam os vídeos); LiA na sua
         self.queues = {'video': queue.Queue(), 'ui': queue.Queue(), 'lia': queue.Queue(), 'report': queue.Queue(),
-                       'ideas': queue.Queue()}   # ideias numa fila só delas: nada trava a lista do dia
+                       'ideas': queue.Queue(),   # ideias numa fila só delas: nada trava a lista do dia
+                       # agendar (validação por IA, até 1 min cada) e limpar mensagens numa fila própria: os botões
+                       # de Editados (capa, legenda, headline, print) não esperam atrás deles
+                       'approve': queue.Queue(), 'tidy': queue.Queue()}
+        self.approving: set = set()   # posts com agendamento na fila ou em andamento
         self.pending: List[Dict] = []
         self.album_links: Dict[str, Dict] = {}
         self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
@@ -190,8 +194,12 @@ class Bot:
     def submit(self, job: tuple):
         kind = job[0]
         name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
-            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
+            'ideas' if kind in ('ideas', 'idea_links') else \
+            'approve' if kind in ('approve', 'use_identical') else \
+            'tidy' if kind in ('tidy', 'clean_agenda') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
             else 'ui'
+        if name == 'approve':
+            self.approving.add(job[1])
         self.queues[name].put(job)
 
     # ---------- Envios ----------
@@ -350,6 +358,19 @@ class Bot:
             esgotado,
             [agendar, ('❌ Descartar', f"dc:{pid}")])
 
+    def retire_editados(self, post: Dict, ids: List[int], note: str):
+        """
+        Tira de Editados as mensagens de um vídeo que foi refeito/agendado/descartado. O que o Telegram não deixar
+        apagar vira uma linha curta (`note`) sem botões, para não ficar uma versão velha com cara de pendente; os
+        números ficam anotados no post para uma resposta (print, link) mandada nelas ainda achar o vídeo.
+        """
+        left = self.tg.tidy(ids, note) if ids else []
+        old = post['metadata'].get('msgs_antigas', [])
+        fresh = self.db.get_post(post['id']) or post
+        self.db.update_post(post['id'], metadata={**fresh['metadata'], 'msgs_antigas': (old + list(ids))[-60:]})
+        if left:
+            logger.warning(f"Editados: {len(left)} mensagem(ns) antiga(s) do post {post['id']} ficaram como estavam")
+
     def send_to_editados(self, post: Dict):
         """Capa, vídeo, textos com botões e, enquanto faltar, o pedido do print das variações."""
         ids = self.tg.send_cover_and_video(EDITADOS, post['cover_path'], post['video_path'])
@@ -385,7 +406,7 @@ class Bot:
             return
         trocar = escolha is not None and escolha < len(post['melhores'])
         fields = self.pipeline.switch_to(post, escolha) if trocar else {}
-        self.tg.delete(post['editados_msgs'])
+        self.retire_editados(post, post['editados_msgs'], "↪️ Refeito com a loja escolhida: use a mensagem nova abaixo")
         self.db.update_post(post_id, troca='trocado' if trocar else 'mantido', **fields)
         if trocar:
             self.db.add_headline(fields['product_key'], post['metadata']['cover_title'])
@@ -398,9 +419,9 @@ class Bot:
         if headline is None:
             headline = self.pipeline.new_headline(post, self.db.headlines_for(post['product_key']))
         cover = self.pipeline.make_cover(post['video_path'], headline, post.get('sticker_path'))
-        metadata = {**post['metadata'], 'cover_title': headline}
         # headline nova = capa nova: precisa aprovar de novo
-        self.tg.delete(post['editados_msgs'])
+        self.retire_editados(post, post['editados_msgs'], "↪️ Capa refeita (headline nova): use a mensagem nova abaixo")
+        metadata = {**self.db.get_post(post_id)['metadata'], 'cover_title': headline}
         self.db.update_post(post_id, metadata=metadata, cover_path=cover, cover_approved=0)
         self.db.add_headline(post['product_key'], headline)
         self.send_to_editados(self.db.get_post(post_id))
@@ -593,8 +614,32 @@ class Bot:
         self.job_approve(post_id)
 
     def job_approve(self, post_id: int):
+        """
+        Agendamento com rede de segurança: se algo falhar no meio (IA, vídeo, Telegram, agenda cheia), o post não fica
+        preso em "⏳ Agendando…": volta a ser editável em Editados, com o motivo.
+        """
+        try:
+            self._approve(post_id)
+        except Exception as e:
+            logger.exception(f"Agendamento do post {post_id} falhou")
+            post = self.db.get_post(post_id)
+            if not post or post['status'] != 'agendando':
+                return
+            self.db.update_post(post_id, status='editado')
+            post = self.db.get_post(post_id)
+            self.refresh_buttons(post)
+            self.tg.send_text(EDITADOS, f"⚠️ Não consegui agendar <b>{html.escape(post['product_name'][:60])}</b> "
+                                        f"({html.escape(str(e)[:150])}). Os botões voltaram: toque 📅 Aprovar e "
+                                        "agendar de novo.",
+                              reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None)
+        finally:
+            self.approving.discard(post_id)
+
+    def _approve(self, post_id: int):
         """Valida os produtos, junta a capa na abertura do vídeo, reserva o horário e move para a Agenda."""
         post = self.db.get_post(post_id)
+        if not post or post['status'] != 'agendando':
+            return   # já agendado/descartado (ex.: botão tocado duas vezes)
         checked = self.validate_before_agenda(post)
         if checked is None:
             return
@@ -608,7 +653,7 @@ class Bot:
                               reply_to=post['editados_msgs'][-1] if post['editados_msgs'] else None)
             return
         slot = self.next_slot(post)
-        self.tg.delete(post['editados_msgs'])
+        self.retire_editados(post, post['editados_msgs'], "📅 Agendado: está na ⏰ Agenda")
         self.db.update_post(post_id, status='agendado', scheduled_at=slot.isoformat(),
                             editados_msgs=[], final_video_path=final)
         self.resubid(self.db.get_post(post_id), force=True)   # sub_id definitivo, com a data da publicação
@@ -929,13 +974,21 @@ class Bot:
                               reply_to=reply_to)
             return
         cover = self.pipeline.make_cover(post['video_path'], post['metadata']['cover_title'], card)
-        self.tg.delete(post['editados_msgs'] + [reply_to])
+        self.retire_editados(post, post['editados_msgs'] + [reply_to], "↪️ Capa refeita com as variações: use a mensagem nova abaixo")
         self.db.update_post(post_id, sticker_path=card, cover_path=cover, cover_approved=0, variacoes='ok')
         self.send_to_editados(self.db.get_post(post_id))
 
     def on_editados_reply(self, msg: Dict):
-        post = self.db.post_by_editados_msg(msg['reply_to_message']['message_id'])
+        target = msg['reply_to_message']['message_id']
+        post = self.db.post_by_editados_msg(target) or next(
+            (p for p in self.db.with_status('editado') if target in p['metadata'].get('msgs_antigas', [])), None)
         if not post:
+            if not msg['reply_to_message'].get('from', {}).get('is_bot'):
+                return   # resposta a uma mensagem sua: conversa, não é para o robô
+            self.tg.react(msg['message_id'], '🤔')
+            self.tg.send_text(EDITADOS, "Esta mensagem é de um vídeo que não está mais em ✅ Editados (já foi "
+                                        "agendado ou descartado). Veja o que falta no tópico 📌 Pendências.",
+                              reply_to=msg['message_id'])
             return
         image_id = None
         if msg.get('photo'):
@@ -1006,10 +1059,19 @@ class Bot:
         if not post:
             self.tg.answer_callback(cb['id'], 'Post não encontrado')
             return
+        tapped = (cb.get('message') or {}).get('message_id')
+        self.on_post_button(cb, post, action, tapped)
+        # Botão tocado numa mensagem antiga do vídeo (o Telegram não deixou apagar quando ele foi refeito): a ação
+        # vale para o vídeo certo; a mensagem tocada também mostra os botões atuais, para não parecer travada.
+        if tapped and tapped not in post['editados_msgs'] and (action in ('cv', 'ca', 'ap') or action[:2] == 'eg'):
+            current = self.db.get_post(post['id'])
+            if current['status'] == 'editado' and len(current['editados_msgs']) > 2:
+                self.tg.edit_markup(tapped, self.editados_markup(current))
 
+    def on_post_button(self, cb: Dict, post: Dict, action: str, tapped: Optional[int]):
         if action == 'sv' and post['status'] == 'editado':
             pedido = post['editados_msgs'][3:]
-            self.tg.delete(pedido)
+            self.retire_editados(post, pedido, "✔️ Sem variações")
             self.db.update_post(post['id'], variacoes='sem', editados_msgs=post['editados_msgs'][:3])
             self.tg.answer_callback(cb['id'], 'Ok, capa sem cartão de variações')
 
@@ -1033,7 +1095,7 @@ class Bot:
                 self.tg.answer_callback(cb['id'], 'Capa já aprovada')
                 return
             self.db.update_post(post['id'], cover_approved=1)
-            self.tg.edit_markup(post['editados_msgs'][2], self.editados_markup(self.db.get_post(post['id'])))
+            self.refresh_buttons(self.db.get_post(post['id']))
             self.tg.answer_callback(cb['id'], 'Capa aprovada')
 
         elif action == 'ap' and post['status'] == 'editado' and not post['cover_approved']:
@@ -1049,7 +1111,7 @@ class Bot:
                 self.tg.answer_callback(cb['id'], 'Legenda já aprovada')
                 return
             self.db.update_post(post['id'], caption_approved=1)
-            self.tg.edit_markup(post['editados_msgs'][2], self.editados_markup(self.db.get_post(post['id'])))
+            self.refresh_buttons(self.db.get_post(post['id']))
             self.tg.answer_callback(cb['id'], 'Legenda aprovada')
 
         elif action == 'lg' and post['status'] == 'editado':
@@ -1058,8 +1120,12 @@ class Bot:
 
         elif action == 'ap' and post['status'] == 'editado':
             self.db.update_post(post['id'], status='agendando')
-            self.tg.edit_markup(post['editados_msgs'][2], keyboard([('⏳ Agendando…', f"ag:{post['id']}")]))
-            self.tg.answer_callback(cb['id'], 'Validando os produtos e agendando… (até 1 minuto)')
+            waiting = keyboard([('⏳ Agendando…', f"ag:{post['id']}")])
+            for m in {post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None, tapped} - {None}:
+                self.tg.edit_markup(m, waiting)
+            ahead = len(self.approving)
+            self.tg.answer_callback(cb['id'], 'Validando os produtos e agendando… (até 1 minuto' +
+                                    (f"; {ahead} vídeo(s) na frente)" if ahead else ')'))
             self.submit(('approve', post['id']))
 
         elif action[:2] == 'eg' and action[2:].isdigit() and post['status'] == 'editado':
@@ -1080,15 +1146,28 @@ class Bot:
             self.tg.answer_callback(cb['id'], 'Ok, agendando mesmo assim…')
             self.submit(('approve', post['id']))
 
-        elif action == 'ag':
-            self.tg.answer_callback(cb['id'], 'Já estou agendando, aguarde uns segundos')
+        elif action == 'ag' and post['status'] == 'agendando' and post['id'] not in self.approving:
+            # ficou "⏳ Agendando…" sem nada em andamento (ex.: falha antiga): agenda de novo
+            self.tg.answer_callback(cb['id'], 'Retomando o agendamento deste vídeo…')
+            self.submit(('approve', post['id']))
+
+        elif action == 'ag' and post['status'] == 'agendando':
+            ahead = max(len(self.approving) - 1, 0)
+            self.tg.answer_callback(cb['id'], 'Já estou agendando, aguarde' +
+                                    (f" ({ahead} vídeo(s) na frente, ~1 min cada)" if ahead else ' uns segundos'))
+
+        elif action == 'ag' and post['status'] == 'editado':
+            self.refresh_buttons(post)
+            if tapped and tapped not in post['editados_msgs']:
+                self.tg.edit_markup(tapped, self.editados_markup(post))
+            self.tg.answer_callback(cb['id'], 'Não agendou: os botões voltaram, veja o aviso logo abaixo')
 
         elif action == 'hl' and post['status'] == 'editado':
             self.tg.answer_callback(cb['id'], 'Gerando outra headline…')
             self.submit(('headline', post['id'], None))
 
         elif action == 'dc' and post['status'] in ('editado', 'agendado', 'avisado', 'na_lia'):
-            self.tg.delete(post['editados_msgs'])
+            self.retire_editados(post, post['editados_msgs'], "❌ Descartado")
             self.clear_agenda(post['agenda_msgs'], f"❌ {post['product_name'][:50]}: descartado")
             self.db.update_post(post['id'], status='descartado',
                                 discarded_at=scheduler.now().isoformat(timespec='seconds'))
@@ -2133,6 +2212,9 @@ class Bot:
                     self.job_sales(*job[1:])
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
+            finally:
+                if job[0] in ('approve', 'use_identical'):
+                    self.approving.discard(job[1])
 
     def handle(self, update: Dict):
         if 'callback_query' in update:
