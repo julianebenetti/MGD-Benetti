@@ -67,7 +67,8 @@ IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
 WINNERS_TIME = os.getenv('VENCEDORES_HORA', '07:45')   # 🏆 vencedores do dia em 📊 Relatório
-STUDY_DAYS = int(os.getenv('ESTUDO_DIAS', '14'))        # 📈 levantamento automático do Shopee Vídeo
+STUDY_DAYS = int(os.getenv('ESTUDO_DIAS', '3'))         # 📈 levantamento do Shopee Vídeo: a cada 3 dias, vs. 3 antes
+PANEL_TIME = os.getenv('PAINEL_HORA', '08:05')           # 📊 painel diário da operação no Shopee Vídeo
 IDEAS_TRIES = 6                 # tentativas por dia da lista diária (se a Shopee falhar)
 IDEAS_RETRY_MINUTES = 30
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
@@ -78,7 +79,7 @@ MAX_PENDING_LINES = 40
 # Aviso de venda nova em 📊 Relatório: videos (só Shopee Vídeo: robô e app da LiA) | todas | nao
 SALES_WATCH = (os.getenv('VENDAS_AVISO') or 'videos').strip().lower()
 SALES_WATCH = '' if SALES_WATCH == 'nao' else SALES_WATCH
-SALES_WATCH_MINUTES = int(os.getenv('VENDAS_AVISO_MINUTOS', '60'))
+SALES_WATCH_MINUTES = int(os.getenv('VENDAS_AVISO_MINUTOS', '30'))
 
 
 def fmt_when(iso: str) -> str:
@@ -189,7 +190,7 @@ class Bot:
     def submit(self, job: tuple):
         kind = job[0]
         name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
-            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study') \
+            'ideas' if kind in ('ideas', 'idea_links') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
             else 'ui'
         self.queues[name].put(job)
 
@@ -1406,6 +1407,42 @@ class Bot:
         if auto:
             self.db.set_meta('estudo_dia', end.date().isoformat())
 
+    def job_panel(self, thread: Optional[int], daily: bool = False):
+        """📊 Painel da operação no Shopee Vídeo (30 dias + dia a dia), fixado em 📊 Relatório; sai todo dia."""
+        end = scheduler.now()
+        try:
+            items = conversions.fetch(self.pipeline.shopee, end - timedelta(days=30), end)
+        except Exception as e:
+            logger.warning(f"Painel: consulta falhou ({e})")
+            if not daily:
+                self.tg.send_text(thread, f"⚠️ Não consegui consultar as vendas agora ({html.escape(str(e)[:150])}).")
+            return
+        videos = conversions.from_videos(items, self.posts_by_sub())
+        posted = {}
+        for p in self.db.with_status('postado'):
+            if p.get('posted_at'):
+                d = datetime.fromisoformat(p['posted_at']).astimezone(scheduler.TZ).date().isoformat()
+                posted[d] = posted.get(d, 0) + 1
+        marks = [h for h in estudo.history(self.db) if h['tipo'] in ('decisao', 'punicao', 'nota')]
+        text = estudo.panel_text(videos, posted, end.date(), 30, marks[-1]['texto'] if marks else '')
+        msg_id = self.tg.send_text(thread, text)
+        if daily:
+            self.tg.pin(msg_id)
+            self.db.set_meta('painel_dia', end.date().isoformat())
+
+    def daily_panel(self):
+        """No horário PAINEL_HORA, o painel do Shopee Vídeo vai sozinho para 📊 Relatório (uma vez por dia)."""
+        current = scheduler.now()
+        hour, minute = (int(x) for x in PANEL_TIME.split(':'))
+        today = current.date().isoformat()
+        if (current.hour, current.minute) < (hour, minute) or self.db.get_meta('painel_dia') == today:
+            return
+        tried = float(self.db.get_meta('painel_tentativa', '0') or 0)
+        if time.time() - tried < 30 * 60:
+            return
+        self.db.set_meta('painel_tentativa', str(time.time()))
+        self.submit(('panel', RELATORIO or POSTADOS, True))
+
     def periodic_study(self):
         """A cada STUDY_DAYS dias, às 8h, o levantamento vai sozinho para 📊 Relatório e entra no histórico."""
         current = scheduler.now()
@@ -1860,14 +1897,8 @@ class Bot:
             exported[r['link_produto']] = scheduler.now().date().isoformat()
         cutoff = (scheduler.now().date() - timedelta(days=ideas.REPEAT_DAYS)).isoformat()
         self.db.set_meta('ideias_exportadas', json.dumps({k: d for k, d in exported.items() if d > cutoff}))
-        lots = ideas.batches(rows)
-        for k, (batch, text) in enumerate(zip(lots, ideas.export_texts(rows, today)), 1):
+        for text in ideas.export_texts(rows, today):   # só as mensagens para copiar (o CSV não é mais usado)
             self.tg.send_text(thread, text)
-            name = f"ideias-{today:%d-%m}" + (f"-lote{k}" if len(lots) > 1 else '') + ".csv"
-            self.tg.send_document(thread, name, ideas.export_csv(batch),
-                                  f"📄 {'Lote ' + str(k) + ' · ' if len(lots) > 1 else ''}"
-                                  f"{html.escape(ideas.batch_title(batch))}: {len(batch)} links para a \"Planilha CSV\" "
-                                  "do app da LiA")
 
     def on_idea_links_command(self, thread: Optional[int], arg: str = ''):
         """
@@ -2039,6 +2070,8 @@ class Bot:
                     self.job_prompt_narration(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
+                elif job[0] == 'panel':
+                    self.job_panel(*job[1:])
                 elif job[0] == 'study':
                     self.job_study(*job[1:])
                 elif job[0] == 'winners':
@@ -2123,6 +2156,10 @@ class Bot:
             self.tg.send_text(thread or RELATORIO, f"📈 Montando o levantamento do Shopee Vídeo ({days} dias)…")
             self.submit(('study', thread or RELATORIO, days))
             return
+        if command.lower().startswith('/painel'):
+            self.tg.send_text(thread or RELATORIO, "📊 Montando o painel do Shopee Vídeo…")
+            self.submit(('panel', thread or RELATORIO))
+            return
         if command.lower().startswith('/historico') or command.lower().startswith('/histórico'):
             self.tg.send_text(thread or RELATORIO, estudo.history_text(self.db))
             return
@@ -2196,7 +2233,8 @@ class Bot:
         """Menu do / : no grupo do robô, os comandos dele; nos outros grupos, só o /brutos."""
         self.tg.set_commands([
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
-            ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 14 dias)'),
+            ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
+            ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
             ('historico', 'Histórico da conta no Shopee Vídeo (marcos, punições, levantamentos)'),
             ('nota', 'Guarda um marco no histórico, ex.: /nota levei punição no vídeo X'),
             ('vencedores', 'Vídeos que mais vendem: qual fixar e de quais fazer mais versões'),
@@ -2267,6 +2305,7 @@ class Bot:
                 self.watch_sales()
                 self.daily_winners()
                 self.periodic_study()
+                self.daily_panel()
                 self.daily_ideas()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
                     self.lia_checked = time.time()

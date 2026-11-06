@@ -719,10 +719,10 @@ def export_csv(rows: List[Dict]) -> bytes:
     return ('link\n' + '\n'.join(r['link'] for r in rows) + '\n').encode('utf-8')
 
 
-# Lotes da LiA (até 20 cada) juntando seções inteiras: 15 mais buscados + 5 beleza · 10 casa + 10 Natal · o restante
-# (moda + pet + oportunidades). Seções que não estão aqui vão para lotes no fim. LIA_LOTES no .env muda isso.
+# Lotes da LiA (até 20 cada) juntando seções inteiras: 10 casa + 10 moda · 15 mais buscados + 5 beleza · o restante
+# (Natal + pet + oportunidades). Seções que não estão aqui vão para lotes no fim. LIA_LOTES no .env muda isso.
 LIA_GROUPS = [g.split('+') for g in
-              (os.getenv('LIA_LOTES') or 'alta+beleza,casa+natal,moda+pet+tapete+oportunidades').split(',') if g]
+              (os.getenv('LIA_LOTES') or 'casa+moda,alta+beleza,natal+pet+tapete+oportunidades').split(',') if g]
 
 
 def batches(rows: List[Dict]) -> List[List[Dict]]:

@@ -41,6 +41,9 @@ SEED = [
                               'fixar o vídeo que mais vende, fazer mais versões dos vencedores, testar oportunidades.'),
     ('2026-11-06', 'decisao', 'Lista do dia ajustada: 15 mais buscados, 10 casa e decoração (nicho novo em teste), '
                               '5 beleza/cabelo, 10 Natal, 10 moda, 5 pet, 5 oportunidades.'),
+    ('2026-11-06', 'decisao', 'Lotes de links da LiA: casa + moda, mais buscados + beleza, Natal + pet + oportunidades '
+                              '(sem CSV). Levantamento a cada 3 dias, painel diário do Shopee Vídeo e aviso de cada '
+                              'venda nova em Relatório.'),
 ]
 
 
@@ -150,3 +153,60 @@ def history_line(s: Dict, days: int) -> str:
     top = s['top'][0][0][:40] if s['top'] else '—'
     return (f"Levantamento de {days} dias: {s['orders']} pedidos, {brl(s['commission'])} de comissão, "
             f"{s['cancel_rate']}% cancelados; mais vendido: {top} ({s['top_share']}% da comissão).")
+
+
+def panel_text(items: List[Dict], posted: Dict[str, int], today, days: int = 30, last_mark: str = '') -> str:
+    """
+    📊 Painel diário da operação no Shopee Vídeo: os últimos `days` dias (pedidos, comissão, cancelamento), a
+    evolução dia a dia dos últimos 14 (pedidos × vídeos postados pelo robô), ontem × média e o que mais vende.
+    `items`: conversões do canal vídeo; `posted`: {AAAA-MM-DD: vídeos postados naquele dia}.
+    """
+    from datetime import timedelta
+    e = html.escape
+    s = summary(items)
+    valid = [i for i in items if i['status'] != 'cancelado']
+    per_day = defaultdict(lambda: [set(), 0.0])
+    for i in valid:
+        if i.get('time'):
+            d = datetime.fromtimestamp(int(i['time'])).date().isoformat()
+            per_day[d][0].add(i['order_id'])
+            per_day[d][1] += i['commission']
+    lines = [f"📊 <b>Painel do Shopee Vídeo</b> · {today:%d/%m} (atualiza todo dia)",
+             f"<b>Últimos {days} dias:</b> {s['orders']} pedido(s) · <b>{brl(s['commission'])}</b> · "
+             f"{brl(s['per_order'])}/pedido · ❌ {s['cancel_rate']}% cancelados", ""]
+    yesterday = (today - timedelta(days=1)).isoformat()
+    last7 = [(today - timedelta(days=k)).isoformat() for k in range(1, 8)]
+    avg7 = sum(len(per_day[d][0]) for d in last7) / 7
+    y_orders = len(per_day[yesterday][0])
+    trend = '📈' if y_orders > avg7 else '📉' if y_orders < avg7 else '➡️'
+    lines.append(f"{trend} <b>Ontem:</b> {y_orders} pedido(s) · {brl(per_day[yesterday][1])} "
+                 f"(média dos últimos 7 dias: {avg7:.1f}/dia)")
+    lines += ["", "<b>Dia a dia</b> (pedidos pelo vídeo · vídeos postados pelo robô)", "<code>"]
+    peak = max([len(per_day[(today - timedelta(days=k)).isoformat()][0]) for k in range(14)] + [1])
+    for k in range(13, -1, -1):
+        d = today - timedelta(days=k)
+        n = len(per_day[d.isoformat()][0])
+        bar = '█' * round(10 * n / peak) if n else '·'
+        lines.append(f"{d:%d/%m} {bar:<10} {n:>3} ped · {posted.get(d.isoformat(), 0):>2} víd")
+    lines.append("</code>")
+    if s['top']:
+        lines += ["<b>O que mais vende</b> (30 dias)"]
+        for name, orders, commission in s['top'][:5]:
+            lines.append(f"• {e(name[:50])}: {orders} ped · {brl(commission)}")
+    if s['hours']:
+        best = [h for h, _ in sorted(s['hours'].items(), key=lambda kv: kv[1], reverse=True)[:3]]
+        lines.append(f"⏰ Compras: {_bands(s['hours'])} · mais fortes {', '.join(f'{h}h' for h in sorted(best))}")
+    alerts = []
+    if s['cancel_rate'] >= 20:
+        alerts.append(f"cancelamento em {s['cancel_rate']}%: confira se o link é exatamente o produto do vídeo")
+    if s['top_share'] >= 60:
+        alerts.append(f"um produto concentra {s['top_share']}% da comissão: faça versões dele (/vencedores)")
+    recent_posts = sum(posted.get(d, 0) for d in last7)
+    if recent_posts and not sum(len(per_day[d][0]) for d in last7):
+        alerts.append(f"{recent_posts} vídeos postados em 7 dias sem nenhuma venda: revise nicho, ganchos e punições")
+    if alerts:
+        lines += ["", "⚠️ <b>Atenção:</b> " + ' · '.join(alerts)]
+    if last_mark:
+        lines += ["", f"🧭 Último marco: {e(last_mark[:160])}"]
+    lines.append("<i>/vencedores (o que fixar e repetir) · /estudo · /historico · /nota</i>")
+    return '\n'.join(lines)[:4000]

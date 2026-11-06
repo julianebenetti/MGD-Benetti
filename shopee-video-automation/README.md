@@ -70,9 +70,9 @@ qualquer tópico do grupo.
 informa; nada de remédio/antipulgas no pet. `IDEIAS_BUSCADOS`, `IDEIAS_CASA`, `IDEIAS_BELEZA`, `IDEIAS_NATAL`,
 `IDEIAS_MODA`, `IDEIAS_PET`, `IDEIAS_TAPETE` (0: dentro de pet) e `IDEIAS_OPORTUNIDADES` mudam as quantidades.
 Pedir na hora: **`/sugestoes`** (tudo) ou só uma parte: `/sugestoes alta|casa|beleza|natal|moda|pet|tapete|oportunidades`
-(`/sugestoes tapete` traz 5 anúncios só de tapete). Os links para a LiA vêm em **lotes de 20 que juntam seções inteiras**: 15 mais buscados + 5
-beleza · 10 casa + 10 Natal · o restante (moda + pet + oportunidades); cada lote com a mensagem para copiar e o seu
-CSV. `LIA_LOTES` muda os grupos (ex.: `alta+beleza,casa+natal,moda+pet+oportunidades`).
+(`/sugestoes tapete` traz 5 anúncios só de tapete). Os links para a LiA vêm em **lotes de 20 que juntam seções inteiras**: 10 casa + 10 moda ·
+15 mais buscados + 5 beleza · o restante (Natal + pet + oportunidades), cada lote numa mensagem para copiar (sem CSV).
+`LIA_LOTES` muda os grupos (ex.: `casa+moda,alta+beleza,natal+pet+oportunidades`).
 Shopee falhar, o robô avisa e tenta de novo a cada 30 min, até 6 vezes no dia). Primeiro vem
 **🔥 Buscas em alta**: os termos mais buscados do dia na Shopee (lista "Buscas em alta" do rodapé da shopee.com.br,
 gravada às 07:15 pelo `buscas-alta.js` da AfiliDash na tabela `garimpo_buscas_alta`, lida pelo PostgREST local em
@@ -115,7 +115,13 @@ do robô pelo produto). **📌 Fixe hoje** = o que mais rendeu; **🔁 Faça mai
 🎬 1, 🎬 2… que montam a nova versão em 🎬 Prompts (4 narrações, outro gancho e outra cena, mesmo produto). O link do
 produto vai direto pela API, sem abrir página da Shopee.
 
-**📈 Levantamento e histórico do Shopee Vídeo** — a cada 14 dias (`ESTUDO_DIAS`), às 8h, o robô avisa em 📊 Relatório
+**📊 Painel do Shopee Vídeo** — todo dia às 8:05 (`PAINEL_HORA`), fixado em 📊 Relatório, ou com **`/painel`**: os
+últimos 30 dias do canal vídeo (pedidos, comissão, R$/pedido, cancelamento), ontem × média de 7 dias, o dia a dia
+dos últimos 14 (pedidos pelo vídeo × vídeos postados pelo robô), o que mais vende, horários de compra, alertas e o
+último marco do histórico. As **vendas novas** do vídeo chegam em 📊 Relatório assim que aparecem (conferência a cada
+30 min, `VENDAS_AVISO_MINUTOS`).
+
+**📈 Levantamento e histórico do Shopee Vídeo** — a cada 3 dias (`ESTUDO_DIAS`), às 8h, comparando com os 3 dias anteriores, o robô avisa em 📊 Relatório
 e manda o levantamento só do canal vídeo (pedidos, comissão, cancelamentos, o que vendeu, horários e melhor dia,
 comparado com o anterior, e alertas); **`/estudo`** (ou `/estudo 30`) pede na hora. O automático entra no
 histórico: **`/historico`** mostra a linha do tempo (marcos, punições, decisões, levantamentos) e **`/nota texto`**
