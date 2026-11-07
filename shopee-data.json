@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794069848,
-  "updated_at_br": "07/11/2026 13:39",
+  "updated_at": 1794074484,
+  "updated_at_br": "07/11/2026 14:57",
   "period_days": 90,
-  "total_orders": 5024,
-  "total_conversions": 4831,
+  "total_orders": 5023,
+  "total_conversions": 4830,
   "orders": [
     {
       "ID do pedido": "261107MX45MN51",
@@ -5132,7 +5132,7 @@
     },
     {
       "ID do pedido": "261103BH399B1G",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-03 09:12:02",
       "Sub_id1": "",
       "Valor de Compra(R$)": "52.68",
@@ -5144,7 +5144,7 @@
       "Comissao total do pedido(R$)": "6.63768",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Papai Noel Decorativo 40cm Realista Super Luxo para  Decoração Natal",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "40617173794",
       "ID da loja": "1474606866",
       "Nome da loja": "SHOPSUL DECOR",
@@ -5152,7 +5152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "247396321138356",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-03"
     },
     {
@@ -5232,7 +5232,7 @@
     },
     {
       "ID do pedido": "261103ANU6W6M2",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-03 01:04:19",
       "Sub_id1": "20Out26VEAconjuntoviscolycra",
       "Valor de Compra(R$)": "233.52",
@@ -5244,7 +5244,7 @@
       "Comissao total do pedido(R$)": "10.5084",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mesa Dobrável Maleta Ripado Portátil Reforçada Alça Festa Trabalho Exposição Camping Viagem",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "48515181433",
       "ID da loja": "1452762497",
       "Nome da loja": "Reusarte Shop",
@@ -5252,7 +5252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247367059188418",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-03"
     },
     {
@@ -8957,7 +8957,7 @@
     },
     {
       "ID do pedido": "261029TPKM2TXE",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-10-28 20:13:54",
       "Sub_id1": "",
       "Valor de Compra(R$)": "59.25",
@@ -8969,7 +8969,7 @@
       "Comissao total do pedido(R$)": "8.8875",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "Macaquinho Saia Plus Size Feminino Elegante Decote Bobo & Amarração Lateral",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "46464714769",
       "ID da loja": "972022966",
       "Nome da loja": "FashionWear",
@@ -8977,7 +8977,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "246917634110111",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-10-28"
     },
     {
@@ -125577,31 +125577,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "239997848157303",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-09"
-    },
-    {
-      "ID do pedido": "260810W0JB6EKT",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-09 17:50:48",
-      "Sub_id1": "25Jul26TapeteHigienicoVs4",
-      "Valor de Compra(R$)": "51.78",
-      "Comissao liquida do afiliado(R$)": "16.23303",
-      "Taxa de comissao Shopee do item": "8.00%",
-      "Taxa de comissao do vendedor do item": "25.00%",
-      "Comissao Shopee(R$)": "4.1424",
-      "Comissao do vendedor(R$)": "12.945",
-      "Comissao total do pedido(R$)": "17.0874",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "50 unid - Tapete Higiênico PetCharm Slim -Tamanho 50cm x 60cm Para Cachorros",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18899838992",
-      "ID da loja": "908280603",
-      "Nome da loja": "Pet Charm",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "239997048133009",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-09"
     }
