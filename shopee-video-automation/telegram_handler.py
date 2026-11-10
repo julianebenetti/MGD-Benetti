@@ -202,20 +202,37 @@ class TelegramBot:
                     failed.append(msg_id)
         return failed
 
+    def can_delete(self) -> Optional[bool]:
+        """O robô é administrador com a permissão "Apagar mensagens" no grupo? (None: não deu para saber)"""
+        try:
+            me = self.call('getMe')['id']
+            member = self.call('getChatMember', data={'chat_id': self.chat_id, 'user_id': me})
+        except (RuntimeError, requests.RequestException) as e:
+            logger.warning(f"Não consegui ver as permissões do robô: {e}")
+            return None
+        return member.get('status') == 'creator' or bool(member.get('can_delete_messages'))
+
     def tidy(self, message_ids: List[int], note: str) -> List[int]:
+        """Como tidy_report; devolve só as que nem apagar nem resumir deu."""
+        return self.tidy_report(message_ids, note)[2]
+
+    def tidy_report(self, message_ids: List[int], note: str):
         """
         Tira as mensagens do caminho: apaga; se o Telegram não deixar, vira uma linha curta (`note`) sem botões
-        (texto) ou uma imagem pequena com a `note` (capa/vídeo). Devolve as que nem isso deu.
+        (texto) ou uma imagem pequena com a `note` (capa/vídeo). Devolve (apagadas, resumidas, nem isso).
         """
-        left = []
-        for msg_id in self.delete(message_ids):
+        failed = self.delete(message_ids)
+        left, summarized = [], []
+        for msg_id in failed:
             empty = json.dumps({'inline_keyboard': []})
             try:
                 self.call('editMessageText', data={'chat_id': self.chat_id, 'message_id': msg_id, 'text': note,
                                                    'reply_markup': empty})
+                summarized.append(msg_id)
                 continue
             except RuntimeError as e:
                 if 'not modified' in str(e):
+                    summarized.append(msg_id)
                     continue
             try:   # foto/vídeo: troca pela imagem pequena
                 with open(placeholder(), 'rb') as img:
@@ -223,13 +240,16 @@ class TelegramBot:
                         'chat_id': self.chat_id, 'message_id': msg_id, 'reply_markup': empty,
                         'media': json.dumps({'type': 'photo', 'media': 'attach://img', 'caption': note})},
                         files={'img': img})
+                summarized.append(msg_id)
                 continue
             except (RuntimeError, requests.RequestException, OSError) as e:
                 if 'not modified' in str(e):
+                    summarized.append(msg_id)
                     continue
                 logger.warning(f"Não consegui apagar nem resumir a mensagem {msg_id}: {e}")
             left.append(msg_id)
-        return left
+        deleted = [i for i in message_ids if i not in failed]
+        return deleted, summarized, left
 
     def react(self, message_id: int, emoji: str):
         try:

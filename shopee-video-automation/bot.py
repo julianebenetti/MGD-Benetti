@@ -73,6 +73,8 @@ PANEL_TIME = os.getenv('PAINEL_HORA', '08:05')           # 📊 painel diário d
 IDEAS_TRIES = 6                 # tentativas por dia da lista diária (se a Shopee falhar)
 IDEAS_RETRY_MINUTES = 30
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
+# sem ✅ Postei nem confirmação da LiA: passadas tantas horas do horário, vai sozinho para Postados (0 desliga)
+AUTO_POSTED_HOURS = int(float(os.getenv('AGENDA_POSTADO_AUTO_HORAS', '6') or 0))
 LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # sem confirmação: avisa                          # ideia sugerida não volta antes disso
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
@@ -590,31 +592,75 @@ class Bot:
         if ids:
             self.submit(('tidy', list(ids), note))
 
-    def job_tidy(self, ids: List[int], note: str) -> List[int]:
-        left = self.tg.tidy(ids, note)
-        self.db.forget_sent([i for i in ids if i not in left])
-        return left
+    def summarized_msgs(self) -> List[int]:
+        """Mensagens que o Telegram não deixou apagar e viraram o quadrado verde / linha "resolvido"."""
+        try:
+            return json.loads(self.db.get_meta('msgs_resumidas') or '[]')
+        except ValueError:
+            return []
 
-    def job_clean_agenda(self, thread: Optional[int]):
+    def job_tidy(self, ids: List[int], note: str) -> List[int]:
         """
-        /limparagenda: tudo que o robô mandou na Agenda e não é de um vídeo que ainda está lá (nem o resumo) sai:
-        apagado ou, se o Telegram não deixar, vira uma linha curta "resolvido".
+        Apaga; o que não der vira quadrado verde/linha curta e fica anotado para ser apagado depois (quando o robô
+        tiver a permissão "Apagar mensagens", na limpeza diária ou no /limparagenda).
         """
+        old = set(self.summarized_msgs())
+        retry = [i for i in ids if i in old]
+        deleted, summarized, left = self.tg.tidy_report([i for i in ids if i not in old], note)
+        if retry:   # já está verde: só tenta apagar de novo (não reenvia a imagem)
+            failed = self.tg.delete(retry)
+            deleted += [i for i in retry if i not in failed]
+        self.db.forget_sent(deleted)
+        self.db.set_meta('msgs_resumidas', json.dumps(sorted((old | set(summarized)) - set(deleted))[-3000:]))
+        return left + [i for i in summarized + retry if i not in deleted]
+
+    def job_clean_agenda(self, thread: Optional[int], quiet: bool = False):
+        """
+        /limparagenda (e todo dia sozinho): tudo que o robô mandou na Agenda e não é de um vídeo que ainda está lá
+        (nem o resumo) sai: apagado ou, se o Telegram não deixar, vira o quadrado verde, que é apagado assim que o
+        robô tiver a permissão "Apagar mensagens".
+        """
+        self.auto_posted()
         keep = {int(self.db.get_meta('agenda_resumo_msg', '0'))}
         for p in self.db.scheduled():
             keep |= set(p['agenda_msgs'])
         stale = [i for i in self.db.sent_in(AGENDA) if i not in keep]
         left = self.job_tidy(stale, "✅ resolvido") if stale else []
         self.refresh_agenda_summary(repost=True)
-        text = f"🧹 Agenda limpa: tirei {len(stale) - len(left)} mensagem(ns) de vídeos já resolvidos."
+        if quiet and not left:
+            return
+        can = self.tg.can_delete()
+        text = (f"🧹 Agenda limpa: apaguei {len(stale) - len(left)} mensagem(ns) de vídeos já resolvidos."
+                if stale else "🧹 Nada para limpar nas mensagens que o robô conhece.")
         if left:
-            text += (f" {len(left)} o Telegram não deixou mexer: confira se o robô é administrador com a permissão "
-                     "<b>Apagar mensagens</b> no grupo.")
-        if not stale:
-            text = "🧹 Nada para limpar nas mensagens que o robô conhece."
-        text += ("\n<i>Mensagens de antes desta atualização o robô não tem anotadas: essas, apague à mão "
-                 "(segure numa, toque em Selecionar e marque as outras).</i>")
+            text += f"\n🟩 {len(left)} o Telegram não deixou apagar (ficam como quadrado verde / \"resolvido\")."
+        if can is False:
+            text += ("\n\n⚠️ <b>O robô não tem permissão para apagar mensagens</b>, por isso os quadrados verdes. "
+                     "No grupo: toque no nome do grupo → Administradores → AfiliDash Shopee Video Bot → ligue "
+                     "<b>Apagar mensagens</b> → Salvar. Depois mande /limparagenda: os verdes somem.")
+        elif left:
+            text += " Tento de novo na limpeza de amanhã."
+        if not quiet:
+            text += ("\n<i>Mensagens de antes de o robô anotar o que manda: essas, apague à mão "
+                     "(segure numa, toque em Selecionar e marque as outras).</i>")
         self.tg.send_text(thread or AGENDA, text)
+
+    def auto_posted(self):
+        """
+        Vídeo que já passou AUTO_POSTED_HOURS do horário e ficou esperando o ✅ Postei (ou a confirmação da LiA) vai
+        sozinho para 🚀 Postados, com a data do horário agendado: você posta pelo app da LiA e não precisa tocar em
+        cada um. Se a LiA avisar que falhou, a conferência dela reagenda o vídeo como sempre.
+        """
+        if AUTO_POSTED_HOURS <= 0:
+            return
+        limit = scheduler.now() - timedelta(hours=AUTO_POSTED_HOURS)
+        for post in self.db.with_status('avisado', 'na_lia'):
+            if post.get('scheduled_at') and datetime.fromisoformat(post['scheduled_at']) <= limit:
+                try:
+                    self.move_to_postados(post, f"⏱️ Considerado postado ({AUTO_POSTED_HOURS} h depois do "
+                                                "horário, sem ✅ Postei)", via='auto', when=post['scheduled_at'])
+                except Exception as e:
+                    logger.warning(f"Post {post['id']}: não consegui mover para Postados ({e})")
 
     def back_to_editados(self, post: Dict, result: Optional[str] = None, reason: str = ''):
         """Tira o post da Agenda (apaga as mensagens dele lá) e manda de novo para Editados, sem horário."""
@@ -1256,6 +1302,10 @@ class Bot:
     # ---------- Relógio ----------
 
     def tick(self):
+        current_day = scheduler.now()
+        if current_day.hour >= 4 and self.db.get_meta('limpeza_dia') != current_day.date().isoformat():
+            self.db.set_meta('limpeza_dia', current_day.date().isoformat())
+            self.submit(('clean_agenda', AGENDA, True))   # limpeza diária da Agenda (avisa só se sobrar verde)
         for album in [a for a, v in self.album_links.items() if time.time() - v['at'] > BATCH_LINK_TTL]:
             del self.album_links[album]
         for p in self.pending:  # cada vídeo sem link é perguntado sozinho; os outros seguem
