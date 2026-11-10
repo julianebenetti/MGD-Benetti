@@ -7,6 +7,7 @@ import logging
 import os
 import re
 import socket
+import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -53,7 +54,26 @@ class TelegramBot:
         self.on_sent = None   # (tópico, [ids]) de cada mensagem enviada: o robô anota as da Agenda para limpar depois
 
     def call(self, method: str, timeout: int = 30, **kwargs):
-        resp = requests.post(f"{self.api_url}/{method}", timeout=timeout, **kwargs)
+        """
+        Chamada à Bot API. Conexão lenta/instável (ex.: vários vídeos subindo ao mesmo tempo no VPS): tenta de novo
+        até 3 vezes, esperando 5 s e 15 s. Envio com arquivo só repete se nem conectou (para não duplicar).
+        """
+        waits = [] if method == 'getUpdates' else [5, 15]
+        for attempt in range(len(waits) + 1):
+            try:
+                if attempt and kwargs.get('files'):
+                    for f in kwargs['files'].values():
+                        handle = f[1] if isinstance(f, tuple) else f
+                        if hasattr(handle, 'seek'):
+                            handle.seek(0)
+                resp = requests.post(f"{self.api_url}/{method}", timeout=timeout, **kwargs)
+                break
+            except (requests.ConnectionError, requests.Timeout) as e:
+                sent = isinstance(e, requests.ReadTimeout) and kwargs.get('files')
+                if attempt == len(waits) or sent:
+                    raise
+                logger.warning(f"Telegram {method}: sem resposta ({e}); tentando de novo em {waits[attempt]} s")
+                time.sleep(waits[attempt])
         data = resp.json()
         if not data.get('ok'):
             raise RuntimeError(f"Telegram {method}: {data.get('description')}")
@@ -226,9 +246,17 @@ class TelegramBot:
             logger.warning(f"answerCallbackQuery falhou: {e}")
 
     def download(self, file_id: str, dest_dir: Path) -> Path:
-        file_path = self.call('getFile', data={'file_id': file_id})['file_path']
-        resp = requests.get(f"https://api.telegram.org/file/bot{self.token}/{file_path}", timeout=600)
-        resp.raise_for_status()
+        file_path = self.call('getFile', timeout=60, data={'file_id': file_id})['file_path']
+        for attempt in range(3):
+            try:
+                resp = requests.get(f"https://api.telegram.org/file/bot{self.token}/{file_path}", timeout=600)
+                resp.raise_for_status()
+                break
+            except (requests.ConnectionError, requests.Timeout) as e:
+                if attempt == 2:
+                    raise
+                logger.warning(f"Download do Telegram falhou ({e}); tentando de novo")
+                time.sleep(10)
         dest_dir.mkdir(parents=True, exist_ok=True)
         out = dest_dir / f"{file_id}{Path(file_path).suffix or '.mp4'}"
         out.write_bytes(resp.content)

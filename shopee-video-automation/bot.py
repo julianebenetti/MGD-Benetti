@@ -50,6 +50,7 @@ BATCH_LINK_TTL = 600
 FAILED_RETRY_TTL = 1800
 COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
 VIDEO_WORKERS = int(os.getenv('VIDEOS_AO_MESMO_TEMPO', '2'))   # vídeos preparados ao mesmo tempo
+VIDEO_NET_RETRIES = 3   # falha de conexão ao preparar um vídeo: refaz sozinho (2, 4 e 6 min depois)
 DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 
@@ -313,32 +314,60 @@ class Bot:
         """Vídeos esperando link ficam gravados: um reinício (ex.: atualização) não os perde."""
         self.db.set_meta('videos_sem_link', json.dumps(self.pending))
 
-    def job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
+    def job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False,
+                  attempt: int = 0):
+        retry = False
         try:
-            self._job_video(msg_id, file_id, link, text, trust_link)
+            retry = self._job_video(msg_id, file_id, link, text, trust_link, attempt)
         finally:
-            self.db.remove_video_job(msg_id)
+            if not retry:
+                self.db.remove_video_job(msg_id)
 
-    def _job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
+    def _job_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False,
+                   attempt: int = 0) -> bool:
+        """Devolve True quando o vídeo voltou para a fila (falha de conexão: tenta de novo sozinho)."""
         try:
             video = self.tg.download(file_id, BASE / 'downloads')
             result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for, trust_link)
         except Exception as e:
+            network = isinstance(e, requests.RequestException)
+            if network and attempt < VIDEO_NET_RETRIES:
+                # internet do VPS / Telegram / Shopee lenta: espera e refaz, sem mensagem de erro
+                wait = 120 * (attempt + 1)
+                logger.warning(f"Vídeo {msg_id}: falha de conexão ({e}); tentando de novo em {wait} s")
+                threading.Timer(wait, self.submit, args=(
+                    ('video', msg_id, file_id, link, text, trust_link, attempt + 1),)).start()
+                return True
             if not isinstance(e, PipelineError):
                 logger.exception("Falha ao preparar vídeo")
-            reason = str(e) if isinstance(e, PipelineError) else f"Erro inesperado: {e}"
+            reason = str(e) if isinstance(e, PipelineError) else \
+                f"Falha de conexão com o Telegram/Shopee (tentei {attempt + 1} vezes): {e}" if network else \
+                f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
             rows = [[('✅ Pode seguir', f"vk:{msg_id}")]] if isinstance(e, VariationMismatch) else []
             if PROMPTS and isinstance(e, (VariationMismatch, DetailMismatch)):
                 rows.append([('🎬 Prompt corrigido', f"pc:{msg_id}")])
+            if not isinstance(e, PipelineError):
+                rows.append([('🔁 Tentar de novo', f"rt:{msg_id}")])
             markup = keyboard(*rows) if rows else None
             err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id, markup=markup)
             self.db.add_failure(msg_id, err_id, file_id, text, link, reason)
-            return
+            return False
         post_id = self.db.create_post(source_msg_id=msg_id, **result)
         self.db.add_headline(result['product_key'], result['metadata']['cover_title'])
-        self.send_to_editados(self.db.get_post(post_id))
+        self.deliver_to_editados(post_id)
         self.tg.react(msg_id, '👍')
+        return False
+
+    def deliver_to_editados(self, post_id: int, attempt: int = 0):
+        """Manda o vídeo pronto para Editados; se a conexão falhar no envio, tenta de novo depois (até 4 vezes)."""
+        try:
+            self.send_to_editados(self.db.get_post(post_id))
+        except requests.RequestException as e:
+            if attempt >= 3:
+                raise
+            logger.warning(f"Post {post_id}: envio para Editados falhou ({e}); tentando de novo em 2 min")
+            threading.Timer(120, self.submit, args=(('deliver', post_id, attempt + 1),)).start()
 
     # ---------- Editados ----------
 
@@ -1040,6 +1069,16 @@ class Bot:
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
             return
+        if action == 'rt' and raw_id.isdigit():   # 🔁 tentar de novo um vídeo que falhou por erro/conexão
+            failure = self.db.find_failure(int(raw_id), 0)
+            if not failure or failure['msg_id'] != int(raw_id) or not failure.get('link'):
+                self.tg.answer_callback(cb['id'], 'Já resolvido (ou não achei o link: responda o vídeo com ele)')
+                return
+            self.db.remove_failure(failure['msg_id'])
+            self.tg.edit_markup(failure['err_msg_id'], keyboard())
+            self.tg.answer_callback(cb['id'], 'Ok, preparando de novo…')
+            self.enqueue_video(failure['msg_id'], failure['file_id'], failure['link'], failure['text'])
+            return
         if action == 'wv':   # 🏆 vencedores: nova versão do vídeo de um produto que já vende
             self.on_new_version(cb, raw_id)
             return
@@ -1508,6 +1547,17 @@ class Bot:
         for d, n in self.manual_videos().items():
             out[d] = out.get(d, 0) + int(n)
         return out
+
+    def on_redo_command(self, thread: Optional[int]):
+        """/refazer: põe de novo na fila os vídeos das últimas 48 h que falharam por erro inesperado ou conexão."""
+        redo = [f for f in self.db.recent_failures(48 * 3600) if f.get('link') and f.get('file_id')
+                and re.match(r'(Erro inesperado|Falha de conexão)', f.get('reason') or '')]
+        for f in redo:
+            self.db.remove_failure(f['msg_id'])
+            self.tg.edit_markup(f['err_msg_id'], keyboard())
+            self.enqueue_video(f['msg_id'], f['file_id'], f['link'], f['text'])
+        self.tg.send_text(thread or ENVIOS, f"🔁 {len(redo)} vídeo(s) que deram erro voltaram para a fila." if redo
+                          else "Nenhum vídeo com erro de conexão/inesperado nas últimas 48 h.")
 
     def on_posted_command(self, thread: Optional[int], command: str):
         """/postei N [DD/MM]: registra vídeos postados fora do robô naquele dia (soma). /postei 0 DD/MM zera o dia."""
@@ -2152,6 +2202,8 @@ class Bot:
             try:
                 if job[0] == 'video':
                     self.job_video(*job[1:])
+                elif job[0] == 'deliver':
+                    self.deliver_to_editados(*job[1:])
                 elif job[0] == 'headline':
                     self.job_headline(*job[1:])
                 elif job[0] == 'approve':
@@ -2293,6 +2345,9 @@ class Bot:
             self.tg.send_text(thread or RELATORIO, "📊 Montando o painel do Shopee Vídeo…")
             self.submit(('panel', thread or RELATORIO))
             return
+        if command.lower().startswith('/refazer'):
+            self.on_redo_command(thread)
+            return
         if command.lower().startswith('/postei'):
             self.on_posted_command(thread, command)
             return
@@ -2371,6 +2426,7 @@ class Bot:
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
             ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
+            ('refazer', 'Refaz os vídeos que deram erro (conexão/erro inesperado) nas últimas 48 h'),
             ('postei', 'Registra vídeos postados fora do robô, ex.: /postei 12 04/11'),
             ('historico', 'Histórico da conta no Shopee Vídeo (marcos, punições, levantamentos)'),
             ('nota', 'Guarda um marco no histórico, ex.: /nota levei punição no vídeo X'),
