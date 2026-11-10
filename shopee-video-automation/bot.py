@@ -74,7 +74,7 @@ IDEAS_TRIES = 6                 # tentativas por dia da lista diária (se a Shop
 IDEAS_RETRY_MINUTES = 30
 LIA_CHECK_SECONDS = 300                                              # lê a conversa com a LiA a cada 5 min
 # sem ✅ Postei nem confirmação da LiA: passadas tantas horas do horário, vai sozinho para Postados (0 desliga)
-AUTO_POSTED_HOURS = int(float(os.getenv('AGENDA_POSTADO_AUTO_HORAS', '6') or 0))
+AUTO_POSTED_HOURS = int(float(os.getenv('AGENDA_POSTADO_AUTO_HORAS', '0') or 0))   # padrão: desligado
 LIA_ALERT_SECONDS = int(float(os.getenv('LIA_ALERTA_HORAS', '2')) * 3600)   # sem confirmação: avisa                          # ideia sugerida não volta antes disso
 REPORT_TIME = os.getenv('RELATORIO_HORA', '22:30')   # relatório do dia, depois do último horário da agenda
 FAILURES_SHOWN = 7 * 24 * 3600    # falhas sem resposta aparecem nas pendências por até 7 dias
@@ -627,19 +627,21 @@ class Bot:
         stale = [i for i in self.db.sent_in(AGENDA) if i not in keep]
         left = self.job_tidy(stale, "✅ resolvido") if stale else []
         self.refresh_agenda_summary(repost=True)
-        if quiet and not left:
+        if quiet and not left and not stale:
             return
         can = self.tg.can_delete()
         text = (f"🧹 Agenda limpa: apaguei {len(stale) - len(left)} mensagem(ns) de vídeos já resolvidos."
                 if stale else "🧹 Nada para limpar nas mensagens que o robô conhece.")
         if left:
             text += f"\n🟩 {len(left)} o Telegram não deixou apagar (ficam como quadrado verde / \"resolvido\")."
+            if self.tg.last_delete_error:
+                text += f"\nMotivo dado pelo Telegram: <i>{html.escape(self.tg.last_delete_error[:200])}</i>"
         if can is False:
             text += ("\n\n⚠️ <b>O robô não tem permissão para apagar mensagens</b>, por isso os quadrados verdes. "
                      "No grupo: toque no nome do grupo → Administradores → AfiliDash Shopee Video Bot → ligue "
                      "<b>Apagar mensagens</b> → Salvar. Depois mande /limparagenda: os verdes somem.")
         elif left:
-            text += " Tento de novo na limpeza de amanhã."
+            text += " Tento apagar de novo no próximo /reorganizar ou /limparagenda."
         if not quiet:
             text += ("\n<i>Mensagens de antes de o robô anotar o que manda: essas, apague à mão "
                      "(segure numa, toque em Selecionar e marque as outras).</i>")
@@ -940,6 +942,8 @@ class Bot:
                 + '\n'.join(lines)) if plan else "🗓️ Nenhum vídeo agendado para reorganizar."
         self.tg.send_text(thread, text[:4000])
         self.agenda_last = ''
+        # junto: tira da Agenda as mensagens dos vídeos que você já marcou ✅ Postei (ou descartou)
+        self.submit(('clean_agenda', thread or AGENDA, True))
 
     def job_validate_agenda(self, thread: Optional[int]):
         """
@@ -1302,10 +1306,6 @@ class Bot:
     # ---------- Relógio ----------
 
     def tick(self):
-        current_day = scheduler.now()
-        if current_day.hour >= 4 and self.db.get_meta('limpeza_dia') != current_day.date().isoformat():
-            self.db.set_meta('limpeza_dia', current_day.date().isoformat())
-            self.submit(('clean_agenda', AGENDA, True))   # limpeza diária da Agenda (avisa só se sobrar verde)
         for album in [a for a, v in self.album_links.items() if time.time() - v['at'] > BATCH_LINK_TTL]:
             del self.album_links[album]
         for p in self.pending:  # cada vídeo sem link é perguntado sozinho; os outros seguem
@@ -2488,7 +2488,7 @@ class Bot:
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),
             ('validaragenda', 'Valida produto × vídeo de todos os posts da Agenda'),
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
-            ('reorganizar', 'Refaz os horários da Agenda: lotes de 5, 30 por dia (manhã, tarde, noite)'),
+            ('reorganizar', 'Refaz os horários da Agenda e limpa as mensagens dos vídeos já postados'),
             ('limparagenda', 'Tira da Agenda as mensagens de vídeos já postados/descartados'),
             ('linksideias', 'Links das ideias para o app da LiA: /linksideias, /linksideias 25/10 ou /linksideias 40'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),

@@ -51,6 +51,7 @@ class TelegramBot:
         self.token = token
         self.chat_id = int(chat_id)
         self.api_url = f"https://api.telegram.org/bot{token}"
+        self.last_delete_error = ''   # motivo da última recusa ao apagar (mostrado no /limparagenda)
         self.on_sent = None   # (tópico, [ids]) de cada mensagem enviada: o robô anota as da Agenda para limpar depois
 
     def call(self, method: str, timeout: int = 30, **kwargs):
@@ -184,6 +185,7 @@ class TelegramBot:
     def delete(self, message_ids: List[int]) -> List[int]:
         """Apaga as mensagens; devolve as que o Telegram não deixou apagar (o lote falhou: tenta uma a uma)."""
         failed = []
+        self.last_delete_error = ''
         for chunk in range(0, len(message_ids), 100):
             ids = message_ids[chunk:chunk + 100]
             try:
@@ -197,9 +199,11 @@ class TelegramBot:
                 except RuntimeError as e:
                     if 'not found' not in str(e).lower():
                         failed.append(msg_id)
+                        self.last_delete_error = str(e)
                         logger.warning(f"Não consegui apagar a mensagem {msg_id}: {e}")
-                except requests.RequestException:
+                except requests.RequestException as e:
                     failed.append(msg_id)
+                    self.last_delete_error = f"sem resposta do Telegram ({e})"
         return failed
 
     def can_delete(self) -> Optional[bool]:
