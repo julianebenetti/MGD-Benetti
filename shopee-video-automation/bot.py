@@ -50,7 +50,7 @@ BATCH_LINK_TTL = 600
 FAILED_RETRY_TTL = 1800
 COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
 VIDEO_WORKERS = int(os.getenv('VIDEOS_AO_MESMO_TEMPO', '2'))   # vídeos preparados ao mesmo tempo
-VIDEO_NET_RETRIES = 3   # falha de conexão ao preparar um vídeo: refaz sozinho (2, 4 e 6 min depois)
+VIDEO_NET_RETRIES = 5   # falha de conexão/Shopee fora do ar: refaz sozinho (2, 4, 8, 16 e 30 min depois)
 DIAS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 
@@ -335,7 +335,7 @@ class Bot:
             network = isinstance(e, requests.RequestException)
             if network and attempt < VIDEO_NET_RETRIES:
                 # internet do VPS / Telegram / Shopee lenta: espera e refaz, sem mensagem de erro
-                wait = 120 * (attempt + 1)
+                wait = min(120 * 2 ** attempt, 1800)
                 logger.warning(f"Vídeo {msg_id}: falha de conexão ({e}); tentando de novo em {wait} s")
                 threading.Timer(wait, self.submit, args=(
                     ('video', msg_id, file_id, link, text, trust_link, attempt + 1),)).start()
@@ -343,7 +343,7 @@ class Bot:
             if not isinstance(e, PipelineError):
                 logger.exception("Falha ao preparar vídeo")
             reason = str(e) if isinstance(e, PipelineError) else \
-                f"Falha de conexão com o Telegram/Shopee (tentei {attempt + 1} vezes): {e}" if network else \
+                f"Falha de conexão / Shopee fora do ar (tentei {attempt + 1} vezes em ~1 h): {e}" if network else \
                 f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
             rows = [[('✅ Pode seguir', f"vk:{msg_id}")]] if isinstance(e, VariationMismatch) else []

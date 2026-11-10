@@ -75,6 +75,14 @@ def commission_value(product: Dict) -> float:
     return round(price * rate, 2)
 
 
+
+# "System Error" / limite de chamadas da Shopee: passageiro, vale tentar de novo mais tarde
+TEMPORARY_CODES = {10000, 10020, 10030}
+
+
+class ShopeeUnavailable(requests.RequestException):
+    """API da Shopee fora do ar ou sobrecarregada: o robô espera e tenta de novo (como falha de conexão)."""
+
 class ShopeeAffiliateClient:
     def __init__(self, app_id: str, secret: str):
         self.app_id = app_id
@@ -94,9 +102,14 @@ class ShopeeAffiliateClient:
             'Content-Type': 'application/json',
             'Authorization': f'SHA256 Credential={self.app_id}, Timestamp={ts}, Signature={signature}',
         })
+        if resp.status_code >= 500:
+            raise ShopeeUnavailable(f"Shopee API fora do ar (HTTP {resp.status_code})")
         resp.raise_for_status()
         data = resp.json()
         if data.get('errors'):
+            codes = {(e.get('extensions') or {}).get('code') for e in data['errors']}
+            if codes & TEMPORARY_CODES:
+                raise ShopeeUnavailable(f"Shopee API fora do ar no momento ({data['errors'][0].get('message')})")
             raise RuntimeError(f"Shopee API: {data['errors']}")
         return data['data']
 
