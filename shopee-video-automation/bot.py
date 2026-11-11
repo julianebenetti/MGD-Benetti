@@ -2340,13 +2340,16 @@ class Bot:
                    'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
             arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades'}.get(arg, arg)
             arg = {'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal', 'decoracao': 'casa',
-                   'decoração': 'casa'}.get(arg, arg)
-            if arg and arg not in ('alta', 'casa', 'beleza', 'natal', 'moda', 'pet', 'tapete', 'oportunidades'):
+                   'decoração': 'casa', 'móveis': 'moveis', 'movel': 'moveis', 'móvel': 'moveis',
+                   'eletrodomesticos': 'eletro', 'eletrodomésticos': 'eletro', 'eletros': 'eletro'}.get(arg, arg)
+            if arg and arg not in ('alta', 'casa', 'moveis', 'eletro', 'beleza', 'natal', 'moda', 'pet', 'tapete',
+                                   'oportunidades'):
                 self.tg.send_text(target, "Use /sugestoes (a lista toda) ou só uma parte: /sugestoes alta · "
-                                          "/sugestoes casa · /sugestoes beleza · /sugestoes natal · /sugestoes moda · "
+                                          "/sugestoes casa · /sugestoes moveis · /sugestoes eletro · /sugestoes beleza · /sugestoes natal · /sugestoes moda · "
                                           "/sugestoes pet · /sugestoes tapete · /sugestoes oportunidades")
                 return
-            what = {'alta': 'os mais buscados', 'casa': 'casa e decoração', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
+            what = {'alta': 'os mais buscados', 'casa': 'casa e decoração', 'moveis': 'móveis',
+                    'eletro': 'eletrodomésticos', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
                     'moda': 'moda feminina', 'pet': 'pet', 'tapete': 'tapete higiênico',
                     'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
             self.tg.send_text(target, f"💡 Buscando {what} na Shopee agora… (leva 1 a 3 minutos)")
@@ -2482,7 +2485,7 @@ class Bot:
             ('nota', 'Guarda um marco no histórico, ex.: /nota levei punição no vídeo X'),
             ('vencedores', 'Vídeos que mais vendem: qual fixar e de quais fazer mais versões'),
             ('vendas', 'Vendas do Shopee Vídeo: 7 dias (/vendas hoje, /vendas 30, /vendas todas)'),
-            ('sugestoes', 'Ideias agora (ou só uma parte: /sugestoes beleza, natal, alta, moda, pet, tapete)'),
+            ('sugestoes', 'Ideias agora (ou só uma parte: /sugestoes moveis, eletro, casa, beleza, natal, moda, pet)'),
             ('verificarlia', 'Confere na LiA se algum vídeo ficou sem publicar'),
             ('pausar', 'Pausa as postagens (ex.: /pausar 25/10 18:30, ou até /retomar)'),
             ('retomar', 'Retoma as postagens e refaz os horários da Agenda'),

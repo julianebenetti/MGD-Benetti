@@ -391,6 +391,17 @@ FOCUS = [
      ['organizador', 'quadro decorativo', 'luminária', 'tapete sala', 'cortina', 'vaso decorativo', 'espelho decorativo',
       'almofada decorativa', 'porta retrato', 'prateleira', 'utensílios de cozinha', 'escorredor de louça',
       'kit banheiro', 'cabide', 'difusor de aromas', 'jogo de cama', 'manta sofá', 'cesto organizador'], '', True),
+    # móveis e eletrodomésticos (pedido de 11/11): ticket mais alto, comissão maior por venda; em teste no vídeo
+    ('moveis', '🪑 Móveis (teste)', int(os.getenv('IDEIAS_MOVEIS', '5')),
+     ['rack para sala', 'painel de tv', 'sapateira', 'cômoda', 'penteadeira', 'mesa dobrável', 'cadeira de escritório',
+      'armário multiuso', 'estante', 'criado mudo', 'mesa de cabeceira', 'guarda roupa', 'cabeceira cama',
+      'banqueta', 'mesa de centro', 'balcão cozinha', 'nicho decorativo', 'puff', 'escrivaninha', 'arara roupas'],
+     '', True),
+    ('eletro', '🔌 Eletrodomésticos (teste)', int(os.getenv('IDEIAS_ELETRO', '5')),
+     ['air fryer', 'aspirador de pó', 'robô aspirador', 'liquidificador', 'cafeteira', 'ventilador',
+      'panela elétrica', 'batedeira', 'mixer', 'sanduicheira', 'chaleira elétrica', 'forno elétrico',
+      'processador de alimentos', 'panela de pressão elétrica', 'mop giratório elétrico', 'climatizador',
+      'ferro de passar', 'vaporizador de roupas', 'micro-ondas', 'umidificador'], '', True),
     ('beleza', '💇 Beleza e cabelo', int(os.getenv('IDEIAS_BELEZA', '5')),
      ['escova rotativa', 'escova secadora', 'secador de cabelo', 'prancha alisadora', 'chapinha', 'babyliss',
       'modelador de cachos', 'escova alisadora', 'escova giratória', 'secador profissional', 'difusor de cabelo',
@@ -720,9 +731,9 @@ def export_csv(rows: List[Dict]) -> bytes:
 
 
 # Lotes da LiA (até 20 cada) juntando seções inteiras: 10 casa + 10 moda · 15 mais buscados + 5 beleza · o restante
-# (Natal + pet + oportunidades). Seções que não estão aqui vão para lotes no fim. LIA_LOTES no .env muda isso.
+# (Natal + pet + oportunidades) · móveis + eletrodomésticos. Seções que não estão aqui vão para lotes no fim. LIA_LOTES no .env muda isso.
 LIA_GROUPS = [g.split('+') for g in
-              (os.getenv('LIA_LOTES') or 'casa+moda,alta+beleza,natal+pet+tapete+oportunidades').split(',') if g]
+              (os.getenv('LIA_LOTES') or 'casa+moda,alta+beleza,natal+pet+tapete+oportunidades,moveis+eletro').split(',') if g]
 
 
 def batches(rows: List[Dict]) -> List[List[Dict]]:
