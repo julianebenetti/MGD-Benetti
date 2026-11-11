@@ -2374,6 +2374,9 @@ class Bot:
         if command.lower().startswith('/extensao') or command.lower().startswith('/extensão'):
             self.submit(('extension', thread or PROMPTS))
             return
+        if command.lower().startswith('/comandosideias'):
+            self.refresh_ideas_help(repost=True)
+            return
         if command.lower().startswith('/linksideias'):
             self.submit(('idea_links', thread or IDEIAS, command.split(maxsplit=1)[1] if ' ' in command else ''))
             return
@@ -2473,6 +2476,53 @@ class Bot:
                 markup=self.agenda_markup(post['id']))
             self.db.update_post(post['id'], agenda_msgs=post['agenda_msgs'] + [msg_id])
 
+    @staticmethod
+    def ideas_help_text() -> str:
+        """Mensagem fixada no topo de 💡 Ideias: os comandos para puxar ideias e links."""
+        return (
+            "📌 <b>Comandos das Ideias</b> (mande aqui mesmo)\n\n"
+            f"🕢 A lista do dia chega sozinha às <b>{IDEAS_TIME}</b>.\n\n"
+            "<b>💡 Pedir ideias agora</b>\n"
+            "• /sugestoes: a lista toda\n"
+            "• /sugestoes alta: 🔥 os mais buscados\n"
+            "• /sugestoes casa: 🏠 casa e decoração\n"
+            "• /sugestoes moveis: 🪑 móveis\n"
+            "• /sugestoes eletro: 🔌 eletrodomésticos\n"
+            "• /sugestoes beleza: 💇 beleza e cabelo\n"
+            "• /sugestoes natal: 🎄 Natal\n"
+            "• /sugestoes moda: 👗 moda feminina\n"
+            "• /sugestoes pet: 🐾 pet\n"
+            "• /sugestoes tapete: 🐾 só tapete higiênico\n"
+            "• /sugestoes oportunidades: 🌱 poucas vendas ainda / comissão extra\n\n"
+            "<b>🔗 Links para o app da LiA</b> (lotes de até 20, um link por linha)\n"
+            "• /linksideias: os links da última lista\n"
+            "• /linksideias 25/10: as ideias de um dia\n"
+            "• /linksideias 40: 40 ideias novas dos últimos dias\n\n"
+            "<b>🏆 O que já vende</b>\n"
+            "• /vencedores: o vídeo para fixar e de quais fazer mais versões (/vencedores 30 = 30 dias)\n"
+            "• /vendas: vendas do Shopee Vídeo (/vendas hoje, /vendas 30)\n\n"
+            "<i>Se a Shopee estiver fora do ar, o robô avisa e tenta de novo sozinho. "
+            "Esta mensagem volta para cá com /comandosideias.</i>")
+
+    def refresh_ideas_help(self, repost: bool = False):
+        """Mantém a mensagem de comandos fixada no topo de 💡 Ideias (edita se mudou; refaz se foi apagada)."""
+        if not IDEIAS:
+            return
+        text = self.ideas_help_text()
+        msg_id = int(self.db.get_meta('ideias_ajuda_msg', '0') or 0)
+        if msg_id and not repost:
+            if self.db.get_meta('ideias_ajuda_texto') == text:
+                return
+            if self.tg.edit_text(msg_id, text):
+                self.db.set_meta('ideias_ajuda_texto', text)
+                return
+        if msg_id and repost:
+            self.tg.delete([msg_id])
+        msg_id = self.tg.send_text(IDEIAS, text)
+        self.tg.pin(msg_id)
+        self.db.set_meta('ideias_ajuda_msg', str(msg_id))
+        self.db.set_meta('ideias_ajuda_texto', text)
+
     def register_commands(self):
         """Menu do / : no grupo do robô, os comandos dele; nos outros grupos, só o /brutos."""
         self.tg.set_commands([
@@ -2493,6 +2543,7 @@ class Bot:
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
             ('reorganizar', 'Refaz os horários da Agenda e limpa as mensagens dos vídeos já postados'),
             ('limparagenda', 'Tira da Agenda as mensagens de vídeos já postados/descartados'),
+            ('comandosideias', 'Fixa de novo em 💡 Ideias a mensagem com os comandos das ideias'),
             ('linksideias', 'Links das ideias para o app da LiA: /linksideias, /linksideias 25/10 ou /linksideias 40'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
             ('extensao', 'Extensão do Chrome que manda as avaliações dos produtos para os prompts'),
@@ -2515,6 +2566,10 @@ class Bot:
 
     def run(self):
         self.register_commands()
+        try:
+            self.refresh_ideas_help()
+        except Exception as e:
+            logger.warning(f"Não fixei os comandos em Ideias: {e}")
         self.resume_after_restart()
         self.submit(('resubid_agenda',))
         if self.db.get_meta('agenda_lotes') != '2':   # uma vez: a agenda passa para os lotes atuais (5 por lote)
