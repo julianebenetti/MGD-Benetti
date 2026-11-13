@@ -62,6 +62,13 @@ divulgados, trocas por loja de comissão maior, o que está em Editados/Agenda/P
 últimos 7 dias. A qualquer hora: **`/relatorio`** (hoje) ou **`/relatorio 10/10`** (outro dia), em
 qualquer tópico do grupo.
 
+**📈 Vendas do mês** (dica da comunidade, 12/11) — a API só dá o total de vendas; o robô guarda o total de cada
+produto que vê (buscas das ideias e, com `SHOPEE_DATAFEED_URL`, o **datafeed** baixado todo dia a partir das 5h ou com
+**`/datafeed`**) e calcula as vendas dos últimos dias (≈ X/mês, a partir de 5 dias de histórico). As ideias passam a
+priorizar quem vende mais no mês (1.000+/mês ×1,6; 500+ ×1,3), tiram produto parado (`IDEIAS_MIN_VENDAS_MES`) e, com o
+datafeed, ganham a seção **📈 Vendendo agora** (`/sugestoes agora`, `IDEIAS_VENDENDO_AGORA`). Ideias e /vencedores
+lembram de olhar o ranking **Em destaque** dos vídeos do produto antes de gravar.
+
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
 **A lista do dia** (06/11): 🔥 **15 mais buscados** · 🏠 **10 casa e decoração** (nicho novo, em teste) ·
 💇 **5 beleza/cabelo** · 🎄 **10 Natal** (de 15/10 a 24/12; fora disso as vagas vão para casa) · 👗 **10 moda** ·

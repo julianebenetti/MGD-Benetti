@@ -31,6 +31,7 @@ from pipeline import DetailMismatch, Pipeline, PipelineError, VariationMismatch 
 import prompts  # noqa: E402
 import reviews  # noqa: E402
 import estudo  # noqa: E402
+import sales_trend  # noqa: E402
 from content_generator import HASHTAGS, fit_caption  # noqa: E402
 from sub_id import nome_do_sub_id, novo_sub_id, prefixo  # noqa: E402
 from shopee_affiliate import commission_value  # noqa: E402
@@ -171,6 +172,8 @@ class Bot:
     def __init__(self):
         self.tg = TelegramBot(os.environ['TELEGRAM_BOT_TOKEN'], os.environ['TELEGRAM_CHAT_ID'])
         self.db = Storage()
+        self.trend = sales_trend.Trend(self.db)   # vendas do mês (histórico do total de vendas)
+        ideas.TREND = self.trend
         self.tg.on_sent = lambda thread, ids: self.db.log_sent(thread, ids) if thread == AGENDA else None
         self.pipeline = Pipeline(BASE / os.getenv('VIDEOS_OUTPUT_DIR', 'processed_videos'))
         self.pipeline.is_sold_out = self.db.is_sold_out
@@ -197,7 +200,7 @@ class Bot:
     def submit(self, job: tuple):
         kind = job[0]
         name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
-            'ideas' if kind in ('ideas', 'idea_links') else \
+            'ideas' if kind in ('ideas', 'idea_links', 'datafeed') else \
             'approve' if kind in ('approve', 'use_identical') else \
             'tidy' if kind in ('tidy', 'clean_agenda') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
             else 'ui'
@@ -2046,6 +2049,8 @@ class Bot:
         `only`: só uma parte. Nada já postado/agendado nem sugerido nos últimos ideas.REPEAT_DAYS dias.
         """
         today = scheduler.now().date()
+        self.trend.cache.clear()
+        shopee = sales_trend.RecordingClient(self.pipeline.shopee, self.trend)   # toda busca alimenta o histórico
         active = self.db.with_status('editado', 'agendando', 'agendado', 'enviando', 'na_lia', 'avisado', 'postado')
         used = {p['product_key'] for p in active}
         used_types = {ideas.similar_key(p['product_name']) for p in active}
@@ -2069,18 +2074,28 @@ class Bot:
             try:
                 terms, hot_day = ideas.trending_terms(today)
                 if terms:
-                    hot, hot_missing = ideas.trending(self.pipeline.shopee, terms, lambda p: skip_key(p) or skip_type(p))
+                    hot, hot_missing = ideas.trending(shopee, terms, lambda p: skip_key(p) or skip_type(p))
             except Exception as e:
                 logger.warning(f"Buscas em alta falharam: {e}")
             sections.append(('alta', '🔥 Mais buscados', hot))
+        if only in (None, 'agora') and sales_trend.DATAFEED_URL:   # 📈 o que mais vendeu nos últimos dias
+            taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
+            try:
+                now_selling = ideas.rising_now(shopee, lambda p: skip_key(p) or f"{p['shopId']}:{p['itemId']}" in taken,
+                                               skip_type, ideas.RISING_COUNT or (5 if only else 0))
+            except Exception as e:
+                logger.warning(f"Vendendo agora falhou: {e}")
+                now_selling = []
+            if now_selling or only == 'agora':
+                sections.append(('agora', '📈 Vendendo agora (datafeed: mais vendas nos últimos dias)', now_selling))
         taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
-        if only not in ('alta', 'oportunidades'):
-            sections += ideas.focus(self.pipeline.shopee, today, lambda p: skip_key(p) or
+        if only not in ('alta', 'oportunidades', 'agora'):
+            sections += ideas.focus(shopee, today, lambda p: skip_key(p) or
                                     f"{p['shopId']}:{p['itemId']}" in taken, skip_type, only)
         if only in (None, 'oportunidades'):   # 🌱 teste: sinais de pouca concorrência
             taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
             try:
-                opp = ideas.opportunities(self.pipeline.shopee, today,
+                opp = ideas.opportunities(shopee, today,
                                           lambda p: skip_key(p) or f"{p['shopId']}:{p['itemId']}" in taken, skip_type)
             except Exception as e:
                 logger.warning(f"Oportunidades falharam: {e}")
@@ -2185,6 +2200,37 @@ class Bot:
             self.tg.send_text(thread, f"As ideias {label} já foram usadas ou saíram do ar.")
             return
         self.send_idea_links(thread, rows, today)
+
+    def daily_datafeed(self):
+        """Uma vez por dia (a partir das 5h), baixa o datafeed da Shopee para o histórico de vendas do mês."""
+        if not sales_trend.DATAFEED_URL:
+            return
+        current = scheduler.now()
+        today = current.date().isoformat()
+        if current.hour < 5 or self.db.get_meta('datafeed_dia') == today:
+            return
+        last = float(self.db.get_meta('datafeed_tentativa', '0') or 0)
+        if time.time() - last < 3600:
+            return
+        self.db.set_meta('datafeed_tentativa', str(time.time()))
+        self.submit(('datafeed', None))
+
+    def job_datafeed(self, thread: Optional[int]):
+        try:
+            info = sales_trend.import_datafeed(self.db, today=scheduler.now().date())
+        except Exception as e:
+            logger.warning(f"Datafeed falhou: {e}")
+            if thread:
+                self.tg.send_text(thread, f"⚠️ Não consegui baixar/ler o datafeed: {html.escape(str(e)[:300])}")
+            return
+        self.db.set_meta('datafeed_dia', scheduler.now().date().isoformat())
+        logger.info(f"Datafeed: {info}")
+        if thread:
+            days = self.db.conn.execute("SELECT COUNT(DISTINCT day) FROM sales_hist").fetchone()[0]
+            self.tg.send_text(thread, f"📈 Datafeed lido: {info['linhas']} produtos, {info['gravados']} com "
+                                      f"{sales_trend.DATAFEED_MIN_SALES}+ vendas guardados no histórico "
+                                      f"({days} dia(s) de histórico). As vendas do mês aparecem a partir de "
+                                      f"{sales_trend.MIN_SPAN_DAYS} dias de histórico.")
 
     def daily_ideas(self):
         """No horário IDEIAS_HORA, a lista do dia vai sozinha para 💡 Ideias (uma vez por dia)."""
@@ -2300,6 +2346,8 @@ class Bot:
                     self.job_narrations(*job[1:])
                 elif job[0] == 'prompt_narr':
                     self.job_prompt_narration(*job[1:])
+                elif job[0] == 'datafeed':
+                    self.job_datafeed(*job[1:])
                 elif job[0] == 'ideas':
                     self.job_ideas(*job[1:])
                 elif job[0] == 'panel':
@@ -2338,17 +2386,19 @@ class Bot:
             arg = (command.split(maxsplit=1)[1].strip().lower() if ' ' in command else '')
             arg = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
                    'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
-            arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades'}.get(arg, arg)
+            arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades', 'vendendo': 'agora',
+                   'tendencia': 'agora', 'tendência': 'agora', 'datafeed': 'agora'}.get(arg, arg)
             arg = {'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal', 'decoracao': 'casa',
                    'decoração': 'casa', 'móveis': 'moveis', 'movel': 'moveis', 'móvel': 'moveis',
                    'eletrodomesticos': 'eletro', 'eletrodomésticos': 'eletro', 'eletros': 'eletro'}.get(arg, arg)
-            if arg and arg not in ('alta', 'casa', 'moveis', 'eletro', 'beleza', 'natal', 'moda', 'pet', 'tapete',
+            if arg and arg not in ('alta', 'agora', 'casa', 'moveis', 'eletro', 'beleza', 'natal', 'moda', 'pet', 'tapete',
                                    'oportunidades'):
                 self.tg.send_text(target, "Use /sugestoes (a lista toda) ou só uma parte: /sugestoes alta · "
                                           "/sugestoes casa · /sugestoes moveis · /sugestoes eletro · /sugestoes beleza · /sugestoes natal · /sugestoes moda · "
                                           "/sugestoes pet · /sugestoes tapete · /sugestoes oportunidades")
                 return
-            what = {'alta': 'os mais buscados', 'casa': 'casa e decoração', 'moveis': 'móveis',
+            what = {'alta': 'os mais buscados', 'agora': 'o que está vendendo agora (datafeed)',
+                    'casa': 'casa e decoração', 'moveis': 'móveis',
                     'eletro': 'eletrodomésticos', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
                     'moda': 'moda feminina', 'pet': 'pet', 'tapete': 'tapete higiênico',
                     'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
@@ -2373,6 +2423,15 @@ class Bot:
             return
         if command.lower().startswith('/extensao') or command.lower().startswith('/extensão'):
             self.submit(('extension', thread or PROMPTS))
+            return
+        if command.lower().startswith('/datafeed'):
+            if not sales_trend.DATAFEED_URL:
+                self.tg.send_text(thread or IDEIAS, "O datafeed ainda não está configurado: no portal de afiliados da "
+                                                    "Shopee, copie o link de download do seu datafeed e coloque no "
+                                                    ".env do VPS como SHOPEE_DATAFEED_URL=… (não mande o link aqui).")
+                return
+            self.tg.send_text(thread or IDEIAS, "📈 Baixando o datafeed da Shopee… (pode levar alguns minutos)")
+            self.submit(('datafeed', thread or IDEIAS))
             return
         if command.lower().startswith('/comandosideias'):
             self.refresh_ideas_help(repost=True)
@@ -2485,6 +2544,7 @@ class Bot:
             "<b>💡 Pedir ideias agora</b>\n"
             "• /sugestoes: a lista toda\n"
             "• /sugestoes alta: 🔥 os mais buscados\n"
+            "• /sugestoes agora: 📈 o que mais vendeu nos últimos dias (datafeed)\n"
             "• /sugestoes casa: 🏠 casa e decoração\n"
             "• /sugestoes moveis: 🪑 móveis\n"
             "• /sugestoes eletro: 🔌 eletrodomésticos\n"
@@ -2498,6 +2558,11 @@ class Bot:
             "• /linksideias: os links da última lista\n"
             "• /linksideias 25/10: as ideias de um dia\n"
             "• /linksideias 40: 40 ideias novas dos últimos dias\n\n"
+            "<b>📈 Vendas do mês</b>\n"
+            "• Cada ideia mostra <b>≈ X/mês</b> quando o robô já tem histórico (ideal 1.000+/mês; novo, 500+)\n"
+            "• /datafeed: baixa agora o datafeed da Shopee (o automático é todo dia de manhã)\n"
+            "• Antes de gravar: produto → vídeos → <b>Em destaque</b>. Se os 6 primeiros têm menos visualizações "
+            "que o seu melhor vídeo, entre na disputa com várias versões\n\n"
             "<b>🏆 O que já vende</b>\n"
             "• /vencedores: o vídeo para fixar e de quais fazer mais versões (/vencedores 30 = 30 dias)\n"
             "• /vendas: vendas do Shopee Vídeo (/vendas hoje, /vendas 30)\n\n"
@@ -2543,6 +2608,7 @@ class Bot:
             ('agenda', 'Resumo da Agenda em ordem de horário (o que precisa de você)'),
             ('reorganizar', 'Refaz os horários da Agenda e limpa as mensagens dos vídeos já postados'),
             ('limparagenda', 'Tira da Agenda as mensagens de vídeos já postados/descartados'),
+            ('datafeed', 'Baixa agora o datafeed da Shopee (histórico das vendas do mês)'),
             ('comandosideias', 'Fixa de novo em 💡 Ideias a mensagem com os comandos das ideias'),
             ('linksideias', 'Links das ideias para o app da LiA: /linksideias, /linksideias 25/10 ou /linksideias 40'),
             ('cookies', 'Login da Shopee: mande junto o arquivo exportado (em Envios)'),
@@ -2608,6 +2674,7 @@ class Bot:
                 self.periodic_study()
                 self.daily_panel()
                 self.daily_ideas()
+                self.daily_datafeed()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
                     self.lia_checked = time.time()
                     self.submit(('lia_check',))

@@ -158,8 +158,32 @@ def upcoming(today: date) -> List[Tuple[date, str, List[str]]]:
     return sorted(found)
 
 
+# Vendas do mês (sales_trend.Trend, ligado pelo robô): quando o robô já tem duas leituras do total de vendas de um
+# produto, sabe quanto ele vendeu nos últimos dias. Dica da comunidade (12/11): escolher pelo que vende NO MÊS;
+# 1.000+/mês é o ideal, 500+ vale para produto novo; produto parado (abaixo de DEAD_MONTHLY) sai da lista.
+TREND = None
+RISING_COUNT = int(os.getenv('IDEIAS_VENDENDO_AGORA', '5'))
+
+
+def month_sales(p: Dict) -> Optional[int]:
+    try:
+        return TREND.month(p) if TREND else None
+    except Exception:
+        return None
+
+
+def dead(p: Dict) -> bool:
+    from sales_trend import DEAD_MONTHLY
+    m = month_sales(p)
+    return m is not None and m < DEAD_MONTHLY
+
+
 def _score(p: Dict) -> float:
-    return commission_value(p) * math.log10(10 + int(p.get('sales') or 0))
+    base = commission_value(p) * math.log10(10 + int(p.get('sales') or 0))
+    m = month_sales(p)
+    if m is None:
+        return base
+    return base * (1.6 if m >= 1000 else 1.3 if m >= 500 else 1.0 if m >= 100 else 0.6)
 
 
 def collect(client, today: date, skip: Callable[[Dict], bool]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
@@ -369,11 +393,11 @@ def trending(client, terms: List[Dict], skip: Callable[[Dict], bool]) -> Tuple[L
               and float(p.get('ratingStar') or 0) >= MIN_RATING and int(p.get('sales') or 0) >= TRENDING_MIN_SALES
               and commission_value(p) > 0 and not BLOCKED.search(p.get('productName', ''))
               and not FORBIDDEN.search(p.get('productName', '')) and k not in keys
-              and similar_key(p.get('productName', '')) not in kinds and not skip(p)]
+              and similar_key(p.get('productName', '')) not in kinds and not skip(p) and not dead(p)]
         if not ok:
             missing += 1
             continue
-        best = max(ok, key=lambda p: int(p.get('sales') or 0))
+        best = max(ok, key=lambda p: (month_sales(p) or 0, int(p.get('sales') or 0)))
         keys.add(f"{best['shopId']}:{best['itemId']}")
         kinds.add(similar_key(best.get('productName', '')))
         chosen.append({**best, 'tema': f'busca nº {row.get("posicao")}: "{term}"', 'busca': term})
@@ -491,7 +515,7 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
                         and commission_value(p) > 0 and not BLOCKED.search(p.get('productName', ''))
                         and not FORBIDDEN.search(p.get('productName', ''))
                         and not PET_BLOCKED.search(p.get('productName', ''))
-                        and all(w in name for w in words) and k not in seen and not skip(p)
+                        and all(w in name for w in words) and k not in seen and not skip(p) and not dead(p)
                         and not (by_type and check_history and skip_type(p))):
                     ok.append(p)
             for p in sorted(ok, key=lambda p: _score(p) * (1.5 if _seller_rate(p) > 0 else 1), reverse=True):
@@ -564,7 +588,7 @@ def opportunities(client, today: date, skip: Callable[[Dict], bool], skip_type: 
         sales = int(p.get('sales') or 0)
         if (float(p.get('ratingStar') or 0) >= MIN_RATING and OPP_MIN_SALES <= sales <= OPP_MAX_SALES
                 and commission_value(p) > 0 and not BLOCKED.search(name) and not FORBIDDEN.search(name)
-                and not PET_BLOCKED.search(name) and not skip(p) and not skip_type(p)):
+                and not PET_BLOCKED.search(name) and not skip(p) and not skip_type(p) and not dead(p)):
             if _seller_field and 'sellerCommissionRate' in p and _seller_rate(p) <= 0:
                 continue   # a API informa e a loja não paga extra: fica de fora
             extra = _seller_rate(p)
@@ -582,6 +606,38 @@ def opportunities(client, today: date, skip: Callable[[Dict], bool], skip_type: 
     return chosen
 
 
+def rising_now(client, skip: Callable[[Dict], bool], skip_type: Callable[[Dict], bool],
+               count: int = RISING_COUNT) -> List[Dict]:
+    """
+    📈 Vendendo agora: os produtos do datafeed que mais venderam nos últimos dias (vendas/mês estimadas), conferidos
+    na API (nota, comissão) e com as mesmas regras das outras seções.
+    """
+    if not TREND or not count:
+        return []
+    from sales_trend import rising
+    chosen, kinds = [], set()
+    for r in rising(TREND.db, count * 8):
+        name = r.get('nome') or ''
+        if name and (BLOCKED.search(name) or FORBIDDEN.search(name) or PET_BLOCKED.search(name)):
+            continue
+        try:
+            p = client.product_by_ids(r['shopId'], r['itemId'])
+        except Exception as e:
+            logger.warning(f"Vendendo agora: produto {r['shopId']}:{r['itemId']} falhou ({e})")
+            continue
+        if not p or float(p.get('ratingStar') or 0) < MIN_RATING or commission_value(p) <= 0:
+            continue
+        pname = p.get('productName', '')
+        kind = similar_key(pname)
+        if BLOCKED.search(pname) or FORBIDDEN.search(pname) or skip(p) or skip_type(p) or kind in kinds:
+            continue
+        kinds.add(kind)
+        chosen.append({**p, 'tema': f"Vendendo agora · ≈ {_milhar(r['mes'])}/mês (datafeed)"})
+        if len(chosen) >= count:
+            break
+    return chosen
+
+
 def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, hot_missing: int = 0,
                     hot_day: Optional[date] = None, hot_wanted: int = 0) -> List[str]:
     """A lista do dia por seção (mesma numeração do CSV/links), em mensagens abaixo do limite do Telegram."""
@@ -591,13 +647,18 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
         url = f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
         return (f"<b>{i}. {e(p['productName'][:90])}</b>\n"
                 f"   {_brl(float(p.get('priceMin') or 0))} · comissão <b>{_brl(commission_value(p))}</b> · "
-                f"{_milhar(int(p.get('sales') or 0))} vendas · nota {p.get('ratingStar')}" +
+                f"{_milhar(int(p.get('sales') or 0))} vendas" +
+                (f" (≈ <b>{_milhar(month_sales(p))}/mês</b>)" if month_sales(p) is not None else '') +
+                f" · nota {p.get('ratingStar')}" +
                 f"\n   {'🔎' if p.get('busca') else '🏷️'} {e(p['tema'])} · {e(p.get('shopName', '')[:30])}\n   🔗 {url}")
 
     total = sum(len(items) for _, _, items in sections)
     blocks = [f"💡 <b>{total} ideias para gravar</b> · {today:%d/%m}\n"
               f"Nota ≥ {MIN_RATING}, {MIN_SALES}+ vendas, nunca suplementos. Grave (ou crie no app da LiA) e mande em "
-              f"📥 Envios com o link."]
+              f"📥 Envios com o link.\n"
+              f"📈 <b>≈ X/mês</b> = vendas dos últimos dias (ideal 1.000+/mês; produto novo, 500+).\n"
+              f"🏆 Antes de gravar, abra o produto → vídeos → <b>Em destaque</b>: se os 6 primeiros têm menos "
+              f"visualizações que o seu melhor vídeo, entre na disputa com várias versões (retenção conta)."]
     i = 1
     for key, title, items in sections:
         if key == 'alta':
@@ -612,8 +673,7 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
         if key == 'alta' and hot_wanted and len(items) < hot_wanted:
             blocks.append(f"<i>Só {len(items)} dos termos em alta tinham produto bom"
                           + (f" ({hot_missing} sem produto)" if hot_missing else '') + ".</i>")
-    blocks.append("<i>Pedir de novo: /sugestoes (tudo) · /sugestoes alta · /sugestoes casa · /sugestoes beleza · /sugestoes natal · "
-                  "/sugestoes moda · /sugestoes pet · /sugestoes tapete · /sugestoes oportunidades</i>")
+    blocks.append("<i>Pedir de novo: /sugestoes (tudo) ou uma parte (veja a mensagem fixada no topo)</i>")
     messages, current = [], ''
     for block in blocks:
         if len(current) + len(block) + 2 > 3800:
@@ -653,7 +713,9 @@ def render(seasonal: List[Dict], evergreen: List[Dict], cheap: List[Dict], today
         url = f"https://shopee.com.br/product/{p['shopId']}/{p['itemId']}"
         return (f"<b>{i}. {e(p['productName'][:90])}</b>\n"
                 f"   {_brl(float(p.get('priceMin') or 0))} · comissão <b>{_brl(commission_value(p))}</b> · "
-                f"{_milhar(int(p.get('sales') or 0))} vendas · nota {p.get('ratingStar')}" +
+                f"{_milhar(int(p.get('sales') or 0))} vendas" +
+                (f" (≈ <b>{_milhar(month_sales(p))}/mês</b>)" if month_sales(p) is not None else '') +
+                f" · nota {p.get('ratingStar')}" +
                 f"\n   {'🔎' if p.get('busca') else '🏷️'} {e(p['tema'])} · {e(p.get('shopName', '')[:30])}\n   🔗 {url}")
 
     main_total = len(seasonal) + len(evergreen)

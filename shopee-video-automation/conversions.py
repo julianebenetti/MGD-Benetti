@@ -202,6 +202,9 @@ def winners_text(rows: List[Dict], days: int, top: int = 8) -> str:
         lines.append(f"{n}. {e(g['name'][:55])} · {g['orders']} pedido(s) · <b>{brl(g['commission'])}</b>")
     if len(rows) > top:
         lines.append(f"… e mais {len(rows) - top}")
+    lines.append("\n🏆 <b>Antes de gravar a versão nova:</b> abra o produto na Shopee → vídeos → <b>Em destaque</b>. "
+                 "Os 6 primeiros dividem a maior parte das visualizações (a Shopee mede visualização e retenção). Se "
+                 "eles têm menos visualizações que o seu melhor vídeo, entre na disputa com várias versões.")
     lines.append("\n<i>Toque no número para eu montar a nova versão em 🎬 Prompts (4 narrações para escolher).</i>")
     return '\n'.join(lines)[:4000]
 
