@@ -223,7 +223,10 @@ def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -
     header = next(reader)
     cols = _pick(header)
     if 'sales' not in cols:
-        raise RuntimeError(f"o datafeed não tem coluna de vendas (colunas: {', '.join(header[:25])})")
+        raise RuntimeError("este datafeed não traz quantas unidades cada produto vendeu (só nome, preço, desconto, "
+                           "nota, categoria e links), então não serve para as vendas do mês. Não precisa fazer nada: "
+                           "o robô já calcula as vendas do mês pelas buscas das ideias. "
+                           f"(colunas: {', '.join(header[:30])})")
     hist, items, total = [], [], 0
     for row in reader:
         total += 1

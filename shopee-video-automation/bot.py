@@ -2241,6 +2241,8 @@ class Bot:
                     pass
         except Exception as e:
             logger.warning(f"Datafeed falhou: {e}")
+            if 'não traz quantas unidades' in str(e):   # não adianta baixar de novo hoje (20 MB à toa)
+                self.db.set_meta('datafeed_dia', scheduler.now().date().isoformat())
             if thread:
                 self.tg.send_text(thread, f"⚠️ Não consegui baixar/ler o datafeed: {html.escape(str(e)[:300])}")
             return
