@@ -2215,9 +2215,30 @@ class Bot:
         self.db.set_meta('datafeed_tentativa', str(time.time()))
         self.submit(('datafeed', None))
 
-    def job_datafeed(self, thread: Optional[int]):
+    def on_datafeed_file(self, msg: Dict, thread: Optional[int]):
+        """O datafeed mandado como arquivo com a legenda /datafeed (o Telegram só deixa o robô baixar até 20 MB)."""
+        doc = msg['document']
+        target = thread or IDEIAS
+        if int(doc.get('file_size') or 0) > 20 * 1024 * 1024:
+            self.tg.send_text(target, "⚠️ Esse arquivo passa de 20 MB, o limite que o Telegram deixa um robô baixar. "
+                                      "Compacte o CSV em .zip (no Windows: botão direito → Compactar para arquivo "
+                                      "ZIP) e mande o .zip com a legenda /datafeed. Ou use o link "
+                                      "(SHOPEE_DATAFEED_URL no .env).", reply_to=msg['message_id'])
+            return
+        self.tg.react(msg['message_id'], '👌')
+        self.submit(('datafeed', target, doc['file_id']))
+
+    def job_datafeed(self, thread: Optional[int], file_id: Optional[str] = None):
         try:
-            info = sales_trend.import_datafeed(self.db, today=scheduler.now().date())
+            source = sales_trend.DATAFEED_URL
+            if file_id:
+                source = str(self.tg.download(file_id, BASE / 'downloads' / 'datafeed'))
+            info = sales_trend.import_datafeed(self.db, source, today=scheduler.now().date())
+            if file_id:
+                try:
+                    os.remove(source)
+                except OSError:
+                    pass
         except Exception as e:
             logger.warning(f"Datafeed falhou: {e}")
             if thread:
@@ -2378,6 +2399,9 @@ class Bot:
             return
         thread = msg.get('message_thread_id')
         command = (msg.get('text') or '').strip()
+        if msg.get('document') and (msg.get('caption') or '').strip().lower().startswith('/datafeed'):
+            self.on_datafeed_file(msg, thread)
+            return
         if command.lower().startswith('/relatorio'):
             self.on_report_command(thread, command)
             return
@@ -2426,9 +2450,9 @@ class Bot:
             return
         if command.lower().startswith('/datafeed'):
             if not sales_trend.DATAFEED_URL:
-                self.tg.send_text(thread or IDEIAS, "O datafeed ainda não está configurado: no portal de afiliados da "
-                                                    "Shopee, copie o link de download do seu datafeed e coloque no "
-                                                    ".env do VPS como SHOPEE_DATAFEED_URL=… (não mande o link aqui).")
+                self.tg.send_text(thread or IDEIAS, "O link do datafeed não está configurado (SHOPEE_DATAFEED_URL no "
+                                                    ".env do VPS; não mande o link aqui). Outra opção: mande o arquivo "
+                                                    "do datafeed compactado em .zip aqui, com a legenda /datafeed.")
                 return
             self.tg.send_text(thread or IDEIAS, "📈 Baixando o datafeed da Shopee… (pode levar alguns minutos)")
             self.submit(('datafeed', thread or IDEIAS))

@@ -197,12 +197,28 @@ class _Prefixed(io.RawIOBase):
         return len(data)
 
 
+class _FileResponse:
+    """Um arquivo local com a mesma cara da resposta do requests (para _lines)."""
+
+    def __init__(self, path: str):
+        self.raw = open(path, 'rb')
+        self.raw.decode_content = True
+        self.headers = {}
+
+
 def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -> Dict:
     """Baixa o datafeed, grava o total de vendas dos produtos com DATAFEED_MIN_SALES+ vendas. Devolve um resumo."""
     today = today or date.today()
     setup(db)
-    resp = requests.get(url, stream=True, timeout=(30, 600))
-    resp.raise_for_status()
+    if os.path.exists(url):   # arquivo mandado no Telegram (.csv, .zip ou .gz)
+        resp = _FileResponse(url)
+    else:
+        resp = requests.get(url, stream=True, timeout=(30, 600))
+        resp.raise_for_status()
+        if 'text/html' in (resp.headers.get('Content-Type') or '').lower():
+            raise RuntimeError("o link abriu uma página da Shopee em vez do arquivo (ele pede login ou expirou). "
+                               "Gere de novo o link de download no portal de afiliados, ou mande o arquivo "
+                               "compactado (.zip) aqui com a legenda /datafeed")
     reader = csv.reader(_lines(resp))
     header = next(reader)
     cols = _pick(header)
