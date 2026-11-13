@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794555978,
-  "updated_at_br": "13/11/2026 04:42",
+  "updated_at": 1794565902,
+  "updated_at_br": "13/11/2026 07:27",
   "period_days": 90,
-  "total_orders": 5066,
-  "total_conversions": 4861,
+  "total_orders": 5065,
+  "total_conversions": 4860,
   "orders": [
     {
       "ID do pedido": "2611124CJHEAMR",
@@ -7982,7 +7982,7 @@
     },
     {
       "ID do pedido": "261110004E8D8H",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-10 08:55:49",
       "Sub_id1": "28Out26VEAtapetehigienicoV5",
       "Valor de Compra(R$)": "31.95",
@@ -7994,7 +7994,7 @@
       "Comissao total do pedido(R$)": "0.9585",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapete Higiênico Pet 40 Unidades - 1ª Linha (60x60)",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22494281066",
       "ID da loja": "1551711304",
       "Nome da loja": "ATM_Comércios",
@@ -8002,7 +8002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248000149178160",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-10"
     },
     {
@@ -11532,7 +11532,7 @@
     },
     {
       "ID do pedido": "261109TQJ9DPTP",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 10:17:43",
       "Sub_id1": "06Nov26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "60",
@@ -11544,7 +11544,7 @@
       "Comissao total do pedido(R$)": "2.52",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Saia Plus Size Jeans Azul Com Detalhes Laterais Midi Moda Cristã Evangélica.",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18397739457",
       "ID da loja": "880955053",
       "Nome da loja": "Katyuscia_online",
@@ -11552,7 +11552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247918663127424",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
@@ -12307,7 +12307,7 @@
     },
     {
       "ID do pedido": "261109SNQS34SM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 00:12:20",
       "Sub_id1": "03Nov26VEAmacaquinhoplusdecote",
       "Valor de Compra(R$)": "55.65",
@@ -12319,7 +12319,7 @@
       "Comissao total do pedido(R$)": "10.017",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit colcha Matelado acentinado  – 03 peças",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22095232898",
       "ID da loja": "1271173579",
       "Nome da loja": "CAPITAL BORDADOS",
@@ -12327,12 +12327,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247882340100133",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
       "ID do pedido": "261109SNQS34SM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 00:12:20",
       "Sub_id1": "03Nov26VEAmacaquinhoplusdecote",
       "Valor de Compra(R$)": "55.65",
@@ -12344,7 +12344,7 @@
       "Comissao total do pedido(R$)": "10.017",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit colcha Matelado acentinado  – 03 peças",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22095232898",
       "ID da loja": "1271173579",
       "Nome da loja": "CAPITAL BORDADOS",
@@ -12352,12 +12352,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247882340100133",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
       "ID do pedido": "261109SNQS34SM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 00:12:20",
       "Sub_id1": "03Nov26VEAmacaquinhoplusdecote",
       "Valor de Compra(R$)": "55.65",
@@ -12369,7 +12369,7 @@
       "Comissao total do pedido(R$)": "10.017",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit colcha Matelado acentinado  – 03 peças",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22095232898",
       "ID da loja": "1271173579",
       "Nome da loja": "CAPITAL BORDADOS",
@@ -12377,12 +12377,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247882340100133",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
       "ID do pedido": "261109SNQS34SM",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 00:12:20",
       "Sub_id1": "03Nov26VEAmacaquinhoplusdecote",
       "Valor de Compra(R$)": "55.65",
@@ -12394,7 +12394,7 @@
       "Comissao total do pedido(R$)": "10.017",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit colcha Matelado acentinado  – 03 peças",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22095232898",
       "ID da loja": "1271173579",
       "Nome da loja": "CAPITAL BORDADOS",
@@ -12402,7 +12402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247882340100133",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
@@ -126627,31 +126627,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240489065141368",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-15"
-    },
-    {
-      "ID do pedido": "260815E69DNQ0W",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-15 10:09:55",
-      "Sub_id1": "29Jul26VIPtapetehigienicovs1",
-      "Valor de Compra(R$)": "36.51",
-      "Comissao liquida do afiliado(R$)": "2.16778",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "2.25%",
-      "Comissao Shopee(R$)": "1.4604",
-      "Comissao do vendedor(R$)": "0.82147",
-      "Comissao total do pedido(R$)": "2.28187",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Tapete Higiênico Descartável para Cachorro Unidades 60x60 cm - Fralda Pet Xixi Cão Pequeno Médio",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "44001553177",
-      "ID da loja": "1101178064",
-      "Nome da loja": "Jatobraz",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "240487795129449",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-15"
     }
