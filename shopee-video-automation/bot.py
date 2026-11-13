@@ -2087,7 +2087,7 @@ class Bot:
                 logger.warning(f"Vendendo agora falhou: {e}")
                 now_selling = []
             if now_selling or only == 'agora':
-                sections.append(('agora', '📈 Vendendo agora (datafeed: mais vendas nos últimos dias)', now_selling))
+                sections.append(('agora', '📈 Em alta (datafeed: o que mais cresceu nos últimos dias)', now_selling))
         taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
         if only not in ('alta', 'oportunidades', 'agora'):
             sections += ideas.focus(shopee, today, lambda p: skip_key(p) or
@@ -2250,10 +2250,15 @@ class Bot:
         logger.info(f"Datafeed: {info}")
         if thread:
             days = self.db.conn.execute("SELECT COUNT(DISTINCT day) FROM sales_hist").fetchone()[0]
-            self.tg.send_text(thread, f"📈 Datafeed lido: {info['linhas']} produtos, {info['gravados']} com "
-                                      f"{sales_trend.DATAFEED_MIN_SALES}+ vendas guardados no histórico "
-                                      f"({days} dia(s) de histórico). As vendas do mês aparecem a partir de "
-                                      f"{sales_trend.MIN_SPAN_DAYS} dias de histórico.")
+            if info.get('metrica') == 'like':
+                what = (f"{info['gravados']} das suas categorias com {sales_trend.DATAFEED_MIN_LIKES}+ curtidas "
+                        "guardados (este datafeed não traz vendas: o robô acompanha as curtidas; curtidas "
+                        "crescendo rápido = produto em alta)")
+            else:
+                what = f"{info['gravados']} com {sales_trend.DATAFEED_MIN_SALES}+ vendas guardados no histórico"
+            self.tg.send_text(thread, f"📈 Datafeed lido: {info['linhas']} produtos, {what}. {days} dia(s) de "
+                                      f"histórico: a seção 📈 Em alta aparece nas ideias a partir de "
+                                      f"{sales_trend.MIN_SPAN_DAYS} dias.")
 
     def daily_ideas(self):
         """No horário IDEIAS_HORA, a lista do dia vai sozinha para 💡 Ideias (uma vez por dia)."""
@@ -2570,7 +2575,7 @@ class Bot:
             "<b>💡 Pedir ideias agora</b>\n"
             "• /sugestoes: a lista toda\n"
             "• /sugestoes alta: 🔥 os mais buscados\n"
-            "• /sugestoes agora: 📈 o que mais vendeu nos últimos dias (datafeed)\n"
+            "• /sugestoes agora: 📈 em alta no datafeed (o que mais cresceu nos últimos dias)\n"
             "• /sugestoes casa: 🏠 casa e decoração\n"
             "• /sugestoes moveis: 🪑 móveis\n"
             "• /sugestoes eletro: 🔌 eletrodomésticos\n"

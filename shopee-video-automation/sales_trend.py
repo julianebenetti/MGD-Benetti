@@ -129,7 +129,17 @@ COLUMNS = {
     'rating': ['item_rating', 'rating', 'rating_star', 'ratingstar', 'avaliacao', 'avaliação'],
     'price': ['sale_price', 'price', 'preco', 'preço', 'price_min'],
     'link': ['product_link', 'link', 'url', 'product_url'],
+    'like': ['like', 'likes', 'liked_count', 'favorites', 'curtidas'],
+    'cat': ['global_category1', 'category', 'categoria'],
 }
+
+# Sem coluna de vendas (o datafeed da Shopee Brasil não tem), o robô acompanha as CURTIDAS: curtidas crescendo
+# rápido = produto em alta. Só das categorias dos nichos dela e com DATAFEED_MIN_CURTIDAS+ curtidas.
+DATAFEED_MIN_LIKES = int(os.getenv('DATAFEED_MIN_CURTIDAS', '100'))
+DATAFEED_CATEGORIES = [c.strip().lower() for c in (os.getenv('DATAFEED_CATEGORIAS') or
+                       'home,beauty,women,pet,furniture,kitchen,appliance,baby,mom,health,fashion accessories,'
+                       'bags,shoes,kids,toy').split(',') if c.strip()]
+LIKE_PREFIX = 'L:'   # no histórico, as curtidas ficam com esta marca na chave (para não misturar com vendas)
 
 
 def _pick(header: List[str]) -> Dict[str, int]:
@@ -222,7 +232,8 @@ def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -
     reader = csv.reader(_lines(resp))
     header = next(reader)
     cols = _pick(header)
-    if 'sales' not in cols:
+    metric = 'sales' if 'sales' in cols else 'like' if 'like' in cols else ''
+    if not metric:
         raise RuntimeError("este datafeed não traz quantas unidades cada produto vendeu (só nome, preço, desconto, "
                            "nota, categoria e links), então não serve para as vendas do mês. Não precisa fazer nada: "
                            "o robô já calcula as vendas do mês pelas buscas das ideias. "
@@ -231,9 +242,13 @@ def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -
     for row in reader:
         total += 1
         try:
-            sales = int(_num(row[cols['sales']]))
-            if sales < DATAFEED_MIN_SALES:
+            sales = int(_num(row[cols[metric]]))
+            if sales < (DATAFEED_MIN_SALES if metric == 'sales' else DATAFEED_MIN_LIKES):
                 continue
+            if metric == 'like' and 'cat' in cols and DATAFEED_CATEGORIES:
+                cat = row[cols['cat']].lower()
+                if not any(c in cat for c in DATAFEED_CATEGORIES):
+                    continue
             if 'item' in cols:
                 shop, item = row[cols['shop']].strip(), row[cols['item']].strip()
             else:
@@ -244,7 +259,7 @@ def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -
             key = f"{int(float(shop))}:{int(float(item))}"
         except (IndexError, ValueError):
             continue
-        hist.append((key, today.isoformat(), sales))
+        hist.append(((LIKE_PREFIX if metric == 'like' else '') + key, today.isoformat(), sales))
         items.append((key, row[cols['name']][:200] if 'name' in cols else '',
                       _num(row[cols['rating']]) if 'rating' in cols else 0.0,
                       _num(row[cols['price']]) if 'price' in cols else 0.0, today.isoformat()))
@@ -256,7 +271,7 @@ def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -
                             "VALUES (?, ?, ?, ?, ?)", items)
         db.conn.commit()
     prune(db, today)
-    return {'linhas': total, 'gravados': len(hist), 'colunas': sorted(cols)}
+    return {'linhas': total, 'gravados': len(hist), 'colunas': sorted(cols), 'metrica': metric}
 
 
 def rising(db, limit: int = 40, today: Optional[date] = None) -> List[Dict]:
@@ -268,9 +283,12 @@ def rising(db, limit: int = 40, today: Optional[date] = None) -> List[Dict]:
             ((today - timedelta(days=3)).isoformat(),)).fetchall()
     scored = []
     for key, name, rating in rows:
-        m = monthly(db, key, today=today)
+        m, kind = monthly(db, key, today=today), 'vendas'
+        if m is None:
+            m, kind = monthly(db, LIKE_PREFIX + key, today=today), 'curtidas'
         if m:
             shop, item = key.split(':')
-            scored.append({'shopId': int(shop), 'itemId': int(item), 'nome': name, 'nota': rating, 'mes': m})
+            scored.append({'shopId': int(shop), 'itemId': int(item), 'nome': name, 'nota': rating, 'mes': m,
+                           'tipo': kind})
     scored.sort(key=lambda r: r['mes'], reverse=True)
     return scored[:limit]

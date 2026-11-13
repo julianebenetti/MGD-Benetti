@@ -632,7 +632,8 @@ def rising_now(client, skip: Callable[[Dict], bool], skip_type: Callable[[Dict],
         if BLOCKED.search(pname) or FORBIDDEN.search(pname) or skip(p) or skip_type(p) or kind in kinds:
             continue
         kinds.add(kind)
-        chosen.append({**p, 'tema': f"Vendendo agora · ≈ {_milhar(r['mes'])}/mês (datafeed)"})
+        what = 'vendas' if r.get('tipo', 'vendas') == 'vendas' else 'curtidas novas'
+        chosen.append({**p, 'tema': f"Em alta · ≈ {_milhar(r['mes'])} {what}/mês (datafeed)"})
         if len(chosen) >= count:
             break
     return chosen
