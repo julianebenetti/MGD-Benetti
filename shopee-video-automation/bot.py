@@ -1612,6 +1612,75 @@ class Bot:
         self.tg.send_text(thread or ENVIOS, f"🔁 {len(redo)} vídeo(s) que deram erro voltaram para a fila." if redo
                           else "Nenhum vídeo com erro de conexão/inesperado nas últimas 48 h.")
 
+    # ---------- Contas do Shopee Vídeo (só no robô, no VPS: nunca no repositório, que é público) ----------
+
+    def sv_accounts(self) -> List[Dict]:
+        try:
+            return json.loads(self.db.get_meta('sv_contas') or '[]')
+        except ValueError:
+            return []
+
+    def on_accounts_command(self, thread: Optional[int], command: str):
+        """
+        /contas: a lista. /conta usuario | aparelho | observação (uma por linha, várias de uma vez): guarda/atualiza.
+        /removerconta usuario: tira. Nunca senha, código ou token.
+        """
+        target = thread or RELATORIO or IDEIAS
+        e = html.escape
+        low = command.lower()
+        accounts = self.sv_accounts()
+        if low.startswith('/removerconta'):
+            user = command.split(maxsplit=1)[1].strip().lstrip('@').lower() if ' ' in command else ''
+            left = [a for a in accounts if a['usuario'].lower() != user]
+            if not user or len(left) == len(accounts):
+                self.tg.send_text(target, "Use /removerconta usuario (ex.: /removerconta benetti_shop_)")
+                return
+            self.db.set_meta('sv_contas', json.dumps(left, ensure_ascii=False))
+            self.tg.send_text(target, f"🗑️ Conta <b>{e(user)}</b> tirada da lista.")
+            return
+        if low.startswith('/conta') and not low.startswith('/contas'):
+            body = command.split(maxsplit=1)[1] if len(command.split(maxsplit=1)) > 1 else ''
+            lines = [l.strip() for l in body.splitlines() if l.strip()]
+            if not lines or re.search(r'senha|password|c[oó]digo|token', body, re.IGNORECASE):
+                self.tg.send_text(target, "Use: <code>/conta usuario | aparelho | observação</code> (uma conta por "
+                                          "linha; a observação é opcional). Ex.:\n<code>/conta benetti_shop_ | Celular "
+                                          "da Valentina | LiA</code>\n⚠️ Nunca mande senha ou código de verificação.")
+                return
+            saved = []
+            for line in lines:
+                parts = [p.strip() for p in line.split('|')]
+                user = parts[0].lstrip('@')
+                if not user:
+                    continue
+                old = next((a for a in accounts if a['usuario'].lower() == user.lower()), None)
+                item = old or {'usuario': user}
+                if len(parts) > 1 and parts[1]:
+                    item['aparelho'] = parts[1]
+                if len(parts) > 2 and parts[2]:
+                    item['obs'] = parts[2]
+                item['atualizado'] = scheduler.now().strftime('%d/%m/%Y')
+                if not old:
+                    accounts.append(item)
+                saved.append(user)
+            self.db.set_meta('sv_contas', json.dumps(accounts, ensure_ascii=False))
+            self.tg.send_text(target, f"✍️ Guardei: {e(', '.join(saved))}. Veja a lista com /contas.")
+            return
+        if not accounts:
+            self.tg.send_text(target, "Nenhuma conta guardada ainda. Use: <code>/conta usuario | aparelho | "
+                                      "observação</code> (uma por linha).")
+            return
+        by_device: Dict[str, List[Dict]] = {}
+        for a in sorted(accounts, key=lambda a: a['usuario'].lower()):
+            by_device.setdefault(a.get('aparelho') or 'aparelho não informado', []).append(a)
+        lines = ["📱 <b>Contas do Shopee Vídeo (LiA)</b>"]
+        for device, items in by_device.items():
+            lines.append(f"\n<b>{e(device)}</b>")
+            for a in items:
+                lines.append(f"• <code>{e(a['usuario'])}</code>" + (f" · {e(a['obs'])}" if a.get('obs') else '')
+                             + (f" <i>(atualizado {e(a['atualizado'])})</i>" if a.get('atualizado') else ''))
+        lines.append("\n<i>Mudar: /conta usuario | aparelho | observação · tirar: /removerconta usuario</i>")
+        self.tg.send_text(target, '\n'.join(lines))
+
     def on_posted_command(self, thread: Optional[int], command: str):
         """/postei N [DD/MM]: registra vídeos postados fora do robô naquele dia (soma). /postei 0 DD/MM zera o dia."""
         parts = command.split()[1:]
@@ -2491,6 +2560,9 @@ class Bot:
             self.tg.send_text(thread or RELATORIO, "📊 Montando o painel do Shopee Vídeo…")
             self.submit(('panel', thread or RELATORIO))
             return
+        if re.match(r'/(contas|conta|removerconta)\b', command.lower()):
+            self.on_accounts_command(thread, command)
+            return
         if command.lower().startswith('/refazer'):
             self.on_redo_command(thread)
             return
@@ -2625,6 +2697,8 @@ class Bot:
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
             ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
+            ('contas', 'Contas do Shopee Vídeo e em qual celular cada uma usa a LiA'),
+            ('conta', 'Guarda/atualiza uma conta: /conta usuario | aparelho | observação'),
             ('refazer', 'Refaz os vídeos que deram erro (conexão/erro inesperado) nas últimas 48 h'),
             ('postei', 'Registra vídeos postados fora do robô, ex.: /postei 12 04/11'),
             ('historico', 'Histórico da conta no Shopee Vídeo (marcos, punições, levantamentos)'),
