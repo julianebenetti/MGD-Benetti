@@ -226,7 +226,7 @@ def import_datafeed(db, url: str = DATAFEED_URL, today: Optional[date] = None) -
         raise RuntimeError("este datafeed não traz quantas unidades cada produto vendeu (só nome, preço, desconto, "
                            "nota, categoria e links), então não serve para as vendas do mês. Não precisa fazer nada: "
                            "o robô já calcula as vendas do mês pelas buscas das ideias. "
-                           f"(colunas: {', '.join(header[:30])})")
+                           f"(colunas: {', '.join(h.strip() for h in header)})")
     hist, items, total = [], [], 0
     for row in reader:
         total += 1
