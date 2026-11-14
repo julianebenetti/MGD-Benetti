@@ -1033,13 +1033,58 @@ class Bot:
                               + ('\n\n'.join(parts) if parts else "Tudo certo: nenhum vídeo ficou sem publicar."))
 
     def move_to_postados(self, post: Dict, label: str = "✅ Postado", via: str = 'manual',
-                         when: Optional[str] = None):
+                         when: Optional[str] = None, announce: bool = True):
         """`when`: horário real da publicação (ex.: a mensagem "Vídeo salvo na Shopee" da LiA); sem ele, agora."""
         posted_at = (datetime.fromisoformat(when).astimezone(scheduler.TZ) if when else scheduler.now())
         self.clear_agenda(post['agenda_msgs'], f"✅ {post['product_name'][:50]}: postado (está em 🚀 Postados)")
         self.db.update_post(post['id'], status='postado', agenda_msgs=[],
                             posted_at=posted_at.isoformat(timespec='seconds'), posted_via=via)
-        self.tg.send_photo(POSTADOS, post['cover_path'], postados_caption(post, label))
+        if announce:
+            self.tg.send_photo(POSTADOS, post['cover_path'], postados_caption(post, label))
+
+    def on_post_all_command(self, thread: Optional[int]):
+        """/posteitudo: pergunta antes de marcar como postados os vídeos que estão na Agenda."""
+        posts = self.db.scheduled()
+        target = thread or AGENDA
+        if not posts:
+            self.tg.send_text(target, "✅ A Agenda já está vazia: nenhum vídeo esperando ✅ Postei.")
+            return
+        now = scheduler.now()
+        past = [p for p in posts if p.get('scheduled_at') and datetime.fromisoformat(p['scheduled_at']) <= now]
+        rows = [[(f"✅ Sim, marcar os {len(posts)} como postados", "pt:all")]]
+        if past and len(past) < len(posts):
+            rows.append([(f"Só os {len(past)} cujo horário já passou", "pt:past")])
+        rows.append([("Cancelar", "pt:no")])
+        self.tg.send_text(target, f"🚀 <b>Marcar como postados de uma vez?</b>\n\nNa Agenda: <b>{len(posts)}</b> "
+                                  f"vídeo(s) ({len(past)} com o horário já passado, {len(posts) - len(past)} "
+                                  "com horário no futuro). Eles vão para 🚀 Postados e as mensagens deles saem da "
+                                  "Agenda. Não manda nada para a LiA.", markup=keyboard(*rows))
+
+    def on_post_all_button(self, cb: Dict, which: str):
+        msg = (cb.get('message') or {}).get('message_id')
+        if which == 'no':
+            self.tg.answer_callback(cb['id'], 'Ok, nada mudou')
+            if msg:
+                self.tg.edit_text(msg, "Cancelado: a Agenda ficou como estava.", markup=keyboard())
+            return
+        now = scheduler.now()
+        posts = [p for p in self.db.scheduled()
+                 if which == 'all' or (p.get('scheduled_at') and datetime.fromisoformat(p['scheduled_at']) <= now)]
+        names = []
+        for post in posts:
+            when = post.get('scheduled_at')
+            if not when or datetime.fromisoformat(when) > now:
+                when = None   # horário no futuro: postado agora
+            self.move_to_postados(post, "✅ Postado (marcado com /posteitudo)", when=when, announce=False)
+            names.append(post['product_name'][:45])
+        self.tg.answer_callback(cb['id'], f"{len(posts)} vídeo(s) movidos para Postados")
+        if msg:
+            self.tg.edit_text(msg, f"✅ {len(posts)} vídeo(s) marcados como postados. Limpando as mensagens "
+                                   "deles da Agenda…", markup=keyboard())
+        if names:
+            self.tg.send_text(POSTADOS, f"🚀 <b>{len(names)} vídeo(s) marcados como postados de uma vez</b> "
+                                        "(/posteitudo):\n" + '\n'.join(f"• {html.escape(n)}" for n in names)[:3800])
+        self.submit(('clean_agenda', AGENDA, True))
 
     def job_variations(self, post_id: int, file_id: str, reply_to: int):
         """Print das variações → cartão → capa refeita (precisa aprovar de novo)."""
@@ -1121,6 +1166,9 @@ class Bot:
         logger.info(f"Botão {cb.get('data', '')}")
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
+            return
+        if action == 'pt':   # /posteitudo: confirmação
+            self.on_post_all_button(cb, raw_id)
             return
         if action == 'rt' and raw_id.isdigit():   # 🔁 tentar de novo um vídeo que falhou por erro/conexão
             failure = self.db.find_failure(int(raw_id), 0)
@@ -2560,6 +2608,9 @@ class Bot:
             self.tg.send_text(thread or RELATORIO, "📊 Montando o painel do Shopee Vídeo…")
             self.submit(('panel', thread or RELATORIO))
             return
+        if command.lower().startswith('/posteitudo'):
+            self.on_post_all_command(thread)
+            return
         if re.match(r'/(contas|conta|removerconta)\b', command.lower()):
             self.on_accounts_command(thread, command)
             return
@@ -2697,6 +2748,7 @@ class Bot:
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
             ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
+            ('posteitudo', 'Marca de uma vez como postados os vídeos da Agenda (pede confirmação)'),
             ('contas', 'Contas do Shopee Vídeo e em qual celular cada uma usa a LiA'),
             ('conta', 'Guarda/atualiza uma conta: /conta usuario | aparelho | observação'),
             ('refazer', 'Refaz os vídeos que deram erro (conexão/erro inesperado) nas últimas 48 h'),
