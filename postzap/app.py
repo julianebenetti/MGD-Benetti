@@ -269,7 +269,7 @@ def ids_da_chave(chave):
 
 def preparar(p):
     """Completa o produto antes de postar: foto, preço atual, link de afiliado (sub_id) e link curto com prévia."""
-    avisos = []
+    avisos = list(p.get('avisos') or [])
     ids = ids_da_chave(p.get('chave'))
     link = p.get('link') or ''
     if ids:
@@ -296,6 +296,60 @@ def preparar(p):
     p['link'] = criar_link_curto(link, p.get('produto', ''), p.get('imagem', '')) if link else ''
     p['avisos'] = avisos
     return p
+
+
+LOJAS = (('magazineluiza', 'Magalu'), ('magalu', 'Magalu'), ('mercadolivre', 'Mercado Livre'),
+         ('mercadolibre', 'Mercado Livre'), ('meli.la', 'Mercado Livre'), ('amazon', 'Amazon'), ('amzn', 'Amazon'),
+         ('shopee', 'Shopee'), ('shp.ee', 'Shopee'))
+
+
+def loja_do_link(*urls):
+    for u in urls:
+        host = urllib.parse.urlparse(u or '').netloc.lower()
+        for trecho, nome in LOJAS:
+            if trecho in host:
+                return nome
+    return ''
+
+
+def ler_link(url):
+    """Link de afiliado de outra loja (Magalu, Mercado Livre, Amazon…): tenta ler nome, foto e preço da página.
+    O link enviado nos grupos é sempre o que você colou (é ele que tem o seu código de afiliado)."""
+    import html as h
+    if not re.match(r'https?://', url or ''):
+        raise ValueError('Cole o link completo, começando com https://')
+    info = {'origem': 'manual', 'link': url.strip(), 'produto': '', 'imagem': '', 'preco': '', 'avisos': []}
+    final, pagina = url, ''
+    try:
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                          'Chrome/126.0 Safari/537.36', 'Accept-Language': 'pt-BR,pt;q=0.9'})
+        with urllib.request.urlopen(req, timeout=20) as r:
+            final = r.geturl()
+            pagina = r.read(1_500_000).decode('utf-8', 'ignore')
+    except Exception as e:
+        info['avisos'].append(f'A loja não deixou ler a página ({str(e)[:80]}): preencha nome, foto e preço à mão.')
+
+    def meta(*nomes):
+        for n in nomes:
+            m = (re.search(rf'<meta[^>]+(?:property|name|itemprop)=["\']{re.escape(n)}["\'][^>]*content=["\']([^"\']+)', pagina, re.I)
+                 or re.search(rf'<meta[^>]+content=["\']([^"\']+)["\'][^>]*(?:property|name|itemprop)=["\']{re.escape(n)}["\']', pagina, re.I))
+            if m:
+                return h.unescape(m.group(1)).strip()
+        return ''
+    info['produto'] = re.sub(r'\s*[|\-–]\s*(Magalu|Mercado Livre|Amazon\.com\.br.*|Magazine Luiza)\s*$', '',
+                             meta('og:title', 'twitter:title') or h.unescape((re.search(r'<title>([^<]+)', pagina) or [None, ''])[1]).strip())
+    info['imagem'] = meta('og:image', 'twitter:image')
+    preco = meta('product:price:amount', 'og:price:amount', 'price')
+    if not preco:
+        m = re.search(r'"price"\s*:\s*"?(\d+[.,]?\d*)', pagina)
+        preco = m.group(1) if m else ''
+    info['preco'] = br(preco) if preco else ''
+    info['loja'] = loja_do_link(final, url)
+    info['chave'] = 'url:' + hashlib.sha1(final.split('?')[0].encode()).hexdigest()[:16]
+    if not info['produto']:
+        info['avisos'].append('Não achei o nome do produto: escreva no campo.')
+    return info
 
 
 def criar_link_curto(destino, titulo, imagem):
@@ -543,6 +597,8 @@ class H(BaseHTTPRequestHandler):
             return self.send_json({'erro': str(e)}, 500)
 
     def post(self, p, b):
+        if p == '/api/ler_link':
+            return self.send_json(ler_link(b.get('url', '')))
         if p == '/api/preparar':
             if bloqueado(b.get('produto')):
                 return self.send_json({'erro': 'Produto de suplementação não pode ser postado.'}, 400)

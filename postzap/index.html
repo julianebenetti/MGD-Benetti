@@ -57,6 +57,9 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
       </select>
       <button class="b" onclick="carregarProdutos()">↻</button>
     </div>
+    <div class="card"><b>➕ Oferta de outra loja</b> <span class="muted">(Magalu, Mercado Livre, Amazon…)</span>
+      <div class="row" style="margin-top:8px"><input id="outro" placeholder="Cole aqui o seu link de afiliado" style="flex:1;min-width:200px">
+      <button class="b p" onclick="outraLoja()">📝 Preparar postagem</button></div></div>
     <div id="avisos"></div><div id="produtos" class="grid"></div>
   </section>
 
@@ -142,7 +145,7 @@ async function iniciar(){
   carregarProdutos(); carregarGrupos(); statusWa(); setInterval(statusWa, 60000); setInterval(()=>{ if(!$('#t-fila').classList.contains('hide')||!$('#t-historico').classList.contains('hide')) carregarFila(); }, 20000);
 }
 
-const ROTULO = {central_video:'🎬 Vendeu em vídeo', central_ideias:'💡 Ideia da Central', garimpo:'⛏️ Garimpo'};
+const ROTULO = {central_video:'🎬 Vendeu em vídeo', central_ideias:'💡 Ideia da Central', garimpo:'⛏️ Garimpo', manual:'🏬 Outra loja'};
 async function carregarProdutos(){
   $('#produtos').innerHTML = '<p class="muted">Carregando…</p>';
   const j = await api('produtos'); PRODUTOS = j.produtos;
@@ -183,18 +186,33 @@ function abrirDlg(tit, texto, grupos, quando){
   $('#dgrupos').innerHTML = gruposChecks(grupos); $('#dquando').value = quando ? quando.slice(0,16) : '';
   dlg.showModal();
 }
-async function novo(i){
-  const base = PRODUTOS[i];
+async function outraLoja(){
+  const url = $('#outro').value.trim(); if (!url) return;
+  $('#dcampos').classList.remove('hide'); abrirDlg('Lendo o link…', '', [], '');
+  try { const p = await api('ler_link', {url}); $('#outro').value = ''; await novoProduto(p); }
+  catch(e){ $('#derr').textContent = e.message; }
+}
+function novo(i){ return novoProduto(PRODUTOS[i]); }
+async function novoProduto(base){
   $('#dcampos').classList.remove('hide');
   abrirDlg(base.produto, 'Buscando foto, preço atual e gerando o link…', [], '');
   let p;
   try { p = await api('preparar', {...base}); } catch(e){ $('#dtexto').value = ''; $('#derr').textContent = e.message; return; }
   EDIT = {novo: {...p, chamada: (p.chamada || '').toUpperCase(), preco_de: ''}};
+  if (base.origem === 'manual') {
+    $('#dtit').innerHTML = `<span class="tag">${esc(p.loja || 'Outra loja')}</span> <input id="dnome" value="${esc(p.produto)}" placeholder="Nome do produto" oninput="EDIT.novo.produto=this.value;regerar()" style="margin-top:6px">
+      <input id="dfoto" value="${esc(p.imagem)}" placeholder="Link da foto (opcional, para a miniatura)" style="margin-top:6px" onchange="trocarFoto(this.value)">`;
+  }
   $('#dimg').src = p.imagem || ''; $('#dimg').style.visibility = p.imagem ? '' : 'hidden';
   $('#dchamada').value = EDIT.novo.chamada; $('#dde').value = ''; $('#dpor').value = p.preco || '';
   $('#davisos').innerHTML = (p.avisos || []).map(esc).join('<br>') + (p.imagem ? '' : '<br>Sem foto: a prévia vai sem miniatura.');
   $('#dgrupos').innerHTML = gruposChecks(GRUPOS.filter(g => g.ativo).map(g => g.jid));
   $('#dtexto').value = montar(EDIT.novo);
+}
+async function trocarFoto(url){
+  EDIT.novo.imagem = url; $('#dimg').src = url; $('#dimg').style.visibility = url ? '' : 'hidden';
+  const p = await api('preparar', {...EDIT.novo, link: EDIT.novo.link_afiliado});   // novo link curto com a foto
+  EDIT.novo.link = p.link; EDIT.mexeu = false; regerar();
 }
 function editar(id){ const it = FILA.find(x => x.id === id); EDIT = {id};
   $('#dcampos').classList.add('hide');

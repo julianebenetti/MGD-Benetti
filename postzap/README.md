@@ -8,6 +8,8 @@ App **separado** da AfiliDash e do robô do Shopee Vídeo para postar links da S
   - 🎬 **Vendeu em vídeo** e 💡 **Ideias** — da Central Shopee Vídeo (`estado.db` do robô no VPS);
   - ⛏️ **Garimpo** — tabela `garimpo_produtos` do Supabase.
   - Suplementos/vitaminas/colágeno/whey são bloqueados; comissão mínima R$ 9.
+- 🏬 **Outras lojas** (Magalu, Mercado Livre, Amazon…): cole o seu link de afiliado; o PostZap tenta ler nome, foto e
+  preço da página (se a loja bloquear, você preenche à mão). O link enviado é sempre o seu, com o seu código de afiliado.
 - **Preparar postagem** → mensagem pronta pelo modelo (editável) → escolhe grupos e horário → **✅ Aprovar**.
 - **Mensagem no formato dos grupos de ofertas**: chamada em maiúsculas, 🛍️ nome, ~De~ / *Por* ✅, 🔗 Compre aqui, ⚠️ aviso.
 - **Prévia do link** (miniatura + título `@descontoirresistivel`): o link vira `posts.descontoirresistivel.com.br/zap/l/xxxx`,
