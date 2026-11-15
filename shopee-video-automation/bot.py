@@ -2318,6 +2318,27 @@ class Bot:
             return
         self.send_idea_links(thread, rows, today)
 
+    def insights_reminder(self):
+        """
+        A cada 3 dias (dias 1, 4, 7, 10… do mês, às INSIGHTS_HORA), cobra em 📊 Relatório os prints dos Insights do
+        Shopee Vídeo para mandar ao Claude (acompanhar a volta da entrega depois das violações).
+        """
+        current = scheduler.now()
+        hour, minute = (int(x) for x in os.getenv('INSIGHTS_HORA', '18:15').split(':'))
+        today = current.date().isoformat()
+        if current.day % 3 != 1 or (current.hour, current.minute) < (hour, minute) \
+                or self.db.get_meta('lembrete_insights') == today:
+            return
+        self.db.set_meta('lembrete_insights', today)
+        msg_id = self.tg.send_text(
+            RELATORIO or POSTADOS,
+            "📲 <b>Hora dos Insights do Shopee Vídeo!</b>\n\nNo app da Shopee → Insights → <b>Shopee Video</b>, "
+            "tire os prints de <b>Últimos 7 dias</b> e de <b>Personalizado</b> (desde o dia 1º):\n"
+            "• Métricas Principais e Tendência de Vendas\n• Performance do Produto e Desempenho do Conteúdo\n"
+            "• Audiência: idade, gênero, localização e <b>atividade</b>\n\n"
+            "Mande para o Claude na conversa do robô, para acompanharmos a volta da entrega.")
+        self.tg.pin(msg_id)
+
     def daily_datafeed(self):
         """Uma vez por dia (a partir das 5h), baixa o datafeed da Shopee para o histórico de vendas do mês."""
         if not sales_trend.DATAFEED_URL:
@@ -2832,6 +2853,7 @@ class Bot:
                 self.daily_panel()
                 self.daily_ideas()
                 self.daily_datafeed()
+                self.insights_reminder()
                 if self.lia and time.time() - self.lia_checked > LIA_CHECK_SECONDS:
                     self.lia_checked = time.time()
                     self.submit(('lia_check',))
