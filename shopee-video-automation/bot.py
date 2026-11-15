@@ -2230,7 +2230,7 @@ class Bot:
         """A lista de ideias; `daily`: a do dia (só marca o dia como feito quando a lista sai; senão tenta de novo)."""
         today = scheduler.now().date().isoformat()
         try:
-            self._ideas(thread, only)
+            self._ideas(thread, only, daily)
         except Exception as e:
             logger.exception("Ideias falharam")
             tries = json.loads(self.db.get_meta('ideias_tentativas', '{}'))
@@ -2242,7 +2242,7 @@ class Bot:
         if daily:
             self.db.set_meta('ideias_ok_dia', today)
 
-    def _ideas(self, thread: Optional[int], only: Optional[str] = None):
+    def _ideas(self, thread: Optional[int], only=None, daily: bool = False):
         """
         A lista do dia (ideas.FOCUS): 🔥 mais buscados + beleza/cabelo + Natal + moda/pet (teste) + 🌱 oportunidades.
         `only`: só uma parte. Nada já postado/agendado nem sugerido nos últimos ideas.REPEAT_DAYS dias.
@@ -2268,7 +2268,12 @@ class Bot:
             return kind in types or kind in used_types
 
         sections, hot_missing, hot_day = [], 0, None
-        if only in (None, 'alta'):
+        only = {only} if isinstance(only, str) else set(only or []) or None   # uma ou várias seções
+
+        def want(key: str) -> bool:
+            return only is None or key in only
+
+        if want('alta'):
             hot = []
             try:
                 terms, hot_day = ideas.trending_terms(today)
@@ -2277,7 +2282,7 @@ class Bot:
             except Exception as e:
                 logger.warning(f"Buscas em alta falharam: {e}")
             sections.append(('alta', '🔥 Mais buscados', hot))
-        if only in (None, 'agora') and sales_trend.DATAFEED_URL:   # 📈 o que mais vendeu nos últimos dias
+        if want('agora') and sales_trend.DATAFEED_URL:   # 📈 o que mais vendeu nos últimos dias
             taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
             try:
                 now_selling = ideas.rising_now(shopee, lambda p: skip_key(p) or f"{p['shopId']}:{p['itemId']}" in taken,
@@ -2285,13 +2290,13 @@ class Bot:
             except Exception as e:
                 logger.warning(f"Vendendo agora falhou: {e}")
                 now_selling = []
-            if now_selling or only == 'agora':
+            if now_selling or (only and 'agora' in only):
                 sections.append(('agora', '📈 Em alta (datafeed: o que mais cresceu nos últimos dias)', now_selling))
         taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
-        if only not in ('alta', 'oportunidades', 'agora'):
+        if only is None or only - {'alta', 'oportunidades', 'agora'}:
             sections += ideas.focus(shopee, today, lambda p: skip_key(p) or
                                     f"{p['shopId']}:{p['itemId']}" in taken, skip_type, only)
-        if only in (None, 'oportunidades'):   # 🌱 teste: sinais de pouca concorrência
+        if want('oportunidades'):   # 🌱 teste: sinais de pouca concorrência
             taken = {f"{p['shopId']}:{p['itemId']}" for _, _, items in sections for p in items}
             try:
                 opp = ideas.opportunities(shopee, today,
@@ -2303,7 +2308,9 @@ class Bot:
         found = [p for _, _, items in sections for p in items]
         if not found:
             raise RuntimeError("nenhum produto passou nas regras (a Shopee respondeu?)")
-        for message in ideas.render_sections(sections, today, hot_missing, hot_day, ideas.TRENDING_MAX):
+        heading = ('📅 Lista do dia' if daily else '🔎 Seu pedido: ' + ' + '.join(t.split(' (')[0] for _, t, _ in sections)
+                   if only else '🔎 Seu pedido: lista toda')
+        for message in ideas.render_sections(sections, today, hot_missing, hot_day, ideas.TRENDING_MAX, heading):
             self.tg.send_text(thread, message)
         for p in found:
             suggested[f"{p['shopId']}:{p['itemId']}"] = today.isoformat()
@@ -2636,27 +2643,33 @@ class Bot:
             return
         if command.lower().startswith('/sugestoes') or command.lower().startswith('/sugestões'):
             target = thread or IDEIAS
-            arg = (command.split(maxsplit=1)[1].strip().lower() if ' ' in command else '')
-            arg = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
-                   'tapetes': 'tapete', 'tapetehigienico': 'tapete'}.get(arg.replace(' ', ''), arg)
-            arg = {'oportunidade': 'oportunidades', 'teste': 'oportunidades', 'vendendo': 'agora',
-                   'tendencia': 'agora', 'tendência': 'agora', 'datafeed': 'agora'}.get(arg, arg)
-            arg = {'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal', 'decoracao': 'casa',
-                   'decoração': 'casa', 'móveis': 'moveis', 'movel': 'moveis', 'móvel': 'moveis',
-                   'eletrodomesticos': 'eletro', 'eletrodomésticos': 'eletro', 'eletros': 'eletro'}.get(arg, arg)
-            if arg and arg not in ('alta', 'agora', 'casa', 'moveis', 'eletro', 'beleza', 'natal', 'moda', 'pet', 'tapete',
-                                   'oportunidades'):
-                self.tg.send_text(target, "Use /sugestoes (a lista toda) ou só uma parte: /sugestoes alta · "
-                                          "/sugestoes casa · /sugestoes moveis · /sugestoes eletro · /sugestoes beleza · /sugestoes natal · /sugestoes moda · "
-                                          "/sugestoes pet · /sugestoes tapete · /sugestoes oportunidades")
+            raw = (command.split(maxsplit=1)[1].strip().lower() if ' ' in command else '')
+            names = {'buscados': 'alta', 'maisbuscados': 'alta', 'roupas': 'moda', 'feminina': 'moda',
+                     'tapetes': 'tapete', 'tapetehigienico': 'tapete', 'oportunidade': 'oportunidades',
+                     'teste': 'oportunidades', 'vendendo': 'agora', 'tendencia': 'agora', 'tendência': 'agora',
+                     'datafeed': 'agora', 'cabelo': 'beleza', 'escova': 'beleza', 'natalino': 'natal',
+                     'decoracao': 'casa', 'decoração': 'casa', 'móveis': 'moveis', 'movel': 'moveis',
+                     'móvel': 'moveis', 'eletrodomesticos': 'eletro', 'eletrodomésticos': 'eletro',
+                     'eletros': 'eletro'}
+            valid = ('alta', 'agora', 'casa', 'moveis', 'eletro', 'beleza', 'natal', 'moda', 'pet', 'tapete',
+                     'oportunidades')
+            words = [w for w in re.split(r'[\s,;+]+', raw.replace('mais buscados', 'alta')
+                                         .replace('tapete higiênico', 'tapete')) if w and w not in ('e', 'de')]
+            parts = list(dict.fromkeys(names.get(w, w) for w in words))
+            wrong = [w for w in parts if w not in valid]
+            if wrong:
+                self.tg.send_text(target, f"Não conheço: {html.escape(', '.join(wrong))}. Use /sugestoes (a lista toda) "
+                                          "ou uma ou mais partes: alta · agora · casa · moveis · eletro · beleza · "
+                                          "natal · moda · pet · tapete · oportunidades (ex.: /sugestoes moveis eletro)")
                 return
-            what = {'alta': 'os mais buscados', 'agora': 'o que está vendendo agora (datafeed)',
-                    'casa': 'casa e decoração', 'moveis': 'móveis',
-                    'eletro': 'eletrodomésticos', 'beleza': 'beleza e cabelo', 'natal': 'Natal',
-                    'moda': 'moda feminina', 'pet': 'pet', 'tapete': 'tapete higiênico',
-                    'oportunidades': 'oportunidades (teste)'}.get(arg, 'a lista do dia')
-            self.tg.send_text(target, f"💡 Buscando {what} na Shopee agora… (leva 1 a 3 minutos)")
-            self.submit(('ideas', target, False, arg or None))
+            label = {'alta': 'mais buscados', 'agora': 'em alta (datafeed)', 'casa': 'casa e decoração',
+                     'moveis': 'móveis', 'eletro': 'eletrodomésticos', 'beleza': 'beleza e cabelo',
+                     'natal': 'Natal', 'moda': 'moda feminina', 'pet': 'pet', 'tapete': 'tapete higiênico',
+                     'oportunidades': 'oportunidades (teste)'}
+            what = ' + '.join(label[p] for p in parts) if parts else 'a lista toda'
+            self.tg.send_text(target, f"💡 Buscando <b>só {html.escape(what)}</b> na Shopee agora… (1 a 3 minutos)"
+                              if parts else "💡 Buscando a lista toda na Shopee agora… (1 a 3 minutos)")
+            self.submit(('ideas', target, False, parts or None))
             return
         if command.lower().startswith('/verificarlia'):
             self.tg.send_text(thread or AGENDA, "🔎 Conferindo a conversa com a LiA…")
@@ -2805,6 +2818,7 @@ class Bot:
             f"🕢 A lista do dia chega sozinha às <b>{IDEAS_TIME}</b>.\n\n"
             "<b>💡 Pedir ideias agora</b>\n"
             "• /sugestoes: a lista toda\n"
+            "• Vários de uma vez: /sugestoes moveis eletro (só esses vêm)\n"
             "• /sugestoes alta: 🔥 os mais buscados\n"
             "• /sugestoes agora: 📈 em alta no datafeed (o que mais cresceu nos últimos dias)\n"
             "• /sugestoes casa: 🏠 casa e decoração\n"

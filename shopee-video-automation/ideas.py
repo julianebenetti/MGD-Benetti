@@ -469,7 +469,7 @@ def _keywords_today(keywords: List[str], today: date, n: int) -> List[str]:
 
 
 def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable[[Dict], bool],
-          only: Optional[str] = None) -> List[Tuple[str, str, List[Dict]]]:
+          only=None) -> List[Tuple[str, str, List[Dict]]]:
     """
     Os nichos fixos da lista do dia: [(chave, título, ideias)]. Nota ≥ MIN_RATING, ≥ MIN_SALES vendas, com
     comissão (sem piso: vídeo orgânico), por comissão × vendas, nunca suplementos. `skip`: o mesmo anúncio já
@@ -481,8 +481,9 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
     if not natal_season(today):   # fora da temporada: as vagas do Natal vão para casa e decoração
         counts['casa'] += counts.pop('natal')
     for key, title, _, keywords, must, by_type in FOCUS:
-        count = counts.get(key, 0) or (5 if only == key else 0)   # pedido avulso de uma seção desligada: 5
-        if (only and key != only) or not count:
+        wanted = {only} if isinstance(only, str) else set(only or [])
+        count = counts.get(key, 0) or (5 if key in wanted else 0)   # pedido avulso de uma seção desligada: 5
+        if (wanted and key not in wanted) or not count:
             continue
         found: Dict[str, Dict] = {}
 
@@ -643,7 +644,7 @@ def rising_now(client, skip: Callable[[Dict], bool], skip_type: Callable[[Dict],
 
 
 def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, hot_missing: int = 0,
-                    hot_day: Optional[date] = None, hot_wanted: int = 0) -> List[str]:
+                    hot_day: Optional[date] = None, hot_wanted: int = 0, heading: str = '') -> List[str]:
     """A lista do dia por seção (mesma numeração do CSV/links), em mensagens abaixo do limite do Telegram."""
     e = html.escape
 
@@ -657,7 +658,7 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
                 f"\n   {'🔎' if p.get('busca') else '🏷️'} {e(p['tema'])} · {e(p.get('shopName', '')[:30])}\n   🔗 {url}")
 
     total = sum(len(items) for _, _, items in sections)
-    blocks = [f"💡 <b>{total} ideias para gravar</b> · {today:%d/%m}\n"
+    blocks = [(f"<b>{html.escape(heading)}</b>\n" if heading else '') + f"💡 <b>{total} ideias para gravar</b> · {today:%d/%m}\n"
               f"Nota ≥ {MIN_RATING}, {MIN_SALES}+ vendas, comissão ≥ {_brl(IDEAS_MIN_COMMISSION)}, nunca suplementos. Grave (ou crie no app da LiA) e mande em "
               f"📥 Envios com o link.\n"
               f"📈 <b>≈ X/mês</b> = vendas dos últimos dias (ideal 1.000+/mês; produto novo, 500+).\n"
