@@ -73,7 +73,7 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
   <section id="t-grupos" class="hide">
     <div class="card"><div class="row"><b style="flex:1">Marque os grupos onde o PostZap pode postar</b>
       <button class="b p" onclick="atualizarGrupos()">↻ Buscar grupos do WhatsApp</button></div>
-      <p class="muted">Dica: o chip do PostZap precisa ser admin (ou ter permissão de enviar) nos grupos.</p>
+      <p class="muted">"Buscar grupos" lê os grupos dos chips conectados. Cada grupo mostra quais chips estão nele — o envio sorteia entre eles.</p>
       <div id="grupos"></div></div>
   </section>
 
@@ -145,7 +145,7 @@ async function iniciar(){
   carregarProdutos(); carregarGrupos(); statusWa(); setInterval(statusWa, 60000); setInterval(()=>{ if(!$('#t-fila').classList.contains('hide')||!$('#t-historico').classList.contains('hide')) carregarFila(); }, 20000);
 }
 
-const ROTULO = {central_video:'🎬 Vendeu em vídeo', central_ideias:'💡 Ideia da Central', garimpo:'⛏️ Garimpo', manual:'🏬 Outra loja'};
+const ROTULO = {whatsapp:'💬 Enviado pelo WhatsApp', central_video:'🎬 Vendeu em vídeo', central_ideias:'💡 Ideia da Central', garimpo:'⛏️ Garimpo', manual:'🏬 Outra loja'};
 async function carregarProdutos(){
   $('#produtos').innerHTML = '<p class="muted">Carregando…</p>';
   const j = await api('produtos'); PRODUTOS = j.produtos;
@@ -257,26 +257,33 @@ async function pausar(v){ await api('pausar', {pausado:v}); carregarFila(); }
 
 async function carregarGrupos(){
   GRUPOS = (await api('grupos')).grupos;
-  $('#grupos').innerHTML = GRUPOS.map(g => `<label class="chk"><input type="checkbox" ${g.ativo?'checked':''} onchange="ativar('${esc(g.jid)}',this.checked)"> ${esc(g.nome)} <span class="muted">· ${g.hoje} post(s) hoje</span></label>`).join('')
+  $('#grupos').innerHTML = GRUPOS.map(g => `<label class="chk"><input type="checkbox" ${g.ativo?'checked':''} onchange="ativar('${esc(g.jid)}',this.checked)"> ${esc(g.nome)} <span class="muted">· ${g.hoje} post(s) hoje · chips: ${(g.chips||[]).map(esc).join(', ') || 'nenhum'}</span></label>`).join('')
     || '<p class="muted">Nenhum grupo ainda. Conecte o WhatsApp e clique em "Buscar grupos".</p>';
 }
 async function ativar(jid, ativo){ await api('grupos/ativo', {jid, ativo}); GRUPOS.find(g => g.jid === jid).ativo = ativo ? 1 : 0; }
 async function atualizarGrupos(){ try { const j = await api('grupos/atualizar', {}); alert(j.total + ' grupos encontrados'); } catch(e){ alert(e.message); } carregarGrupos(); }
 
 async function statusWa(){
-  try { const s = await api('whatsapp'); $('#wa').textContent = 'WhatsApp: ' + (s.estado === 'open' ? '🟢 conectado' : '🔴 desconectado'); return s; }
-  catch(e){ $('#wa').textContent = 'WhatsApp: ⚠️ ' + e.message; }
+  try {
+    const j = await api('whatsapp'); const on = j.chips.filter(c => c.estado === 'open').length;
+    $('#wa').textContent = `WhatsApp: ${on === j.chips.length ? '🟢' : on ? '🟡' : '🔴'} ${on}/${j.chips.length} chips conectados`;
+    return j.chips;
+  } catch(e){ $('#wa').textContent = 'WhatsApp: ⚠️ ' + e.message; }
 }
 async function carregarConexao(){
-  $('#conexao').innerHTML = 'Verificando…';
-  const s = await statusWa(); if (!s) return;
-  if (s.estado === 'open') $('#conexao').innerHTML = `<p>🟢 <b>Conectado.</b></p><button class="b" onclick="desconectar()">Desconectar</button>`;
-  else $('#conexao').innerHTML = `<p><b>Conecte o chip do PostZap</b>: no celular, WhatsApp → Aparelhos conectados → Conectar aparelho, e leia o QR.</p>
-    ${s.qr ? `<img src="${esc(s.qr)}" alt="QR Code" style="width:260px;max-width:100%;background:#fff;padding:8px;border-radius:8px">` : ''}
-    ${s.codigo ? `<p>Ou use o código: <b>${esc(s.codigo)}</b></p>` : ''}${s.erro ? `<p class="err">${esc(s.erro)}</p>` : ''}
-    <p><button class="b" onclick="carregarConexao()">↻ Atualizar QR</button></p>`;
+  $('#conexao').innerHTML = 'Verificando os chips…';
+  const chips = await statusWa(); if (!chips) return;
+  $('#conexao').innerHTML = `<p class="muted">Cada postagem sorteia qual chip envia em cada grupo (sem repetir o mesmo chip seguido no grupo).
+    Para conectar: no celular do chip, WhatsApp → Aparelhos conectados → Conectar aparelho, e leia o QR.</p>` +
+    chips.map(c => `<div class="card"><div class="row"><b style="flex:1">📱 ${esc(c.instancia)}</b>
+      <span class="tag">${c.estado === 'open' ? '🟢 conectado' : '🔴 desconectado'}</span></div>
+      ${c.estado === 'open'
+        ? `<p class="muted">${esc(c.nome || '')} ${c.numero ? '· +' + esc(c.numero) : ''}</p><button class="b" onclick="desconectar('${esc(c.instancia)}')">Desconectar</button>`
+        : `${c.qr ? `<img src="${esc(c.qr)}" alt="QR Code" style="width:240px;max-width:100%;background:#fff;padding:8px;border-radius:8px">` : ''}
+           ${c.codigo ? `<p>Código: <b>${esc(c.codigo)}</b></p>` : ''}${c.erro ? `<p class="err">${esc(c.erro)}</p>` : ''}`}
+    </div>`).join('') + `<button class="b" onclick="carregarConexao()">↻ Atualizar</button>`;
 }
-async function desconectar(){ if (confirm('Desconectar o WhatsApp do PostZap?')) { await api('whatsapp/desconectar', {}); carregarConexao(); } }
+async function desconectar(instancia){ if (confirm('Desconectar o chip ' + instancia + '?')) { await api('whatsapp/desconectar', {instancia}); carregarConexao(); } }
 async function salvarModelo(){ MODELO = $('#modelo').value; await api('modelo', {modelo: MODELO}); $('#mok').textContent = 'Salvo ✓'; }
 
 iniciar();

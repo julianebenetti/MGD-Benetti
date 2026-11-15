@@ -30,9 +30,14 @@ if [ ! -f .env ]; then
   cp .env.example .env
   sed -i "s/^EVOLUTION_KEY=.*/EVOLUTION_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(20))')/" .env
   echo "⚠️  Criei $DIR/.env — abra com:  nano $DIR/.env"
-  echo "    Preencha POSTZAP_SENHA e SUPABASE_KEY, salve (Ctrl+O, Enter, Ctrl+X) e rode o comando de novo."
+  echo "    Preencha POSTZAP_SENHA, SUPABASE_KEY e NUMEROS_AUTORIZADOS, salve (Ctrl+O, Enter, Ctrl+X) e rode o comando de novo."
   exit 1
 fi
+if ! grep -q '^WEBHOOK_SEGREDO=.' .env; then
+  sed -i '/^WEBHOOK_SEGREDO=/d' .env
+  echo "WEBHOOK_SEGREDO=$(python3 -c 'import secrets; print(secrets.token_hex(16))')" >> .env
+fi
+grep -q '^EVOLUTION_INSTANCIAS=' .env || echo "EVOLUTION_INSTANCIAS=chip1,chip2,chip3" >> .env
 grep -q '^POSTZAP_SENHA=.' .env || { echo "⚠️  Falta POSTZAP_SENHA no $DIR/.env"; exit 1; }
 
 echo "▶ Docker (WhatsApp / Evolution API)"

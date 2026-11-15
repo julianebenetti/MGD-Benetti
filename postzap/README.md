@@ -15,7 +15,11 @@ App **separado** da AfiliDash e do robô do Shopee Vídeo para postar links da S
 - **Prévia do link** (miniatura + título `@descontoirresistivel`): o link vira `posts.descontoirresistivel.com.br/zap/l/xxxx`,
   que mostra a foto do produto no WhatsApp e leva para o link de afiliado da Shopee (com Sub ID `postzap`, para ver no
   relatório as vendas do WhatsApp). Conta os cliques. É só texto: não pesa no celular de quem recebe.
-- **Envio** pelo WhatsApp do chip separado (Evolution API), com 90–240 s entre grupos e limite de 8 posts/dia por grupo.
+- **3 chips (admins)**: cada postagem sorteia qual chip envia em cada grupo (sem repetir o mesmo chip seguido no
+  grupo), embaralha a ordem dos grupos e espera 90–240 s entre eles. Limite de 8 posts/dia por grupo.
+- 💬 **Conversa no WhatsApp**: do seu número (`NUMEROS_AUTORIZADOS`), compartilhe o link de um produto com qualquer
+  um dos chips. Ele responde com a prévia pronta (chamada automática por IA, foto, preço, link curto) e o menu:
+  `1` aprovar · `2` chamada · `3` preço De · `4` preço Por · `5 20h` agendar · `0` descartar. Avisa quando terminar.
 - Avisa quando o produto já foi postado; histórico de tudo que saiu; botão ⏸️ para pausar todos os envios.
 - Dados próprios em `postzap.db` (grupos, fila, histórico). Não usa nenhuma tabela da AfiliDash.
 
@@ -37,7 +41,7 @@ sobe o WhatsApp (Evolution API) e cria o serviço `postzap`.
    `sudo nginx -t && sudo systemctl reload nginx` (HTTPS: `sudo certbot --nginx -d posts.descontoirresistivel.com.br`).
 
 ## Primeiro uso
-1. 🔗 **WhatsApp** → leia o QR com o **chip separado** (Aparelhos conectados).
+1. 🔗 **WhatsApp** → leia o QR de **cada um dos 3 chips** (Aparelhos conectados).
 2. 👥 **Grupos** → "Buscar grupos" e marque onde pode postar.
 3. ✏️ **Modelo** → ajuste a mensagem (vamos copiar o formato do PromosApp quando chegarem os prints).
 4. 🛍️ **Produtos** → Preparar postagem → Aprovar.

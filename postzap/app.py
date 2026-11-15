@@ -53,7 +53,10 @@ CFG = {
     'central_db': os.getenv('CENTRAL_DB', '/opt/shopee-video/shopee-video-automation/estado.db'),
     'evo_url': os.getenv('EVOLUTION_URL', 'http://127.0.0.1:8080').rstrip('/'),
     'evo_key': os.getenv('EVOLUTION_KEY', ''),
-    'evo_inst': os.getenv('EVOLUTION_INSTANCIA', 'postzap'),
+    'evo_insts': [x.strip() for x in os.getenv('EVOLUTION_INSTANCIAS', 'chip1,chip2,chip3').split(',') if x.strip()],
+    'autorizados': [re.sub(r'\D', '', x) for x in os.getenv('NUMEROS_AUTORIZADOS', '').split(',') if re.sub(r'\D', '', x)],
+    'webhook_segredo': os.getenv('WEBHOOK_SEGREDO', ''),
+    'openai_model': os.getenv('OPENAI_MODEL', 'gpt-5.6-luna'),
     'intervalo_min': int(os.getenv('INTERVALO_MIN_SEG', '90')),
     'intervalo_max': int(os.getenv('INTERVALO_MAX_SEG', '240')),
     'limite_dia': int(os.getenv('LIMITE_POSTS_DIA_POR_GRUPO', '8')),
@@ -94,6 +97,8 @@ CREATE TABLE IF NOT EXISTS envios (
     id INTEGER PRIMARY KEY AUTOINCREMENT, fila_id INTEGER, jid TEXT, chave TEXT, quando TEXT, ok INTEGER, erro TEXT
 );
 CREATE TABLE IF NOT EXISTS config (k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE IF NOT EXISTS grupo_chips (jid TEXT, instancia TEXT, PRIMARY KEY (jid, instancia));
+CREATE TABLE IF NOT EXISTS conversa (numero TEXT PRIMARY KEY, fila_id INTEGER, esperando TEXT);
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
 );
@@ -110,6 +115,10 @@ def db():
 def init_db():
     with db() as c:
         c.executescript(SCHEMA)
+        for tab, col in (('envios', 'instancia TEXT'), ('fila', 'dados TEXT'), ('fila', 'pedido_por TEXT'),
+                         ('fila', 'pedido_inst TEXT')):
+            if col.split()[0] not in {r[1] for r in c.execute(f'PRAGMA table_info({tab})')}:
+                c.execute(f'ALTER TABLE {tab} ADD COLUMN {col}')
 
 
 def get_cfg(k, default=''):
@@ -400,19 +409,57 @@ def evo(method, path, body=None, timeout=30):
         raise RuntimeError(f"Evolution fora do ar: {e.reason}")
 
 
-def whatsapp_status():
-    inst = CFG['evo_inst']
+_webhook_ok = set()
+_estado_cache = {}
+
+
+def instancias():
+    return CFG['evo_insts']
+
+
+def estado_chip(inst, cache_seg=60):
+    """'open' = conectado. Guardado por 1 min para não consultar a cada envio."""
+    t, st = _estado_cache.get(inst, (0, ''))
+    if time.time() - t < cache_seg:
+        return st
     try:
-        st = evo('GET', f'/instance/connectionState/{inst}')
+        r = evo('GET', f'/instance/connectionState/{inst}')
+        st = (r.get('instance') or {}).get('state') or r.get('state') or 'desconhecido'
     except RuntimeError as e:
-        if '404' in str(e):
-            evo('POST', '/instance/create', {'instanceName': inst, 'qrcode': True, 'integration': 'WHATSAPP-BAILEYS'})
-            st = evo('GET', f'/instance/connectionState/{inst}')
-        else:
-            return {'estado': 'erro', 'erro': str(e)}
-    estado = (st.get('instance') or {}).get('state') or st.get('state') or 'desconhecido'
-    res = {'estado': estado}
-    if estado != 'open':
+        st = 'inexistente' if '404' in str(e) else 'erro'
+    _estado_cache[inst] = (time.time(), st)
+    return st
+
+
+def configurar_webhook(inst):
+    """Mensagens recebidas pelo chip chegam ao PostZap (para a conversa de links)."""
+    if inst in _webhook_ok or not CFG['webhook_segredo']:
+        return
+    try:
+        evo('POST', f'/webhook/set/{inst}', {'webhook': {
+            'enabled': True, 'url': f"{CFG['url_publica']}/webhook/{CFG['webhook_segredo']}",
+            'byEvents': False, 'base64': False, 'events': ['MESSAGES_UPSERT']}})
+        _webhook_ok.add(inst)
+    except RuntimeError as e:
+        log.warning(f'Webhook de {inst}: {e}')
+
+
+def whatsapp_status(inst):
+    st = estado_chip(inst, cache_seg=0)
+    if st == 'inexistente':
+        evo('POST', '/instance/create', {'instanceName': inst, 'qrcode': True, 'integration': 'WHATSAPP-BAILEYS'})
+        st = estado_chip(inst, cache_seg=0)
+    res = {'instancia': inst, 'estado': st}
+    if st == 'open':
+        configurar_webhook(inst)
+        try:
+            info = evo('GET', f'/instance/fetchInstances?instanceName={inst}')
+            info = info[0] if isinstance(info, list) and info else {}
+            res['numero'] = (info.get('ownerJid') or '').split('@')[0]
+            res['nome'] = info.get('profileName') or ''
+        except RuntimeError:
+            pass
+    else:
         try:
             qr = evo('GET', f'/instance/connect/{inst}')
             res['qr'] = qr.get('base64') or ''
@@ -423,16 +470,24 @@ def whatsapp_status():
 
 
 def atualizar_grupos():
-    lista = evo('GET', f"/group/fetchAllGroups/{CFG['evo_inst']}?getParticipants=false", timeout=60)
-    with _lock, db() as c:
-        for g in lista:
-            c.execute('INSERT INTO grupos (jid, nome) VALUES (?,?) ON CONFLICT(jid) DO UPDATE SET nome=excluded.nome',
-                      (g['id'], g.get('subject') or g['id']))
-    return len(lista)
+    """Busca os grupos de cada chip conectado e guarda em quais grupos cada chip está."""
+    total = set()
+    for inst in instancias():
+        if estado_chip(inst, cache_seg=0) != 'open':
+            continue
+        lista = evo('GET', f"/group/fetchAllGroups/{inst}?getParticipants=false", timeout=60)
+        with _lock, db() as c:
+            c.execute('DELETE FROM grupo_chips WHERE instancia=?', (inst,))
+            for g in lista:
+                total.add(g['id'])
+                c.execute('INSERT INTO grupos (jid, nome) VALUES (?,?) ON CONFLICT(jid) DO UPDATE SET nome=excluded.nome',
+                          (g['id'], g.get('subject') or g['id']))
+                c.execute('INSERT OR IGNORE INTO grupo_chips VALUES (?,?)', (g['id'], inst))
+    return len(total)
 
 
-def enviar_texto(jid, texto):
-    evo('POST', f"/message/sendText/{CFG['evo_inst']}", {'number': jid, 'text': texto, 'linkPreview': True}, timeout=60)
+def enviar_texto(inst, jid, texto, previa=True):
+    evo('POST', f"/message/sendText/{inst}", {'number': jid, 'text': texto, 'linkPreview': previa}, timeout=60)
 
 
 # ---------------------------------------------------------------- envio (fila aprovada)
@@ -440,6 +495,19 @@ def enviar_texto(jid, texto):
 def posts_hoje(c, jid):
     inicio = agora().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     return c.execute('SELECT COUNT(*) FROM envios WHERE jid=? AND ok=1 AND quando>=?', (jid, inicio)).fetchone()[0]
+
+
+def sortear_chip(jid, evitar=None):
+    """Sorteia entre os chips conectados que estão no grupo; evita repetir o mesmo chip da postagem anterior."""
+    with db() as c:
+        chips = [r[0] for r in c.execute('SELECT instancia FROM grupo_chips WHERE jid=?', (jid,))]
+        ultimo = c.execute('SELECT instancia FROM envios WHERE jid=? AND ok=1 ORDER BY id DESC LIMIT 1', (jid,)).fetchone()
+    chips = [x for x in chips if x in instancias() and estado_chip(x) == 'open'] or \
+            [x for x in instancias() if estado_chip(x) == 'open' and not chips]
+    if not chips:
+        return None
+    opcoes = [x for x in chips if x not in {evitar, ultimo and ultimo[0]}] or chips
+    return random.choice(opcoes)
 
 
 def worker():
@@ -462,34 +530,274 @@ def processar_fila():
             return
         c.execute("UPDATE fila SET status='enviando' WHERE id=?", (item['id'],))
     grupos = json.loads(item['grupos'] or '[]')
-    erros = []
+    random.shuffle(grupos)                     # ordem dos grupos também muda a cada postagem
+    erros, usados, anterior = [], {}, None
     for i, jid in enumerate(grupos):
         if get_cfg('pausado') == '1':
             erros.append('pausado no meio do envio')
             break
         with db() as c:
+            nome = (c.execute('SELECT nome FROM grupos WHERE jid=?', (jid,)).fetchone() or [jid])[0]
             if posts_hoje(c, jid) >= CFG['limite_dia']:
-                erros.append(f'{jid}: limite de {CFG["limite_dia"]} posts/dia atingido')
+                erros.append(f'{nome}: limite de {CFG["limite_dia"]} posts/dia atingido')
                 continue
             ja = c.execute('SELECT 1 FROM envios WHERE fila_id=? AND jid=? AND ok=1', (item['id'], jid)).fetchone()
         if ja:
             continue
+        inst = sortear_chip(jid, anterior)
         ok, erro = 1, None
-        try:
-            enviar_texto(jid, item['texto'])
-            log.info(f"Fila {item['id']} enviada para {jid}")
-        except Exception as e:
-            ok, erro = 0, str(e)[:300]
-            erros.append(f'{jid}: {erro}')
+        if not inst:
+            ok, erro = 0, 'nenhum chip conectado está neste grupo'
+        else:
+            try:
+                enviar_texto(inst, jid, item['texto'])
+                usados[inst] = usados.get(inst, 0) + 1
+                anterior = inst
+                log.info(f"Fila {item['id']} → {nome} pelo chip {inst}")
+            except Exception as e:
+                ok, erro = 0, str(e)[:300]
+        if not ok:
+            erros.append(f'{nome}: {erro}')
         with _lock, db() as c:
-            c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro) VALUES (?,?,?,?,?,?)',
-                      (item['id'], jid, item['chave'], agora().isoformat(), ok, erro))
+            c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia) VALUES (?,?,?,?,?,?,?)',
+                      (item['id'], jid, item['chave'], agora().isoformat(), ok, erro, inst))
         if i < len(grupos) - 1:
             time.sleep(random.randint(CFG['intervalo_min'], max(CFG['intervalo_min'], CFG['intervalo_max'])))
     with _lock, db() as c:
         status = 'erro' if erros and len(erros) >= len(grupos) else 'enviado'
         c.execute('UPDATE fila SET status=?, enviado_em=?, erro=? WHERE id=?',
                   (status, agora().isoformat(), '\n'.join(erros) or None, item['id']))
+    if item['pedido_por']:
+        resumo = ', '.join(f'{k}: {v}' for k, v in usados.items()) or 'nenhum'
+        aviso = (f"✅ Postado: *{item['produto'][:60]}*\n{sum(usados.values())} grupo(s) · chips usados → {resumo}"
+                 + (f"\n⚠️ {chr(10).join(erros)}" if erros else ''))
+        responder(item['pedido_inst'], item['pedido_por'], aviso)
+
+
+# ---------------------------------------------------------------- chamada automática (IA)
+
+def chave_openai():
+    k = os.getenv('OPENAI_API_KEY', '')
+    if not k and Path(CFG['central_env']).exists():
+        for line in Path(CFG['central_env']).read_text(encoding='utf-8').splitlines():
+            a, _, v = line.partition('=')
+            if a.strip() == 'OPENAI_API_KEY':
+                k = v.strip().strip('"\'')
+    return k
+
+
+def gerar_chamada(produto):
+    """Frase curta em MAIÚSCULAS com 1 emoji, no estilo dos grupos de ofertas. Sem IA: frase padrão."""
+    key = chave_openai()
+    if key and produto:
+        prompt = ("Você escreve chamadas para grupos de ofertas no WhatsApp. Crie UMA chamada curta (máx. 7 palavras) "
+                  "em MAIÚSCULAS, terminando com '!' e 1 emoji que combine, destacando o principal benefício do produto. "
+                  "Exemplos: 'TREINE CONFORTÁVEL E SEM TRANSPARÊNCIA! 🏋️', 'CAIXAS QUE TRANSFORMAM SEU ESPAÇO! 📦', "
+                  "'CUIDADO CERÂMICO PRA SUA SAÚDE! 🍳'. Não invente preço, desconto ou promessas falsas. "
+                  f"Responda só a chamada.\nProduto: {produto}")
+        try:
+            req = urllib.request.Request('https://api.openai.com/v1/chat/completions', headers={
+                'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
+                data=json.dumps({'model': CFG['openai_model'],
+                                 'messages': [{'role': 'user', 'content': prompt}]}).encode())
+            with urllib.request.urlopen(req, timeout=40) as r:
+                txt = json.load(r)['choices'][0]['message']['content'].strip().strip('"*').splitlines()[0]
+            if 3 < len(txt) < 90:
+                return txt.upper()
+        except Exception as e:
+            log.warning(f'Chamada automática falhou: {e}')
+    return 'OFERTA IMPERDÍVEL! 🔥'
+
+
+# ---------------------------------------------------------------- conversa no WhatsApp (mandar links)
+
+MENU = ("Responda com:\n*1* ✅ aprovar e postar agora\n*2* ✏️ trocar a chamada\n*3* 💸 colocar o preço \"De:\"\n"
+        "*4* 💰 trocar o preço \"Por:\"\n*5* 🕒 agendar (ex.: *5 20h* ou *5 20:30*)\n*0* 🗑️ descartar")
+
+
+def montar_texto(p):
+    linhas = [l for l in (get_cfg('modelo', MODELO_PADRAO)).split('\n') if '{preco_de}' not in l or p.get('preco_de')]
+    return re.sub(r'\{(\w+)\}', lambda m: str(p.get(m.group(1), '') or ''), '\n'.join(linhas))
+
+
+def digitos(x):
+    return re.sub(r'\D', '', x or '')
+
+
+def autorizado(numeros):
+    for n in numeros:
+        d = digitos(n)
+        if len(d) >= 8 and any(a[-8:] == d[-8:] for a in CFG['autorizados']):
+            return True
+    return False
+
+
+def responder(inst, para, texto, previa=False):
+    try:
+        enviar_texto(inst, para, texto, previa)
+    except Exception as e:
+        log.warning(f'Resposta para {para} falhou: {e}')
+
+
+def grupos_ativos():
+    with db() as c:
+        return [r[0] for r in c.execute('SELECT jid FROM grupos WHERE ativo=1')]
+
+
+def conversa_get(numero):
+    with db() as c:
+        r = c.execute('SELECT * FROM conversa WHERE numero=?', (numero,)).fetchone()
+    return dict(r) if r else {'numero': numero, 'fila_id': None, 'esperando': ''}
+
+
+def conversa_set(numero, fila_id, esperando=''):
+    with _lock, db() as c:
+        c.execute('INSERT OR REPLACE INTO conversa VALUES (?,?,?)', (numero, fila_id, esperando))
+
+
+def item_fila(fid):
+    with db() as c:
+        r = c.execute('SELECT * FROM fila WHERE id=?', (fid,)).fetchone()
+    return dict(r) if r else None
+
+
+def regravar(item, **mud):
+    dados = json.loads(item.get('dados') or '{}')
+    dados.update(mud)
+    texto = montar_texto(dados)
+    with _lock, db() as c:
+        c.execute('UPDATE fila SET texto=?, dados=?, preco=? WHERE id=?', (texto, json.dumps(dados), dados.get('preco'), item['id']))
+    return texto
+
+
+def receber_webhook(payload):
+    if (payload.get('event') or '').lower().replace('_', '.') != 'messages.upsert':
+        return
+    inst = payload.get('instance') or ''
+    data = payload.get('data') or {}
+    if isinstance(data, list):
+        data = data[0] if data else {}
+    key = data.get('key') or {}
+    jid = key.get('remoteJid') or ''
+    if key.get('fromMe') or jid.endswith('@g.us') or jid.endswith('@broadcast'):
+        return
+    if not autorizado([jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]):
+        return
+    msg = data.get('message') or {}
+    texto = (msg.get('conversation') or (msg.get('extendedTextMessage') or {}).get('text')
+             or (msg.get('imageMessage') or {}).get('caption') or '').strip()
+    if texto:
+        threading.Thread(target=tratar_mensagem, args=(inst, jid, texto), daemon=True).start()
+
+
+def tratar_mensagem(inst, numero, texto):
+    try:
+        _tratar(inst, numero, texto)
+    except Exception as e:
+        log.exception('Conversa')
+        responder(inst, numero, f'⚠️ Deu erro: {str(e)[:150]}')
+
+
+def _tratar(inst, numero, texto):
+    conv = conversa_get(numero)
+    link = re.search(r'https?://\S+', texto)
+    if link:                                         # link novo = nova postagem
+        responder(inst, numero, '⏳ Montando a postagem…')
+        url = link.group(0).rstrip('.,)')
+        ids = None
+        if 'shopee' in url or 'shp.ee' in url:
+            try:
+                final = urllib.request.urlopen(urllib.request.Request(url, method='HEAD', headers={
+                    'User-Agent': 'Mozilla/5.0'}), timeout=15).geturl()
+            except Exception:
+                final = url
+            m = re.search(r'/product/(\d+)/(\d+)', final) or re.search(r'i\.(\d+)\.(\d+)', final)
+            ids = f'{m.group(1)}:{m.group(2)}' if m else None
+        if ids:
+            p = {'origem': 'whatsapp', 'chave': ids, 'link': url if 's.shopee' in url else '', 'produto': ''}
+            nodes = []
+            try:
+                a, b = ids.split(':')
+                nodes = shopee_gql(f'{{productOfferV2(shopId:{a},itemId:{b},limit:1){{nodes{{productName}}}}}}')['productOfferV2']['nodes']
+            except Exception:
+                pass
+            p['produto'] = nodes[0]['productName'] if nodes else ''
+            p = preparar(p)
+        else:
+            p = ler_link(url)
+            p['origem'] = 'whatsapp'
+            p = preparar(p)
+        if bloqueado(p.get('produto')):
+            return responder(inst, numero, '🚫 Produto de suplementação: não posto esse tipo de produto.')
+        if not p.get('produto'):
+            p['produto'] = 'Oferta'
+            p['avisos'].append('Não consegui ler o nome do produto: mande *2* para escrever a chamada e edite no app se quiser.')
+        p['chamada'] = gerar_chamada(p['produto'])
+        p['produto'] = p['produto'][:120]
+        grupos = grupos_ativos()
+        with _lock, db() as c:
+            cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, criado_em, '
+                            'dados, pedido_por, pedido_inst) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                            ('whatsapp', p.get('chave'), p['produto'], p.get('preco'), p.get('comissao', ''), p['link'],
+                             montar_texto(p), json.dumps(grupos), agora().isoformat(), json.dumps(p), numero, inst))
+            fid = cur.lastrowid
+        conversa_set(numero, fid)
+        item = item_fila(fid)
+        responder(inst, numero, item['texto'], previa=True)
+        extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
+        sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: mande *4* para colocar.'
+        responder(inst, numero, f"👆 Prévia · vai para {len(grupos)} grupo(s){extra}{sem_preco}\n\n{MENU}")
+        return
+
+    item = item_fila(conv['fila_id']) if conv['fila_id'] else None
+    if not item or item['status'] not in ('rascunho', 'erro'):
+        return responder(inst, numero, '📲 Me mande o link de um produto (Shopee, Magalu, Mercado Livre, Amazon…) '
+                                       'que eu monto a postagem.')
+    esperando, t = conv['esperando'], texto.strip()
+    if esperando:
+        conversa_set(numero, item['id'])
+        campo = {'chamada': 'chamada', 'de': 'preco_de', 'por': 'preco'}[esperando]
+        valor = t.upper() if campo == 'chamada' else br(t)
+        regravar(item, **{campo: valor})
+        responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
+        return responder(inst, numero, f'👆 Atualizado.\n\n{MENU}')
+    cmd, _, resto = t.partition(' ')
+    if cmd == '1':
+        grupos = json.loads(item['grupos'] or '[]')
+        if not grupos:
+            return responder(inst, numero, '⚠️ Nenhum grupo marcado. Marque os grupos no app (👥 Grupos).')
+        with _lock, db() as c:
+            c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=?", (agora().isoformat(), item['id']))
+        conversa_set(numero, None)
+        quando = item['agendado_para']
+        return responder(inst, numero, f"✅ Aprovado! {'Posto às ' + quando[11:16] if quando else 'Começando a postar'} em "
+                                       f"{len(grupos)} grupo(s), sorteando entre os chips. Aviso quando terminar.")
+    if cmd in ('2', '3', '4'):
+        esp = {'2': 'chamada', '3': 'de', '4': 'por'}[cmd]
+        if resto:
+            conversa_set(numero, item['id'], esp)
+            return _tratar(inst, numero, resto)
+        conversa_set(numero, item['id'], esp)
+        return responder(inst, numero, {'chamada': '✏️ Mande a nova chamada:', 'de': '💸 Mande o preço "De:" (ex.: 149,90):',
+                                        'por': '💰 Mande o preço "Por:" (ex.: 99,90):'}[esp])
+    if cmd == '5':
+        m = re.match(r'(\d{1,2})(?:[:h](\d{2}))?h?$', resto.strip().lower())
+        if not m:
+            return responder(inst, numero, '🕒 Mande assim: *5 20h* ou *5 20:30*')
+        quando = agora().replace(hour=int(m.group(1)), minute=int(m.group(2) or 0), second=0, microsecond=0)
+        if quando < agora():
+            quando += timedelta(days=1)
+        with _lock, db() as c:
+            c.execute("UPDATE fila SET agendado_para=?, status='aprovado', aprovado_em=? WHERE id=?",
+                      (quando.isoformat(), agora().isoformat(), item['id']))
+        conversa_set(numero, None)
+        return responder(inst, numero, f"🕒 Agendado para {quando.strftime('%d/%m às %H:%M')}. Aviso quando postar.")
+    if cmd == '0':
+        with _lock, db() as c:
+            c.execute("UPDATE fila SET status='descartado' WHERE id=?", (item['id'],))
+        conversa_set(numero, None)
+        return responder(inst, numero, '🗑️ Descartado.')
+    responder(inst, numero, MENU)
 
 
 # ---------------------------------------------------------------- login simples
@@ -558,12 +866,13 @@ class H(BaseHTTPRequestHandler):
                     x['ultimo_envio'] = env.get(x['chave'], '')
                 return self.send_json({'produtos': ce + g, 'avisos': [a for a in (eg, ec) if a]})
             if p == '/api/whatsapp':
-                return self.send_json(whatsapp_status())
+                return self.send_json({'chips': [whatsapp_status(i) for i in instancias()]})
             if p == '/api/grupos':
                 with db() as c:
                     rows = [dict(r) for r in c.execute('SELECT * FROM grupos ORDER BY ativo DESC, nome')]
                     for r in rows:
                         r['hoje'] = posts_hoje(c, r['jid'])
+                        r['chips'] = [x[0] for x in c.execute('SELECT instancia FROM grupo_chips WHERE jid=?', (r['jid'],))]
                 return self.send_json({'grupos': rows})
             if p == '/api/fila':
                 with db() as c:
@@ -582,6 +891,12 @@ class H(BaseHTTPRequestHandler):
     def do_POST(self):
         p = self.rota()
         b = self.body()
+        if CFG['webhook_segredo'] and p == f"/webhook/{CFG['webhook_segredo']}":
+            try:
+                receber_webhook(b)
+            except Exception:
+                log.exception('webhook')
+            return self.send_json({'ok': True})
         if p == '/api/login':
             if CFG['senha'] and hmac.compare_digest(str(b.get('senha', '')), CFG['senha']):
                 return self.send_json({'ok': True}, extra={
@@ -610,7 +925,10 @@ class H(BaseHTTPRequestHandler):
                 c.execute('UPDATE grupos SET ativo=? WHERE jid=?', (1 if b.get('ativo') else 0, b['jid']))
             return self.send_json({'ok': True})
         if p == '/api/whatsapp/desconectar':
-            evo('DELETE', f"/instance/logout/{CFG['evo_inst']}")
+            if b.get('instancia') not in instancias():
+                return self.send_json({'erro': 'chip desconhecido'}, 400)
+            evo('DELETE', f"/instance/logout/{b['instancia']}")
+            _estado_cache.pop(b['instancia'], None)
             return self.send_json({'ok': True})
         if p == '/api/modelo':
             set_cfg('modelo', b.get('modelo') or MODELO_PADRAO)
@@ -659,6 +977,8 @@ def main():
     with _lock, db() as c:   # envio interrompido por reinício volta para aprovado (não repete grupos já enviados)
         c.execute("UPDATE fila SET status='aprovado' WHERE status='enviando'")
     threading.Thread(target=worker, daemon=True).start()
+    if not CFG['autorizados']:
+        log.warning('NUMEROS_AUTORIZADOS vazio: a conversa de links pelo WhatsApp fica desligada')
     srv = ThreadingHTTPServer(('127.0.0.1', CFG['porta']), H)
     log.info(f"PostZap em http://127.0.0.1:{CFG['porta']}/zap")
     srv.serve_forever()
