@@ -31,6 +31,7 @@ from pipeline import DetailMismatch, Pipeline, PipelineError, VariationMismatch 
 import prompts  # noqa: E402
 import reviews  # noqa: E402
 import estudo  # noqa: E402
+import pack_editor  # noqa: E402
 import sales_trend  # noqa: E402
 from content_generator import HASHTAGS, fit_caption  # noqa: E402
 from sub_id import nome_do_sub_id, novo_sub_id, prefixo  # noqa: E402
@@ -67,6 +68,8 @@ PENDENCIAS = topic('TELEGRAM_TOPIC_PENDENCIAS')
 RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
+PACK = topic('TELEGRAM_TOPIC_PACK')   # 📦 vídeos do pack: o robô junta vídeo + vinheta e manda para Editados
+PACK_WAIT_SECONDS = int(os.getenv('PACK_ESPERA', '90'))   # sem nada novo por tanto tempo: o pack está completo
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
 WINNERS_TIME = os.getenv('VENCEDORES_HORA', '07:45')   # 🏆 vencedores do dia em 📊 Relatório
 STUDY_DAYS = int(os.getenv('ESTUDO_DIAS', '3'))         # 📈 levantamento do Shopee Vídeo: a cada 3 dias, vs. 3 antes
@@ -199,7 +202,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind == 'video' else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
+        name = 'video' if kind in ('video', 'pack') else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
             'ideas' if kind in ('ideas', 'idea_links', 'datafeed') else \
             'approve' if kind in ('approve', 'use_identical') else \
             'tidy' if kind in ('tidy', 'clean_agenda') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
@@ -310,6 +313,83 @@ class Bot:
             return None
         return failure
 
+    # ---------- 📦 Pack ----------
+
+    def pack_state(self) -> Dict:
+        try:
+            return json.loads(self.db.get_meta('pack_atual') or '{}')
+        except ValueError:
+            return {}
+
+    def on_pack(self, msg: Dict):
+        """
+        📦 Pack: um link de produto e, depois, os vídeos dele (encaminhados do grupo do pack, em qualquer ordem).
+        Vídeos de MAIN_MIN_SECONDS+ são os principais; os curtos, vinhetas. Imagens são ignoradas. O pack fecha com
+        /montar, com o próximo link ou depois de PACK_WAIT_SECONDS sem nada novo.
+        """
+        text = (msg.get('caption') or msg.get('text') or '').strip()
+        state = self.pack_state()
+        if text.lower().startswith('/montar'):
+            if state.get('principais'):
+                self.close_pack(state)
+            else:
+                self.tg.send_text(PACK, "Ainda não recebi vídeos deste pack. Mande o link do produto e os vídeos.")
+            return
+        links = extract_shopee_links(text)
+        video = msg.get('video') or (msg.get('document') if msg.get('document', {}).get('mime_type', '')
+                                     .startswith('video/') else None)
+        if links and not video:
+            if state.get('principais'):
+                self.close_pack(state)
+            self.db.set_meta('pack_atual', json.dumps({'link': links[0], 'link_msg': msg['message_id'],
+                                                       'principais': [], 'vinhetas': [], 'at': time.time()}))
+            self.tg.react(msg['message_id'], '👌')
+            return
+        if not video:
+            return   # imagens e textos ("Vídeos 👇", "Vinhetas 👇"): nada a fazer
+        if links:
+            state = {**state, 'link': links[0], 'link_msg': msg['message_id']}
+        duration = float(video.get('duration') or 0)
+        kind = 'principais' if duration >= pack_editor.MAIN_MIN_SECONDS else 'vinhetas'
+        state.setdefault('principais', [])
+        state.setdefault('vinhetas', [])
+        state[kind].append([msg['message_id'], video['file_id'], duration])
+        state['at'] = time.time()
+        self.db.set_meta('pack_atual', json.dumps(state))
+        self.tg.react(msg['message_id'], '👌')
+
+    def pack_tick(self):
+        state = self.pack_state()
+        if state.get('principais') and time.time() - float(state.get('at') or 0) > PACK_WAIT_SECONDS:
+            self.close_pack(state)
+
+    def close_pack(self, state: Dict):
+        self.db.set_meta('pack_atual', '{}')
+        if not state.get('link'):
+            self.tg.send_text(PACK, f"⚠️ Recebi {len(state.get('principais', []))} vídeo(s) do pack, mas nenhum link. "
+                                    "Mande o link do produto e encaminhe os vídeos de novo (o link primeiro).")
+            return
+        self.tg.send_text(PACK, f"🎬 Pack recebido: {len(state['principais'])} vídeo(s) e "
+                                f"{len(state.get('vinhetas', []))} vinheta(s). Montando as combinações…")
+        self.submit(('pack', state))
+
+    def job_pack(self, state: Dict):
+        """Baixa, junta cada vídeo com a vinheta de outro (sorteio) e põe cada um na fila normal (validação, capa…)."""
+        folder = BASE / 'downloads' / f"pack_{state['link_msg']}"
+        mains = [str(self.tg.download(f, folder)) for _, f, _ in state['principais']]
+        extras = [str(self.tg.download(f, folder)) for _, f, _ in state.get('vinhetas', [])]
+        built = pack_editor.build(mains, extras, folder / 'montados', int(state['link_msg']))
+        lines = []
+        for item, (msg_id, _, _) in zip(built, state['principais']):
+            what = (f"vídeo {item['main']} + vinheta {item['extra']} ({'antes' if item['before'] else 'depois'})"
+                    if item['extra'] else f"vídeo {item['main']} (sem vinheta)")
+            lines.append(f"• {what}")
+            self.db.add_video_job(msg_id, 'local:' + item['path'], state['link'], 'pack', False)
+            self.submit(('video', msg_id, 'local:' + item['path'], state['link'], 'pack', False))
+        self.tg.send_text(PACK, f"✅ Montei {len(built)} vídeo(s), cada um diferente:\n" + '\n'.join(lines)
+                          + "\n\nEles seguem o caminho normal: conferência com o anúncio e capa, e chegam em "
+                            "✅ Editados.")
+
     def enqueue_video(self, msg_id: int, file_id: str, link: str, text: str, trust_link: bool = False):
         self.tg.react(msg_id, '👌')
         self.db.add_video_job(msg_id, file_id, link, text, trust_link)
@@ -332,7 +412,7 @@ class Bot:
                    attempt: int = 0) -> bool:
         """Devolve True quando o vídeo voltou para a fila (falha de conexão: tenta de novo sozinho)."""
         try:
-            video = self.tg.download(file_id, BASE / 'downloads')
+            video = file_id[6:] if file_id.startswith('local:') else self.tg.download(file_id, BASE / 'downloads')
             result = self.pipeline.prepare(str(video), link, text, self.db.headlines_for, trust_link)
         except Exception as e:
             network = isinstance(e, requests.RequestException)
@@ -1357,6 +1437,7 @@ class Bot:
     # ---------- Relógio ----------
 
     def tick(self):
+        self.pack_tick()
         for album in [a for a, v in self.album_links.items() if time.time() - v['at'] > BATCH_LINK_TTL]:
             del self.album_links[album]
         for p in self.pending:  # cada vídeo sem link é perguntado sozinho; os outros seguem
@@ -2512,6 +2593,8 @@ class Bot:
                     self.job_narrations(*job[1:])
                 elif job[0] == 'prompt_narr':
                     self.job_prompt_narration(*job[1:])
+                elif job[0] == 'pack':
+                    self.job_pack(*job[1:])
                 elif job[0] == 'datafeed':
                     self.job_datafeed(*job[1:])
                 elif job[0] == 'ideas':
@@ -2666,6 +2749,9 @@ class Bot:
         if thread == PROMPTS and PROMPTS and not msg.get('from', {}).get('is_bot'):
             self.on_prompts(msg)
             return
+        if thread == PACK and PACK and not msg.get('from', {}).get('is_bot'):
+            self.on_pack(msg)
+            return
         if thread == ENVIOS:
             self.on_envios(msg)
         elif thread == EDITADOS and msg.get('reply_to_message') and not msg.get('from', {}).get('is_bot'):
@@ -2769,6 +2855,7 @@ class Bot:
             ('relatorio', 'Resumo de hoje (ou /relatorio 10/10 para outro dia)'),
             ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
             ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
+            ('montar', '📦 Pack: monta agora os vídeos recebidos (senão monta sozinho em 90 s)'),
             ('posteitudo', 'Marca de uma vez como postados os vídeos da Agenda (pede confirmação)'),
             ('contas', 'Contas do Shopee Vídeo e em qual celular cada uma usa a LiA'),
             ('conta', 'Guarda/atualiza uma conta: /conta usuario | aparelho | observação'),
@@ -2814,6 +2901,19 @@ class Bot:
             self.refresh_ideas_help()
         except Exception as e:
             logger.warning(f"Não fixei os comandos em Ideias: {e}")
+        if PACK and self.db.get_meta('pack_ajuda') != '1':
+            try:
+                self.tg.pin(self.tg.send_text(PACK, (
+                    "📦 <b>Pack de vídeos</b>\n\n1. Encaminhe para cá o <b>link do produto</b> do pack.\n"
+                    "2. Encaminhe os <b>vídeos</b> (~8 s) e as <b>vinhetas</b> (~4 s) desse produto, em qualquer "
+                    "ordem. As imagens podem vir junto: eu ignoro.\n3. Eu junto cada vídeo com a vinheta de "
+                    "<b>outro</b> vídeo (sorteio), alternando a vinheta antes e depois, para os seus ficarem "
+                    "diferentes dos de quem comprou o mesmo pack.\n4. Cada vídeo montado passa pela conferência com "
+                    "o anúncio e chega em ✅ Editados, como os do 📥 Envios.\n\nMonto sozinho 90 s depois do último "
+                    "vídeo, ou na hora com /montar. Um produto por vez: mande o próximo link depois.")))
+                self.db.set_meta('pack_ajuda', '1')
+            except Exception as e:
+                logger.warning(f"Não fixei a ajuda do Pack: {e}")
         self.resume_after_restart()
         self.submit(('resubid_agenda',))
         if self.db.get_meta('agenda_lotes') != '2':   # uma vez: a agenda passa para os lotes atuais (5 por lote)

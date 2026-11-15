@@ -69,6 +69,11 @@ priorizar quem vende mais no mês (1.000+/mês ×1,6; 500+ ×1,3), tiram produto
 datafeed, ganham a seção **📈 Vendendo agora** (`/sugestoes agora`, `IDEIAS_VENDENDO_AGORA`). Ideias e /vencedores
 lembram de olhar o ranking **Em destaque** dos vídeos do produto antes de gravar.
 
+**📦 Pack** (tópico novo, criado pelo `instalar.sh`) — encaminhe o link do produto do pack e os vídeos (~8 s) e
+vinhetas (~4 s); o robô junta cada vídeo com a vinheta de outro (sorteio, vinheta antes/depois alternando) para não
+ficar igual ao de quem comprou o mesmo pack, e cada um segue o caminho do 📥 Envios (conferência com o anúncio, capa,
+✅ Editados). Monta 90 s depois do último vídeo (`PACK_ESPERA`) ou com **`/montar`**. Imagens são ignoradas.
+
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
 **A lista do dia** (06/11): 🔥 **10 mais buscados** · 🏠 **10 casa e decoração** (nicho novo, em teste) ·
 💇 **5 beleza/cabelo** · 🎄 **10 Natal** (de 15/10 a 24/12; fora disso as vagas vão para casa) · 👗 **15 moda** ·

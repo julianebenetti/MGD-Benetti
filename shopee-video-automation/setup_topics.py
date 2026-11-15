@@ -20,6 +20,7 @@ TOPICS = [
     ('TELEGRAM_TOPIC_RELATORIO', '📊 Relatório', 0xCB86DB),
     ('TELEGRAM_TOPIC_IDEIAS', '💡 Ideias', 0xFFD67E),
     ('TELEGRAM_TOPIC_PROMPTS', '🎬 Prompts', 0x6FB9F0),
+    ('TELEGRAM_TOPIC_PACK', '📦 Pack', 0xFFD67E),
 ]
 
 
