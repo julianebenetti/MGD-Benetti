@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PostZap</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyNUQzNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwZDZlNDkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNSIgZmlsbD0idXJsKCNnKSIvPgogIDxwYXRoIGQ9Ik0zMiAxMWMtMTEuNiAwLTIxIDguNC0yMSAxOC44IDAgNS42IDIuNyAxMC42IDcgMTRMMTYgNTNsOS42LTQuNmMyIC41IDQuMS44IDYuNC44IDExLjYgMCAyMS04LjQgMjEtMTguOFM0My42IDExIDMyIDExeiIgZmlsbD0iI2ZmZiIvPgogIDxwYXRoIGQ9Ik0zNS41IDE3IDIzIDMzLjVoOC4yTDI4LjUgNDUgNDEgMjguNWgtOC4yeiIgZmlsbD0iI0ZGNkEwMCIvPgo8L3N2Zz4K">
 <style>
 :root{--bg:#f4f6f5;--card:#fff;--tx:#1d2420;--mut:#66706b;--bd:#dfe4e1;--pri:#128c5e;--pri2:#0d6e49;--warn:#b26a00;--err:#c0392b;--chip:#e8f3ee}
 @media (prefers-color-scheme:dark){:root{--bg:#121614;--card:#1b211e;--tx:#e6ece9;--mut:#9aa6a0;--bd:#2c3530;--chip:#1f3229}}
@@ -32,13 +33,13 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 </head>
 <body>
 <div id="login" class="card hide">
-  <h2>PostZap</h2>
+  <div style="text-align:center"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyNUQzNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwZDZlNDkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNSIgZmlsbD0idXJsKCNnKSIvPgogIDxwYXRoIGQ9Ik0zMiAxMWMtMTEuNiAwLTIxIDguNC0yMSAxOC44IDAgNS42IDIuNyAxMC42IDcgMTRMMTYgNTNsOS42LTQuNmMyIC41IDQuMS44IDYuNC44IDExLjYgMCAyMS04LjQgMjEtMTguOFM0My42IDExIDMyIDExeiIgZmlsbD0iI2ZmZiIvPgogIDxwYXRoIGQ9Ik0zNS41IDE3IDIzIDMzLjVoOC4yTDI4LjUgNDUgNDEgMjguNWgtOC4yeiIgZmlsbD0iI0ZGNkEwMCIvPgo8L3N2Zz4K" alt="" width="72" height="72"><h2 style="margin:8px 0 16px">PostZap</h2></div>
   <form onsubmit="entrar(event)"><input id="senha" type="password" placeholder="Senha" autofocus><br><br>
   <button class="b p" style="width:100%">Entrar</button><p id="lerr" class="err"></p></form>
 </div>
 
 <div id="app" class="hide">
-<header><h1>📲 PostZap</h1><span id="wa">WhatsApp: …</span></header>
+<header><h1 style="display:flex;align-items:center;gap:8px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyNUQzNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwZDZlNDkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNSIgZmlsbD0idXJsKCNnKSIvPgogIDxwYXRoIGQ9Ik0zMiAxMWMtMTEuNiAwLTIxIDguNC0yMSAxOC44IDAgNS42IDIuNyAxMC42IDcgMTRMMTYgNTNsOS42LTQuNmMyIC41IDQuMS44IDYuNC44IDExLjYgMCAyMS04LjQgMjEtMTguOFM0My42IDExIDMyIDExeiIgZmlsbD0iI2ZmZiIvPgogIDxwYXRoIGQ9Ik0zNS41IDE3IDIzIDMzLjVoOC4yTDI4LjUgNDUgNDEgMjguNWgtOC4yeiIgZmlsbD0iI0ZGNkEwMCIvPgo8L3N2Zz4K" alt="" width="30" height="30">PostZap</h1><span id="wa">WhatsApp: …</span></header>
 <nav>
   <button data-t="produtos" class="on">🛍️ Produtos</button>
   <button data-t="fila">✅ Aprovação</button>
