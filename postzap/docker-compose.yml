@@ -1,0 +1,33 @@
+# Evolution API (WhatsApp) só para o PostZap. Acessível apenas de dentro do VPS (127.0.0.1).
+services:
+  evolution:
+    image: atendai/evolution-api:v2.2.3
+    container_name: postzap-evolution
+    restart: always
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      AUTHENTICATION_API_KEY: ${EVOLUTION_KEY}
+      DATABASE_ENABLED: "true"
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:evolution@postgres:5432/evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      CACHE_REDIS_ENABLED: "false"
+      CACHE_LOCAL_ENABLED: "true"
+      CONFIG_SESSION_PHONE_CLIENT: PostZap
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      DEL_INSTANCE: "false"
+    volumes:
+      - ./evolution-data/instances:/evolution/instances
+    depends_on:
+      - postgres
+  postgres:
+    image: postgres:16-alpine
+    container_name: postzap-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: evolution
+      POSTGRES_DB: evolution
+    volumes:
+      - ./evolution-data/postgres:/var/lib/postgresql/data
