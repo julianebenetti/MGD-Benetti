@@ -55,6 +55,22 @@ marco, e o **levantamento automático a cada 14 dias** (`/estudo` para pedir na 
 Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo, em teste)** · 5 beleza/cabelo ·
 10 Natal · 10 moda · 5 pet (tapete incluído) · 5 oportunidades = 60 ideias por dia (o app da LiA cria 40 por dia).
 
+## Levantamento de 15/11/2026 (Insights do app, Shopee Video, 01/11 a 14/11)
+
+- **Métricas:** 7 vídeos com receita (+75%) · **3 mil visualizações (−94%)** · tempo médio de visualização 45 s
+  (+114%) · 709 cliques (−19%) · **15 pedidos (+7%)** · R$ 574,80 vendidos (−63%) · **comissão R$ 68,30 (+53%)** ·
+  **R$ 4,55 por pedido** (no estudo de 05/11 eram R$ 2,00).
+- **Vendas por dia:** pico em 03/11 (~R$ 125), 09–10/11 (~R$ 75), zero em 07/11 e 12/11, ~R$ 50 em 13–14/11.
+- **O que vendeu:** vestido midi floral (vídeo de 24/08) 6 itens, **R$ 44,40 = 65% da comissão** · Papai Noel 40 cm
+  2 itens, R$ 13,50 · sapatilha croco 1, R$ 7,30 · árvore de Natal MDF 3 itens, só R$ 0,60 · kit 3 luminárias
+  (vídeo de 14/10/2025), lego Minecraft e vestido infantil: R$ 0,40 a R$ 1,70 cada. **Beleza/escova não aparece.**
+- **Público (30 dias):** 79% mulheres · **45+ = 49%**, 35–44 = 24%, 25–34 = 20% · SP 35%, RJ 18%, Salvador 13%,
+  Fortaleza 8%, Brasília 8%.
+- **Leitura:** o alcance ainda não voltou depois das punições (visualizações −94%), mas quem assiste fica mais tempo
+  e a comissão por pedido dobrou. Moda (vestido) virou o principal; Natal vende, mas produto de comissão baixa
+  (árvore MDF, lego, vestido infantil) não paga o vídeo. Vídeos antigos seguem vendendo (vestido de agosto,
+  luminárias de 2025). Público maduro: mulheres 35+.
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar
