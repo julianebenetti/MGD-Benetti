@@ -435,7 +435,8 @@ class Bot:
             if not isinstance(e, PipelineError):
                 rows.append([('🔁 Tentar de novo', f"rt:{msg_id}")])
             markup = keyboard(*rows) if rows else None
-            err_id = self.tg.send_text(ENVIOS, f"⚠️ {html.escape(reason)}", reply_to=msg_id, markup=markup)
+            err_id = self.tg.send_text(PACK if PACK and file_id.startswith("local:") else ENVIOS,   # do pack: avisa no Pack
+                                       f"⚠️ {html.escape(reason)}", reply_to=msg_id, markup=markup)
             self.db.add_failure(msg_id, err_id, file_id, text, link, reason)
             return False
         post_id = self.db.create_post(source_msg_id=msg_id, **result)

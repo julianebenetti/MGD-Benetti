@@ -6,6 +6,7 @@ O produto não é espelhado nem alterado (isso daria "produto irrelevante").
 """
 
 import json
+import os
 import logging
 import random
 import subprocess
@@ -15,6 +16,7 @@ from typing import Dict, List, Tuple
 logger = logging.getLogger(__name__)
 
 MAIN_MIN_SECONDS = 6.0   # a partir disso é "vídeo"; abaixo, "vinheta/complemento"
+FADE_SECONDS = float(os.getenv('PACK_TRANSICAO', '0.5'))   # duração da transição suave entre vídeo e vinheta
 
 
 def probe(path: str) -> Dict:
@@ -63,8 +65,12 @@ def join(main: str, extra: str, before: bool, out: str) -> str:
     vf = (f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,"
           f"setsar=1,fps=30,format=yuv420p")
     af = 'aresample=44100,aformat=channel_layouts=stereo'
+    # transição suave (dissolve) entre as duas partes, sem cortar o produto
+    fade = min(FADE_SECONDS, pa['duration'] / 3, pb['duration'] / 3)
+    offset = max(pa['duration'] - fade, 0.1)
     graph = (f"[0:v]{vf}[v0];[1:v]{vf}[v1];{audio[0]}{af}[a0];{audio[1]}{af}[a1];"
-             f"[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]")
+             f"[v0][v1]xfade=transition=fade:duration={fade:.2f}:offset={offset:.2f}[v];"
+             f"[a0][a1]acrossfade=d={fade:.2f}[a]")
     args += ['-filter_complex', graph, '-map', '[v]', '-map', '[a]', '-c:v', 'libx264', '-preset', 'veryfast',
              '-crf', '20', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out]
     subprocess.run(args, check=True, capture_output=True)
