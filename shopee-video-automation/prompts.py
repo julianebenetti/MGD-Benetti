@@ -59,6 +59,12 @@ REGRAS OBRIGATÓRIAS DO PROMPT
     limpar, monta sem ferramenta), na cena e na narração, sem promessas exageradas.
 11. Simples e direto: poucas cenas, nada contraditório, sem efeitos desnecessários.
 
+PÚBLICO (Insights do Shopee Vídeo, 01–14/11): 79% mulheres; 49% com 45+ anos e 24% com 35–44. Fale com a mulher
+adulta: gancho e benefícios que importam para ela (conforto, caimento que valoriza o corpo real, praticidade na
+rotina, casa arrumada e acolhedora, receber a família, presentear, Natal em casa), tom acolhedor e confiante, sem
+gírias de adolescente nem termos da moda jovem. Pessoas e mãos que aparecem no vídeo: mulheres adultas (35–55 anos),
+reais, bem cuidadas, em casa ou no dia a dia, nunca modelo adolescente.
+
 A NARRAÇÃO VENDE O BENEFÍCIO, NÃO A FICHA TÉCNICA. Antes de escrever, liste em "beneficios" os 2 ou 3 benefícios
 que fazem alguém comprar ESTE produto (o resultado na vida da pessoa), do mais forte para o menos forte. Ex.:
 frigideira antiaderente → cozinhar sem óleo (ou quase), nada gruda, comida mais saudável, lava em segundos;

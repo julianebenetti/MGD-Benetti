@@ -70,11 +70,11 @@ datafeed, ganham a seção **📈 Vendendo agora** (`/sugestoes agora`, `IDEIAS_
 lembram de olhar o ranking **Em destaque** dos vídeos do produto antes de gravar.
 
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
-**A lista do dia** (06/11): 🔥 **15 mais buscados** · 🏠 **10 casa e decoração** (nicho novo, em teste) ·
-💇 **5 beleza/cabelo** · 🎄 **10 Natal** (de 15/10 a 24/12; fora disso as vagas vão para casa) · 👗 **10 moda** ·
+**A lista do dia** (06/11): 🔥 **10 mais buscados** · 🏠 **10 casa e decoração** (nicho novo, em teste) ·
+💇 **5 beleza/cabelo** · 🎄 **10 Natal** (de 15/10 a 24/12; fora disso as vagas vão para casa) · 👗 **15 moda** ·
 🐾 **5 pet** (tapete higiênico incluído) · 🌱 **5 oportunidades** (teste) · 🪑 **5 móveis** e 🔌 **5 eletrodomésticos**
-(teste, desde 11/11) = 70. Nota ≥ 4,7, 100+ vendas, com comissão
-(sem piso, vídeo orgânico), por comissão × vendas com preferência para **comissão extra da loja** quando a API
+(teste, desde 11/11) = 70. Nota ≥ 4,7, 100+ vendas, comissão mínima de
+R$ 3 por venda (`IDEIAS_COMISSAO_MIN`; desde 15/11), por comissão × vendas com preferência para **comissão extra da loja** quando a API
 informa; nada de remédio/antipulgas no pet. `IDEIAS_BUSCADOS`, `IDEIAS_CASA`, `IDEIAS_MOVEIS`, `IDEIAS_ELETRO`, `IDEIAS_BELEZA`, `IDEIAS_NATAL`,
 `IDEIAS_MODA`, `IDEIAS_PET`, `IDEIAS_TAPETE` (0: dentro de pet) e `IDEIAS_OPORTUNIDADES` mudam as quantidades.
 Pedir na hora: **`/sugestoes`** (tudo) ou só uma parte: `/sugestoes alta|casa|moveis|eletro|beleza|natal|moda|pet|tapete|oportunidades`

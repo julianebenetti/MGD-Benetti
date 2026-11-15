@@ -55,7 +55,7 @@ marco, e o **levantamento automático a cada 14 dias** (`/estudo` para pedir na 
 Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo, em teste)** · 5 beleza/cabelo ·
 10 Natal · 10 moda · 5 pet (tapete incluído) · 5 oportunidades = 60 ideias por dia (o app da LiA cria 40 por dia).
 
-## Levantamento de 15/11/2026 (Insights do app, Shopee Video, 01/11 a 14/11)
+## Levantamento de 15/11/2026 (Insights do app, conta pedrita.bambam.store, Shopee Video, 01/11 a 14/11)
 
 - **Métricas:** 7 vídeos com receita (+75%) · **3 mil visualizações (−94%)** · tempo médio de visualização 45 s
   (+114%) · 709 cliques (−19%) · **15 pedidos (+7%)** · R$ 574,80 vendidos (−63%) · **comissão R$ 68,30 (+53%)** ·
@@ -70,6 +70,16 @@ Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo,
   e a comissão por pedido dobrou. Moda (vestido) virou o principal; Natal vende, mas produto de comissão baixa
   (árvore MDF, lego, vestido infantil) não paga o vídeo. Vídeos antigos seguem vendendo (vestido de agosto,
   luminárias de 2025). Público maduro: mulheres 35+.
+
+## Decisões de 15/11/2026
+
+1. **Comissão mínima de R$ 3 por venda** nas ideias (antes: sem piso).
+2. **Lista do dia:** 10 mais buscados · 10 casa · 5 beleza · 10 Natal · **15 moda** · 5 pet · 5 oportunidades ·
+   5 móveis · 5 eletrodomésticos (+ 📈 em alta pelo datafeed). Lotes da LiA: moda + beleza · casa + mais buscados ·
+   Natal + pet + oportunidades · móveis + eletro + em alta.
+3. **Narrações e cenas para o público real:** mulheres 35+ (conforto, caimento, praticidade, casa, família, Natal),
+   pessoas adultas no vídeo.
+4. Fixar e fazer versões do **vestido midi floral** (65% da comissão); conferir se a cor do vídeo está no anúncio.
 
 ## Próximos levantamentos
 

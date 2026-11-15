@@ -162,6 +162,9 @@ def upcoming(today: date) -> List[Tuple[date, str, List[str]]]:
 # produto, sabe quanto ele vendeu nos últimos dias. Dica da comunidade (12/11): escolher pelo que vende NO MÊS;
 # 1.000+/mês é o ideal, 500+ vale para produto novo; produto parado (abaixo de DEAD_MONTHLY) sai da lista.
 TREND = None
+# Comissão mínima por venda nas ideias do Shopee Vídeo (levantamento de 15/11: árvore MDF, lego e vestido infantil
+# venderam e pagaram R$ 0,20 a R$ 0,50 cada; o mesmo vídeo num produto de R$ 5+ rende 10 vezes mais)
+IDEAS_MIN_COMMISSION = float(os.getenv('IDEIAS_COMISSAO_MIN', '3'))
 RISING_COUNT = int(os.getenv('IDEIAS_VENDENDO_AGORA', '5'))
 
 
@@ -271,7 +274,7 @@ def collect(client, today: date, skip: Callable[[Dict], bool]) -> Tuple[List[Dic
 
 # 🔥 Buscas em alta (orgânico: sem piso de R$ por venda)
 TRENDING_URL = os.getenv('BUSCAS_ALTA_URL', 'http://localhost:3000/garimpo_buscas_alta')
-TRENDING_MAX = int(os.getenv('IDEIAS_BUSCADOS', '15'))
+TRENDING_MAX = int(os.getenv('IDEIAS_BUSCADOS', '10'))
 TRENDING_MIN_SALES = 100
 # venda proibida (o termo "Pod Recarregável" apareceu em 26/10)
 FORBIDDEN = re.compile(r'\bpods?\b|vape|vaper|cigarr?o eletr|e-?cig|narguil|ess[eê]ncia (de |para )?narg|'
@@ -391,7 +394,7 @@ def trending(client, terms: List[Dict], skip: Callable[[Dict], bool]) -> Tuple[L
         ok = [p for k, p in found.items()
               if name_has_term(p.get('productName', ''), term)
               and float(p.get('ratingStar') or 0) >= MIN_RATING and int(p.get('sales') or 0) >= TRENDING_MIN_SALES
-              and commission_value(p) > 0 and not BLOCKED.search(p.get('productName', ''))
+              and commission_value(p) >= IDEAS_MIN_COMMISSION and not BLOCKED.search(p.get('productName', ''))
               and not FORBIDDEN.search(p.get('productName', '')) and k not in keys
               and similar_key(p.get('productName', '')) not in kinds and not skip(p) and not dead(p)]
         if not ok:
@@ -434,7 +437,7 @@ FOCUS = [
      ['papai noel decorativo', 'enfeite de natal', 'árvore de natal', 'guirlanda de natal', 'pisca pisca',
       'presépio', 'naninha natal', 'toalha de mesa natal', 'bola de natal', 'decoração natalina',
       'almofada natal', 'luzes de natal', 'boneco de neve decorativo', 'mesa posta natal'], '', True),
-    ('moda', '👗 Moda feminina', int(os.getenv('IDEIAS_MODA', '10')),
+    ('moda', '👗 Moda feminina', int(os.getenv('IDEIAS_MODA', '15')),
      ['vestido feminino', 'conjunto feminino', 'blusa feminina', 'calça feminina', 'saia feminina',
       'macaquinho feminino', 'cropped feminino', 'body feminino', 'short feminino', 'pijama feminino',
       'jaqueta feminina', 'legging feminina', 'camisa feminina', 'macacão feminino', 'moda praia feminina',
@@ -512,7 +515,7 @@ def focus(client, today: date, skip: Callable[[Dict], bool], skip_type: Callable
             for k, p in found.items():
                 name = ' '.join(_plain(p.get('productName', '')))
                 if (float(p.get('ratingStar') or 0) >= MIN_RATING and int(p.get('sales') or 0) >= MIN_SALES
-                        and commission_value(p) > 0 and not BLOCKED.search(p.get('productName', ''))
+                        and commission_value(p) >= IDEAS_MIN_COMMISSION and not BLOCKED.search(p.get('productName', ''))
                         and not FORBIDDEN.search(p.get('productName', ''))
                         and not PET_BLOCKED.search(p.get('productName', ''))
                         and all(w in name for w in words) and k not in seen and not skip(p) and not dead(p)
@@ -587,7 +590,7 @@ def opportunities(client, today: date, skip: Callable[[Dict], bool], skip_type: 
         name = p.get('productName', '')
         sales = int(p.get('sales') or 0)
         if (float(p.get('ratingStar') or 0) >= MIN_RATING and OPP_MIN_SALES <= sales <= OPP_MAX_SALES
-                and commission_value(p) > 0 and not BLOCKED.search(name) and not FORBIDDEN.search(name)
+                and commission_value(p) >= IDEAS_MIN_COMMISSION and not BLOCKED.search(name) and not FORBIDDEN.search(name)
                 and not PET_BLOCKED.search(name) and not skip(p) and not skip_type(p) and not dead(p)):
             if _seller_field and 'sellerCommissionRate' in p and _seller_rate(p) <= 0:
                 continue   # a API informa e a loja não paga extra: fica de fora
@@ -625,7 +628,7 @@ def rising_now(client, skip: Callable[[Dict], bool], skip_type: Callable[[Dict],
         except Exception as e:
             logger.warning(f"Vendendo agora: produto {r['shopId']}:{r['itemId']} falhou ({e})")
             continue
-        if not p or float(p.get('ratingStar') or 0) < MIN_RATING or commission_value(p) <= 0:
+        if not p or float(p.get('ratingStar') or 0) < MIN_RATING or commission_value(p) < IDEAS_MIN_COMMISSION:
             continue
         pname = p.get('productName', '')
         kind = similar_key(pname)
@@ -655,7 +658,7 @@ def render_sections(sections: List[Tuple[str, str, List[Dict]]], today: date, ho
 
     total = sum(len(items) for _, _, items in sections)
     blocks = [f"💡 <b>{total} ideias para gravar</b> · {today:%d/%m}\n"
-              f"Nota ≥ {MIN_RATING}, {MIN_SALES}+ vendas, nunca suplementos. Grave (ou crie no app da LiA) e mande em "
+              f"Nota ≥ {MIN_RATING}, {MIN_SALES}+ vendas, comissão ≥ {_brl(IDEAS_MIN_COMMISSION)}, nunca suplementos. Grave (ou crie no app da LiA) e mande em "
               f"📥 Envios com o link.\n"
               f"📈 <b>≈ X/mês</b> = vendas dos últimos dias (ideal 1.000+/mês; produto novo, 500+).\n"
               f"🏆 Antes de gravar, abra o produto → vídeos → <b>Em destaque</b>: se os 6 primeiros têm menos "
@@ -796,7 +799,7 @@ def export_csv(rows: List[Dict]) -> bytes:
 # Lotes da LiA (até 20 cada) juntando seções inteiras: 10 casa + 10 moda · 15 mais buscados + 5 beleza · o restante
 # (Natal + pet + oportunidades) · móveis + eletrodomésticos. Seções que não estão aqui vão para lotes no fim. LIA_LOTES no .env muda isso.
 LIA_GROUPS = [g.split('+') for g in
-              (os.getenv('LIA_LOTES') or 'casa+moda,alta+beleza,natal+pet+tapete+oportunidades,moveis+eletro').split(',') if g]
+              (os.getenv('LIA_LOTES') or 'moda+beleza,casa+alta,natal+pet+tapete+oportunidades,moveis+eletro+agora').split(',') if g]
 
 
 def batches(rows: List[Dict]) -> List[List[Dict]]:
