@@ -66,9 +66,45 @@ $SUDO systemctl restart $SERVICE
 sleep 2
 $SUDO systemctl is-active --quiet $SERVICE && echo "✅ PostZap rodando em 127.0.0.1:$(grep -oP '^POSTZAP_PORTA=\K[0-9]+' .env || echo 8790)"
 
+# ---- Endereço público (Nginx + HTTPS), só se o domínio já aponta para este VPS e ninguém mais usa a porta 80
+DOMINIO=$(grep -oP '^URL_PUBLICA=https?://\K[^/]+' .env || echo posts.descontoirresistivel.com.br)
+PORTA=$(grep -oP '^POSTZAP_PORTA=\K[0-9]+' .env || echo 8790)
+IP_VPS=$(curl -fsS4 https://api.ipify.org || true)
+IP_DNS=$(getent ahostsv4 "$DOMINIO" | awk 'NR==1{print $1}' || true)
+SITE=/etc/nginx/sites-available/postzap
+if [ -n "$IP_VPS" ] && [ "$IP_VPS" = "$IP_DNS" ]; then
+  OCUPA80=$($SUDO ss -ltnpH 'sport = :80' | grep -v nginx || true)
+  if [ -n "$OCUPA80" ]; then
+    echo "⚠️  A porta 80 já é usada por outro programa (não Nginx). Não mexi em nada:"; echo "$OCUPA80"
+  elif ! [ -f "$SITE" ] && grep -rqs "server_name[^;]*$DOMINIO" /etc/nginx/ 2>/dev/null; then
+    echo "⚠️  O Nginx já tem um site para $DOMINIO. Coloque dentro dele:"
+    echo "    location /zap/ { proxy_pass http://127.0.0.1:$PORTA; proxy_set_header Host \$host; }"
+  else
+    echo "▶ Publicando em https://$DOMINIO/zap/"
+    command -v nginx >/dev/null || $SUDO apt-get install -y -qq nginx
+    command -v certbot >/dev/null || $SUDO apt-get install -y -qq certbot python3-certbot-nginx
+    if ! [ -f "$SITE" ]; then
+      $SUDO tee "$SITE" >/dev/null <<NGX
+server {
+    listen 80;
+    server_name $DOMINIO;
+    location = /zap { return 301 /zap/; }
+    location /zap/ { proxy_pass http://127.0.0.1:$PORTA; proxy_set_header Host \$host; proxy_read_timeout 120s; }
+}
+NGX
+      $SUDO ln -sf "$SITE" /etc/nginx/sites-enabled/postzap
+    fi
+    $SUDO nginx -t && $SUDO systemctl reload nginx
+    $SUDO certbot --nginx -n --agree-tos --register-unsafely-without-email --redirect -d "$DOMINIO" \
+      || echo "⚠️  O HTTPS falhou (veja a mensagem acima); o endereço funciona com http:// por enquanto"
+    echo "✅ Abra: https://$DOMINIO/zap/"
+  fi
+else
+  echo "⚠️  $DOMINIO ainda não aponta para este VPS (DNS: ${IP_DNS:-nenhum} · VPS: ${IP_VPS:-?})."
+  echo "    Crie no DNS do domínio um registro A:  posts  →  $IP_VPS   e rode este comando de novo depois."
+fi
+
 cat <<TXT
 
-Falta publicar no endereço (só na primeira vez) — veja o README:
-  posts.descontoirresistivel.com.br/zap  →  127.0.0.1:8790
 Ver o que está acontecendo:  journalctl -u $SERVICE -f
 TXT
