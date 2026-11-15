@@ -42,7 +42,16 @@ grep -q '^POSTZAP_SENHA=.' .env || { echo "⚠️  Falta POSTZAP_SENHA no $DIR/.
 
 echo "▶ Docker (WhatsApp / Evolution API)"
 if ! command -v docker >/dev/null; then curl -fsSL https://get.docker.com | $SUDO sh; fi
-$SUDO docker compose --env-file .env up -d
+if ! $SUDO docker compose version >/dev/null 2>&1; then
+  echo "▶ Instalando o Docker Compose"
+  $SUDO apt-get install -y -qq docker-compose-plugin >/dev/null 2>&1 \
+    || $SUDO apt-get install -y -qq docker-compose-v2 >/dev/null 2>&1 \
+    || { $SUDO mkdir -p /usr/local/lib/docker/cli-plugins
+         $SUDO curl -fsSL "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-$(uname -m)" \
+           -o /usr/local/lib/docker/cli-plugins/docker-compose
+         $SUDO chmod +x /usr/local/lib/docker/cli-plugins/docker-compose; }
+fi
+$SUDO docker compose up -d   # lê EVOLUTION_KEY do .env desta pasta
 
 echo "▶ Serviço do PostZap"
 $SUDO tee /etc/systemd/system/$SERVICE.service >/dev/null <<UNIT
