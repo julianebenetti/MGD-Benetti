@@ -69,7 +69,9 @@ RELATORIO = topic('TELEGRAM_TOPIC_RELATORIO')
 IDEIAS = topic('TELEGRAM_TOPIC_IDEIAS')
 PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 PACK = topic('TELEGRAM_TOPIC_PACK')   # 📦 vídeos do pack: o robô junta vídeo + vinheta e manda para Editados
-PACK_WAIT_SECONDS = int(os.getenv('PACK_ESPERA', '90'))   # sem nada novo por tanto tempo: o pack está completo
+PACK_WAIT_SECONDS = int(os.getenv('PACK_ESPERA', '90'))
+# vídeos do pack: por escolha da Juliane (15/11), seguem mesmo se a IA achar diferença com o anúncio (só avisa)
+PACK_CHECK = os.getenv('PACK_CONFERIR', 'nao').strip().lower() in ('sim', '1', 'true')   # sem nada novo por tanto tempo: o pack está completo
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
 WINNERS_TIME = os.getenv('VENCEDORES_HORA', '07:45')   # 🏆 vencedores do dia em 📊 Relatório
 STUDY_DAYS = int(os.getenv('ESTUDO_DIAS', '3'))         # 📈 levantamento do Shopee Vídeo: a cada 3 dias, vs. 3 antes
@@ -384,8 +386,8 @@ class Bot:
             what = (f"vídeo {item['main']} + vinheta {item['extra']} ({'antes' if item['before'] else 'depois'})"
                     if item['extra'] else f"vídeo {item['main']} (sem vinheta)")
             lines.append(f"• {what}")
-            self.db.add_video_job(msg_id, 'local:' + item['path'], state['link'], 'pack', False)
-            self.submit(('video', msg_id, 'local:' + item['path'], state['link'], 'pack', False))
+            self.db.add_video_job(msg_id, 'local:' + item['path'], state['link'], 'pack', not PACK_CHECK)
+            self.submit(('video', msg_id, 'local:' + item['path'], state['link'], 'pack', not PACK_CHECK))
         self.tg.send_text(PACK, f"✅ Montei {len(built)} vídeo(s), cada um diferente:\n" + '\n'.join(lines)
                           + "\n\nEles seguem o caminho normal: conferência com o anúncio e capa, e chegam em "
                             "✅ Editados.")
@@ -429,7 +431,9 @@ class Bot:
                 f"Falha de conexão / Shopee fora do ar (tentei {attempt + 1} vezes em ~1 h): {e}" if network else \
                 f"Erro inesperado: {e}"
             self.tg.react(msg_id, '🤔')
-            rows = [[('✅ Pode seguir', f"vk:{msg_id}")]] if isinstance(e, VariationMismatch) else []
+            rows = [[('✅ Pode seguir', f"vk:{msg_id}")]] if isinstance(e, VariationMismatch) else \
+                [[('✅ Gerar mesmo assim', f"vk:{msg_id}")]] if file_id.startswith('local:') and link \
+                and isinstance(e, PipelineError) else []
             if PROMPTS and isinstance(e, (VariationMismatch, DetailMismatch)):
                 rows.append([('🎬 Prompt corrigido', f"pc:{msg_id}")])
             if not isinstance(e, PipelineError):
@@ -439,6 +443,8 @@ class Bot:
                                        f"⚠️ {html.escape(reason)}", reply_to=msg_id, markup=markup)
             self.db.add_failure(msg_id, err_id, file_id, text, link, reason)
             return False
+        if file_id.startswith('local:'):   # veio do 📦 Pack: a validação antes da Agenda só avisa
+            result['metadata'] = {**result.get('metadata', {}), 'origem': 'pack'}
         post_id = self.db.create_post(source_msg_id=msg_id, **result)
         self.db.add_headline(result['product_key'], result['metadata']['cover_title'])
         self.deliver_to_editados(post_id)
@@ -629,7 +635,8 @@ class Bot:
         result, reason = v['main']
         # A Shopee pune o DIVULGADO como "irrelevante" quando o vídeo não mostra exatamente o item da foto do
         # anúncio (inclusive outra cor/estampa/modelo). Só passa idêntico; o resto só com "Agendar mesmo assim".
-        confirmed = post['metadata'].get('validacao_forcada')
+        confirmed = post['metadata'].get('validacao_forcada') or \
+            (post['metadata'].get('origem') == 'pack' and not PACK_CHECK)
         if result != 'sim' and not confirmed:
             self.db.update_post(post['id'], status='editado')
             post = self.db.get_post(post['id'])
@@ -1731,16 +1738,22 @@ class Bot:
             out[d] = out.get(d, 0) + int(n)
         return out
 
-    def on_redo_command(self, thread: Optional[int]):
-        """/refazer: põe de novo na fila os vídeos das últimas 48 h que falharam por erro inesperado ou conexão."""
+    def on_redo_command(self, thread: Optional[int], command: str = ''):
+        """
+        /refazer: põe de novo na fila os vídeos das últimas 48 h que falharam por erro inesperado ou conexão.
+        /refazer pack: os vídeos do 📦 Pack recusados na conferência com o anúncio, agora sem conferir.
+        """
+        pack = 'pack' in command.lower()
         redo = [f for f in self.db.recent_failures(48 * 3600) if f.get('link') and f.get('file_id')
-                and re.match(r'(Erro inesperado|Falha de conexão)', f.get('reason') or '')]
+                and ((pack and str(f['file_id']).startswith('local:'))
+                     or (not pack and re.match(r'(Erro inesperado|Falha de conexão)', f.get('reason') or '')))]
         for f in redo:
             self.db.remove_failure(f['msg_id'])
             self.tg.edit_markup(f['err_msg_id'], keyboard())
-            self.enqueue_video(f['msg_id'], f['file_id'], f['link'], f['text'])
+            self.enqueue_video(f['msg_id'], f['file_id'], f['link'], f['text'], trust_link=pack)
         self.tg.send_text(thread or ENVIOS, f"🔁 {len(redo)} vídeo(s) que deram erro voltaram para a fila." if redo
-                          else "Nenhum vídeo com erro de conexão/inesperado nas últimas 48 h.")
+                          else ("Nenhum vídeo do pack recusado nas últimas 48 h." if pack else
+                                "Nenhum vídeo com erro de conexão/inesperado nas últimas 48 h."))
 
     # ---------- Contas do Shopee Vídeo (só no robô, no VPS: nunca no repositório, que é público) ----------
 
@@ -2733,7 +2746,7 @@ class Bot:
             self.on_accounts_command(thread, command)
             return
         if command.lower().startswith('/refazer'):
-            self.on_redo_command(thread)
+            self.on_redo_command(thread, command)
             return
         if command.lower().startswith('/postei'):
             self.on_posted_command(thread, command)
