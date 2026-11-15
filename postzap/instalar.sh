@@ -30,7 +30,7 @@ if [ ! -f .env ]; then
   cp .env.example .env
   sed -i "s/^EVOLUTION_KEY=.*/EVOLUTION_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(20))')/" .env
   echo "⚠️  Criei $DIR/.env — abra com:  nano $DIR/.env"
-  echo "    Preencha POSTZAP_SENHA, SUPABASE_KEY e NUMEROS_AUTORIZADOS, salve (Ctrl+O, Enter, Ctrl+X) e rode o comando de novo."
+  echo "    Preencha POSTZAP_SENHA e NUMEROS_AUTORIZADOS, salve (Ctrl+O, Enter, Ctrl+X) e rode o comando de novo."
   exit 1
 fi
 if ! grep -q '^WEBHOOK_SEGREDO=.' .env; then

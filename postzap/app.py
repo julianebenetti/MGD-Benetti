@@ -49,7 +49,8 @@ CFG = {
     'senha': os.getenv('POSTZAP_SENHA', ''),
     'segredo': os.getenv('POSTZAP_SEGREDO', '') or hashlib.sha256(os.getenv('POSTZAP_SENHA', 'x').encode()).hexdigest(),
     'supabase_url': os.getenv('SUPABASE_URL', 'https://tkxkrbdvcctoajuigvvv.supabase.co').rstrip('/'),
-    'supabase_key': os.getenv('SUPABASE_KEY', ''),
+    # chave pública (anon), a mesma do garimpo-shopee.html: só lê o que a página do Garimpo já lê
+    'supabase_key': os.getenv('SUPABASE_KEY', '') or 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRreGtyYmR2Y2N0b2FqdWlndnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4NzY2NzUsImV4cCI6MjA5OTQ1MjY3NX0.-szTE2wYYr9DNTLiff6zmLpbP6UOL1l9SFpvc-29Njs',
     'central_db': os.getenv('CENTRAL_DB', '/opt/shopee-video/shopee-video-automation/estado.db'),
     'evo_url': os.getenv('EVOLUTION_URL', 'http://127.0.0.1:8080').rstrip('/'),
     'evo_key': os.getenv('EVOLUTION_KEY', ''),
