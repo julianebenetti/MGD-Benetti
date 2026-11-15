@@ -1,7 +1,7 @@
 # Evolution API (WhatsApp) só para o PostZap. Acessível apenas de dentro do VPS (127.0.0.1).
 services:
   evolution:
-    image: atendai/evolution-api:v2.2.3
+    image: evoapicloud/evolution-api:v2.3.7
     container_name: postzap-evolution
     restart: always
     ports:
