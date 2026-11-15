@@ -9,6 +9,10 @@ App **separado** da AfiliDash e do robô do Shopee Vídeo para postar links da S
   - ⛏️ **Garimpo** — tabela `garimpo_produtos` do Supabase.
   - Suplementos/vitaminas/colágeno/whey são bloqueados; comissão mínima R$ 9.
 - **Preparar postagem** → mensagem pronta pelo modelo (editável) → escolhe grupos e horário → **✅ Aprovar**.
+- **Mensagem no formato dos grupos de ofertas**: chamada em maiúsculas, 🛍️ nome, ~De~ / *Por* ✅, 🔗 Compre aqui, ⚠️ aviso.
+- **Prévia do link** (miniatura + título `@descontoirresistivel`): o link vira `posts.descontoirresistivel.com.br/zap/l/xxxx`,
+  que mostra a foto do produto no WhatsApp e leva para o link de afiliado da Shopee (com Sub ID `postzap`, para ver no
+  relatório as vendas do WhatsApp). Conta os cliques. É só texto: não pesa no celular de quem recebe.
 - **Envio** pelo WhatsApp do chip separado (Evolution API), com 90–240 s entre grupos e limite de 8 posts/dia por grupo.
 - Avisa quando o produto já foi postado; histórico de tudo que saiu; botão ⏸️ para pausar todos os envios.
 - Dados próprios em `postzap.db` (grupos, fila, histórico). Não usa nenhuma tabela da AfiliDash.

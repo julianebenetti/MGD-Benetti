@@ -59,17 +59,23 @@ CFG = {
     'limite_dia': int(os.getenv('LIMITE_POSTS_DIA_POR_GRUPO', '8')),
     'repetir_dias': int(os.getenv('NAO_REPETIR_DIAS', '7')),
     'comissao_min': float(os.getenv('COMISSAO_MIN', '9')),
+    'url_publica': os.getenv('URL_PUBLICA', 'https://posts.descontoirresistivel.com.br/zap').rstrip('/'),
+    'titulo_previa': os.getenv('TITULO_PREVIA', '@descontoirresistivel'),
+    'sub_id': os.getenv('SUB_ID', 'postzap'),
+    'central_env': os.getenv('CENTRAL_ENV', '/opt/shopee-video/shopee-video-automation/.env'),
 }
 BLOQUEADOS = ('suplement', 'vitamin', 'colágeno', 'colageno', 'whey', 'creatina', 'termogênic', 'termogenic')
 
-MODELO_PADRAO = """🔥 *{produto}*
+MODELO_PADRAO = """*{chamada}*
 
-💰 Por apenas *R$ {preco}*
-⭐ Nota {nota} · {vendas} vendidos
+🛍️ {produto}
 
-👉 {link}
+~De: {preco_de}~
+*Por: {preco}* ✅
 
-_Promoção por tempo limitado — o preço pode mudar a qualquer momento._"""
+🔗 *Compre aqui:* {link}
+
+⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento."""
 
 # ---------------------------------------------------------------- banco próprio
 
@@ -88,6 +94,9 @@ CREATE TABLE IF NOT EXISTS envios (
     id INTEGER PRIMARY KEY AUTOINCREMENT, fila_id INTEGER, jid TEXT, chave TEXT, quando TEXT, ok INTEGER, erro TEXT
 );
 CREATE TABLE IF NOT EXISTS config (k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
+    codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
+);
 """
 _lock = threading.Lock()
 
@@ -179,7 +188,7 @@ def produtos_central():
         conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=5)
         conn.row_factory = sqlite3.Row
         meta = conn.execute("SELECT value FROM meta WHERE key='ideias_links'").fetchone()
-        posts = conn.execute("SELECT product_key, product_name, products, links, posted_at FROM posts "
+        posts = conn.execute("SELECT product_key, product_name, products, links, posted_at, metadata FROM posts "
                              "WHERE status='postado' ORDER BY posted_at DESC LIMIT 80").fetchall()
         conn.close()
     except Exception as e:
@@ -208,6 +217,8 @@ def produtos_central():
                     'loja': info.get('shopName', ''), 'preco': br(info.get('priceMin') or info.get('price') or 0),
                     'comissao': br(info.get('commission') or 0), 'vendas': info.get('sales') or 0,
                     'nota': info.get('ratingStar') or '', 'link': links[0],
+                    'imagem': info.get('imageUrl', ''),
+                    'chamada': (json.loads(p['metadata'] or '{}') or {}).get('headline', ''),
                     'detalhe': f"Já postado em vídeo · {(p['posted_at'] or '')[:10]}"})
     return out, ''
 
@@ -217,6 +228,106 @@ def ultimos_envios():
     with db() as c:
         rows = c.execute('SELECT chave, MAX(quando) q FROM envios WHERE ok=1 GROUP BY chave').fetchall()
     return {r['chave']: r['q'] for r in rows}
+
+
+# ---------------------------------------------------------------- Shopee (foto, preço atual e link de afiliado)
+
+def credenciais_shopee():
+    """Usa as chaves do .env do PostZap ou, se vazias, lê (só leitura) as do robô do Shopee Vídeo."""
+    app_id, secret = os.getenv('SHOPEE_AFFILIATE_APP_ID', ''), os.getenv('SHOPEE_AFFILIATE_SECRET', '')
+    if not (app_id and secret) and Path(CFG['central_env']).exists():
+        for line in Path(CFG['central_env']).read_text(encoding='utf-8').splitlines():
+            k, _, v = line.partition('=')
+            if k.strip() == 'SHOPEE_AFFILIATE_APP_ID' and not app_id:
+                app_id = v.strip().strip('"\'')
+            if k.strip() == 'SHOPEE_AFFILIATE_SECRET' and not secret:
+                secret = v.strip().strip('"\'')
+    return app_id, secret
+
+
+def shopee_gql(query):
+    app_id, secret = credenciais_shopee()
+    if not (app_id and secret):
+        raise RuntimeError('chaves da Shopee Affiliate não encontradas')
+    payload = json.dumps({'query': query}, separators=(',', ':'), ensure_ascii=False)
+    ts = str(int(time.time()))
+    sig = hashlib.sha256(f'{app_id}{ts}{payload}{secret}'.encode()).hexdigest()
+    req = urllib.request.Request('https://open-api.affiliate.shopee.com.br/graphql', data=payload.encode(), headers={
+        'Content-Type': 'application/json',
+        'Authorization': f'SHA256 Credential={app_id}, Timestamp={ts}, Signature={sig}'})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        data = json.load(r)
+    if data.get('errors'):
+        raise RuntimeError(f"Shopee: {data['errors'][0].get('message')}")
+    return data['data']
+
+
+def ids_da_chave(chave):
+    m = re.fullmatch(r'(\d+):(\d+)', chave or '')
+    return (int(m.group(1)), int(m.group(2))) if m else None
+
+
+def preparar(p):
+    """Completa o produto antes de postar: foto, preço atual, link de afiliado (sub_id) e link curto com prévia."""
+    avisos = []
+    ids = ids_da_chave(p.get('chave'))
+    link = p.get('link') or ''
+    if ids:
+        try:
+            nodes = shopee_gql(f'{{productOfferV2(shopId:{ids[0]},itemId:{ids[1]},limit:1)'
+                               '{nodes{productName priceMin priceMax imageUrl sales ratingStar}}}')['productOfferV2']['nodes']
+            if nodes:
+                n = nodes[0]
+                p['imagem'] = n.get('imageUrl') or p.get('imagem', '')
+                if n.get('priceMin'):
+                    p['preco'] = br(n['priceMin'])
+            else:
+                avisos.append('Produto não encontrado na Shopee agora (pode ter saído do ar).')
+        except Exception as e:
+            avisos.append(f'Não consegui atualizar foto/preço: {e}')
+        if 's.shopee.com.br' not in link:
+            try:
+                origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
+                link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
+                                  f'subIds:[{json.dumps(CFG["sub_id"])}]}}){{shortLink}}}}')['generateShortLink']['shortLink']
+            except Exception as e:
+                avisos.append(f'Não consegui gerar o link de afiliado: {e}')
+    p['link_afiliado'] = link
+    p['link'] = criar_link_curto(link, p.get('produto', ''), p.get('imagem', '')) if link else ''
+    p['avisos'] = avisos
+    return p
+
+
+def criar_link_curto(destino, titulo, imagem):
+    import secrets
+    with _lock, db() as c:
+        r = c.execute('SELECT codigo FROM links WHERE destino=? AND imagem=?', (destino, imagem or '')).fetchone()
+        if r:
+            return f"{CFG['url_publica']}/l/{r[0]}"
+        codigo = secrets.token_urlsafe(5).replace('-', 'x').replace('_', 'y')
+        c.execute('INSERT INTO links VALUES (?,?,?,?,?,0)', (codigo, destino, titulo, imagem or '', agora().isoformat()))
+    return f"{CFG['url_publica']}/l/{codigo}"
+
+
+def pagina_link(codigo):
+    """Página do link curto: o WhatsApp lê og:title/og:image (a miniatura), a pessoa é levada à Shopee."""
+    import html as h
+    with _lock, db() as c:
+        r = c.execute('SELECT * FROM links WHERE codigo=?', (codigo,)).fetchone()
+        if r:
+            c.execute('UPDATE links SET cliques=cliques+1 WHERE codigo=?', (codigo,))
+    if not r:
+        return None
+    d, t, img = h.escape(r['destino']), h.escape(CFG['titulo_previa']), h.escape(r['imagem'] or '')
+    desc = h.escape(r['titulo'] or '')
+    return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>{t}</title>
+<meta property="og:title" content="{t}"><meta property="og:description" content="{desc}">
+<meta property="og:type" content="website">{f'<meta property="og:image" content="{img}">' if img else ''}
+<meta http-equiv="refresh" content="0;url={d}"></head>
+<body style="font-family:sans-serif;text-align:center;padding:40px">
+<p>Abrindo a oferta…</p><p><a href="{d}">Toque aqui se não abrir</a></p>
+<script>location.replace({json.dumps(r['destino'])})</script></body></html>""".encode()
 
 
 # ---------------------------------------------------------------- Evolution API (WhatsApp)
@@ -375,6 +486,13 @@ class H(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(html)
             return
+        if p.startswith('/l/'):
+            pg = pagina_link(p[3:])
+            self.send_response(200 if pg else 404)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.end_headers()
+            self.wfile.write(pg or b'Link nao encontrado')
+            return
         if not self.logado():
             return self.send_json({'erro': 'login'}, 401)
         try:
@@ -425,6 +543,10 @@ class H(BaseHTTPRequestHandler):
             return self.send_json({'erro': str(e)}, 500)
 
     def post(self, p, b):
+        if p == '/api/preparar':
+            if bloqueado(b.get('produto')):
+                return self.send_json({'erro': 'Produto de suplementação não pode ser postado.'}, 400)
+            return self.send_json(preparar(b))
         if p == '/api/grupos/atualizar':
             return self.send_json({'total': atualizar_grupos()})
         if p == '/api/grupos/ativo':

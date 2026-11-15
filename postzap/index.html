@@ -78,7 +78,9 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 
   <section id="t-modelo" class="hide">
     <div class="card"><b>Modelo da mensagem</b>
-      <p class="muted">Campos: {produto} {preco} {comissao} {vendas} {nota} {loja} {link}. Use *negrito* e _itálico_ do WhatsApp.</p>
+      <p class="muted">Campos: {chamada} {produto} {preco_de} {preco} {comissao} {vendas} {nota} {loja} {link}.
+      A linha com {preco_de} some quando não há preço antigo. WhatsApp: *negrito*, _itálico_, ~riscado~.
+      O {link} é o seu link curto com prévia (foto do produto + título), igual ao dos grupos de ofertas.</p>
       <textarea id="modelo"></textarea><br><br><button class="b p" onclick="salvarModelo()">Salvar modelo</button> <span id="mok" class="muted"></span>
     </div>
   </section>
@@ -87,7 +89,18 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 
 <dialog id="dlg"><div class="in">
   <h3 id="dtit" style="margin-top:0"></h3>
-  <textarea id="dtexto"></textarea>
+  <div id="dcampos">
+    <div class="row" style="align-items:flex-start">
+      <img id="dimg" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:8px;background:var(--bg)">
+      <div style="flex:1;min-width:200px">
+        <input id="dchamada" placeholder="Chamada em maiúsculas (ex.: TREINE CONFORTÁVEL E SEM TRANSPARÊNCIA! 🏋️)" oninput="regerar()">
+        <div class="row" style="margin-top:8px"><input id="dde" placeholder="De: (opcional)" style="flex:1" oninput="regerar()">
+        <input id="dpor" placeholder="Por:" style="flex:1" oninput="regerar()"></div>
+      </div>
+    </div>
+    <p id="davisos" class="warn"></p>
+  </div>
+  <textarea id="dtexto" oninput="EDIT.mexeu=true"></textarea>
   <p><b>Grupos</b></p><div id="dgrupos" style="max-height:200px;overflow:auto"></div>
   <p><b>Quando postar</b> <span class="muted">(vazio = assim que aprovar)</span></p>
   <input id="dquando" type="datetime-local">
@@ -150,7 +163,15 @@ function renderProdutos(){
 }
 
 function montar(p){
-  return MODELO.replace(/\{(\w+)\}/g, (m, k) => p[k] ?? m);
+  return MODELO.split('\n')
+    .filter(l => !/\{preco_de\}/.test(l) || p.preco_de)        // sem preço antigo: some a linha "De:"
+    .join('\n').replace(/\{(\w+)\}/g, (m, k) => p[k] ?? '');
+}
+function regerar(){
+  if (!EDIT || !EDIT.novo) return;
+  Object.assign(EDIT.novo, {chamada: $('#dchamada').value.toUpperCase(), preco_de: $('#dde').value, preco: $('#dpor').value});
+  if (EDIT.mexeu) { $('#derr').textContent = 'Você editou o texto à mão: ajuste direto nele.'; return; }
+  $('#dtexto').value = montar(EDIT.novo);
 }
 function gruposChecks(sel){
   const ativos = GRUPOS.filter(g => g.ativo);
@@ -162,10 +183,21 @@ function abrirDlg(tit, texto, grupos, quando){
   $('#dgrupos').innerHTML = gruposChecks(grupos); $('#dquando').value = quando ? quando.slice(0,16) : '';
   dlg.showModal();
 }
-function novo(i){ const p = PRODUTOS[i]; EDIT = {novo:p};
-  abrirDlg(p.produto, montar(p), GRUPOS.filter(g => g.ativo).map(g => g.jid), '');
+async function novo(i){
+  const base = PRODUTOS[i];
+  $('#dcampos').classList.remove('hide');
+  abrirDlg(base.produto, 'Buscando foto, preço atual e gerando o link…', [], '');
+  let p;
+  try { p = await api('preparar', {...base}); } catch(e){ $('#dtexto').value = ''; $('#derr').textContent = e.message; return; }
+  EDIT = {novo: {...p, chamada: (p.chamada || '').toUpperCase(), preco_de: ''}};
+  $('#dimg').src = p.imagem || ''; $('#dimg').style.visibility = p.imagem ? '' : 'hidden';
+  $('#dchamada').value = EDIT.novo.chamada; $('#dde').value = ''; $('#dpor').value = p.preco || '';
+  $('#davisos').innerHTML = (p.avisos || []).map(esc).join('<br>') + (p.imagem ? '' : '<br>Sem foto: a prévia vai sem miniatura.');
+  $('#dgrupos').innerHTML = gruposChecks(GRUPOS.filter(g => g.ativo).map(g => g.jid));
+  $('#dtexto').value = montar(EDIT.novo);
 }
 function editar(id){ const it = FILA.find(x => x.id === id); EDIT = {id};
+  $('#dcampos').classList.add('hide');
   abrirDlg(it.produto, it.texto, JSON.parse(it.grupos || '[]'), it.agendado_para);
 }
 async function salvarItem(aprovar){
