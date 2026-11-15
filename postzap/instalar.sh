@@ -41,6 +41,16 @@ fi
 grep -q '^EVOLUTION_INSTANCIAS=' .env || echo "EVOLUTION_INSTANCIAS=chip1,chip2,chip3" >> .env
 grep -q '^POSTZAP_SENHA=.' .env || { echo "⚠️  Falta POSTZAP_SENHA no $DIR/.env"; exit 1; }
 
+# Porta livre para o WhatsApp (a 8080 pode estar em uso por outro programa do VPS)
+if ! grep -q '^EVOLUTION_PORTA=[0-9]' .env; then
+  P=18080
+  while $SUDO ss -ltnH "sport = :$P" | grep -q .; do P=$((P+1)); done
+  sed -i '/^EVOLUTION_PORTA=/d' .env
+  echo "EVOLUTION_PORTA=$P" >> .env
+fi
+EVO_PORTA=$(grep -oP '^EVOLUTION_PORTA=\K[0-9]+' .env)
+sed -i "s#^EVOLUTION_URL=.*#EVOLUTION_URL=http://127.0.0.1:$EVO_PORTA#" .env
+
 echo "▶ Docker (WhatsApp / Evolution API)"
 if ! command -v docker >/dev/null; then curl -fsSL https://get.docker.com | $SUDO sh; fi
 if ! $SUDO docker compose version >/dev/null 2>&1; then
