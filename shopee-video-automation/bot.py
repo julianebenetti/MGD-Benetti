@@ -1516,7 +1516,7 @@ class Bot:
                 lines.append(f"• {what}: <a href=\"{link}\">{html.escape(name[:45])}</a> · desde {since}")
             if len(group) > MAX_PENDING_LINES:
                 lines.append(f"… e mais {len(group) - MAX_PENDING_LINES}")
-        return '\n'.join(lines)[:4000]
+        return '\n'.join(lines)
 
     def agenda_summary_text(self) -> str:
         """
@@ -1568,7 +1568,7 @@ class Bot:
                 day = when.date()
                 lines.append(f"<b>{DIAS[when.weekday()]}, {when:%d/%m}</b>")
             lines.append(item(p, '⏰'))
-        return '\n'.join(lines)[:4000]
+        return '\n'.join(lines)
 
     def refresh_agenda_summary(self, repost: bool = False):
         """Mensagem fixada na Agenda com o resumo (só edita se mudou; /agenda manda uma nova no fim)."""
@@ -1650,7 +1650,7 @@ class Bot:
         for d, n in zip(week, counts):
             lines.append(f"<code>{DIAS[d.weekday()]} {d:%d/%m} {'▇' * min(n, 15):<15} {n}</code>")
         lines.append(f"Total: <b>{sum(counts)}</b> · média {sum(counts) / 7:.1f} por dia".replace('.', ','))
-        return '\n'.join(lines)[:4000]
+        return '\n'.join(lines)
 
     def shop_by_item(self) -> Dict[str, str]:
         """ID do item divulgado → ID da loja, dos posts do robô (para montar o link quando a conversão não traz)."""

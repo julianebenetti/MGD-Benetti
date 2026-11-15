@@ -41,6 +41,30 @@ def extract_shopee_links(text: str) -> List[str]:
     return SHOPEE_LINK_RE.findall(text or '')
 
 
+TELEGRAM_LIMIT = 4000   # o limite é 4096 caracteres; sobra para o "…"
+
+
+def fit_html(text: str, limit: int = TELEGRAM_LIMIT) -> str:
+    """
+    Corta mensagens longas sempre no fim de uma linha (cada linha do robô fecha as próprias tags), nunca no meio de
+    um <a>/<b>: um corte no meio faz o Telegram recusar a mensagem ("can't parse entities").
+    """
+    if len(text) <= limit:
+        return text
+    cut = text.rfind('\n', 0, limit - 2)
+    text = text[:cut if cut > 0 else limit - 2]
+    for tag in ('code', 'i', 'b'):   # alguma tag aberta numa linha anterior (ex.: <code> de várias linhas)
+        if text.count(f'<{tag}>') > text.count(f'</{tag}>'):
+            text += f'</{tag}>'
+    return text + '\n…'
+
+
+def plain(text: str) -> str:
+    """O texto sem HTML (último recurso quando o Telegram não aceita a formatação)."""
+    import html as _html
+    return _html.unescape(re.sub(r'<[^>]+>', '', text))[:TELEGRAM_LIMIT]
+
+
 def keyboard(*rows: List[tuple]) -> str:
     return json.dumps({'inline_keyboard': [
         [{'text': label, 'callback_data': data} for label, data in row] for row in rows]})
@@ -102,13 +126,22 @@ class TelegramBot:
 
     def send_text(self, thread_id: Optional[int], text: str, reply_to: Optional[int] = None,
                   markup: Optional[str] = None) -> int:
+        text = fit_html(text)
         data = {'chat_id': self.chat_id, 'text': text, 'parse_mode': 'HTML',
                 'link_preview_options': json.dumps({'is_disabled': True}), **self._thread(thread_id)}
         if reply_to:
             data['reply_parameters'] = json.dumps({'message_id': reply_to, 'allow_sending_without_reply': True})
         if markup:
             data['reply_markup'] = markup
-        return self.call('sendMessage', data=data)['message_id']
+        try:
+            return self.call('sendMessage', data=data)['message_id']
+        except RuntimeError as e:
+            if "can't parse entities" not in str(e):
+                raise
+            logger.warning(f"Mensagem com HTML quebrado, mandando sem formatação: {e}")
+            data.pop('parse_mode')
+            data['text'] = plain(text)
+            return self.call('sendMessage', data=data)['message_id']
 
     def copy(self, thread_id: Optional[int], from_chat_id: int, message_id: int) -> int:
         """Copia uma mensagem de outro grupo para cá (sem o 'encaminhado de')."""
@@ -141,6 +174,7 @@ class TelegramBot:
     def edit_text(self, message_id: int, text: str, markup: Optional[str] = None) -> bool:
         """Troca o texto (e os botões) de uma mensagem; False se ela não existe mais (foi apagada)."""
         try:
+            text = fit_html(text)
             self.call('editMessageText', data={
                 'chat_id': self.chat_id, 'message_id': message_id, 'text': text, 'parse_mode': 'HTML',
                 'link_preview_options': json.dumps({'is_disabled': True}),
