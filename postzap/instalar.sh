@@ -22,7 +22,8 @@ else
     $SUDO git -C "$INSTALL_DIR" sparse-checkout set postzap
   fi
   $SUDO chown -R "$(id -un)" "$INSTALL_DIR"
-  DIR="$INSTALL_DIR/postzap"
+  # roda a versão recém-baixada (o curl pode entregar uma cópia antiga deste arquivo, guardada em cache)
+  exec bash "$INSTALL_DIR/postzap/instalar.sh"
 fi
 cd "$DIR"
 
