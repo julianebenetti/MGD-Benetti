@@ -49,6 +49,7 @@ logger = logging.getLogger('bot')
 BASE = Path(__file__).parent
 ASK_AFTER_SECONDS = 8   # só o tempo de chegarem os outros vídeos de um álbum (o link pode vir em um deles)
 BATCH_LINK_TTL = 600
+LOOSE_LINK_SECONDS = 900   # link solto só vale para os vídeos sem link que chegaram nos últimos 15 min
 FAILED_RETRY_TTL = 1800
 COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
 VIDEO_WORKERS = int(os.getenv('VIDEOS_AO_MESMO_TEMPO', '2'))   # vídeos preparados ao mesmo tempo
@@ -282,7 +283,9 @@ class Bot:
         elif links:
             replied_id = (msg.get('reply_to_message') or {}).get('message_id')
             waiting = next((p for p in self.pending if p['msg_id'] == replied_id), None)
-            retry = None if waiting else self.failed_to_retry(msg, allow_latest=not self.pending)
+            # link solto (sem responder nada) nunca refaz sozinho uma falha antiga: só respondendo a mensagem dela
+            retry = None if waiting else self.failed_to_retry(msg, allow_latest=False)
+            recent = [p for p in self.pending if time.time() - p['at'] < LOOSE_LINK_SECONDS]
             if waiting:  # resposta a um vídeo que esperava o link: só ele, com a conferência normal
                 self.pending.remove(waiting)
                 self.tg.react(msg['message_id'], '👌')
@@ -293,14 +296,22 @@ class Bot:
                 # link reenviado por você: vale o link, sem a conferência da IA
                 self.enqueue_video(retry['msg_id'], retry['file_id'], links[0], f"{retry['text']}\n{text}",
                                    trust_link=True)
-            elif self.pending:  # link solto: vale para todos os vídeos que estavam sem link
-                for p in self.pending:
+            elif recent:  # link solto: vale só para os vídeos sem link que chegaram há pouco (os seus de agora)
+                for p in recent:
+                    self.pending.remove(p)
                     self.enqueue_video(p['msg_id'], p['file_id'], links[0], f"{p['text']}\n{text}")
-                self.pending = []
                 self.tg.react(msg['message_id'], '👌')
+                self.tg.send_text(ENVIOS, f"🔗 Esse link vale para os {len(recent)} vídeo(s) que você mandou agora.",
+                                  reply_to=msg['message_id'])
             else:
                 self.batch_link = {'link': links[0], 'text': text, 'at': time.time()}
                 self.tg.react(msg['message_id'], '✍')
+                old = len(self.pending)
+                self.tg.send_text(ENVIOS, f"🔗 Guardei o link: vale para os vídeos que você mandar nos próximos "
+                                          f"{BATCH_LINK_TTL // 60} min." + (
+                                              f" ({old} vídeo(s) mais antigos continuam esperando link: para usar este "
+                                              "link neles, responda o vídeo com o link.)" if old else ''),
+                                  reply_to=msg['message_id'])
 
     def failed_to_retry(self, msg: Dict, allow_latest: bool = True) -> Optional[Dict]:
         """
