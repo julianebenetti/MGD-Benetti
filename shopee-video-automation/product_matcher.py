@@ -127,3 +127,30 @@ def check_match(video_path: str, product: Dict, strict: bool = False) -> Tuple[s
     except Exception as e:
         logger.error(f"Conferência vídeo × produto falhou: {e}")
         return 'incerto', f'não foi possível conferir ({e})'
+
+
+PHOTOS_PROMPT = """A primeira imagem é a foto do anúncio de referência ("{ref}"). A segunda é a foto de OUTRO anúncio
+("{other}"). Os dois anúncios vendem EXATAMENTE o mesmo produto (mesmo modelo, mesmo formato, mesmas peças e
+quantidade, mesmos detalhes)? Cor diferente que o anúncio também vende = "variacao".
+- "sim": mesmo produto, mesmo modelo
+- "variacao": mesmo modelo, outra cor/estampa
+- "nao": outro modelo, outra quantidade ou outro produto
+- "incerto": não dá para afirmar
+Em "motivo", uma frase curta em português (se "nao", diga o que muda)."""
+
+
+def compare_photos(reference: Dict, other: Dict) -> Tuple[str, str]:
+    """O outro anúncio vende o mesmo produto da referência? Compara as fotos principais (para trocar de loja)."""
+    try:
+        content = []
+        for p in (reference, other):
+            photo = requests.get(p['imageUrl'], timeout=30)
+            photo.raise_for_status()
+            content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)))))
+        content.append({'type': 'text', 'text': PHOTOS_PROMPT.format(ref=reference['productName'],
+                                                                     other=other['productName'])})
+        data = ask_json(content, SCHEMA)
+        return data['resultado'], data['motivo']
+    except Exception as e:
+        logger.warning(f"Comparação de fotos falhou: {e}")
+        return 'incerto', f'não foi possível comparar ({e})'

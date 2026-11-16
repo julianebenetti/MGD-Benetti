@@ -71,7 +71,11 @@ PROMPTS = topic('TELEGRAM_TOPIC_PROMPTS')
 PACK = topic('TELEGRAM_TOPIC_PACK')   # 📦 vídeos do pack: o robô junta vídeo + vinheta e manda para Editados
 PACK_WAIT_SECONDS = int(os.getenv('PACK_ESPERA', '90'))
 # vídeos do pack: por escolha da Juliane (15/11), seguem mesmo se a IA achar diferença com o anúncio (só avisa)
-PACK_CHECK = os.getenv('PACK_CONFERIR', 'nao').strip().lower() in ('sim', '1', 'true')   # sem nada novo por tanto tempo: o pack está completo
+PACK_CHECK = os.getenv('PACK_CONFERIR', 'nao').strip().lower() in ('sim', '1', 'true')
+# ao receber o link do pack, procura o mesmo produto em outras lojas (quem paga mais) para você escolher qual divulgar
+PACK_ALTERNATIVES = os.getenv('PACK_OUTRAS_LOJAS', 'sim').strip().lower() not in ('nao', 'não', '0', 'false')
+PACK_CHOICE_SECONDS = int(os.getenv('PACK_ESPERA_ESCOLHA', '600'))   # espera a escolha da loja até 10 min
+PACK_MAX_OPTIONS = 6   # sem nada novo por tanto tempo: o pack está completo
 IDEAS_TIME = os.getenv('IDEIAS_HORA', '07:30')    # lista diária de ideias em 💡 Ideias
 WINNERS_TIME = os.getenv('VENCEDORES_HORA', '07:45')   # 🏆 vencedores do dia em 📊 Relatório
 STUDY_DAYS = int(os.getenv('ESTUDO_DIAS', '3'))         # 📈 levantamento do Shopee Vídeo: a cada 3 dias, vs. 3 antes
@@ -204,7 +208,7 @@ class Bot:
 
     def submit(self, job: tuple):
         kind = job[0]
-        name = 'video' if kind in ('video', 'pack') else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
+        name = 'video' if kind in ('video', 'pack', 'pack_alts') else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
             'ideas' if kind in ('ideas', 'idea_links', 'datafeed') else \
             'approve' if kind in ('approve', 'use_identical') else \
             'tidy' if kind in ('tidy', 'clean_agenda') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
@@ -344,8 +348,11 @@ class Bot:
             if state.get('principais'):
                 self.close_pack(state)
             self.db.set_meta('pack_atual', json.dumps({'link': links[0], 'link_msg': msg['message_id'],
-                                                       'principais': [], 'vinhetas': [], 'at': time.time()}))
+                                                       'principais': [], 'vinhetas': [], 'at': time.time(),
+                                                       'escolhendo': PACK_ALTERNATIVES, 'link_at': time.time()}))
             self.tg.react(msg['message_id'], '👌')
+            if PACK_ALTERNATIVES:
+                self.submit(('pack_alts', links[0], msg['message_id']))
             return
         if not video:
             return   # imagens e textos ("Vídeos 👇", "Vinhetas 👇"): nada a fazer
@@ -360,8 +367,94 @@ class Bot:
         self.db.set_meta('pack_atual', json.dumps(state))
         self.tg.react(msg['message_id'], '👌')
 
+    def job_pack_alternatives(self, link: str, link_msg: int):
+        """
+        O mesmo produto do link do pack em outras lojas: busca pelo nome, confere pelas fotos se é o mesmo modelo e
+        mostra as opções por comissão, com botões para escolher qual link os vídeos deste pack vão divulgar.
+        """
+        from product_matcher import compare_photos
+        shopee = self.pipeline.shopee
+        try:
+            found = shopee.find_candidates(link)
+            if not found:
+                self.tg.send_text(PACK, "⚠️ Não achei o produto desse link na Shopee; os vídeos vão usar ele mesmo.",
+                                  reply_to=link_msg)
+                self.pack_choice_done(link_msg)
+                return
+            ref = found[0]
+            ref['commissionValue'] = commission_value(ref)
+            alts = [p for p in shopee.other_sellers(ref, min_rating=4.6) if p['commissionValue'] > 0][:12]
+        except Exception as e:
+            logger.warning(f"Pack: busca de outras lojas falhou: {e}")
+            self.tg.send_text(PACK, f"⚠️ Não consegui procurar outras lojas agora ({html.escape(str(e)[:120])}); "
+                                    "os vídeos vão usar o link do pack.", reply_to=link_msg)
+            self.pack_choice_done(link_msg)
+            return
+        same = []
+        for p in alts:   # só o mesmo modelo (o vídeo precisa bater com o anúncio)
+            result, reason = compare_photos(ref, p)
+            if result in ('sim', 'variacao'):
+                same.append({**p, 'conferencia': result, 'motivo': reason})
+            if len(same) >= PACK_MAX_OPTIONS:
+                break
+        e = html.escape
+        if not same:
+            self.tg.send_text(PACK, f"🔎 Procurei <b>{e(ref['productName'][:70])}</b> em outras lojas e não achei o "
+                                    "mesmo modelo com comissão. Os vídeos vão usar o link do pack.", reply_to=link_msg)
+            self.pack_choice_done(link_msg)
+            return
+        options = [ref] + same
+        state = self.pack_state()
+        if state.get('link_msg') == link_msg:
+            state['opcoes'] = [{'shopId': p['shopId'], 'itemId': p['itemId'], 'shopName': p.get('shopName', '')}
+                               for p in options]
+            self.db.set_meta('pack_atual', json.dumps(state))
+        lines = [f"🔎 <b>Outras lojas com o mesmo produto</b> (conferi pelas fotos)\n{e(ref['productName'][:80])}\n"]
+        for n, p in enumerate(options):
+            tag = 'link do pack' if n == 0 else ('mesmo modelo' if p.get('conferencia') == 'sim' else
+                                                  'mesmo modelo, outra cor na foto')
+            sales = f"{int(p.get('sales') or 0):,}".replace(',', '.')
+            lines.append(f"<b>{n}. {e(p.get('shopName', '')[:40])}</b> ({tag})\n{details(p)} · {sales} vendas"
+                         f"\n{e(product_url(p))}")
+        lines.append("\nToque na loja que os vídeos deste pack vão divulgar. Abra o link e confira se a foto é a "
+                     "mesma do vídeo. <i>A API não informa quantos afiliados divulgam cada anúncio: loja com menos "
+                     "vendas costuma ter menos concorrência.</i> Sem escolha em "
+                     f"{PACK_CHOICE_SECONDS // 60} min, sigo com o link do pack.")
+        rows = [[(f"{n}. {p.get('shopName', '')[:22]} · {brl(commission_value(p))}", f"pk:{link_msg}.{n}")]
+                for n, p in enumerate(options)]
+        self.tg.send_text(PACK, '\n'.join(lines), reply_to=link_msg, markup=keyboard(*rows))
+
+    def pack_choice_done(self, link_msg: int):
+        state = self.pack_state()
+        if state.get('link_msg') == link_msg:
+            state['escolhendo'] = False
+            state['at'] = time.time()
+            self.db.set_meta('pack_atual', json.dumps(state))
+
+    def on_pack_choice(self, cb: Dict, raw: str):
+        link_msg, _, n = raw.partition('.')
+        state = self.pack_state()
+        if not link_msg.isdigit() or not n.isdigit() or state.get('link_msg') != int(link_msg) \
+                or int(n) >= len(state.get('opcoes') or []):
+            self.tg.answer_callback(cb['id'], 'Esse pack já foi montado (a escolha vale antes de montar)')
+            return
+        chosen = state['opcoes'][int(n)]
+        state['link'] = product_url(chosen)
+        state['escolhendo'] = False
+        state['at'] = time.time()
+        self.db.set_meta('pack_atual', json.dumps(state))
+        self.tg.answer_callback(cb['id'], f"Ok: {chosen.get('shopName', '')[:40]}")
+        msg = (cb.get('message') or {}).get('message_id')
+        if msg:
+            self.tg.edit_markup(msg, keyboard())
+        self.tg.send_text(PACK, f"✅ Os vídeos deste pack vão divulgar <b>{html.escape(chosen.get('shopName', ''))}</b>."
+                                + (" Pode mandar os vídeos (ou /montar, se já mandou)." if not state.get('principais')
+                                   else " Monto em instantes (ou mande /montar)."), reply_to=msg)
+
     def pack_tick(self):
         state = self.pack_state()
+        if state.get('escolhendo') and time.time() - float(state.get('link_at') or 0) < PACK_CHOICE_SECONDS:
+            return   # esperando você escolher a loja (no máximo PACK_CHOICE_SECONDS; depois segue com o link do pack)
         if state.get('principais') and time.time() - float(state.get('at') or 0) > PACK_WAIT_SECONDS:
             self.close_pack(state)
 
@@ -1254,6 +1347,9 @@ class Bot:
         logger.info(f"Botão {cb.get('data', '')}")
         if action == 'vk' and raw_id.isdigit():
             self.on_variation_ok(cb, int(raw_id))
+            return
+        if action == 'pk':   # 📦 Pack: loja escolhida para divulgar
+            self.on_pack_choice(cb, raw_id)
             return
         if action == 'pt':   # /posteitudo: confirmação
             self.on_post_all_button(cb, raw_id)
@@ -2614,6 +2710,8 @@ class Bot:
                     self.job_narrations(*job[1:])
                 elif job[0] == 'prompt_narr':
                     self.job_prompt_narration(*job[1:])
+                elif job[0] == 'pack_alts':
+                    self.job_pack_alternatives(*job[1:])
                 elif job[0] == 'pack':
                     self.job_pack(*job[1:])
                 elif job[0] == 'datafeed':
@@ -2929,17 +3027,19 @@ class Bot:
             self.refresh_ideas_help()
         except Exception as e:
             logger.warning(f"Não fixei os comandos em Ideias: {e}")
-        if PACK and self.db.get_meta('pack_ajuda') != '1':
+        if PACK and self.db.get_meta('pack_ajuda') != '2':
             try:
                 self.tg.pin(self.tg.send_text(PACK, (
-                    "📦 <b>Pack de vídeos</b>\n\n1. Encaminhe para cá o <b>link do produto</b> do pack.\n"
+                    "📦 <b>Pack de vídeos</b>\n\n1. Encaminhe para cá o <b>link do produto</b> do pack. Eu procuro o "
+                    "<b>mesmo produto em outras lojas</b> (conferido pelas fotos) e mostro as comissões: você toca na "
+                    "loja que quer divulgar.\n"
                     "2. Encaminhe os <b>vídeos</b> (~8 s) e as <b>vinhetas</b> (~4 s) desse produto, em qualquer "
                     "ordem. As imagens podem vir junto: eu ignoro.\n3. Eu junto cada vídeo com a vinheta de "
                     "<b>outro</b> vídeo (sorteio), alternando a vinheta antes e depois, para os seus ficarem "
                     "diferentes dos de quem comprou o mesmo pack.\n4. Cada vídeo montado passa pela conferência com "
                     "o anúncio e chega em ✅ Editados, como os do 📥 Envios.\n\nMonto sozinho 90 s depois do último "
                     "vídeo, ou na hora com /montar. Um produto por vez: mande o próximo link depois.")))
-                self.db.set_meta('pack_ajuda', '1')
+                self.db.set_meta('pack_ajuda', '2')
             except Exception as e:
                 logger.warning(f"Não fixei a ajuda do Pack: {e}")
         self.resume_after_restart()
