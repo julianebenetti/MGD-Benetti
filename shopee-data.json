@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794886372,
-  "updated_at_br": "17/11/2026 00:28",
+  "updated_at": 1794891710,
+  "updated_at_br": "17/11/2026 01:57",
   "period_days": 90,
-  "total_orders": 4954,
-  "total_conversions": 4751,
+  "total_orders": 4953,
+  "total_conversions": 4750,
   "orders": [
     {
       "ID do pedido": "261116EDKY37T4",
@@ -123827,31 +123827,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240826534196322",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-19"
-    },
-    {
-      "ID do pedido": "260819QKYJ00D5",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-19 04:08:54",
-      "Sub_id1": "01Ago26VEAcalcajogger",
-      "Valor de Compra(R$)": "15.43",
-      "Comissao liquida do afiliado(R$)": "1.24598",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "4.50%",
-      "Comissao Shopee(R$)": "0.6172",
-      "Comissao do vendedor(R$)": "0.69435",
-      "Comissao total do pedido(R$)": "1.31155",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit Shampoo + Condicionador Hidra Multy Kids Salon Line 300ml",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22401382655",
-      "ID da loja": "616222685",
-      "Nome da loja": "Salon Line",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "240811734133169",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     }
