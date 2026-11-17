@@ -1,7 +1,7 @@
 """
 Agenda em lotes: 30 vídeos por dia, 10 de manhã, 10 à tarde e 10 à noite, em lotes de 5 vídeos no mesmo horário
 (a LiA publica um atrás do outro). Cada lote tem um horário quebrado (ex.: 9:13, nunca 9:00), o mesmo para os 5
-vídeos dele; nunca o mesmo produto duas vezes no mesmo dia.
+vídeos dele; o mesmo produto até 3 vezes no dia, em lotes separados.
 """
 
 import os
@@ -21,6 +21,9 @@ START_HOUR = min(BATCH_HOURS)
 END_HOUR = max(BATCH_HOURS) + 1
 PERIODS = {'manhã': range(0, 12), 'tarde': range(12, 18), 'noite': range(18, 24)}
 MIN_LEAD = timedelta(minutes=5)
+# O mesmo produto pode entrar até tantas vezes no dia (pack com 5 vídeos, versões do que vende), nunca no mesmo lote
+# nem em lotes vizinhos (ex.: 9h e 13h sim, 9h e 11h não). Antes de 17/11 era 1 por dia, o que esvaziava a agenda.
+SAME_PRODUCT_PER_DAY = int(os.getenv('AGENDA_MESMO_PRODUTO_DIA', '3'))
 MAX_DAYS_AHEAD = 60
 
 
@@ -47,7 +50,7 @@ def next_slot(product_key: str, scheduled: Iterable[dict], current: Optional[dat
               posted: Iterable[dict] = ()) -> datetime:
     """
     O próximo lote com vaga: ainda não passou, tem menos de BATCH_SIZE vídeos, o dia tem menos de POSTS_PER_DAY e
-    ainda não tem esse produto. `scheduled`: posts agendados ('scheduled_at', 'product_key'); `posted`: já postados
+    o produto ainda não entrou SAME_PRODUCT_PER_DAY vezes no dia (nem neste lote ou nos vizinhos). `scheduled`: posts agendados ('scheduled_at', 'product_key'); `posted`: já postados
     ('posted_at', 'product_key'), que contam no limite do dia e na regra do mesmo produto.
     (`rng` e `last_posted` ficam por compatibilidade: os horários dos lotes já vêm da data.)
     """
@@ -59,12 +62,20 @@ def next_slot(product_key: str, scheduled: Iterable[dict], current: Optional[dat
     for offset in range(MAX_DAYS_AHEAD):
         day = (current + timedelta(days=offset)).date()
         day_items = [(w, k, s) for w, k, s in items if w.date() == day]
-        if len(day_items) >= POSTS_PER_DAY or any(k == product_key for _, k, _ in day_items):
+        same = [w for w, k, _ in day_items if k == product_key]
+        if len(day_items) >= POSTS_PER_DAY or len(same) >= SAME_PRODUCT_PER_DAY:
             continue
-        for slot in batches(day):
+        day_batches = batches(day)
+        for n, slot in enumerate(day_batches):
             if slot < current + MIN_LEAD:
                 continue
             in_batch = sum(1 for w, _, s in day_items if s and w.replace(second=0, microsecond=0) == slot)
-            if in_batch < BATCH_SIZE:
-                return slot
+            if in_batch >= BATCH_SIZE:
+                continue
+            # mesmo produto: nunca no mesmo lote; até 3 por dia, também não nos lotes vizinhos
+            near = {b.replace(second=0, microsecond=0) for b in
+                    (day_batches[max(n - 1, 0):n + 2] if SAME_PRODUCT_PER_DAY <= 3 else [slot])}
+            if any(w.replace(second=0, microsecond=0) in near for w in same):
+                continue
+            return slot
     raise RuntimeError('Agenda cheia nos próximos 60 dias')
