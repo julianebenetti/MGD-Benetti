@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794891710,
-  "updated_at_br": "17/11/2026 01:57",
+  "updated_at": 1794905976,
+  "updated_at_br": "17/11/2026 05:55",
   "period_days": 90,
-  "total_orders": 4953,
-  "total_conversions": 4750,
+  "total_orders": 4952,
+  "total_conversions": 4749,
   "orders": [
     {
       "ID do pedido": "261116EDKY37T4",
@@ -123802,31 +123802,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240835518185798",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-19"
-    },
-    {
-      "ID do pedido": "260819R1RMDYJX",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-19 08:15:34",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "30.89",
-      "Comissao liquida do afiliado(R$)": "1.17382",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.2356",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.2356",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Máquina De Limpeza Ultrassônica Alta Frequência Vibração Wash Cleaner Lavar Jóias Óculos Relógio De Lavagem Pequeno Anel",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23393214955",
-      "ID da loja": "378486098",
-      "Nome da loja": "DAFUSHOP Official Store",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "240826534196322",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     }
