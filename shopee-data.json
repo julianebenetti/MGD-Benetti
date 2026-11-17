@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794905976,
-  "updated_at_br": "17/11/2026 05:55",
+  "updated_at": 1794915021,
+  "updated_at_br": "17/11/2026 08:26",
   "period_days": 90,
-  "total_orders": 4952,
-  "total_conversions": 4749,
+  "total_orders": 4951,
+  "total_conversions": 4748,
   "orders": [
     {
       "ID do pedido": "261116EDKY37T4",
@@ -2732,7 +2732,7 @@
     },
     {
       "ID do pedido": "26111386Y2F6AV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-13 15:19:23",
       "Sub_id1": "28Out26VEAtapetehigienicoV3",
       "Valor de Compra(R$)": "29.99",
@@ -2744,7 +2744,7 @@
       "Comissao total do pedido(R$)": "0.8997",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 1 Par de Luva Longa Arrastão + 1 Meia Arrastão Rock Gótico Festa Fantasia Sexy Carnaval",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22394915725",
       "ID da loja": "1654033173",
       "Nome da loja": "Beth Nolasco",
@@ -2752,7 +2752,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248282363140838",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-13"
     },
     {
@@ -7307,7 +7307,7 @@
     },
     {
       "ID do pedido": "261112439WJPPY",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-12 00:03:16",
       "Sub_id1": "11nov26veatapetehigienicov328out26",
       "Valor de Compra(R$)": "19.99",
@@ -7319,7 +7319,7 @@
       "Comissao total do pedido(R$)": "1.1994",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit com 50/100/150/200 Unidades de Fio Dental Infantil em Formato de Arco Ultra Fino para uma",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58257647375",
       "ID da loja": "1773878675",
       "Nome da loja": "Bom Select",
@@ -7327,7 +7327,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248140993190266",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-12"
     },
     {
@@ -123777,31 +123777,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240838992107448",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-19"
-    },
-    {
-      "ID do pedido": "260819RA4C7EC6",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-19 10:45:18",
-      "Sub_id1": "29Jul26VEACalcaJoggerRapaz",
-      "Valor de Compra(R$)": "38.99",
-      "Comissao liquida do afiliado(R$)": "7.77851",
-      "Taxa de comissao Shopee do item": "8.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "3.1192",
-      "Comissao do vendedor(R$)": "5.0687",
-      "Comissao total do pedido(R$)": "8.1879",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Jogger Preta Masculina Dry Fit Com Fitas Esportiva",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22492676165",
-      "ID da loja": "413762733",
-      "Nome da loja": "ALAN.FONTE.888",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "240835518185798",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-19"
     }
