@@ -797,8 +797,26 @@ def enviar_item(inst, jid, item):
         evo('POST', f"/message/sendMedia/{inst}", {
             'number': jid, 'mediatype': dados.get('midia_tipo', 'image'), 'mimetype': dados.get('mimetype', 'image/jpeg'),
             'caption': item['texto'] or '', 'media': Path(midia).read_text(), 'fileName': Path(midia).stem}, timeout=180)
+    elif dados.get('imagem') and modo_link() != 'previa' and item.get('origem') != 'aviso':
+        # Link direto: o WhatsApp não consegue montar a miniatura da Shopee → vai a foto do produto com o texto
+        # na legenda (o link continua direto na loja). Se a foto falhar, vai só o texto.
+        try:
+            evo('POST', f"/message/sendMedia/{inst}", {
+                'number': jid, 'mediatype': 'image', 'mimetype': 'image/jpeg', 'caption': item['texto'] or '',
+                'media': dados['imagem'], 'fileName': 'oferta.jpg'}, timeout=120)
+        except RuntimeError as e:
+            log.warning(f'Foto do produto não foi ({e}); mandando só o texto')
+            enviar_texto(inst, jid, item['texto'])
     else:
         enviar_texto(inst, jid, item['texto'])
+
+
+def mostrar_previa(inst, numero, fid):
+    """Mostra para você exatamente como vai sair no grupo (com foto, se for o caso)."""
+    try:
+        enviar_item(inst, numero, item_fila(fid))
+    except Exception as e:
+        log.warning(f'Prévia para {numero} falhou: {e}')
 
 
 # ---------------------------------------------------------------- envio (fila aprovada)
@@ -1138,8 +1156,7 @@ def _tratar(inst, numero, texto):
                              montar_texto(p), json.dumps(grupos), agora().isoformat(), json.dumps(p), numero, inst))
             fid = cur.lastrowid
         conversa_set(numero, fid)
-        item = item_fila(fid)
-        responder(inst, numero, item['texto'], previa=True)
+        mostrar_previa(inst, numero, fid)
         extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
         sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: mande *4* para colocar.'
         responder(inst, numero, f"👆 Prévia · vai para {len(grupos)} grupo(s){extra}{sem_preco}\n\n{menu()}")
@@ -1155,7 +1172,7 @@ def _tratar(inst, numero, texto):
         campo = {'chamada': 'chamada', 'de': 'preco_de', 'por': 'preco'}[esperando]
         valor = t.upper() if campo == 'chamada' else br(t)
         regravar(item, **{campo: valor})
-        responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
+        mostrar_previa(inst, numero, item['id'])
         return responder(inst, numero, f'👆 Atualizado.\n\n{menu()}')
     cmd, _, resto = t.partition(' ')
     if item['origem'] == 'aviso' and cmd not in ('1', '5', '0'):
@@ -1201,7 +1218,7 @@ def _tratar(inst, numero, texto):
     if cmd == '6':
         cod = resto.strip()
         regravar(item, cupom='' if cod in ('', '0') else cod.upper(), cupom_texto='')
-        responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
+        mostrar_previa(inst, numero, item['id'])
         return responder(inst, numero, f"👆 {'Cupom removido' if cod in ('', '0') else 'Cupom colocado'}.\n\n{menu()}")
     if cmd == '7':
         nomes = list(modelos())
@@ -1209,7 +1226,7 @@ def _tratar(inst, numero, texto):
         if not alvo:
             return responder(inst, numero, f"🎨 Estilos: {', '.join(nomes)}. Ex.: *7 {nomes[-1].lower()}*")
         regravar(item, estilo=alvo)
-        responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
+        mostrar_previa(inst, numero, item['id'])
         return responder(inst, numero, f'👆 Estilo "{alvo}".\n\n{menu()}')
     if cmd == '0':
         with _lock, db() as c:
