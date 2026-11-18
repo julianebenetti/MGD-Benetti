@@ -2808,9 +2808,45 @@ def agenda_engajamento():
 def status_cfg():
     d = {'ativo': False, 'max_dia': 5, 'ofertas': True, 'engajamento': True}
     d.update(get_json('status', {}))
-    if 'chips' not in d:                         # padrão: todos menos o chip1 (WhatsApp pessoal da Juliane)
-        d['chips'] = [i for i in instancias() if i != 'chip1'] or instancias()
+    if not d.get('chips'):                       # padrão: todos os chips
+        d['chips'] = instancias()
     return d
+
+
+def contatos_status(inst):
+    """Quem pode ver o Status: contatos do chip + membros dos grupos onde ele está (só vê quem também salvou o número)."""
+    jids = set()
+    try:
+        for ct in evo('POST', f'/chat/findContacts/{inst}', {}, timeout=60) or []:
+            j = ct.get('remoteJid') or ct.get('id') or ''
+            if j.endswith('@s.whatsapp.net'):
+                jids.add(j)
+    except Exception:
+        pass
+    try:
+        for g in evo('GET', f'/group/fetchAllGroups/{inst}?getParticipants=true', timeout=240) or []:
+            for pt in g.get('participants') or []:
+                j = pt.get('phoneNumber') or pt.get('id') or ''
+                if j.endswith('@s.whatsapp.net'):
+                    jids.add(j)
+    except Exception:
+        pass
+    return sorted(jids)
+
+
+def enviar_status(inst, corpo):
+    """Evolution v2: /message/sendStatus. Manda a lista de quem pode ver (statusJidList); sem ela, alguns servidores
+    não entregam a ninguém."""
+    lista = contatos_status(inst)
+    payload = dict(corpo, allContacts=not lista, statusJidList=lista)
+    r = evo('POST', f'/message/sendStatus/{inst}', payload, timeout=180)
+    return f'ok · {len(lista)} contato(s) na lista' + ('' if lista else ' (allContacts)')
+
+
+def marcar_status(inst, ok, oque, info):
+    st = get_json('status_ultimo', {})
+    st[inst] = {'quando': agora().strftime('%Y-%m-%dT%H:%M'), 'ok': ok, 'oque': oque, 'info': str(info)[:300]}
+    set_cfg('status_ultimo', json.dumps(st, ensure_ascii=False))
 
 
 def postar_status(item):
@@ -2836,9 +2872,14 @@ def postar_status(item):
             continue
         corpo = ({'type': 'image', 'content': img, 'caption': texto[:700], 'allContacts': True} if img else
                  {'type': 'text', 'content': texto[:650], 'backgroundColor': '#7c3aed', 'font': 1, 'allContacts': True})
-        evo('POST', f'/message/sendStatus/{inst}', {'statusMessage': corpo, **corpo}, timeout=120)
-        set_cfg(chave, str(feitos + 1))
-        log.info(f"Status do {inst}: post #{item.get('id')}")
+        try:
+            resp = enviar_status(inst, corpo)
+            set_cfg(chave, str(feitos + 1))
+            marcar_status(inst, True, f"post #{item.get('id')}", resp)
+            log.info(f"Status do {inst}: post #{item.get('id')}")
+        except Exception as e:
+            marcar_status(inst, False, f"post #{item.get('id')}", str(e)[:300])
+            log.warning(f'Status do {inst}: {e}')
 
 
 # ---------------------------------------------------------------- vendas por post e grupo (relatório da Shopee)
@@ -3059,7 +3100,7 @@ class H(BaseHTTPRequestHandler):
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
                                        'ctas': get_json('ctas', CTAS_PADRAO), 'cta_modo': get_cfg('cta_modo', 'frases'),
-                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'chips_todos': instancias(), 'modo_link': modo_link(),
+                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'chips_todos': instancias(), 'status_ultimo': get_json('status_ultimo', {}), 'modo_link': modo_link(),
                                        'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': focos_nomes(),
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
@@ -3300,6 +3341,21 @@ class H(BaseHTTPRequestHandler):
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
                    else rodar_convite_pedidos() if b.get('tipo') == 'convite' else rodar_enquete())
             return self.send_json({'id': fid})
+        if p == '/api/status/testar':                # posta um Status de teste agora, nos chips marcados
+            res = {}
+            for inst in status_cfg().get('chips') or instancias():
+                if estado_chip(inst) != 'open':
+                    res[inst] = 'desconectado'
+                    continue
+                corpo = {'type': 'text', 'content': f'💜 Teste do PostZap · {data_sub(agora())} {agora().strftime("%H:%M")}',
+                         'backgroundColor': '#7c3aed', 'font': 1}
+                try:
+                    res[inst] = enviar_status(inst, corpo)
+                    marcar_status(inst, True, 'teste', res[inst])
+                except Exception as e:
+                    res[inst] = 'falhou: ' + str(e)[:300]
+                    marcar_status(inst, False, 'teste', res[inst])
+            return self.send_json(res)
         if p == '/api/status':
             cfg = status_cfg()
             for k in ('ativo', 'ofertas', 'engajamento'):

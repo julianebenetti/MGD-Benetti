@@ -300,7 +300,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         <div class="corpo"><p class="muted">Quem escreve no privado de um chip começando com a palavra-gatilho ("QUERO vestido plus size azul") recebe as 3 melhores ofertas com o seu link (Sub ID <b>inbox</b>).</p>
           <div class="q"><div class="t"><b>🔑 Palavra-gatilho</b><small>Só responde quando a mensagem COMEÇA com ela. Pode pôr mais de uma, separadas por vírgula.</small></div>
             <div class="v"><input id="egGatilho" style="width:180px" placeholder="quero"></div></div>
-          <div class="q" style="display:block"><div class="t"><b>📱 Quais chips atendem?</b><small>Deixe o seu WhatsApp pessoal (chip1) desmarcado.</small></div>
+          <div class="q" style="display:block"><div class="t"><b>📱 Quais chips atendem?</b><small>Desmarque o chip que for o seu WhatsApp pessoal, se houver.</small></div>
             <div id="egInboxChips" class="row" style="margin-top:6px"></div></div>
           <div class="q" style="display:block"><div class="t"><b>👉 Link "toque aqui pra pedir"</b><small>Abre o privado com "QUERO " já escrito. Nos estilos de mensagem, use o campo {link_pedido}.</small></div>
             <div id="egLink" class="muted" style="margin-top:6px;word-break:break-all"></div></div>
@@ -368,7 +368,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <label class="chk"><input type="checkbox" id="stAtivo"> <b>Postar no Status</b></label>
       <label class="chk"><input type="checkbox" id="stOfertas"> Ofertas</label>
       <label class="chk"><input type="checkbox" id="stEng"> Mensagem do dia / da noite e avisos</label>
-      <div style="margin-top:6px"><b>Em quais chips?</b> <small class="muted">o chip1 é o seu WhatsApp pessoal: os seus amigos veriam as ofertas</small><div id="stChips"></div></div>
+      <div style="margin-top:6px"><b>Em quais chips?</b> <small class="muted">desmarque o seu WhatsApp pessoal, se algum for</small><div id="stChips"></div></div>
+      <div style="margin-top:8px"><button class="b" type="button" onclick="testarStatus()">📱 Postar um Status de teste agora</button></div>
+      <div id="stUlt" style="margin-top:6px;font-size:13px"></div>
       <div class="row" style="margin-top:6px">No máximo <input type="number" id="stMax" min="1" max="30" style="width:70px"> status por chip por dia</div></div>
     <div class="card"><b>🔗 Link nas postagens</b>
       <label class="chk"><input type="radio" name="mlink" value="direto"> <span><b>Direto na loja (recomendado)</b> — o link é o próprio
@@ -953,7 +955,7 @@ async function carregarEng(){
   $('#egResNoite').innerHTML = ENG.noite_ativo ? `${ENG.noite_hora} · ${img(ENG.noite_imagem !== false)}` : off;
   $('#egResEnq').innerHTML = ENG.enquete_ativo ? `${ENG.enquete_hora_modo === 'fixo' ? ENG.enquete_hora : 'hoje ' + ENG.enquete_hora_hoje + ' (sorteado)'} · ${ENG.enquete_modo === 'fixa' ? 'opções fixas' : 'rodízio'}` : off;
   const nchips = (ENG.inbox_chips || []).length;
-  $('#egResInbox').innerHTML = ENG.inbox_ativo ? `gatilho "${esc((ENG.inbox_gatilho || 'quero').toUpperCase())}" · ${nchips ? nchips + ' chip(s)' : 'todos os chips'}${(!nchips || (ENG.inbox_chips || []).includes('chip1')) ? ' <b class="warn">· inclui o chip1 (pessoal)!</b>' : ''}` : off;
+  $('#egResInbox').innerHTML = ENG.inbox_ativo ? `gatilho "${esc((ENG.inbox_gatilho || 'quero').toUpperCase())}" · ${nchips ? nchips + ' chip(s)' : 'todos os chips'}` : off;
   $('#egResConv').innerHTML = ENG.convite_ativo ? `${cd.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.convite_hora}${ENG.inbox_ativo ? '' : ' <b class="warn">· ligue o "Responder pedidos"</b>'}` : off;
   $('#egResMon').innerHTML = ENG.monitor_ativo ? `${(ENG.monitor_grupos || []).length} grupo(s) · ${(ENG.monitor_telegram || []).length} canal(is)` : off;
   const ag = ENG.agenda_hoje || {itens: []};
@@ -1012,6 +1014,11 @@ async function trocarConvite(inp, somar){
   inp.value = '';
 }
 async function convitePadrao(){ await api('engajamento/convite_img', {padrao: true}); await carregarEng(); }
+async function testarStatus(){
+  $('#stUlt').textContent = 'Postando o teste… (pode levar 1 min)';
+  try { const r = await api('status/testar', {}); $('#stUlt').innerHTML = Object.entries(r).map(([c, v]) => `<div>${String(v).startsWith('ok') ? '✅' : '❌'} <b>${c}:</b> ${esc(v)}</div>`).join('') || 'Nenhum chip marcado.'; }
+  catch(e){ $('#stUlt').textContent = '⚠️ ' + e.message; }
+}
 async function testarIA(){
   $('#egTeste').innerHTML = 'Testando… (a imagem pode levar até 1 min)';
   try { const r = await api('engajamento/teste_ia', {});
@@ -1090,7 +1097,10 @@ function carregarMensagens(){
   document.querySelectorAll('input[name=mlink]').forEach(r => r.checked = r.value === MSG.modo_link);
   const st = MSG.status || {}; $('#stAtivo').checked = st.ativo; $('#stOfertas').checked = st.ofertas !== false;
   $('#stEng').checked = st.engajamento !== false; $('#stMax').value = st.max_dia || 5;
-  $('#stChips').innerHTML = (MSG.chips_todos || []).map(c => `<label class="chk"><input type="checkbox" class="stChip" value="${c}" ${(st.chips || []).includes(c) ? 'checked' : ''}> ${c}${c === 'chip1' ? ' (pessoal)' : ''}</label>`).join('');
+  $('#stChips').innerHTML = (MSG.chips_todos || []).map(c => `<label class="chk"><input type="checkbox" class="stChip" value="${c}" ${(st.chips || []).includes(c) ? 'checked' : ''}> ${c}</label>`).join('');
+  const su = MSG.status_ultimo || {};
+  $('#stUlt').innerHTML = Object.keys(su).length ? '<b>Último Status de cada chip:</b>' + Object.entries(su).map(([c, v]) => `<div>${v.ok ? '✅' : '❌'} ${c} · ${fdata(v.quando, true)} · ${esc(v.oque)} · <span class="muted">${esc(v.info)}</span></div>`).join('')
+    : '<span class="muted">Nenhum Status postado ainda.</span>';
   $('#mchamadas').innerHTML = ['Todas', ...MSG.lojas.filter(l => l !== 'Outras')].map(l => `<label>${esc(l)}
     <textarea data-cham="${esc(l)}" style="min-height:90px" placeholder="*APROVEITA QUE TÁ BARATO* 🔥">${esc((MSG.chamadas[l] || []).join('\n'))}</textarea></label>`).join('');
 }
