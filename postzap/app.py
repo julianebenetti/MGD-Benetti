@@ -1504,6 +1504,11 @@ def receber_webhook(payload):
         return
     key = data.get('key') or {}
     jid = key.get('remoteJid') or ''
+    if key.get('fromMe') and jid and not jid.endswith('@g.us') and not jid.endswith('@broadcast'):
+        mid = key.get('id')
+        if mid and mid not in _vistos:          # não foi o PostZap que mandou: é você conversando com a pessoa
+            set_cfg(f'humano_{inst}_{digitos(jid)[-11:]}', str(time.time()))
+        return
     if key.get('fromMe') or jid.endswith('@broadcast'):
         return
     msg0 = data.get('message') or {}
@@ -1530,7 +1535,7 @@ def receber_webhook(payload):
     else:
         quem = [jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]
     if not autorizado([x for x in quem if x]):
-        if not jid.endswith('@g.us') and texto0 and eng_cfg().get('inbox_ativo') and not (key.get('id') and _marcar_visto(key['id'])):
+        if not jid.endswith('@g.us') and texto0 and inbox_deve_responder(inst, jid, texto0) and not (key.get('id') and _marcar_visto(key['id'])):
             threading.Thread(target=pedido_inbox, args=(inst, jid, texto0), daemon=True).start()   # alguém pedindo produto
         return
     if key.get('id') and _marcar_visto(key['id']):   # já tratada por outro chip, ou é resposta do próprio PostZap
@@ -2013,6 +2018,9 @@ ENG_PADRAO = {
     'peso_votos': 1.5,                      # o mais votado vale até 50% a mais no Divulgador (proporcional aos votos)
     'aprovar': True,                        # mensagem do dia e enquete vão ao FILA POST ZAP para você aprovar
     'inbox_ativo': False, 'inbox_max_dia': 5,
+    'inbox_gatilho': 'quero',               # só responde mensagem que COMEÇA com uma dessas palavras (separadas por vírgula)
+    'inbox_chips': [],                      # chips que atendem pedidos (vazio = todos); desmarque o seu WhatsApp pessoal
+    'inbox_silencio_h': 12,                 # se VOCÊ falou com a pessoa nas últimas X horas, o robô fica quieto
     'monitor_ativo': False, 'monitor_grupos': [], 'monitor_telegram': [],
 }
 
@@ -2107,24 +2115,24 @@ TIPOS_NOITE = ['boa noite carinhoso agradecendo quem acompanhou as ofertas do di
                'pergunta leve para responder antes de dormir (ex.: qual achadinho de hoje você mais gostou?)',
                'lembrete gentil para ativar as notificações do grupo e não perder as ofertas da manhã',
                'frase de autoestima e descanso para mulheres reais, com carinho',
-               'convite para chamar no privado dizendo o produto que procura, que amanhã cedo a gente procura a melhor oferta',
+               'convite para chamar no privado mandando a palavra QUERO seguida do produto (ex.: "QUERO tênis confortável"), que a gente procura a melhor oferta',
                'contagem regressiva para a Black Friday/Natal, pedindo para deixar nos comentários o que querem ver']
 TIPOS_MSG = ['bom dia animado com uma pergunta para o grupo responder', 'dica rápida de moda plus size (como combinar uma peça)',
              'contagem regressiva para a Black Friday ou o Natal, convidando a ficar de olho nas ofertas do grupo',
              'pergunta divertida de "isso ou aquilo" sobre moda/casa', 'frase motivacional de autoestima para mulheres reais',
-             'convite para chamar no privado dizendo o produto que procura, que a gente acha a melhor oferta']
+             'convite para chamar no privado mandando a palavra QUERO seguida do produto que procura (ex.: "QUERO vestido plus size azul"), que a gente acha a melhor oferta']
 
 
 BANCO_DIA = ['*Bom dia, lindas!* ☀️ Hoje tem achadinho novo chegando por aqui. Qual peça vocês mais querem ver hoje? 👇',
              '*Bom dia!* 💜 Café na mão e olho nas ofertas! Me conta: vocês preferem *vestido* ou *conjunto*? 👗',
              '*Bom dia, meninas!* 🌸 Lembrando que aqui é lugar de mulher real e preço bom. O que vocês estão precisando essa semana?',
              '*Bom dia!* ☀️ Faltam poucos dias pra *Black Friday*! Deixem aqui o que vocês querem que eu procure 🛍️',
-             '*Bom dia, lindas!* 💖 Vocês sabiam que dá pra me chamar no privado e pedir um produto? Eu procuro a melhor oferta pra vocês!']
+             '*Bom dia, lindas!* 💖 Sabiam que dá pra pedir um produto? Me chama no privado escrevendo *QUERO* + o produto (ex.: _QUERO vestido plus size azul_) que eu procuro a melhor oferta!']
 BANCO_NOITE = ['*Boa noite, lindas!* 🌙 Obrigada por acompanharem as ofertas de hoje. Amanhã tem mais! Qual achadinho vocês mais amaram? 💜',
                '*Boa noite!* ✨ Antes de dormir: ativem as notificações do grupo pra não perder as ofertas da manhã 🔔',
                '*Boa noite, meninas!* 🌙 Vocês merecem descanso e autoestima lá em cima. Amanhã a gente garimpa mais coisa boa! 💖',
                '*Boa noite!* 🎄 O Natal tá chegando! Me contem nos comentários o que vocês querem ver por aqui 👇',
-               '*Boa noite, lindas!* 💜 Tá procurando algo específico? Me chama no privado que amanhã cedo eu procuro a melhor oferta!']
+               '*Boa noite, lindas!* 💜 Tá procurando algo? Me chama no privado escrevendo *QUERO* + o produto (ex.: _QUERO jogo de lençol_) que eu procuro a melhor oferta!']
 _motivo_texto = ['']
 
 
@@ -2273,6 +2281,29 @@ def peso_votado(nicho, focos):
     return 1 + (float(eng_cfg().get('peso_votos', 1.5)) - 1) * v / top
 
 
+def gatilhos_inbox(e=None):
+    e = e or eng_cfg()
+    return [normalizar(g) for g in str(e.get('inbox_gatilho') or '').split(',') if normalizar(g)]
+
+
+def inbox_deve_responder(inst, jid, texto):
+    """Só responde pedido quando: está ligado, o chip atende pedidos, a mensagem começa com a palavra-gatilho
+    e você não conversou com essa pessoa há pouco (para não falar com seus amigos)."""
+    e = eng_cfg()
+    if not e.get('inbox_ativo'):
+        return False
+    if e.get('inbox_chips') and inst not in e['inbox_chips']:
+        return False
+    gat = gatilhos_inbox(e)
+    primeira = normalizar(texto.strip().split()[0]) if texto.strip() else ''
+    if gat and primeira not in gat:
+        return False
+    ultimo = float(get_cfg(f'humano_{inst}_{digitos(jid)[-11:]}', '0') or 0)
+    if time.time() - ultimo < float(e.get('inbox_silencio_h', 12)) * 3600:
+        return False
+    return True
+
+
 def pedido_inbox(inst, jid, texto):
     """Alguém do grupo chamou no privado dizendo o que procura: devolve as 3 melhores ofertas com o seu link (Sub ID inbox)."""
     e = eng_cfg()
@@ -2282,12 +2313,15 @@ def pedido_inbox(inst, jid, texto):
     if n >= int(e.get('inbox_max_dia', 5)):
         return
     termo = re.sub(r'https?://\S+', '', texto)
+    for g in str(e.get('inbox_gatilho') or '').split(','):     # tira a palavra-gatilho ("QUERO vestido…" → "vestido…")
+        if g.strip():
+            termo = re.sub(rf'^\s*#?{re.escape(g.strip())}\b[\s:,-]*', '', termo, flags=re.I)
     termo = re.sub(r'(?i)\b(oi|ol[aá]|bom dia|boa tarde|boa noite|tudo bem|por favor|queria|quero|procuro|preciso de?|'
                    r'estou procurando|tem|voc[eê]s? t[eê]m|um|uma|uns|umas)\b[,!.?]*', ' ', termo)
     termo = re.sub(r'\s+', ' ', termo).strip(' ,.!?')[:60]
     if len(termo) < 3 or bloqueado(termo):
         if len(termo) < 3:
-            responder(inst, jid, 'Oi! 💜 Me conta o *nome do produto* que você está procurando (ex.: "vestido plus size azul") '
+            responder(inst, jid, 'Oi! 💜 Me manda *QUERO* + o nome do produto (ex.: "QUERO vestido plus size azul") '
                                  'que eu procuro a melhor oferta pra você!')
         return
     try:
@@ -2624,6 +2658,7 @@ class H(BaseHTTPRequestHandler):
                     pedidos = [dict(r) for r in c.execute('SELECT texto, resultado, quando FROM pedidos_inbox ORDER BY id DESC LIMIT 30')]
                 pq, po = enquete_de_hoje()
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
+                                           chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
                                            enquete_hora_hoje=hora_da_enquete(),
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
@@ -2865,6 +2900,12 @@ class H(BaseHTTPRequestHandler):
             for k, lim in (('enquete_opcoes', 12), ('monitor_grupos', 50), ('monitor_telegram', 20)):
                 if isinstance(b.get(k), list):
                     e[k] = [str(x).strip()[:100] for x in b[k] if str(x).strip()][:lim]
+            if 'inbox_gatilho' in b:
+                e['inbox_gatilho'] = str(b['inbox_gatilho'])[:80]
+            if isinstance(b.get('inbox_chips'), list):
+                e['inbox_chips'] = [x for x in b['inbox_chips'] if x in instancias()]
+            if str(b.get('inbox_silencio_h', '')).isdigit():
+                e['inbox_silencio_h'] = int(b['inbox_silencio_h'])
             for k in ('inbox_max_dia', 'peso_votos'):
                 if str(b.get(k, '')).replace('.', '', 1).isdigit():
                     e[k] = float(b[k]) if k == 'peso_votos' else int(b[k])

@@ -63,6 +63,7 @@
   independentes (plus size não é só roupa evangélica).
 - **💬 Engajamento do PostZap:** mensagem do dia (texto + imagem pela IA da OpenAI, chave do robô do Shopee Vídeo),
   enquete diária "o que querem ver" (votos dão prioridade no Divulgador), "me chama no privado" (quem pede um produto
-  recebe as 3 melhores ofertas com Sub ID `inbox`) e monitor de grupos de WhatsApp/canais públicos do Telegram (links
+  recebe as 3 melhores ofertas com Sub ID `inbox`; só responde mensagem que começa com a palavra-gatilho "QUERO", só nos chips
+  escolhidos — o chip1 é o WhatsApp pessoal dela — e fica quieto com quem ela conversou nas últimas 12h) e monitor de grupos de WhatsApp/canais públicos do Telegram (links
   da Shopee viram post com o link dela; cupons viram aviso para revisar). Tudo passa pelo FILA POST ZAP para aprovação.
 - **Black Friday 2026: sexta 27Nov26.** Aquecimento dos grupos começou em 18Nov26 (6 posts/dia por grupo, +2/dia, até 20).

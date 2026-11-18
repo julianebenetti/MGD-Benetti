@@ -258,9 +258,16 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <button class="b" type="button" onclick="engAgora('enq')">📊 Mandar uma enquete agora (pro FILA POST ZAP)</button></div>
 
     <div class="card" style="background:hsla(330,70%,55%,.07)"><b>💌 "Me chama no privado"</b>
-      <p class="muted">Quem escrever no privado de um chip dizendo o que procura ("vestido plus size azul") recebe na hora as 3 melhores ofertas
+      <p class="muted">Quem escrever no privado de um chip começando com a palavra-gatilho ("QUERO vestido plus size azul") recebe na hora as 3 melhores ofertas
       da Shopee com o seu link (Sub ID <b>inbox</b>). A mensagem do dia convida para isso de vez em quando.</p>
       <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egInbox"></div></div>
+      <div class="q"><div class="t"><b>🔑 Palavra-gatilho</b><small>Só responde quando a mensagem COMEÇA com ela (ex.: "QUERO vestido plus size azul").
+        Pode pôr mais de uma, separadas por vírgula. O convite no grupo ensina a usar.</small></div>
+        <div class="v"><input id="egGatilho" style="width:180px" placeholder="quero"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>📱 Quais chips atendem pedidos?</b><small>Desmarque o seu WhatsApp pessoal — assim ele nunca responde seus amigos.</small></div>
+        <div id="egInboxChips" class="row" style="margin-top:6px"></div></div>
+      <div class="q"><div class="t"><b>🤫 Ficar quieto com quem você conversou</b><small>Se VOCÊ mandou mensagem para a pessoa nas últimas horas, o robô não responde.</small></div>
+        <div class="v"><input type="number" id="egSilencio" min="0" max="168"> horas</div></div>
       <div class="q"><div class="t"><b>Máximo de pedidos por pessoa por dia</b></div><div class="v"><input type="number" id="egInboxMax" min="1" max="20"></div></div>
       <details><summary class="muted">O que estão pedindo (últimos)</summary><div id="egPedidos"></div></details></div>
 
@@ -841,6 +848,11 @@ async function carregarEng(){
     `<div class="row" style="gap:6px;margin:3px 0"><span style="width:190px">${esc(k)}</span><span style="height:14px;border-radius:7px;width:${n / tot * 260}px;background:hsla(${COR_NICHO[k] ?? corFoco(k)},65%,50%,.8)"></span> <b>${n}</b></div>`).join('')
     : '<p class="muted">Ainda sem votos.</p>';
   $('#egInbox').checked = ENG.inbox_ativo; $('#egInboxMax').value = ENG.inbox_max_dia;
+  $('#egGatilho').value = ENG.inbox_gatilho ?? 'quero'; $('#egSilencio').value = ENG.inbox_silencio_h ?? 12;
+  const selChips = ENG.inbox_chips || [];
+  $('#egInboxChips').innerHTML = (ENG.chips || []).map(c => { const num = ((c.eventos || []).find(e => e.numero) || {}).numero;
+    return `<label class="chk" style="border:0;padding:4px 10px;border-radius:8px;background:var(--bg)"><input type="checkbox" class="egChip" value="${esc(c.chip)}"
+      ${!selChips.length || selChips.includes(c.chip) ? 'checked' : ''}> 📱 ${esc(c.chip)} ${num ? '<span class="muted">+' + esc(num) + '</span>' : ''}</label>`; }).join('');
   $('#egPedidos').innerHTML = (ENG.pedidos || []).map(p => `<div class="chk"><span style="flex:1">"${esc(p.texto)}"</span><span class="muted">${esc(p.resultado)} · ${esc(fdata(p.quando, true))}</span></div>`).join('') || '<p class="muted">Nenhum pedido ainda.</p>';
   $('#egMon').checked = ENG.monitor_ativo; $('#egTg').value = (ENG.monitor_telegram || []).join('\n');
   MONSEL = new Set(ENG.monitor_grupos || []); desenharMonGrupos(); $('#egAprovar').checked = ENG.aprovar;
@@ -865,6 +877,8 @@ async function salvarEng(){
     enquete_ativo: $('#egEnq').checked, enquete_hora: $('#egEnqH').value, enquete_pergunta: $('#egPerg').value, peso_votos: $('#egPeso').value,
     enquete_opcoes: [...document.querySelectorAll('.egOp:checked')].map(i => i.value).slice(0, 12),
     inbox_ativo: $('#egInbox').checked, inbox_max_dia: $('#egInboxMax').value,
+    inbox_gatilho: $('#egGatilho').value, inbox_silencio_h: $('#egSilencio').value,
+    inbox_chips: [...document.querySelectorAll('.egChip:checked')].map(i => i.value),
     monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked});
   await carregarEng(); $('#egOk').textContent = 'Salvo ✓';
 }
