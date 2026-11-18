@@ -66,6 +66,21 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
   </section>
 
   <section id="t-fila" class="hide">
+    <details class="card" id="ritmoCard"><summary><b>⏱️ Ritmo de envio</b> <span id="ritmoResumo" class="muted"></span></summary>
+      <p class="muted">Os posts aprovados saem em <b>rajadas</b> (alguns posts juntos, depois uma pausa), só no horário escolhido.
+      O <b>aquecimento</b> começa com poucos posts por dia em cada grupo e aumenta um pouco por dia — bom para chegar na Black Friday com chips e grupos "quentes".
+      Post agendado com hora (<b>5 20h</b>) sai na hora marcada.</p>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))">
+        <label>Horário: das <input id="rIni" type="time"> às <input id="rFim" type="time"></label>
+        <label>Posts por rajada: de <input id="rRaj1" type="number" min="1" style="width:70px"> a <input id="rRaj2" type="number" min="1" style="width:70px"></label>
+        <label>Pausa entre rajadas (min): <input id="rPau1" type="number" min="1" style="width:70px"> a <input id="rPau2" type="number" min="1" style="width:70px"></label>
+        <label>Entre um grupo e outro (seg): <input id="rGr1" type="number" min="30" style="width:80px"> a <input id="rGr2" type="number" min="30" style="width:80px"></label>
+        <label>Aquecimento: começa com <input id="rAq1" type="number" min="1" style="width:70px"> posts/dia por grupo</label>
+        <label>Sobe <input id="rAq2" type="number" min="0" style="width:70px"> por dia, até <input id="rAq3" type="number" min="1" style="width:70px"></label>
+      </div>
+      <p class="row"><button class="b p" onclick="salvarRitmo(false)">💾 Salvar ritmo</button>
+        <button class="b" onclick="salvarRitmo(true)">🔄 Recomeçar aquecimento hoje</button> <span id="rOk" class="muted"></span></p>
+    </details>
     <div class="row" style="margin-bottom:12px"><span id="pausa"></span>
       <button class="b" onclick="novoAviso()">📢 Novo aviso para os grupos</button></div>
     <div id="fila"></div>
@@ -298,7 +313,21 @@ async function salvarItem(aprovar){
 }
 
 const ST = {rascunho:'📝 Aguardando sua aprovação', aprovado:'⏳ Aprovado, na fila', enviando:'📤 Enviando…', enviado:'✅ Enviado', erro:'⚠️ Erro'};
+function mostrarRitmo(){
+  const r = MSG.ritmo; if (!r) return;
+  $('#ritmoResumo').textContent = `· ${r.inicio}–${r.fim} · rajadas de ${r.rajada[0]}–${r.rajada[1]} · pausa ${r.pausa[0]}–${r.pausa[1]} min · hoje até ${MSG.limite_hoje} posts/grupo · próxima saída ${fdata(MSG.proxima_saida, true)}`;
+  $('#rIni').value = r.inicio; $('#rFim').value = r.fim; [$('#rRaj1').value, $('#rRaj2').value] = r.rajada;
+  [$('#rPau1').value, $('#rPau2').value] = r.pausa; [$('#rGr1').value, $('#rGr2').value] = r.entre_grupos;
+  $('#rAq1').value = r.aquec_inicio; $('#rAq2').value = r.aquec_passo; $('#rAq3').value = r.aquec_max;
+}
+async function salvarRitmo(reiniciar){
+  const j = await api('ritmo', {inicio: $('#rIni').value, fim: $('#rFim').value, rajada: [$('#rRaj1').value, $('#rRaj2').value],
+    pausa: [$('#rPau1').value, $('#rPau2').value], entre_grupos: [$('#rGr1').value, $('#rGr2').value],
+    aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, reiniciar_aquecimento: reiniciar});
+  MSG = await api('config'); mostrarRitmo(); $('#rOk').textContent = `Salvo ✓ — hoje: até ${j.limite_hoje} posts por grupo`;
+}
 async function carregarFila(){
+  MSG = await api('config').catch(() => MSG); mostrarRitmo();
   const j = await api('fila'); FILA = j.fila;
   $('#pausa').innerHTML = j.pausado
     ? `<b class="warn">⏸️ Envios pausados</b> <button class="b p" onclick="pausar(false)">▶️ Retomar</button>`

@@ -32,6 +32,10 @@ mande o link ali e responda `1`, `1 vip`, `2`… Só números de `NUMEROS_AUTORI
 (📌 *Post #12 pronto*). Responda **em cima** da prévia daquele post (deslizar → responder) com `1`, `1 vip`, `3 149,90`,
 `7 relâmpago`, `0`… — ou escreva `#12 1`. `pendentes` lista os que esperam resposta.
 
+## Ritmo de envio (aba ✅ Aprovação → ⏱️ Ritmo)
+Posts aprovados saem em **rajadas** (1–3 posts, pausa de 40–90 min, sorteado), só das 8h às 22h, com 2–5 min entre
+grupos. **Aquecimento:** 6 posts/dia por grupo no 1º dia, +2 por dia, até 20. Agendado com hora (`5 20h`) sai na hora.
+
 ## Fase 1 (listas, cupons, estilos)
 - 📋 **Listas de grupos** (👥 Grupos): "VIP", "Achados"… um clique na postagem ou `1 vip` no WhatsApp.
 - 👑 **Só grupos onde algum chip é admin** (filtro ligado por padrão); o envio prefere o chip admin do grupo.

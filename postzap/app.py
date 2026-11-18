@@ -893,15 +893,92 @@ def worker():
         time.sleep(30)
 
 
+RITMO_PADRAO = {
+    'inicio': '08:00', 'fim': '22:00',      # rajadas só nesse horário (agendado com hora marcada sai na hora)
+    'rajada': [1, 3],                       # posts por rajada (sorteado)
+    'pausa': [40, 90],                      # minutos de pausa entre rajadas (sorteado)
+    'entre_grupos': [120, 300],             # segundos entre um grupo e outro no mesmo post
+    'aquec_inicio': 6, 'aquec_passo': 2, 'aquec_max': 20, 'aquec_desde': '',   # posts/dia por grupo: 6 → +2/dia → 20
+}
+
+
+def ritmo():
+    r = dict(RITMO_PADRAO)
+    r.update(get_json('ritmo', {}))
+    if not r.get('aquec_desde'):
+        r['aquec_desde'] = agora().date().isoformat()
+        set_cfg('ritmo', json.dumps(r))
+    return r
+
+
+def limite_hoje(r=None):
+    """Aquecimento: começa devagar e sobe um pouco por dia até o máximo."""
+    r = r or ritmo()
+    try:
+        dias = (agora().date() - date.fromisoformat(r['aquec_desde'])).days
+    except ValueError:
+        dias = 0
+    return min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias))
+
+
+def no_horario(r, quando=None):
+    h = (quando or agora()).strftime('%H:%M')
+    return r['inicio'] <= h < r['fim']
+
+
+def proxima_saida():
+    """Quando sai o próximo post da fila (para avisar você)."""
+    r = ritmo()
+    prox = get_cfg('proxima_rajada')
+    t = max(agora(), datetime.fromisoformat(prox)) if prox else agora()
+    if not no_horario(r, t):
+        ini = datetime.strptime(r['inicio'], '%H:%M').time()
+        t = t.replace(hour=ini.hour, minute=ini.minute, second=0, microsecond=0)
+        if t <= agora():
+            t += timedelta(days=1)
+    return t
+
+
+def proximo_item():
+    """Agendados com hora marcada saem na hora; os outros saem em rajadas (1–3 posts, pausa 40–90 min) no horário."""
+    r = ritmo()
+    agora_iso = agora().isoformat()
+    with db() as c:
+        item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND agendado_para!='' AND agendado_para IS NOT NULL "
+                         "AND agendado_para<=? ORDER BY agendado_para LIMIT 1", (agora_iso,)).fetchone()
+    if item:
+        return item
+    if not no_horario(r):
+        return None
+    prox = get_cfg('proxima_rajada')
+    if prox and prox > agora_iso:
+        return None
+    with db() as c:
+        item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND (agendado_para IS NULL OR agendado_para='') "
+                         "ORDER BY aprovado_em LIMIT 1").fetchone()
+    if not item:
+        return None
+    restante = int(get_cfg('rajada_restante', '0') or 0)
+    if restante <= 0:
+        restante = random.randint(*r['rajada'])
+    restante -= 1
+    set_cfg('rajada_restante', str(restante))
+    if restante <= 0:          # acabou a rajada: sorteia a pausa (conta a partir de agora; o envio leva alguns min)
+        set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(*r['pausa']))).isoformat())
+    else:                      # dentro da rajada: próximo post logo em seguida (3–8 min)
+        set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(3, 8))).isoformat())
+    return item
+
+
 def processar_fila():
     if get_cfg('pausado') == '1':
         return
+    item = proximo_item()
+    if not item:
+        return
+    r = ritmo()
+    limite = limite_hoje(r)
     with _lock, db() as c:
-        item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND (agendado_para IS NULL OR agendado_para='' "
-                         "OR agendado_para<=?) ORDER BY COALESCE(NULLIF(agendado_para,''), aprovado_em) LIMIT 1",
-                         (agora().isoformat(),)).fetchone()
-        if not item:
-            return
         c.execute("UPDATE fila SET status='enviando' WHERE id=?", (item['id'],))
     fila = grupos_fila()
     grupos = [g for g in json.loads(item['grupos'] or '[]') if g not in fila]   # o grupo da fila nunca recebe post
@@ -913,8 +990,8 @@ def processar_fila():
             break
         with db() as c:
             nome = (c.execute('SELECT nome FROM grupos WHERE jid=?', (jid,)).fetchone() or [jid])[0]
-            if posts_hoje(c, jid) >= CFG['limite_dia']:
-                erros.append(f'{nome}: limite de {CFG["limite_dia"]} posts/dia atingido')
+            if posts_hoje(c, jid) >= limite:
+                erros.append(f'{nome}: limite de hoje ({limite} posts/grupo, aquecimento) atingido')
                 continue
             ja = c.execute('SELECT 1 FROM envios WHERE fila_id=? AND jid=? AND ok=1', (item['id'], jid)).fetchone()
         if ja:
@@ -950,7 +1027,7 @@ def processar_fila():
             c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia) VALUES (?,?,?,?,?,?,?)',
                       (item['id'], jid, item['chave'], agora().isoformat(), ok, erro, inst))
         if i < len(grupos) - 1:
-            time.sleep(random.randint(CFG['intervalo_min'], max(CFG['intervalo_min'], CFG['intervalo_max'])))
+            time.sleep(random.randint(*r['entre_grupos']))
     with _lock, db() as c:
         status = 'erro' if erros and len(erros) >= len(grupos) else 'enviado'
         c.execute('UPDATE fila SET status=?, enviado_em=?, erro=? WHERE id=?',
@@ -1313,8 +1390,13 @@ def _tratar(inst, numero, texto, citado=''):
             c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=?", (agora().isoformat(), fid))
         conversa_set(numero, None)
         quando = item['agendado_para']
-        return responder(inst, numero, f"✅ Post #{fid} aprovado! {'Sai em ' + data_tela(quando, True) if quando else 'Entrou na fila de envio'} "
-                                       f"para {len(grupos)} grupo(s). Aviso quando terminar.")
+        with db() as c:
+            na_frente = c.execute("SELECT COUNT(*) FROM fila WHERE status IN ('aprovado','enviando') AND id!=? AND "
+                                  "(agendado_para IS NULL OR agendado_para='')", (fid,)).fetchone()[0]
+        prev = proxima_saida()
+        quando_txt = (f"sai em {data_tela(quando, True)}" if quando else
+                      f"entrou na fila ({na_frente} na frente) · próxima rajada a partir de {data_tela(prev.isoformat(), True)}")
+        return responder(inst, numero, f"✅ Post #{fid} aprovado! {quando_txt} · {len(grupos)} grupo(s). Aviso quando sair.")
     if cmd in ('2', '3', '4'):
         esp = {'2': 'chamada', '3': 'de', '4': 'por'}[cmd]
         conversa_set(numero, fid, esp)
@@ -1459,8 +1541,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
-                                       'intervalo': [CFG['intervalo_min'], CFG['intervalo_max']],
-                                       'limite_dia': CFG['limite_dia'], 'repetir_dias': CFG['repetir_dias']})
+                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(),
+                                       'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
             log.exception('GET')
             return self.send_json({'erro': str(e)}, 500)
@@ -1553,6 +1635,23 @@ class H(BaseHTTPRequestHandler):
             with _lock, db() as c:
                 c.execute('DELETE FROM cupons WHERE id=?', (b['id'],))
             return self.send_json({'ok': True})
+        if p == '/api/ritmo':
+            r = ritmo()
+            for k in ('inicio', 'fim'):
+                if re.fullmatch(r'\d{2}:\d{2}', str(b.get(k, ''))):
+                    r[k] = b[k]
+            for k in ('rajada', 'pausa', 'entre_grupos'):
+                v = b.get(k)
+                if isinstance(v, list) and len(v) == 2 and all(str(x).isdigit() for x in v):
+                    a1, a2 = sorted(int(x) for x in v)
+                    r[k] = [max(1, a1), max(1, a2)]
+            for k in ('aquec_inicio', 'aquec_passo', 'aquec_max'):
+                if str(b.get(k, '')).isdigit():
+                    r[k] = int(b[k])
+            if b.get('reiniciar_aquecimento'):
+                r['aquec_desde'] = agora().date().isoformat()
+            set_cfg('ritmo', json.dumps(r))
+            return self.send_json({'ok': True, 'limite_hoje': limite_hoje(r)})
         if p == '/api/pausar':
             set_cfg('pausado', '1' if b.get('pausado') else '0')
             return self.send_json({'ok': True})
