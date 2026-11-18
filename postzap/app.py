@@ -2253,11 +2253,15 @@ def mensagem_do_dia(periodo='dia'):
         texto = banco[hoje.toordinal() % len(banco)]
         _motivo_texto[0] = str(ex)[:200]
         log.warning(f'Texto da IA falhou, usando texto pronto: {ex}')
+    convite = False
     if ('privado' in tipo or 'QUERO' in texto) and e.get('inbox_ativo'):
         link = link_pedido()
         if link:
             texto = texto.rstrip() + f'\n\n👉 *Toque aqui pra pedir:* {link}'
+            convite = True
     img = ''
+    if convite and imagens_convite():
+        return texto, 'CONVITE'
     if e.get('noite_imagem' if periodo == 'noite' else 'msg_imagem'):
         img = imagem_ia(prompt_imagem(periodo, tipo))
     return texto, img
@@ -2284,6 +2288,9 @@ def criar_post_engajamento(origem, texto, dados, produto):
 def rodar_mensagem_do_dia(periodo='dia'):
     texto, img = mensagem_do_dia(periodo)
     dados = {}
+    if img == 'CONVITE':
+        dados, img = dados_convite(), ''
+        _ultimo_erro_imagem[0] = ''
     if img:
         MIDIA_DIR.mkdir(exist_ok=True)
         arq = MIDIA_DIR / f"eng_{int(time.time())}.b64"
@@ -2292,7 +2299,7 @@ def rodar_mensagem_do_dia(periodo='dia'):
     titulo = '🌙 Mensagem da noite' if periodo == 'noite' else '☀️ Mensagem do dia'
     if _motivo_texto[0]:
         titulo += ' (texto pronto, a IA falhou: ' + _motivo_texto[0][:120] + ')'
-    if eng_cfg().get('noite_imagem' if periodo == 'noite' else 'msg_imagem') and not img:
+    if eng_cfg().get('noite_imagem' if periodo == 'noite' else 'msg_imagem') and not img and not dados:
         titulo += ' (sem imagem: ' + (_ultimo_erro_imagem[0] or 'erro desconhecido')[:160] + ')'
     return criar_post_engajamento('aviso', texto, dados, titulo)
 
@@ -2407,11 +2414,34 @@ CONVITE_PEDIDOS = ('🛍️ *Tá procurando alguma coisa específica?*\n\n'
                    '👉 *Toque aqui pra pedir:* {link}')
 
 
+CONVITE_DIR = BASE / 'convite'
+
+
+def imagens_convite():
+    """Imagens fixas do convite "me chama no privado": as suas (enviadas no app) ou as prontas (A e D), em rodízio."""
+    suas = [x for x in get_json('convite_imgs', []) if Path(x).exists()]
+    return suas or [str(p) for p in sorted(CONVITE_DIR.glob('*.jpg'))]
+
+
+def dados_convite():
+    import base64
+    imgs = imagens_convite()
+    if not imgs:
+        return {}
+    n = int(get_cfg('convite_vez', '0') or 0)
+    set_cfg('convite_vez', str(n + 1))
+    arq = Path(imgs[n % len(imgs)])
+    MIDIA_DIR.mkdir(exist_ok=True)
+    b64 = MIDIA_DIR / f"convite_{int(time.time())}.b64"
+    b64.write_text(base64.b64encode(arq.read_bytes()).decode())
+    return {'midia': str(b64), 'midia_tipo': 'image', 'mimetype': 'image/png' if arq.suffix == '.png' else 'image/jpeg'}
+
+
 def rodar_convite_pedidos():
     link = link_pedido()
     if not link:
         raise RuntimeError('nenhum chip que atende pedidos está conectado (veja 💌 "Me chama no privado")')
-    return criar_post_engajamento('aviso', CONVITE_PEDIDOS.format(link=link), {}, '💌 Convite de pedidos')
+    return criar_post_engajamento('aviso', CONVITE_PEDIDOS.format(link=link), dados_convite(), '💌 Convite de pedidos')
 
 
 def gatilhos_inbox(e=None):
@@ -2821,12 +2851,23 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(), monitor_stat=get_json('monitor_stat', {}),
+                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}),
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
                 return self.send_json(historico((qs.get('periodo') or ['7'])[0], (qs.get('mes') or [''])[0]))
+            if p.startswith('/api/convite_img/'):       # prévia das imagens fixas do convite
+                imgs = imagens_convite()
+                n = int(re.sub(r'\D', '', p.rsplit('/', 1)[-1]) or 0)
+                if n < len(imgs):
+                    corpo = Path(imgs[n]).read_bytes()
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'image/png' if imgs[n].endswith('.png') else 'image/jpeg')
+                    self.send_header('Cache-Control', 'no-cache')
+                    self.end_headers()
+                    self.wfile.write(corpo)
+                    return
             if p.startswith('/api/midia/'):              # miniatura do card: imagem que vai sair no post
                 it = item_fila(int(re.sub(r'\D', '', p.rsplit('/', 1)[-1]) or 0))
                 dados = json.loads((it or {}).get('dados') or '{}')
@@ -3074,6 +3115,28 @@ class H(BaseHTTPRequestHandler):
                 if str(b.get(k, '')).replace('.', '', 1).isdigit():
                     e[k] = float(b[k]) if k == 'peso_votos' else int(b[k])
             set_cfg('engajamento', json.dumps(e, ensure_ascii=False))
+            return self.send_json({'ok': True})
+        if p == '/api/engajamento/convite_img':          # trocar a imagem fixa do convite (ou voltar às prontas)
+            import base64
+            if b.get('padrao'):
+                for x in get_json('convite_imgs', []):
+                    Path(x).unlink(missing_ok=True)
+                set_cfg('convite_imgs', '[]')
+                return self.send_json({'ok': True})
+            m = re.match(r'data:image/(png|jpeg|jpg|webp);base64,(.+)', str(b.get('imagem', '')), re.S)
+            if not m:
+                return self.send_json({'erro': 'mande uma imagem PNG ou JPG'}, 400)
+            dados_img = base64.b64decode(m.group(2))
+            if len(dados_img) > 5_000_000:
+                return self.send_json({'erro': 'imagem grande demais (máx. 5 MB)'}, 400)
+            MIDIA_DIR.mkdir(exist_ok=True)
+            arq = MIDIA_DIR / f"convite_sua_{int(time.time())}.{'png' if m.group(1) == 'png' else 'jpg'}"
+            arq.write_bytes(dados_img)
+            lista = [] if not b.get('somar') else [x for x in get_json('convite_imgs', []) if Path(x).exists()]
+            if not b.get('somar'):
+                for x in get_json('convite_imgs', []):
+                    Path(x).unlink(missing_ok=True)
+            set_cfg('convite_imgs', json.dumps(lista + [str(arq)]))
             return self.send_json({'ok': True})
         if p == '/api/engajamento/teste_ia':               # diagnóstico: texto e imagem, com o motivo de cada falha
             r = {}

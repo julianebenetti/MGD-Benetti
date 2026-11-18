@@ -272,6 +272,11 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <div class="q" style="display:block"><div class="t"><b>👉 Link "toque aqui pra pedir"</b><small>Abre o privado do chip com "QUERO " já escrito — a pessoa
         só completa com o produto. Vai sozinho nos convites da mensagem do dia/noite. Nos estilos, use o campo <b>{link_pedido}</b>.</small></div>
         <div id="egLink" class="muted" style="margin-top:6px;word-break:break-all"></div>
+        <div style="margin-top:10px"><b>🖼️ Imagem do convite</b> <small class="muted">sempre a mesma (o grupo já reconhece) · se tiver mais de uma, vai alternando</small>
+          <div id="egConvImgs" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0"></div>
+          <label class="b" style="cursor:pointer">🔄 Trocar por outra imagem<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, false)"></label>
+          <label class="b" style="cursor:pointer">➕ Somar mais uma<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, true)"></label>
+          <button class="b" type="button" id="egConvPadrao" onclick="convitePadrao()">↩️ Voltar às prontas</button></div>
         <button class="b" type="button" style="margin-top:6px" onclick="engAgora('convite')">📌 Mandar convite de pedidos agora (pro FILA POST ZAP)</button></div>
       <details><summary class="muted">O que estão pedindo (últimos)</summary><div id="egPedidos"></div></details></div>
 
@@ -839,7 +844,7 @@ let ENG = {};
 async function carregarEng(){
   ENG = await api('engajamento'); if (!GRUPOS.length) await carregarGrupos();
   $('#egMsg').checked = ENG.msg_ativo; $('#egMsgH').value = ENG.msg_hora; $('#egImg').checked = ENG.msg_imagem;
-  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora; $('#egNoiteImg').checked = ENG.noite_imagem !== false; $('#egImgOrdem').value = ENG.imagem_ordem || 'gemini,openai';
+  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora; $('#egNoiteImg').checked = ENG.noite_imagem !== false; $('#egImgOrdem').value = ENG.imagem_ordem || 'gemini,openai'; desenharConvite();
   const ms = Object.entries(ENG.monitor_stat || {}).sort((a, b) => (b[1].visto || '').localeCompare(a[1].visto || ''));
   $('#egMonStat').innerHTML = !ENG.monitor_ativo ? '<span class="muted">⏸️ Monitor desligado.</span>' : !ms.length
     ? '<span class="muted">⏳ Nada lido ainda. Grupos: chega quando alguém posta lá. Telegram: confere a cada ~10 min.</span>'
@@ -898,6 +903,21 @@ async function salvarEng(){
     monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked});
   await carregarEng(); $('#egOk').textContent = 'Salvo ✓';
 }
+function desenharConvite(){
+  $('#egConvImgs').innerHTML = (ENG.convite_imgs || []).map((n, i) => `<img src="${B}api/convite_img/${i}?v=${Date.now()}" title="${esc(n)}" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid #ddd">`).join('');
+  $('#egConvPadrao').style.display = ENG.convite_suas ? '' : 'none';
+}
+async function trocarConvite(inp, somar){
+  const f = inp.files[0]; if (!f) return;
+  const bruto = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+  const img = new Image(); await new Promise(r => { img.onload = r; img.src = bruto; });
+  const k = Math.min(1, 1080 / Math.max(img.width, img.height)), cv = document.createElement('canvas');   // reduz pra caber no envio
+  cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+  const imagem = cv.toDataURL('image/jpeg', 0.88);
+  try { await api('engajamento/convite_img', {imagem, somar}); await carregarEng(); } catch(e){ alert(e.message); }
+  inp.value = '';
+}
+async function convitePadrao(){ await api('engajamento/convite_img', {padrao: true}); await carregarEng(); }
 async function testarIA(){
   $('#egTeste').innerHTML = 'Testando… (a imagem pode levar até 1 min)';
   try { const r = await api('engajamento/teste_ia', {});
