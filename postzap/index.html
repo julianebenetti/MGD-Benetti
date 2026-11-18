@@ -106,7 +106,11 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       </div>
       <div class="salvar"><button class="b p" onclick="salvarRitmo()">💾 Salvar</button> <span id="rOk" class="muted"></span></div>
     </details>
-    <div class="row" style="margin-bottom:12px"><span id="pausa"></span>
+    <div id="semGrupos"></div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="b p" id="btnTodos" onclick="aprovarTodos()">✅ Aprovar todos</button>
+      <select id="listaTodos" style="width:auto"><option value="">nos grupos de cada post / marcados</option></select>
+      <span id="pausa"></span>
       <button class="b" onclick="novoAviso()">📢 Novo aviso para os grupos</button></div>
     <div id="fila"></div>
   </section>
@@ -409,6 +413,11 @@ async function carregarFila(){
   const j = await api('fila'); FILA = j.fila;
   const n = FILA.filter(x => ['rascunho','erro'].includes(x.status)).length;
   $('#nPend').style.display = n ? '' : 'none'; $('#nPend').textContent = n;
+  $('#btnTodos').textContent = `✅ Aprovar todos (${n})`; $('#btnTodos').disabled = !n;
+  const sel = $('#listaTodos').value;
+  $('#listaTodos').innerHTML = '<option value="">nos grupos de cada post / marcados</option>' + LISTAS.map(l => `<option value="${l.id}" ${String(l.id) === sel ? 'selected' : ''}>só na lista ${esc(l.nome)}</option>`).join('');
+  $('#semGrupos').innerHTML = MSG.grupos_ativos ? '' : `<div class="card" style="border-color:var(--warn)"><b class="warn">⚠️ Nenhum grupo marcado para receber posts.</b>
+    <span class="muted">Vá em 👥 Grupos e marque onde postar — sem isso nada sai.</span></div>`;
   $('#pausa').innerHTML = j.pausado
     ? `<b class="warn">⏸️ Envios pausados</b> <button class="b p" onclick="pausar(false)">▶️ Retomar</button>`
     : `<button class="b" onclick="pausar(true)">⏸️ Pausar todos os envios</button>`;
@@ -432,6 +441,14 @@ async function carregarFila(){
   $('#hist').innerHTML = FILA.filter(x => x.status === 'enviado').map(card).join('') || '<p class="muted">Nada enviado ainda.</p>';
 }
 async function mudarNicho(id, nicho){ await api('fila/nicho', {id, nicho}); }
+async function aprovarTodos(){
+  const lista = $('#listaTodos').value ? Number($('#listaTodos').value) : null;
+  if (!confirm('Aprovar todos os posts que estão aguardando? Eles saem nas rajadas, no horário configurado.')) return;
+  const j = await api('fila/aprovar_todos', {lista});
+  alert(`✅ ${j.aprovados.length} aprovado(s). Saem nas rajadas a partir de ${fdata(j.proxima, true)}.` +
+        (j.sem_grupo.length ? `\n⚠️ ${j.sem_grupo.length} sem grupo: marque grupos em 👥 Grupos.` : ''));
+  carregarFila();
+}
 async function aprovar(id){ try { await api('fila/aprovar', {id}); } catch(e){ alert(e.message); } carregarFila(); }
 async function acao(a, id){ await api('fila/' + a, {id}); carregarFila(); }
 async function pausar(v){ await api('pausar', {pausado:v}); carregarFila(); }

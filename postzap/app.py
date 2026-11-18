@@ -1385,7 +1385,8 @@ def montar_post_do_link(url):
 
 
 MENU_CURTO = ("↩️ *Responda em cima desta mensagem* (ou da foto) com: *1* postar · *1 vip* · *2* chamada · *3* De · "
-              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *8* nicho · *0* descartar")
+              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *8* nicho · *0* descartar\n"
+              "Para liberar tudo de uma vez: *aprovar todos* (ou *aprovar todos vip*)")
 
 
 def item_alvo(numero, texto, citado, conv):
@@ -1401,6 +1402,31 @@ def item_alvo(numero, texto, citado, conv):
         if it and it.get('pedido_por') == numero:
             return it, m.group(2)
     return (item_fila(conv['fila_id']) if conv['fila_id'] else None), texto
+
+
+def destinos_do_item(item, lista=None):
+    """Grupos para onde o post vai: a lista escolhida → os do próprio post → os marcados agora em 👥 Grupos."""
+    fila = grupos_fila()
+    if lista:
+        gs = json.loads(lista['grupos'] or '[]')
+    else:
+        gs = json.loads(item['grupos'] or '[]') or grupos_ativos()
+    return [g for g in gs if g not in fila]
+
+
+def aprovar_itens(itens, lista=None):
+    """Aprova vários posts de uma vez (mantém agendamentos). Devolve (aprovados, sem_grupo)."""
+    ok, sem = [], []
+    for it in itens:
+        gs = destinos_do_item(it, lista)
+        if not gs:
+            sem.append(it['id'])
+            continue
+        with _lock, db() as c:
+            c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL, grupos=? WHERE id=? "
+                      "AND status IN ('rascunho','erro')", (agora().isoformat(), json.dumps(gs), it['id']))
+        ok.append(it['id'])
+    return ok, sem
 
 
 def pendentes(numero):
@@ -1442,6 +1468,21 @@ def _tratar(inst, numero, texto, citado=''):
         return
 
     t = texto.strip()
+    m_todos = re.match(r'(?:aprovar|aprova|postar) tod[oa]s(?:\s+(.+))?$', t.strip(), re.I)
+    if m_todos:
+        lista = achar_lista(m_todos.group(1)) if m_todos.group(1) else None
+        if m_todos.group(1) and not lista:
+            return responder(inst, numero, f'⚠️ Não achei a lista "{m_todos.group(1)}".')
+        itens = [item_fila(x['id']) for x in pendentes(numero)]
+        if not itens:
+            return responder(inst, numero, '📭 Nenhum post esperando aprovação.')
+        ok, sem = aprovar_itens(itens, lista)
+        conversa_set(numero, None)
+        prev = proxima_saida()
+        return responder(inst, numero, (f"✅ {len(ok)} post(s) aprovados ({', '.join('#' + str(i) for i in ok)})"
+                                        f"{' para a lista ' + lista['nome'] if lista else ''}. Saem nas rajadas a partir de "
+                                        f"{data_tela(prev.isoformat(), True)}." if ok else '')
+                                       + (f"\n⚠️ Sem grupo (marque grupos em 👥 Grupos): {', '.join('#' + str(i) for i in sem)}" if sem else ''))
     if t.lower() in ('pendentes', 'fila', 'lista'):
         ps = pendentes(numero)
         return responder(inst, numero, ('📋 *Esperando sua resposta:*\n' + '\n'.join(f"#{x['id']} · {x['produto'][:50]}" for x in ps)
@@ -1477,7 +1518,10 @@ def _tratar(inst, numero, texto, citado=''):
             c.execute('UPDATE fila SET grupos=? WHERE id=?', (lista['grupos'], fid))
         item = item_fila(fid)
     if cmd == '1':
-        grupos = [g for g in json.loads(item['grupos'] or '[]') if g not in grupos_fila()]
+        grupos = destinos_do_item(item)
+        if grupos and not json.loads(item['grupos'] or '[]'):
+            with _lock, db() as c:
+                c.execute('UPDATE fila SET grupos=? WHERE id=?', (json.dumps(grupos), fid))
         if not grupos:
             return responder(inst, numero, '⚠️ Nenhum grupo marcado. Marque os grupos no app (👥 Grupos).', fid=fid)
         with _lock, db() as c:
@@ -1806,7 +1850,7 @@ class H(BaseHTTPRequestHandler):
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
                                        'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS,
-                                       'nichos_agora': nichos_da_hora(),
+                                       'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
             log.exception('GET')
@@ -1971,13 +2015,17 @@ class H(BaseHTTPRequestHandler):
                           (b.get('texto'), json.dumps(b.get('grupos') or []), b.get('agendado_para') or '', b['id']))
             return self.send_json({'ok': True})
         if p == '/api/fila/aprovar':
-            with _lock, db() as c:
-                it = c.execute('SELECT grupos FROM fila WHERE id=?', (b['id'],)).fetchone()
-                if not it or not json.loads(it['grupos'] or '[]'):
-                    return self.send_json({'erro': 'Escolha pelo menos um grupo antes de aprovar.'}, 400)
-                c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=? "
-                          "AND status IN ('rascunho','erro')", (agora().isoformat(), b['id']))
+            it = item_fila(b['id'])
+            ok, sem = aprovar_itens([it]) if it else ([], [])
+            if sem or not it:
+                return self.send_json({'erro': 'Nenhum grupo marcado: marque grupos em 👥 Grupos (ou escolha no ✏️ Editar).'}, 400)
             return self.send_json({'ok': True})
+        if p == '/api/fila/aprovar_todos':
+            lista = next((l for l in listas() if l['id'] == b.get('lista')), None)
+            with db() as c:
+                itens = [dict(r) for r in c.execute("SELECT * FROM fila WHERE status IN ('rascunho','erro') ORDER BY id")]
+            ok, sem = aprovar_itens(itens, lista)
+            return self.send_json({'aprovados': ok, 'sem_grupo': sem, 'proxima': proxima_saida().isoformat()})
         if p == '/api/fila/nicho':
             it = item_fila(b['id'])
             if it and b.get('nicho') in NICHOS:
