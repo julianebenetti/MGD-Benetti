@@ -160,10 +160,12 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v"><input id="dvVend" type="number" min="0"> vendas</div></div>
         <div class="q"><div class="t"><b>🔁 Depois de postar, quanto tempo sem repetir o mesmo produto?</b></div>
           <div class="v"><input id="dvRep" type="number" min="1"> dias</div></div>
-        <div class="q" style="display:block"><div class="t"><b>🎯 Focos (público / ocasião)</b>
-          <small>Ligue os focos que você quer receber. Cada um tem as próprias palavras de busca e ganha prioridade no ranking (seus grupos são de plus size).</small></div>
+        <div class="q" style="display:block"><div class="t"><b>🎯 Temas da mineração (público, datas e ocasiões)</b>
+          <small>Ligue só o que quer buscar agora. Cada tema tem as próprias palavras de busca e ganha prioridade no ranking.
+          São independentes: um vestido plus size comum fica só com ➕ Plus Size.</small></div>
           <div id="dvFocos"></div>
-          <div class="row" style="margin-top:6px">Prioridade dos focos no ranking: <input id="dvPeso" type="number" min="1" max="5" step="0.1" style="width:80px"> × <small class="muted">(1 = sem prioridade · 1,6 = 60% a mais)</small></div></div>
+          <button class="b" type="button" onclick="novoTema()">➕ Novo tema</button>
+          <div class="row" style="margin-top:6px">Prioridade dos temas ligados no ranking: <input id="dvPeso" type="number" min="1" max="5" step="0.1" style="width:80px"> × <small class="muted">(1 = sem prioridade · 1,6 = 60% a mais)</small></div></div>
         <div class="q" style="display:block"><div class="t"><b>🔎 Outras buscas (gerais)</b><small>Uma palavra de busca por linha (ex.: escova secadora).</small></div>
           <textarea id="dvPal" style="min-height:160px;margin-top:6px"></textarea></div>
       </div>
@@ -259,7 +261,9 @@ const $ = s => document.querySelector(s);
 // Cores por nicho (fundo suave) e por status (faixa à esquerda) — para bater o olho e diferenciar
 const COR_NICHO = {'🏠 Casa e decoração': 28, '🍳 Cozinha e utensílios': 45, '🔌 Eletrodomésticos': 200, '💇 Beleza e cabelo': 320,
   '👗 Moda': 275, '🧸 Infantil': 55, '🎧 Eletrônicos': 220, '🛋️ Móveis': 95, '🐶 Pet': 160, '📦 Outros': 0};
-const COR_FOCO = {'➕ Plus Size': 330, '✝️ Evangélica': 210, '🎄 Natal': 130};
+const COR_FOCO_FIXA = {'➕ Plus Size': 330, '✝️ Evangélica': 210, '🎄 Natal': 130, '🎆 Réveillon': 50, '☀️ Verão e praia': 185, '🎒 Volta às aulas': 15};
+const corFoco = f => COR_FOCO_FIXA[f] ?? ([...f].reduce((a, c) => (a * 31 + c.codePointAt(0)) % 360, 7));   // tema novo: cor própria
+const COR_FOCO = new Proxy({}, {get: (_, f) => corFoco(String(f))});
 const COR_STATUS = {rascunho: '#e0a100', erro: '#d64545', aprovado: '#3b82f6', enviando: '#8b5cf6', enviado: '#16a34a', descartado: '#999'};
 function tom(nicho, focos){
   const f = (focos || [])[0]; const h = f ? COR_FOCO[f] : COR_NICHO[nicho];
@@ -555,9 +559,8 @@ async function carregarDiv(){
   $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min; $('#dvComModa').value = d.comissao_min_moda;
   $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias;
   $('#dvPal').value = d.palavras.join('\n'); $('#dvPeso').value = d.peso_foco;
-  $('#dvFocos').innerHTML = MSG.focos.map(f => `<div class="card" style="margin:8px 0;background:hsla(${COR_FOCO[f]},75%,55%,.10)">
-    <label class="chk" style="border:0"><input type="checkbox" class="dvFocoAt" value="${esc(f)}" ${d.focos_ativos.includes(f) ? 'checked' : ''}> <b>${esc(f)}</b></label>
-    <textarea class="dvFocoPal" data-foco="${esc(f)}" style="min-height:90px">${esc(((d.palavras_foco || {})[f] || []).join('\n'))}</textarea></div>`).join('');
+  $('#dvFocos').innerHTML = '';
+  Object.keys(d.palavras_foco || {}).forEach(f => addTema(f, d.palavras_foco[f], d.focos_ativos.includes(f), !(d.prontos || []).includes(f)));
 }
 async function salvarDiv(){
   await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
@@ -567,6 +570,21 @@ async function salvarDiv(){
     focos_ativos: [...document.querySelectorAll('.dvFocoAt:checked')].map(i => i.value),
     palavras_foco: Object.fromEntries([...document.querySelectorAll('.dvFocoPal')].map(t => [t.dataset.foco, t.value.split('\n')]))});
   await carregarDiv(); $('#dvOk').textContent = 'Salvo ✓';
+}
+function addTema(nome, palavras, ativo, criado){
+  const div = document.createElement('div'); div.className = 'card tema'; div.style.cssText = `margin:8px 0;background:hsla(${corFoco(nome)},75%,55%,.10)`;
+  div.innerHTML = `<div class="row"><label class="chk" style="border:0;flex:1"><input type="checkbox" class="dvFocoAt" value="${esc(nome)}" ${ativo ? 'checked' : ''}>
+      <b>${esc(nome)}</b> <span class="muted">${ativo ? '· ligado' : '· desligado'}</span></label>
+      ${criado ? `<button class="b" type="button" onclick="this.closest('.tema').remove();pendente('dvOk')">🗑️</button>` : ''}</div>
+    <details><summary class="muted">Palavras de busca (${(palavras || []).length})</summary>
+    <textarea class="dvFocoPal" data-foco="${esc(nome)}" style="min-height:90px">${esc((palavras || []).join('\n'))}</textarea></details>`;
+  div.querySelector('.dvFocoAt').onchange = e => { e.target.parentElement.querySelector('.muted').textContent = e.target.checked ? '· ligado' : '· desligado'; pendente('dvOk'); };
+  $('#dvFocos').appendChild(div);
+}
+function novoTema(){
+  const nome = prompt('Nome do tema, com um emoji na frente (ex.: 🎁 Dia das Mães, 👟 Tênis, 💍 Festa e casamento):'); if (!nome) return;
+  const pal = prompt('Palavras de busca, separadas por vírgula (ex.: presente dia das mães, kit presente mãe):') || '';
+  addTema(nome.trim(), pal.split(',').map(x => x.trim()).filter(Boolean), true, true); pendente('dvOk');
 }
 async function testarDiv(){
   $('#dvRes').innerHTML = '<p class="muted">Buscando na Shopee… (pode levar 1 min)</p>';

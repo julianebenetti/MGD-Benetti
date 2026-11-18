@@ -465,19 +465,50 @@ _DICA_NICHO = {'casa': '🏠 Casa e decoração', 'decor': '🏠 Casa e decoraç
                'utens': '🍳 Cozinha e utensílios', 'eletron': '🎧 Eletrônicos', 'tapete': '🏠 Casa e decoração'}
 
 
-FOCOS = ['➕ Plus Size', '✝️ Evangélica', '🎄 Natal']      # público/ocasião, por cima do nicho
-_REGRAS_FOCO = [
-    ('➕ Plus Size', r'plus ?size|\bplus\b|tamanhos? grandes?|\bg[1-5]\b|\bxg+\b|\bgg+\b|\b(48|50|52|54|56|58|60)\b.*(ao|a) \b(54|56|58|60|62)'),
-    ('✝️ Evangélica', r'evang[eé]lic|crist[aã]|moda (crist|religios)|modest|saia (longa|midi|m[ií]di|godê|lápis longa)|'
-                      r'vestido (longo|midi|m[ií]di).*(manga|social)|conjunto (social|saia)'),
-    ('🎄 Natal', r'natal|natalin|papai noel|noel|[aá]rvore de natal|pisca[- ]?pisca|enfeite|guirlanda|pres[eé]pio|'
-                r'amigo secreto|ceia|bola de natal|festas de fim de ano|r[eé]veillon'),
-]
+# Temas da mineração (público/ocasião, por cima do nicho). Prontos: regra de detecção pelo nome + palavras de busca.
+# A Juliane liga/desliga cada um no 🤖 Divulgador e pode criar temas novos (detectados pelas palavras de busca deles).
+TEMAS_PRONTOS = {
+    '➕ Plus Size': (r'plus ?size|\bplus\b|tamanhos? grandes?|\bg[1-5]\b|\bxg+\b|\bgg+\b',
+                    ['vestido plus size', 'conjunto plus size', 'calça plus size', 'blusa plus size', 'macacão plus size',
+                     'short plus size', 'sutiã plus size', 'moda praia plus size', 'saia plus size'], True),
+    '✝️ Evangélica': (r'evang[eé]lic|crist[aã]|moda (crist|religios)|modest|saia (longa|midi|m[ií]di|god[eê])|'
+                     r'vestido (longo|midi|m[ií]di).*(manga|social)|conjunto (social|saia)',
+                     ['vestido evangélico', 'saia midi evangélica', 'saia longa', 'conjunto evangélico', 'vestido midi manga',
+                      'saia jeans longa'], True),
+    '🎄 Natal': (r'natal|natalin|papai noel|noel|[aá]rvore de natal|pisca[- ]?pisca|guirlanda|pres[eé]pio|amigo secreto|ceia|'
+                r'bolas? de natal',
+                ['decoração de natal', 'árvore de natal', 'pisca pisca', 'enfeite de natal', 'pijama natal família',
+                 'roupa natal', 'presente amigo secreto', 'mesa posta natal', 'kit presente natal'], True),
+    '🎆 Réveillon': (r'r[eé]veillon|ano novo|virada|roupa branca|vestido branco|ta[cç]a de champanhe',
+                    ['vestido branco réveillon', 'conjunto branco feminino', 'roupa ano novo', 'decoração ano novo',
+                     'taça de champanhe', 'look réveillon plus size'], False),
+    '☀️ Verão e praia': (r'biqu[ií]ni|mai[oô]|sa[ií]da de praia|moda praia|chap[eé]u de praia|canga|bolsa de praia|'
+                        r'piscina|ver[aã]o|regata',
+                        ['biquíni', 'maiô', 'saída de praia', 'moda praia plus size', 'chapéu de praia', 'vestido verão',
+                         'bolsa de praia', 'canga'], False),
+    '🎒 Volta às aulas': (r'volta [aà]s aulas|material escolar|mochila escolar|estojo|caderno|lancheira',
+                         ['material escolar', 'mochila escolar', 'estojo escolar', 'lancheira', 'kit caderno'], False),
+}
+FOCOS = list(TEMAS_PRONTOS)          # nomes dos temas prontos (os criados por ela vêm de focos_nomes())
+_REGRAS_FOCO = [(n, v[0]) for n, v in TEMAS_PRONTOS.items()]
+
+
+def focos_nomes(d=None):
+    """Todos os temas (prontos + criados por ela), na ordem."""
+    d = d or divulgador_cfg()
+    return list(dict.fromkeys(FOCOS + list((d.get('palavras_foco') or {}).keys())))
 
 
 def classificar_focos(produto, dica=''):
     t = f"{produto or ''} {dica or ''}".lower()
-    return [f for f, pad in _REGRAS_FOCO if re.search(pad, t)]
+    achados = [f for f, pad in _REGRAS_FOCO if re.search(pad, t)]
+    try:                                   # temas criados por ela: bate se o nome tiver uma das palavras de busca dele
+        for f, palavras in (get_json('divulgador', {}).get('palavras_foco') or {}).items():
+            if f not in TEMAS_PRONTOS and any(w.strip().lower() and w.strip().lower() in t for w in palavras):
+                achados.append(f)
+    except Exception:
+        pass
+    return achados
 
 
 def classificar_nicho(produto, dica=''):
@@ -1637,15 +1668,8 @@ DIVULGADOR_PADRAO = {
                  'cadeira', 'colchão', 'guarda-roupa', 'penteadeira', 'gaveteiro', 'estante',
                  'aspirador', 'ventilador', 'climatizador', 'air fryer', 'jogo de panelas', 'brinquedo infantil'],
     # Focos (público/ocasião): palavras próprias, ligar/desligar e prioridade no ranking (os grupos são de plus size)
-    'focos_ativos': ['➕ Plus Size', '✝️ Evangélica', '🎄 Natal'],
-    'palavras_foco': {
-        '➕ Plus Size': ['vestido plus size', 'conjunto plus size', 'calça plus size', 'blusa plus size', 'macacão plus size',
-                        'short plus size', 'sutiã plus size', 'moda praia plus size', 'saia plus size'],
-        '✝️ Evangélica': ['vestido evangélico', 'saia midi evangélica', 'saia longa', 'conjunto evangélico', 'vestido midi manga',
-                         'saia jeans longa', 'vestido plus size evangélico'],
-        '🎄 Natal': ['decoração de natal', 'árvore de natal', 'pisca pisca', 'enfeite de natal', 'pijama natal família',
-                    'roupa natal', 'presente amigo secreto', 'mesa posta natal', 'kit presente natal'],
-    },
+    'focos_ativos': [n for n, v in TEMAS_PRONTOS.items() if v[2]],
+    'palavras_foco': {n: list(v[1]) for n, v in TEMAS_PRONTOS.items()},
     'peso_foco': 1.6,                       # produto com foco ativo vale 60% a mais no ranking
     'comissao_min': 9.0,                    # R$ por venda (piso do Garimpo)
     'comissao_min_moda': 4.0,               # exceção: público do WhatsApp gosta de moda barata (decisão 18Nov26)
@@ -1665,6 +1689,10 @@ def piso_comissao(nicho, d=None):
 def divulgador_cfg():
     d = dict(DIVULGADOR_PADRAO)
     d.update(get_json('divulgador', {}))
+    pf = dict(d.get('palavras_foco') or {})
+    for n, v in TEMAS_PRONTOS.items():      # temas prontos novos aparecem (desligados) para quem já tinha salvo
+        pf.setdefault(n, list(v[1]))
+    d['palavras_foco'] = pf
     return d
 
 
@@ -1881,7 +1909,7 @@ class H(BaseHTTPRequestHandler):
                                       c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (r['jid'],))]
                 return self.send_json({'grupos': rows, 'listas': listas()})
             if p == '/api/divulgador':
-                return self.send_json(divulgador_cfg())
+                return self.send_json(dict(divulgador_cfg(), prontos=FOCOS))
             if p == '/api/cupons':
                 with db() as c:
                     return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
@@ -1904,7 +1932,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
-                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': FOCOS,
+                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': focos_nomes(),
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
@@ -2003,7 +2031,7 @@ class H(BaseHTTPRequestHandler):
             r = ritmo()
             if isinstance(b.get('nichos_horario'), list):
                 r['nichos_horario'] = sorted(
-                    [{'de': f['de'], 'ate': f['ate'], 'nichos': [n for n in f.get('nichos', []) if n in NICHOS + FOCOS]}
+                    [{'de': f['de'], 'ate': f['ate'], 'nichos': [n for n in f.get('nichos', []) if n in NICHOS + focos_nomes()]}
                      for f in b['nichos_horario'] if re.fullmatch(r'\d{2}:\d{2}', f.get('de', '')) and
                      re.fullmatch(r'\d{2}:\d{2}', f.get('ate', ''))], key=lambda f: f['de'])
             for k in ('nichos_ativo', 'nicho_estrito'):
@@ -2034,9 +2062,13 @@ class H(BaseHTTPRequestHandler):
             if isinstance(b.get('horarios'), list):
                 d['horarios'] = sorted(h for h in b['horarios'] if re.fullmatch(r'\d{2}:\d{2}', h))
             if isinstance(b.get('focos_ativos'), list):
-                d['focos_ativos'] = [f for f in b['focos_ativos'] if f in FOCOS]
-            if isinstance(b.get('palavras_foco'), dict):
-                d['palavras_foco'] = {f: [w.strip() for w in v if w.strip()][:20] for f, v in b['palavras_foco'].items() if f in FOCOS}
+                d['focos_ativos'] = [f.strip() for f in b['focos_ativos'] if f.strip()]
+            if isinstance(b.get('palavras_foco'), dict):         # inclui temas novos criados por ela (máx. 20)
+                d['palavras_foco'] = {f.strip()[:40]: [w.strip() for w in v if w.strip()][:20]
+                                      for f, v in list(b['palavras_foco'].items())[:20] if f.strip()}
+                for n, v in TEMAS_PRONTOS.items():
+                    d['palavras_foco'].setdefault(n, list(v[1]))
+                d['focos_ativos'] = [f for f in d['focos_ativos'] if f in d['palavras_foco']]
             if str(b.get('peso_foco', '')).replace('.', '', 1).isdigit():
                 d['peso_foco'] = min(5.0, max(1.0, float(b['peso_foco'])))
             if isinstance(b.get('palavras'), list):
