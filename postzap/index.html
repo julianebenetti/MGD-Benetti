@@ -35,6 +35,11 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 .q .v{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.q .v input{width:90px}.q .v input[type=time]{width:120px}.q .v input[type=checkbox]{width:auto}
 .salvar{position:sticky;bottom:0;background:var(--card);padding:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .pend{color:var(--warn);font-weight:600}
+details.mini{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px}
+details.mini>summary{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 12px;cursor:pointer;list-style:none}
+details.mini>summary::-webkit-details-marker{display:none}
+details.mini .mnome{flex:1;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.mini[open]>summary{border-bottom:1px solid var(--bd)}details.mini>.card{border:0;margin:0}
 nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px;border-left:1px solid var(--bd);white-space:nowrap}
 </style>
 </head>
@@ -408,6 +413,7 @@ async function salvarRitmo(){
   $('#rOk').textContent = `Salvo ✓ — hoje: até ${j.limite_hoje} posts por grupo`;
 }
 async function carregarFila(){
+  const abertos = new Set([...document.querySelectorAll('details.mini[open] summary b')].map(b => b.textContent));
   MSG = await api('config').catch(() => MSG);
   if ($('#rOk').textContent.indexOf('não salvas') < 0) mostrarRitmo();
   const j = await api('fila'); FILA = j.fila;
@@ -431,14 +437,31 @@ async function carregarFila(){
     ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
     <pre style="white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto)}</pre>
     ${it.erro ? `<p class="err">${esc(it.erro)}</p>` : ''}
-    ${it.link ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
+    ${it.link && it.status === 'enviado' ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
       it.cliques_grupo.map(g => esc(g.nome) + ': ' + g.n).join(' · ') : ''}${it.sub_ids ? ' · Sub IDs Shopee: ' + it.sub_ids.map(esc).join(' / ') : ''}</p>` : ''}
     <p class="row" style="margin:0">
     ${['rascunho','erro'].includes(it.status) ? `<button class="b p" onclick="aprovar(${it.id})">✅ Aprovar</button><button class="b" onclick="editar(${it.id})">✏️ Editar</button>` : ''}
     ${it.status==='aprovado' ? `<button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
     ${!['enviando','enviado'].includes(it.status) ? `<button class="b" onclick="acao('descartar',${it.id})">🗑️ Descartar</button>` : ''}</p></div>`;
-  $('#fila').innerHTML = FILA.filter(x => !['enviado'].includes(x.status)).map(card).join('') || '<p class="muted">Nada aguardando. Prepare uma postagem em 🛍️ Produtos.</p>';
-  $('#hist').innerHTML = FILA.filter(x => x.status === 'enviado').map(card).join('') || '<p class="muted">Nada enviado ainda.</p>';
+  // card reduzido (uma linha; toque para abrir o completo)
+  const mini = it => `<details class="mini"><summary><b>#${it.id}</b> <span class="tag">${esc(it.nicho || '📢')}</span>
+      <span class="mnome">${esc(it.produto)}</span>
+      <span class="muted">${JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length} grupo(s)
+      ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}${it.enviado_em ? ' · ✅ ' + esc(fdata(it.enviado_em, true)) : ''}
+      ${it.link && it.status === 'enviado' ? ' · 👆 ' + (it.cliques || 0) : ''}</span>
+      <span class="tag">${ST[it.status] || it.status}</span></summary>${card(it)}</details>`;
+  const precisa = FILA.filter(x => ['rascunho', 'erro'].includes(x.status));
+  const naFila = FILA.filter(x => ['aprovado', 'enviando'].includes(x.status))
+    .sort((a, b) => (a.status === 'enviando' ? -1 : 0) - (b.status === 'enviando' ? -1 : 0));
+  $('#fila').innerHTML =
+    (precisa.length ? `<h3 style="margin:8px 0">📝 Precisam de você (${precisa.length})</h3>` + precisa.map(card).join('')
+                    : '<p class="muted">✨ Nada esperando sua aprovação.</p>') +
+    (naFila.length ? `<h3 style="margin:16px 0 8px">⏳ Na fila de envio (${naFila.length}) <span class="muted" style="font-weight:400;font-size:13px">
+       · saem nas rajadas a partir de ${esc(fdata(MSG.proxima_saida, true))}</span></h3>` + naFila.map(mini).join('') : '');
+  const env = FILA.filter(x => x.status === 'enviado');
+  setTimeout(() => document.querySelectorAll('details.mini').forEach(d => { if (abertos.has(d.querySelector('summary b').textContent)) d.open = true; }));
+  $('#hist').innerHTML = env.length ? `<p class="muted">${env.length} post(s) enviados · toque para ver o post completo</p>` + env.map(mini).join('')
+                                    : '<p class="muted">Nada enviado ainda.</p>';
 }
 async function mudarNicho(id, nicho){ await api('fila/nicho', {id, nicho}); }
 async function aprovarTodos(){
