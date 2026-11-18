@@ -1412,6 +1412,8 @@ MENU_AVISO = "Responda com:\n*1* ✅ enviar agora (ou *1 nome-da-lista*)\n*5* �
 def montar_texto(p):
     """Texto final pelo estilo escolhido. Linha com campos {..} todos vazios some (ex.: sem "De:", sem cupom)."""
     p = dict(p)
+    if '{link_pedido}' in ''.join(modelos().values()) and eng_cfg().get('inbox_ativo'):
+        p.setdefault('link_pedido', link_pedido())
     p['chamada'] = re.sub(r'\s+', ' ', str(p.get('chamada') or '').replace('*', '')).strip()   # o estilo já põe o negrito
     de, por = num(p.get('preco_de')), num(p.get('preco'))
     p['desconto'] = f"{round((1 - por / de) * 100)}% OFF" if de > por > 0 else ''
@@ -2156,6 +2158,10 @@ def mensagem_do_dia(periodo='dia'):
         texto = banco[hoje.toordinal() % len(banco)]
         _motivo_texto[0] = str(ex)[:200]
         log.warning(f'Texto da IA falhou, usando texto pronto: {ex}')
+    if ('privado' in tipo or 'QUERO' in texto) and e.get('inbox_ativo'):
+        link = link_pedido()
+        if link:
+            texto = texto.rstrip() + f'\n\n👉 *Toque aqui pra pedir:* {link}'
     img = ''
     if e.get('noite_imagem' if periodo == 'noite' else 'msg_imagem'):
         clima = ('noite tranquila, luz quente e aconchegante, tons de azul e lilás' if periodo == 'noite'
@@ -2279,6 +2285,41 @@ def peso_votado(nicho, focos):
     top = max(r.values())
     v = max([r.get(nicho, 0)] + [r.get(f, 0) for f in focos or []])
     return 1 + (float(eng_cfg().get('peso_votos', 1.5)) - 1) * v / top
+
+
+def link_pedido():
+    """Link "toque aqui pra pedir": abre o privado de um chip que atende pedidos com "QUERO " já escrito."""
+    e = eng_cfg()
+    chips = e.get('inbox_chips') or instancias()
+    for inst in chips:
+        if estado_chip(inst) != 'open':
+            continue
+        num = get_cfg(f'numero_{inst}')
+        if not num:
+            try:
+                num = numero_do_chip(inst)
+                if num:
+                    set_cfg(f'numero_{inst}', num)
+            except Exception:
+                num = ''
+        if num:
+            gat = (str(e.get('inbox_gatilho') or 'quero').split(',')[0].strip() or 'quero').upper()
+            return f"https://wa.me/{num}?text={urllib.parse.quote(gat + ' ')}"
+    return ''
+
+
+CONVITE_PEDIDOS = ('🛍️ *Tá procurando alguma coisa específica?*\n\n'
+                   'Toque no link abaixo, escreva o produto depois do *QUERO* e me manda — eu procuro as *melhores ofertas* '
+                   'da Shopee e te respondo rapidinho! 💜\n\n'
+                   'Ex.: _QUERO vestido plus size azul_ · _QUERO jogo de lençol queen_\n\n'
+                   '👉 *Toque aqui pra pedir:* {link}')
+
+
+def rodar_convite_pedidos():
+    link = link_pedido()
+    if not link:
+        raise RuntimeError('nenhum chip que atende pedidos está conectado (veja 💌 "Me chama no privado")')
+    return criar_post_engajamento('aviso', CONVITE_PEDIDOS.format(link=link), {}, '💌 Convite de pedidos')
 
 
 def gatilhos_inbox(e=None):
@@ -2658,6 +2699,7 @@ class H(BaseHTTPRequestHandler):
                     pedidos = [dict(r) for r in c.execute('SELECT texto, resultado, quando FROM pedidos_inbox ORDER BY id DESC LIMIT 30')]
                 pq, po = enquete_de_hoje()
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
+                                           link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
                                            enquete_hora_hoje=hora_da_enquete(),
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
@@ -2923,7 +2965,7 @@ class H(BaseHTTPRequestHandler):
             return self.send_json(r)
         if p == '/api/engajamento/agora':
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
-                   else rodar_enquete())
+                   else rodar_convite_pedidos() if b.get('tipo') == 'convite' else rodar_enquete())
             return self.send_json({'id': fid})
         if p == '/api/status':
             cfg = status_cfg()

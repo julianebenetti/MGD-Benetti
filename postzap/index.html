@@ -269,6 +269,10 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <div class="q"><div class="t"><b>🤫 Ficar quieto com quem você conversou</b><small>Se VOCÊ mandou mensagem para a pessoa nas últimas horas, o robô não responde.</small></div>
         <div class="v"><input type="number" id="egSilencio" min="0" max="168"> horas</div></div>
       <div class="q"><div class="t"><b>Máximo de pedidos por pessoa por dia</b></div><div class="v"><input type="number" id="egInboxMax" min="1" max="20"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>👉 Link "toque aqui pra pedir"</b><small>Abre o privado do chip com "QUERO " já escrito — a pessoa
+        só completa com o produto. Vai sozinho nos convites da mensagem do dia/noite. Nos estilos, use o campo <b>{link_pedido}</b>.</small></div>
+        <div id="egLink" class="muted" style="margin-top:6px;word-break:break-all"></div>
+        <button class="b" type="button" style="margin-top:6px" onclick="engAgora('convite')">📌 Mandar convite de pedidos agora (pro FILA POST ZAP)</button></div>
       <details><summary class="muted">O que estão pedindo (últimos)</summary><div id="egPedidos"></div></details></div>
 
     <div class="card" style="background:hsla(130,60%,50%,.07)"><b>🔭 Monitorar grupos e canais de ofertas</b>
@@ -316,7 +320,8 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         aparece e conta cliques por grupo aqui no app; quem toca é levado na hora para a loja.</span></label>
     </div>
     <div class="card"><b>🎨 Estilos de mensagem</b>
-      <p class="muted">Campos: {chamada} {produto} {preco_de} {preco} {desconto} {cupom} {cupom_texto} {pix} {parcelamento} {loja} {link}.
+      <p class="muted">Campos: {chamada} {produto} {preco_de} {preco} {desconto} {cupom} {cupom_texto} {pix} {parcelamento} {loja} {link} {link_pedido}
+      (ex.: uma linha "💬 Não achou o que queria? Peça aqui: {link_pedido}").
       {cta} = chamada para ação (veja abaixo). Uma linha some sozinha quando os campos dela estão vazios (ex.: sem "De:", sem cupom). {desconto} é calculado do De/Por.
       WhatsApp: *negrito*, _itálico_, ~riscado~.</p>
       <div class="row"><select id="mestilo" style="width:auto" onchange="mostrarEstilo()"></select>
@@ -848,6 +853,8 @@ async function carregarEng(){
     `<div class="row" style="gap:6px;margin:3px 0"><span style="width:190px">${esc(k)}</span><span style="height:14px;border-radius:7px;width:${n / tot * 260}px;background:hsla(${COR_NICHO[k] ?? corFoco(k)},65%,50%,.8)"></span> <b>${n}</b></div>`).join('')
     : '<p class="muted">Ainda sem votos.</p>';
   $('#egInbox').checked = ENG.inbox_ativo; $('#egInboxMax').value = ENG.inbox_max_dia;
+  $('#egLink').innerHTML = ENG.link_pedido ? `<a href="${esc(ENG.link_pedido)}" target="_blank">${esc(ENG.link_pedido)}</a>`
+    : (ENG.inbox_ativo ? '⚠️ Nenhum chip que atende pedidos está conectado.' : 'Ligue o "Me chama no privado" para gerar o link.');
   $('#egGatilho').value = ENG.inbox_gatilho ?? 'quero'; $('#egSilencio').value = ENG.inbox_silencio_h ?? 12;
   const selChips = ENG.inbox_chips || [];
   $('#egInboxChips').innerHTML = (ENG.chips || []).map(c => { const num = ((c.eventos || []).find(e => e.numero) || {}).numero;
