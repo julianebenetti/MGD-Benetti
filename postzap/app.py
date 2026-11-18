@@ -1262,120 +1262,129 @@ def proxima_saida():
     return t
 
 
-def proximo_item():
-    """Agendados com hora marcada saem na hora; os outros saem em rajadas (1–3 posts, pausa 40–90 min) no horário."""
+def proximos_itens():
+    """Agendado com hora marcada sai sozinho na hora. Fora isso, uma RAJADA: sorteia quantos posts (ex.: 1–3),
+    pega os primeiros da fila (preferindo o nicho da hora) e marca a pausa até a próxima rajada."""
     r = ritmo()
     agora_iso = agora().isoformat()
     with db() as c:
         item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND agendado_para!='' AND agendado_para IS NOT NULL "
                          "AND agendado_para<=? ORDER BY agendado_para LIMIT 1", (agora_iso,)).fetchone()
     if item:
-        return item
+        return [item]
     if not no_horario(r):
-        return None
+        return []
     prox = get_cfg('proxima_rajada')
     if prox and prox > agora_iso:
-        return None
+        return []
     with db() as c:
         candidatos = c.execute("SELECT * FROM fila WHERE status='aprovado' AND (agendado_para IS NULL OR agendado_para='') "
                                "ORDER BY aprovado_em").fetchall()
     da_hora = nichos_da_hora(r)
-    if da_hora:                     # rajada do nicho da hora; sem nenhum desse nicho: outro (ou espera, se estrito)
+    if da_hora:                     # rajada do nicho da hora; completa com outros (a não ser que seja estrito)
         do_nicho = [x for x in candidatos if x['origem'] == 'aviso' or nicho_do_item(x) in da_hora
                     or set(focos_do_item(x)) & set(da_hora)]          # avisos/engajamento saem em qualquer faixa
-        candidatos = do_nicho or ([] if r.get('nicho_estrito') else candidatos)
-    item = candidatos[0] if candidatos else None
-    if not item:
-        return None
-    restante = int(get_cfg('rajada_restante', '0') or 0)
-    if restante <= 0:
-        restante = random.randint(*r['rajada'])
-    restante -= 1
-    set_cfg('rajada_restante', str(restante))
-    if restante <= 0:          # acabou a rajada: sorteia a pausa (conta a partir de agora; o envio leva alguns min)
-        set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(*r['pausa']))).isoformat())
-    else:                      # dentro da rajada: próximo post logo em seguida (3–8 min)
-        set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(3, 8))).isoformat())
-    return item
+        resto = [x for x in candidatos if x not in do_nicho]
+        candidatos = do_nicho + ([] if r.get('nicho_estrito') else resto)
+    if not candidatos:
+        return []
+    n = random.randint(*sorted(r['rajada']))
+    set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(*r['pausa']))).isoformat())
+    return candidatos[:n]
+
+
+def _link_do_grupo(item, jid):
+    envio = dict(item)
+    with db() as c:
+        gid = c.execute('SELECT rowid FROM grupos WHERE jid=?', (jid,)).fetchone()
+    if gid and item['link'] and item['link'] in (item['texto'] or ''):
+        if '/l/' in item['link']:                   # página do PostZap: marca do grupo → cliques por grupo
+            envio['texto'] = item['texto'].replace(item['link'], f"{item['link']}?g={gid[0]}")
+        elif 'shopee' in item['link']:              # link direto: um link de afiliado por grupo → vendas por grupo
+            try:
+                novo = link_shopee_do_grupo(item, gid[0])
+                if novo:
+                    envio['texto'] = item['texto'].replace(item['link'], novo)
+            except Exception as e:
+                log.warning(f'Link por grupo falhou ({e}); vai o link geral')
+    return envio
 
 
 def processar_fila():
+    """Envia a rajada GRUPO A GRUPO: em cada grupo saem todos os posts da rajada em sequência (segundos entre eles),
+    depois espera o intervalo entre grupos e vai para o próximo."""
     if get_cfg('pausado') == '1':
         return
-    item = proximo_item()
-    if not item:
+    itens = [dict(x) for x in proximos_itens()]
+    if not itens:
         return
     r = ritmo()
     limite = limite_hoje(r)
-    with _lock, db() as c:
-        c.execute("UPDATE fila SET status='enviando' WHERE id=?", (item['id'],))
     fila = grupos_fila()
-    grupos = [g for g in (json.loads(item['grupos'] or '[]') or grupos_ativos()) if g not in fila]  # sem grupo: os marcados agora
-    if not grupos:
-        with _lock, db() as c:
-            c.execute("UPDATE fila SET status='erro', erro=? WHERE id=?",
-                      ('Nenhum grupo: marque grupos em 👥 Grupos ou use 📋 Definir grupos e aprove de novo.', item['id']))
-        return
-    random.shuffle(grupos)                     # ordem dos grupos também muda a cada postagem
-    erros, usados, anterior = [], {}, None
-    for i, jid in enumerate(grupos):
+    with _lock, db() as c:
+        for it in itens:
+            c.execute("UPDATE fila SET status='enviando' WHERE id=?", (it['id'],))
+    for it in itens:
+        it['_grupos'] = [g for g in (json.loads(it['grupos'] or '[]') or grupos_ativos()) if g not in fila]
+        it['_erros'], it['_usados'] = [], {}
+        if not it['_grupos']:
+            it['_erros'].append('Nenhum grupo: marque grupos em 👥 Grupos ou use 📋 Definir grupos e aprove de novo.')
+    todos = list(dict.fromkeys(g for it in itens for g in it['_grupos']))
+    random.shuffle(todos)                      # ordem dos grupos também muda a cada rajada
+    entre_posts = r.get('entre_posts') or [15, 45]
+    anterior = None
+    for gi, jid in enumerate(todos):
         if get_cfg('pausado') == '1':
-            erros.append('pausado no meio do envio')
+            for it in itens:
+                it['_erros'].append('pausado no meio do envio')
             break
         with db() as c:
             nome = (c.execute('SELECT nome FROM grupos WHERE jid=?', (jid,)).fetchone() or [jid])[0]
-            if posts_hoje(c, jid) >= limite:
-                erros.append(f'{nome}: limite de hoje ({limite} posts/grupo, aquecimento) atingido')
-                continue
-            ja = c.execute('SELECT 1 FROM envios WHERE fila_id=? AND jid=? AND ok=1', (item['id'], jid)).fetchone()
-        if ja:
-            continue
-        inst = sortear_chip(jid, anterior)
-        ok, erro = 1, None
-        envio = dict(item)
-        with db() as c:
-            gid = c.execute('SELECT rowid FROM grupos WHERE jid=?', (jid,)).fetchone()
-        if gid and item['link'] and item['link'] in (item['texto'] or ''):
-            if '/l/' in item['link']:                   # página do PostZap: marca do grupo → cliques por grupo
-                envio['texto'] = item['texto'].replace(item['link'], f"{item['link']}?g={gid[0]}")
-            elif 'shopee' in item['link']:              # link direto: um link de afiliado por grupo → vendas por grupo
+        inst = sortear_chip(jid, anterior)     # o mesmo chip manda a rajada inteira neste grupo
+        enviou = False
+        for it in [x for x in itens if jid in x['_grupos']]:
+            with db() as c:
+                if c.execute('SELECT 1 FROM envios WHERE fila_id=? AND jid=? AND ok=1', (it['id'], jid)).fetchone():
+                    continue
+                if posts_hoje(c, jid) >= limite:
+                    it['_erros'].append(f'{nome}: limite de hoje ({limite} posts/grupo, aquecimento) atingido')
+                    continue
+            if enviou:
+                time.sleep(random.randint(*sorted(entre_posts)))
+            ok, erro = 1, None
+            if not inst:
+                ok, erro = 0, 'nenhum chip conectado está neste grupo'
+            else:
                 try:
-                    novo = link_shopee_do_grupo(item, gid[0])
-                    if novo:
-                        envio['texto'] = item['texto'].replace(item['link'], novo)
+                    enviar_item(inst, jid, _link_do_grupo(it, jid))
+                    it['_usados'][inst] = it['_usados'].get(inst, 0) + 1
+                    anterior, enviou = inst, True
+                    log.info(f"Fila {it['id']} → {nome} pelo chip {inst}")
                 except Exception as e:
-                    log.warning(f'Link por grupo falhou ({e}); vai o link geral')
-        if not inst:
-            ok, erro = 0, 'nenhum chip conectado está neste grupo'
-        else:
-            try:
-                enviar_item(inst, jid, envio)
-                usados[inst] = usados.get(inst, 0) + 1
-                anterior = inst
-                log.info(f"Fila {item['id']} → {nome} pelo chip {inst}")
-            except Exception as e:
-                ok, erro = 0, str(e)[:300]
-        if not ok:
-            erros.append(f'{nome}: {erro}')
-        with _lock, db() as c:
-            c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia) VALUES (?,?,?,?,?,?,?)',
-                      (item['id'], jid, item['chave'], agora().isoformat(), ok, erro, inst))
-        if i < len(grupos) - 1:
+                    ok, erro = 0, str(e)[:300]
+            if not ok:
+                it['_erros'].append(f'{nome}: {erro}')
+            with _lock, db() as c:
+                c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia) VALUES (?,?,?,?,?,?,?)',
+                          (it['id'], jid, it['chave'], agora().isoformat(), ok, erro, inst))
+        if enviou and gi < len(todos) - 1:
             time.sleep(random.randint(*r['entre_grupos']))
-    with _lock, db() as c:
-        status = 'erro' if erros and len(erros) >= len(grupos) else 'enviado'
-        c.execute('UPDATE fila SET status=?, enviado_em=?, erro=? WHERE id=?',
-                  (status, agora().isoformat(), '\n'.join(erros) or None, item['id']))
-    if usados and status_cfg().get('ativo'):
-        try:
-            postar_status(dict(item))
-        except Exception as e:
-            log.warning(f'Status: {e}')
-    if item['pedido_por']:
-        resumo = ', '.join(f'{k}: {v}' for k, v in usados.items()) or 'nenhum'
-        aviso = (f"✅ Postado: *{item['produto'][:60]}*\n{sum(usados.values())} grupo(s) · chips usados → {resumo}"
-                 + (f"\n⚠️ {chr(10).join(erros)}" if erros else ''))
-        responder(item['pedido_inst'], item['pedido_por'], aviso)
+    for it in itens:
+        erros, usados = it['_erros'], it['_usados']
+        with _lock, db() as c:
+            status = 'erro' if not usados and erros else 'enviado'
+            c.execute('UPDATE fila SET status=?, enviado_em=?, erro=? WHERE id=?',
+                      (status, agora().isoformat(), '\n'.join(erros) or None, it['id']))
+        if usados and status_cfg().get('ativo'):
+            try:
+                postar_status(it)
+            except Exception as e:
+                log.warning(f'Status: {e}')
+        if it['pedido_por']:
+            resumo = ', '.join(f'{k}: {v}' for k, v in usados.items()) or 'nenhum'
+            aviso = (f"✅ Postado: *{it['produto'][:60]}*\n{sum(usados.values())} grupo(s) · chips usados → {resumo}"
+                     + (f"\n⚠️ {chr(10).join(erros)}" if erros else ''))
+            responder(it['pedido_inst'], it['pedido_por'], aviso)
 
 
 # ---------------------------------------------------------------- chamada automática (IA)
