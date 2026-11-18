@@ -2081,6 +2081,7 @@ ENG_PADRAO = {
     'msg_ativo': False, 'msg_hora': '09:30', 'msg_imagem': True,
     'noite_ativo': False, 'noite_hora': '21:00', 'noite_imagem': True,
     'convite_ativo': False, 'convite_dias': [2, 5], 'convite_hora': '19:30',   # convite de pedidos automático (0=seg … 6=dom)
+    'amiga_ativo': False, 'amiga_dias': [0, 3], 'amiga_hora': '12:30', 'amiga_grupos': [],   # 👭 convide uma amiga (links dos grupos)
     'imagem_ordem': 'gemini,openai',        # quem gera as imagens, em ordem (gemini | openai | pollinations)
     'enquete_hora_modo': 'aleatorio',       # aleatorio: um horário sorteado por dia dentro da janela | fixo: enquete_hora
     'enquete_janela': ['19:00', '22:00'],
@@ -2487,7 +2488,7 @@ CONVITE_DIR = BASE / 'convite'
 def imagens_convite():
     """Imagens fixas do convite "me chama no privado": as suas (enviadas no app) ou as prontas (A e D), em rodízio."""
     suas = [x for x in get_json('convite_imgs', []) if Path(x).exists()]
-    return suas or [str(p) for p in sorted(CONVITE_DIR.glob('*.jpg'))]
+    return suas or [str(p) for p in sorted(CONVITE_DIR.glob('*.jpg')) if p.name != 'amiga.jpg']
 
 
 def dados_convite():
@@ -2502,6 +2503,77 @@ def dados_convite():
     b64 = MIDIA_DIR / f"convite_{int(time.time())}.b64"
     b64.write_text(base64.b64encode(arq.read_bytes()).decode())
     return {'midia': str(b64), 'midia_tipo': 'image', 'mimetype': 'image/png' if arq.suffix == '.png' else 'image/jpeg'}
+
+
+def _grupos_admin():
+    with db() as c:
+        return sorted(((r[0], r[1]) for r in c.execute('SELECT jid, nome FROM grupos WHERE admin=1') if r[0] not in grupos_fila()), key=lambda x: x[1])
+
+
+def grupos_para_amiga():
+    """Grupos que entram na lista do "convide uma amiga": os escolhidos, ou todos onde algum chip é admin."""
+    e = eng_cfg()
+    fora = grupos_fila() | set(e.get('monitor_grupos') or [])
+    with db() as c:
+        todos = {r[0]: r[1] for r in c.execute('SELECT jid, nome FROM grupos WHERE admin=1')}
+        cheios = {r[0] for r in c.execute("SELECT m.jid FROM membros m WHERE m.total>=1000 AND m.dia=(SELECT MAX(dia) FROM membros "
+                                           "WHERE jid=m.jid AND total IS NOT NULL)")}
+    escolhidos = [j for j in (e.get('amiga_grupos') or []) if j in todos] or list(todos)
+    lista = [(j, todos[j]) for j in escolhidos if j not in fora and j not in cheios]
+    return sorted(lista, key=lambda x: x[1])
+
+
+def link_convite_grupo(jid):
+    """Link chat.whatsapp.com do grupo (precisa de um chip admin). Guarda por 1 dia."""
+    cache = get_json('links_grupo', {})
+    if cache.get(jid, {}).get('dia') == agora().date().isoformat():
+        return cache[jid]['url']
+    with db() as c:
+        chips = [r[0] for r in c.execute('SELECT instancia FROM grupo_chips WHERE jid=? ORDER BY admin DESC', (jid,))]
+    for inst in chips:
+        if estado_chip(inst) != 'open':
+            continue
+        try:
+            r = evo('GET', f'/group/inviteCode/{inst}?groupJid={urllib.parse.quote(jid)}', timeout=60)
+            url = r.get('inviteUrl') or (f"https://chat.whatsapp.com/{r['inviteCode']}" if r.get('inviteCode') else '')
+            if url:
+                cache[jid] = {'url': url, 'dia': agora().date().isoformat()}
+                set_cfg('links_grupo', json.dumps(cache))
+                return url
+        except Exception as ex:
+            log.warning(f'Link do grupo {jid} pelo {inst}: {ex}')
+    return ''
+
+
+def texto_convide_amiga():
+    linhas = []
+    for i, (jid, nome) in enumerate(grupos_para_amiga(), 1):
+        url = link_convite_grupo(jid)
+        if not url:
+            continue
+        m = re.match(r'\s*#?(\d+)', nome)
+        rot = f'GRUPO {int(m.group(1)):02d}' if m else f'GRUPO {i:02d}'
+        linhas.append(f'👉 *{rot}:* {url}')
+    if not linhas:
+        raise RuntimeError('não consegui o link de nenhum grupo (algum chip precisa ser admin e estar conectado)')
+    return ('💜 *MENINAS! QUEREM CONVIDAR UMA AMIGA?* 💜\n\n'
+            'Mande o link de qualquer um dos nossos grupos pra ela entrar e acompanhar os achadinhos com a gente! 🛒✨\n\n'
+            '⚠️ *Importante:* se algum grupo estiver cheio ou der problema, entre em outro da lista pra não perder '
+            'nenhuma oferta, cupom ou promoção! 🔥\n\n'
+            '👇 *NOSSOS GRUPOS:*\n\n' + '\n\n'.join(linhas) +
+            '\n\n🔥 *Entrou? Fica de olho!* Os melhores achadinhos e cupons acabam rapidinho! 🛍️')
+
+
+def rodar_convite_amiga():
+    import base64
+    dados = {}
+    arq = BASE / 'convite' / 'amiga.jpg'
+    if arq.exists():
+        MIDIA_DIR.mkdir(exist_ok=True)
+        b64 = MIDIA_DIR / f"amiga_{int(time.time())}.b64"
+        b64.write_text(base64.b64encode(arq.read_bytes()).decode())
+        dados = {'midia': str(b64), 'midia_tipo': 'image', 'mimetype': 'image/jpeg'}
+    return criar_post_engajamento('aviso', texto_convide_amiga(), dados, '👭 Convide uma amiga')
 
 
 def rodar_convite_pedidos():
@@ -2645,6 +2717,8 @@ def processar_achado(texto, fonte, midia=None):
     jid_fila, inst_fila = destino_fila()
     if not jid_fila:
         return
+    if re.search(r'chat\.whatsapp\.com/|t\.me/(?:joinchat|\+)', texto) or re.search(r'(?i)convidar uma amiga|nossos grupos', texto):
+        return                                   # convite pros grupos de outra pessoa: não é oferta nem cupom
     links = [u.rstrip('.,)') for u in re.findall(r'https?://\S+', texto)]
     achados = []                                 # qualquer link (encurtadores, sites de divulgação) que termine na Shopee
     for url in links[:4]:
@@ -2762,6 +2836,8 @@ def agenda_de_hoje():
     if e.get('convite_ativo') and e.get('inbox_ativo'):
         if conv_hoje:
             itens.append(('💌 Convite de pedidos', e.get('convite_hora', '19:30'), True, 'convite'))
+    if e.get('amiga_ativo') and agora().weekday() in (e.get('amiga_dias') or []):
+        itens.append(('👭 Convide uma amiga', e.get('amiga_hora', '12:30'), True, 'amiga'))
     out = [{'nome': n, 'hora': h, 'ativo': bool(a), 'feito': bool(get_cfg(f'eng_{k}_{hoje}')), 'tipo': k} for n, h, a, k in itens]
     prox = ''
     if e.get('convite_ativo') and e.get('inbox_ativo') and not conv_hoje and e.get('convite_dias'):
@@ -2779,7 +2855,9 @@ def agenda_engajamento():
                                             (e['noite_ativo'], e['noite_hora'], 'noite', lambda: rodar_mensagem_do_dia('noite')),
                                             (e['enquete_ativo'], hora_da_enquete(), 'enq', rodar_enquete),
                                             (e.get('convite_ativo') and e.get('inbox_ativo') and agora().weekday() in (e.get('convite_dias') or []),
-                                             e.get('convite_hora', '19:30'), 'convite', rodar_convite_pedidos)):
+                                             e.get('convite_hora', '19:30'), 'convite', rodar_convite_pedidos),
+                                            (e.get('amiga_ativo') and agora().weekday() in (e.get('amiga_dias') or []),
+                                             e.get('amiga_hora', '12:30'), 'amiga', rodar_convite_amiga)):
                 marca = f'eng_{nome}_{hoje}'
                 if ativo and hm >= hora and not get_cfg(marca):
                     set_cfg(marca, '1')
@@ -3043,7 +3121,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
+                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
@@ -3276,7 +3354,7 @@ class H(BaseHTTPRequestHandler):
                                                  'preco': br(n.get('priceMin'))} for n in minerar()]})
         if p == '/api/engajamento':
             e = eng_cfg()
-            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'noite_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo', 'convite_ativo'):
+            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'noite_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo', 'convite_ativo', 'amiga_ativo'):
                 if k in b:
                     e[k] = bool(b[k])
             if b.get('enquete_hora_modo') in ('aleatorio', 'fixo'):
@@ -3287,12 +3365,16 @@ class H(BaseHTTPRequestHandler):
                 e['enquete_modo'] = b['enquete_modo']
             if str(b.get('enquete_troca_dias', '')).isdigit():
                 e['enquete_troca_dias'] = max(1, min(14, int(b['enquete_troca_dias'])))
+            if isinstance(b.get('amiga_dias'), list):
+                e['amiga_dias'] = sorted({int(x) for x in b['amiga_dias'] if str(x).isdigit() and int(x) < 7})
+            if isinstance(b.get('amiga_grupos'), list):
+                e['amiga_grupos'] = [str(x) for x in b['amiga_grupos'] if str(x).endswith('@g.us')][:40]
             if isinstance(b.get('convite_dias'), list):
                 e['convite_dias'] = sorted({int(x) for x in b['convite_dias'] if str(x).isdigit() and int(x) < 7})
             for k in ('banco_dia', 'banco_noite'):
                 if isinstance(b.get(k), list):
                     e[k] = [str(x).strip()[:1000] for x in b[k] if str(x).strip()][:30]
-            for k in ('msg_hora', 'noite_hora', 'enquete_hora', 'convite_hora'):
+            for k in ('msg_hora', 'noite_hora', 'enquete_hora', 'convite_hora', 'amiga_hora'):
                 if re.fullmatch(r'\d{2}:\d{2}', str(b.get(k, ''))):
                     e[k] = b[k]
             if b.get('enquete_pergunta'):
@@ -3349,7 +3431,8 @@ class H(BaseHTTPRequestHandler):
             return self.send_json(r)
         if p == '/api/engajamento/agora':
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
-                   else rodar_convite_pedidos() if b.get('tipo') == 'convite' else rodar_enquete())
+                   else rodar_convite_pedidos() if b.get('tipo') == 'convite' else rodar_convite_amiga() if b.get('tipo') == 'amiga'
+                   else rodar_enquete())
             return self.send_json({'id': fid})
         if p == '/api/status/testar':                # posta um Status de teste agora, nos chips marcados
             res = {}

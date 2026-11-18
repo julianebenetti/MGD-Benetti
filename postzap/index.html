@@ -321,6 +321,15 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
             <label class="b" style="cursor:pointer">🔄 Trocar por outra<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, false)"></label>
             <label class="b" style="cursor:pointer">➕ Somar mais uma<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, true)"></label>
             <button class="b" type="button" id="egConvPadrao" onclick="convitePadrao()">↩️ Voltar às prontas</button></div></div></details>
+
+      <details class="rot"><summary><input type="checkbox" class="sw" id="egAmiga" onclick="event.stopPropagation()">
+        <span class="tit">👭 Convide uma amiga</span><span class="res" id="egResAmiga"></span>
+        <button class="b" type="button" onclick="event.preventDefault();engAgora('amiga')">▶ Mandar agora</button><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Mensagem com os links de todos os seus grupos pra elas chamarem as amigas. Grupo cheio (1.000+) sai da lista sozinho. Os links são pegos na hora por um chip admin.</p>
+          <div class="q" style="display:block"><div class="t"><b>Em quais dias?</b></div><div id="egAmigaDias" class="row" style="margin-top:6px"></div></div>
+          <div class="q"><div class="t"><b>Que horas?</b></div><div class="v"><input type="time" id="egAmigaH"></div></div>
+          <div class="q" style="display:block"><div class="t"><b>Quais grupos entram na lista?</b><small>Nenhum marcado = todos onde um chip é admin.</small></div>
+            <div id="egAmigaGrupos" style="max-height:220px;overflow:auto;margin-top:6px"></div></div></div></details>
     </div>
 
     <!-- ================= MONITOR ================= -->
@@ -953,6 +962,10 @@ async function carregarEng(){
   $('#egConv').checked = !!ENG.convite_ativo; $('#egConvH').value = ENG.convite_hora || '19:30';
   $('#egConvDias').innerHTML = DSEM.map((d, i) => `<label class="chk" style="border:0;padding:4px 10px;border-radius:8px;background:var(--bg)"><input type="checkbox" class="egCd" value="${i}" ${cd.includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
   $('#egBancoDia').value = (ENG.banco_dia || ENG.banco_padrao.dia).join('\n'); $('#egBancoNoite').value = (ENG.banco_noite || ENG.banco_padrao.noite).join('\n');
+  const ad = ENG.amiga_dias || [], ag2 = ENG.amiga_grupos || [];
+  $('#egAmiga').checked = !!ENG.amiga_ativo; $('#egAmigaH').value = ENG.amiga_hora || '12:30';
+  $('#egAmigaDias').innerHTML = DSEM.map((d, i) => `<label class="chk" style="border:0;padding:4px 10px;border-radius:8px;background:var(--bg)"><input type="checkbox" class="egAd" value="${i}" ${ad.includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
+  $('#egAmigaGrupos').innerHTML = (ENG.grupos_admin || []).map(g => `<label class="chk" style="display:block"><input type="checkbox" class="egAg" value="${esc(g.jid)}" ${ag2.includes(g.jid) ? 'checked' : ''}> ${esc(g.nome)}</label>`).join('') || '<p class="muted">Nenhum grupo onde um chip é admin. Toque em 🔄 Buscar grupos em 👥 Grupos.</p>';
   const img = v => v ? 'com imagem' : 'só texto', off = '<span class="muted">desligado</span>';
   $('#egResMsg').innerHTML = ENG.msg_ativo ? `${ENG.msg_hora} · ${img(ENG.msg_imagem)}` : off;
   $('#egResNoite').innerHTML = ENG.noite_ativo ? `${ENG.noite_hora} · ${img(ENG.noite_imagem !== false)}` : off;
@@ -960,6 +973,7 @@ async function carregarEng(){
   const nchips = (ENG.inbox_chips || []).length;
   $('#egResInbox').innerHTML = ENG.inbox_ativo ? `gatilho "${esc((ENG.inbox_gatilho || 'quero').toUpperCase())}" · ${nchips ? nchips + ' chip(s)' : 'todos os chips'}` : off;
   $('#egResConv').innerHTML = ENG.convite_ativo ? `${cd.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.convite_hora}${ENG.inbox_ativo ? '' : ' <b class="warn">· ligue o "Responder pedidos"</b>'}` : off;
+  $('#egResAmiga').innerHTML = ENG.amiga_ativo ? `${ad.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.amiga_hora} · ${ag2.length || (ENG.grupos_admin || []).length} grupo(s)` : off;
   $('#egResMon').innerHTML = ENG.monitor_ativo ? `${(ENG.monitor_grupos || []).length} grupo(s) · ${(ENG.monitor_telegram || []).length} canal(is)` : off;
   const ag = ENG.agenda_hoje || {itens: []};
   $('#egAgenda').innerHTML = `<b>📅 Hoje nos grupos · ${fdata(new Date().toISOString().slice(0, 10))}</b> <span class="muted">· ${ENG.aprovar ? 'tudo passa pelo FILA POST ZAP pra você aprovar' : 'sai direto, sem aprovação'}</span>
@@ -999,6 +1013,8 @@ async function salvarEng(){
     inbox_chips: [...document.querySelectorAll('.egChip:checked')].map(i => i.value),
     monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked,
     convite_ativo: $('#egConv').checked, convite_hora: $('#egConvH').value, convite_dias: [...document.querySelectorAll('.egCd:checked')].map(i => +i.value),
+    amiga_ativo: $('#egAmiga').checked, amiga_hora: $('#egAmigaH').value, amiga_dias: [...document.querySelectorAll('.egAd:checked')].map(i => +i.value),
+    amiga_grupos: [...document.querySelectorAll('.egAg:checked')].map(i => i.value),
     banco_dia: $('#egBancoDia').value.split('\n'), banco_noite: $('#egBancoNoite').value.split('\n')});
   await carregarEng(); $('#egOk').textContent = '✓ Salvo automaticamente às ' + new Date().toTimeString().slice(0, 5);
 }
