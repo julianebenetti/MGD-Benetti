@@ -120,6 +120,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v">+ <input id="rAq2" type="number" min="0"> por dia</div></div>
         <div class="q"><div class="t"><b>🔝 Até no máximo quantos posts por dia (em cada grupo)?</b></div>
           <div class="v"><input id="rAq3" type="number" min="1"> posts/dia</div></div>
+        <div class="q"><div class="t"><b>🔒 Travar o ritmo?</b><small>Para de subir +N por dia e fica nesse teto até você destravar (0 = sem trava). Conselho: 10–12 até medir as saídas.</small></div>
+          <div class="v"><input id="rTrava" type="number" min="0" max="50" style="width:70px"> posts/dia
+            <button class="b" type="button" style="padding:3px 8px" onclick="$('#rTrava').value = MSG.limite_hoje">no de hoje</button></div></div>
         <div class="q" style="display:block"><div class="t"><b>🗂️ Nichos por horário</b>
           <small>Em cada faixa, as rajadas postam primeiro os posts desses nichos e focos (➕ Plus Size, ✝️ Evangélica, 🎄 Natal). O 🤖 Divulgador também busca o que é da faixa que vai começar.</small></div>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicAt"> Usar nichos por horário</label>
@@ -559,10 +562,10 @@ async function salvarItem(aprovar){
 const ST = {rascunho:'📝 Aguardando sua aprovação', aprovado:'⏳ Aprovado, na fila', enviando:'📤 Enviando…', enviado:'✅ Enviado', erro:'⚠️ Erro'};
 function mostrarRitmo(){
   const r = MSG.ritmo; if (!r) return;
-  $('#ritmoResumo').textContent = `· ${r.inicio}–${r.fim} · rajadas de ${r.rajada[0]}–${r.rajada[1]} · pausa ${r.pausa[0]}–${r.pausa[1]} min · hoje até ${MSG.limite_hoje} posts/grupo · próxima saída ${fdata(MSG.proxima_saida, true)}`;
+  $('#ritmoResumo').textContent = `· ${r.inicio}–${r.fim} · rajadas de ${r.rajada[0]}–${r.rajada[1]} · pausa ${r.pausa[0]}–${r.pausa[1]} min · hoje até ${MSG.limite_hoje} posts/grupo${r.trava > 0 ? ' 🔒' : ''} · próxima saída ${fdata(MSG.proxima_saida, true)}`;
   $('#rIni').value = r.inicio; $('#rFim').value = r.fim; [$('#rRaj1').value, $('#rRaj2').value] = r.rajada;
   [$('#rPau1').value, $('#rPau2').value] = r.pausa; [$('#rGr1').value, $('#rGr2').value] = r.entre_grupos;
-  $('#rAq1').value = r.aquec_inicio; $('#rAq2').value = r.aquec_passo; $('#rAq3').value = r.aquec_max;
+  $('#rAq1').value = r.aquec_inicio; $('#rAq2').value = r.aquec_passo; $('#rAq3').value = r.aquec_max; $('#rTrava').value = r.trava || 0;
   $('#rNicAt').checked = r.nichos_ativo; $('#rNicEs').checked = r.nicho_estrito;
   FAIXAS = JSON.parse(JSON.stringify(r.nichos_horario || [])); desenharGrade();
   if (MSG.nichos_agora && MSG.nichos_agora.length) $('#ritmoResumo').textContent += ' · agora: ' + MSG.nichos_agora.join(', ');
@@ -627,7 +630,7 @@ async function salvarRitmo(){
   const reiniciar = $('#rReini').checked;
   const j = await api('ritmo', {inicio: $('#rIni').value, fim: $('#rFim').value, rajada: [$('#rRaj1').value, $('#rRaj2').value],
     pausa: [$('#rPau1').value, $('#rPau2').value], entre_grupos: [$('#rGr1').value, $('#rGr2').value],
-    aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, reiniciar_aquecimento: reiniciar,
+    aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, trava: String($('#rTrava').value || 0), reiniciar_aquecimento: reiniciar,
     nichos_ativo: $('#rNicAt').checked, nicho_estrito: $('#rNicEs').checked,
     nichos_horario: FAIXAS.filter(f => f.de && f.ate)});
   MSG = await api('config'); mostrarRitmo(); $('#rReini').checked = false;
@@ -742,7 +745,7 @@ function desenharPosts(){
     const vd = lista.reduce((s, p) => s + (p.vendas || 0), 0), cm = lista.reduce((s, p) => s + (p.comissao || 0), 0);
     t += `<tr class="dia"><td colspan="7">📅 ${fdata(d)} · ${DS[new Date(d + 'T12:00').getDay()]} · ${lista.length} post(s)
       <span class="muted" style="font-weight:400"> — ${Object.entries(cont).sort((a, b) => b[1] - a[1]).map(([k, v]) => esc(k) + ' ' + v).join(' · ')}</span>
-      <span style="float:right">🛒 ${vd} · 💰 ${rs(cm)}</span></td></tr>`;
+      <span style="float:right">${(HIST.membros_por_dia || {})[d] ? `<span title="pessoas que entraram/saíram dos grupos nesse dia">👥 <span style="color:#16a34a">+${HIST.membros_por_dia[d][0]}</span> <span style="color:#dc2626">−${HIST.membros_por_dia[d][1]}</span></span> · ` : ''}🛒 ${vd} · 💰 ${rs(cm)}</span></td></tr>`;
     t += lista.map(p => `<tr class="post" style="${tom(p.nicho, p.focos)}" onclick="verPost(this, ${p.id})"><td>${esc(fdata(p.quando, true).slice(-5))}</td><td>#${p.id}</td>
       <td>${p.nicho === '📢 Aviso' ? '<span class="tag">📢 Aviso</span>' : etiquetas(p.nicho, p.focos)}</td><td>${esc(p.produto)}</td>
       <td class="n">${p.grupos}</td><td class="n">${p.vendas || '·'}</td><td class="n">${p.comissao ? rs(p.comissao) : '·'}</td></tr>`).join('');
@@ -777,14 +780,20 @@ function desenharGruposHist(){
   const totMax = Math.max(1, ...HIST.grupos.map(g => g.total));
   const barra = g => `<span style="display:inline-block;height:10px;border-radius:5px;width:${g.total / totMax * 90}px;background:hsla(150,60%,45%,.8)"></span>`;
   const rs = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
-  let t = `<tr><th class="fixa">Grupo</th><th class="n">Posts ${nomeMes(HIST.mes)}</th><th></th><th class="n">🛒 Vendas</th><th class="n">💰 Comissão</th>` + cols.map(c => `<th class="n">${c.nome}</th>`).join('') + '</tr>';
-  t += HIST.grupos.map(g => `<tr><td class="fixa">${esc(g.nome)}</td><td class="n"><b>${g.total}</b></td><td>${barra(g)}</td><td class="n">${g.vendas || '·'}</td><td class="n">${g.comissao ? rs(g.comissao) : '·'}</td>` + cols.map(c => {
+  let t = `<tr><th class="fixa">Grupo</th><th class="n">Posts ${nomeMes(HIST.mes)}</th><th></th><th class="n">🛒 Vendas</th><th class="n">💰 Comissão</th><th class="n" title="membros hoje">👥 Membros</th><th class="n">➕ Entraram</th><th class="n">➖ Saíram</th>` + cols.map(c => `<th class="n">${c.nome}</th>`).join('') + '</tr>';
+  t += HIST.grupos.map(g => `<tr><td class="fixa">${esc(g.nome)}</td><td class="n"><b>${g.total}</b></td><td>${barra(g)}</td><td class="n">${g.vendas || '·'}</td><td class="n">${g.comissao ? rs(g.comissao) : '·'}</td>
+      <td class="n">${g.membros.total ?? '·'}</td><td class="n" style="color:#16a34a">${g.membros.entradas ? '+' + g.membros.entradas : '·'}</td>
+      <td class="n" style="color:#dc2626;${g.membros.total && g.membros.saidas / g.membros.total > .05 ? 'font-weight:700' : ''}">${g.membros.saidas ? '−' + g.membros.saidas : '·'}</td>` + cols.map(c => {
       const n = c.dias.reduce((s, d) => s + (g.dias[d] || 0), 0), cheio = c.lim && n >= c.lim;
-      return `<td class="n ${cheio ? 'warn' : ''}" style="${cheio ? 'font-weight:700' : ''}">${n || '·'}</td>`;
+      const sai = c.dias.reduce((s, d) => s + ((g.membros_dia[d] || [0, 0])[1]), 0);
+      return `<td class="n ${cheio ? 'warn' : ''}" style="${cheio ? 'font-weight:700' : ''}">${n || '·'}${sai ? `<br><small style="color:#dc2626" title="saíram">−${sai}</small>` : ''}</td>`;
     }).join('') + '</tr>').join('');
   t += `<tr><td class="fixa"><b>Total</b></td><td class="n"><b>${HIST.grupos.reduce((s, g) => s + g.total, 0)}</b></td>
        <td class="muted">${HVER === 'dia' ? 'limite hoje: ' + (HIST.limites[hoje] ?? '—') + '/grupo' : ''}</td>
-       <td class="n"><b>${HIST.grupos.reduce((s, g) => s + (g.vendas || 0), 0)}</b></td><td class="n"><b>${rs(HIST.grupos.reduce((s, g) => s + (g.comissao || 0), 0))}</b></td>` +
+       <td class="n"><b>${HIST.grupos.reduce((s, g) => s + (g.vendas || 0), 0)}</b></td><td class="n"><b>${rs(HIST.grupos.reduce((s, g) => s + (g.comissao || 0), 0))}</b></td>
+       <td class="n"><b>${HIST.grupos.reduce((s, g) => s + (g.membros.total || 0), 0) || '·'}</b></td>
+       <td class="n" style="color:#16a34a"><b>+${HIST.grupos.reduce((s, g) => s + (g.membros.entradas || 0), 0)}</b></td>
+       <td class="n" style="color:#dc2626"><b>−${HIST.grupos.reduce((s, g) => s + (g.membros.saidas || 0), 0)}</b></td>` +
        cols.map(c => `<td class="n"><b>${HIST.grupos.reduce((s, g) => s + c.dias.reduce((x, d) => x + (g.dias[d] || 0), 0), 0)}</b></td>`).join('') + '</tr>';
   $('#hGr').innerHTML = HIST.grupos.length ? t : '<tr><td class="muted">Nenhum envio nesse mês.</td></tr>';
 }

@@ -172,6 +172,7 @@ CREATE TABLE IF NOT EXISTS votos (
 CREATE TABLE IF NOT EXISTS pedidos_inbox (       -- o que as pessoas pedem no privado (e o que recebeu)
     id INTEGER PRIMARY KEY AUTOINCREMENT, numero TEXT, texto TEXT, resultado TEXT, quando TEXT
 );
+CREATE TABLE IF NOT EXISTS membros (dia TEXT, jid TEXT, entradas INTEGER DEFAULT 0, saidas INTEGER DEFAULT 0, total INTEGER, PRIMARY KEY (dia, jid));
 CREATE TABLE IF NOT EXISTS monitor_vistos (chave TEXT PRIMARY KEY, quando TEXT);
 CREATE TABLE IF NOT EXISTS vendas (             -- vendas da Shopee ligadas ao post/grupo pelos Sub IDs (postzap-origem-data-gN)
     chave TEXT PRIMARY KEY, fila_id INTEGER, jid TEXT, item TEXT, produto TEXT, valor REAL, comissao REAL, status TEXT,
@@ -881,7 +882,7 @@ def configurar_webhook(inst):
     try:
         evo('POST', f'/webhook/set/{inst}', {'webhook': {
             'enabled': True, 'url': f"{CFG['url_publica']}/webhook/{CFG['webhook_segredo']}",
-            'byEvents': False, 'base64': False, 'events': ['MESSAGES_UPSERT', 'MESSAGES_UPDATE']}})
+            'byEvents': False, 'base64': False, 'events': ['MESSAGES_UPSERT', 'MESSAGES_UPDATE', 'GROUP_PARTICIPANTS_UPDATE']}})
         _webhook_ok.add(inst)
     except RuntimeError as e:
         log.warning(f'Webhook de {inst}: {e}')
@@ -978,6 +979,10 @@ def atualizar_grupos():
                 c.execute('INSERT INTO grupos (jid, nome) VALUES (?,?) ON CONFLICT(jid) DO UPDATE SET nome=excluded.nome',
                           (g['id'], g.get('subject') or g['id']))
                 c.execute('INSERT OR REPLACE INTO grupo_chips (jid, instancia, admin) VALUES (?,?,?)', (g['id'], inst, adm))
+                n = len(g['participants']) if isinstance(g.get('participants'), list) else g.get('size')
+                if n:                                # foto do tamanho do grupo no dia
+                    c.execute('INSERT INTO membros (dia, jid, total) VALUES (?,?,?) ON CONFLICT(dia, jid) DO UPDATE SET total=excluded.total',
+                              (agora().date().isoformat(), g['id'], int(n)))
     with _lock, db() as c:      # grupo é "seu" quando algum chip é admin nele
         c.execute('UPDATE grupos SET admin=(SELECT MAX(admin) FROM grupo_chips gc WHERE gc.jid=grupos.jid)')
     return len(total)
@@ -1165,7 +1170,13 @@ def limite_hoje(r=None):
         dias = (agora().date() - date.fromisoformat(r['aquec_desde'])).days
     except ValueError:
         dias = 0
-    return min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias))
+    return _com_trava(r, min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias)))
+
+
+def _com_trava(r, n):
+    """🔒 Ritmo travado: não passa do teto escolhido, por mais que o aquecimento suba."""
+    t = int(r.get('trava') or 0)
+    return min(n, t) if t > 0 else n
 
 
 def limite_em(dia, r=None):
@@ -1174,8 +1185,8 @@ def limite_em(dia, r=None):
     try:
         dias = (dia - date.fromisoformat(r['aquec_desde'])).days
     except (ValueError, TypeError):
-        return int(r['aquec_max'])
-    return min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias))
+        return _com_trava(r, int(r['aquec_max']))
+    return _com_trava(r, min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias)))
 
 
 def historico(periodo='7', mes=''):
@@ -1209,16 +1220,28 @@ def historico(periodo='7', mes=''):
             "SELECT jid, COUNT(*), COALESCE(SUM(comissao),0) FROM vendas WHERE substr(quando,1,7)=? AND jid IS NOT NULL "
             "AND status NOT IN ('CANCELLED','UNPAID') GROUP BY jid", (mes,))}
         meses = [r[0] for r in c.execute("SELECT DISTINCT substr(quando,1,7) FROM envios WHERE ok=1 ORDER BY 1")]
+        memb = {}
+        for jid, ent, sai in c.execute("SELECT jid, SUM(entradas), SUM(saidas) FROM membros WHERE substr(dia,1,7)=? GROUP BY jid", (mes,)):
+            memb[jid] = {'entradas': ent or 0, 'saidas': sai or 0}
+        for jid, tot in c.execute("SELECT m.jid, m.total FROM membros m WHERE m.total IS NOT NULL AND m.dia=(SELECT MAX(dia) FROM membros "
+                                  "WHERE jid=m.jid AND total IS NOT NULL)"):
+            memb.setdefault(jid, {'entradas': 0, 'saidas': 0})['total'] = tot
+        memb_dia = {}
+        for jid, dia, ent, sai in c.execute("SELECT jid, dia, entradas, saidas FROM membros WHERE substr(dia,1,7)=?", (mes,)):
+            memb_dia.setdefault(jid, {})[dia] = [ent or 0, sai or 0]
+        por_dia = {r[0]: [r[1] or 0, r[2] or 0] for r in c.execute(
+            "SELECT dia, SUM(entradas), SUM(saidas) FROM membros WHERE dia>=? GROUP BY dia", (ini.isoformat(),))}
     a, m = map(int, mes.split('-'))
     prox = date(a + (m == 12), m % 12 + 1, 1)
     dias = [(date(a, m, 1) + timedelta(days=i)) for i in range((prox - date(a, m, 1)).days)]
     r = ritmo()
     grupos = sorted([{'jid': j, 'nome': nomes.get(j, j), 'dias': d, 'total': sum(d.values()),
-                      'vendas': vend.get(j, (0, 0))[0], 'comissao': round(vend.get(j, (0, 0))[1], 2)} for j, d in cont.items()],
+                      'vendas': vend.get(j, (0, 0))[0], 'comissao': round(vend.get(j, (0, 0))[1], 2),
+                      'membros': memb.get(j, {}), 'membros_dia': memb_dia.get(j, {})} for j, d in cont.items()],
                     key=lambda g: -g['total'])
     return {'posts': posts, 'inicio': ini.isoformat(), 'mes': mes, 'meses': sorted(set(meses + [hoje.strftime('%Y-%m')])),
             'dias': [d.isoformat() for d in dias], 'limites': {d.isoformat(): limite_em(d, r) for d in dias}, 'grupos': grupos,
-            'vendas_atualizado': get_cfg('vendas_atualizado')}
+            'vendas_atualizado': get_cfg('vendas_atualizado'), 'membros_por_dia': por_dia}
 
 
 def no_horario(r, quando=None):
@@ -1499,12 +1522,37 @@ def regravar(item, **mud):
     return texto
 
 
+def registrar_membros(inst, data):
+    """Conta entradas e saídas por grupo por dia. Vários chips no mesmo grupo recebem o mesmo aviso: só um conta."""
+    jid = data.get('id') or data.get('groupJid') or ''
+    acao = str(data.get('action') or '').lower()
+    pessoas = data.get('participants') or []
+    if not jid.endswith('@g.us') or acao not in ('add', 'remove') or not pessoas:
+        return
+    with _lock, db() as c:
+        chips = [r[0] for r in c.execute('SELECT instancia FROM grupo_chips WHERE jid=? ORDER BY instancia', (jid,))]
+        abertos = [x for x in chips if estado_chip(x) == 'open']
+        if abertos and inst != abertos[0]:
+            return
+        col = 'entradas' if acao == 'add' else 'saidas'
+        dia = agora().date().isoformat()
+        c.execute(f'INSERT INTO membros (dia, jid, {col}) VALUES (?,?,?) ON CONFLICT(dia, jid) DO UPDATE SET {col}={col}+?',
+                  (dia, jid, len(pessoas), len(pessoas)))
+        ult = c.execute('SELECT total FROM membros WHERE jid=? AND total IS NOT NULL ORDER BY dia DESC LIMIT 1', (jid,)).fetchone()
+        if ult and ult[0]:
+            c.execute('UPDATE membros SET total=? WHERE dia=? AND jid=?',
+                      (max(0, ult[0] + (len(pessoas) if acao == 'add' else -len(pessoas))), dia, jid))
+
+
 def receber_webhook(payload):
     evento = (payload.get('event') or '').lower().replace('_', '.')
     inst = payload.get('instance') or ''
     data = payload.get('data') or {}
     if isinstance(data, list):
         data = data[0] if data else {}
+    if evento == 'group.participants.update':   # alguém entrou/saiu de um grupo
+        registrar_membros(inst, data)
+        return
     if registrar_voto(data):                     # voto em enquete (chega como update ou upsert, conforme a versão)
         return
     if evento != 'messages.upsert':
@@ -2753,7 +2801,14 @@ def coletar_vendas(dias=10):
 
 
 def agenda_vendas():
+    n = 0
     while True:
+        if n % 3 == 0:                           # a cada ~6h: tamanho de cada grupo (para entradas/saídas)
+            try:
+                atualizar_grupos()
+            except Exception as e:
+                log.warning(f'Tamanho dos grupos: {e}')
+        n += 1
         try:
             coletar_vendas()
         except Exception as e:
@@ -3038,7 +3093,7 @@ class H(BaseHTTPRequestHandler):
                 if isinstance(v, list) and len(v) == 2 and all(str(x).isdigit() for x in v):
                     a1, a2 = sorted(int(x) for x in v)
                     r[k] = [max(1, a1), max(1, a2)]
-            for k in ('aquec_inicio', 'aquec_passo', 'aquec_max'):
+            for k in ('aquec_inicio', 'aquec_passo', 'aquec_max', 'trava'):
                 if str(b.get(k, '')).isdigit():
                     r[k] = int(b[k])
             if b.get('reiniciar_aquecimento'):
