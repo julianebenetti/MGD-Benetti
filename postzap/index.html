@@ -35,6 +35,12 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 .q .v{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.q .v input{width:90px}.q .v input[type=time]{width:120px}.q .v input[type=checkbox]{width:auto}
 .salvar{position:sticky;bottom:0;background:var(--card);padding:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .pend{color:var(--warn);font-weight:600}
+.linha{position:relative;display:flex;height:64px;border-radius:12px;overflow:hidden;border:1px solid var(--bd);margin:10px 0 2px;background:var(--bg)}
+.linha .seg{display:flex;flex-direction:column;justify-content:center;padding:0 8px;font-size:12px;border-right:2px solid var(--card);cursor:pointer;overflow:hidden;white-space:nowrap}
+.linha .seg b{font-size:12.5px}.linha .seg:hover{filter:brightness(.95)}.linha .vazio{background:transparent;cursor:default}
+.linha .agora{position:absolute;top:0;bottom:0;width:2px;background:#d64545}.linha .agora span{position:absolute;top:2px;left:4px;font-size:10px;color:#d64545;font-weight:700}
+.linhaH{position:relative;height:16px;font-size:10.5px;color:var(--mut);margin-bottom:10px}.linhaH span{position:absolute;transform:translateX(-50%)}
+table.grade th.flash{animation:flash 1.2s}@keyframes flash{0%,60%{background:#fff3c4}100%{background:transparent}}
 table.grade{border-collapse:separate;border-spacing:4px;min-width:640px;width:100%}
 table.grade th{font-size:12px;color:var(--mut);font-weight:600;vertical-align:bottom;padding-bottom:4px}
 table.grade th input{width:96px;padding:3px;font-size:12px;text-align:center}
@@ -111,6 +117,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <small>Em cada faixa, as rajadas postam primeiro os posts desses nichos e focos (➕ Plus Size, ✝️ Evangélica, 🎄 Natal). O 🤖 Divulgador também busca o que é da faixa que vai começar.</small></div>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicAt"> Usar nichos por horário</label>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicEs"> Só posta o nicho da hora (se não tiver nenhum, espera). Desmarcado: posta outro nicho.</label>
+          <div id="rLinha" class="linha"></div><div id="rLinhaH" class="linhaH"></div>
           <div style="overflow-x:auto"><table id="rGrade" class="grade"></table></div>
           <div class="row" style="margin-top:6px"><button class="b" type="button" onclick="addFaixa()">➕ Adicionar horário</button>
             <span class="muted">Toque no quadradinho para ligar/desligar · mude o horário no topo de cada coluna · 🗑️ tira a coluna</span></div></div>
@@ -436,6 +443,34 @@ function desenharGrade(){
   }).join('') + '</tr>';
   $('#rGrade').innerHTML = cab + MSG.nichos.map(n => linha(n, COR_NICHO[n] ?? 0)).join('') +
     `<tr class="sep"><td colspan="${FAIXAS.length + 1}">TEMAS</td></tr>` + MSG.focos.map(n => linha(n, corFoco(n))).join('');
+  desenharLinha();
+}
+// Linha do tempo (resumo do dia) em cima da grade: cada faixa no tamanho real do horário; toque = destaca a coluna
+function desenharLinha(){
+  const min = t => { const [h, m] = (t || '0:0').split(':').map(Number); return h * 60 + m; };
+  const ini = Math.min(6 * 60, ...FAIXAS.filter(f => f.de).map(f => min(f.de))), fim = 24 * 60, tot = fim - ini;
+  let html = '', pos = ini;
+  FAIXAS.filter(f => f.de && f.ate).forEach(f => {
+    const a = Math.max(min(f.de), ini), b = Math.min(min(f.ate) || fim, fim);
+    if (a > pos) html += `<div class="seg vazio" style="flex:${a - pos}"></div>`;
+    if (b <= a) return;
+    const it = f.nichos || [], primeiro = it[0];
+    const h = primeiro ? (COR_NICHO[primeiro] ?? corFoco(primeiro)) : 0;
+    const ic = it.map(n => [...n][0] + ([...n][1] === '\ufe0f' ? '\ufe0f' : ''));
+    html += `<div class="seg" title="${esc(f.de)}–${esc(f.ate)}: ${esc(it.join(', ') || 'nada')}" style="flex:${b - a};${primeiro ? `background:hsla(${h},65%,55%,.28)` : ''}"
+      onclick="destacarColuna('${f.de}')"><b>${f.de.slice(0, 2)}–${f.ate >= '23:59' ? '24' : f.ate.slice(0, 2)}h</b><span>${ic.slice(0, 3).join(' ')}${ic.length > 3 ? ' +' + (ic.length - 3) : ''}</span></div>`;
+    pos = b;
+  });
+  if (pos < fim) html += `<div class="seg vazio" style="flex:${fim - pos}"></div>`;
+  const agora = new Date(), am = agora.getHours() * 60 + agora.getMinutes();
+  if (am >= ini && am <= fim) html += `<div class="agora" style="left:${(am - ini) / tot * 100}%"><span>agora</span></div>`;
+  $('#rLinha').innerHTML = html;
+  $('#rLinhaH').innerHTML = [6, 9, 12, 15, 18, 21, 24].filter(x => x * 60 >= ini).map(x => `<span style="left:${(x * 60 - ini) / tot * 100}%">${x}h</span>`).join('');
+}
+function destacarColuna(de){
+  const i = FAIXAS.findIndex(f => f.de === de); const th = $('#rGrade').rows[0].cells[i + 1];
+  if (!th) return; th.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'});
+  th.classList.remove('flash'); void th.offsetWidth; th.classList.add('flash');
 }
 function alternarCelula(i, n){
   const l = FAIXAS[i].nichos = FAIXAS[i].nichos || [];
