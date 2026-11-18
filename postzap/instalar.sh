@@ -26,6 +26,7 @@ else
   exec bash "$INSTALL_DIR/postzap/instalar.sh"
 fi
 cd "$DIR"
+python3 -c "import PIL" 2>/dev/null || $SUDO apt-get install -y -qq python3-pil >/dev/null 2>&1 || true   # deixa as imagens da IA leves
 
 if [ ! -f .env ]; then
   cp .env.example .env

@@ -791,6 +791,12 @@ async function carregarHistorico(){
   $('#hNicho').innerHTML = '<option value="">Todos os nichos</option>' + ns.map(n => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('');
   desenharPosts(); desenharGruposHist(); carregarFila();
 }
+function entrega(e){
+  if (!e) return '';
+  const n = k => e[k] || 0, ok = n('SERVER_ACK') + n('DELIVERY_ACK') + n('READ') + n('PLAYED'), err = n('ERROR'), pend = n('PENDING');
+  if (!ok && !err && !pend) return '';
+  return `<br><small title="confirmação do WhatsApp">${ok ? '<span style="color:#16a34a">✓' + ok + '</span> ' : ''}${pend ? '<span class="muted">⏳' + pend + '</span> ' : ''}${err ? '<span style="color:#dc2626">✗' + err + '</span>' : ''}</small>`;
+}
 function desenharPosts(){
   const fn = $('#hNicho').value, ps = HIST.posts.filter(p => !fn || p.nicho === fn);
   const rs = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
@@ -810,7 +816,7 @@ function desenharPosts(){
       <span style="float:right">${(HIST.membros_por_dia || {})[d] ? `<span title="pessoas que entraram/saíram dos grupos nesse dia">👥 <span style="color:#16a34a">+${HIST.membros_por_dia[d][0]}</span> <span style="color:#dc2626">−${HIST.membros_por_dia[d][1]}</span></span> · ` : ''}🛒 ${vd} · 💰 ${rs(cm)}</span></td></tr>`;
     t += lista.map(p => `<tr class="post" style="${tom(p.nicho, p.focos)}" onclick="verPost(this, ${p.id})"><td>${esc(fdata(p.quando, true).slice(-5))}</td><td>#${p.id}</td>
       <td>${p.nicho === '📢 Aviso' ? '<span class="tag">📢 Aviso</span>' : etiquetas(p.nicho, p.focos)}</td><td>${esc(p.produto)}</td>
-      <td class="n">${p.grupos}</td><td class="n">${p.vendas || '·'}</td><td class="n">${p.comissao ? rs(p.comissao) : '·'}</td></tr>`).join('');
+      <td class="n">${p.grupos}${entrega(p.entrega)}</td><td class="n">${p.vendas || '·'}</td><td class="n">${p.comissao ? rs(p.comissao) : '·'}</td></tr>`).join('');
   });
   $('#hTab').innerHTML = ps.length ? t : '<tr><td class="muted">Nada enviado nesse período.</td></tr>';
 }

@@ -195,7 +195,8 @@ def init_db():
     with db() as c:
         c.executescript(SCHEMA)
         for tab, col in (('envios', 'instancia TEXT'), ('fila', 'dados TEXT'), ('fila', 'pedido_por TEXT'),
-                         ('fila', 'pedido_inst TEXT'), ('grupo_chips', 'admin INTEGER'), ('grupos', 'admin INTEGER')):
+                         ('fila', 'pedido_inst TEXT'), ('grupo_chips', 'admin INTEGER'), ('grupos', 'admin INTEGER'),
+                         ('envios', 'msg_id TEXT'), ('envios', 'wa_status TEXT')):
             if col.split()[0] not in {r[1] for r in c.execute(f'PRAGMA table_info({tab})')}:
                 c.execute(f'ALTER TABLE {tab} ADD COLUMN {col}')
 
@@ -1206,6 +1207,8 @@ def historico(periodo='7', mes=''):
                           'nicho': '📢 Aviso' if r['origem'] == 'aviso' else nicho_do_item(item),
                           'focos': [] if r['origem'] == 'aviso' else focos_do_item(item),
                           'cliques': c.execute('SELECT COUNT(*) FROM cliques WHERE codigo=?', (cod,)).fetchone()[0] if cod else None,
+                          'entrega': dict(c.execute("SELECT COALESCE(NULLIF(UPPER(wa_status),''),'?'), COUNT(*) FROM envios WHERE fila_id=? AND ok=1 "
+                                                    "GROUP BY 1", (r['id'],)).fetchall()),
                           **dict(zip(('vendas', 'comissao'), c.execute(
                               "SELECT COUNT(*), COALESCE(SUM(comissao),0) FROM vendas WHERE fila_id=? AND status NOT IN ('CANCELLED','UNPAID')",
                               (r['id'],)).fetchone()))})
@@ -1366,12 +1369,14 @@ def processar_fila():
                     n = c.execute('SELECT COUNT(*) FROM envios WHERE jid=? AND ok=1', (jid,)).fetchone()[0]
                 if (n + 1) % max(1, int(sc.get('lembrete_cada') or 5)) == 0:   # 1 a cada N posts neste grupo
                     envio['texto'] = (envio['texto'] or '').rstrip() + '\n\n' + sc['lembrete_texto']
-            ok, erro = 1, None
+            ok, erro, msg_id, wa = 1, None, None, ''
             if not inst_it:
                 ok, erro = 0, 'nenhum chip conectado está neste grupo'
             else:
                 try:
-                    enviar_item(inst_it, jid, envio)
+                    res = enviar_item(inst_it, jid, envio)
+                    msg_id = (res or {}).get('key', {}).get('id') if isinstance(res, dict) else None
+                    wa = str((res or {}).get('status') or '') if isinstance(res, dict) else ''
                     it['_usados'][inst_it] = it['_usados'].get(inst_it, 0) + 1
                     anterior, enviou = inst, True
                     log.info(f"Fila {it['id']} → {nome} pelo chip {inst}")
@@ -1380,8 +1385,8 @@ def processar_fila():
             if not ok:
                 it['_erros'].append(f'{nome}: {erro}')
             with _lock, db() as c:
-                c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia) VALUES (?,?,?,?,?,?,?)',
-                          (it['id'], jid, it['chave'], agora().isoformat(), ok, erro, inst_it))
+                c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia, msg_id, wa_status) VALUES (?,?,?,?,?,?,?,?,?)',
+                          (it['id'], jid, it['chave'], agora().isoformat(), ok, erro, inst_it, msg_id, wa))
         if enviou and gi < len(todos) - 1:
             time.sleep(random.randint(*r['entre_grupos']))
     for it in itens:
@@ -1577,6 +1582,15 @@ def receber_webhook(payload):
     if evento == 'group.participants.update':   # alguém entrou/saiu de um grupo
         registrar_membros(inst, data)
         return
+    if evento == 'messages.update':             # confirmação do WhatsApp: entregue / lido / erro
+        mid = data.get('keyId') or (data.get('key') or {}).get('id') or data.get('messageId')
+        st = str(data.get('status') or '').upper()
+        if mid and st:
+            ordem = {'ERROR': 9, 'PENDING': 1, 'SERVER_ACK': 2, 'DELIVERY_ACK': 3, 'READ': 4, 'PLAYED': 4}
+            with _lock, db() as c:
+                atual = (c.execute('SELECT wa_status FROM envios WHERE msg_id=?', (mid,)).fetchone() or [None])[0]
+                if atual is not None and (st == 'ERROR' or ordem.get(st, 0) > ordem.get(str(atual).upper(), 0)):
+                    c.execute('UPDATE envios SET wa_status=? WHERE msg_id=?', (st, mid))
     if registrar_voto(data):                     # voto em enquete (chega como update ou upsert, conforme a versão)
         return
     if evento != 'messages.upsert':
@@ -2243,6 +2257,20 @@ def _img_pollinations(prompt, erros):
 GERADORES_IMG = {'gemini': _img_gemini, 'openai': _img_openai, 'pollinations': _img_pollinations}
 
 
+def reduzir_imagem(b64):
+    """PNG grande da IA (1–3 MB) → JPEG ~1080px (bem mais leve pro WhatsApp). Sem a Pillow, devolve como veio."""
+    try:
+        import base64, io
+        from PIL import Image
+        im = Image.open(io.BytesIO(base64.b64decode(b64))).convert('RGB')
+        im.thumbnail((1080, 1080))
+        out = io.BytesIO()
+        im.save(out, 'JPEG', quality=85, optimize=True)
+        return base64.b64encode(out.getvalue()).decode()
+    except Exception:
+        return b64
+
+
 def imagem_ia(prompt):
     """Imagem quadrada pela IA. Ordem em ✏️/💬 (cfg imagem_ordem), padrão: Gemini → ChatGPT/OpenAI.
     A reserva grátis (Pollinations) vem desligada: qualidade ruim — melhor sair sem imagem.
@@ -2254,7 +2282,7 @@ def imagem_ia(prompt):
         if b64:
             _ultimo_erro_imagem[0] = ''
             _ultimo_gerador[0] = nome
-            return b64
+            return reduzir_imagem(b64)
     _ultimo_erro_imagem[0] = ' | '.join(erros)
     log.warning(f'Imagem da IA falhou: {_ultimo_erro_imagem[0]}')
     return ''
