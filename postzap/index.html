@@ -296,6 +296,12 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
   <section id="t-conexao" class="hide"><div class="card" id="conexao">…</div></section>
 
   <section id="t-modelo" class="hide">
+    <div class="card"><b>📱 Status dos chips</b>
+      <p class="muted">Depois de sair nos grupos, o post vai também para o <b>Status</b> de cada chip conectado — alcance extra para os contatos dos chips.</p>
+      <label class="chk"><input type="checkbox" id="stAtivo"> <b>Postar no Status</b></label>
+      <label class="chk"><input type="checkbox" id="stOfertas"> Ofertas</label>
+      <label class="chk"><input type="checkbox" id="stEng"> Mensagem do dia / da noite e avisos</label>
+      <div class="row" style="margin-top:6px">No máximo <input type="number" id="stMax" min="1" max="30" style="width:70px"> status por chip por dia</div></div>
     <div class="card"><b>🔗 Link nas postagens</b>
       <label class="chk"><input type="radio" name="mlink" value="direto"> <span><b>Direto na loja (recomendado)</b> — o link é o próprio
         s.shopee.com.br: tocou, abre o app da Shopee. A foto do produto vai junto, com o texto na legenda. Cada grupo recebe um link de afiliado próprio (Sub ID g&lt;grupo&gt;) → vendas por grupo no relatório da Shopee.</span></label>
@@ -616,7 +622,11 @@ async function carregarFila(){
     <div class="muted">${ROTULO[it.origem]||''} · ${JSON.parse(it.grupos||'[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).map(nome).map(esc).join(', ') || 'sem grupos'}
     ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}
     ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
-    <pre style="white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto)}</pre>
+    <div class="row" style="align-items:flex-start;gap:10px">
+      ${it.thumb ? `<a href="${B}api/midia/${it.id}" target="_blank"><img src="${B}api/midia/${it.id}" alt="imagem do post" loading="lazy"
+        style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);background:var(--bg)"
+        onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'muted',textContent:'(sem imagem)'}))"></a>` : ''}
+      <pre style="flex:1;margin:0;white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto || (JSON.parse(it.dados || '{}').enquete ? '📊 ' + JSON.parse(it.dados).enquete.pergunta + '\n• ' + JSON.parse(it.dados).enquete.opcoes.join('\n• ') : ''))}</pre></div>
     ${it.erro ? `<p class="err">${esc(it.erro)}</p>` : ''}
     ${it.link && it.status === 'enviado' ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
       it.cliques_grupo.map(g => esc(g.nome) + ': ' + g.n).join(' · ') : ''}${it.sub_ids ? ' · Sub IDs Shopee: ' + it.sub_ids.map(esc).join(' / ') : ''}</p>` : ''}
@@ -625,7 +635,7 @@ async function carregarFila(){
     ${it.status==='aprovado' ? `<button class="b" onclick="editar(${it.id})">✏️ Editar (grupos, texto, horário)</button><button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
     ${!['enviando','enviado'].includes(it.status) ? `<button class="b" onclick="acao('descartar',${it.id})">🗑️ Descartar</button>` : ''}</p></div>`;
   // card reduzido (uma linha; toque para abrir o completo)
-  const mini = it => `<details class="mini" style="${tom(it.nicho, it.focos)}border-left:6px solid ${COR_STATUS[it.status] || '#999'}"><summary><b>#${it.id}</b> ${it.nicho ? etiquetas(it.nicho, it.focos) : '<span class="tag">📢 Aviso</span>'}
+  const mini = it => `<details class="mini" style="${tom(it.nicho, it.focos)}border-left:6px solid ${COR_STATUS[it.status] || '#999'}"><summary>${it.thumb ? `<img src="${B}api/midia/${it.id}" loading="lazy" style="width:34px;height:34px;object-fit:cover;border-radius:6px" onerror="this.remove()">` : ''}<b>#${it.id}</b> ${it.nicho ? etiquetas(it.nicho, it.focos) : '<span class="tag">📢 Aviso</span>'}
       <span class="mnome">${esc(it.produto)}</span>
       <span class="muted">${it.status === 'enviado' ? (it.grupos_enviados || 0) + ' grupo(s)' : (n => n ? n + ' grupo(s)' : '<span class="warn">sem grupo → vai para os marcados</span>')(JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length)}
       ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}${it.enviado_em ? ' · ✅ ' + esc(fdata(it.enviado_em, true)) : ''}
@@ -933,6 +943,8 @@ function carregarMensagens(){
     `<option ${(MSG.estilo_loja[l] || 'Padrão') === n ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>`).join('');
   $('#mmodo').value = MSG.chamada_modo; $('#mctamodo').value = MSG.cta_modo || 'frases'; $('#mctas').value = (MSG.ctas || []).join('\n');
   document.querySelectorAll('input[name=mlink]').forEach(r => r.checked = r.value === MSG.modo_link);
+  const st = MSG.status || {}; $('#stAtivo').checked = st.ativo; $('#stOfertas').checked = st.ofertas !== false;
+  $('#stEng').checked = st.engajamento !== false; $('#stMax').value = st.max_dia || 5;
   $('#mchamadas').innerHTML = ['Todas', ...MSG.lojas.filter(l => l !== 'Outras')].map(l => `<label>${esc(l)}
     <textarea data-cham="${esc(l)}" style="min-height:90px" placeholder="*APROVEITA QUE TÁ BARATO* 🔥">${esc((MSG.chamadas[l] || []).join('\n'))}</textarea></label>`).join('');
 }
@@ -950,6 +962,7 @@ async function salvarMensagens(){
   const estilo_loja = {}; document.querySelectorAll('#mlojas select').forEach(s => estilo_loja[s.dataset.loja] = s.value);
   const chamadas = {}; document.querySelectorAll('#mchamadas textarea').forEach(t => chamadas[t.dataset.cham] = t.value.split('\n').map(x => x.trim()).filter(Boolean));
   const modo_link = (document.querySelector('input[name=mlink]:checked') || {}).value;
+  await api('status', {ativo: $('#stAtivo').checked, ofertas: $('#stOfertas').checked, engajamento: $('#stEng').checked, max_dia: $('#stMax').value});
   await api('mensagens', {modelos: MSG.modelos, estilo_loja, chamadas, chamada_modo: $('#mmodo').value, modo_link,
     cta_modo: $('#mctamodo').value, ctas: $('#mctas').value.split('\n')});
   MSG = await api('config'); $('#mok').textContent = 'Salvo ✓'; setTimeout(() => $('#mok').textContent = '', 3000);

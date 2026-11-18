@@ -1343,6 +1343,11 @@ def processar_fila():
         status = 'erro' if erros and len(erros) >= len(grupos) else 'enviado'
         c.execute('UPDATE fila SET status=?, enviado_em=?, erro=? WHERE id=?',
                   (status, agora().isoformat(), '\n'.join(erros) or None, item['id']))
+    if usados and status_cfg().get('ativo'):
+        try:
+            postar_status(dict(item))
+        except Exception as e:
+            log.warning(f'Status: {e}')
     if item['pedido_por']:
         resumo = ', '.join(f'{k}: {v}' for k, v in usados.items()) or 'nenhum'
         aviso = (f"✅ Postado: *{item['produto'][:60]}*\n{sum(usados.values())} grupo(s) · chips usados → {resumo}"
@@ -2056,11 +2061,8 @@ def imagem_ia(prompt):
     Devolve base64 (PNG) ou '' — o motivo da falha fica em _ultimo_erro_imagem."""
     import base64
     key = chave_openai()
-    if not key:
-        _ultimo_erro_imagem[0] = 'sem chave da OpenAI (OPENAI_API_KEY no .env do PostZap ou do robô)'
-        return ''
-    modelos_img = [m for m in dict.fromkeys([os.getenv('OPENAI_IMAGE_MODEL', ''), 'gpt-image-1', 'gpt-image-1-mini', 'dall-e-3']) if m]
-    erros = []
+    modelos_img = [m for m in dict.fromkeys([os.getenv('OPENAI_IMAGE_MODEL', ''), 'gpt-image-1', 'gpt-image-1-mini', 'dall-e-3']) if m] if key else []
+    erros = [] if key else ['OpenAI: sem chave']
     for modelo in modelos_img:
         corpo = {'model': modelo, 'prompt': prompt[:3800], 'size': '1024x1024', 'n': 1}
         if modelo.startswith('dall-e'):
@@ -2085,6 +2087,17 @@ def imagem_ia(prompt):
             erros.append(f'{modelo}: {msg[:140]}')
         except Exception as e:
             erros.append(f'{modelo}: {str(e)[:140]}')
+    try:                                         # reserva grátis, sem chave: Pollinations
+        url = ('https://image.pollinations.ai/prompt/' + urllib.parse.quote(prompt[:900]) +
+               f'?width=1024&height=1024&nologo=true&seed={random.randint(1, 10**6)}')
+        with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=180) as r:
+            tipo, dados_img = r.headers.get('Content-Type', ''), r.read()
+        if tipo.startswith('image/') and len(dados_img) > 5000:
+            _ultimo_erro_imagem[0] = ''
+            return base64.b64encode(dados_img).decode()
+        erros.append(f'pollinations: resposta inválida ({tipo}, {len(dados_img)} bytes)')
+    except Exception as e:
+        erros.append(f'pollinations: {str(e)[:140]}')
     _ultimo_erro_imagem[0] = ' | '.join(erros)
     log.warning(f'Imagem da IA falhou: {_ultimo_erro_imagem[0]}')
     return ''
@@ -2169,7 +2182,7 @@ def rodar_mensagem_do_dia(periodo='dia'):
         MIDIA_DIR.mkdir(exist_ok=True)
         arq = MIDIA_DIR / f"eng_{int(time.time())}.b64"
         arq.write_text(img)
-        dados = {'midia': str(arq), 'midia_tipo': 'image', 'mimetype': 'image/png'}
+        dados = {'midia': str(arq), 'midia_tipo': 'image', 'mimetype': 'image/jpeg' if img.startswith('/9j') else 'image/png'}
     titulo = '🌙 Mensagem da noite' if periodo == 'noite' else '☀️ Mensagem do dia'
     if _motivo_texto[0]:
         titulo += ' (texto pronto, a IA falhou: ' + _motivo_texto[0][:120] + ')'
@@ -2433,6 +2446,42 @@ def agenda_engajamento():
         time.sleep(60)
 
 
+# ---------------------------------------------------------------- status dos chips
+
+def status_cfg():
+    d = {'ativo': False, 'max_dia': 5, 'ofertas': True, 'engajamento': True}
+    d.update(get_json('status', {}))
+    return d
+
+
+def postar_status(item):
+    """Depois de sair nos grupos, a oferta (ou a mensagem do dia) vai também para o Status dos chips conectados."""
+    cfg = status_cfg()
+    dados = json.loads(item.get('dados') or '{}')
+    aviso = item.get('origem') == 'aviso'
+    if (aviso and not cfg.get('engajamento')) or (not aviso and not cfg.get('ofertas')) or dados.get('enquete'):
+        return
+    img = ''
+    if dados.get('midia') and Path(dados['midia']).exists() and dados.get('midia_tipo', 'image') == 'image':
+        img = Path(dados['midia']).read_text()
+    elif dados.get('imagem'):
+        img = dados['imagem']
+    texto = item.get('texto') or ''
+    hoje = agora().date().isoformat()
+    for inst in instancias():
+        if estado_chip(inst) != 'open':
+            continue
+        chave = f'status_{inst}_{hoje}'
+        feitos = int(get_cfg(chave, '0') or 0)
+        if feitos >= int(cfg.get('max_dia', 5)):
+            continue
+        corpo = ({'type': 'image', 'content': img, 'caption': texto[:700], 'allContacts': True} if img else
+                 {'type': 'text', 'content': texto[:650], 'backgroundColor': '#7c3aed', 'font': 1, 'allContacts': True})
+        evo('POST', f'/message/sendStatus/{inst}', {'statusMessage': corpo, **corpo}, timeout=120)
+        set_cfg(chave, str(feitos + 1))
+        log.info(f"Status do {inst}: post #{item.get('id')}")
+
+
 # ---------------------------------------------------------------- vendas por post e grupo (relatório da Shopee)
 
 def coletar_vendas(dias=10):
@@ -2581,6 +2630,24 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/historico':
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
                 return self.send_json(historico((qs.get('periodo') or ['7'])[0], (qs.get('mes') or [''])[0]))
+            if p.startswith('/api/midia/'):              # miniatura do card: imagem que vai sair no post
+                it = item_fila(int(re.sub(r'\D', '', p.rsplit('/', 1)[-1]) or 0))
+                dados = json.loads((it or {}).get('dados') or '{}')
+                if dados.get('midia') and Path(dados['midia']).exists():
+                    import base64
+                    corpo = base64.b64decode(Path(dados['midia']).read_text())
+                    self.send_response(200)
+                    self.send_header('Content-Type', dados.get('mimetype') or 'image/png')
+                    self.send_header('Cache-Control', 'max-age=86400')
+                    self.end_headers()
+                    self.wfile.write(corpo)
+                    return
+                if dados.get('imagem'):
+                    self.send_response(302)
+                    self.send_header('Location', dados['imagem'])
+                    self.end_headers()
+                    return
+                return self.send_json({'erro': 'sem imagem'}, 404)
             if p == '/api/cupons':
                 with db() as c:
                     return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
@@ -2598,6 +2665,9 @@ class H(BaseHTTPRequestHandler):
                         r['sub_ids'] = (json.loads(r.get('dados') or '{}') or {}).get('sub_ids')
                         r['nicho'] = nicho_do_item(r) if r.get('origem') != 'aviso' else ''
                         r['focos'] = focos_do_item(r) if r.get('origem') != 'aviso' else []
+                        _d = json.loads(r.get('dados') or '{}')
+                        r['thumb'] = bool((_d.get('midia') and _d.get('midia_tipo', 'image') == 'image') or
+                                          (_d.get('imagem') and modo_link() != 'previa'))
                         r['grupos_enviados'] = c.execute('SELECT COUNT(DISTINCT jid) FROM envios WHERE fila_id=? AND ok=1',
                                                          (r['id'],)).fetchone()[0]
                 with db() as c:
@@ -2610,7 +2680,7 @@ class H(BaseHTTPRequestHandler):
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
                                        'ctas': get_json('ctas', CTAS_PADRAO), 'cta_modo': get_cfg('cta_modo', 'frases'),
-                                       'temas_pai': temas_pai(), 'modo_link': modo_link(),
+                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'modo_link': modo_link(),
                                        'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': focos_nomes(),
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
@@ -2814,6 +2884,15 @@ class H(BaseHTTPRequestHandler):
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
                    else rodar_enquete())
             return self.send_json({'id': fid})
+        if p == '/api/status':
+            cfg = status_cfg()
+            for k in ('ativo', 'ofertas', 'engajamento'):
+                if k in b:
+                    cfg[k] = bool(b[k])
+            if str(b.get('max_dia', '')).isdigit():
+                cfg['max_dia'] = max(1, min(30, int(b['max_dia'])))
+            set_cfg('status', json.dumps(cfg))
+            return self.send_json({'ok': True})
         if p == '/api/vendas/atualizar':
             return self.send_json({'lidas': coletar_vendas()})
         if p == '/api/pausar':
