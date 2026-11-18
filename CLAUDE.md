@@ -56,6 +56,9 @@
 - **Público dos grupos de WhatsApp:** a maioria foi formada para **moda plus size**; ela também quer mandar **moda evangélica**
   e **itens de Natal**. No PostZap isso é organizado como **temas da mineração** (focos) por cima do nicho (👗 Moda, 🏠 Casa…),
   cada um com liga/desliga e palavras próprias no Divulgador: prontos ➕ Plus Size, ✝️ Evangélica, 🎄 Natal (ligados),
-  🎆 Réveillon, ☀️ Verão e praia, 🎒 Volta às aulas (desligados); ela pode criar outros. Plus Size e Evangélica são
+  🎆 Réveillon, ☀️ Verão e praia, 🎒 Volta às aulas, 👙 Moda íntima, 👟 Calçados, 👜 Bolsas e acessórios, 🏋️ Fitness,
+  🎁 Presentes, 🧔 Masculino (desligados); ela pode criar outros. Temas ligados a uma categoria usam a cor dela e aparecem
+  embaixo dela na grade de horários (Plus Size, Evangélica, Réveillon, Verão, Moda íntima, Calçados, Bolsas, Fitness,
+  Masculino → Moda; Natal → Casa; Volta às aulas → Infantil; Presentes = várias categorias). Plus Size e Evangélica são
   independentes (plus size não é só roupa evangélica).
 - **Black Friday 2026: sexta 27Nov26.** Aquecimento dos grupos começou em 18Nov26 (6 posts/dia por grupo, +2/dia, até 20).

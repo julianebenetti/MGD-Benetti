@@ -529,9 +529,27 @@ TEMAS_PRONTOS = {
                          'bolsa de praia', 'canga'], False),
     '🎒 Volta às aulas': (r'volta [aà]s aulas|material escolar|mochila escolar|estojo|caderno|lancheira',
                          ['material escolar', 'mochila escolar', 'estojo escolar', 'lancheira', 'kit caderno'], False),
+    # Subcategorias de moda que mais vendem nos pedidos dela (sutiã+calcinha 3,2 mil; calçados 2,9 mil; bolsa 1,3 mil; legging 1,1 mil)
+    '👙 Moda íntima': (r'suti[aã]|calcinha|lingerie|cinta modeladora|top sem bojo|body rendado|cal[cç]ola|kit calcinha',
+                      ['sutiã', 'kit calcinha', 'sutiã plus size', 'lingerie', 'cinta modeladora', 'top sem bojo'], False),
+    '👟 Calçados': (r't[eê]nis|sand[aá]lia|chinelo|sapat|\bbota|rasteirinha|tamanco|\bmule\b|scarpin|papete|sapatilha',
+                   ['sandália feminina', 'tênis feminino', 'chinelo feminino', 'rasteirinha', 'tamanco', 'papete feminina'], False),
+    '👜 Bolsas e acessórios': (r'bolsa|carteira|bijuteria|brinco|colar|pulseira|rel[oó]gio(?! intelig)|[oó]culos de sol|'
+                              r'\bcinto\b|piranha de cabelo|tiara',
+                              ['bolsa feminina', 'bolsa transversal', 'kit bijuteria', 'relógio feminino', 'óculos de sol feminino',
+                               'carteira feminina'], False),
+    '🏋️ Fitness': (r'legging|fitness|academia|treino|top esportivo|macaquinho|cal[cç]a de compress',
+                   ['legging', 'conjunto fitness', 'top fitness', 'short fitness', 'legging plus size', 'macaquinho fitness'], False),
+    '🎁 Presentes': (r'presente|amigo secreto|lembrancinha|caixa (de )?presente|kit presente',
+                    ['kit presente feminino', 'presente para mãe', 'presente amigo secreto', 'kit presente beleza',
+                     'presente criativo'], False),
+    '🧔 Masculino': (r'masculin|\bhomem\b|cueca|barba|camisa polo|bermuda',
+                    ['camiseta masculina', 'bermuda masculina', 'kit cueca', 'tênis masculino', 'kit barba'], False),
 }
 TEMA_PAI_PRONTO = {'➕ Plus Size': '👗 Moda', '✝️ Evangélica': '👗 Moda', '🎆 Réveillon': '👗 Moda',
-                   '☀️ Verão e praia': '👗 Moda', '🎄 Natal': '🏠 Casa e decoração', '🎒 Volta às aulas': '🧸 Infantil'}
+                   '☀️ Verão e praia': '👗 Moda', '🎄 Natal': '🏠 Casa e decoração', '🎒 Volta às aulas': '🧸 Infantil',
+                   '👙 Moda íntima': '👗 Moda', '👟 Calçados': '👗 Moda', '👜 Bolsas e acessórios': '👗 Moda',
+                   '🏋️ Fitness': '👗 Moda', '🧔 Masculino': '👗 Moda'}     # 🎁 Presentes: várias categorias (cor própria)
 FOCOS = list(TEMAS_PRONTOS)          # nomes dos temas prontos (os criados por ela vêm de focos_nomes())
 _REGRAS_FOCO = [(n, v[0]) for n, v in TEMAS_PRONTOS.items()]
 

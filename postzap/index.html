@@ -286,7 +286,7 @@ const $ = s => document.querySelector(s);
 // Cores por nicho (fundo suave) e por status (faixa à esquerda) — para bater o olho e diferenciar
 const COR_NICHO = {'🏠 Casa e decoração': 28, '🍳 Cozinha e utensílios': 45, '🔌 Eletrodomésticos': 200, '💇 Beleza e cabelo': 320,
   '👗 Moda': 275, '🧸 Infantil': 55, '🎧 Eletrônicos': 220, '🛋️ Móveis': 95, '🐶 Pet': 160, '📦 Outros': 0};
-const COR_FOCO_FIXA = {'➕ Plus Size': 330, '✝️ Evangélica': 210, '🎄 Natal': 130, '🎆 Réveillon': 50, '☀️ Verão e praia': 185, '🎒 Volta às aulas': 15};
+const COR_FOCO_FIXA = {'➕ Plus Size': 330, '✝️ Evangélica': 210, '🎄 Natal': 130, '🎆 Réveillon': 50, '☀️ Verão e praia': 185, '🎒 Volta às aulas': 15, '🎁 Presentes': 0};
 // tema ligado a uma categoria usa a MESMA cor dela (Plus Size = cor da Moda…); sem categoria: cor própria
 const corFoco = f => COR_NICHO[((typeof MSG !== 'undefined' && MSG.temas_pai) || {})[f]] ?? COR_FOCO_FIXA[f] ?? ([...f].reduce((a, c) => (a * 31 + c.codePointAt(0)) % 360, 7));
 const COR_FOCO = new Proxy({}, {get: (_, f) => corFoco(String(f))});
