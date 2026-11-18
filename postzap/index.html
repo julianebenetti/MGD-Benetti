@@ -369,6 +369,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <label class="chk"><input type="checkbox" id="stOfertas"> Ofertas</label>
       <label class="chk"><input type="checkbox" id="stEng"> Mensagem do dia / da noite e avisos</label>
       <div style="margin-top:6px"><b>Em quais chips?</b> <small class="muted">desmarque o seu WhatsApp pessoal, se algum for</small><div id="stChips"></div></div>
+      <div style="margin-top:8px;padding:8px;border-radius:10px;background:var(--bg)"><label class="chk" style="border:0"><input type="checkbox" id="stLem"> <b>📲 Lembrar de salvar o número</b></label>
+        <small class="muted">Só quem salvou o número do chip vê o Status. Vai no fim de 1 a cada <input type="number" id="stLemN" min="1" max="50" style="width:60px"> posts de oferta, em cada grupo.</small>
+        <input id="stLemT" style="margin-top:6px"></div>
       <div style="margin-top:8px"><button class="b" type="button" onclick="testarStatus()">📱 Postar um Status de teste agora</button></div>
       <div id="stUlt" style="margin-top:6px;font-size:13px"></div>
       <div class="row" style="margin-top:6px">No máximo <input type="number" id="stMax" min="1" max="30" style="width:70px"> status por chip por dia</div></div>
@@ -1098,6 +1101,7 @@ function carregarMensagens(){
   const st = MSG.status || {}; $('#stAtivo').checked = st.ativo; $('#stOfertas').checked = st.ofertas !== false;
   $('#stEng').checked = st.engajamento !== false; $('#stMax').value = st.max_dia || 5;
   $('#stChips').innerHTML = (MSG.chips_todos || []).map(c => `<label class="chk"><input type="checkbox" class="stChip" value="${c}" ${(st.chips || []).includes(c) ? 'checked' : ''}> ${c}</label>`).join('');
+  $('#stLem').checked = st.lembrete_ativo !== false; $('#stLemN').value = st.lembrete_cada || 5; $('#stLemT').value = st.lembrete_texto || '';
   const su = MSG.status_ultimo || {};
   $('#stUlt').innerHTML = Object.keys(su).length ? '<b>Último Status de cada chip:</b>' + Object.entries(su).map(([c, v]) => `<div>${v.ok ? '✅' : '❌'} ${c} · ${fdata(v.quando, true)} · ${esc(v.oque)} · <span class="muted">${esc(v.info)}</span></div>`).join('')
     : '<span class="muted">Nenhum Status postado ainda.</span>';
@@ -1118,7 +1122,8 @@ async function salvarMensagens(){
   const estilo_loja = {}; document.querySelectorAll('#mlojas select').forEach(s => estilo_loja[s.dataset.loja] = s.value);
   const chamadas = {}; document.querySelectorAll('#mchamadas textarea').forEach(t => chamadas[t.dataset.cham] = t.value.split('\n').map(x => x.trim()).filter(Boolean));
   const modo_link = (document.querySelector('input[name=mlink]:checked') || {}).value;
-  await api('status', {ativo: $('#stAtivo').checked, ofertas: $('#stOfertas').checked, engajamento: $('#stEng').checked, max_dia: $('#stMax').value, chips: [...document.querySelectorAll('.stChip:checked')].map(i => i.value)});
+  await api('status', {ativo: $('#stAtivo').checked, ofertas: $('#stOfertas').checked, engajamento: $('#stEng').checked, max_dia: $('#stMax').value, chips: [...document.querySelectorAll('.stChip:checked')].map(i => i.value),
+    lembrete_ativo: $('#stLem').checked, lembrete_cada: $('#stLemN').value, lembrete_texto: $('#stLemT').value});
   await api('mensagens', {modelos: MSG.modelos, estilo_loja, chamadas, chamada_modo: $('#mmodo').value, modo_link,
     cta_modo: $('#mctamodo').value, ctas: $('#mctas').value.split('\n')});
   MSG = await api('config'); $('#mok').textContent = 'Salvo ✓'; setTimeout(() => $('#mok').textContent = '', 3000);

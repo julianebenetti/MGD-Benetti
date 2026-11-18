@@ -1351,12 +1351,20 @@ def processar_fila():
                     continue
             if enviou:
                 time.sleep(random.randint(*sorted(entre_posts)))
+            envio = _link_do_grupo(it, jid)
+            sc = status_cfg()
+            if (sc.get('ativo') and sc.get('lembrete_ativo') and it['origem'] != 'aviso' and inst
+                    and inst in (sc.get('chips') or []) and not json.loads(it.get('dados') or '{}').get('enquete')):
+                with db() as c:
+                    n = c.execute('SELECT COUNT(*) FROM envios WHERE jid=? AND ok=1', (jid,)).fetchone()[0]
+                if (n + 1) % max(1, int(sc.get('lembrete_cada') or 5)) == 0:   # 1 a cada N posts neste grupo
+                    envio['texto'] = (envio['texto'] or '').rstrip() + '\n\n' + sc['lembrete_texto']
             ok, erro = 1, None
             if not inst:
                 ok, erro = 0, 'nenhum chip conectado está neste grupo'
             else:
                 try:
-                    enviar_item(inst, jid, _link_do_grupo(it, jid))
+                    enviar_item(inst, jid, envio)
                     it['_usados'][inst] = it['_usados'].get(inst, 0) + 1
                     anterior, enviou = inst, True
                     log.info(f"Fila {it['id']} → {nome} pelo chip {inst}")
@@ -2806,7 +2814,9 @@ def agenda_engajamento():
 # ---------------------------------------------------------------- status dos chips
 
 def status_cfg():
-    d = {'ativo': False, 'max_dia': 5, 'ofertas': True, 'engajamento': True}
+    d = {'ativo': False, 'max_dia': 5, 'ofertas': True, 'engajamento': True,
+         'lembrete_ativo': True, 'lembrete_cada': 5,
+         'lembrete_texto': '📲 *Salve este número nos seus contatos* pra ver as ofertas relâmpago no Status!'}
     d.update(get_json('status', {}))
     if not d.get('chips'):                       # padrão: todos os chips
         d['chips'] = instancias()
@@ -3365,6 +3375,12 @@ class H(BaseHTTPRequestHandler):
                 cfg['max_dia'] = max(1, min(30, int(b['max_dia'])))
             if isinstance(b.get('chips'), list):
                 cfg['chips'] = [x for x in b['chips'] if x in instancias()]
+            if 'lembrete_ativo' in b:
+                cfg['lembrete_ativo'] = bool(b['lembrete_ativo'])
+            if str(b.get('lembrete_cada', '')).isdigit():
+                cfg['lembrete_cada'] = max(1, min(50, int(b['lembrete_cada'])))
+            if str(b.get('lembrete_texto', '')).strip():
+                cfg['lembrete_texto'] = str(b['lembrete_texto']).strip()[:300]
             set_cfg('status', json.dumps(cfg))
             return self.send_json({'ok': True})
         if p == '/api/vendas/atualizar':
