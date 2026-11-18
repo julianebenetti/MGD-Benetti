@@ -55,9 +55,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
 <nav>
   <button data-t="fila" class="on">✅ Aprovação <span id="nPend" class="tag" style="display:none"></span></button>
   <button data-t="produtos">🛍️ Produtos</button>
-  <button data-t="divulgador">🤖 Divulgador</button>
   <button data-t="historico">📜 Histórico</button>
   <span class="sep" title="Configurações">⚙️</span>
+  <button data-t="divulgador">🤖 Divulgador</button>
   <button data-t="grupos">👥 Grupos</button>
   <button data-t="modelo">✏️ Mensagens</button>
   <button data-t="cupons">🎟️ Cupons</button>
@@ -101,7 +101,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         <div class="q"><div class="t"><b>🔝 Até no máximo quantos posts por dia (em cada grupo)?</b></div>
           <div class="v"><input id="rAq3" type="number" min="1"> posts/dia</div></div>
         <div class="q" style="display:block"><div class="t"><b>🗂️ Nichos por horário</b>
-          <small>Em cada faixa, as rajadas postam primeiro os posts desses nichos. O 🤖 Divulgador também busca o nicho da faixa que vai começar.</small></div>
+          <small>Em cada faixa, as rajadas postam primeiro os posts desses nichos e focos (➕ Plus Size, ✝️ Evangélica, 🎄 Natal). O 🤖 Divulgador também busca o que é da faixa que vai começar.</small></div>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicAt"> Usar nichos por horário</label>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicEs"> Só posta o nicho da hora (se não tiver nenhum, espera). Desmarcado: posta outro nicho.</label>
           <div id="rFaixas"></div>
@@ -160,7 +160,11 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v"><input id="dvVend" type="number" min="0"> vendas</div></div>
         <div class="q"><div class="t"><b>🔁 Depois de postar, quanto tempo sem repetir o mesmo produto?</b></div>
           <div class="v"><input id="dvRep" type="number" min="1"> dias</div></div>
-        <div class="q" style="display:block"><div class="t"><b>🔎 O que ele deve buscar?</b><small>Uma palavra de busca por linha (ex.: escova secadora).</small></div>
+        <div class="q" style="display:block"><div class="t"><b>🎯 Focos (público / ocasião)</b>
+          <small>Ligue os focos que você quer receber. Cada um tem as próprias palavras de busca e ganha prioridade no ranking (seus grupos são de plus size).</small></div>
+          <div id="dvFocos"></div>
+          <div class="row" style="margin-top:6px">Prioridade dos focos no ranking: <input id="dvPeso" type="number" min="1" max="5" step="0.1" style="width:80px"> × <small class="muted">(1 = sem prioridade · 1,6 = 60% a mais)</small></div></div>
+        <div class="q" style="display:block"><div class="t"><b>🔎 Outras buscas (gerais)</b><small>Uma palavra de busca por linha (ex.: escova secadora).</small></div>
           <textarea id="dvPal" style="min-height:160px;margin-top:6px"></textarea></div>
       </div>
       <div class="salvar"><button class="b p" onclick="salvarDiv()">💾 Salvar</button>
@@ -252,6 +256,17 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
 <script>
 const B = location.pathname.startsWith('/zap') ? '/zap/' : '/';
 const $ = s => document.querySelector(s);
+// Cores por nicho (fundo suave) e por status (faixa à esquerda) — para bater o olho e diferenciar
+const COR_NICHO = {'🏠 Casa e decoração': 28, '🍳 Cozinha e utensílios': 45, '🔌 Eletrodomésticos': 200, '💇 Beleza e cabelo': 320,
+  '👗 Moda': 275, '🧸 Infantil': 55, '🎧 Eletrônicos': 220, '🛋️ Móveis': 95, '🐶 Pet': 160, '📦 Outros': 0};
+const COR_FOCO = {'➕ Plus Size': 330, '✝️ Evangélica': 210, '🎄 Natal': 130};
+const COR_STATUS = {rascunho: '#e0a100', erro: '#d64545', aprovado: '#3b82f6', enviando: '#8b5cf6', enviado: '#16a34a', descartado: '#999'};
+function tom(nicho, focos){
+  const f = (focos || [])[0]; const h = f ? COR_FOCO[f] : COR_NICHO[nicho];
+  return h === undefined ? '' : `background-color:hsla(${h},70%,55%,.10);`;
+}
+const etiquetas = (nicho, focos) => (nicho ? `<span class="tag" style="background:hsla(${COR_NICHO[nicho] ?? 0},70%,55%,.18)">${esc(nicho)}</span> ` : '') +
+  (focos || []).map(f => `<span class="tag" style="background:hsla(${COR_FOCO[f]},75%,55%,.25)">${esc(f)}</span>`).join(' ');
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 // Datas sempre no padrão ddMmmaa (18Nov26); com hora: 18Nov26 20:30
 function fdata(v, hora){
@@ -299,10 +314,11 @@ async function carregarProdutos(){
 }
 function renderProdutos(){
   const q = $('#busca').value.toLowerCase(), f = $('#fonte').value, fn = $('#fnicho').value;
-  if ($('#fnicho').options.length < 2) $('#fnicho').innerHTML += MSG.nichos.map(n => `<option>${esc(n)}</option>`).join('');
-  const lista = PRODUTOS.filter(p => (!f || p.origem === f) && (!fn || p.nicho === fn) && (!q || p.produto.toLowerCase().includes(q)));
-  $('#produtos').innerHTML = lista.map((p, i) => `<div class="card prod">
-    <span class="tag">${ROTULO[p.origem]}</span> <span class="tag">${esc(p.nicho || '')}</span>
+  if ($('#fnicho').options.length < 2) $('#fnicho').innerHTML += '<optgroup label="Nichos">' + MSG.nichos.map(n => `<option>${esc(n)}</option>`).join('') +
+    '</optgroup><optgroup label="Focos">' + MSG.focos.map(n => `<option>${esc(n)}</option>`).join('') + '</optgroup>';
+  const lista = PRODUTOS.filter(p => (!f || p.origem === f) && (!fn || p.nicho === fn || (p.focos || []).includes(fn)) && (!q || p.produto.toLowerCase().includes(q)));
+  $('#produtos').innerHTML = lista.map((p, i) => `<div class="card prod" style="${tom(p.nicho, p.focos)}">
+    <span class="tag">${ROTULO[p.origem]}</span> ${etiquetas(p.nicho, p.focos)}
     <h3>${esc(p.produto)}</h3>
     <div class="muted">R$ ${esc(p.preco)} · comissão R$ ${esc(p.comissao)} · ${esc(p.vendas)} vendas · ⭐ ${esc(p.nota)}</div>
     <div class="muted">${esc(p.detalhe)}</div>
@@ -397,7 +413,8 @@ function addFaixa(f){
   const d = document.createElement('div'); d.className = 'faixa card'; d.style.margin = '8px 0';
   d.innerHTML = `<div class="row">das <input type="time" class="fde" value="${f.de}" style="width:120px"> às <input type="time" class="fate" value="${f.ate}" style="width:120px">
     <button class="b" type="button" onclick="this.closest('.faixa').remove();pendente('rOk')">🗑️</button></div>
-    <div class="row" style="margin-top:6px">${MSG.nichos.map(n => `<label class="chk" style="border:0;padding:2px 8px 2px 0"><input type="checkbox" value="${esc(n)}" ${f.nichos.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>`;
+    <div class="row" style="margin-top:6px"><span class="muted" style="width:52px">Nichos:</span>${MSG.nichos.map(n => `<label class="chk" style="border:0;padding:2px 8px 2px 0"><input type="checkbox" value="${esc(n)}" ${f.nichos.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>
+    <div class="row" style="margin-top:2px"><span class="muted" style="width:52px">Focos:</span>${MSG.focos.map(n => `<label class="chk" style="border:0;padding:2px 8px 2px 0;background:hsla(${COR_FOCO[n]},75%,55%,.15);border-radius:6px;padding-left:6px"><input type="checkbox" value="${esc(n)}" ${f.nichos.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>`;
   $('#rFaixas').appendChild(d);
 }
 function pendente(id){ $('#' + id).innerHTML = '<span class="pend">● alterações não salvas</span>'; }
@@ -431,7 +448,7 @@ async function carregarFila(){
   const selNicho = it => it.nicho ? (['rascunho','erro','aprovado'].includes(it.status)
       ? `<select style="width:auto;padding:2px 6px;font-size:12px" onchange="mudarNicho(${it.id}, this.value)">${MSG.nichos.map(n => `<option ${n === it.nicho ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`
       : `<span class="tag">${esc(it.nicho)}</span>`) : '';
-  const card = it => `<div class="card"><div class="row"><b style="flex:1">#${it.id} ${esc(it.produto)}</b>${selNicho(it)}<span class="tag">${ST[it.status]||it.status}</span></div>
+  const card = it => `<div class="card" style="${tom(it.nicho, it.focos)}border-left:6px solid ${COR_STATUS[it.status] || '#999'}"><div class="row"><b style="flex:1">#${it.id} ${esc(it.produto)}</b>${etiquetas('', it.focos)}${selNicho(it)}<span class="tag">${ST[it.status]||it.status}</span></div>
     <div class="muted">${ROTULO[it.origem]||''} · ${JSON.parse(it.grupos||'[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).map(nome).map(esc).join(', ') || 'sem grupos'}
     ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}
     ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
@@ -444,7 +461,7 @@ async function carregarFila(){
     ${it.status==='aprovado' ? `<button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
     ${!['enviando','enviado'].includes(it.status) ? `<button class="b" onclick="acao('descartar',${it.id})">🗑️ Descartar</button>` : ''}</p></div>`;
   // card reduzido (uma linha; toque para abrir o completo)
-  const mini = it => `<details class="mini"><summary><b>#${it.id}</b> <span class="tag">${esc(it.nicho || '📢')}</span>
+  const mini = it => `<details class="mini" style="${tom(it.nicho, it.focos)}border-left:6px solid ${COR_STATUS[it.status] || '#999'}"><summary><b>#${it.id}</b> ${it.nicho ? etiquetas(it.nicho, it.focos) : '<span class="tag">📢 Aviso</span>'}
       <span class="mnome">${esc(it.produto)}</span>
       <span class="muted">${JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length} grupo(s)
       ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}${it.enviado_em ? ' · ✅ ' + esc(fdata(it.enviado_em, true)) : ''}
@@ -537,20 +554,25 @@ async function carregarDiv(){
   $('#dvAtivo').checked = d.ativo; document.querySelectorAll('input[name=dvModo]').forEach(r => r.checked = r.value === d.modo);
   $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min; $('#dvComModa').value = d.comissao_min_moda;
   $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias;
-  $('#dvPal').value = d.palavras.join('\n');
+  $('#dvPal').value = d.palavras.join('\n'); $('#dvPeso').value = d.peso_foco;
+  $('#dvFocos').innerHTML = MSG.focos.map(f => `<div class="card" style="margin:8px 0;background:hsla(${COR_FOCO[f]},75%,55%,.10)">
+    <label class="chk" style="border:0"><input type="checkbox" class="dvFocoAt" value="${esc(f)}" ${d.focos_ativos.includes(f) ? 'checked' : ''}> <b>${esc(f)}</b></label>
+    <textarea class="dvFocoPal" data-foco="${esc(f)}" style="min-height:90px">${esc(((d.palavras_foco || {})[f] || []).join('\n'))}</textarea></div>`).join('');
 }
 async function salvarDiv(){
   await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
     horarios: $('#dvHor').value.split(',').map(x => x.trim().padStart(5, '0')).filter(Boolean), por_rodada: $('#dvQtd').value,
     comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
-    palavras: $('#dvPal').value.split('\n')});
+    palavras: $('#dvPal').value.split('\n'), peso_foco: $('#dvPeso').value,
+    focos_ativos: [...document.querySelectorAll('.dvFocoAt:checked')].map(i => i.value),
+    palavras_foco: Object.fromEntries([...document.querySelectorAll('.dvFocoPal')].map(t => [t.dataset.foco, t.value.split('\n')]))});
   await carregarDiv(); $('#dvOk').textContent = 'Salvo ✓';
 }
 async function testarDiv(){
   $('#dvRes').innerHTML = '<p class="muted">Buscando na Shopee… (pode levar 1 min)</p>';
   try { const j = await api('divulgador/testar', {});
     $('#dvRes').innerHTML = j.produtos.length ? '<p><b>Ele mandaria agora:</b></p>' + j.produtos.map(p => `<div class="chk"><span style="flex:1">${esc(p.produto)}</span>
-      <span class="muted">R$ ${esc(p.preco)} · comissão <b>R$ ${esc(p.comissao)}</b> · ${esc(p.vendas)} vendas · ⭐ ${esc(p.nota)} · "${esc(p.palavra)}"</span></div>`).join('')
+      <span>${etiquetas(p.nicho, p.focos)}</span><span class="muted">R$ ${esc(p.preco)} · comissão <b>R$ ${esc(p.comissao)}</b> · ${esc(p.vendas)} vendas · ⭐ ${esc(p.nota)} · "${esc(p.palavra)}"</span></div>`).join('')
       : '<p class="muted">Nada passou nos filtros agora.</p>'; }
   catch(e){ $('#dvRes').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
 }

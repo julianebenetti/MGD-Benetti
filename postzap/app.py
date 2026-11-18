@@ -276,6 +276,7 @@ def produtos_garimpo(limite=150):
                     'preco': br(p.get('preco')), 'comissao': br(com), 'vendas': p.get('vendas') or 0,
                     'nota': p.get('nota') or '', 'link': p['link'],
                     'nicho': classificar_nicho(p.get('produto'), p.get('nicho')),
+                    'focos': classificar_focos(p.get('produto'), p.get('nicho')),
                     'detalhe': ' · '.join(x for x in (p.get('nicho'), p.get('tipo'), data_tela(p.get('data_indicacao'))) if x)})
     return out, ''
 
@@ -306,6 +307,7 @@ def produtos_central():
                         'loja': r.get('loja', ''), 'preco': br(r.get('preco')), 'comissao': br(r.get('comissao')),
                         'vendas': r.get('vendas') or 0, 'nota': r.get('nota') or '', 'link': r['link'],
                         'nicho': classificar_nicho(r.get('produto'), f"{r.get('secao', '')} {r.get('tema', '')}"),
+                        'focos': classificar_focos(r.get('produto'), f"{r.get('secao', '')} {r.get('tema', '')}"),
                         'detalhe': f"Ideias de {data_tela(data.get('dia'))} · {r.get('secao', '')}"})
     for p in posts:
         chave = p['product_key'] or ''
@@ -322,6 +324,7 @@ def produtos_central():
                     'imagem': info.get('imageUrl', ''),
                     'chamada': (json.loads(p['metadata'] or '{}') or {}).get('headline', ''),
                     'nicho': classificar_nicho(p['product_name']),
+                    'focos': classificar_focos(p['product_name']),
                     'detalhe': f"Já postado em vídeo · {data_tela(p['posted_at'])}"})
     return out, ''
 
@@ -449,7 +452,8 @@ _REGRAS_NICHO = [   # a primeira que bate vale (ordem importa: "forma para air f
                       r'c[aâ]mera|smart|bluetooth|power ?bank|tablet|projetor|ring light|cabo usb'),
     ('🛋️ Móveis', r'cadeira|\bmesa\b|guarda-?roupa|arm[aá]rio|sof[aá]|\brack\b|cama box|colch[aã]o|estante|c[oô]moda|'
                   r'penteadeira|gaveteiro|paneleiro|banqueta|escrivaninha'),
-    ('🏠 Casa e decoração', r'tapete|cortina|almofada|quadro|espelho|vaso|lumin[aá]ria|jogo de cama|len[cç]ol|edredom|colcha|'
+    ('🏠 Casa e decoração', r'[aá]rvore de natal|pisca[- ]?pisca|enfeite|guirlanda|pres[eé]pio|bolas? de natal|mesa posta|'
+                           r'tapete|cortina|almofada|quadro|espelho|vaso|lumin[aá]ria|jogo de cama|len[cç]ol|edredom|colcha|'
                            r'manta|cobertor|toalha|organizador|cabide|prateleira|decora|banheiro|travesseiro|lixeira|varal|'
                            r'cesto|jardim|abajur|porta-?retrato|casa'),
     ('👗 Moda', r'vestido|blusa|cal[cç]a|short|saia|macac[aã]o|legging|conjunto|suti[aã]|calcinha|cueca|t[eê]nis|sand[aá]lia|'
@@ -459,6 +463,21 @@ _DICA_NICHO = {'casa': '🏠 Casa e decoração', 'decor': '🏠 Casa e decoraç
                'eletro': '🔌 Eletrodomésticos', 'beleza': '💇 Beleza e cabelo', 'cabelo': '💇 Beleza e cabelo',
                'moda': '👗 Moda', 'pet': '🐶 Pet', 'infantil': '🧸 Infantil', 'cozinha': '🍳 Cozinha e utensílios',
                'utens': '🍳 Cozinha e utensílios', 'eletron': '🎧 Eletrônicos', 'tapete': '🏠 Casa e decoração'}
+
+
+FOCOS = ['➕ Plus Size', '✝️ Evangélica', '🎄 Natal']      # público/ocasião, por cima do nicho
+_REGRAS_FOCO = [
+    ('➕ Plus Size', r'plus ?size|\bplus\b|tamanhos? grandes?|\bg[1-5]\b|\bxg+\b|\bgg+\b|\b(48|50|52|54|56|58|60)\b.*(ao|a) \b(54|56|58|60|62)'),
+    ('✝️ Evangélica', r'evang[eé]lic|crist[aã]|moda (crist|religios)|modest|saia (longa|midi|m[ií]di|godê|lápis longa)|'
+                      r'vestido (longo|midi|m[ií]di).*(manga|social)|conjunto (social|saia)'),
+    ('🎄 Natal', r'natal|natalin|papai noel|noel|[aá]rvore de natal|pisca[- ]?pisca|enfeite|guirlanda|pres[eé]pio|'
+                r'amigo secreto|ceia|bola de natal|festas de fim de ano|r[eé]veillon'),
+]
+
+
+def classificar_focos(produto, dica=''):
+    t = f"{produto or ''} {dica or ''}".lower()
+    return [f for f, pad in _REGRAS_FOCO if re.search(pad, t)]
 
 
 def classificar_nicho(produto, dica=''):
@@ -518,6 +537,8 @@ def preparar(p):
     # previa: passa pela página do PostZap (miniatura garantida + cliques por grupo), redireciona na hora.
     p['link'] = (link if modo_link() == 'direto' else criar_link_curto(link, p.get('produto', ''), p.get('imagem', ''))) if link else ''
     p['loja'] = 'Shopee' if ids else (p.get('loja') or loja_do_link(link) or 'Outras')
+    if not isinstance(p.get('focos'), list):
+        p['focos'] = classificar_focos(p.get('produto'), p.get('palavra') or '')
     if not p.get('nicho') or p['nicho'] not in NICHOS:
         p['nicho'] = classificar_nicho(p.get('produto'), p.get('nicho') or p.get('palavra') or '')
     if 'cupom' not in p:
@@ -972,6 +993,14 @@ def nichos_da_hora(r=None, quando=None):
     return []
 
 
+def focos_do_item(item):
+    try:
+        d = json.loads(item['dados'] or '{}') or {}
+        return d['focos'] if 'focos' in d else classificar_focos(item['produto'])
+    except (ValueError, KeyError, TypeError):
+        return []
+
+
 def nicho_do_item(item):
     try:
         return (json.loads(item['dados'] or '{}') or {}).get('nicho') or classificar_nicho(item['produto'])
@@ -982,6 +1011,15 @@ def nicho_do_item(item):
 def ritmo():
     r = dict(RITMO_PADRAO)
     r.update(get_json('ritmo', {}))
+    if get_cfg('migr_focos') != '1':           # 1ª vez: põe os focos nas faixas de moda e de noite
+        extra = {'10:00': ['➕ Plus Size', '✝️ Evangélica'], '15:00': ['🎄 Natal'], '18:00': ['🎄 Natal'],
+                 '20:00': ['➕ Plus Size', '✝️ Evangélica', '🎄 Natal']}
+        for f in r.get('nichos_horario') or []:
+            for k, v in extra.items():
+                if f.get('de', '') <= k < f.get('ate', ''):
+                    f['nichos'] = list(dict.fromkeys((f.get('nichos') or []) + v))
+        set_cfg('ritmo', json.dumps(r))
+        set_cfg('migr_focos', '1')
     if get_cfg('migr_nichos_dados') != '1':        # 1ª vez: faixas novas, baseadas nas vendas reais
         r['nichos_horario'] = RITMO_PADRAO['nichos_horario']
         set_cfg('ritmo', json.dumps(r))
@@ -1043,7 +1081,7 @@ def proximo_item():
                                "ORDER BY aprovado_em").fetchall()
     da_hora = nichos_da_hora(r)
     if da_hora:                     # rajada do nicho da hora; sem nenhum desse nicho: outro (ou espera, se estrito)
-        do_nicho = [x for x in candidatos if nicho_do_item(x) in da_hora]
+        do_nicho = [x for x in candidatos if nicho_do_item(x) in da_hora or set(focos_do_item(x)) & set(da_hora)]
         candidatos = do_nicho or ([] if r.get('nicho_estrito') else candidatos)
     item = candidatos[0] if candidatos else None
     if not item:
@@ -1460,7 +1498,7 @@ def _tratar(inst, numero, texto, citado=''):
             mostrar_previa(inst, numero, fid)
             extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
             sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: responda *4 99,90*.'
-            responder(inst, numero, f"📌 *Post #{fid} pronto* · {p.get('nicho', '')} · {p['produto'][:45]} · vai para {len(grupos)} grupo(s)"
+            responder(inst, numero, f"📌 *Post #{fid} pronto* · {' · '.join([p.get('nicho', '')] + p.get('focos', []))} · {p['produto'][:45]} · vai para {len(grupos)} grupo(s)"
                                     f"{extra}{sem_preco}\n\n{MENU_CURTO}", fid=fid)
         n = len(pendentes(numero))
         if len(links) > 1 and n:
@@ -1598,6 +1636,17 @@ DIVULGADOR_PADRAO = {
                  'jogo de lençol', 'cortina', 'tapete sala', 'organizador', 'toalha de banho', 'cobertor', 'travesseiro',
                  'cadeira', 'colchão', 'guarda-roupa', 'penteadeira', 'gaveteiro', 'estante',
                  'aspirador', 'ventilador', 'climatizador', 'air fryer', 'jogo de panelas', 'brinquedo infantil'],
+    # Focos (público/ocasião): palavras próprias, ligar/desligar e prioridade no ranking (os grupos são de plus size)
+    'focos_ativos': ['➕ Plus Size', '✝️ Evangélica', '🎄 Natal'],
+    'palavras_foco': {
+        '➕ Plus Size': ['vestido plus size', 'conjunto plus size', 'calça plus size', 'blusa plus size', 'macacão plus size',
+                        'short plus size', 'sutiã plus size', 'moda praia plus size', 'saia plus size'],
+        '✝️ Evangélica': ['vestido evangélico', 'saia midi evangélica', 'saia longa', 'conjunto evangélico', 'vestido midi manga',
+                         'saia jeans longa', 'vestido plus size evangélico'],
+        '🎄 Natal': ['decoração de natal', 'árvore de natal', 'pisca pisca', 'enfeite de natal', 'pijama natal família',
+                    'roupa natal', 'presente amigo secreto', 'mesa posta natal', 'kit presente natal'],
+    },
+    'peso_foco': 1.6,                       # produto com foco ativo vale 60% a mais no ranking
     'comissao_min': 9.0,                    # R$ por venda (piso do Garimpo)
     'comissao_min_moda': 4.0,               # exceção: público do WhatsApp gosta de moda barata (decisão 18Nov26)
     'nota_min': 4.6, 'vendas_min': 300,
@@ -1633,7 +1682,8 @@ def minerar(d=None, limite_busca=20):
     corte = (agora() - timedelta(days=int(d['nao_repetir_dias']))).isoformat()
     with db() as c:
         recentes = {r[0] for r in c.execute("SELECT chave FROM fila WHERE criado_em>=? AND status!='descartado'", (corte,))}
-    for palavra in d['palavras']:
+    todas = list(d['palavras']) + [w for f in d.get('focos_ativos', []) for w in (d.get('palavras_foco') or {}).get(f, [])]
+    for palavra in dict.fromkeys(todas):
         for ordem in (2, 5):                   # 2 = mais vendidos · 5 = maior comissão
             try:
                 nodes = shopee_gql(f'{{productOfferV2(keyword:{json.dumps(palavra, ensure_ascii=False)},'
@@ -1652,8 +1702,10 @@ def minerar(d=None, limite_busca=20):
                         or vendas < int(d['vendas_min']):
                     continue
                 piso = piso_comissao(classificar_nicho(n.get('productName'), palavra), d)
-                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra,   # pontos relativos ao piso do nicho
-                          'pontos': (com / piso) * (1 + min(vendas, 20000) / 2000) * (nota / 5)})
+                focos = [f for f in classificar_focos(n.get('productName'), palavra) if f in d.get('focos_ativos', [])]
+                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra, 'focos': focos,  # relativo ao piso do nicho
+                          'pontos': (com / piso) * (1 + min(vendas, 20000) / 2000) * (nota / 5)
+                                    * (float(d.get('peso_foco', 1.6)) if focos else 1)})
                 achados.append(n)
     achados.sort(key=lambda x: -x['pontos'])
     escolhidos, por_palavra = [], {}
@@ -1688,8 +1740,9 @@ def rodar_divulgador(manual=False):
     alvo = nichos_da_hora(r, agora() + timedelta(minutes=40))     # o nicho da faixa que vai começar
     if alvo and not manual:
         palavras = [w for w in d['palavras'] if classificar_nicho(w) in alvo]
-        if palavras:
-            d = dict(d, palavras=palavras)
+        focos_alvo = [f for f in d.get('focos_ativos', []) if f in alvo]      # foco escolhido para a faixa
+        if palavras or focos_alvo:
+            d = dict(d, palavras=palavras, focos_ativos=focos_alvo or d.get('focos_ativos', []))
     escolhidos = minerar(d)
     if not escolhidos:
         return 0, 'Nenhum produto novo passou nos filtros agora.'
@@ -1700,6 +1753,7 @@ def rodar_divulgador(manual=False):
     for n in escolhidos:
         try:
             p = preparar({'origem': 'divulgador', 'chave': n['chave'], 'produto': n['productName'], 'palavra': n['palavra'],
+                          'focos': classificar_focos(n['productName'], n['palavra']),
                           'imagem': n.get('imageUrl', ''), 'preco': br(n.get('priceMin'))})
         except Exception as e:
             log.warning(f'Divulgador: preparar falhou: {e}')
@@ -1716,7 +1770,7 @@ def rodar_divulgador(manual=False):
                              'aprovado' if auto else 'rascunho', agora().isoformat() if auto else None))
             fid = cur.lastrowid
         mostrar_previa(inst, jid, fid)
-        info = (f"🤖 *Post #{fid}* · {p.get('nicho', '')} · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
+        info = (f"🤖 *Post #{fid}* · {' · '.join([p.get('nicho', '')] + p.get('focos', []))} · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
                 f"⭐ {n.get('ratingStar')} · busca \"{n['palavra']}\"")
         responder(inst, jid, info + ('\n✅ Já aprovado (sai na próxima rajada). Responda *0* em cima para cancelar.'
                                      if auto else f'\n\n{MENU_CURTO}'), fid=fid)
@@ -1844,12 +1898,13 @@ class H(BaseHTTPRequestHandler):
                             'ON g.rowid=k.grupo WHERE k.codigo=? GROUP BY k.grupo ORDER BY n DESC', (cod,))] if cod else []
                         r['sub_ids'] = (json.loads(r.get('dados') or '{}') or {}).get('sub_ids')
                         r['nicho'] = nicho_do_item(r) if r.get('origem') != 'aviso' else ''
+                        r['focos'] = focos_do_item(r) if r.get('origem') != 'aviso' else []
                 return self.send_json({'fila': rows, 'pausado': get_cfg('pausado') == '1'})
             if p == '/api/config':
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
-                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS,
+                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': FOCOS,
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
@@ -1948,7 +2003,7 @@ class H(BaseHTTPRequestHandler):
             r = ritmo()
             if isinstance(b.get('nichos_horario'), list):
                 r['nichos_horario'] = sorted(
-                    [{'de': f['de'], 'ate': f['ate'], 'nichos': [n for n in f.get('nichos', []) if n in NICHOS]}
+                    [{'de': f['de'], 'ate': f['ate'], 'nichos': [n for n in f.get('nichos', []) if n in NICHOS + FOCOS]}
                      for f in b['nichos_horario'] if re.fullmatch(r'\d{2}:\d{2}', f.get('de', '')) and
                      re.fullmatch(r'\d{2}:\d{2}', f.get('ate', ''))], key=lambda f: f['de'])
             for k in ('nichos_ativo', 'nicho_estrito'):
@@ -1978,6 +2033,12 @@ class H(BaseHTTPRequestHandler):
                 d['modo'] = b['modo']
             if isinstance(b.get('horarios'), list):
                 d['horarios'] = sorted(h for h in b['horarios'] if re.fullmatch(r'\d{2}:\d{2}', h))
+            if isinstance(b.get('focos_ativos'), list):
+                d['focos_ativos'] = [f for f in b['focos_ativos'] if f in FOCOS]
+            if isinstance(b.get('palavras_foco'), dict):
+                d['palavras_foco'] = {f: [w.strip() for w in v if w.strip()][:20] for f, v in b['palavras_foco'].items() if f in FOCOS}
+            if str(b.get('peso_foco', '')).replace('.', '', 1).isdigit():
+                d['peso_foco'] = min(5.0, max(1.0, float(b['peso_foco'])))
             if isinstance(b.get('palavras'), list):
                 d['palavras'] = [x.strip() for x in b['palavras'] if x.strip()][:40]
             for k, tipo in (('por_rodada', int), ('comissao_min', float), ('comissao_min_moda', float), ('nota_min', float), ('vendas_min', int),
@@ -1992,7 +2053,8 @@ class H(BaseHTTPRequestHandler):
             n, msg = rodar_divulgador(manual=True)
             return self.send_json({'feitos': n, 'msg': msg})
         if p == '/api/divulgador/testar':
-            return self.send_json({'produtos': [{'produto': n['productName'], 'comissao': br(n['comissao_rs']),
+            return self.send_json({'produtos': [{'produto': n['productName'], 'comissao': br(n['comissao_rs']), 'focos': n.get('focos', []),
+                                                 'nicho': classificar_nicho(n['productName'], n['palavra']),
                                                  'vendas': n.get('sales'), 'nota': n.get('ratingStar'), 'palavra': n['palavra'],
                                                  'preco': br(n.get('priceMin'))} for n in minerar()]})
         if p == '/api/pausar':

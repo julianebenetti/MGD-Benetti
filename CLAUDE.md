@@ -53,4 +53,7 @@
   Eletrônicos e Eletrodomésticos (ticket R$ 91). Horários: Moda e Beleza 20–22h e 10–11h; Eletro 11–14h e 17h;
   Móveis 21h e 13–14h; Casa/decoração espalhado, com 21–22h e 13–17h. Comissão média por pedido é baixa (R$ 1,5–6,5):
   o piso de R$ 9 por produto deixa de fora a maior parte da moda — produtos de moda acima do piso são raros e valiosos.
+- **Público dos grupos de WhatsApp:** a maioria foi formada para **moda plus size**; ela também quer mandar **moda evangélica**
+  e **itens de Natal**. No PostZap isso é organizado como **focos** (➕ Plus Size, ✝️ Evangélica, 🎄 Natal) por cima do
+  nicho (👗 Moda, 🏠 Casa…): têm palavras de busca próprias e prioridade no Divulgador, entram nas faixas de horário e nos filtros.
 - **Black Friday 2026: sexta 27Nov26.** Aquecimento dos grupos começou em 18Nov26 (6 posts/dia por grupo, +2/dia, até 20).

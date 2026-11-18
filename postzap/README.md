@@ -38,6 +38,10 @@ filtra (comissão ≥ R$ 9, nota, vendas, sem suplementos, sem repetir em 7 dias
 ao FILA POST ZAP como 📌 Post #N. Modo "aprovar" (você responde em cima) ou "postar sozinho" (já aprovados, saem nas
 rajadas; `0` em cima cancela). "Testar" mostra o que ele acharia sem mandar nada.
 
+## 🎯 Focos (público/ocasião)
+➕ Plus Size, ✝️ Evangélica e 🎄 Natal ficam **por cima do nicho** (ex.: "👗 Moda · ➕ Plus Size"). Detectados pelo nome do
+produto, aparecem nos cards/filtros, entram nas faixas de horário e têm palavras de busca próprias e prioridade no Divulgador.
+
 ## Ritmo de envio (aba ✅ Aprovação → ⏱️ Ritmo)
 Posts aprovados saem em **rajadas** (1–3 posts, pausa de 40–90 min, sorteado), só das 8h às 22h, com 2–5 min entre
 grupos. **Aquecimento:** 6 posts/dia por grupo no 1º dia, +2 por dia, até 20. Agendado com hora (`5 20h`) sai na hora.
