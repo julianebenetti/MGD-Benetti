@@ -163,6 +163,15 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 <script>
 const B = location.pathname.startsWith('/zap') ? '/zap/' : '/';
 const $ = s => document.querySelector(s);
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+// Datas sempre no padrão ddMmmaa (18Nov26); com hora: 18Nov26 20:30
+function fdata(v, hora){
+  if (!v) return '';
+  const d = /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(v + 'T12:00:00') : new Date(v);
+  if (isNaN(d)) return String(v);
+  const p = n => String(n).padStart(2, '0');
+  return p(d.getDate()) + MESES[d.getMonth()] + String(d.getFullYear()).slice(2) + (hora ? ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) : '');
+}
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let PRODUTOS = [], GRUPOS = [], LISTAS = [], MODELO = '', FILA = [], EDIT = null, MSG = {}, CUPONS = [];
 
@@ -207,7 +216,7 @@ function renderProdutos(){
     <h3>${esc(p.produto)}</h3>
     <div class="muted">R$ ${esc(p.preco)} · comissão R$ ${esc(p.comissao)} · ${esc(p.vendas)} vendas · ⭐ ${esc(p.nota)}</div>
     <div class="muted">${esc(p.detalhe)}</div>
-    ${p.ultimo_envio ? `<div class="warn">Já postado em ${esc(p.ultimo_envio.slice(0,10).split('-').reverse().join('/'))}</div>` : ''}
+    ${p.ultimo_envio ? `<div class="warn">Já postado em ${esc(fdata(p.ultimo_envio))}</div>` : ''}
     <p class="row" style="margin-bottom:0"><button class="b p" onclick="novo(${PRODUTOS.indexOf(p)})">📝 Preparar postagem</button>
     <a class="muted" href="${esc(p.link)}" target="_blank" rel="noopener">abrir link</a></p></div>`).join('') || '<p class="muted">Nenhum produto.</p>';
 }
@@ -291,8 +300,8 @@ async function carregarFila(){
   const nome = jid => (GRUPOS.find(g => g.jid === jid) || {}).nome || jid;
   const card = it => `<div class="card"><div class="row"><b style="flex:1">${esc(it.produto)}</b><span class="tag">${ST[it.status]||it.status}</span></div>
     <div class="muted">${ROTULO[it.origem]||''} · ${JSON.parse(it.grupos||'[]').map(nome).map(esc).join(', ') || 'sem grupos'}
-    ${it.agendado_para ? ' · 🕒 ' + esc(new Date(it.agendado_para).toLocaleString('pt-BR')) : ''}
-    ${it.enviado_em ? ' · enviado ' + esc(new Date(it.enviado_em).toLocaleString('pt-BR')) : ''}</div>
+    ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}
+    ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
     <pre style="white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto)}</pre>
     ${it.erro ? `<p class="err">${esc(it.erro)}</p>` : ''}
     ${it.link ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
@@ -350,7 +359,7 @@ async function carregarCupons(){
   const hoje = new Date().toISOString().slice(0,10);
   $('#cupons').innerHTML = CUPONS.map(c => `<div class="card row"><b style="min-width:110px">🎟️ ${esc(c.codigo)}</b>
     <span class="tag">${esc(c.loja)}</span><span style="flex:1">${esc(c.texto || '')}</span>
-    <span class="muted">${c.validade ? 'até ' + c.validade.split('-').reverse().join('/') : 'sem validade'}${c.validade && c.validade < hoje ? ' <b class="err">vencido</b>' : ''}</span>
+    <span class="muted">${c.validade ? 'até ' + fdata(c.validade) : 'sem validade'}${c.validade && c.validade < hoje ? ' <b class="err">vencido</b>' : ''}</span>
     <button class="b" onclick="alternarCupom(${c.id})">${c.ativo ? '⏸️ Pausar' : '▶️ Ativar'}</button>
     <button class="b" onclick="excluirCupom(${c.id})">🗑️</button></div>`).join('') || '<p class="muted">Nenhum cupom cadastrado.</p>';
 }
@@ -404,7 +413,7 @@ async function statusWa(){
   } catch(e){ $('#wa').textContent = 'WhatsApp: ⚠️ ' + e.message; }
 }
 let _conTimer;
-const dt = iso => iso ? new Date(iso).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+const dt = iso => fdata(iso, true);
 async function carregarConexao(silencioso){
   clearTimeout(_conTimer);
   if (!silencioso) $('#conexao').innerHTML = 'Verificando os chips…';

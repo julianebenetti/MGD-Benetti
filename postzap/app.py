@@ -22,7 +22,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from http import cookies
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -272,7 +272,7 @@ def produtos_garimpo(limite=150):
         out.append({'origem': 'garimpo', 'chave': chave, 'produto': p.get('produto') or '', 'loja': p.get('loja') or '',
                     'preco': br(p.get('preco')), 'comissao': br(com), 'vendas': p.get('vendas') or 0,
                     'nota': p.get('nota') or '', 'link': p['link'],
-                    'detalhe': ' · '.join(x for x in (p.get('nicho'), p.get('tipo'), str(p.get('data_indicacao') or '')) if x)})
+                    'detalhe': ' · '.join(x for x in (p.get('nicho'), p.get('tipo'), data_tela(p.get('data_indicacao'))) if x)})
     return out, ''
 
 
@@ -300,7 +300,7 @@ def produtos_central():
             out.append({'origem': 'central_ideias', 'chave': chave, 'produto': r.get('produto', ''),
                         'loja': r.get('loja', ''), 'preco': br(r.get('preco')), 'comissao': br(r.get('comissao')),
                         'vendas': r.get('vendas') or 0, 'nota': r.get('nota') or '', 'link': r['link'],
-                        'detalhe': f"Ideias de {data.get('dia', '')} · {r.get('secao', '')}"})
+                        'detalhe': f"Ideias de {data_tela(data.get('dia'))} · {r.get('secao', '')}"})
     for p in posts:
         chave = p['product_key'] or ''
         links = json.loads(p['links'] or '[]')
@@ -315,7 +315,7 @@ def produtos_central():
                     'nota': info.get('ratingStar') or '', 'link': links[0],
                     'imagem': info.get('imageUrl', ''),
                     'chamada': (json.loads(p['metadata'] or '{}') or {}).get('headline', ''),
-                    'detalhe': f"Já postado em vídeo · {(p['posted_at'] or '')[:10]}"})
+                    'detalhe': f"Já postado em vídeo · {data_tela(p['posted_at'])}"})
     return out, ''
 
 
@@ -409,6 +409,19 @@ MESES = ('Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', '
 def data_sub(d):
     """Data dos Sub IDs no padrão ddMmmaa (ex.: 18Nov26), o mesmo do robô do Shopee Vídeo."""
     return f"{d.day:02d}{MESES[d.month - 1]}{d:%y}"
+
+
+def data_tela(valor, hora=False):
+    """'2026-11-18' / ISO / date → '18Nov26' (com hora: '18Nov26 20:30'). Vazio ou inválido: devolve como veio."""
+    if not valor:
+        return ''
+    try:
+        d = valor if isinstance(valor, (date, datetime)) else datetime.fromisoformat(str(valor).replace('Z', '+00:00'))
+    except ValueError:
+        return str(valor)
+    if isinstance(d, datetime) and d.tzinfo:
+        d = d.astimezone(BRT)
+    return data_sub(d) + (f" {d:%H:%M}" if hora and isinstance(d, datetime) else '')
 
 
 def ids_da_chave(chave):
@@ -1137,7 +1150,7 @@ def _tratar(inst, numero, texto):
             c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=?", (agora().isoformat(), item['id']))
         conversa_set(numero, None)
         quando = item['agendado_para']
-        return responder(inst, numero, f"✅ Aprovado! {'Posto às ' + quando[11:16] if quando else 'Começando a postar'} em "
+        return responder(inst, numero, f"✅ Aprovado! {'Posto em ' + data_tela(quando, True) if quando else 'Começando a postar'} em "
                                        f"{len(grupos)} grupo(s), sorteando entre os chips. Aviso quando terminar.")
     if cmd in ('2', '3', '4'):
         esp = {'2': 'chamada', '3': 'de', '4': 'por'}[cmd]
@@ -1158,7 +1171,7 @@ def _tratar(inst, numero, texto):
             c.execute("UPDATE fila SET agendado_para=?, status='aprovado', aprovado_em=? WHERE id=?",
                       (quando.isoformat(), agora().isoformat(), item['id']))
         conversa_set(numero, None)
-        return responder(inst, numero, f"🕒 Agendado para {quando.strftime('%d/%m às %H:%M')}. Aviso quando postar.")
+        return responder(inst, numero, f"🕒 Agendado para {data_sub(quando)} às {quando:%H:%M}. Aviso quando postar.")
     if cmd == '6':
         cod = resto.strip()
         regravar(item, cupom='' if cod in ('', '0') else cod.upper(), cupom_texto='')
