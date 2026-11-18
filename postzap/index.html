@@ -29,6 +29,12 @@ textarea{min-height:170px;font-family:ui-monospace,Menlo,monospace;font-size:13p
 dialog{border:0;border-radius:14px;padding:0;width:min(640px,calc(100% - 32px));background:var(--card);color:var(--tx)}
 dialog .in{padding:16px}dialog::backdrop{background:#0008}
 #login{max-width:340px;margin:15vh auto}
+.form{display:flex;flex-direction:column;gap:2px;margin-top:8px}
+.q{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--bd)}
+.q .t{flex:1;min-width:220px}.q .t b{display:block}.q .t small{color:var(--mut)}
+.q .v{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.q .v input{width:90px}.q .v input[type=time]{width:120px}.q .v input[type=checkbox]{width:auto}
+.salvar{position:sticky;bottom:0;background:var(--card);padding:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pend{color:var(--warn);font-weight:600}
 </style>
 </head>
 <body>
@@ -71,16 +77,25 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
       <p class="muted">Os posts aprovados saem em <b>rajadas</b> (alguns posts juntos, depois uma pausa), só no horário escolhido.
       O <b>aquecimento</b> começa com poucos posts por dia em cada grupo e aumenta um pouco por dia — bom para chegar na Black Friday com chips e grupos "quentes".
       Post agendado com hora (<b>5 20h</b>) sai na hora marcada.</p>
-      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr))">
-        <label>Horário: das <input id="rIni" type="time"> às <input id="rFim" type="time"></label>
-        <label>Posts por rajada: de <input id="rRaj1" type="number" min="1" style="width:70px"> a <input id="rRaj2" type="number" min="1" style="width:70px"></label>
-        <label>Pausa entre rajadas (min): <input id="rPau1" type="number" min="1" style="width:70px"> a <input id="rPau2" type="number" min="1" style="width:70px"></label>
-        <label>Entre um grupo e outro (seg): <input id="rGr1" type="number" min="30" style="width:80px"> a <input id="rGr2" type="number" min="30" style="width:80px"></label>
-        <label>Aquecimento: começa com <input id="rAq1" type="number" min="1" style="width:70px"> posts/dia por grupo</label>
-        <label>Sobe <input id="rAq2" type="number" min="0" style="width:70px"> por dia, até <input id="rAq3" type="number" min="1" style="width:70px"></label>
+      <div class="form" oninput="pendente('rOk')">
+        <div class="q"><div class="t"><b>⏰ Em que horário pode postar?</b><small>Fora desse horário os posts esperam o dia seguinte.</small></div>
+          <div class="v">das <input id="rIni" type="time"> às <input id="rFim" type="time"></div></div>
+        <div class="q"><div class="t"><b>📦 Quantos posts saem juntos em cada rajada?</b><small>Sorteia um número entre os dois.</small></div>
+          <div class="v">de <input id="rRaj1" type="number" min="1"> a <input id="rRaj2" type="number" min="1"> posts</div></div>
+        <div class="q"><div class="t"><b>⏸️ Quanto tempo de pausa entre uma rajada e outra?</b><small>Sorteia entre os dois.</small></div>
+          <div class="v">de <input id="rPau1" type="number" min="1"> a <input id="rPau2" type="number" min="1"> minutos</div></div>
+        <div class="q"><div class="t"><b>👥 Quanto esperar entre um grupo e outro?</b><small>No mesmo post. Mais tempo = mais seguro contra ban.</small></div>
+          <div class="v">de <input id="rGr1" type="number" min="30"> a <input id="rGr2" type="number" min="30"> segundos</div></div>
+        <div class="q"><div class="t"><b>🔥 Aquecimento: com quantos posts por dia (em cada grupo) começa?</b></div>
+          <div class="v"><input id="rAq1" type="number" min="1"> posts/dia</div></div>
+        <div class="q"><div class="t"><b>📈 Quanto aumenta por dia?</b></div>
+          <div class="v">+ <input id="rAq2" type="number" min="0"> por dia</div></div>
+        <div class="q"><div class="t"><b>🔝 Até no máximo quantos posts por dia (em cada grupo)?</b></div>
+          <div class="v"><input id="rAq3" type="number" min="1"> posts/dia</div></div>
+        <div class="q"><div class="t"><b>🔄 Recomeçar o aquecimento a partir de hoje?</b><small>Volta para o número inicial e sobe de novo.</small></div>
+          <div class="v"><label class="chk" style="border:0"><input type="checkbox" id="rReini"> sim, recomeçar</label></div></div>
       </div>
-      <p class="row"><button class="b p" onclick="salvarRitmo(false)">💾 Salvar ritmo</button>
-        <button class="b" onclick="salvarRitmo(true)">🔄 Recomeçar aquecimento hoje</button> <span id="rOk" class="muted"></span></p>
+      <div class="salvar"><button class="b p" onclick="salvarRitmo()">💾 Salvar</button> <span id="rOk" class="muted"></span></div>
     </details>
     <div class="row" style="margin-bottom:12px"><span id="pausa"></span>
       <button class="b" onclick="novoAviso()">📢 Novo aviso para os grupos</button></div>
@@ -104,26 +119,33 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 
   <section id="t-divulgador" class="hide">
     <div class="card"><div class="row"><b style="flex:1">🤖 Divulgador automático</b>
-      <label class="chk" style="border:0"><input type="checkbox" id="dvAtivo"> <b>Ligado</b></label></div>
+      <label class="chk" style="border:0"><input type="checkbox" id="dvAtivo" onchange="pendente('dvOk')"> <b>Ligado</b></label></div>
       <p class="muted">Nos horários escolhidos, o PostZap busca ofertas na Shopee (mesma API do MCP), aplica os filtros
       (comissão mínima R$ 9, nunca suplementos, sem repetir) e manda os melhores para o grupo <b>FILA POST ZAP</b>, cada um como
       📌 Post #N — com o seu link de afiliado e a chamada prontos.</p>
+      <div onchange="pendente('dvOk')">
       <label class="chk"><input type="radio" name="dvModo" value="aprovar"> <span><b>Mandar para eu aprovar</b> — responda em cima de cada um (1, 7, 0…)</span></label>
       <label class="chk"><input type="radio" name="dvModo" value="automatico"> <span><b>Postar sozinho</b> — já entram aprovados e saem nas rajadas;
-        responda <b>0</b> em cima de um para cancelar antes de sair</span></label>
-      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-top:10px">
-        <label>Horários (vírgula)<input id="dvHor" placeholder="07:40, 12:10, 17:10"></label>
-        <label>Posts por rodada<input id="dvQtd" type="number" min="1" max="15"></label>
-        <label>Comissão mínima (R$)<input id="dvCom" type="number" min="9" step="0.5"></label>
-        <label>Nota mínima<input id="dvNota" type="number" min="0" max="5" step="0.1"></label>
-        <label>Vendas mínimas<input id="dvVend" type="number" min="0"></label>
-        <label>Não repetir por (dias)<input id="dvRep" type="number" min="1"></label>
+        responda <b>0</b> em cima de um para cancelar antes de sair</span></label></div>
+      <div class="form" oninput="pendente('dvOk')" onchange="pendente('dvOk')">
+        <div class="q"><div class="t"><b>⏰ Em que horários ele busca ofertas?</b><small>Separe por vírgula. Padrão: antes dos picos (13–15h, 18h, 20–21h).</small></div>
+          <div class="v"><input id="dvHor" style="width:200px" placeholder="07:40, 12:10, 17:10"></div></div>
+        <div class="q"><div class="t"><b>📦 Quantos posts novos em cada busca?</b></div>
+          <div class="v"><input id="dvQtd" type="number" min="1" max="15"> posts</div></div>
+        <div class="q"><div class="t"><b>💰 Comissão mínima por venda?</b><small>Nunca abaixo de R$ 9 (regra do Garimpo).</small></div>
+          <div class="v">R$ <input id="dvCom" type="number" min="9" step="0.5"></div></div>
+        <div class="q"><div class="t"><b>⭐ Nota mínima do produto?</b></div>
+          <div class="v"><input id="dvNota" type="number" min="0" max="5" step="0.1"></div></div>
+        <div class="q"><div class="t"><b>🛒 Mínimo de vendas do produto?</b></div>
+          <div class="v"><input id="dvVend" type="number" min="0"> vendas</div></div>
+        <div class="q"><div class="t"><b>🔁 Depois de postar, quanto tempo sem repetir o mesmo produto?</b></div>
+          <div class="v"><input id="dvRep" type="number" min="1"> dias</div></div>
+        <div class="q" style="display:block"><div class="t"><b>🔎 O que ele deve buscar?</b><small>Uma palavra de busca por linha (ex.: escova secadora).</small></div>
+          <textarea id="dvPal" style="min-height:160px;margin-top:6px"></textarea></div>
       </div>
-      <label style="display:block;margin-top:10px">Palavras de busca (uma por linha)
-        <textarea id="dvPal" style="min-height:160px"></textarea></label>
-      <p class="row"><button class="b p" onclick="salvarDiv()">💾 Salvar</button>
+      <div class="salvar"><button class="b p" onclick="salvarDiv()">💾 Salvar</button>
         <button class="b" onclick="testarDiv()">🔍 Testar (ver o que ele acharia agora)</button>
-        <button class="b" onclick="rodarDiv()">🚀 Rodar agora (manda pro FILA POST ZAP)</button> <span id="dvOk" class="muted"></span></p>
+        <button class="b" onclick="rodarDiv()">🚀 Rodar agora</button> <span id="dvOk" class="muted"></span></div>
       <div id="dvRes"></div></div>
   </section>
 
@@ -346,21 +368,25 @@ function mostrarRitmo(){
   [$('#rPau1').value, $('#rPau2').value] = r.pausa; [$('#rGr1').value, $('#rGr2').value] = r.entre_grupos;
   $('#rAq1').value = r.aquec_inicio; $('#rAq2').value = r.aquec_passo; $('#rAq3').value = r.aquec_max;
 }
-async function salvarRitmo(reiniciar){
+function pendente(id){ $('#' + id).innerHTML = '<span class="pend">● alterações não salvas</span>'; }
+async function salvarRitmo(){
+  const reiniciar = $('#rReini').checked;
   const j = await api('ritmo', {inicio: $('#rIni').value, fim: $('#rFim').value, rajada: [$('#rRaj1').value, $('#rRaj2').value],
     pausa: [$('#rPau1').value, $('#rPau2').value], entre_grupos: [$('#rGr1').value, $('#rGr2').value],
     aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, reiniciar_aquecimento: reiniciar});
-  MSG = await api('config'); mostrarRitmo(); $('#rOk').textContent = `Salvo ✓ — hoje: até ${j.limite_hoje} posts por grupo`;
+  MSG = await api('config'); mostrarRitmo(); $('#rReini').checked = false;
+  $('#rOk').textContent = `Salvo ✓ — hoje: até ${j.limite_hoje} posts por grupo`;
 }
 async function carregarFila(){
-  MSG = await api('config').catch(() => MSG); mostrarRitmo();
+  MSG = await api('config').catch(() => MSG);
+  if ($('#rOk').textContent.indexOf('não salvas') < 0) mostrarRitmo();
   const j = await api('fila'); FILA = j.fila;
   $('#pausa').innerHTML = j.pausado
     ? `<b class="warn">⏸️ Envios pausados</b> <button class="b p" onclick="pausar(false)">▶️ Retomar</button>`
     : `<button class="b" onclick="pausar(true)">⏸️ Pausar todos os envios</button>`;
   const nome = jid => (GRUPOS.find(g => g.jid === jid) || {}).nome || jid;
   const card = it => `<div class="card"><div class="row"><b style="flex:1">${esc(it.produto)}</b><span class="tag">${ST[it.status]||it.status}</span></div>
-    <div class="muted">${ROTULO[it.origem]||''} · ${JSON.parse(it.grupos||'[]').map(nome).map(esc).join(', ') || 'sem grupos'}
+    <div class="muted">${ROTULO[it.origem]||''} · ${JSON.parse(it.grupos||'[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).map(nome).map(esc).join(', ') || 'sem grupos'}
     ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}
     ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
     <pre style="white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto)}</pre>
@@ -446,7 +472,7 @@ async function salvarDiv(){
     horarios: $('#dvHor').value.split(',').map(x => x.trim().padStart(5, '0')).filter(Boolean), por_rodada: $('#dvQtd').value,
     comissao_min: $('#dvCom').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
     palavras: $('#dvPal').value.split('\n')});
-  $('#dvOk').textContent = 'Salvo ✓'; carregarDiv();
+  await carregarDiv(); $('#dvOk').textContent = 'Salvo ✓';
 }
 async function testarDiv(){
   $('#dvRes').innerHTML = '<p class="muted">Buscando na Shopee… (pode levar 1 min)</p>';
