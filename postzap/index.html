@@ -221,88 +221,132 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
   </section>
 
   <section id="t-engajamento" class="hide">
-    <div class="form" oninput="pendente('egOk')" onchange="pendente('egOk')">
-    <div class="card" style="background:hsla(275,70%,55%,.07)"><b>☀️ Mensagem do dia</b>
-      <p class="muted">Todo dia, um texto acolhedor (bom dia, pergunta, dica de moda plus size, contagem para a Black Friday/Natal…) com uma imagem
-      criada pela IA. Não é oferta: mostra que tem gente de verdade cuidando do grupo.</p>
-      <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egMsg"></div></div>
-      <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egMsgH"></div></div>
-      <div class="q"><div class="t"><b>Com imagem da IA?</b><small>Sem imagem, vai só o texto.</small></div><div class="v"><input type="checkbox" id="egImg"></div></div>
-      <button class="b" type="button" onclick="engAgora('msg')">✨ Gerar uma agora (manda pro FILA POST ZAP)</button></div>
+    <style>
+      .egtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+      .egtabs button{border:1px solid var(--borda,#ddd);background:#fff;border-radius:20px;padding:7px 14px;font-weight:700;cursor:pointer}
+      .egtabs button.on{background:#e7f6ee;border-color:#16a34a;color:#166534}
+      details.rot{background:#fff;border:1px solid #e5e5e5;border-radius:14px;margin:10px 0;padding:0 14px}
+      details.rot>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer;flex-wrap:wrap}
+      details.rot>summary::-webkit-details-marker{display:none}
+      details.rot>summary .tit{font-weight:700;flex:1;min-width:160px}
+      details.rot>summary .res{color:#777;font-size:12px}
+      details.rot>summary .eng{font-size:12px;color:#777}
+      details.rot[open]>summary .eng::after{content:'▲'} details.rot:not([open])>summary .eng::after{content:'⚙️'}
+      details.rot .corpo{border-top:1px solid #eee;padding:8px 0 12px}
+      input.sw{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:12px;background:#ccc;position:relative;cursor:pointer;margin:0;flex:none;transition:.2s}
+      input.sw:checked{background:#16a34a}
+      input.sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
+      input.sw:checked::after{left:21px}
+      .tl{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+      .tl>div{flex:1;min-width:120px;border-left:3px solid #a78bfa;padding:4px 10px;background:#faf8ff;border-radius:0 8px 8px 0}
+      .tl>div.off{opacity:.45;border-color:#ccc}
+      .egp{display:none} .egp.on{display:block}
+      .avan{margin-top:8px} .avan summary{color:#777;font-size:13px;cursor:pointer}
+    </style>
 
-    <div class="card" style="background:hsla(240,60%,55%,.08)"><b>🌙 Mensagem da noite</b>
-      <p class="muted">Boa noite carinhoso, pergunta leve, lembrete de ativar as notificações, contagem para a Black Friday/Natal… com uma
-      imagem criada pela IA, de clima noturno.</p>
-      <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egNoite"></div></div>
-      <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egNoiteH"></div></div>
-      <div class="q"><div class="t"><b>Com imagem da IA?</b><small>Sem imagem, vai só o texto.</small></div><div class="v"><input type="checkbox" id="egNoiteImg"></div></div>
-      <button class="b" type="button" onclick="engAgora('noite')">🌙 Gerar uma agora (manda pro FILA POST ZAP)</button></div>
+    <div class="card" id="egAgenda"></div>
+    <div class="egtabs" id="egTabs">
+      <button type="button" data-p="rotina" class="on">📅 Rotina do dia</button>
+      <button type="button" data-p="pedidos">💌 Pedidos no privado</button>
+      <button type="button" data-p="monitor">🔭 Monitor</button>
+      <button type="button" data-p="ia">⚙️ IA e aprovação</button>
+    </div>
 
-    <div class="card" style="background:hsla(200,70%,55%,.07)"><b>📊 Enquete diária</b>
-      <p class="muted">Pergunta o que o grupo quer ver. Os mais votados (últimos 2 dias) ganham prioridade no 🤖 Divulgador.</p>
-      <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egEnq"></div></div>
-      <div class="q" style="display:block"><div class="t"><b>Quando sai?</b></div>
-        <label class="chk"><input type="radio" name="egEnqHM" value="aleatorio"> <span><b>Num horário diferente a cada noite</b> (recomendado), entre
-          <input type="time" id="egJan1" style="width:110px"> e <input type="time" id="egJan2" style="width:110px"> — longe da mensagem da noite.
-          <span class="muted" id="egEnqHoje"></span></span></label>
-        <label class="chk"><input type="radio" name="egEnqHM" value="fixo"> <span><b>Sempre às</b> <input type="time" id="egEnqH" style="width:110px"></span></label></div>
-      <div class="q" style="display:block"><div class="t"><b>Como escolher as opções?</b></div>
-        <label class="chk"><input type="radio" name="egModo" value="rodizio"> <span><b>Rodízio (recomendado)</b> — pacotes de opções que combinam (moda, casa,
-          achadinhos, festas), trocando a cada <input type="number" id="egTroca" min="1" max="14" style="width:60px"> dia(s). Assim a enquete não fica repetitiva.</span></label>
-        <label class="chk"><input type="radio" name="egModo" value="fixa"> <span><b>Sempre as mesmas</b> — a pergunta e as opções escolhidas abaixo.</span></label>
-        <div id="egHoje" class="card" style="margin:8px 0 0"></div>
-        <details style="margin-top:6px"><summary class="muted">Ver todos os pacotes do rodízio</summary><div id="egPacotes"></div></details></div>
-      <div id="egFixa">
-      <div class="q" style="display:block"><div class="t"><b>Pergunta</b></div><input id="egPerg" style="margin-top:6px"></div>
-      <div class="q" style="display:block"><div class="t"><b>Opções</b> <small>(até 12)</small></div><div id="egOps" class="row" style="margin-top:6px"></div></div></div>
-      <div class="q"><div class="t"><b>Quanto o voto pesa no Divulgador?</b><small>1,5 = o mais votado vale 50% a mais</small></div>
-        <div class="v"><input type="number" id="egPeso" min="1" max="3" step="0.1"> ×</div></div>
-      <div id="egVotos"></div>
-      <button class="b" type="button" onclick="engAgora('enq')">📊 Mandar uma enquete agora (pro FILA POST ZAP)</button></div>
+    <div class="form" id="egForm">
+    <!-- ================= ROTINA ================= -->
+    <div class="egp on" data-p="rotina">
+      <details class="rot"><summary><input type="checkbox" class="sw" id="egMsg" onclick="event.stopPropagation()">
+        <span class="tit">☀️ Mensagem de bom dia</span><span class="res" id="egResMsg"></span>
+        <button class="b" type="button" onclick="event.preventDefault();engAgora('msg')">▶ Mandar agora</button><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Texto acolhedor (bom dia, pergunta, dica de moda plus size, contagem pra Black Friday/Natal) com foto feita pela IA. Não é oferta: mostra que tem gente cuidando do grupo.</p>
+          <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egMsgH"></div></div>
+          <div class="q"><div class="t"><b>Com imagem da IA?</b><small>Sem imagem, vai só o texto.</small></div><div class="v"><input type="checkbox" id="egImg"></div></div>
+          <details class="avan"><summary>✏️ Textos prontos (usados se a IA falhar) — um por linha</summary><textarea id="egBancoDia" style="min-height:120px;margin-top:6px"></textarea></details></div></details>
 
-    <div class="card" style="background:hsla(330,70%,55%,.07)"><b>💌 "Me chama no privado"</b>
-      <p class="muted">Quem escrever no privado de um chip começando com a palavra-gatilho ("QUERO vestido plus size azul") recebe na hora as 3 melhores ofertas
-      da Shopee com o seu link (Sub ID <b>inbox</b>). A mensagem do dia convida para isso de vez em quando.</p>
-      <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egInbox"></div></div>
-      <div class="q"><div class="t"><b>🔑 Palavra-gatilho</b><small>Só responde quando a mensagem COMEÇA com ela (ex.: "QUERO vestido plus size azul").
-        Pode pôr mais de uma, separadas por vírgula. O convite no grupo ensina a usar.</small></div>
-        <div class="v"><input id="egGatilho" style="width:180px" placeholder="quero"></div></div>
-      <div class="q" style="display:block"><div class="t"><b>📱 Quais chips atendem pedidos?</b><small>Desmarque o seu WhatsApp pessoal — assim ele nunca responde seus amigos.</small></div>
-        <div id="egInboxChips" class="row" style="margin-top:6px"></div></div>
-      <div class="q"><div class="t"><b>🤫 Ficar quieto com quem você conversou</b><small>Se VOCÊ mandou mensagem para a pessoa nas últimas horas, o robô não responde.</small></div>
-        <div class="v"><input type="number" id="egSilencio" min="0" max="168"> horas</div></div>
-      <div class="q"><div class="t"><b>Máximo de pedidos por pessoa por dia</b></div><div class="v"><input type="number" id="egInboxMax" min="1" max="20"></div></div>
-      <div class="q" style="display:block"><div class="t"><b>👉 Link "toque aqui pra pedir"</b><small>Abre o privado do chip com "QUERO " já escrito — a pessoa
-        só completa com o produto. Vai sozinho nos convites da mensagem do dia/noite. Nos estilos, use o campo <b>{link_pedido}</b>.</small></div>
-        <div id="egLink" class="muted" style="margin-top:6px;word-break:break-all"></div>
-        <div style="margin-top:10px"><b>🖼️ Imagem do convite</b> <small class="muted">sempre a mesma (o grupo já reconhece) · se tiver mais de uma, vai alternando</small>
-          <div id="egConvImgs" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0"></div>
-          <label class="b" style="cursor:pointer">🔄 Trocar por outra imagem<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, false)"></label>
-          <label class="b" style="cursor:pointer">➕ Somar mais uma<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, true)"></label>
-          <button class="b" type="button" id="egConvPadrao" onclick="convitePadrao()">↩️ Voltar às prontas</button></div>
-        <button class="b" type="button" style="margin-top:6px" onclick="engAgora('convite')">📌 Mandar convite de pedidos agora (pro FILA POST ZAP)</button></div>
-      <details><summary class="muted">O que estão pedindo (últimos)</summary><div id="egPedidos"></div></details></div>
+      <details class="rot"><summary><input type="checkbox" class="sw" id="egNoite" onclick="event.stopPropagation()">
+        <span class="tit">🌙 Mensagem de boa noite</span><span class="res" id="egResNoite"></span>
+        <button class="b" type="button" onclick="event.preventDefault();engAgora('noite')">▶ Mandar agora</button><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Boa noite carinhoso, pergunta leve, lembrete de ativar as notificações… com foto de clima noturno.</p>
+          <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egNoiteH"></div></div>
+          <div class="q"><div class="t"><b>Com imagem da IA?</b></div><div class="v"><input type="checkbox" id="egNoiteImg"></div></div>
+          <details class="avan"><summary>✏️ Textos prontos (usados se a IA falhar) — um por linha</summary><textarea id="egBancoNoite" style="min-height:120px;margin-top:6px"></textarea></details></div></details>
 
-    <div class="card" style="background:hsla(130,60%,50%,.07)"><b>🔭 Monitorar grupos e canais de ofertas</b>
-      <p class="muted">Achou link da Shopee num grupo/canal monitorado → vira post com o SEU link para você aprovar no FILA POST ZAP.
-      Cupom/bug sem link vira aviso para você revisar (cupom exclusivo de outro afiliado não funciona para o seu público).</p>
-      <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egMon"></div></div>
-      <div class="q" style="display:block"><div class="t"><b>Grupos de WhatsApp para monitorar</b><small>Um dos chips precisa estar no grupo.</small></div>
-        <input id="egMonBusca" placeholder="Buscar grupo…" style="margin-top:6px" oninput="desenharMonGrupos()"><div id="egMonGrupos" style="max-height:220px;overflow:auto"></div></div>
-      <div class="q" style="display:block"><div class="t"><b>Canais PÚBLICOS do Telegram</b><small>Um por linha, ex.: @nomedocanal (confere a cada ~10 min)</small></div>
-        <textarea id="egTg" style="min-height:80px;margin-top:6px"></textarea></div>
-      <div class="q" style="display:block"><div class="t"><b>📡 Está funcionando?</b><small>O que o monitor leu de cada grupo/canal.</small></div><div id="egMonStat" style="margin-top:6px"></div></div></div>
+      <details class="rot"><summary><input type="checkbox" class="sw" id="egEnq" onclick="event.stopPropagation()">
+        <span class="tit">📊 Enquete "o que querem ver"</span><span class="res" id="egResEnq"></span>
+        <button class="b" type="button" onclick="event.preventDefault();engAgora('enq')">▶ Mandar agora</button><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Os mais votados (últimos 2 dias) ganham prioridade no 🤖 Divulgador.</p>
+          <div id="egVotos"></div>
+          <div class="q" style="display:block"><div class="t"><b>Quando sai?</b></div>
+            <label class="chk"><input type="radio" name="egEnqHM" value="aleatorio"> <span>Horário diferente a cada noite, entre
+              <input type="time" id="egJan1" style="width:110px"> e <input type="time" id="egJan2" style="width:110px"> <span class="muted" id="egEnqHoje"></span></span></label>
+            <label class="chk"><input type="radio" name="egEnqHM" value="fixo"> <span>Sempre às <input type="time" id="egEnqH" style="width:110px"></span></label></div>
+          <div class="q" style="display:block"><div class="t"><b>Opções</b></div>
+            <label class="chk"><input type="radio" name="egModo" value="rodizio"> <span><b>Rodízio</b> de pacotes que combinam, trocando a cada <input type="number" id="egTroca" min="1" max="14" style="width:60px"> dia(s)</span></label>
+            <label class="chk"><input type="radio" name="egModo" value="fixa"> <span><b>Sempre as mesmas</b> (escolhidas abaixo)</span></label>
+            <div id="egHoje" class="card" style="margin:8px 0 0"></div>
+            <details class="avan"><summary>Ver todos os pacotes do rodízio</summary><div id="egPacotes"></div></details></div>
+          <div id="egFixa">
+            <div class="q" style="display:block"><div class="t"><b>Pergunta</b></div><input id="egPerg" style="margin-top:6px"></div>
+            <div class="q" style="display:block"><div class="t"><b>Opções</b> <small>(até 12)</small></div><div id="egOps" class="row" style="margin-top:6px"></div></div></div>
+          <details class="avan"><summary>Avançado</summary>
+            <div class="q"><div class="t"><b>Quanto o voto pesa no Divulgador?</b><small>1,5 = o mais votado vale 50% a mais</small></div>
+              <div class="v"><input type="number" id="egPeso" min="1" max="3" step="0.1"> ×</div></div></details></div></details>
+    </div>
 
-    <div class="card"><div class="row"><b style="flex:1">🔧 A IA está funcionando?</b>
-      <button class="b" type="button" onclick="testarIA()">🔧 Testar IA (texto e imagem)</button></div>
-      <div class="q"><div class="t"><b>Quem cria as imagens?</b><small>Gemini (Google) e ChatGPT (OpenAI) fazem fotos bonitas. O grátis é bem mais fraco.</small></div>
+    <!-- ================= PEDIDOS ================= -->
+    <div class="egp" data-p="pedidos">
+      <details class="rot" open><summary><input type="checkbox" class="sw" id="egInbox" onclick="event.stopPropagation()">
+        <span class="tit">💌 Responder pedidos no privado</span><span class="res" id="egResInbox"></span><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Quem escreve no privado de um chip começando com a palavra-gatilho ("QUERO vestido plus size azul") recebe as 3 melhores ofertas com o seu link (Sub ID <b>inbox</b>).</p>
+          <div class="q"><div class="t"><b>🔑 Palavra-gatilho</b><small>Só responde quando a mensagem COMEÇA com ela. Pode pôr mais de uma, separadas por vírgula.</small></div>
+            <div class="v"><input id="egGatilho" style="width:180px" placeholder="quero"></div></div>
+          <div class="q" style="display:block"><div class="t"><b>📱 Quais chips atendem?</b><small>Deixe o seu WhatsApp pessoal (chip1) desmarcado.</small></div>
+            <div id="egInboxChips" class="row" style="margin-top:6px"></div></div>
+          <div class="q" style="display:block"><div class="t"><b>👉 Link "toque aqui pra pedir"</b><small>Abre o privado com "QUERO " já escrito. Nos estilos de mensagem, use o campo {link_pedido}.</small></div>
+            <div id="egLink" class="muted" style="margin-top:6px;word-break:break-all"></div></div>
+          <details class="avan"><summary>Avançado</summary>
+            <div class="q"><div class="t"><b>🤫 Ficar quieto com quem você conversou</b><small>Se você falou com a pessoa nas últimas horas, o robô não responde.</small></div>
+              <div class="v"><input type="number" id="egSilencio" min="0" max="168"> horas</div></div>
+            <div class="q"><div class="t"><b>Máximo de pedidos por pessoa por dia</b></div><div class="v"><input type="number" id="egInboxMax" min="1" max="20"></div></div></details>
+          <details class="avan"><summary>📥 O que estão pedindo (últimos)</summary><div id="egPedidos"></div></details></div></details>
+
+      <details class="rot"><summary><input type="checkbox" class="sw" id="egConv" onclick="event.stopPropagation()">
+        <span class="tit">📌 Convite de pedidos automático</span><span class="res" id="egResConv"></span>
+        <button class="b" type="button" onclick="event.preventDefault();engAgora('convite')">▶ Mandar agora</button><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Lembra o grupo de que dá pra pedir no privado, sempre com a mesma imagem (o grupo já reconhece). Precisa do "Responder pedidos" ligado.</p>
+          <div class="q" style="display:block"><div class="t"><b>Em quais dias?</b></div><div id="egConvDias" class="row" style="margin-top:6px"></div></div>
+          <div class="q"><div class="t"><b>Que horas?</b></div><div class="v"><input type="time" id="egConvH"></div></div>
+          <div style="margin-top:10px"><b>🖼️ Imagem do convite</b> <small class="muted">se tiver mais de uma, vai alternando</small>
+            <div id="egConvImgs" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0"></div>
+            <label class="b" style="cursor:pointer">🔄 Trocar por outra<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, false)"></label>
+            <label class="b" style="cursor:pointer">➕ Somar mais uma<input type="file" accept="image/png,image/jpeg" style="display:none" onchange="trocarConvite(this, true)"></label>
+            <button class="b" type="button" id="egConvPadrao" onclick="convitePadrao()">↩️ Voltar às prontas</button></div></div></details>
+    </div>
+
+    <!-- ================= MONITOR ================= -->
+    <div class="egp" data-p="monitor">
+      <details class="rot" open><summary><input type="checkbox" class="sw" id="egMon" onclick="event.stopPropagation()">
+        <span class="tit">🔭 Monitorar grupos e canais de ofertas</span><span class="res" id="egResMon"></span><span class="eng"></span></summary>
+        <div class="corpo"><p class="muted">Link da Shopee achado num grupo/canal vira post com o SEU link pra você aprovar. Cupom sem link: o app procura o produto pelo nome; se não achar, vira aviso com a foto original.</p>
+          <div class="q" style="display:block"><div class="t"><b>📡 Está funcionando?</b></div><div id="egMonStat" style="margin-top:6px"></div></div>
+          <div class="q" style="display:block"><div class="t"><b>Grupos de WhatsApp</b><small>Um dos chips precisa estar no grupo.</small></div>
+            <input id="egMonBusca" placeholder="🔎 Buscar grupo…" style="margin-top:6px" oninput="desenharMonGrupos()"><div id="egMonGrupos" style="max-height:220px;overflow:auto"></div></div>
+          <div class="q" style="display:block"><div class="t"><b>Canais PÚBLICOS do Telegram</b><small>Um por linha, ex.: @nomedocanal (confere a cada ~10 min)</small></div>
+            <textarea id="egTg" style="min-height:80px;margin-top:6px"></textarea></div></div></details>
+    </div>
+
+    <!-- ================= IA ================= -->
+    <div class="egp" data-p="ia">
+      <div class="card"><div class="q"><div class="t"><b>✅ Mandar tudo pra eu aprovar antes?</b><small>Desmarcado: mensagens, enquete e convite já saem aprovados.</small></div>
+        <div class="v"><input type="checkbox" class="sw" id="egAprovar"></div></div></div>
+      <div class="card"><div class="q"><div class="t"><b>🖼️ Quem cria as imagens?</b><small>Gemini (Google) e ChatGPT (OpenAI) fazem fotos bonitas.</small></div>
         <div class="v"><select id="egImgOrdem"><option value="gemini,openai">Gemini, depois ChatGPT</option><option value="openai,gemini">ChatGPT, depois Gemini</option>
         <option value="gemini">Só Gemini</option><option value="openai">Só ChatGPT</option><option value="gemini,openai,pollinations">Gemini → ChatGPT → grátis</option></select></div></div>
-      <div id="egTeste" class="muted" style="margin-top:6px">Mostra quais chaves foram encontradas, a imagem de teste e o motivo, se algo falhar.</div></div>
-    <div class="card"><div class="q"><div class="t"><b>Mandar para eu aprovar antes?</b><small>Desmarcado: mensagem do dia e enquete já saem aprovadas.</small></div>
-      <div class="v"><input type="checkbox" id="egAprovar"></div></div></div>
+        <div class="row" style="margin-top:8px"><button class="b" type="button" onclick="testarIA()">🔧 Testar IA (texto e imagem)</button></div>
+        <div id="egTeste" class="muted" style="margin-top:6px">Mostra quais chaves foram encontradas, a imagem de teste e o motivo, se algo falhar.</div></div>
     </div>
-    <div class="salvar"><button class="b p" onclick="salvarEng()">💾 Salvar</button> <span id="egOk" class="muted"></span></div>
+    </div>
+    <div class="muted" id="egOk" style="text-align:right;margin-top:8px"></div>
   </section>
 
   <section id="t-cupons" class="hide">
@@ -899,7 +943,33 @@ async function carregarEng(){
   $('#egPedidos').innerHTML = (ENG.pedidos || []).map(p => `<div class="chk"><span style="flex:1">"${esc(p.texto)}"</span><span class="muted">${esc(p.resultado)} · ${esc(fdata(p.quando, true))}</span></div>`).join('') || '<p class="muted">Nenhum pedido ainda.</p>';
   $('#egMon').checked = ENG.monitor_ativo; $('#egTg').value = (ENG.monitor_telegram || []).join('\n');
   MONSEL = new Set(ENG.monitor_grupos || []); desenharMonGrupos(); $('#egAprovar').checked = ENG.aprovar;
+  // novos: convite automático, textos prontos, resumos e agenda de hoje
+  const DSEM = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'], cd = ENG.convite_dias || [];
+  $('#egConv').checked = !!ENG.convite_ativo; $('#egConvH').value = ENG.convite_hora || '19:30';
+  $('#egConvDias').innerHTML = DSEM.map((d, i) => `<label class="chk" style="border:0;padding:4px 10px;border-radius:8px;background:var(--bg)"><input type="checkbox" class="egCd" value="${i}" ${cd.includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
+  $('#egBancoDia').value = (ENG.banco_dia || ENG.banco_padrao.dia).join('\n'); $('#egBancoNoite').value = (ENG.banco_noite || ENG.banco_padrao.noite).join('\n');
+  const img = v => v ? 'com imagem' : 'só texto', off = '<span class="muted">desligado</span>';
+  $('#egResMsg').innerHTML = ENG.msg_ativo ? `${ENG.msg_hora} · ${img(ENG.msg_imagem)}` : off;
+  $('#egResNoite').innerHTML = ENG.noite_ativo ? `${ENG.noite_hora} · ${img(ENG.noite_imagem !== false)}` : off;
+  $('#egResEnq').innerHTML = ENG.enquete_ativo ? `${ENG.enquete_hora_modo === 'fixo' ? ENG.enquete_hora : 'hoje ' + ENG.enquete_hora_hoje + ' (sorteado)'} · ${ENG.enquete_modo === 'fixa' ? 'opções fixas' : 'rodízio'}` : off;
+  const nchips = (ENG.inbox_chips || []).length;
+  $('#egResInbox').innerHTML = ENG.inbox_ativo ? `gatilho "${esc((ENG.inbox_gatilho || 'quero').toUpperCase())}" · ${nchips ? nchips + ' chip(s)' : 'todos os chips'}${(!nchips || (ENG.inbox_chips || []).includes('chip1')) ? ' <b class="warn">· inclui o chip1 (pessoal)!</b>' : ''}` : off;
+  $('#egResConv').innerHTML = ENG.convite_ativo ? `${cd.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.convite_hora}${ENG.inbox_ativo ? '' : ' <b class="warn">· ligue o "Responder pedidos"</b>'}` : off;
+  $('#egResMon').innerHTML = ENG.monitor_ativo ? `${(ENG.monitor_grupos || []).length} grupo(s) · ${(ENG.monitor_telegram || []).length} canal(is)` : off;
+  const ag = ENG.agenda_hoje || {itens: []};
+  $('#egAgenda').innerHTML = `<b>📅 Hoje nos grupos · ${fdata(new Date().toISOString().slice(0, 10))}</b> <span class="muted">· ${ENG.aprovar ? 'tudo passa pelo FILA POST ZAP pra você aprovar' : 'sai direto, sem aprovação'}</span>
+    <div class="tl">${ag.itens.map(x => `<div class="${x.ativo ? '' : 'off'}"><b>${x.hora}</b><br>${x.nome}<br><span class="muted">${!x.ativo ? 'desligado' : x.feito ? '✅ já gerado' : '⏳ aguardando'}</span></div>`).join('')}
+    ${ag.convite_proximo ? `<div><b>${ag.convite_proximo}</b><br>💌 Convite<br><span class="muted">próximo</span></div>` : ''}</div>`;
 }
+let _egTm = null;
+function autoSalvarEng(){ clearTimeout(_egTm); $('#egOk').textContent = 'Salvando…'; _egTm = setTimeout(salvarEng, 700); }
+document.addEventListener('DOMContentLoaded', () => {
+  $('#egForm').addEventListener('change', autoSalvarEng);
+  document.querySelectorAll('#egTabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#egTabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('#egForm .egp').forEach(x => x.classList.toggle('on', x.dataset.p === b.dataset.p));
+  });
+});
 let MONSEL = new Set();
 function mostrarModoEnq(){
   const fixa = (document.querySelector('input[name=egModo]:checked') || {}).value === 'fixa';
@@ -909,7 +979,7 @@ function desenharMonGrupos(){
   const q = ($('#egMonBusca').value || '').toLowerCase();
   $('#egMonGrupos').innerHTML = GRUPOS.filter(g => !g.fila && (!q || g.nome.toLowerCase().includes(q)))
     .sort((a, b) => (MONSEL.has(b.jid) - MONSEL.has(a.jid)) || (a.admin == 1) - (b.admin == 1))
-    .map(g => `<label class="chk"><input type="checkbox" ${MONSEL.has(g.jid) ? 'checked' : ''} onchange="this.checked?MONSEL.add('${esc(g.jid)}'):MONSEL.delete('${esc(g.jid)}');pendente('egOk')">
+    .map(g => `<label class="chk"><input type="checkbox" ${MONSEL.has(g.jid) ? 'checked' : ''} onchange="this.checked?MONSEL.add('${esc(g.jid)}'):MONSEL.delete('${esc(g.jid)}')">
       ${esc(g.nome)} ${g.admin == 1 ? '<span class="tag">seu (admin)</span>' : ''}</label>`).join('') || '<p class="muted">Nenhum grupo. Busque os grupos em 👥 Grupos.</p>';
 }
 async function salvarEng(){
@@ -922,8 +992,10 @@ async function salvarEng(){
     inbox_ativo: $('#egInbox').checked, inbox_max_dia: $('#egInboxMax').value,
     inbox_gatilho: $('#egGatilho').value, inbox_silencio_h: $('#egSilencio').value,
     inbox_chips: [...document.querySelectorAll('.egChip:checked')].map(i => i.value),
-    monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked});
-  await carregarEng(); $('#egOk').textContent = 'Salvo ✓';
+    monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked,
+    convite_ativo: $('#egConv').checked, convite_hora: $('#egConvH').value, convite_dias: [...document.querySelectorAll('.egCd:checked')].map(i => +i.value),
+    banco_dia: $('#egBancoDia').value.split('\n'), banco_noite: $('#egBancoNoite').value.split('\n')});
+  await carregarEng(); $('#egOk').textContent = '✓ Salvo automaticamente às ' + new Date().toTimeString().slice(0, 5);
 }
 function desenharConvite(){
   $('#egConvImgs').innerHTML = (ENG.convite_imgs || []).map((n, i) => `<img src="${B}api/convite_img/${i}?v=${Date.now()}" title="${esc(n)}" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid #ddd">`).join('');

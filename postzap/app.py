@@ -2072,6 +2072,7 @@ def agenda_divulgador():
 ENG_PADRAO = {
     'msg_ativo': False, 'msg_hora': '09:30', 'msg_imagem': True,
     'noite_ativo': False, 'noite_hora': '21:00', 'noite_imagem': True,
+    'convite_ativo': False, 'convite_dias': [2, 5], 'convite_hora': '19:30',   # convite de pedidos automático (0=seg … 6=dom)
     'imagem_ordem': 'gemini,openai',        # quem gera as imagens, em ordem (gemini | openai | pollinations)
     'enquete_hora_modo': 'aleatorio',       # aleatorio: um horário sorteado por dia dentro da janela | fixo: enquete_hora
     'enquete_janela': ['19:00', '22:00'],
@@ -2307,7 +2308,7 @@ def mensagem_do_dia(periodo='dia'):
                         "interagir. Não fale de preço, não invente promoções, sem hashtags. Use *negrito* do WhatsApp em 1 trecho.")
         _motivo_texto[0] = ''
     except Exception as ex:                      # IA fora: usa um texto pronto (nunca manda vazio)
-        banco = BANCO_NOITE if periodo == 'noite' else BANCO_DIA
+        banco = (e.get('banco_noite') or BANCO_NOITE) if periodo == 'noite' else (e.get('banco_dia') or BANCO_DIA)
         texto = banco[hoje.toordinal() % len(banco)]
         _motivo_texto[0] = str(ex)[:200]
         log.warning(f'Texto da IA falhou, usando texto pronto: {ex}')
@@ -2739,6 +2740,28 @@ def hora_da_enquete():
 _tg_ultimo = [0.0]
 
 
+DIAS_SEMANA = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom']
+
+
+def agenda_de_hoje():
+    """📅 O que sai hoje (para o topo da aba): hora, o quê, ligado e se já foi gerado."""
+    e = eng_cfg()
+    hoje = agora().date().isoformat()
+    itens = [('☀️ Bom dia', e['msg_hora'], e['msg_ativo'], 'msg'),
+             ('📊 Enquete', hora_da_enquete(), e['enquete_ativo'], 'enq'),
+             ('🌙 Boa noite', e['noite_hora'], e['noite_ativo'], 'noite')]
+    conv_hoje = agora().weekday() in (e.get('convite_dias') or [])
+    if e.get('convite_ativo') and e.get('inbox_ativo'):
+        if conv_hoje:
+            itens.append(('💌 Convite de pedidos', e.get('convite_hora', '19:30'), True, 'convite'))
+    out = [{'nome': n, 'hora': h, 'ativo': bool(a), 'feito': bool(get_cfg(f'eng_{k}_{hoje}')), 'tipo': k} for n, h, a, k in itens]
+    prox = ''
+    if e.get('convite_ativo') and e.get('inbox_ativo') and not conv_hoje and e.get('convite_dias'):
+        d = agora().weekday()
+        prox = DIAS_SEMANA[min(e['convite_dias'], key=lambda x: (x - d) % 7)]
+    return {'itens': sorted(out, key=lambda x: x['hora']), 'convite_proximo': prox}
+
+
 def agenda_engajamento():
     while True:
         try:
@@ -2746,7 +2769,9 @@ def agenda_engajamento():
             hoje, hm = agora().date().isoformat(), agora().strftime('%H:%M')
             for ativo, hora, nome, func in ((e['msg_ativo'], e['msg_hora'], 'msg', rodar_mensagem_do_dia),
                                             (e['noite_ativo'], e['noite_hora'], 'noite', lambda: rodar_mensagem_do_dia('noite')),
-                                            (e['enquete_ativo'], hora_da_enquete(), 'enq', rodar_enquete)):
+                                            (e['enquete_ativo'], hora_da_enquete(), 'enq', rodar_enquete),
+                                            (e.get('convite_ativo') and e.get('inbox_ativo') and agora().weekday() in (e.get('convite_dias') or []),
+                                             e.get('convite_hora', '19:30'), 'convite', rodar_convite_pedidos)):
                 marca = f'eng_{nome}_{hoje}'
                 if ativo and hm >= hora and not get_cfg(marca):
                     set_cfg(marca, '1')
@@ -2967,7 +2992,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}),
+                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
@@ -3200,7 +3225,7 @@ class H(BaseHTTPRequestHandler):
                                                  'preco': br(n.get('priceMin'))} for n in minerar()]})
         if p == '/api/engajamento':
             e = eng_cfg()
-            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'noite_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo'):
+            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'noite_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo', 'convite_ativo'):
                 if k in b:
                     e[k] = bool(b[k])
             if b.get('enquete_hora_modo') in ('aleatorio', 'fixo'):
@@ -3211,7 +3236,12 @@ class H(BaseHTTPRequestHandler):
                 e['enquete_modo'] = b['enquete_modo']
             if str(b.get('enquete_troca_dias', '')).isdigit():
                 e['enquete_troca_dias'] = max(1, min(14, int(b['enquete_troca_dias'])))
-            for k in ('msg_hora', 'noite_hora', 'enquete_hora'):
+            if isinstance(b.get('convite_dias'), list):
+                e['convite_dias'] = sorted({int(x) for x in b['convite_dias'] if str(x).isdigit() and int(x) < 7})
+            for k in ('banco_dia', 'banco_noite'):
+                if isinstance(b.get(k), list):
+                    e[k] = [str(x).strip()[:1000] for x in b[k] if str(x).strip()][:30]
+            for k in ('msg_hora', 'noite_hora', 'enquete_hora', 'convite_hora'):
                 if re.fullmatch(r'\d{2}:\d{2}', str(b.get(k, ''))):
                     e[k] = b[k]
             if b.get('enquete_pergunta'):
