@@ -2501,8 +2501,25 @@ def nome_grupo(jid):
 CUPOM_RE = re.compile(r'(?i)\bcupom\b|\bcupons\b|\bcódigo\b|\bcodigo\b')
 
 
+def stat_monitor(fonte, **inc):
+    """Painel do monitor: por fonte, quando leu pela última vez, quantas mensagens/achados e o último erro."""
+    with _lock:
+        st = get_json('monitor_stat', {})
+        f = st.setdefault(fonte, {'msgs': 0, 'achados': 0, 'cupons': 0})
+        f['visto'] = agora().strftime('%Y-%m-%dT%H:%M')
+        for k, v in inc.items():
+            if k == 'erro':
+                f['erro'] = v
+            else:
+                f[k] = f.get(k, 0) + v
+        if 'erro' not in inc:
+            f.pop('erro', None)
+        set_cfg('monitor_stat', json.dumps(st, ensure_ascii=False))
+
+
 def processar_achado(texto, fonte):
     """Oferta/cupom achado num grupo ou canal monitorado → post para você aprovar no FILA POST ZAP (com o SEU link)."""
+    stat_monitor(fonte, msgs=1)
     jid_fila, inst_fila = destino_fila()
     if not jid_fila:
         return
@@ -2527,6 +2544,7 @@ def processar_achado(texto, fonte):
                                  json.dumps(grupos), agora().isoformat(), json.dumps(p), jid_fila, inst_fila))
                 fid = cur.lastrowid
             mostrar_previa(inst_fila, jid_fila, fid)
+            stat_monitor(fonte, achados=1)
             responder(inst_fila, jid_fila, f"🔭 *Achado #{fid}* em {fonte} · já com o SEU link de afiliado\n\n{MENU_CURTO}", fid=fid)
         except ValueError:
             continue
@@ -2543,6 +2561,7 @@ def processar_achado(texto, fonte):
                             'VALUES (?,?,?,?,?,?,?,?,?)', ('aviso', chave, '🎟️ Cupom achado', limpo[:1500], json.dumps(grupos_ativos()),
                                                            agora().isoformat(), '{}', jid_fila, inst_fila))
             fid = cur.lastrowid
+        stat_monitor(fonte, cupons=1)
         responder(inst_fila, jid_fila, f"🎟️ *Cupom achado #{fid}* em {fonte} (revise antes: cupom exclusivo de outro afiliado não funciona "
                                        f"para o seu público)\n\n{limpo[:700]}\n\n{MENU_AVISO}", fid=fid)
 
@@ -2580,6 +2599,9 @@ def hora_da_enquete():
     return h
 
 
+_tg_ultimo = [0.0]
+
+
 def agenda_engajamento():
     while True:
         try:
@@ -2595,7 +2617,8 @@ def agenda_engajamento():
                         func()
                     except Exception as ex:
                         log.warning(f'Engajamento ({nome}): {ex}')
-            if e.get('monitor_ativo') and e.get('monitor_telegram') and int(time.time()) % 600 < 60:   # a cada ~10 min
+            if e.get('monitor_ativo') and e.get('monitor_telegram') and time.time() - _tg_ultimo[0] >= 540:   # a cada ~10 min
+                _tg_ultimo[0] = time.time()
                 for canal in e['monitor_telegram']:
                     try:
                         num = lambda pid: int(re.sub(r'\D', '', pid.split('/')[-1]) or 0)
@@ -2606,7 +2629,12 @@ def agenda_engajamento():
                             processar_achado(txt, f'Telegram @{canal}')
                         if posts:
                             set_cfg(f'tg_{canal}', str(max(num(p[0]) for p in posts)))
+                        else:
+                            stat_monitor(f'Telegram @{canal.strip().lstrip("@")}', erro='nenhum post lido (canal privado ou nome errado?)')
+                        if not novos and posts:
+                            stat_monitor(f'Telegram @{canal.strip().lstrip("@")}')
                     except Exception as ex:
+                        stat_monitor(f'Telegram @{canal.strip().lstrip("@")}', erro=str(ex)[:120])
                         log.warning(f'Telegram {canal}: {ex}')
         except Exception:
             log.exception('Engajamento')
@@ -2793,7 +2821,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(),
+                                           enquete_hora_hoje=hora_da_enquete(), monitor_stat=get_json('monitor_stat', {}),
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':

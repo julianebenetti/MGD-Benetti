@@ -282,7 +282,8 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <div class="q" style="display:block"><div class="t"><b>Grupos de WhatsApp para monitorar</b><small>Um dos chips precisa estar no grupo.</small></div>
         <input id="egMonBusca" placeholder="Buscar grupo…" style="margin-top:6px" oninput="desenharMonGrupos()"><div id="egMonGrupos" style="max-height:220px;overflow:auto"></div></div>
       <div class="q" style="display:block"><div class="t"><b>Canais PÚBLICOS do Telegram</b><small>Um por linha, ex.: @nomedocanal (confere a cada ~10 min)</small></div>
-        <textarea id="egTg" style="min-height:80px;margin-top:6px"></textarea></div></div>
+        <textarea id="egTg" style="min-height:80px;margin-top:6px"></textarea></div>
+      <div class="q" style="display:block"><div class="t"><b>📡 Está funcionando?</b><small>O que o monitor leu de cada grupo/canal.</small></div><div id="egMonStat" style="margin-top:6px"></div></div></div>
 
     <div class="card"><div class="row"><b style="flex:1">🔧 A IA está funcionando?</b>
       <button class="b" type="button" onclick="testarIA()">🔧 Testar IA (texto e imagem)</button></div>
@@ -718,7 +719,7 @@ function desenharPosts(){
   const DS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   let t = '<tr><th>Hora</th><th>#</th><th>Nicho / tema</th><th>Produto</th><th class="n">Grupos</th><th class="n">🛒 Vendas</th><th class="n">💰 Comissão</th></tr>';
   Object.keys(porDia).sort().reverse().forEach(d => {
-    const lista = porDia[d].sort((a, b) => a.quando.localeCompare(b.quando)), cont = {};
+    const lista = porDia[d].sort((a, b) => b.quando.localeCompare(a.quando)), cont = {};
     lista.forEach(p => cont[p.nicho] = (cont[p.nicho] || 0) + 1);
     const vd = lista.reduce((s, p) => s + (p.vendas || 0), 0), cm = lista.reduce((s, p) => s + (p.comissao || 0), 0);
     t += `<tr class="dia"><td colspan="7">📅 ${fdata(d)} · ${DS[new Date(d + 'T12:00').getDay()]} · ${lista.length} post(s)
@@ -839,6 +840,11 @@ async function carregarEng(){
   ENG = await api('engajamento'); if (!GRUPOS.length) await carregarGrupos();
   $('#egMsg').checked = ENG.msg_ativo; $('#egMsgH').value = ENG.msg_hora; $('#egImg').checked = ENG.msg_imagem;
   $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora; $('#egNoiteImg').checked = ENG.noite_imagem !== false; $('#egImgOrdem').value = ENG.imagem_ordem || 'gemini,openai';
+  const ms = Object.entries(ENG.monitor_stat || {}).sort((a, b) => (b[1].visto || '').localeCompare(a[1].visto || ''));
+  $('#egMonStat').innerHTML = !ENG.monitor_ativo ? '<span class="muted">⏸️ Monitor desligado.</span>' : !ms.length
+    ? '<span class="muted">⏳ Nada lido ainda. Grupos: chega quando alguém posta lá. Telegram: confere a cada ~10 min.</span>'
+    : '<table style="width:100%;font-size:13px"><tr class="muted"><td>Fonte</td><td>Última leitura</td><td>Msgs</td><td>Achados</td><td>Cupons</td></tr>' + ms.map(([f, v]) =>
+      `<tr><td>${v.erro ? '❌' : '✅'} ${esc(f)}${v.erro ? `<br><small style="color:#c00">${esc(v.erro)}</small>` : ''}</td><td>${fdata(v.visto, true)}</td><td>${v.msgs || 0}</td><td>${v.achados || 0}</td><td>${v.cupons || 0}</td></tr>`).join('') + '</table>';
   document.querySelectorAll('input[name=egEnqHM]').forEach(r => r.checked = r.value === (ENG.enquete_hora_modo || 'aleatorio'));
   [$('#egJan1').value, $('#egJan2').value] = ENG.enquete_janela || ['19:00', '22:00'];
   $('#egEnqHoje').textContent = ENG.enquete_hora_modo === 'fixo' ? '' : `· hoje sorteou ${ENG.enquete_hora_hoje}`;
