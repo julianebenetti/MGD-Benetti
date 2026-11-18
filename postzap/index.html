@@ -331,7 +331,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="q" style="display:block"><div class="t"><b>🖼️ Imagem</b><small>Feita pela IA (Gemini → ChatGPT) e reusada em todos os convites.</small></div>
             <div id="egAmigaImg" style="margin-top:6px"></div>
             <button class="b" type="button" onclick="gerarAmiga()">🎨 Gerar outra imagem</button> <span class="muted" id="egAmigaSt"></span></div>
-          <div class="q" style="display:block"><div class="t"><b>Quais grupos entram na lista?</b><small>Nenhum marcado = todos onde um chip é admin.</small></div>
+          <div class="q" style="display:block"><div class="t"><b>Quais grupos entram na lista?</b><small>Nenhum marcado = os grupos que receberam posts do PostZap nos últimos 30 dias (marcados abaixo em cinza ✓).</small></div>
             <div id="egAmigaGrupos" style="max-height:220px;overflow:auto;margin-top:6px"></div></div></div></details>
     </div>
 
@@ -384,6 +384,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <div style="margin-top:8px;padding:8px;border-radius:10px;background:var(--bg)"><label class="chk" style="border:0"><input type="checkbox" id="stLem"> <b>📲 Lembrar de salvar o número</b></label>
         <small class="muted">Só quem salvou o número do chip vê o Status. Vai no fim de 1 a cada <input type="number" id="stLemN" min="1" max="50" style="width:60px"> posts de oferta, em cada grupo.</small>
         <input id="stLemT" style="margin-top:6px"></div>
+      <div style="margin-top:8px"><button class="b" type="button" onclick="avisoSalvar()">📣 Mandar aviso "salve este número" pros grupos</button> <span class="muted" id="stAvisoOk"></span></div>
       <div style="margin-top:8px"><button class="b" type="button" onclick="testarStatus()">📱 Postar um Status de teste agora</button></div>
       <div id="stUlt" style="margin-top:6px;font-size:13px"></div>
       <div class="row" style="margin-top:6px">No máximo <input type="number" id="stMax" min="1" max="30" style="width:70px"> status por chip por dia</div></div>
@@ -968,7 +969,7 @@ async function carregarEng(){
   const ad = ENG.amiga_dias || [], ag2 = ENG.amiga_grupos || [];
   $('#egAmiga').checked = !!ENG.amiga_ativo; $('#egAmigaH').value = ENG.amiga_hora || '12:30';
   $('#egAmigaDias').innerHTML = DSEM.map((d, i) => `<label class="chk" style="border:0;padding:4px 10px;border-radius:8px;background:var(--bg)"><input type="checkbox" class="egAd" value="${i}" ${ad.includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
-  $('#egAmigaGrupos').innerHTML = (ENG.grupos_admin || []).map(g => `<label class="chk" style="display:block"><input type="checkbox" class="egAg" value="${esc(g.jid)}" ${ag2.includes(g.jid) ? 'checked' : ''}> ${esc(g.nome)}</label>`).join('') || '<p class="muted">Nenhum grupo onde um chip é admin. Toque em 🔄 Buscar grupos em 👥 Grupos.</p>';
+  $('#egAmigaGrupos').innerHTML = (ENG.grupos_admin || []).map(g => `<label class="chk" style="display:block"><input type="checkbox" class="egAg" value="${esc(g.jid)}" ${ag2.includes(g.jid) ? 'checked' : ''}> ${esc(g.nome)}${!ag2.length && (ENG.amiga_lista || []).includes(g.jid) ? ' <span class="muted">✓ entra</span>' : ''}</label>`).join('') || '<p class="muted">Nenhum grupo onde um chip é admin. Toque em 🔄 Buscar grupos em 👥 Grupos.</p>';
   $('#egAmigaImg').innerHTML = ENG.amiga_img ? `<img src="${B}api/amiga_img?v=${Date.now()}" style="width:180px;border-radius:12px">` : '<span class="muted">Ainda sem imagem: é criada no primeiro convite (ou toque em Gerar).</span>';
   $('#egAmigaSt').textContent = ENG.amiga_img_status === 'gerando' ? '⏳ gerando…' : ENG.amiga_img_status || '';
   const img = v => v ? 'com imagem' : 'só texto', off = '<span class="muted">desligado</span>';
@@ -978,7 +979,7 @@ async function carregarEng(){
   const nchips = (ENG.inbox_chips || []).length;
   $('#egResInbox').innerHTML = ENG.inbox_ativo ? `gatilho "${esc((ENG.inbox_gatilho || 'quero').toUpperCase())}" · ${nchips ? nchips + ' chip(s)' : 'todos os chips'}` : off;
   $('#egResConv').innerHTML = ENG.convite_ativo ? `${cd.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.convite_hora}${ENG.inbox_ativo ? '' : ' <b class="warn">· ligue o "Responder pedidos"</b>'}` : off;
-  $('#egResAmiga').innerHTML = ENG.amiga_ativo ? `${ad.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.amiga_hora} · ${ag2.length || (ENG.grupos_admin || []).length} grupo(s)` : off;
+  $('#egResAmiga').innerHTML = ENG.amiga_ativo ? `${ad.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.amiga_hora} · ${(ENG.amiga_lista || []).length} grupo(s)` : off;
   $('#egResMon').innerHTML = ENG.monitor_ativo ? `${(ENG.monitor_grupos || []).length} grupo(s) · ${(ENG.monitor_telegram || []).length} canal(is)` : off;
   const ag = ENG.agenda_hoje || {itens: []};
   $('#egAgenda').innerHTML = `<b>📅 Hoje nos grupos · ${fdata(new Date().toISOString().slice(0, 10))}</b> <span class="muted">· ${ENG.aprovar ? 'tudo passa pelo FILA POST ZAP pra você aprovar' : 'sai direto, sem aprovação'}</span>
@@ -1038,6 +1039,10 @@ async function trocarConvite(inp, somar){
   inp.value = '';
 }
 async function convitePadrao(){ await api('engajamento/convite_img', {padrao: true}); await carregarEng(); }
+async function avisoSalvar(){
+  try { const j = await api('status/aviso_salvar', {}); $('#stAvisoOk').textContent = `✓ Mandado ao FILA POST ZAP como #${j.id} (sai por um chip que posta Status)`; }
+  catch(e){ $('#stAvisoOk').textContent = '⚠️ ' + e.message; }
+}
 async function testarStatus(){
   $('#stUlt').textContent = 'Postando o teste… (pode levar 1 min)';
   try { await api('status/testar', {}); } catch(e){ $('#stUlt').textContent = '⚠️ ' + e.message; return; }

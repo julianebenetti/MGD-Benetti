@@ -1353,6 +1353,13 @@ def processar_fila():
                 time.sleep(random.randint(*sorted(entre_posts)))
             envio = _link_do_grupo(it, jid)
             sc = status_cfg()
+            inst_it = inst
+            if json.loads(it.get('dados') or '{}').get('so_status'):   # "salve este número": sai por um chip que posta Status
+                with db() as c:
+                    alt = [r[0] for r in c.execute('SELECT instancia FROM grupo_chips WHERE jid=?', (jid,))
+                           if r[0] in (sc.get('chips') or []) and estado_chip(r[0]) == 'open']
+                if alt and inst not in alt:
+                    inst_it = random.choice(alt)
             if (sc.get('ativo') and sc.get('lembrete_ativo') and it['origem'] != 'aviso' and inst
                     and inst in (sc.get('chips') or []) and not json.loads(it.get('dados') or '{}').get('enquete')):
                 with db() as c:
@@ -1360,12 +1367,12 @@ def processar_fila():
                 if (n + 1) % max(1, int(sc.get('lembrete_cada') or 5)) == 0:   # 1 a cada N posts neste grupo
                     envio['texto'] = (envio['texto'] or '').rstrip() + '\n\n' + sc['lembrete_texto']
             ok, erro = 1, None
-            if not inst:
+            if not inst_it:
                 ok, erro = 0, 'nenhum chip conectado está neste grupo'
             else:
                 try:
-                    enviar_item(inst, jid, envio)
-                    it['_usados'][inst] = it['_usados'].get(inst, 0) + 1
+                    enviar_item(inst_it, jid, envio)
+                    it['_usados'][inst_it] = it['_usados'].get(inst_it, 0) + 1
                     anterior, enviou = inst, True
                     log.info(f"Fila {it['id']} → {nome} pelo chip {inst}")
                 except Exception as e:
@@ -1374,7 +1381,7 @@ def processar_fila():
                 it['_erros'].append(f'{nome}: {erro}')
             with _lock, db() as c:
                 c.execute('INSERT INTO envios (fila_id, jid, chave, quando, ok, erro, instancia) VALUES (?,?,?,?,?,?,?)',
-                          (it['id'], jid, it['chave'], agora().isoformat(), ok, erro, inst))
+                          (it['id'], jid, it['chave'], agora().isoformat(), ok, erro, inst_it))
         if enviou and gi < len(todos) - 1:
             time.sleep(random.randint(*r['entre_grupos']))
     for it in itens:
@@ -2518,7 +2525,10 @@ def grupos_para_amiga():
         todos = {r[0]: r[1] for r in c.execute('SELECT jid, nome FROM grupos WHERE admin=1')}
         cheios = {r[0] for r in c.execute("SELECT m.jid FROM membros m WHERE m.total>=1000 AND m.dia=(SELECT MAX(dia) FROM membros "
                                            "WHERE jid=m.jid AND total IS NOT NULL)")}
-    escolhidos = [j for j in (e.get('amiga_grupos') or []) if j in todos] or list(todos)
+    with db() as c:
+        usados = {r[0] for r in c.execute("SELECT DISTINCT jid FROM envios WHERE ok=1 AND quando>=?",
+                                          ((agora() - timedelta(days=30)).isoformat(),))}
+    escolhidos = ([j for j in (e.get('amiga_grupos') or []) if j in todos] or [j for j in todos if j in usados] or list(todos))
     lista = [(j, todos[j]) for j in escolhidos if j not in fora and j not in cheios]
     return sorted(lista, key=lambda x: x[1])
 
@@ -2965,6 +2975,17 @@ def enviar_status(inst, corpo):
     return f'ok · {len(lista)} contato(s) na lista' + ('' if lista else ' (allContacts)')
 
 
+AVISO_SALVAR = ('📲 *Novidade no grupo!*\n\n'
+                'Agora tem *oferta relâmpago no Status* deste número ⚡ — umas aparecem só lá e acabam rapidinho!\n\n'
+                'Pra ver, é só *salvar este número nos seus contatos* (pode chamar de "Achadinhos 💜"). '
+                'Sem salvar, o WhatsApp não mostra o Status pra você.\n\n'
+                'Depois é só abrir a aba *Atualizações* e ficar de olho! 👀')
+
+
+def rodar_aviso_salvar():
+    return criar_post_engajamento('aviso', AVISO_SALVAR, {'so_status': True}, '📲 Salve este número')
+
+
 def testar_status():
     for inst in status_cfg().get('chips') or instancias():
         if estado_chip(inst) != 'open':
@@ -3169,7 +3190,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), amiga_img=AMIGA_IA.exists(), amiga_img_status=get_cfg('amiga_img_status', ''), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
+                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), amiga_img=AMIGA_IA.exists(), amiga_img_status=get_cfg('amiga_img_status', ''), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], amiga_lista=[j for j, _ in grupos_para_amiga()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
@@ -3505,6 +3526,8 @@ class H(BaseHTTPRequestHandler):
         if p == '/api/status/testar':                # posta um Status de teste (em segundo plano: pode levar minutos)
             threading.Thread(target=testar_status, daemon=True).start()
             return self.send_json({'ok': True})
+        if p == '/api/status/aviso_salvar':
+            return self.send_json({'id': rodar_aviso_salvar()})
         if p == '/api/status/testar_velho':
             res = {}
             for inst in status_cfg().get('chips') or instancias():
