@@ -71,6 +71,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
   <button data-t="historico">📜 Histórico</button>
   <span class="sep" title="Configurações">⚙️</span>
   <button data-t="divulgador">🤖 Divulgador</button>
+  <button data-t="engajamento">💬 Engajamento</button>
   <button data-t="grupos">👥 Grupos</button>
   <button data-t="modelo">✏️ Mensagens</button>
   <button data-t="cupons">🎟️ Cupons</button>
@@ -192,6 +193,49 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         <button class="b" onclick="testarDiv()">🔍 Testar (ver o que ele acharia agora)</button>
         <button class="b" onclick="rodarDiv()">🚀 Rodar agora</button> <span id="dvOk" class="muted"></span></div>
       <div id="dvRes"></div></div>
+  </section>
+
+  <section id="t-engajamento" class="hide">
+    <div class="form" oninput="pendente('egOk')" onchange="pendente('egOk')">
+    <div class="card" style="background:hsla(275,70%,55%,.07)"><b>☀️ Mensagem do dia</b>
+      <p class="muted">Todo dia, um texto acolhedor (bom dia, pergunta, dica de moda plus size, contagem para a Black Friday/Natal…) com uma imagem
+      criada pela IA. Não é oferta: mostra que tem gente de verdade cuidando do grupo.</p>
+      <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egMsg"></div></div>
+      <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egMsgH"></div></div>
+      <div class="q"><div class="t"><b>Com imagem da IA?</b><small>Sem imagem, vai só o texto.</small></div><div class="v"><input type="checkbox" id="egImg"></div></div>
+      <button class="b" type="button" onclick="engAgora('msg')">✨ Gerar uma agora (manda pro FILA POST ZAP)</button></div>
+
+    <div class="card" style="background:hsla(200,70%,55%,.07)"><b>📊 Enquete diária</b>
+      <p class="muted">Pergunta o que o grupo quer ver. Os mais votados (últimos 2 dias) ganham prioridade no 🤖 Divulgador.</p>
+      <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egEnq"></div></div>
+      <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egEnqH"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>Pergunta</b></div><input id="egPerg" style="margin-top:6px"></div>
+      <div class="q" style="display:block"><div class="t"><b>Opções</b> <small>(até 12)</small></div><div id="egOps" class="row" style="margin-top:6px"></div></div>
+      <div class="q"><div class="t"><b>Quanto o voto pesa no Divulgador?</b><small>1,5 = o mais votado vale 50% a mais</small></div>
+        <div class="v"><input type="number" id="egPeso" min="1" max="3" step="0.1"> ×</div></div>
+      <div id="egVotos"></div>
+      <button class="b" type="button" onclick="engAgora('enq')">📊 Mandar uma enquete agora (pro FILA POST ZAP)</button></div>
+
+    <div class="card" style="background:hsla(330,70%,55%,.07)"><b>💌 "Me chama no privado"</b>
+      <p class="muted">Quem escrever no privado de um chip dizendo o que procura ("vestido plus size azul") recebe na hora as 3 melhores ofertas
+      da Shopee com o seu link (Sub ID <b>inbox</b>). A mensagem do dia convida para isso de vez em quando.</p>
+      <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egInbox"></div></div>
+      <div class="q"><div class="t"><b>Máximo de pedidos por pessoa por dia</b></div><div class="v"><input type="number" id="egInboxMax" min="1" max="20"></div></div>
+      <details><summary class="muted">O que estão pedindo (últimos)</summary><div id="egPedidos"></div></details></div>
+
+    <div class="card" style="background:hsla(130,60%,50%,.07)"><b>🔭 Monitorar grupos e canais de ofertas</b>
+      <p class="muted">Achou link da Shopee num grupo/canal monitorado → vira post com o SEU link para você aprovar no FILA POST ZAP.
+      Cupom/bug sem link vira aviso para você revisar (cupom exclusivo de outro afiliado não funciona para o seu público).</p>
+      <div class="q"><div class="t"><b>Ligado?</b></div><div class="v"><input type="checkbox" id="egMon"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>Grupos de WhatsApp para monitorar</b><small>Um dos chips precisa estar no grupo.</small></div>
+        <input id="egMonBusca" placeholder="Buscar grupo…" style="margin-top:6px" oninput="desenharMonGrupos()"><div id="egMonGrupos" style="max-height:220px;overflow:auto"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>Canais PÚBLICOS do Telegram</b><small>Um por linha, ex.: @nomedocanal (confere a cada ~10 min)</small></div>
+        <textarea id="egTg" style="min-height:80px;margin-top:6px"></textarea></div></div>
+
+    <div class="card"><div class="q"><div class="t"><b>Mandar para eu aprovar antes?</b><small>Desmarcado: mensagem do dia e enquete já saem aprovadas.</small></div>
+      <div class="v"><input type="checkbox" id="egAprovar"></div></div></div>
+    </div>
+    <div class="salvar"><button class="b p" onclick="salvarEng()">💾 Salvar</button> <span id="egOk" class="muted"></span></div>
   </section>
 
   <section id="t-cupons" class="hide">
@@ -326,7 +370,7 @@ function aba(t){
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   document.querySelectorAll('main section').forEach(s => s.classList.toggle('hide', s.id !== 't-' + t));
   ({produtos:carregarProdutos, fila:carregarFila, historico:carregarFila, grupos:carregarGrupos, conexao:carregarConexao,
-    modelo:carregarMensagens, cupons:carregarCupons, divulgador:carregarDiv})[t]?.();
+    modelo:carregarMensagens, cupons:carregarCupons, divulgador:carregarDiv, engajamento:carregarEng})[t]?.();
 }
 
 async function iniciar(){
@@ -646,6 +690,43 @@ async function salvarCupom(){
 async function alternarCupom(id){ const c = CUPONS.find(x => x.id === id); await api('cupons/salvar', {...c, ativo: !c.ativo}); carregarCupons(); }
 async function excluirCupom(id){ if (confirm('Excluir este cupom?')) { await api('cupons/excluir', {id}); carregarCupons(); } }
 
+let ENG = {};
+async function carregarEng(){
+  ENG = await api('engajamento'); if (!GRUPOS.length) await carregarGrupos();
+  $('#egMsg').checked = ENG.msg_ativo; $('#egMsgH').value = ENG.msg_hora; $('#egImg').checked = ENG.msg_imagem;
+  $('#egEnq').checked = ENG.enquete_ativo; $('#egEnqH').value = ENG.enquete_hora; $('#egPerg').value = ENG.enquete_pergunta; $('#egPeso').value = ENG.peso_votos;
+  $('#egOps').innerHTML = ENG.opcoes_possiveis.map(o => `<label class="chk" style="border:0;padding:3px 8px;border-radius:8px;background:hsla(${COR_NICHO[o] ?? corFoco(o)},70%,55%,.15)">
+    <input type="checkbox" class="egOp" value="${esc(o)}" ${ENG.enquete_opcoes.includes(o) ? 'checked' : ''}> ${esc(o)}</label>`).join('');
+  const v = ENG.votos || {}, tot = Math.max(1, ...Object.values(v));
+  $('#egVotos').innerHTML = Object.keys(v).length ? '<p><b>Votos dos últimos 7 dias</b></p>' + Object.entries(v).map(([k, n]) =>
+    `<div class="row" style="gap:6px;margin:3px 0"><span style="width:190px">${esc(k)}</span><span style="height:14px;border-radius:7px;width:${n / tot * 260}px;background:hsla(${COR_NICHO[k] ?? corFoco(k)},65%,50%,.8)"></span> <b>${n}</b></div>`).join('')
+    : '<p class="muted">Ainda sem votos.</p>';
+  $('#egInbox').checked = ENG.inbox_ativo; $('#egInboxMax').value = ENG.inbox_max_dia;
+  $('#egPedidos').innerHTML = (ENG.pedidos || []).map(p => `<div class="chk"><span style="flex:1">"${esc(p.texto)}"</span><span class="muted">${esc(p.resultado)} · ${esc(fdata(p.quando, true))}</span></div>`).join('') || '<p class="muted">Nenhum pedido ainda.</p>';
+  $('#egMon').checked = ENG.monitor_ativo; $('#egTg').value = (ENG.monitor_telegram || []).join('\n');
+  MONSEL = new Set(ENG.monitor_grupos || []); desenharMonGrupos(); $('#egAprovar').checked = ENG.aprovar;
+}
+let MONSEL = new Set();
+function desenharMonGrupos(){
+  const q = ($('#egMonBusca').value || '').toLowerCase();
+  $('#egMonGrupos').innerHTML = GRUPOS.filter(g => !g.fila && (!q || g.nome.toLowerCase().includes(q)))
+    .sort((a, b) => (MONSEL.has(b.jid) - MONSEL.has(a.jid)) || (a.admin == 1) - (b.admin == 1))
+    .map(g => `<label class="chk"><input type="checkbox" ${MONSEL.has(g.jid) ? 'checked' : ''} onchange="this.checked?MONSEL.add('${esc(g.jid)}'):MONSEL.delete('${esc(g.jid)}');pendente('egOk')">
+      ${esc(g.nome)} ${g.admin == 1 ? '<span class="tag">seu (admin)</span>' : ''}</label>`).join('') || '<p class="muted">Nenhum grupo. Busque os grupos em 👥 Grupos.</p>';
+}
+async function salvarEng(){
+  await api('engajamento', {msg_ativo: $('#egMsg').checked, msg_hora: $('#egMsgH').value, msg_imagem: $('#egImg').checked,
+    enquete_ativo: $('#egEnq').checked, enquete_hora: $('#egEnqH').value, enquete_pergunta: $('#egPerg').value, peso_votos: $('#egPeso').value,
+    enquete_opcoes: [...document.querySelectorAll('.egOp:checked')].map(i => i.value).slice(0, 12),
+    inbox_ativo: $('#egInbox').checked, inbox_max_dia: $('#egInboxMax').value,
+    monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked});
+  await carregarEng(); $('#egOk').textContent = 'Salvo ✓';
+}
+async function engAgora(tipo){
+  $('#egOk').textContent = tipo === 'msg' ? 'Criando texto e imagem com a IA… (pode levar 1 min)' : 'Mandando a enquete…';
+  try { const j = await api('engajamento/agora', {tipo}); $('#egOk').textContent = `✓ Mandado ao FILA POST ZAP como #${j.id}`; }
+  catch(e){ $('#egOk').textContent = '⚠️ ' + e.message; }
+}
 async function carregarDiv(){
   const d = await api('divulgador'); DIV = d;
   try { $('#dvCfg').open = localStorage.dvCfg === '1'; } catch(e){}

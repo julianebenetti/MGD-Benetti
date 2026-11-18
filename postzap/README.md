@@ -42,6 +42,13 @@ rajadas; `0` em cima cancela). "Testar" mostra o que ele acharia sem mandar nada
 ➕ Plus Size, ✝️ Evangélica e 🎄 Natal ficam **por cima do nicho** (ex.: "👗 Moda · ➕ Plus Size"). Detectados pelo nome do
 produto, aparecem nos cards/filtros, entram nas faixas de horário e têm palavras de busca próprias e prioridade no Divulgador.
 
+## 💬 Engajamento
+- **Mensagem do dia** (horário configurável): texto acolhedor + imagem pela IA (OpenAI, modelo em `OPENAI_IMAGE_MODEL`).
+- **Enquete diária** (Evolution `sendPoll`): votos (webhook `MESSAGES_UPDATE`) dão prioridade aos nichos/temas no Divulgador.
+- **Me chama no privado:** pedido de produto no privado de um chip → 3 melhores ofertas com Sub ID `inbox` (limite por pessoa/dia).
+- **Monitor:** grupos de WhatsApp onde um chip está + canais públicos do Telegram (`t.me/s/<canal>`, a cada ~10 min).
+  Link da Shopee → post com o seu link para aprovar; cupom sem link → aviso para revisar.
+
 ## Ritmo de envio (aba ✅ Aprovação → ⏱️ Ritmo)
 Posts aprovados saem em **rajadas** (1–3 posts, pausa de 40–90 min, sorteado), só das 8h às 22h, com 2–5 min entre
 grupos. **Aquecimento:** 6 posts/dia por grupo no 1º dia, +2 por dia, até 20. Agendado com hora (`5 20h`) sai na hora.

@@ -163,11 +163,21 @@ CREATE TABLE IF NOT EXISTS cliques (          -- cada clique de pessoa (robôs d
 CREATE TABLE IF NOT EXISTS previas (          -- mensagem de prévia → post (para responder em cima de cada uma)
     msg_id TEXT PRIMARY KEY, fila_id INTEGER, quando TEXT
 );
+CREATE TABLE IF NOT EXISTS enquetes (           -- enquete enviada a um grupo (para contar os votos)
+    msg_id TEXT PRIMARY KEY, fila_id INTEGER, jid TEXT, opcoes TEXT, quando TEXT
+);
+CREATE TABLE IF NOT EXISTS votos (
+    msg_id TEXT, eleitor TEXT, opcoes TEXT, quando TEXT, PRIMARY KEY (msg_id, eleitor)
+);
+CREATE TABLE IF NOT EXISTS pedidos_inbox (       -- o que as pessoas pedem no privado (e o que recebeu)
+    id INTEGER PRIMARY KEY AUTOINCREMENT, numero TEXT, texto TEXT, resultado TEXT, quando TEXT
+);
+CREATE TABLE IF NOT EXISTS monitor_vistos (chave TEXT PRIMARY KEY, quando TEXT);
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
 );
 """
-_lock = threading.Lock()
+_lock = threading.RLock()   # reentrante: montar o texto dentro de uma transação pode gravar config
 
 
 def db():
@@ -867,7 +877,7 @@ def configurar_webhook(inst):
     try:
         evo('POST', f'/webhook/set/{inst}', {'webhook': {
             'enabled': True, 'url': f"{CFG['url_publica']}/webhook/{CFG['webhook_segredo']}",
-            'byEvents': False, 'base64': False, 'events': ['MESSAGES_UPSERT']}})
+            'byEvents': False, 'base64': False, 'events': ['MESSAGES_UPSERT', 'MESSAGES_UPDATE']}})
         _webhook_ok.add(inst)
     except RuntimeError as e:
         log.warning(f'Webhook de {inst}: {e}')
@@ -998,6 +1008,16 @@ MIDIA_DIR = BASE / 'midia'
 
 def enviar_item(inst, jid, item):
     dados = json.loads(item.get('dados') or '{}')
+    if dados.get('enquete'):
+        e = dados['enquete']
+        res = evo('POST', f"/message/sendPoll/{inst}", {'number': jid, 'name': e['pergunta'],
+                                                        'selectableCount': len(e['opcoes']), 'values': e['opcoes']}, timeout=60)
+        mid = (res or {}).get('key', {}).get('id') if isinstance(res, dict) else None
+        if mid:
+            with _lock, db() as c:
+                c.execute('INSERT OR REPLACE INTO enquetes VALUES (?,?,?,?,?)',
+                          (mid, item.get('id'), jid, json.dumps(e['opcoes'], ensure_ascii=False), agora().isoformat()))
+        return res
     midia = dados.get('midia')
     if midia and Path(midia).exists():
         return evo('POST', f"/message/sendMedia/{inst}", {
@@ -1181,7 +1201,8 @@ def proximo_item():
                                "ORDER BY aprovado_em").fetchall()
     da_hora = nichos_da_hora(r)
     if da_hora:                     # rajada do nicho da hora; sem nenhum desse nicho: outro (ou espera, se estrito)
-        do_nicho = [x for x in candidatos if nicho_do_item(x) in da_hora or set(focos_do_item(x)) & set(da_hora)]
+        do_nicho = [x for x in candidatos if x['origem'] == 'aviso' or nicho_do_item(x) in da_hora
+                    or set(focos_do_item(x)) & set(da_hora)]          # avisos/engajamento saem em qualquer faixa
         candidatos = do_nicho or ([] if r.get('nicho_estrito') else candidatos)
     item = candidatos[0] if candidatos else None
     if not item:
@@ -1410,15 +1431,26 @@ def regravar(item, **mud):
 
 
 def receber_webhook(payload):
-    if (payload.get('event') or '').lower().replace('_', '.') != 'messages.upsert':
-        return
+    evento = (payload.get('event') or '').lower().replace('_', '.')
     inst = payload.get('instance') or ''
     data = payload.get('data') or {}
     if isinstance(data, list):
         data = data[0] if data else {}
+    if registrar_voto(data):                     # voto em enquete (chega como update ou upsert, conforme a versão)
+        return
+    if evento != 'messages.upsert':
+        return
     key = data.get('key') or {}
     jid = key.get('remoteJid') or ''
     if key.get('fromMe') or jid.endswith('@broadcast'):
+        return
+    msg0 = data.get('message') or {}
+    texto0 = (msg0.get('conversation') or (msg0.get('extendedTextMessage') or {}).get('text')
+              or (msg0.get('imageMessage') or {}).get('caption') or '').strip()
+    if jid.endswith('@g.us') and jid in grupos_monitorados() and texto0:     # grupo de ofertas monitorado
+        if key.get('id') and _marcar_visto(key['id']):
+            return
+        threading.Thread(target=processar_achado, args=(texto0, f'grupo {nome_grupo(jid)}'), daemon=True).start()
         return
     if jid.endswith('@g.us'):                    # grupo: só o "FILA POST ZAP" vira lugar de comandos
         if jid not in grupos_fila():
@@ -1436,6 +1468,8 @@ def receber_webhook(payload):
     else:
         quem = [jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]
     if not autorizado([x for x in quem if x]):
+        if not jid.endswith('@g.us') and texto0 and eng_cfg().get('inbox_ativo') and not (key.get('id') and _marcar_visto(key['id'])):
+            threading.Thread(target=pedido_inbox, args=(inst, jid, texto0), daemon=True).start()   # alguém pedindo produto
         return
     if key.get('id') and _marcar_visto(key['id']):   # já tratada por outro chip, ou é resposta do próprio PostZap
         return
@@ -1808,7 +1842,8 @@ def minerar(d=None, limite_busca=20):
                 focos = [f for f in classificar_focos(n.get('productName'), palavra) if f in d.get('focos_ativos', [])]
                 n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra, 'focos': focos,  # relativo ao piso do nicho
                           'pontos': (com / piso) * (1 + min(vendas, 20000) / 2000) * (nota / 5)
-                                    * (float(d.get('peso_foco', 1.6)) if focos else 1)})
+                                    * (float(d.get('peso_foco', 1.6)) if focos else 1)
+                                    * peso_votado(classificar_nicho(n.get('productName'), palavra), focos)})
                 achados.append(n)
     achados.sort(key=lambda x: -x['pontos'])
     escolhidos, por_palavra = [], {}
@@ -1900,6 +1935,330 @@ def agenda_divulgador():
         time.sleep(60)
 
 
+# ---------------------------------------------------------------- engajamento (mensagem do dia, enquete, inbox, monitor)
+
+ENG_PADRAO = {
+    'msg_ativo': False, 'msg_hora': '09:30', 'msg_imagem': True,
+    'enquete_ativo': False, 'enquete_hora': '19:30',
+    'enquete_pergunta': 'O que vocês querem ver mais aqui no grupo amanhã? 💜',
+    'enquete_opcoes': ['👗 Moda', '➕ Plus Size', '👟 Calçados', '👙 Moda íntima', '💇 Beleza e cabelo', '🏠 Casa e decoração',
+                       '🍳 Cozinha e utensílios', '🎄 Natal', '🎁 Presentes', '🧸 Infantil'],
+    'peso_votos': 1.5,                      # o mais votado vale até 50% a mais no Divulgador (proporcional aos votos)
+    'aprovar': True,                        # mensagem do dia e enquete vão ao FILA POST ZAP para você aprovar
+    'inbox_ativo': False, 'inbox_max_dia': 5,
+    'monitor_ativo': False, 'monitor_grupos': [], 'monitor_telegram': [],
+}
+
+
+def eng_cfg():
+    d = dict(ENG_PADRAO)
+    d.update(get_json('engajamento', {}))
+    return d
+
+
+def chat_ia(prompt, max_len=900):
+    key = chave_openai()
+    if not key:
+        raise RuntimeError('sem chave da OpenAI')
+    req = urllib.request.Request('https://api.openai.com/v1/chat/completions', headers={
+        'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
+        data=json.dumps({'model': CFG['openai_model'], 'messages': [{'role': 'user', 'content': prompt}]}).encode())
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.load(r)['choices'][0]['message']['content'].strip()[:max_len]
+
+
+def imagem_ia(prompt):
+    """Imagem quadrada pela IA (OpenAI). Devolve base64 (PNG) ou ''."""
+    key = chave_openai()
+    if not key:
+        return ''
+    try:
+        req = urllib.request.Request('https://api.openai.com/v1/images/generations', headers={
+            'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
+            data=json.dumps({'model': os.getenv('OPENAI_IMAGE_MODEL', 'gpt-image-1'), 'prompt': prompt,
+                             'size': '1024x1024', 'n': 1}).encode())
+        with urllib.request.urlopen(req, timeout=180) as r:
+            d = json.load(r)['data'][0]
+        if d.get('b64_json'):
+            return d['b64_json']
+        if d.get('url'):
+            with urllib.request.urlopen(d['url'], timeout=60) as r2:
+                import base64
+                return base64.b64encode(r2.read()).decode()
+    except Exception as e:
+        log.warning(f'Imagem da IA falhou: {e}')
+    return ''
+
+
+TIPOS_MSG = ['bom dia animado com uma pergunta para o grupo responder', 'dica rápida de moda plus size (como combinar uma peça)',
+             'contagem regressiva para a Black Friday ou o Natal, convidando a ficar de olho nas ofertas do grupo',
+             'pergunta divertida de "isso ou aquilo" sobre moda/casa', 'frase motivacional de autoestima para mulheres reais',
+             'convite para chamar no privado dizendo o produto que procura, que a gente acha a melhor oferta']
+
+
+def mensagem_do_dia():
+    """Texto + imagem de engajamento (não é oferta): o grupo sente que tem gente de verdade cuidando dele."""
+    e = eng_cfg()
+    hoje = agora()
+    tipo = TIPOS_MSG[hoje.toordinal() % len(TIPOS_MSG)]
+    if 'privado' in tipo and not e.get('inbox_ativo'):
+        tipo = TIPOS_MSG[0]
+    contexto = (f"Hoje é {data_sub(hoje)}. Black Friday: 27Nov26. Natal: 25Dez26. O grupo é de ofertas da Shopee para mulheres, "
+                "a maioria do público é plus size; também há público evangélico.")
+    texto = chat_ia(f"{contexto}\nEscreva uma mensagem curta (máx. 5 linhas) para o grupo de WhatsApp, em português do Brasil, "
+                    f"tom acolhedor e animado, com emojis na medida, do tipo: {tipo}. Termine com uma pergunta ou convite para "
+                    "interagir. Não fale de preço, não invente promoções, sem hashtags. Use *negrito* do WhatsApp em 1 trecho.")
+    img = ''
+    if e.get('msg_imagem'):
+        img = imagem_ia(f"Ilustração alegre e acolhedora para grupo de ofertas no WhatsApp, tema: {tipo}. Mulheres brasileiras "
+                        "reais e diversas, incluindo plus size, cores vibrantes e suaves, estilo moderno, SEM nenhum texto na imagem.")
+    return texto, img
+
+
+def criar_post_engajamento(origem, texto, dados, produto):
+    jid_fila, inst_fila = destino_fila()
+    e = eng_cfg()
+    grupos = grupos_ativos()
+    status = 'rascunho' if e.get('aprovar') else 'aprovado'
+    with _lock, db() as c:
+        cur = c.execute('INSERT INTO fila (origem, chave, produto, texto, grupos, criado_em, dados, pedido_por, pedido_inst, status, '
+                        'aprovado_em) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                        (origem, '', produto, texto, json.dumps(grupos), agora().isoformat(), json.dumps(dados, ensure_ascii=False),
+                         jid_fila, inst_fila, status, None if status == 'rascunho' else agora().isoformat()))
+        fid = cur.lastrowid
+    if jid_fila:
+        mostrar_previa(inst_fila, jid_fila, fid)
+        responder(inst_fila, jid_fila, f"💬 *{produto} #{fid}* · " + ('responda *1* em cima para enviar aos grupos (ou *0*)'
+                  if status == 'rascunho' else 'já aprovado, sai na próxima rajada (responda *0* em cima para cancelar)'), fid=fid)
+    return fid
+
+
+def rodar_mensagem_do_dia():
+    texto, img = mensagem_do_dia()
+    dados = {}
+    if img:
+        MIDIA_DIR.mkdir(exist_ok=True)
+        arq = MIDIA_DIR / f"eng_{int(time.time())}.b64"
+        arq.write_text(img)
+        dados = {'midia': str(arq), 'midia_tipo': 'image', 'mimetype': 'image/png'}
+    return criar_post_engajamento('aviso', texto, dados, '💬 Mensagem do dia')
+
+
+def rodar_enquete():
+    e = eng_cfg()
+    opcoes = [o for o in e['enquete_opcoes'] if o.strip()][:12]
+    if len(opcoes) < 2:
+        raise RuntimeError('a enquete precisa de pelo menos 2 opções')
+    return criar_post_engajamento('aviso', '', {'enquete': {'pergunta': e['enquete_pergunta'], 'opcoes': opcoes}},
+                                  '📊 Enquete: ' + e['enquete_pergunta'][:40])
+
+
+def _achar(obj, chave):
+    """Procura uma chave em qualquer nível do JSON (o formato do voto muda entre versões da Evolution)."""
+    if isinstance(obj, dict):
+        if chave in obj:
+            yield obj[chave]
+        for v in obj.values():
+            yield from _achar(v, chave)
+    elif isinstance(obj, list):
+        for v in obj:
+            yield from _achar(v, chave)
+
+
+def registrar_voto(data):
+    sel = next(_achar(data, 'selectedOptions'), None)
+    if sel is None:
+        return False
+    poll_key = next(_achar(data, 'pollCreationMessageKey'), None) or next(_achar(data, 'pollUpdateMessageKey'), None) or {}
+    mid = poll_key.get('id') if isinstance(poll_key, dict) else None
+    key = data.get('key') or {}
+    eleitor = key.get('participant') or key.get('participantAlt') or key.get('remoteJid') or ''
+    nomes = [o.get('name') if isinstance(o, dict) else str(o) for o in (sel or [])]
+    with db() as c:
+        if not mid or not c.execute('SELECT 1 FROM enquetes WHERE msg_id=?', (mid,)).fetchone():
+            return True
+    with _lock, db() as c:
+        if nomes:
+            c.execute('INSERT OR REPLACE INTO votos VALUES (?,?,?,?)', (mid, eleitor, json.dumps(nomes, ensure_ascii=False), agora().isoformat()))
+        else:
+            c.execute('DELETE FROM votos WHERE msg_id=? AND eleitor=?', (mid, eleitor))   # tirou o voto
+    return True
+
+
+def resultado_votos(dias=2):
+    corte = (agora() - timedelta(days=dias)).isoformat()
+    cont = {}
+    with db() as c:
+        for (ops,) in c.execute('SELECT opcoes FROM votos WHERE quando>=?', (corte,)):
+            for o in json.loads(ops):
+                cont[o] = cont.get(o, 0) + 1
+    return dict(sorted(cont.items(), key=lambda x: -x[1]))
+
+
+def peso_votado(nicho, focos):
+    """Prioridade extra no Divulgador para o que o grupo votou (proporcional aos votos dos últimos 2 dias)."""
+    r = resultado_votos()
+    if not r:
+        return 1.0
+    top = max(r.values())
+    v = max([r.get(nicho, 0)] + [r.get(f, 0) for f in focos or []])
+    return 1 + (float(eng_cfg().get('peso_votos', 1.5)) - 1) * v / top
+
+
+def pedido_inbox(inst, jid, texto):
+    """Alguém do grupo chamou no privado dizendo o que procura: devolve as 3 melhores ofertas com o seu link (Sub ID inbox)."""
+    e = eng_cfg()
+    hoje = agora().date().isoformat()
+    with db() as c:
+        n = c.execute('SELECT COUNT(*) FROM pedidos_inbox WHERE numero=? AND quando>=?', (jid, hoje)).fetchone()[0]
+    if n >= int(e.get('inbox_max_dia', 5)):
+        return
+    termo = re.sub(r'https?://\S+', '', texto)
+    termo = re.sub(r'(?i)\b(oi|ol[aá]|bom dia|boa tarde|boa noite|tudo bem|por favor|queria|quero|procuro|preciso de?|'
+                   r'estou procurando|tem|voc[eê]s? t[eê]m|um|uma|uns|umas)\b[,!.?]*', ' ', termo)
+    termo = re.sub(r'\s+', ' ', termo).strip(' ,.!?')[:60]
+    if len(termo) < 3 or bloqueado(termo):
+        if len(termo) < 3:
+            responder(inst, jid, 'Oi! 💜 Me conta o *nome do produto* que você está procurando (ex.: "vestido plus size azul") '
+                                 'que eu procuro a melhor oferta pra você!')
+        return
+    try:
+        nodes = shopee_gql(f'{{productOfferV2(keyword:{json.dumps(termo, ensure_ascii=False)},limit:30,sortType:2)'
+                           '{nodes{itemId shopId productName priceMin ratingStar sales commissionRate imageUrl}}}')['productOfferV2']['nodes']
+    except Exception as ex:
+        log.warning(f'Inbox: busca falhou: {ex}')
+        return
+    bons = [x for x in nodes if not bloqueado(x.get('productName')) and float(x.get('ratingStar') or 0) >= 4.5]
+    bons.sort(key=lambda x: -(int(x.get('sales') or 0) ** 0.5 * float(x.get('ratingStar') or 0) * (1 + comissao_reais(x) / 10)))
+    linhas = []
+    for x in bons[:3]:
+        try:
+            link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:'
+                              f'{json.dumps(f"https://shopee.com.br/product/{x["shopId"]}/{x["itemId"]}")},'
+                              f'subIds:{json.dumps([CFG["sub_id"], "inbox", data_sub(agora())])}}}){{shortLink}}}}')['generateShortLink']['shortLink']
+        except Exception:
+            continue
+        linhas.append(f"🛍️ *{x['productName'][:70]}*\n💰 R$ {br(x.get('priceMin'))} · ⭐ {x.get('ratingStar')} · {int(x.get('sales') or 0)} vendidos\n👉 {link}")
+    with _lock, db() as c:
+        c.execute('INSERT INTO pedidos_inbox (numero, texto, resultado, quando) VALUES (?,?,?,?)',
+                  (jid, texto[:200], f'{len(linhas)} oferta(s) para "{termo}"', agora().isoformat()))
+    if linhas:
+        responder(inst, jid, f'Achei essas ofertas pra *{termo}* 💜\n\n' + '\n\n'.join(linhas) +
+                  '\n\n⚠️ Preços podem mudar a qualquer momento. Se quiser outra coisa, é só me mandar!')
+    else:
+        responder(inst, jid, f'Procurei *{termo}* e não achei uma oferta boa agora 😕 Tenta descrever de outro jeito '
+                             '(ex.: "conjunto plus size linho") que eu procuro de novo!')
+
+
+# ---- monitor de grupos (WhatsApp) e canais públicos (Telegram)
+
+def grupos_monitorados():
+    e = eng_cfg()
+    return set(e.get('monitor_grupos') or []) - grupos_fila() if e.get('monitor_ativo') else set()
+
+
+def nome_grupo(jid):
+    with db() as c:
+        r = c.execute('SELECT nome FROM grupos WHERE jid=?', (jid,)).fetchone()
+    return r[0] if r else jid
+
+
+CUPOM_RE = re.compile(r'(?i)\bcupom\b|\bcupons\b|\bcódigo\b|\bcodigo\b')
+
+
+def processar_achado(texto, fonte):
+    """Oferta/cupom achado num grupo ou canal monitorado → post para você aprovar no FILA POST ZAP (com o SEU link)."""
+    jid_fila, inst_fila = destino_fila()
+    if not jid_fila:
+        return
+    links = [u.rstrip('.,)') for u in re.findall(r'https?://\S+', texto)]
+    shopee = [u for u in links if 'shopee' in u or 'shp.ee' in u]
+    for url in shopee[:3]:
+        try:
+            ids = ids_do_link_shopee(url)
+            if not ids:
+                continue
+            with _lock, db() as c:
+                if c.execute('SELECT 1 FROM monitor_vistos WHERE chave=?', (ids,)).fetchone():
+                    continue
+                c.execute('INSERT INTO monitor_vistos VALUES (?,?)', (ids, agora().isoformat()))
+            p = montar_post_do_link(f'https://shopee.com.br/product/{ids.replace(":", "/")}')
+            p['origem'] = 'monitor'
+            grupos = grupos_ativos()
+            with _lock, db() as c:
+                cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, link, texto, grupos, criado_em, dados, pedido_por, '
+                                'pedido_inst) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                                ('monitor', p.get('chave'), p['produto'], p.get('preco'), p['link'], montar_texto(p),
+                                 json.dumps(grupos), agora().isoformat(), json.dumps(p), jid_fila, inst_fila))
+                fid = cur.lastrowid
+            mostrar_previa(inst_fila, jid_fila, fid)
+            responder(inst_fila, jid_fila, f"🔭 *Achado #{fid}* em {fonte} · já com o SEU link de afiliado\n\n{MENU_CURTO}", fid=fid)
+        except ValueError:
+            continue
+        except Exception as e:
+            log.warning(f'Monitor: {e}')
+    if not shopee and CUPOM_RE.search(texto):     # cupom/bug sem link da Shopee: vira aviso para revisar (sem links de outros)
+        limpo = re.sub(r'https?://\S+', '', texto).strip()
+        chave = 'cupom:' + hashlib.sha1(limpo.lower().encode()).hexdigest()[:16]
+        with _lock, db() as c:
+            if c.execute('SELECT 1 FROM monitor_vistos WHERE chave=?', (chave,)).fetchone():
+                return
+            c.execute('INSERT INTO monitor_vistos VALUES (?,?)', (chave, agora().isoformat()))
+            cur = c.execute('INSERT INTO fila (origem, chave, produto, texto, grupos, criado_em, dados, pedido_por, pedido_inst) '
+                            'VALUES (?,?,?,?,?,?,?,?,?)', ('aviso', chave, '🎟️ Cupom achado', limpo[:1500], json.dumps(grupos_ativos()),
+                                                           agora().isoformat(), '{}', jid_fila, inst_fila))
+            fid = cur.lastrowid
+        responder(inst_fila, jid_fila, f"🎟️ *Cupom achado #{fid}* em {fonte} (revise antes: cupom exclusivo de outro afiliado não funciona "
+                                       f"para o seu público)\n\n{limpo[:700]}\n\n{MENU_AVISO}", fid=fid)
+
+
+def ler_telegram(canal):
+    """Canal PÚBLICO do Telegram (t.me/s/<canal>): devolve [(id, texto)] dos posts recentes."""
+    import html as h
+    canal = canal.strip().lstrip('@').split('/')[-1]
+    req = urllib.request.Request(f'https://t.me/s/{canal}', headers={'User-Agent': 'Mozilla/5.0'})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        pg = r.read().decode('utf-8', 'ignore')
+    posts = []
+    for m in re.finditer(r'data-post="([^"]+)".*?<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', pg, re.S):
+        bruto = re.sub(r'<a [^>]*href="([^"]+)"[^>]*>.*?</a>', r' \1 ', m.group(2))
+        bruto = re.sub(r'<br\s*/?>', '\n', bruto)
+        posts.append((m.group(1), h.unescape(re.sub(r'<[^>]+>', '', bruto)).strip()))
+    return posts
+
+
+def agenda_engajamento():
+    while True:
+        try:
+            e = eng_cfg()
+            hoje, hm = agora().date().isoformat(), agora().strftime('%H:%M')
+            for ativo, hora, nome, func in ((e['msg_ativo'], e['msg_hora'], 'msg', rodar_mensagem_do_dia),
+                                            (e['enquete_ativo'], e['enquete_hora'], 'enq', rodar_enquete)):
+                marca = f'eng_{nome}_{hoje}'
+                if ativo and hm >= hora and not get_cfg(marca):
+                    set_cfg(marca, '1')
+                    try:
+                        func()
+                    except Exception as ex:
+                        log.warning(f'Engajamento ({nome}): {ex}')
+            if e.get('monitor_ativo') and e.get('monitor_telegram') and int(time.time()) % 600 < 60:   # a cada ~10 min
+                for canal in e['monitor_telegram']:
+                    try:
+                        num = lambda pid: int(re.sub(r'\D', '', pid.split('/')[-1]) or 0)
+                        ultimo = int(get_cfg(f'tg_{canal}', '0') or 0)
+                        posts = ler_telegram(canal)
+                        novos = [p for p in posts if num(p[0]) > ultimo] if ultimo else posts[-3:]   # 1ª vez: só os 3 últimos
+                        for pid, txt in novos[-10:]:
+                            processar_achado(txt, f'Telegram @{canal}')
+                        if posts:
+                            set_cfg(f'tg_{canal}', str(max(num(p[0]) for p in posts)))
+                    except Exception as ex:
+                        log.warning(f'Telegram {canal}: {ex}')
+        except Exception:
+            log.exception('Engajamento')
+        time.sleep(60)
+
+
 # ---------------------------------------------------------------- login simples
 
 def token():
@@ -1985,6 +2344,11 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json({'grupos': rows, 'listas': listas()})
             if p == '/api/divulgador':
                 return self.send_json(dict(divulgador_cfg(), prontos=FOCOS, temas_pai=temas_pai(), nichos=NICHOS))
+            if p == '/api/engajamento':
+                with db() as c:
+                    pedidos = [dict(r) for r in c.execute('SELECT texto, resultado, quando FROM pedidos_inbox ORDER BY id DESC LIMIT 30')]
+                return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos,
+                                           opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/cupons':
                 with db() as c:
                     return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
@@ -2176,6 +2540,27 @@ class H(BaseHTTPRequestHandler):
                                                  'nicho': classificar_nicho(n['productName'], n['palavra']),
                                                  'vendas': n.get('sales'), 'nota': n.get('ratingStar'), 'palavra': n['palavra'],
                                                  'preco': br(n.get('priceMin'))} for n in minerar()]})
+        if p == '/api/engajamento':
+            e = eng_cfg()
+            for k in ('msg_ativo', 'msg_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo'):
+                if k in b:
+                    e[k] = bool(b[k])
+            for k in ('msg_hora', 'enquete_hora'):
+                if re.fullmatch(r'\d{2}:\d{2}', str(b.get(k, ''))):
+                    e[k] = b[k]
+            if b.get('enquete_pergunta'):
+                e['enquete_pergunta'] = str(b['enquete_pergunta'])[:250]
+            for k, lim in (('enquete_opcoes', 12), ('monitor_grupos', 50), ('monitor_telegram', 20)):
+                if isinstance(b.get(k), list):
+                    e[k] = [str(x).strip()[:100] for x in b[k] if str(x).strip()][:lim]
+            for k in ('inbox_max_dia', 'peso_votos'):
+                if str(b.get(k, '')).replace('.', '', 1).isdigit():
+                    e[k] = float(b[k]) if k == 'peso_votos' else int(b[k])
+            set_cfg('engajamento', json.dumps(e, ensure_ascii=False))
+            return self.send_json({'ok': True})
+        if p == '/api/engajamento/agora':
+            fid = rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_enquete()
+            return self.send_json({'id': fid})
         if p == '/api/pausar':
             set_cfg('pausado', '1' if b.get('pausado') else '0')
             return self.send_json({'ok': True})
@@ -2260,6 +2645,7 @@ def main():
     threading.Thread(target=worker, daemon=True).start()
     threading.Thread(target=monitor_chips, daemon=True).start()
     threading.Thread(target=agenda_divulgador, daemon=True).start()
+    threading.Thread(target=agenda_engajamento, daemon=True).start()
     if not CFG['autorizados']:
         log.warning('NUMEROS_AUTORIZADOS vazio: a conversa de links pelo WhatsApp fica desligada')
     srv = ThreadingHTTPServer(('127.0.0.1', CFG['porta']), H)
