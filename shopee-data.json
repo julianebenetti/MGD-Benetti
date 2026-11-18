@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794990250,
-  "updated_at_br": "18/11/2026 05:20",
+  "updated_at": 1794999902,
+  "updated_at_br": "18/11/2026 08:00",
   "period_days": 90,
-  "total_orders": 4923,
-  "total_conversions": 4722,
+  "total_orders": 4922,
+  "total_conversions": 4721,
   "orders": [
     {
       "ID do pedido": "261117GXCGJV5Y",
@@ -123052,31 +123052,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "240922940151833",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-20"
-    },
-    {
-      "ID do pedido": "260820TU5Q29H7",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-20 10:55:36",
-      "Sub_id1": "25Jul26TapeteHigienicoVs4",
-      "Valor de Compra(R$)": "49.9",
-      "Comissao liquida do afiliado(R$)": "5.45158",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "7.50%",
-      "Comissao Shopee(R$)": "1.996",
-      "Comissao do vendedor(R$)": "3.7425",
-      "Comissao total do pedido(R$)": "5.7385",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Tapete para Cachorro Higiênico com 50 Unidades DOG MAT Pet 60x60cm, Ultra Absorção e Free Odores",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23398676959",
-      "ID da loja": "1384728500",
-      "Nome da loja": "Loja Desconto do Alto Oficial",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "240922536192738",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-20"
     }
