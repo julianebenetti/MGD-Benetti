@@ -150,6 +150,9 @@ CREATE TABLE IF NOT EXISTS listas (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TE
 CREATE TABLE IF NOT EXISTS cupons (
     id INTEGER PRIMARY KEY AUTOINCREMENT, loja TEXT, codigo TEXT, texto TEXT, validade TEXT, ativo INTEGER DEFAULT 1
 );
+CREATE TABLE IF NOT EXISTS chip_eventos (    -- conexões/quedas de cada chip (para ver reconexões frequentes)
+    id INTEGER PRIMARY KEY AUTOINCREMENT, instancia TEXT, estado TEXT, numero TEXT, nome TEXT, quando TEXT
+);
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
 );
@@ -531,8 +534,54 @@ def configurar_webhook(inst):
         log.warning(f'Webhook de {inst}: {e}')
 
 
+def registrar_estado(inst, st):
+    """Guarda cada mudança conectado ↔ desconectado, com número e horário."""
+    st = 'open' if st == 'open' else 'fechado'
+    if get_cfg(f'estado_{inst}') == st:
+        return
+    numero = nome = ''
+    if st == 'open':
+        try:
+            info = evo('GET', f'/instance/fetchInstances?instanceName={inst}')
+            info = info[0] if isinstance(info, list) and info else {}
+            numero, nome = (info.get('ownerJid') or '').split('@')[0], info.get('profileName') or ''
+        except RuntimeError:
+            pass
+        configurar_webhook(inst)
+    with _lock, db() as c:
+        c.execute('INSERT INTO chip_eventos (instancia, estado, numero, nome, quando) VALUES (?,?,?,?,?)',
+                  (inst, st, numero, nome, agora().isoformat()))
+    set_cfg(f'estado_{inst}', st)
+    log.info(f'Chip {inst}: {"conectado " + numero if st == "open" else "desconectado"}')
+
+
+def monitor_chips():
+    while True:
+        for inst in instancias():
+            try:
+                st = estado_chip(inst, cache_seg=0)
+                if st not in ('erro', 'inexistente'):
+                    registrar_estado(inst, st)
+            except Exception:
+                log.exception('monitor de chips')
+        time.sleep(60)
+
+
+def historico_chip(inst):
+    with db() as c:
+        ev = [dict(r) for r in c.execute('SELECT estado, numero, nome, quando FROM chip_eventos WHERE instancia=? '
+                                         'ORDER BY id DESC LIMIT 8', (inst,))]
+        semana = (agora() - timedelta(days=7)).isoformat()
+        conexoes = c.execute("SELECT COUNT(*) FROM chip_eventos WHERE instancia=? AND estado='open' AND quando>=?",
+                             (inst, semana)).fetchone()[0]
+    desde = ev[0]['quando'] if ev and ev[0]['estado'] == 'open' else ''
+    return {'eventos': ev, 'conexoes_7d': conexoes, 'desde': desde}
+
+
 def whatsapp_status(inst):
     st = estado_chip(inst, cache_seg=0)
+    if st not in ('erro', 'inexistente'):
+        registrar_estado(inst, st)
     if st == 'inexistente':
         evo('POST', '/instance/create', {'instanceName': inst, 'qrcode': True, 'integration': 'WHATSAPP-BAILEYS'})
         st = estado_chip(inst, cache_seg=0)
@@ -553,6 +602,7 @@ def whatsapp_status(inst):
             res['codigo'] = qr.get('pairingCode') or ''
         except RuntimeError as e:
             res['erro'] = str(e)
+    res.update(historico_chip(inst))
     return res
 
 
@@ -1245,6 +1295,7 @@ def main():
     with _lock, db() as c:   # envio interrompido por reinício volta para aprovado (não repete grupos já enviados)
         c.execute("UPDATE fila SET status='aprovado' WHERE status='enviando'")
     threading.Thread(target=worker, daemon=True).start()
+    threading.Thread(target=monitor_chips, daemon=True).start()
     if not CFG['autorizados']:
         log.warning('NUMEROS_AUTORIZADOS vazio: a conversa de links pelo WhatsApp fica desligada')
     srv = ThreadingHTTPServer(('127.0.0.1', CFG['porta']), H)

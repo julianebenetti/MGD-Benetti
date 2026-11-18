@@ -395,18 +395,31 @@ async function statusWa(){
     return j.chips;
   } catch(e){ $('#wa').textContent = 'WhatsApp: ⚠️ ' + e.message; }
 }
-async function carregarConexao(){
-  $('#conexao').innerHTML = 'Verificando os chips…';
+let _conTimer;
+const dt = iso => iso ? new Date(iso).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'}) : '';
+async function carregarConexao(silencioso){
+  clearTimeout(_conTimer);
+  if (!silencioso) $('#conexao').innerHTML = 'Verificando os chips…';
   const chips = await statusWa(); if (!chips) return;
   $('#conexao').innerHTML = `<p class="muted">Cada postagem sorteia qual chip envia em cada grupo (sem repetir o mesmo chip seguido no grupo).
-    Para conectar: no celular do chip, WhatsApp → Aparelhos conectados → Conectar aparelho, e leia o QR.</p>` +
-    chips.map(c => `<div class="card"><div class="row"><b style="flex:1">📱 ${esc(c.instancia)}</b>
+    Para conectar: no celular do chip, WhatsApp → Aparelhos conectados → Conectar aparelho, e leia o QR. Esta tela se atualiza sozinha.</p>` +
+    chips.map(c => {
+      const hist = (c.eventos || []).map(e => `<li>${e.estado === 'open' ? '🟢 conectou' : '🔴 caiu'} · ${dt(e.quando)}${e.numero ? ' · +' + esc(e.numero) : ''}</li>`).join('');
+      const alerta = c.conexoes_7d >= 4 ? `<p class="warn">⚠️ ${c.conexoes_7d} conexões em 7 dias: o chip está caindo muito (veja a internet do celular e se o WhatsApp dele está aberto).</p>` : '';
+      return `<div class="card"><div class="row"><b style="flex:1">📱 ${esc(c.instancia)}</b>
       <span class="tag">${c.estado === 'open' ? '🟢 conectado' : '🔴 desconectado'}</span></div>
       ${c.estado === 'open'
-        ? `<p class="muted">${esc(c.nome || '')} ${c.numero ? '· +' + esc(c.numero) : ''}</p><button class="b" onclick="desconectar('${esc(c.instancia)}')">Desconectar</button>`
+        ? `<p style="margin:8px 0">📞 <b>${c.numero ? '+' + esc(c.numero) : 'número…'}</b> ${c.nome ? '· ' + esc(c.nome) : ''}<br>
+           <span class="muted">Conectado desde ${dt(c.desde) || '—'} · ${c.conexoes_7d} conexão(ões) nos últimos 7 dias</span></p>${alerta}
+           <button class="b" onclick="desconectar('${esc(c.instancia)}')">Desconectar</button>`
         : `${c.qr ? `<img src="${esc(c.qr)}" alt="QR Code" style="width:240px;max-width:100%;background:#fff;padding:8px;border-radius:8px">` : ''}
-           ${c.codigo ? `<p>Código: <b>${esc(c.codigo)}</b></p>` : ''}${c.erro ? `<p class="err">${esc(c.erro)}</p>` : ''}`}
-    </div>`).join('') + `<button class="b" onclick="carregarConexao()">↻ Atualizar</button>`;
+           ${c.codigo ? `<p>Código: <b>${esc(c.codigo)}</b></p>` : ''}${c.erro ? `<p class="err">${esc(c.erro)}</p>` : ''}${alerta}`}
+      ${hist ? `<details style="margin-top:8px"><summary class="muted">Histórico de conexões</summary><ul class="muted">${hist}</ul></details>` : ''}
+    </div>`}).join('') + `<button class="b" onclick="carregarConexao()">↻ Atualizar</button>`;
+  // com QR na tela: confere a cada 8 s (para mostrar "conectado" logo depois de ler); senão a cada 30 s
+  if (!$('#t-conexao').classList.contains('hide'))
+    _conTimer = setTimeout(() => { if (!$('#t-conexao').classList.contains('hide') && !document.querySelector('#conexao details[open]')) carregarConexao(true); },
+                           chips.some(c => c.estado !== 'open') ? 8000 : 30000);
 }
 async function desconectar(instancia){ if (confirm('Desconectar o chip ' + instancia + '?')) { await api('whatsapp/desconectar', {instancia}); carregarConexao(); } }
 
