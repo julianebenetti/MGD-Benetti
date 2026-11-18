@@ -35,6 +35,12 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 .q .v{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.q .v input{width:90px}.q .v input[type=time]{width:120px}.q .v input[type=checkbox]{width:auto}
 .salvar{position:sticky;bottom:0;background:var(--card);padding:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .pend{color:var(--warn);font-weight:600}
+table.hist{border-collapse:collapse;width:100%;font-size:13.5px}table.hist th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;padding:6px 8px;border-bottom:2px solid var(--bd);white-space:nowrap}
+table.hist td{padding:7px 8px;border-bottom:1px solid var(--bd)}table.hist tr.dia td{background:var(--chip);font-weight:700;padding-top:10px}
+table.hist td.n,table.hist th.n{text-align:center}table.hist tr.post{cursor:pointer}table.hist tr.post:hover td{background:var(--bg)}
+table.hist tr.det td{background:var(--bg);white-space:pre-wrap;font-size:12.5px}.hsub.on{background:var(--chip);color:var(--pri);border-color:var(--pri)}
+table.hist .fixa{position:sticky;left:0;background:var(--card);white-space:nowrap;z-index:1;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.seg2 button{padding:4px 10px}.seg2 button.on{background:var(--chip);color:var(--pri);border-color:var(--pri)}
 .linha{position:relative;display:flex;height:64px;border-radius:12px;overflow:hidden;border:1px solid var(--bd);margin:10px 0 2px;background:var(--bg)}
 .linha .seg{display:flex;flex-direction:column;justify-content:center;padding:0 8px;font-size:12px;border-right:2px solid var(--card);cursor:pointer;overflow:hidden;white-space:nowrap}
 .linha .seg b{font-size:12.5px}.linha .seg:hover{filter:brightness(.95)}.linha .vazio{background:transparent;cursor:default}
@@ -136,7 +142,23 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
     <div id="fila"></div>
   </section>
 
-  <section id="t-historico" class="hide"><div id="hist"></div></section>
+  <section id="t-historico" class="hide">
+    <div class="row" style="margin-bottom:10px">
+      <button class="b hsub on" data-h="posts" onclick="subHist('posts')">📜 Posts</button>
+      <button class="b hsub" data-h="grupos" onclick="subHist('grupos')">👥 Por grupo</button></div>
+    <div id="hPosts" class="card">
+      <div class="row" style="margin-bottom:8px">
+        <span class="row" id="hPer"></span>
+        <select id="hNicho" style="width:auto" onchange="desenharPosts()"><option value="">Todos os nichos</option></select>
+        <span id="hResumo" class="muted"></span></div>
+      <div style="overflow-x:auto"><table class="hist" id="hTab"></table></div></div>
+    <div id="hGrupos" class="card hide">
+      <div class="row" style="margin-bottom:8px"><span class="row" id="hMeses"></span>
+        <span class="muted">Ver por:</span><span class="row" id="hVer"></span></div>
+      <p class="muted" style="margin:0 0 6px">Quantos posts cada grupo recebeu. <b class="warn">Em laranja</b>: o grupo bateu o limite do aquecimento naquele dia.</p>
+      <div style="overflow-x:auto"><table class="hist" id="hGr"></table></div></div>
+    <div id="hist"></div>
+  </section>
 
   <section id="t-grupos" class="hide">
     <div class="card"><div class="row"><b style="flex:1">📋 Listas de grupos</b>
@@ -369,7 +391,7 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => aba(b.dat
 function aba(t){
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   document.querySelectorAll('main section').forEach(s => s.classList.toggle('hide', s.id !== 't-' + t));
-  ({produtos:carregarProdutos, fila:carregarFila, historico:carregarFila, grupos:carregarGrupos, conexao:carregarConexao,
+  ({produtos:carregarProdutos, fila:carregarFila, historico:carregarHistorico, grupos:carregarGrupos, conexao:carregarConexao,
     modelo:carregarMensagens, cupons:carregarCupons, divulgador:carregarDiv, engajamento:carregarEng})[t]?.();
 }
 
@@ -599,8 +621,7 @@ async function carregarFila(){
        <span class="muted">para os posts sem grupo (ou para todos da fila), usando a lista escolhida ao lado de "Aprovar todos"</span></div>` + naFila.map(mini).join('') : '');
   const env = FILA.filter(x => x.status === 'enviado');
   setTimeout(() => document.querySelectorAll('details.mini').forEach(d => { if (abertos.has(d.querySelector('summary b').textContent)) d.open = true; }));
-  $('#hist').innerHTML = (env.length ? `<p class="muted">${env.length} post(s) enviados · toque para ver o post completo</p>` + env.map(mini).join('')
-                                     : '<p class="muted">Nada enviado ainda.</p>') +
+  $('#hist').innerHTML = '' +
     ((j.descartados || []).length ? `<details class="card" style="margin-top:16px"><summary><b>🗑️ Descartados (${j.descartados.length})</b>
       <span class="muted">· descartou sem querer? restaure aqui</span></summary>` + j.descartados.map(d => `<div class="chk">
       <b>#${d.id}</b> <span style="flex:1">${esc(d.produto)}</span>
@@ -624,6 +645,70 @@ async function aprovarTodos(){
   alert(`✅ ${j.aprovados.length} aprovado(s). Saem nas rajadas a partir de ${fdata(j.proxima, true)}.` +
         (j.sem_grupo.length ? `\n⚠️ ${j.sem_grupo.length} sem grupo: marque grupos em 👥 Grupos.` : ''));
   carregarFila();
+}
+// ---- Histórico: 📜 Posts (por dia e horário, com nicho) e 👥 Por grupo (dia/semana/mês)
+let HIST = {}, HPER = '7', HMES = '', HVER = 'dia';
+function subHist(q){
+  document.querySelectorAll('.hsub').forEach(b => b.classList.toggle('on', b.dataset.h === q));
+  $('#hPosts').classList.toggle('hide', q !== 'posts'); $('#hGrupos').classList.toggle('hide', q !== 'grupos');
+}
+async function carregarHistorico(){
+  HIST = await api(`historico?periodo=${HPER}&mes=${HMES}`); HMES = HIST.mes;
+  $('#hPer').innerHTML = '<span class="seg2">' + [['hoje', 'Hoje'], ['7', '7 dias'], ['mes', 'Este mês'], ['30', '30 dias']].map(([k, t]) =>
+    `<button class="b ${HPER === k ? 'on' : ''}" onclick="HPER='${k}';carregarHistorico()">${t}</button>`).join(' ') + '</span>';
+  const ns = [...new Set(HIST.posts.map(p => p.nicho))], sel = $('#hNicho').value;
+  $('#hNicho').innerHTML = '<option value="">Todos os nichos</option>' + ns.map(n => `<option ${n === sel ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  desenharPosts(); desenharGruposHist(); carregarFila();
+}
+function desenharPosts(){
+  const fn = $('#hNicho').value, ps = HIST.posts.filter(p => !fn || p.nicho === fn);
+  $('#hResumo').textContent = `${ps.length} post(s) · ${ps.reduce((s, p) => s + p.grupos, 0)} envios`;
+  const porDia = {};
+  ps.forEach(p => (porDia[p.quando.slice(0, 10)] = porDia[p.quando.slice(0, 10)] || []).push(p));
+  const DS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  let t = '<tr><th>Hora</th><th>#</th><th>Nicho / tema</th><th>Produto</th><th class="n">Grupos</th><th class="n">👆 Cliques</th></tr>';
+  Object.keys(porDia).sort().reverse().forEach(d => {
+    const lista = porDia[d].sort((a, b) => a.quando.localeCompare(b.quando)), cont = {};
+    lista.forEach(p => cont[p.nicho] = (cont[p.nicho] || 0) + 1);
+    t += `<tr class="dia"><td colspan="6">📅 ${fdata(d)} · ${DS[new Date(d + 'T12:00').getDay()]} · ${lista.length} post(s)
+      <span class="muted" style="font-weight:400"> — ${Object.entries(cont).sort((a, b) => b[1] - a[1]).map(([k, v]) => esc(k) + ' ' + v).join(' · ')}</span></td></tr>`;
+    t += lista.map(p => `<tr class="post" style="${tom(p.nicho, p.focos)}" onclick="verPost(this, ${p.id})"><td>${esc(fdata(p.quando, true).slice(-5))}</td><td>#${p.id}</td>
+      <td>${p.nicho === '📢 Aviso' ? '<span class="tag">📢 Aviso</span>' : etiquetas(p.nicho, p.focos)}</td><td>${esc(p.produto)}</td>
+      <td class="n">${p.grupos}</td><td class="n">${p.cliques ?? '—'}</td></tr>`).join('');
+  });
+  $('#hTab').innerHTML = ps.length ? t : '<tr><td class="muted">Nada enviado nesse período.</td></tr>';
+}
+function verPost(tr, id){
+  if (tr.nextElementSibling && tr.nextElementSibling.classList.contains('det')) return tr.nextElementSibling.remove();
+  const it = FILA.find(x => x.id === id);
+  tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="6">${esc(it ? it.texto : '(texto não disponível)')}</td></tr>`);
+}
+function desenharGruposHist(){
+  const MS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const nomeMes = m => MS[+m.slice(5) - 1] + m.slice(2, 4);
+  $('#hMeses').innerHTML = '<span class="seg2">' + HIST.meses.map(m => `<button class="b ${m === HIST.mes ? 'on' : ''}" onclick="HMES='${m}';carregarHistorico()">${nomeMes(m)}</button>`).join(' ') + '</span>';
+  $('#hVer').innerHTML = '<span class="seg2">' + [['dia', 'dia'], ['semana', 'semana'], ['mes', 'mês']].map(([k, t]) =>
+    `<button class="b ${HVER === k ? 'on' : ''}" onclick="HVER='${k}';desenharGruposHist()">${t}</button>`).join(' ') + '</span>';
+  const hoje = new Date().toLocaleDateString('sv-SE');
+  let cols = [];
+  const comEnvio = HIST.dias.filter(d => HIST.grupos.some(g => g.dias[d]));
+  const passados = HIST.dias.filter(d => d <= hoje && (!comEnvio.length || d >= comEnvio[0]));   // a partir do 1º dia com envio
+  if (HVER === 'dia') cols = passados.map(d => ({nome: fdata(d).slice(0, 5), dias: [d], lim: HIST.limites[d]}));
+  else if (HVER === 'semana') {
+    let sem = [];
+    passados.forEach((d, i) => { sem.push(d); if (new Date(d + 'T12:00').getDay() === 0 || i === passados.length - 1) { cols.push({nome: fdata(sem[0]).slice(0, 5) + '–' + fdata(sem[sem.length - 1]).slice(0, 5), dias: sem}); sem = []; } });
+  }
+  const totMax = Math.max(1, ...HIST.grupos.map(g => g.total));
+  const barra = g => `<span style="display:inline-block;height:10px;border-radius:5px;width:${g.total / totMax * 90}px;background:hsla(150,60%,45%,.8)"></span>`;
+  let t = `<tr><th class="fixa">Grupo</th><th class="n">${nomeMes(HIST.mes)}</th><th></th>` + cols.map(c => `<th class="n">${c.nome}</th>`).join('') + '</tr>';
+  t += HIST.grupos.map(g => `<tr><td class="fixa">${esc(g.nome)}</td><td class="n"><b>${g.total}</b></td><td>${barra(g)}</td>` + cols.map(c => {
+      const n = c.dias.reduce((s, d) => s + (g.dias[d] || 0), 0), cheio = c.lim && n >= c.lim;
+      return `<td class="n ${cheio ? 'warn' : ''}" style="${cheio ? 'font-weight:700' : ''}">${n || '·'}</td>`;
+    }).join('') + '</tr>').join('');
+  t += `<tr><td class="fixa"><b>Total</b></td><td class="n"><b>${HIST.grupos.reduce((s, g) => s + g.total, 0)}</b></td>
+       <td class="muted">${HVER === 'dia' ? 'limite hoje: ' + (HIST.limites[hoje] ?? '—') + '/grupo' : ''}</td>` +
+       cols.map(c => `<td class="n"><b>${HIST.grupos.reduce((s, g) => s + c.dias.reduce((x, d) => x + (g.dias[d] || 0), 0), 0)}</b></td>`).join('') + '</tr>';
+  $('#hGr').innerHTML = HIST.grupos.length ? t : '<tr><td class="muted">Nenhum envio nesse mês.</td></tr>';
 }
 async function restaurar(id){
   const j = await api('fila/restaurar', {id});

@@ -1164,6 +1164,51 @@ def limite_hoje(r=None):
     return min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias))
 
 
+def limite_em(dia, r=None):
+    """Limite do aquecimento (posts por grupo) num dia passado ou futuro."""
+    r = r or ritmo()
+    try:
+        dias = (dia - date.fromisoformat(r['aquec_desde'])).days
+    except (ValueError, TypeError):
+        return int(r['aquec_max'])
+    return min(int(r['aquec_max']), int(r['aquec_inicio']) + int(r['aquec_passo']) * max(0, dias))
+
+
+def historico(periodo='7', mes=''):
+    """📜 Posts enviados (por dia/horário/nicho) e 👥 quanto cada grupo recebeu por dia no mês."""
+    hoje = agora().date()
+    ini = {'hoje': hoje, '7': hoje - timedelta(days=6), 'mes': hoje.replace(day=1), '30': hoje - timedelta(days=29)}.get(periodo, hoje - timedelta(days=6))
+    with db() as c:
+        linhas = c.execute(
+            "SELECT f.id, f.produto, f.origem, f.dados, f.link, MIN(e.quando) primeiro, COUNT(DISTINCT e.jid) grupos "
+            "FROM envios e JOIN fila f ON f.id=e.fila_id WHERE e.ok=1 AND substr(e.quando,1,10)>=? "
+            "GROUP BY f.id ORDER BY primeiro DESC", (ini.isoformat(),)).fetchall()
+        posts = []
+        for r in linhas:
+            cod = (r['link'] or '').rsplit('/l/', 1)[-1] if '/l/' in (r['link'] or '') else ''
+            item = {'dados': r['dados'], 'produto': r['produto']}
+            posts.append({'id': r['id'], 'produto': r['produto'], 'quando': r['primeiro'], 'grupos': r['grupos'],
+                          'nicho': '📢 Aviso' if r['origem'] == 'aviso' else nicho_do_item(item),
+                          'focos': [] if r['origem'] == 'aviso' else focos_do_item(item),
+                          'cliques': c.execute('SELECT COUNT(*) FROM cliques WHERE codigo=?', (cod,)).fetchone()[0] if cod else None})
+        # por grupo, no mês escolhido
+        mes = mes if re.fullmatch(r'\d{4}-\d{2}', mes or '') else hoje.strftime('%Y-%m')
+        cont = {}
+        for jid, dia, n in c.execute("SELECT jid, substr(quando,1,10) d, COUNT(DISTINCT fila_id) FROM envios WHERE ok=1 "
+                                     "AND substr(quando,1,7)=? GROUP BY jid, d", (mes,)):
+            cont.setdefault(jid, {})[dia] = n
+        nomes = {r[0]: r[1] for r in c.execute('SELECT jid, nome FROM grupos')}
+        meses = [r[0] for r in c.execute("SELECT DISTINCT substr(quando,1,7) FROM envios WHERE ok=1 ORDER BY 1")]
+    a, m = map(int, mes.split('-'))
+    prox = date(a + (m == 12), m % 12 + 1, 1)
+    dias = [(date(a, m, 1) + timedelta(days=i)) for i in range((prox - date(a, m, 1)).days)]
+    r = ritmo()
+    grupos = sorted([{'jid': j, 'nome': nomes.get(j, j), 'dias': d, 'total': sum(d.values())} for j, d in cont.items()],
+                    key=lambda g: -g['total'])
+    return {'posts': posts, 'inicio': ini.isoformat(), 'mes': mes, 'meses': sorted(set(meses + [hoje.strftime('%Y-%m')])),
+            'dias': [d.isoformat() for d in dias], 'limites': {d.isoformat(): limite_em(d, r) for d in dias}, 'grupos': grupos}
+
+
 def no_horario(r, quando=None):
     h = (quando or agora()).strftime('%H:%M')
     return r['inicio'] <= h < r['fim']
@@ -2349,6 +2394,9 @@ class H(BaseHTTPRequestHandler):
                     pedidos = [dict(r) for r in c.execute('SELECT texto, resultado, quando FROM pedidos_inbox ORDER BY id DESC LIMIT 30')]
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos,
                                            opcoes_possiveis=NICHOS + focos_nomes()))
+            if p == '/api/historico':
+                qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+                return self.send_json(historico((qs.get('periodo') or ['7'])[0], (qs.get('mes') or [''])[0]))
             if p == '/api/cupons':
                 with db() as c:
                     return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
