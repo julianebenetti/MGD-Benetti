@@ -35,6 +35,7 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 .q .v{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.q .v input{width:90px}.q .v input[type=time]{width:120px}.q .v input[type=checkbox]{width:auto}
 .salvar{position:sticky;bottom:0;background:var(--card);padding:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .pend{color:var(--warn);font-weight:600}
+nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px;border-left:1px solid var(--bd);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -47,17 +48,18 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 <div id="app" class="hide">
 <header><h1 style="display:flex;align-items:center;gap:8px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+CiAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiMyNUQzNjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwZDZlNDkiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNSIgZmlsbD0idXJsKCNnKSIvPgogIDxwYXRoIGQ9Ik0zMiAxMWMtMTEuNiAwLTIxIDguNC0yMSAxOC44IDAgNS42IDIuNyAxMC42IDcgMTRMMTYgNTNsOS42LTQuNmMyIC41IDQuMS44IDYuNC44IDExLjYgMCAyMS04LjQgMjEtMTguOFM0My42IDExIDMyIDExeiIgZmlsbD0iI2ZmZiIvPgogIDxwYXRoIGQ9Ik0zNS41IDE3IDIzIDMzLjVoOC4yTDI4LjUgNDUgNDEgMjguNWgtOC4yeiIgZmlsbD0iI0ZGNkEwMCIvPgo8L3N2Zz4K" alt="" width="30" height="30">PostZap</h1><span id="wa">WhatsApp: …</span></header>
 <nav>
-  <button data-t="produtos" class="on">🛍️ Produtos</button>
-  <button data-t="fila">✅ Aprovação</button>
+  <button data-t="fila" class="on">✅ Aprovação <span id="nPend" class="tag" style="display:none"></span></button>
+  <button data-t="produtos">🛍️ Produtos</button>
+  <button data-t="divulgador">🤖 Divulgador</button>
   <button data-t="historico">📜 Histórico</button>
+  <span class="sep" title="Configurações">⚙️</span>
   <button data-t="grupos">👥 Grupos</button>
-  <button data-t="conexao">🔗 WhatsApp</button>
   <button data-t="modelo">✏️ Mensagens</button>
   <button data-t="cupons">🎟️ Cupons</button>
-  <button data-t="divulgador">🤖 Divulgador</button>
+  <button data-t="conexao">🔗 WhatsApp</button>
 </nav>
 <main>
-  <section id="t-produtos">
+  <section id="t-produtos" class="hide">
     <div class="row" style="margin-bottom:12px">
       <input id="busca" placeholder="Buscar produto…" style="flex:1;min-width:180px" oninput="renderProdutos()">
       <select id="fonte" style="width:auto" onchange="renderProdutos()">
@@ -72,7 +74,7 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
     <div id="avisos"></div><div id="produtos" class="grid"></div>
   </section>
 
-  <section id="t-fila" class="hide">
+  <section id="t-fila">
     <details class="card" id="ritmoCard"><summary><b>⏱️ Ritmo de envio</b> <span id="ritmoResumo" class="muted"></span></summary>
       <p class="muted">Os posts aprovados saem em <b>rajadas</b> (alguns posts juntos, depois uma pausa), só no horário escolhido.
       O <b>aquecimento</b> começa com poucos posts por dia em cada grupo e aumenta um pouco por dia — bom para chegar na Black Friday com chips e grupos "quentes".
@@ -267,7 +269,7 @@ function aba(t){
 async function iniciar(){
   try { MSG = await api('config'); } catch(e){ return; }
   $('#login').classList.add('hide'); $('#app').classList.remove('hide');
-  carregarProdutos(); carregarGrupos(); statusWa(); setInterval(statusWa, 60000); setInterval(()=>{ if(!$('#t-fila').classList.contains('hide')||!$('#t-historico').classList.contains('hide')) carregarFila(); }, 20000);
+  await carregarGrupos(); carregarFila(); statusWa(); setInterval(statusWa, 60000); setInterval(carregarFila, 20000);   // mantém o contador da aba Aprovação em dia
 }
 
 const ROTULO = {whatsapp:'💬 Enviado pelo WhatsApp', central_video:'🎬 Vendeu em vídeo', central_ideias:'💡 Ideia da Central', garimpo:'⛏️ Garimpo', manual:'🏬 Outra loja'};
@@ -381,6 +383,8 @@ async function carregarFila(){
   MSG = await api('config').catch(() => MSG);
   if ($('#rOk').textContent.indexOf('não salvas') < 0) mostrarRitmo();
   const j = await api('fila'); FILA = j.fila;
+  const n = FILA.filter(x => ['rascunho','erro'].includes(x.status)).length;
+  $('#nPend').style.display = n ? '' : 'none'; $('#nPend').textContent = n;
   $('#pausa').innerHTML = j.pausado
     ? `<b class="warn">⏸️ Envios pausados</b> <button class="b p" onclick="pausar(false)">▶️ Retomar</button>`
     : `<button class="b" onclick="pausar(true)">⏸️ Pausar todos os envios</button>`;
