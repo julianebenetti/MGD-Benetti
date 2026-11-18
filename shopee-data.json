@@ -1,9 +1,9 @@
 {
-  "updated_at": 1794974741,
-  "updated_at_br": "18/11/2026 01:01",
+  "updated_at": 1794990250,
+  "updated_at_br": "18/11/2026 05:20",
   "period_days": 90,
-  "total_orders": 4924,
-  "total_conversions": 4723,
+  "total_orders": 4923,
+  "total_conversions": 4722,
   "orders": [
     {
       "ID do pedido": "261117GXCGJV5Y",
@@ -123077,31 +123077,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "240922536192738",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-20"
-    },
-    {
-      "ID do pedido": "260820THWQ5EWV",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-20 08:10:05",
-      "Sub_id1": "01Ago26VEAarmazenamentomala",
-      "Valor de Compra(R$)": "21.99",
-      "Comissao liquida do afiliado(R$)": "0.83562",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.8796",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.8796",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bolsa de viagem à prova d'água com grande capacidade L08 Bosco.Loja",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22294176690",
-      "ID da loja": "1477444349",
-      "Nome da loja": "maxbel.loja",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "240912604183405",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-20"
     }
