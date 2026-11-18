@@ -227,12 +227,25 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <div class="q"><div class="t"><b>Com imagem da IA?</b><small>Sem imagem, vai só o texto.</small></div><div class="v"><input type="checkbox" id="egImg"></div></div>
       <button class="b" type="button" onclick="engAgora('msg')">✨ Gerar uma agora (manda pro FILA POST ZAP)</button></div>
 
+    <div class="card" style="background:hsla(240,60%,55%,.08)"><b>🌙 Mensagem da noite</b>
+      <p class="muted">Boa noite carinhoso, pergunta leve, lembrete de ativar as notificações, contagem para a Black Friday/Natal… com imagem de clima noturno.</p>
+      <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egNoite"></div></div>
+      <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egNoiteH"></div></div>
+      <button class="b" type="button" onclick="engAgora('noite')">🌙 Gerar uma agora (manda pro FILA POST ZAP)</button></div>
+
     <div class="card" style="background:hsla(200,70%,55%,.07)"><b>📊 Enquete diária</b>
       <p class="muted">Pergunta o que o grupo quer ver. Os mais votados (últimos 2 dias) ganham prioridade no 🤖 Divulgador.</p>
       <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egEnq"></div></div>
       <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egEnqH"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>Como escolher as opções?</b></div>
+        <label class="chk"><input type="radio" name="egModo" value="rodizio"> <span><b>Rodízio (recomendado)</b> — pacotes de opções que combinam (moda, casa,
+          achadinhos, festas), trocando a cada <input type="number" id="egTroca" min="1" max="14" style="width:60px"> dia(s). Assim a enquete não fica repetitiva.</span></label>
+        <label class="chk"><input type="radio" name="egModo" value="fixa"> <span><b>Sempre as mesmas</b> — a pergunta e as opções escolhidas abaixo.</span></label>
+        <div id="egHoje" class="card" style="margin:8px 0 0"></div>
+        <details style="margin-top:6px"><summary class="muted">Ver todos os pacotes do rodízio</summary><div id="egPacotes"></div></details></div>
+      <div id="egFixa">
       <div class="q" style="display:block"><div class="t"><b>Pergunta</b></div><input id="egPerg" style="margin-top:6px"></div>
-      <div class="q" style="display:block"><div class="t"><b>Opções</b> <small>(até 12)</small></div><div id="egOps" class="row" style="margin-top:6px"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>Opções</b> <small>(até 12)</small></div><div id="egOps" class="row" style="margin-top:6px"></div></div></div>
       <div class="q"><div class="t"><b>Quanto o voto pesa no Divulgador?</b><small>1,5 = o mais votado vale 50% a mais</small></div>
         <div class="v"><input type="number" id="egPeso" min="1" max="3" step="0.1"> ×</div></div>
       <div id="egVotos"></div>
@@ -779,6 +792,13 @@ let ENG = {};
 async function carregarEng(){
   ENG = await api('engajamento'); if (!GRUPOS.length) await carregarGrupos();
   $('#egMsg').checked = ENG.msg_ativo; $('#egMsgH').value = ENG.msg_hora; $('#egImg').checked = ENG.msg_imagem;
+  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora;
+  document.querySelectorAll('input[name=egModo]').forEach(r => { r.checked = r.value === (ENG.enquete_modo || 'rodizio'); r.onchange = mostrarModoEnq; });
+  $('#egTroca').value = ENG.enquete_troca_dias || 2;
+  const chipsOp = ops => ops.map(o => `<span class="tag" style="background:hsla(${COR_NICHO[o] ?? corFoco(o)},70%,55%,.2)">${esc(o)}</span>`).join(' ');
+  $('#egHoje').innerHTML = `<b>Enquete de hoje:</b> ${esc(ENG.enquete_hoje.pergunta)}<br>${chipsOp(ENG.enquete_hoje.opcoes)}`;
+  $('#egPacotes').innerHTML = (ENG.pacotes || []).map(p => `<div class="chk" style="display:block"><b>${esc(p.pergunta)}</b><br>${chipsOp(p.opcoes)}</div>`).join('');
+  mostrarModoEnq();
   $('#egEnq').checked = ENG.enquete_ativo; $('#egEnqH').value = ENG.enquete_hora; $('#egPerg').value = ENG.enquete_pergunta; $('#egPeso').value = ENG.peso_votos;
   $('#egOps').innerHTML = ENG.opcoes_possiveis.map(o => `<label class="chk" style="border:0;padding:3px 8px;border-radius:8px;background:hsla(${COR_NICHO[o] ?? corFoco(o)},70%,55%,.15)">
     <input type="checkbox" class="egOp" value="${esc(o)}" ${ENG.enquete_opcoes.includes(o) ? 'checked' : ''}> ${esc(o)}</label>`).join('');
@@ -792,6 +812,10 @@ async function carregarEng(){
   MONSEL = new Set(ENG.monitor_grupos || []); desenharMonGrupos(); $('#egAprovar').checked = ENG.aprovar;
 }
 let MONSEL = new Set();
+function mostrarModoEnq(){
+  const fixa = (document.querySelector('input[name=egModo]:checked') || {}).value === 'fixa';
+  $('#egFixa').classList.toggle('hide', !fixa); $('#egHoje').classList.toggle('hide', fixa);
+}
 function desenharMonGrupos(){
   const q = ($('#egMonBusca').value || '').toLowerCase();
   $('#egMonGrupos').innerHTML = GRUPOS.filter(g => !g.fila && (!q || g.nome.toLowerCase().includes(q)))
@@ -801,6 +825,8 @@ function desenharMonGrupos(){
 }
 async function salvarEng(){
   await api('engajamento', {msg_ativo: $('#egMsg').checked, msg_hora: $('#egMsgH').value, msg_imagem: $('#egImg').checked,
+    noite_ativo: $('#egNoite').checked, noite_hora: $('#egNoiteH').value,
+    enquete_modo: (document.querySelector('input[name=egModo]:checked') || {}).value, enquete_troca_dias: $('#egTroca').value,
     enquete_ativo: $('#egEnq').checked, enquete_hora: $('#egEnqH').value, enquete_pergunta: $('#egPerg').value, peso_votos: $('#egPeso').value,
     enquete_opcoes: [...document.querySelectorAll('.egOp:checked')].map(i => i.value).slice(0, 12),
     inbox_ativo: $('#egInbox').checked, inbox_max_dia: $('#egInboxMax').value,
@@ -808,7 +834,7 @@ async function salvarEng(){
   await carregarEng(); $('#egOk').textContent = 'Salvo ✓';
 }
 async function engAgora(tipo){
-  $('#egOk').textContent = tipo === 'msg' ? 'Criando texto e imagem com a IA… (pode levar 1 min)' : 'Mandando a enquete…';
+  $('#egOk').textContent = tipo === 'enq' ? 'Mandando a enquete…' : 'Criando texto e imagem com a IA… (pode levar 1–2 min)';
   try { const j = await api('engajamento/agora', {tipo}); $('#egOk').textContent = `✓ Mandado ao FILA POST ZAP como #${j.id}`; }
   catch(e){ $('#egOk').textContent = '⚠️ ' + e.message; }
 }

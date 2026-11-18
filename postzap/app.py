@@ -1984,10 +1984,13 @@ def agenda_divulgador():
 
 ENG_PADRAO = {
     'msg_ativo': False, 'msg_hora': '09:30', 'msg_imagem': True,
+    'noite_ativo': False, 'noite_hora': '21:00',
     'enquete_ativo': False, 'enquete_hora': '19:30',
     'enquete_pergunta': 'O que vocês querem ver mais aqui no grupo amanhã? 💜',
     'enquete_opcoes': ['👗 Moda', '➕ Plus Size', '👟 Calçados', '👙 Moda íntima', '💇 Beleza e cabelo', '🏠 Casa e decoração',
                        '🍳 Cozinha e utensílios', '🎄 Natal', '🎁 Presentes', '🧸 Infantil'],
+    'enquete_modo': 'rodizio',             # rodizio: pacotes de opções que combinam, trocando a cada N dias | fixa: as opções escolhidas
+    'enquete_troca_dias': 2,
     'peso_votos': 1.5,                      # o mais votado vale até 50% a mais no Divulgador (proporcional aos votos)
     'aprovar': True,                        # mensagem do dia e enquete vão ao FILA POST ZAP para você aprovar
     'inbox_ativo': False, 'inbox_max_dia': 5,
@@ -2012,42 +2015,68 @@ def chat_ia(prompt, max_len=900):
         return json.load(r)['choices'][0]['message']['content'].strip()[:max_len]
 
 
+_ultimo_erro_imagem = ['']
+
+
 def imagem_ia(prompt):
-    """Imagem quadrada pela IA (OpenAI). Devolve base64 (PNG) ou ''."""
+    """Imagem quadrada pela IA (OpenAI). Tenta os modelos em ordem (nem toda conta tem todos liberados).
+    Devolve base64 (PNG) ou '' — o motivo da falha fica em _ultimo_erro_imagem."""
+    import base64
     key = chave_openai()
     if not key:
+        _ultimo_erro_imagem[0] = 'sem chave da OpenAI (OPENAI_API_KEY no .env do PostZap ou do robô)'
         return ''
-    try:
-        req = urllib.request.Request('https://api.openai.com/v1/images/generations', headers={
-            'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'},
-            data=json.dumps({'model': os.getenv('OPENAI_IMAGE_MODEL', 'gpt-image-1'), 'prompt': prompt,
-                             'size': '1024x1024', 'n': 1}).encode())
-        with urllib.request.urlopen(req, timeout=180) as r:
-            d = json.load(r)['data'][0]
-        if d.get('b64_json'):
-            return d['b64_json']
-        if d.get('url'):
-            with urllib.request.urlopen(d['url'], timeout=60) as r2:
-                import base64
-                return base64.b64encode(r2.read()).decode()
-    except Exception as e:
-        log.warning(f'Imagem da IA falhou: {e}')
+    modelos_img = [m for m in dict.fromkeys([os.getenv('OPENAI_IMAGE_MODEL', ''), 'gpt-image-1', 'gpt-image-1-mini', 'dall-e-3']) if m]
+    erros = []
+    for modelo in modelos_img:
+        corpo = {'model': modelo, 'prompt': prompt[:3800], 'size': '1024x1024', 'n': 1}
+        if modelo.startswith('dall-e'):
+            corpo['response_format'] = 'b64_json'
+        try:
+            req = urllib.request.Request('https://api.openai.com/v1/images/generations', data=json.dumps(corpo).encode(),
+                                         headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=240) as r:
+                d = json.load(r)['data'][0]
+            if d.get('b64_json'):
+                _ultimo_erro_imagem[0] = ''
+                return d['b64_json']
+            if d.get('url'):
+                with urllib.request.urlopen(d['url'], timeout=60) as r2:
+                    _ultimo_erro_imagem[0] = ''
+                    return base64.b64encode(r2.read()).decode()
+        except urllib.error.HTTPError as e:
+            try:
+                msg = json.loads(e.read().decode()).get('error', {}).get('message', '')
+            except Exception:
+                msg = str(e)
+            erros.append(f'{modelo}: {msg[:140]}')
+        except Exception as e:
+            erros.append(f'{modelo}: {str(e)[:140]}')
+    _ultimo_erro_imagem[0] = ' | '.join(erros)
+    log.warning(f'Imagem da IA falhou: {_ultimo_erro_imagem[0]}')
     return ''
 
 
+TIPOS_NOITE = ['boa noite carinhoso agradecendo quem acompanhou as ofertas do dia e avisando que amanhã tem mais',
+               'pergunta leve para responder antes de dormir (ex.: qual achadinho de hoje você mais gostou?)',
+               'lembrete gentil para ativar as notificações do grupo e não perder as ofertas da manhã',
+               'frase de autoestima e descanso para mulheres reais, com carinho',
+               'convite para chamar no privado dizendo o produto que procura, que amanhã cedo a gente procura a melhor oferta',
+               'contagem regressiva para a Black Friday/Natal, pedindo para deixar nos comentários o que querem ver']
 TIPOS_MSG = ['bom dia animado com uma pergunta para o grupo responder', 'dica rápida de moda plus size (como combinar uma peça)',
              'contagem regressiva para a Black Friday ou o Natal, convidando a ficar de olho nas ofertas do grupo',
              'pergunta divertida de "isso ou aquilo" sobre moda/casa', 'frase motivacional de autoestima para mulheres reais',
              'convite para chamar no privado dizendo o produto que procura, que a gente acha a melhor oferta']
 
 
-def mensagem_do_dia():
+def mensagem_do_dia(periodo='dia'):
     """Texto + imagem de engajamento (não é oferta): o grupo sente que tem gente de verdade cuidando dele."""
     e = eng_cfg()
     hoje = agora()
-    tipo = TIPOS_MSG[hoje.toordinal() % len(TIPOS_MSG)]
+    tipos = TIPOS_NOITE if periodo == 'noite' else TIPOS_MSG
+    tipo = tipos[hoje.toordinal() % len(tipos)]
     if 'privado' in tipo and not e.get('inbox_ativo'):
-        tipo = TIPOS_MSG[0]
+        tipo = tipos[0]
     contexto = (f"Hoje é {data_sub(hoje)}. Black Friday: 27Nov26. Natal: 25Dez26. O grupo é de ofertas da Shopee para mulheres, "
                 "a maioria do público é plus size; também há público evangélico.")
     texto = chat_ia(f"{contexto}\nEscreva uma mensagem curta (máx. 5 linhas) para o grupo de WhatsApp, em português do Brasil, "
@@ -2055,8 +2084,10 @@ def mensagem_do_dia():
                     "interagir. Não fale de preço, não invente promoções, sem hashtags. Use *negrito* do WhatsApp em 1 trecho.")
     img = ''
     if e.get('msg_imagem'):
+        clima = ('noite tranquila, luz quente e aconchegante, tons de azul e lilás' if periodo == 'noite'
+                 else 'manhã ensolarada, cores vibrantes e suaves')
         img = imagem_ia(f"Ilustração alegre e acolhedora para grupo de ofertas no WhatsApp, tema: {tipo}. Mulheres brasileiras "
-                        "reais e diversas, incluindo plus size, cores vibrantes e suaves, estilo moderno, SEM nenhum texto na imagem.")
+                        f"reais e diversas, incluindo plus size, {clima}, estilo moderno, SEM nenhum texto na imagem.")
     return texto, img
 
 
@@ -2078,20 +2109,44 @@ def criar_post_engajamento(origem, texto, dados, produto):
     return fid
 
 
-def rodar_mensagem_do_dia():
-    texto, img = mensagem_do_dia()
+def rodar_mensagem_do_dia(periodo='dia'):
+    texto, img = mensagem_do_dia(periodo)
     dados = {}
     if img:
         MIDIA_DIR.mkdir(exist_ok=True)
         arq = MIDIA_DIR / f"eng_{int(time.time())}.b64"
         arq.write_text(img)
         dados = {'midia': str(arq), 'midia_tipo': 'image', 'mimetype': 'image/png'}
-    return criar_post_engajamento('aviso', texto, dados, '💬 Mensagem do dia')
+    titulo = '🌙 Mensagem da noite' if periodo == 'noite' else '☀️ Mensagem do dia'
+    if eng_cfg().get('msg_imagem') and not img:
+        titulo += ' (sem imagem: ' + (_ultimo_erro_imagem[0] or 'erro desconhecido')[:160] + ')'
+    return criar_post_engajamento('aviso', texto, dados, titulo)
+
+
+# Pacotes de opções que fazem sentido juntas (rodízio): cada pacote fica N dias e depois troca
+PACOTES_ENQUETE = [
+    ('Qual dessas vocês querem ver mais amanhã? 👗', ['👗 Moda', '➕ Plus Size', '👙 Moda íntima', '👟 Calçados', '👜 Bolsas e acessórios', '🏋️ Fitness']),
+    ('Pra casa, o que vocês mais estão precisando? 🏠', ['🏠 Casa e decoração', '🍳 Cozinha e utensílios', '🔌 Eletrodomésticos', '🛋️ Móveis', '🎄 Natal']),
+    ('Qual desses achadinhos vocês querem que eu procure? 💖', ['💇 Beleza e cabelo', '🎁 Presentes', '🧸 Infantil', '🐶 Pet', '🎧 Eletrônicos']),
+    ('Pras festas de fim de ano, o que vocês querem ver? 🎄', ['🎄 Natal', '🎆 Réveillon', '🎁 Presentes', '➕ Plus Size', '✝️ Evangélica', '☀️ Verão e praia']),
+]
+
+
+def enquete_de_hoje():
+    """(pergunta, opções) da enquete de hoje: rodízio de pacotes ou as opções fixas escolhidas."""
+    e = eng_cfg()
+    if e.get('enquete_modo', 'rodizio') != 'rodizio':
+        return e['enquete_pergunta'], [o for o in e['enquete_opcoes'] if o.strip()][:12]
+    troca = max(1, int(e.get('enquete_troca_dias', 2)))
+    pac = [p for p in PACOTES_ENQUETE if not (p[1][0] == '🎄 Natal' and p[1][1] == '🎆 Réveillon' and agora().month not in (11, 12))]
+    pergunta, opcoes = pac[(agora().toordinal() // troca) % len(pac)]
+    return pergunta, opcoes
 
 
 def rodar_enquete():
     e = eng_cfg()
-    opcoes = [o for o in e['enquete_opcoes'] if o.strip()][:12]
+    pergunta, opcoes = enquete_de_hoje()
+    e = dict(e, enquete_pergunta=pergunta)
     if len(opcoes) < 2:
         raise RuntimeError('a enquete precisa de pelo menos 2 opções')
     return criar_post_engajamento('aviso', '', {'enquete': {'pergunta': e['enquete_pergunta'], 'opcoes': opcoes}},
@@ -2278,6 +2333,7 @@ def agenda_engajamento():
             e = eng_cfg()
             hoje, hm = agora().date().isoformat(), agora().strftime('%H:%M')
             for ativo, hora, nome, func in ((e['msg_ativo'], e['msg_hora'], 'msg', rodar_mensagem_do_dia),
+                                            (e['noite_ativo'], e['noite_hora'], 'noite', lambda: rodar_mensagem_do_dia('noite')),
                                             (e['enquete_ativo'], e['enquete_hora'], 'enq', rodar_enquete)):
                 marca = f'eng_{nome}_{hoje}'
                 if ativo and hm >= hora and not get_cfg(marca):
@@ -2392,7 +2448,9 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/engajamento':
                 with db() as c:
                     pedidos = [dict(r) for r in c.execute('SELECT texto, resultado, quando FROM pedidos_inbox ORDER BY id DESC LIMIT 30')]
-                return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos,
+                pq, po = enquete_de_hoje()
+                return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
+                                           pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
@@ -2592,10 +2650,14 @@ class H(BaseHTTPRequestHandler):
                                                  'preco': br(n.get('priceMin'))} for n in minerar()]})
         if p == '/api/engajamento':
             e = eng_cfg()
-            for k in ('msg_ativo', 'msg_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo'):
+            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo'):
                 if k in b:
                     e[k] = bool(b[k])
-            for k in ('msg_hora', 'enquete_hora'):
+            if b.get('enquete_modo') in ('rodizio', 'fixa'):
+                e['enquete_modo'] = b['enquete_modo']
+            if str(b.get('enquete_troca_dias', '')).isdigit():
+                e['enquete_troca_dias'] = max(1, min(14, int(b['enquete_troca_dias'])))
+            for k in ('msg_hora', 'noite_hora', 'enquete_hora'):
                 if re.fullmatch(r'\d{2}:\d{2}', str(b.get(k, ''))):
                     e[k] = b[k]
             if b.get('enquete_pergunta'):
@@ -2609,7 +2671,8 @@ class H(BaseHTTPRequestHandler):
             set_cfg('engajamento', json.dumps(e, ensure_ascii=False))
             return self.send_json({'ok': True})
         if p == '/api/engajamento/agora':
-            fid = rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_enquete()
+            fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
+                   else rodar_enquete())
             return self.send_json({'id': fid})
         if p == '/api/pausar':
             set_cfg('pausado', '1' if b.get('pausado') else '0')
