@@ -2676,6 +2676,8 @@ def agenda_engajamento():
 def status_cfg():
     d = {'ativo': False, 'max_dia': 5, 'ofertas': True, 'engajamento': True}
     d.update(get_json('status', {}))
+    if 'chips' not in d:                         # padrão: todos menos o chip1 (WhatsApp pessoal da Juliane)
+        d['chips'] = [i for i in instancias() if i != 'chip1'] or instancias()
     return d
 
 
@@ -2694,7 +2696,7 @@ def postar_status(item):
     texto = item.get('texto') or ''
     hoje = agora().date().isoformat()
     for inst in instancias():
-        if estado_chip(inst) != 'open':
+        if inst not in cfg.get('chips', []) or estado_chip(inst) != 'open':
             continue
         chave = f'status_{inst}_{hoje}'
         feitos = int(get_cfg(chave, '0') or 0)
@@ -2918,7 +2920,7 @@ class H(BaseHTTPRequestHandler):
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
                                        'ctas': get_json('ctas', CTAS_PADRAO), 'cta_modo': get_cfg('cta_modo', 'frases'),
-                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'modo_link': modo_link(),
+                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'chips_todos': instancias(), 'modo_link': modo_link(),
                                        'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': focos_nomes(),
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
@@ -3161,6 +3163,8 @@ class H(BaseHTTPRequestHandler):
                     cfg[k] = bool(b[k])
             if str(b.get('max_dia', '')).isdigit():
                 cfg['max_dia'] = max(1, min(30, int(b['max_dia'])))
+            if isinstance(b.get('chips'), list):
+                cfg['chips'] = [x for x in b['chips'] if x in instancias()]
             set_cfg('status', json.dumps(cfg))
             return self.send_json({'ok': True})
         if p == '/api/vendas/atualizar':
