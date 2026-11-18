@@ -173,6 +173,10 @@ CREATE TABLE IF NOT EXISTS pedidos_inbox (       -- o que as pessoas pedem no pr
     id INTEGER PRIMARY KEY AUTOINCREMENT, numero TEXT, texto TEXT, resultado TEXT, quando TEXT
 );
 CREATE TABLE IF NOT EXISTS monitor_vistos (chave TEXT PRIMARY KEY, quando TEXT);
+CREATE TABLE IF NOT EXISTS vendas (             -- vendas da Shopee ligadas ao post/grupo pelos Sub IDs (postzap-origem-data-gN)
+    chave TEXT PRIMARY KEY, fila_id INTEGER, jid TEXT, item TEXT, produto TEXT, valor REAL, comissao REAL, status TEXT,
+    quando TEXT, sub TEXT
+);
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
 );
@@ -1190,7 +1194,10 @@ def historico(periodo='7', mes=''):
             posts.append({'id': r['id'], 'produto': r['produto'], 'quando': r['primeiro'], 'grupos': r['grupos'],
                           'nicho': '📢 Aviso' if r['origem'] == 'aviso' else nicho_do_item(item),
                           'focos': [] if r['origem'] == 'aviso' else focos_do_item(item),
-                          'cliques': c.execute('SELECT COUNT(*) FROM cliques WHERE codigo=?', (cod,)).fetchone()[0] if cod else None})
+                          'cliques': c.execute('SELECT COUNT(*) FROM cliques WHERE codigo=?', (cod,)).fetchone()[0] if cod else None,
+                          **dict(zip(('vendas', 'comissao'), c.execute(
+                              "SELECT COUNT(*), COALESCE(SUM(comissao),0) FROM vendas WHERE fila_id=? AND status NOT IN ('CANCELLED','UNPAID')",
+                              (r['id'],)).fetchone()))})
         # por grupo, no mês escolhido
         mes = mes if re.fullmatch(r'\d{4}-\d{2}', mes or '') else hoje.strftime('%Y-%m')
         cont = {}
@@ -1198,15 +1205,20 @@ def historico(periodo='7', mes=''):
                                      "AND substr(quando,1,7)=? GROUP BY jid, d", (mes,)):
             cont.setdefault(jid, {})[dia] = n
         nomes = {r[0]: r[1] for r in c.execute('SELECT jid, nome FROM grupos')}
+        vend = {r[0]: (r[1], r[2]) for r in c.execute(
+            "SELECT jid, COUNT(*), COALESCE(SUM(comissao),0) FROM vendas WHERE substr(quando,1,7)=? AND jid IS NOT NULL "
+            "AND status NOT IN ('CANCELLED','UNPAID') GROUP BY jid", (mes,))}
         meses = [r[0] for r in c.execute("SELECT DISTINCT substr(quando,1,7) FROM envios WHERE ok=1 ORDER BY 1")]
     a, m = map(int, mes.split('-'))
     prox = date(a + (m == 12), m % 12 + 1, 1)
     dias = [(date(a, m, 1) + timedelta(days=i)) for i in range((prox - date(a, m, 1)).days)]
     r = ritmo()
-    grupos = sorted([{'jid': j, 'nome': nomes.get(j, j), 'dias': d, 'total': sum(d.values())} for j, d in cont.items()],
+    grupos = sorted([{'jid': j, 'nome': nomes.get(j, j), 'dias': d, 'total': sum(d.values()),
+                      'vendas': vend.get(j, (0, 0))[0], 'comissao': round(vend.get(j, (0, 0))[1], 2)} for j, d in cont.items()],
                     key=lambda g: -g['total'])
     return {'posts': posts, 'inicio': ini.isoformat(), 'mes': mes, 'meses': sorted(set(meses + [hoje.strftime('%Y-%m')])),
-            'dias': [d.isoformat() for d in dias], 'limites': {d.isoformat(): limite_em(d, r) for d in dias}, 'grupos': grupos}
+            'dias': [d.isoformat() for d in dias], 'limites': {d.isoformat(): limite_em(d, r) for d in dias}, 'grupos': grupos,
+            'vendas_atualizado': get_cfg('vendas_atualizado')}
 
 
 def no_horario(r, quando=None):
@@ -2421,6 +2433,58 @@ def agenda_engajamento():
         time.sleep(60)
 
 
+# ---------------------------------------------------------------- vendas por post e grupo (relatório da Shopee)
+
+def coletar_vendas(dias=10):
+    """Lê o relatório de conversões da Shopee e liga cada venda ao post e ao grupo pelos Sub IDs do PostZap."""
+    agora_ts = int(time.time())
+    inicio = agora_ts - dias * 86400
+    scroll, total = None, 0
+    with db() as c:
+        gid_jid = {str(r[0]): r[1] for r in c.execute('SELECT rowid, jid FROM grupos')}
+    for _ in range(40):
+        arg = f', scrollId: "{scroll}"' if scroll else ''
+        d = shopee_gql('{conversionReport(purchaseTimeStart: %d, purchaseTimeEnd: %d, limit: 100%s){nodes{purchaseTime '
+                       'conversionId utmContent orders{orderId orderStatus items{itemId shopId itemName actualAmount itemCommission}}}'
+                       'pageInfo{hasNextPage scrollId}}}' % (inicio, agora_ts, arg))['conversionReport']
+        for n in d.get('nodes') or []:
+            partes = [p for p in (n.get('utmContent') or '').split('-') if p]
+            if not partes or partes[0] != CFG['sub_id']:
+                continue                         # venda que não veio do PostZap
+            g = next((p[1:] for p in partes[1:] if re.fullmatch(r'g\d+', p)), None)
+            jid = gid_jid.get(g) if g else None
+            quando = datetime.fromtimestamp(int(n.get('purchaseTime') or 0), BRT).isoformat()
+            for o in n.get('orders') or []:
+                for it in o.get('items') or []:
+                    chave_item = f"{it.get('shopId')}:{it.get('itemId')}"
+                    with db() as c:              # o post desse produto que foi para esse grupo (o mais recente antes da compra)
+                        q = ('SELECT f.id FROM fila f JOIN envios e ON e.fila_id=f.id AND e.ok=1 WHERE f.chave=? '
+                             + ('AND e.jid=? ' if jid else '') + 'AND e.quando<=? ORDER BY e.quando DESC LIMIT 1')
+                        r = c.execute(q, (chave_item, jid, quando) if jid else (chave_item, quando)).fetchone()
+                    with _lock, db() as c:
+                        c.execute('INSERT OR REPLACE INTO vendas VALUES (?,?,?,?,?,?,?,?,?,?)',
+                                  (f"{o.get('orderId')}:{chave_item}", r[0] if r else None, jid, chave_item, it.get('itemName', '')[:150],
+                                   num(it.get('actualAmount')), num(it.get('itemCommission')), o.get('orderStatus', ''), quando,
+                                   '-'.join(partes)))
+                    total += 1
+        pi = d.get('pageInfo') or {}
+        if not pi.get('hasNextPage') or not pi.get('scrollId'):
+            break
+        scroll = pi['scrollId']
+        time.sleep(3)
+    set_cfg('vendas_atualizado', agora().isoformat())
+    return total
+
+
+def agenda_vendas():
+    while True:
+        try:
+            coletar_vendas()
+        except Exception as e:
+            log.warning(f'Vendas da Shopee: {e}')
+        time.sleep(2 * 3600)                     # a cada 2 horas
+
+
 # ---------------------------------------------------------------- login simples
 
 def token():
@@ -2750,6 +2814,8 @@ class H(BaseHTTPRequestHandler):
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
                    else rodar_enquete())
             return self.send_json({'id': fid})
+        if p == '/api/vendas/atualizar':
+            return self.send_json({'lidas': coletar_vendas()})
         if p == '/api/pausar':
             set_cfg('pausado', '1' if b.get('pausado') else '0')
             return self.send_json({'ok': True})
@@ -2835,6 +2901,7 @@ def main():
     threading.Thread(target=monitor_chips, daemon=True).start()
     threading.Thread(target=agenda_divulgador, daemon=True).start()
     threading.Thread(target=agenda_engajamento, daemon=True).start()
+    threading.Thread(target=agenda_vendas, daemon=True).start()
     if not CFG['autorizados']:
         log.warning('NUMEROS_AUTORIZADOS vazio: a conversa de links pelo WhatsApp fica desligada')
     srv = ThreadingHTTPServer(('127.0.0.1', CFG['porta']), H)
