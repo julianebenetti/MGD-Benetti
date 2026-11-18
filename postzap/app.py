@@ -1572,7 +1572,8 @@ def receber_webhook(payload):
     if jid.endswith('@g.us') and jid in grupos_monitorados() and texto0:     # grupo de ofertas monitorado
         if key.get('id') and _marcar_visto(key['id']):
             return
-        threading.Thread(target=processar_achado, args=(texto0, f'grupo {nome_grupo(jid)}'), daemon=True).start()
+        midia0 = {'key': key, 'inst': inst} if msg0.get('imageMessage') else None
+        threading.Thread(target=processar_achado, args=(texto0, f'grupo {nome_grupo(jid)}', midia0), daemon=True).start()
         return
     if jid.endswith('@g.us'):                    # grupo: só o "FILA POST ZAP" vira lugar de comandos
         if jid not in grupos_fila():
@@ -2595,25 +2596,62 @@ def stat_monitor(fonte, **inc):
         set_cfg('monitor_stat', json.dumps(st, ensure_ascii=False))
 
 
-def processar_achado(texto, fonte):
+def cupom_do_texto(texto):
+    m = re.search(r'(?i)(?:cupom|c[oó]digo)\s*[:\-]?\s*\*?([A-Z0-9]{4,20})\b', texto)
+    return m.group(1).upper() if m else ''
+
+
+def produto_pelo_nome(texto):
+    """Achado sem link: tenta achar o produto na Shopee pelo nome escrito na mensagem → 'loja:item' ou ''."""
+    linhas = [re.sub(r'[*_~]', '', l).strip() for l in texto.splitlines()]
+    candidatas = [l for l in linhas if len(l) >= 12 and not re.search(r'(?i)cupom|c[oó]digo|r\$|compre|link|http|corre+', l)]
+    if not candidatas:
+        return ''
+    nome = max(candidatas, key=len)[:80]
+    try:
+        nodes = shopee_gql(f'{{productOfferV2(keyword:{json.dumps(nome, ensure_ascii=False)},limit:10,sortType:2)'
+                           '{nodes{itemId shopId productName}}}')['productOfferV2']['nodes']
+    except Exception:
+        return ''
+    alvo = set(normalizar(nome).split())
+    for x in nodes:                              # só aceita se o nome bater bem (pelo menos 60% das palavras)
+        pal = set(normalizar(x.get('productName') or '').split())
+        if alvo and len(alvo & pal) / len(alvo) >= 0.6 and not bloqueado(x.get('productName')):
+            return f"{x['shopId']}:{x['itemId']}"
+    return ''
+
+
+def processar_achado(texto, fonte, midia=None):
     """Oferta/cupom achado num grupo ou canal monitorado → post para você aprovar no FILA POST ZAP (com o SEU link)."""
     stat_monitor(fonte, msgs=1)
     jid_fila, inst_fila = destino_fila()
     if not jid_fila:
         return
     links = [u.rstrip('.,)') for u in re.findall(r'https?://\S+', texto)]
-    shopee = [u for u in links if 'shopee' in u or 'shp.ee' in u]
-    for url in shopee[:3]:
+    achados = []                                 # qualquer link (encurtadores, sites de divulgação) que termine na Shopee
+    for url in links[:4]:
         try:
             ids = ids_do_link_shopee(url)
-            if not ids:
-                continue
+        except Exception:
+            ids = ''
+        if ids:
+            achados.append(ids)
+    pelo_nome = False
+    if not achados and CUPOM_RE.search(texto):
+        ids = produto_pelo_nome(texto)
+        if ids:
+            achados, pelo_nome = [ids], True
+    shopee = achados
+    for ids in achados[:3]:
+        try:
             with _lock, db() as c:
                 if c.execute('SELECT 1 FROM monitor_vistos WHERE chave=?', (ids,)).fetchone():
                     continue
                 c.execute('INSERT INTO monitor_vistos VALUES (?,?)', (ids, agora().isoformat()))
             p = montar_post_do_link(f'https://shopee.com.br/product/{ids.replace(":", "/")}')
             p['origem'] = 'monitor'
+            if cupom_do_texto(texto) and not p.get('cupom'):
+                p['cupom'] = cupom_do_texto(texto)
             grupos = grupos_ativos()
             with _lock, db() as c:
                 cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, link, texto, grupos, criado_em, dados, pedido_por, '
@@ -2623,13 +2661,25 @@ def processar_achado(texto, fonte):
                 fid = cur.lastrowid
             mostrar_previa(inst_fila, jid_fila, fid)
             stat_monitor(fonte, achados=1)
-            responder(inst_fila, jid_fila, f"🔭 *Achado #{fid}* em {fonte} · já com o SEU link de afiliado\n\n{MENU_CURTO}", fid=fid)
+            extra = ' (achei o produto pelo nome: confira se é o mesmo)' if pelo_nome else ''
+            responder(inst_fila, jid_fila, f"🔭 *Achado #{fid}* em {fonte} · já com o SEU link de afiliado{extra}\n\n{MENU_CURTO}", fid=fid)
         except ValueError:
             continue
         except Exception as e:
             log.warning(f'Monitor: {e}')
     if not shopee and CUPOM_RE.search(texto):     # cupom/bug sem link da Shopee: vira aviso para revisar (sem links de outros)
         limpo = re.sub(r'https?://\S+', '', texto).strip()
+        dados_c = {}
+        if midia:                                # mantém a foto da mensagem original pra você conseguir avaliar
+            try:
+                r = evo('POST', f"/chat/getBase64FromMediaMessage/{midia['inst']}", {'message': {'key': midia['key']}, 'convertToMp4': False}, timeout=120)
+                if r.get('base64'):
+                    MIDIA_DIR.mkdir(exist_ok=True)
+                    arq = MIDIA_DIR / f"cupom_{int(time.time() * 1000)}.b64"
+                    arq.write_text(r['base64'])
+                    dados_c = {'midia': str(arq), 'midia_tipo': 'image', 'mimetype': r.get('mimetype') or 'image/jpeg'}
+            except Exception as e:
+                log.warning(f'Monitor: foto do cupom: {e}')
         chave = 'cupom:' + hashlib.sha1(limpo.lower().encode()).hexdigest()[:16]
         with _lock, db() as c:
             if c.execute('SELECT 1 FROM monitor_vistos WHERE chave=?', (chave,)).fetchone():
@@ -2637,7 +2687,7 @@ def processar_achado(texto, fonte):
             c.execute('INSERT INTO monitor_vistos VALUES (?,?)', (chave, agora().isoformat()))
             cur = c.execute('INSERT INTO fila (origem, chave, produto, texto, grupos, criado_em, dados, pedido_por, pedido_inst) '
                             'VALUES (?,?,?,?,?,?,?,?,?)', ('aviso', chave, '🎟️ Cupom achado', limpo[:1500], json.dumps(grupos_ativos()),
-                                                           agora().isoformat(), '{}', jid_fila, inst_fila))
+                                                           agora().isoformat(), json.dumps(dados_c), jid_fila, inst_fila))
             fid = cur.lastrowid
         stat_monitor(fonte, cupons=1)
         responder(inst_fila, jid_fila, f"🎟️ *Cupom achado #{fid}* em {fonte} (revise antes: cupom exclusivo de outro afiliado não funciona "
