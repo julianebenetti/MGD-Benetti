@@ -28,6 +28,10 @@ Qualquer grupo com **FILA POST ZAP** no nome (com pelo menos um chip dentro) fun
 mande o link ali e responda `1`, `1 vip`, `2`… Só números de `NUMEROS_AUTORIZADOS` são atendidos, só um chip responde
 (mesmo com os 3 no grupo) e esse grupo nunca recebe postagens.
 
+**Vários links de uma vez:** mande quantos quiser (numa mensagem ou em várias). Cada um vira um post numerado
+(📌 *Post #12 pronto*). Responda **em cima** da prévia daquele post (deslizar → responder) com `1`, `1 vip`, `3 149,90`,
+`7 relâmpago`, `0`… — ou escreva `#12 1`. `pendentes` lista os que esperam resposta.
+
 ## Fase 1 (listas, cupons, estilos)
 - 📋 **Listas de grupos** (👥 Grupos): "VIP", "Achados"… um clique na postagem ou `1 vip` no WhatsApp.
 - 👑 **Só grupos onde algum chip é admin** (filtro ligado por padrão); o envio prefere o chip admin do grupo.

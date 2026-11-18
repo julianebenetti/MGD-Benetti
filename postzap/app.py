@@ -157,6 +157,9 @@ CREATE TABLE IF NOT EXISTS chip_eventos (    -- conexões/quedas de cada chip (p
 CREATE TABLE IF NOT EXISTS cliques (          -- cada clique de pessoa (robôs de prévia não contam), por grupo
     id INTEGER PRIMARY KEY AUTOINCREMENT, codigo TEXT, grupo INTEGER, quando TEXT
 );
+CREATE TABLE IF NOT EXISTS previas (          -- mensagem de prévia → post (para responder em cima de cada uma)
+    msg_id TEXT PRIMARY KEY, fila_id INTEGER, quando TEXT
+);
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
 );
@@ -817,7 +820,7 @@ def chip_e_admin(participantes, dono):
 
 
 def enviar_texto(inst, jid, texto, previa=True):
-    evo('POST', f"/message/sendText/{inst}", {'number': jid, 'text': texto, 'linkPreview': previa}, timeout=60)
+    return evo('POST', f"/message/sendText/{inst}", {'number': jid, 'text': texto, 'linkPreview': previa}, timeout=60)
 
 
 MIDIA_DIR = BASE / 'midia'
@@ -827,27 +830,35 @@ def enviar_item(inst, jid, item):
     dados = json.loads(item.get('dados') or '{}')
     midia = dados.get('midia')
     if midia and Path(midia).exists():
-        evo('POST', f"/message/sendMedia/{inst}", {
+        return evo('POST', f"/message/sendMedia/{inst}", {
             'number': jid, 'mediatype': dados.get('midia_tipo', 'image'), 'mimetype': dados.get('mimetype', 'image/jpeg'),
             'caption': item['texto'] or '', 'media': Path(midia).read_text(), 'fileName': Path(midia).stem}, timeout=180)
     elif dados.get('imagem') and modo_link() != 'previa' and item.get('origem') != 'aviso':
         # Link direto: o WhatsApp não consegue montar a miniatura da Shopee → vai a foto do produto com o texto
         # na legenda (o link continua direto na loja). Se a foto falhar, vai só o texto.
         try:
-            evo('POST', f"/message/sendMedia/{inst}", {
+            return evo('POST', f"/message/sendMedia/{inst}", {
                 'number': jid, 'mediatype': 'image', 'mimetype': 'image/jpeg', 'caption': item['texto'] or '',
                 'media': dados['imagem'], 'fileName': 'oferta.jpg'}, timeout=120)
         except RuntimeError as e:
             log.warning(f'Foto do produto não foi ({e}); mandando só o texto')
-            enviar_texto(inst, jid, item['texto'])
+            return enviar_texto(inst, jid, item['texto'])
     else:
-        enviar_texto(inst, jid, item['texto'])
+        return enviar_texto(inst, jid, item['texto'])
+
+
+def ligar_previa(res, fid):
+    """Guarda: esta mensagem enviada é do post #fid (responder em cima dela vale para ele)."""
+    mid = (res or {}).get('key', {}).get('id') if isinstance(res, dict) else None
+    if mid and fid:
+        with _lock, db() as c:
+            c.execute('INSERT OR REPLACE INTO previas VALUES (?,?,?)', (mid, fid, agora().isoformat()))
 
 
 def mostrar_previa(inst, numero, fid):
     """Mostra para você exatamente como vai sair no grupo (com foto, se for o caso)."""
     try:
-        enviar_item(inst, numero, item_fila(fid))
+        ligar_previa(enviar_item(inst, numero, item_fila(fid)), fid)
     except Exception as e:
         log.warning(f'Prévia para {numero} falhou: {e}')
 
@@ -1047,9 +1058,11 @@ def autorizado(numeros):
     return False
 
 
-def responder(inst, para, texto, previa=False):
+def responder(inst, para, texto, previa=False, fid=None):
     try:
-        enviar_texto(inst, para, texto, previa)
+        res = enviar_texto(inst, para, texto, previa)
+        ligar_previa(res, fid)
+        return res
     except Exception as e:
         log.warning(f'Resposta para {para} falhou: {e}')
 
@@ -1122,17 +1135,25 @@ def receber_webhook(payload):
              or (msg.get('imageMessage') or {}).get('caption') or (msg.get('videoMessage') or {}).get('caption') or '').strip()
     if texto:
         info = {'tipo': midia, 'key': key, 'mimetype': (msg.get(f'{midia}Message') or {}).get('mimetype')} if midia else None
-        threading.Thread(target=tratar_mensagem, args=(inst, jid, texto, info), daemon=True).start()
+        ctx = ((msg.get('extendedTextMessage') or {}).get('contextInfo') or (msg.get('imageMessage') or {}).get('contextInfo')
+               or data.get('contextInfo') or {})
+        citado = ctx.get('stanzaId') or ''         # respondeu em cima de qual mensagem
+        threading.Thread(target=tratar_mensagem, args=(inst, jid, texto, info, citado), daemon=True).start()
 
 
-def tratar_mensagem(inst, numero, texto, midia=None):
-    try:
-        if re.match(r'/todos\b', texto, re.I):
-            return novo_aviso(inst, numero, re.sub(r'^/todos\s*', '', texto, flags=re.I), midia)
-        _tratar(inst, numero, texto)
-    except Exception as e:
-        log.exception('Conversa')
-        responder(inst, numero, f'⚠️ Deu erro: {str(e)[:150]}')
+_filas_conversa = {}
+
+
+def tratar_mensagem(inst, numero, texto, midia=None, citado=''):
+    lk = _filas_conversa.setdefault(numero, threading.Lock())   # um de cada vez por conversa (vários links seguidos)
+    with lk:
+        try:
+            if re.match(r'/todos\b', texto, re.I):
+                return novo_aviso(inst, numero, re.sub(r'^/todos\s*', '', texto, flags=re.I), midia)
+            _tratar(inst, numero, texto, citado)
+        except Exception as e:
+            log.exception('Conversa')
+            responder(inst, numero, f'⚠️ Deu erro: {str(e)[:150]}')
 
 
 def novo_aviso(inst, numero, texto, midia=None):
@@ -1158,134 +1179,181 @@ def novo_aviso(inst, numero, texto, midia=None):
         fid = cur.lastrowid
     conversa_set(numero, fid)
     tipo = {'image': ' + 📷 foto', 'video': ' + 🎬 vídeo'}.get(dados.get('midia_tipo'), '')
-    responder(inst, numero, f"📢 *Aviso pronto*{tipo}\n\n{texto}\n\n👆 Vai para {len(grupos)} grupo(s).\n\n{MENU_AVISO}")
+    responder(inst, numero, f"📢 *Aviso #{fid} pronto*{tipo}\n\n{texto}\n\n👆 Vai para {len(grupos)} grupo(s).\n\n{MENU_AVISO}", fid=fid)
 
 
-def _tratar(inst, numero, texto):
+def montar_post_do_link(url):
+    """Link (Shopee ou outra loja) → dados do produto prontos (foto, preço, seu link de afiliado, chamada)."""
+    ids = None
+    if 'shopee' in url or 'shp.ee' in url:
+        ids = ids_do_link_shopee(url)
+        if not ids:
+            raise ValueError('Não consegui descobrir qual é o produto desse link da Shopee. '
+                             'Tente o link copiado de dentro do produto (Compartilhar → Copiar link).')
+    if ids:
+        p = {'origem': 'whatsapp', 'chave': ids, 'link': url if 's.shopee' in url else '', 'produto': ''}
+        nodes = []
+        try:
+            a, b = ids.split(':')
+            nodes = shopee_gql(f'{{productOfferV2(shopId:{a},itemId:{b},limit:1){{nodes{{productName}}}}}}')['productOfferV2']['nodes']
+        except Exception:
+            pass
+        p['produto'] = nodes[0]['productName'] if nodes else ''
+        if not nodes:
+            p['avisos'] = ['A Shopee não devolveu os dados desse produto agora. Responda *2* (chamada) e *4* (preço).']
+    else:
+        p = ler_link(url)
+        p['origem'] = 'whatsapp'
+    p = preparar(p)
+    if bloqueado(p.get('produto')):
+        raise ValueError('🚫 Produto de suplementação: não posto esse tipo de produto.')
+    if not p.get('produto'):
+        p['produto'] = 'Oferta'
+        p['avisos'] = [a for a in p['avisos'] if 'nome do produto' not in a] + [
+            'Não consegui ler o nome do produto: responda *2* para escrever a chamada.']
+    if not p.get('chamada'):
+        p['chamada'] = gerar_chamada(p['produto'], p.get('loja', ''))
+    p['produto'] = p['produto'][:120]
+    return p
+
+
+MENU_CURTO = ("↩️ *Responda em cima desta mensagem* (ou da foto) com: *1* postar · *1 vip* · *2* chamada · *3* De · "
+              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *0* descartar")
+
+
+def item_alvo(numero, texto, citado, conv):
+    """Qual post o comando quer mexer: o da mensagem respondida (citado) → '#12 …' → o último montado."""
+    if citado:
+        with db() as c:
+            r = c.execute('SELECT fila_id FROM previas WHERE msg_id=?', (citado,)).fetchone()
+        if r:
+            return item_fila(r[0]), texto
+    m = re.match(r'#(\d{1,6})\s+(.+)$', texto.strip())
+    if m:                                         # "#12 1" = comando 1 no post #12 (sem # é sempre comando)
+        it = item_fila(int(m.group(1)))
+        if it and it.get('pedido_por') == numero:
+            return it, m.group(2)
+    return (item_fila(conv['fila_id']) if conv['fila_id'] else None), texto
+
+
+def pendentes(numero):
+    with db() as c:
+        return [dict(r) for r in c.execute("SELECT id, produto FROM fila WHERE pedido_por=? AND status IN ('rascunho','erro') "
+                                           "ORDER BY id", (numero,))]
+
+
+def _tratar(inst, numero, texto, citado=''):
     conv = conversa_get(numero)
-    link = re.search(r'https?://\S+', texto)
-    if link:                                         # link novo = nova postagem
-        responder(inst, numero, '⏳ Montando a postagem…')
-        url = link.group(0).rstrip('.,)')
-        ids = None
-        e_shopee = 'shopee' in url or 'shp.ee' in url
-        if e_shopee:
-            ids = ids_do_link_shopee(url)
-            if not ids:
-                return responder(inst, numero, '⚠️ Não consegui descobrir qual é o produto desse link da Shopee. '
-                                               'Tente mandar o link copiado de dentro do produto (Compartilhar → Copiar link).')
-        if ids:
-            p = {'origem': 'whatsapp', 'chave': ids, 'link': url if 's.shopee' in url else '', 'produto': ''}
-            nodes = []
-            try:
-                a, b = ids.split(':')
-                nodes = shopee_gql(f'{{productOfferV2(shopId:{a},itemId:{b},limit:1){{nodes{{productName}}}}}}')['productOfferV2']['nodes']
-            except Exception:
-                pass
-            p['produto'] = nodes[0]['productName'] if nodes else ''
-            if not nodes:
-                p['avisos'] = ['A Shopee não devolveu os dados desse produto agora (pode ter saído do ar ou a chave '
-                               'de afiliado não foi encontrada). Mande *2* para escrever a chamada e *4* para o preço.']
-            p = preparar(p)
+    links = [u.rstrip('.,)') for u in re.findall(r'https?://\S+', texto)]
+    if links:                                         # 1 ou vários links = 1 post para cada, montados em sequência
+        if len(links) > 1:
+            responder(inst, numero, f'⏳ Recebi {len(links)} links. Vou montar um por um — cada post chega com o número dele.')
         else:
-            p = ler_link(url)
-            p['origem'] = 'whatsapp'
-            p = preparar(p)
-        if bloqueado(p.get('produto')):
-            return responder(inst, numero, '🚫 Produto de suplementação: não posto esse tipo de produto.')
-        if not p.get('produto'):
-            p['produto'] = 'Oferta'
-            p['avisos'] = [a for a in p['avisos'] if 'nome do produto' not in a] + [
-                'Não consegui ler o nome do produto: mande *2* para escrever a chamada (o nome dá para editar no app).']
-        if not p.get('chamada'):
-            p['chamada'] = gerar_chamada(p['produto'], p.get('loja', ''))
-        p['produto'] = p['produto'][:120]
-        grupos = grupos_ativos()
-        with _lock, db() as c:
-            cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, criado_em, '
-                            'dados, pedido_por, pedido_inst) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-                            ('whatsapp', p.get('chave'), p['produto'], p.get('preco'), p.get('comissao', ''), p['link'],
-                             montar_texto(p), json.dumps(grupos), agora().isoformat(), json.dumps(p), numero, inst))
-            fid = cur.lastrowid
-        conversa_set(numero, fid)
-        mostrar_previa(inst, numero, fid)
-        extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
-        sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: mande *4* para colocar.'
-        responder(inst, numero, f"👆 Prévia · vai para {len(grupos)} grupo(s){extra}{sem_preco}\n\n{menu()}")
+            responder(inst, numero, '⏳ Montando a postagem…')
+        for url in links:
+            try:
+                p = montar_post_do_link(url)
+            except ValueError as e:
+                responder(inst, numero, f'⚠️ {url[:60]}\n{e}')
+                continue
+            grupos = grupos_ativos()
+            with _lock, db() as c:
+                cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, criado_em, '
+                                'dados, pedido_por, pedido_inst) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                                ('whatsapp', p.get('chave'), p['produto'], p.get('preco'), p.get('comissao', ''), p['link'],
+                                 montar_texto(p), json.dumps(grupos), agora().isoformat(), json.dumps(p), numero, inst))
+                fid = cur.lastrowid
+            conversa_set(numero, fid)
+            mostrar_previa(inst, numero, fid)
+            extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
+            sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: responda *4 99,90*.'
+            responder(inst, numero, f"📌 *Post #{fid} pronto* · {p['produto'][:45]} · vai para {len(grupos)} grupo(s)"
+                                    f"{extra}{sem_preco}\n\n{MENU_CURTO}", fid=fid)
+        n = len(pendentes(numero))
+        if len(links) > 1 and n:
+            responder(inst, numero, f'✅ Terminei. {n} post(s) esperando sua resposta. Mande *pendentes* para ver a lista.')
         return
 
-    item = item_fila(conv['fila_id']) if conv['fila_id'] else None
+    t = texto.strip()
+    if t.lower() in ('pendentes', 'fila', 'lista'):
+        ps = pendentes(numero)
+        return responder(inst, numero, ('📋 *Esperando sua resposta:*\n' + '\n'.join(f"#{x['id']} · {x['produto'][:50]}" for x in ps)
+                                        + '\n\nResponda em cima da prévia, ou mande *#número comando* (ex.: *#' + str(ps[0]['id'])
+                                        + ' 1*).') if ps else '📭 Nenhum post esperando resposta.')
+    item, t = item_alvo(numero, t, citado, conv)
     if not item or item['status'] not in ('rascunho', 'erro'):
+        if item and item['status'] in ('aprovado', 'enviando', 'enviado'):
+            return responder(inst, numero, f"ℹ️ O post #{item['id']} já foi aprovado ({item['status']}).")
         return responder(inst, numero, '📲 Me mande o link de um produto (Shopee, Magalu, Mercado Livre, Amazon…) '
-                                       'que eu monto a postagem.')
-    esperando, t = conv['esperando'], texto.strip()
-    if esperando:
-        conversa_set(numero, item['id'])
+                                       '— pode mandar vários de uma vez — que eu monto as postagens.')
+    fid = item['id']
+    esperando = conv['esperando'] if conv['fila_id'] == fid else ''
+    if esperando and not re.match(r'^[0-7](\s|$)', t):
+        conversa_set(numero, fid)
         campo = {'chamada': 'chamada', 'de': 'preco_de', 'por': 'preco'}[esperando]
-        valor = t.upper() if campo == 'chamada' else br(t)
-        regravar(item, **{campo: valor})
-        mostrar_previa(inst, numero, item['id'])
-        return responder(inst, numero, f'👆 Atualizado.\n\n{menu()}')
+        regravar(item, **{campo: t.upper() if campo == 'chamada' else br(t)})
+        mostrar_previa(inst, numero, fid)
+        return responder(inst, numero, f'👆 Post #{fid} atualizado.\n\n{MENU_CURTO}', fid=fid)
     cmd, _, resto = t.partition(' ')
     if item['origem'] == 'aviso' and cmd not in ('1', '5', '0'):
-        return responder(inst, numero, MENU_AVISO)
+        return responder(inst, numero, MENU_AVISO, fid=fid)
     if cmd == '1' and resto.strip():
         lista = achar_lista(resto)
         if not lista:
             nomes = ', '.join(l['nome'] for l in listas()) or 'nenhuma (crie no app, 👥 Grupos)'
-            return responder(inst, numero, f'⚠️ Não achei a lista "{resto}". Listas: {nomes}')
+            return responder(inst, numero, f'⚠️ Não achei a lista "{resto}". Listas: {nomes}', fid=fid)
         with _lock, db() as c:
-            c.execute('UPDATE fila SET grupos=? WHERE id=?', (lista['grupos'], item['id']))
-        item = item_fila(item['id'])
+            c.execute('UPDATE fila SET grupos=? WHERE id=?', (lista['grupos'], fid))
+        item = item_fila(fid)
     if cmd == '1':
-        grupos = json.loads(item['grupos'] or '[]')
+        grupos = [g for g in json.loads(item['grupos'] or '[]') if g not in grupos_fila()]
         if not grupos:
-            return responder(inst, numero, '⚠️ Nenhum grupo marcado. Marque os grupos no app (👥 Grupos).')
+            return responder(inst, numero, '⚠️ Nenhum grupo marcado. Marque os grupos no app (👥 Grupos).', fid=fid)
         with _lock, db() as c:
-            c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=?", (agora().isoformat(), item['id']))
+            c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=?", (agora().isoformat(), fid))
         conversa_set(numero, None)
         quando = item['agendado_para']
-        return responder(inst, numero, f"✅ Aprovado! {'Posto em ' + data_tela(quando, True) if quando else 'Começando a postar'} em "
-                                       f"{len(grupos)} grupo(s), sorteando entre os chips. Aviso quando terminar.")
+        return responder(inst, numero, f"✅ Post #{fid} aprovado! {'Sai em ' + data_tela(quando, True) if quando else 'Entrou na fila de envio'} "
+                                       f"para {len(grupos)} grupo(s). Aviso quando terminar.")
     if cmd in ('2', '3', '4'):
         esp = {'2': 'chamada', '3': 'de', '4': 'por'}[cmd]
-        if resto:
-            conversa_set(numero, item['id'], esp)
+        conversa_set(numero, fid, esp)
+        if resto.strip():
             return _tratar(inst, numero, resto)
-        conversa_set(numero, item['id'], esp)
-        return responder(inst, numero, {'chamada': '✏️ Mande a nova chamada:', 'de': '💸 Mande o preço "De:" (ex.: 149,90):',
-                                        'por': '💰 Mande o preço "Por:" (ex.: 99,90):'}[esp])
+        return responder(inst, numero, {'chamada': f'✏️ Post #{fid}: mande a nova chamada:',
+                                        'de': f'💸 Post #{fid}: mande o preço "De:" (ex.: 149,90):',
+                                        'por': f'💰 Post #{fid}: mande o preço "Por:" (ex.: 99,90):'}[esp], fid=fid)
     if cmd == '5':
         m = re.match(r'(\d{1,2})(?:[:h](\d{2}))?h?$', resto.strip().lower())
         if not m:
-            return responder(inst, numero, '🕒 Mande assim: *5 20h* ou *5 20:30*')
+            return responder(inst, numero, '🕒 Mande assim: *5 20h* ou *5 20:30*', fid=fid)
         quando = agora().replace(hour=int(m.group(1)), minute=int(m.group(2) or 0), second=0, microsecond=0)
         if quando < agora():
             quando += timedelta(days=1)
         with _lock, db() as c:
             c.execute("UPDATE fila SET agendado_para=?, status='aprovado', aprovado_em=? WHERE id=?",
-                      (quando.isoformat(), agora().isoformat(), item['id']))
+                      (quando.isoformat(), agora().isoformat(), fid))
         conversa_set(numero, None)
-        return responder(inst, numero, f"🕒 Agendado para {data_sub(quando)} às {quando:%H:%M}. Aviso quando postar.")
+        return responder(inst, numero, f"🕒 Post #{fid} agendado para {data_sub(quando)} às {quando:%H:%M}. Aviso quando postar.")
     if cmd == '6':
         cod = resto.strip()
         regravar(item, cupom='' if cod in ('', '0') else cod.upper(), cupom_texto='')
-        mostrar_previa(inst, numero, item['id'])
-        return responder(inst, numero, f"👆 {'Cupom removido' if cod in ('', '0') else 'Cupom colocado'}.\n\n{menu()}")
+        mostrar_previa(inst, numero, fid)
+        return responder(inst, numero, f"👆 Post #{fid}: {'cupom removido' if cod in ('', '0') else 'cupom colocado'}.\n\n{MENU_CURTO}", fid=fid)
     if cmd == '7':
         nomes = list(modelos())
         alvo = next((n for n in nomes if n.lower().startswith(resto.strip().lower()) and resto.strip()), None)
         if not alvo:
-            return responder(inst, numero, f"🎨 Estilos: {', '.join(nomes)}. Ex.: *7 {nomes[-1].lower()}*")
+            return responder(inst, numero, f"🎨 Estilos: {', '.join(nomes)}. Ex.: *7 {nomes[-1].lower()}*", fid=fid)
         regravar(item, estilo=alvo)
-        mostrar_previa(inst, numero, item['id'])
-        return responder(inst, numero, f'👆 Estilo "{alvo}".\n\n{menu()}')
+        mostrar_previa(inst, numero, fid)
+        return responder(inst, numero, f'👆 Post #{fid}: estilo "{alvo}".\n\n{MENU_CURTO}', fid=fid)
     if cmd == '0':
         with _lock, db() as c:
-            c.execute("UPDATE fila SET status='descartado' WHERE id=?", (item['id'],))
+            c.execute("UPDATE fila SET status='descartado' WHERE id=?", (fid,))
         conversa_set(numero, None)
-        return responder(inst, numero, '🗑️ Descartado.')
-    responder(inst, numero, MENU_AVISO if item['origem'] == 'aviso' else menu())
+        return responder(inst, numero, f'🗑️ Post #{fid} descartado.')
+    responder(inst, numero, MENU_AVISO if item['origem'] == 'aviso' else f'Post #{fid}:\n{menu()}', fid=fid)
 
 
 # ---------------------------------------------------------------- login simples
