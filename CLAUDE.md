@@ -23,3 +23,14 @@
 - Essa rotina busca em duas frentes todo dia: categorias gerais (evergreen) e, sempre que
   houver data/temporada comemorativa nos próximos ~90 dias, também busca produtos ligados
   a ela (big_sazonal/microsazonal) — assim o "Top 7 priorizados" não fica só com evergreen.
+
+## Padrões gerais
+- **Datas sempre no formato ddMmmaa** com mês abreviado em português: `18Nov26`, `05Out26`
+  (Jan Fev Mar Abr Mai Jun Jul Ago Set Out Nov Dez). Com hora: `18Nov26 20:30`. Vale para telas,
+  mensagens de WhatsApp/Telegram, Sub IDs da Shopee e nomes de arquivos/campanhas — em todos os apps
+  (AfiliDash, PostZap, robô do Shopee Vídeo).
+
+## PostZap (posts.descontoirresistivel.com.br/zap)
+- App separado da AfiliDash (pasta `postzap/`), no mesmo VPS, para postar ofertas nos grupos de WhatsApp
+  com aprovação. Não mexer em tabelas da AfiliDash nem no robô do Shopee Vídeo (só leitura).
+- Links postados sempre convertidos para o link de afiliado da Juliane e rastreáveis (Sub IDs).

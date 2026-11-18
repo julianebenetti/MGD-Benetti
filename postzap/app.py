@@ -464,7 +464,9 @@ def preparar(p):
         if aviso:
             avisos.append(aviso)
     p['link_afiliado'] = link
-    p['link'] = criar_link_curto(link, p.get('produto', ''), p.get('imagem', '')) if link else ''
+    # direto (padrão): o link da mensagem é o próprio link da loja → toque abre o app da Shopee na hora.
+    # previa: passa pela página do PostZap (miniatura garantida + cliques por grupo), redireciona na hora.
+    p['link'] = (link if modo_link() == 'direto' else criar_link_curto(link, p.get('produto', ''), p.get('imagem', ''))) if link else ''
     p['loja'] = 'Shopee' if ids else (p.get('loja') or loja_do_link(link) or 'Outras')
     if 'cupom' not in p:
         p['cupom'], p['cupom_texto'] = cupom_para(p['loja'])
@@ -530,6 +532,21 @@ def ler_link(url):
     return info
 
 
+def modo_link():
+    return get_cfg('modo_link', 'direto')
+
+
+def link_shopee_do_grupo(item, gid):
+    """Link de afiliado só deste grupo: Sub IDs postzap · origem · data · g<grupo> → vendas por grupo no relatório."""
+    ids = ids_da_chave(item.get('chave'))
+    if not ids:
+        return None
+    subs = [CFG['sub_id'], re.sub(r'[^A-Za-z0-9]', '', item.get('origem') or 'app')[:20] or 'app', data_sub(agora()), f'g{gid}']
+    origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
+    return shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
+                      f'subIds:{json.dumps(subs)}}}){{shortLink}}}}')['generateShortLink']['shortLink']
+
+
 def converter_amazon(url):
     """Coloca a SUA tag de associada (AMAZON_TAG no .env) no link da Amazon; amzn.to é aberto antes."""
     if not CFG['amazon_tag']:
@@ -585,6 +602,8 @@ def pagina_link(codigo, grupo=None, agente=''):
                       (codigo, int(grupo) if str(grupo or '').isdigit() else None, agora().isoformat()))
     if not r:
         return None
+    if humano:
+        return ('302', r['destino'])                  # pessoa: vai direto para a loja, sem página no meio
     d, t, img = h.escape(r['destino']), h.escape(CFG['titulo_previa']), h.escape(r['imagem'] or '')
     desc = h.escape(r['titulo'] or '')
     return f"""<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
@@ -840,11 +859,18 @@ def processar_fila():
         inst = sortear_chip(jid, anterior)
         ok, erro = 1, None
         envio = dict(item)
-        if item['link'] and '/l/' in item['link']:      # link com a marca do grupo → cliques por grupo
-            with db() as c:
-                gid = c.execute('SELECT rowid FROM grupos WHERE jid=?', (jid,)).fetchone()
-            if gid:
-                envio['texto'] = (item['texto'] or '').replace(item['link'], f"{item['link']}?g={gid[0]}")
+        with db() as c:
+            gid = c.execute('SELECT rowid FROM grupos WHERE jid=?', (jid,)).fetchone()
+        if gid and item['link'] and item['link'] in (item['texto'] or ''):
+            if '/l/' in item['link']:                   # página do PostZap: marca do grupo → cliques por grupo
+                envio['texto'] = item['texto'].replace(item['link'], f"{item['link']}?g={gid[0]}")
+            elif 'shopee' in item['link']:              # link direto: um link de afiliado por grupo → vendas por grupo
+                try:
+                    novo = link_shopee_do_grupo(item, gid[0])
+                    if novo:
+                        envio['texto'] = item['texto'].replace(item['link'], novo)
+                except Exception as e:
+                    log.warning(f'Link por grupo falhou ({e}); vai o link geral')
         if not inst:
             ok, erro = 0, 'nenhum chip conectado está neste grupo'
         else:
@@ -1244,6 +1270,12 @@ class H(BaseHTTPRequestHandler):
         if p.startswith('/l/'):
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             pg = pagina_link(p[3:], (qs.get('g') or [None])[0], self.headers.get('User-Agent', ''))
+            if isinstance(pg, tuple):
+                self.send_response(302)
+                self.send_header('Location', pg[1])
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+                return
             self.send_response(200 if pg else 404)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
@@ -1288,7 +1320,7 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/config':
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
-                                       'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
+                                       'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
                                        'intervalo': [CFG['intervalo_min'], CFG['intervalo_max']],
                                        'limite_dia': CFG['limite_dia'], 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
@@ -1349,6 +1381,8 @@ class H(BaseHTTPRequestHandler):
                 set_cfg('estilo_loja', json.dumps(b['estilo_loja'], ensure_ascii=False))
             if isinstance(b.get('chamadas'), dict):
                 set_cfg('chamadas', json.dumps(b['chamadas'], ensure_ascii=False))
+            if b.get('modo_link') in ('direto', 'previa'):
+                set_cfg('modo_link', b['modo_link'])
             if b.get('chamada_modo') in ('ia', 'frases', 'misto'):
                 set_cfg('chamada_modo', b['chamada_modo'])
             return self.send_json({'ok': True})
