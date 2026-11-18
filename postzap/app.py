@@ -1357,14 +1357,19 @@ def processar_fila():
 
 # ---------------------------------------------------------------- chamada automática (IA)
 
-def chave_openai():
-    k = os.getenv('OPENAI_API_KEY', '')
+def chave_env(nome):
+    """Chave do .env do PostZap; se não tiver, do .env do robô do Shopee Vídeo."""
+    k = os.getenv(nome, '')
     if not k and Path(CFG['central_env']).exists():
         for line in Path(CFG['central_env']).read_text(encoding='utf-8').splitlines():
             a, _, v = line.partition('=')
-            if a.strip() == 'OPENAI_API_KEY':
+            if a.strip() == nome:
                 k = v.strip().strip('"\'')
     return k
+
+
+def chave_openai():
+    return chave_env('OPENAI_API_KEY')
 
 
 def gerar_chamada(produto, loja=''):
@@ -2009,6 +2014,7 @@ def agenda_divulgador():
 ENG_PADRAO = {
     'msg_ativo': False, 'msg_hora': '09:30', 'msg_imagem': True,
     'noite_ativo': False, 'noite_hora': '21:00', 'noite_imagem': True,
+    'imagem_ordem': 'gemini,openai',        # quem gera as imagens, em ordem (gemini | openai | pollinations)
     'enquete_hora_modo': 'aleatorio',       # aleatorio: um horário sorteado por dia dentro da janela | fixo: enquete_hora
     'enquete_janela': ['19:00', '22:00'],
     'enquete_ativo': False, 'enquete_hora': '19:30',
@@ -2066,51 +2072,140 @@ def chat_ia(prompt, max_len=900):
 _ultimo_erro_imagem = ['']
 
 
-def imagem_ia(prompt):
-    """Imagem quadrada pela IA (OpenAI). Tenta os modelos em ordem (nem toda conta tem todos liberados).
-    Devolve base64 (PNG) ou '' — o motivo da falha fica em _ultimo_erro_imagem."""
+def _erro_http(e):
+    try:
+        d = json.loads(e.read().decode())
+        return (d.get('error', {}) or {}).get('message', '') or str(d)[:140]
+    except Exception:
+        return str(e)
+
+
+def _img_gemini(prompt, erros):
+    """Google Gemini ("Nano Banana") e Imagen. Chave grátis em aistudio.google.com → GEMINI_API_KEY no .env."""
+    key = chave_env('GEMINI_API_KEY') or chave_env('GOOGLE_API_KEY')
+    if not key:
+        erros.append('Gemini: sem chave (GEMINI_API_KEY)')
+        return ''
+    base = 'https://generativelanguage.googleapis.com/v1beta/models/'
+    hdr = {'x-goog-api-key': key, 'Content-Type': 'application/json'}
+    for modelo in dict.fromkeys([os.getenv('GEMINI_IMAGE_MODEL', ''), 'gemini-2.5-flash-image', 'imagen-4.0-generate-001']):
+        if not modelo:
+            continue
+        try:
+            if modelo.startswith('imagen'):
+                corpo = {'instances': [{'prompt': prompt[:3000]}], 'parameters': {'sampleCount': 1, 'aspectRatio': '1:1'}}
+                req = urllib.request.Request(base + modelo + ':predict', data=json.dumps(corpo).encode(), headers=hdr)
+                with urllib.request.urlopen(req, timeout=180) as r:
+                    for pr in json.load(r).get('predictions', []):
+                        if pr.get('bytesBase64Encoded'):
+                            return pr['bytesBase64Encoded']
+            else:
+                corpo = {'contents': [{'parts': [{'text': prompt[:3800]}]}],
+                         'generationConfig': {'responseModalities': ['IMAGE'], 'imageConfig': {'aspectRatio': '1:1'}}}
+                req = urllib.request.Request(base + modelo + ':generateContent', data=json.dumps(corpo).encode(), headers=hdr)
+                with urllib.request.urlopen(req, timeout=180) as r:
+                    d = json.load(r)
+                for cand in d.get('candidates', []):
+                    for part in (cand.get('content') or {}).get('parts', []):
+                        dado = (part.get('inlineData') or part.get('inline_data') or {}).get('data')
+                        if dado:
+                            return dado
+            erros.append(f'{modelo}: veio sem imagem')
+        except urllib.error.HTTPError as e:
+            erros.append(f'{modelo}: {_erro_http(e)[:140]}')
+        except Exception as e:
+            erros.append(f'{modelo}: {str(e)[:140]}')
+    return ''
+
+
+def _img_openai(prompt, erros):
+    """OpenAI (o mesmo gerador de imagens do ChatGPT). gpt-image-1 pede a organização verificada na OpenAI."""
     import base64
     key = chave_openai()
-    modelos_img = [m for m in dict.fromkeys([os.getenv('OPENAI_IMAGE_MODEL', ''), 'gpt-image-1', 'gpt-image-1-mini', 'dall-e-3']) if m] if key else []
-    erros = [] if key else ['OpenAI: sem chave']
-    for modelo in modelos_img:
+    if not key:
+        erros.append('OpenAI: sem chave')
+        return ''
+    for modelo in dict.fromkeys([os.getenv('OPENAI_IMAGE_MODEL', ''), 'gpt-image-1', 'gpt-image-1-mini', 'dall-e-3']):
+        if not modelo:
+            continue
         corpo = {'model': modelo, 'prompt': prompt[:3800], 'size': '1024x1024', 'n': 1}
         if modelo.startswith('dall-e'):
-            corpo['response_format'] = 'b64_json'
+            corpo.update(response_format='b64_json', quality='hd', style='natural')
+        else:
+            corpo['quality'] = 'high'
         try:
             req = urllib.request.Request('https://api.openai.com/v1/images/generations', data=json.dumps(corpo).encode(),
                                          headers={'Authorization': f'Bearer {key}', 'Content-Type': 'application/json'})
             with urllib.request.urlopen(req, timeout=240) as r:
                 d = json.load(r)['data'][0]
             if d.get('b64_json'):
-                _ultimo_erro_imagem[0] = ''
                 return d['b64_json']
             if d.get('url'):
                 with urllib.request.urlopen(d['url'], timeout=60) as r2:
-                    _ultimo_erro_imagem[0] = ''
                     return base64.b64encode(r2.read()).decode()
         except urllib.error.HTTPError as e:
-            try:
-                msg = json.loads(e.read().decode()).get('error', {}).get('message', '')
-            except Exception:
-                msg = str(e)
-            erros.append(f'{modelo}: {msg[:140]}')
+            erros.append(f'{modelo}: {_erro_http(e)[:140]}')
         except Exception as e:
             erros.append(f'{modelo}: {str(e)[:140]}')
-    try:                                         # reserva grátis, sem chave: Pollinations
+    return ''
+
+
+def _img_pollinations(prompt, erros):
+    import base64
+    try:
         url = ('https://image.pollinations.ai/prompt/' + urllib.parse.quote(prompt[:900]) +
-               f'?width=1024&height=1024&nologo=true&seed={random.randint(1, 10**6)}')
+               f'?width=1024&height=1024&nologo=true&model=flux&enhance=true&seed={random.randint(1, 10**6)}')
         with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=180) as r:
             tipo, dados_img = r.headers.get('Content-Type', ''), r.read()
         if tipo.startswith('image/') and len(dados_img) > 5000:
-            _ultimo_erro_imagem[0] = ''
             return base64.b64encode(dados_img).decode()
         erros.append(f'pollinations: resposta inválida ({tipo}, {len(dados_img)} bytes)')
     except Exception as e:
         erros.append(f'pollinations: {str(e)[:140]}')
+    return ''
+
+
+GERADORES_IMG = {'gemini': _img_gemini, 'openai': _img_openai, 'pollinations': _img_pollinations}
+
+
+def imagem_ia(prompt):
+    """Imagem quadrada pela IA. Ordem em ✏️/💬 (cfg imagem_ordem), padrão: Gemini → ChatGPT/OpenAI.
+    A reserva grátis (Pollinations) vem desligada: qualidade ruim — melhor sair sem imagem.
+    Devolve base64 ou '' — o motivo da falha fica em _ultimo_erro_imagem."""
+    ordem = [x.strip() for x in str(eng_cfg().get('imagem_ordem') or 'gemini,openai').split(',') if x.strip() in GERADORES_IMG]
+    erros = []
+    for nome in ordem or ['gemini', 'openai']:
+        b64 = GERADORES_IMG[nome](prompt, erros)
+        if b64:
+            _ultimo_erro_imagem[0] = ''
+            _ultimo_gerador[0] = nome
+            return b64
     _ultimo_erro_imagem[0] = ' | '.join(erros)
     log.warning(f'Imagem da IA falhou: {_ultimo_erro_imagem[0]}')
     return ''
+
+
+_ultimo_gerador = ['']
+
+CENAS_DIA = ['a cozy sunlit Brazilian living room with a cup of coffee, fresh flowers and a stylish dress on a hanger',
+             'a smiling curvy Brazilian woman in a colorful midi dress holding shopping bags on a sunny street',
+             'flat lay of a pastel outfit, sandals, a handbag and a coffee cup on a light wooden table, morning light',
+             'two happy curvy Brazilian friends laughing while looking at a phone, bright café, morning',
+             'a beautiful breakfast table with coffee, fruit and a small gift box with a lilac ribbon']
+CENAS_NOITE = ['a calm bedroom at night with warm fairy lights, a soft blanket and a cup of tea',
+               'a curvy Brazilian woman relaxing on a sofa at night smiling at her phone, warm lamp light',
+               'a cozy window at night with a crescent moon, candles and a small Christmas tree with warm lights',
+               'flat lay of a silk pajama, a book and a scented candle, warm evening light']
+
+
+def prompt_imagem(periodo, tipo):
+    cenas = CENAS_NOITE if periodo == 'noite' else CENAS_DIA
+    cena = random.choice(cenas)
+    if 'natal' in tipo.lower() or agora().month == 12:
+        cena += ', subtle Christmas decorations'
+    return (f"Professional lifestyle photograph, {cena}. Natural realistic skin and hands, correct anatomy, soft natural light, "
+            "shallow depth of field, shot on a full-frame camera, 50mm lens, warm pastel color palette with lilac and pink accents, "
+            "Instagram-quality, clean composition with space at the top. Absolutely no text, letters, words, logos or watermarks.")
 
 
 TIPOS_NOITE = ['boa noite carinhoso agradecendo quem acompanhou as ofertas do dia e avisando que amanhã tem mais',
@@ -2164,10 +2259,7 @@ def mensagem_do_dia(periodo='dia'):
             texto = texto.rstrip() + f'\n\n👉 *Toque aqui pra pedir:* {link}'
     img = ''
     if e.get('noite_imagem' if periodo == 'noite' else 'msg_imagem'):
-        clima = ('noite tranquila, luz quente e aconchegante, tons de azul e lilás' if periodo == 'noite'
-                 else 'manhã ensolarada, cores vibrantes e suaves')
-        img = imagem_ia(f"Ilustração alegre e acolhedora para grupo de ofertas no WhatsApp, tema: {tipo}. Mulheres brasileiras "
-                        f"reais e diversas, incluindo plus size, {clima}, estilo moderno, SEM nenhum texto na imagem.")
+        img = imagem_ia(prompt_imagem(periodo, tipo))
     return texto, img
 
 
@@ -2942,6 +3034,8 @@ class H(BaseHTTPRequestHandler):
             for k, lim in (('enquete_opcoes', 12), ('monitor_grupos', 50), ('monitor_telegram', 20)):
                 if isinstance(b.get(k), list):
                     e[k] = [str(x).strip()[:100] for x in b[k] if str(x).strip()][:lim]
+            if re.fullmatch(r'[a-z,]{3,40}', str(b.get('imagem_ordem', ''))):
+                e['imagem_ordem'] = b['imagem_ordem']
             if 'inbox_gatilho' in b:
                 e['inbox_gatilho'] = str(b['inbox_gatilho'])[:80]
             if isinstance(b.get('inbox_chips'), list):
@@ -2959,9 +3053,11 @@ class H(BaseHTTPRequestHandler):
                 r['texto'] = 'ok: ' + chat_ia('Responda só: tudo certo! 💜', 60)
             except Exception as ex:
                 r['texto'] = 'falhou: ' + str(ex)[:300]
-            img = imagem_ia('um coração lilás simples, ilustração minimalista, sem texto')
-            r['imagem'] = 'ok (imagem gerada)' if img else 'falhou: ' + (_ultimo_erro_imagem[0] or 'erro desconhecido')[:400]
+            img = imagem_ia(prompt_imagem('dia', 'teste'))
+            r['imagem'] = f'ok (imagem gerada pelo {_ultimo_gerador[0]})' if img else 'falhou: ' + (_ultimo_erro_imagem[0] or 'erro desconhecido')[:400]
             r['chave'] = 'encontrada' if chave_openai() else 'NÃO encontrada'
+            r['gemini'] = 'encontrada' if (chave_env('GEMINI_API_KEY') or chave_env('GOOGLE_API_KEY')) else 'NÃO encontrada'
+            r['previa'] = ('data:' + ('image/jpeg' if img.startswith('/9j') else 'image/png') + ';base64,' + img) if img else ''
             return self.send_json(r)
         if p == '/api/engajamento/agora':
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'

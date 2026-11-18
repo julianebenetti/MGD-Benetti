@@ -286,7 +286,10 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
 
     <div class="card"><div class="row"><b style="flex:1">🔧 A IA está funcionando?</b>
       <button class="b" type="button" onclick="testarIA()">🔧 Testar IA (texto e imagem)</button></div>
-      <div id="egTeste" class="muted" style="margin-top:6px">Mostra se a chave da OpenAI foi encontrada e o motivo, se o texto ou a imagem falharem.</div></div>
+      <div class="q"><div class="t"><b>Quem cria as imagens?</b><small>Gemini (Google) e ChatGPT (OpenAI) fazem fotos bonitas. O grátis é bem mais fraco.</small></div>
+        <div class="v"><select id="egImgOrdem"><option value="gemini,openai">Gemini, depois ChatGPT</option><option value="openai,gemini">ChatGPT, depois Gemini</option>
+        <option value="gemini">Só Gemini</option><option value="openai">Só ChatGPT</option><option value="gemini,openai,pollinations">Gemini → ChatGPT → grátis</option></select></div></div>
+      <div id="egTeste" class="muted" style="margin-top:6px">Mostra quais chaves foram encontradas, a imagem de teste e o motivo, se algo falhar.</div></div>
     <div class="card"><div class="q"><div class="t"><b>Mandar para eu aprovar antes?</b><small>Desmarcado: mensagem do dia e enquete já saem aprovadas.</small></div>
       <div class="v"><input type="checkbox" id="egAprovar"></div></div></div>
     </div>
@@ -835,7 +838,7 @@ let ENG = {};
 async function carregarEng(){
   ENG = await api('engajamento'); if (!GRUPOS.length) await carregarGrupos();
   $('#egMsg').checked = ENG.msg_ativo; $('#egMsgH').value = ENG.msg_hora; $('#egImg').checked = ENG.msg_imagem;
-  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora; $('#egNoiteImg').checked = ENG.noite_imagem !== false;
+  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora; $('#egNoiteImg').checked = ENG.noite_imagem !== false; $('#egImgOrdem').value = ENG.imagem_ordem || 'gemini,openai';
   document.querySelectorAll('input[name=egEnqHM]').forEach(r => r.checked = r.value === (ENG.enquete_hora_modo || 'aleatorio'));
   [$('#egJan1').value, $('#egJan2').value] = ENG.enquete_janela || ['19:00', '22:00'];
   $('#egEnqHoje').textContent = ENG.enquete_hora_modo === 'fixo' ? '' : `· hoje sorteou ${ENG.enquete_hora_hoje}`;
@@ -878,7 +881,7 @@ function desenharMonGrupos(){
 }
 async function salvarEng(){
   await api('engajamento', {msg_ativo: $('#egMsg').checked, msg_hora: $('#egMsgH').value, msg_imagem: $('#egImg').checked,
-    noite_ativo: $('#egNoite').checked, noite_hora: $('#egNoiteH').value, noite_imagem: $('#egNoiteImg').checked,
+    noite_ativo: $('#egNoite').checked, noite_hora: $('#egNoiteH').value, noite_imagem: $('#egNoiteImg').checked, imagem_ordem: $('#egImgOrdem').value,
     enquete_hora_modo: (document.querySelector('input[name=egEnqHM]:checked') || {}).value, enquete_janela: [$('#egJan1').value, $('#egJan2').value],
     enquete_modo: (document.querySelector('input[name=egModo]:checked') || {}).value, enquete_troca_dias: $('#egTroca').value,
     enquete_ativo: $('#egEnq').checked, enquete_hora: $('#egEnqH').value, enquete_pergunta: $('#egPerg').value, peso_votos: $('#egPeso').value,
@@ -893,7 +896,8 @@ async function testarIA(){
   $('#egTeste').innerHTML = 'Testando… (a imagem pode levar até 1 min)';
   try { const r = await api('engajamento/teste_ia', {});
     const linha = (n, v) => `<div>${v.startsWith('ok') || v === 'encontrada' ? '✅' : '❌'} <b>${n}:</b> ${esc(v)}</div>`;
-    $('#egTeste').innerHTML = linha('Chave da OpenAI', r.chave) + linha('Texto', r.texto) + linha('Imagem', r.imagem); }
+    $('#egTeste').innerHTML = linha('Chave do Gemini', r.gemini) + linha('Chave da OpenAI (ChatGPT)', r.chave) + linha('Texto', r.texto) + linha('Imagem', r.imagem)
+      + (r.previa ? `<img src="${r.previa}" style="max-width:260px;border-radius:12px;margin-top:8px;display:block">` : ''); }
   catch(e){ $('#egTeste').textContent = '⚠️ ' + e.message; }
 }
 async function engAgora(tipo){
