@@ -2553,22 +2553,51 @@ def texto_convide_amiga():
             continue
         m = re.match(r'\s*#?(\d+)', nome)
         rot = f'GRUPO {int(m.group(1)):02d}' if m else f'GRUPO {i:02d}'
-        linhas.append(f'👉 *{rot}:* {url}')
+        linhas.append(f'🔗 *{rot}* → {url}')
     if not linhas:
         raise RuntimeError('não consegui o link de nenhum grupo (algum chip precisa ser admin e estar conectado)')
-    return ('💜 *MENINAS! QUEREM CONVIDAR UMA AMIGA?* 💜\n\n'
-            'Mande o link de qualquer um dos nossos grupos pra ela entrar e acompanhar os achadinhos com a gente! 🛒✨\n\n'
-            '⚠️ *Importante:* se algum grupo estiver cheio ou der problema, entre em outro da lista pra não perder '
-            'nenhuma oferta, cupom ou promoção! 🔥\n\n'
-            '👇 *NOSSOS GRUPOS:*\n\n' + '\n\n'.join(linhas) +
-            '\n\n🔥 *Entrou? Fica de olho!* Os melhores achadinhos e cupons acabam rapidinho! 🛍️')
+    abre = random.choice([
+        '👭 *Achadinho bom a gente divide!*\n\nTem uma amiga, irmã ou prima que ama uma promoção? Chama ela pra cá! 💜',
+        '💌 *Sabe aquela amiga que vive perguntando onde você comprou?*\n\nManda pra ela um dos links abaixo e deixa ela garimpar com a gente! ✨',
+        '🛍️ *Quanto mais amigas, mais achadinhos!*\n\nCompartilhe um dos nossos grupos com quem você gosta, a entrada é grátis! 💜'])
+    return (abre + '\n\n📲 *Escolha um grupo e encaminhe o link:*\n\n' + '\n'.join(linhas) +
+            '\n\n💡 Se um grupo estiver lotado, é só tentar o próximo da lista. O conteúdo é o mesmo em todos!\n\n'
+            'Obrigada por espalhar o amor pelas ofertas! 🥰')
+
+
+PROMPT_AMIGAS = ("Professional lifestyle photograph of three happy Brazilian women friends of different body types, including "
+                 "curvy plus size, laughing together on a sofa while looking at a smartphone and holding colorful shopping bags, "
+                 "cozy bright living room, warm natural light, lilac and pink accents, genuine joyful expressions, correct anatomy and hands, "
+                 "shallow depth of field, 50mm lens, Instagram quality. Absolutely no text, letters, logos or watermarks.")
+AMIGA_IA = MIDIA_DIR / 'amiga_ia.b64'
+
+
+def gerar_imagem_amiga():
+    """Imagem das amigas pela IA (Gemini → ChatGPT). Fica guardada e é reusada em todos os convites."""
+    img = imagem_ia(PROMPT_AMIGAS)
+    if not img:
+        raise RuntimeError('a IA não gerou a imagem: ' + (_ultimo_erro_imagem[0] or 'erro desconhecido')[:200])
+    MIDIA_DIR.mkdir(exist_ok=True)
+    AMIGA_IA.write_text(img)
+    return _ultimo_gerador[0]
 
 
 def rodar_convite_amiga():
     import base64
     dados = {}
     arq = BASE / 'convite' / 'amiga.jpg'
-    if arq.exists():
+    if not AMIGA_IA.exists():
+        try:
+            gerar_imagem_amiga()
+        except Exception as ex:
+            log.warning(f'Imagem das amigas: {ex}')
+    if AMIGA_IA.exists():
+        MIDIA_DIR.mkdir(exist_ok=True)
+        b64 = MIDIA_DIR / f"amiga_{int(time.time())}.b64"
+        conteudo = AMIGA_IA.read_text()
+        b64.write_text(conteudo)
+        dados = {'midia': str(b64), 'midia_tipo': 'image', 'mimetype': 'image/jpeg' if conteudo.startswith('/9j') else 'image/png'}
+    elif arq.exists():
         MIDIA_DIR.mkdir(exist_ok=True)
         b64 = MIDIA_DIR / f"amiga_{int(time.time())}.b64"
         b64.write_text(base64.b64encode(arq.read_bytes()).decode())
@@ -2902,7 +2931,11 @@ def status_cfg():
 
 
 def contatos_status(inst):
-    """Quem pode ver o Status: contatos do chip + membros dos grupos onde ele está (só vê quem também salvou o número)."""
+    """Quem pode ver o Status: contatos do chip + membros dos grupos onde ele está (só vê quem também salvou o número).
+    Guarda a lista por 6h (buscar os membros de todos os grupos demora)."""
+    cache = get_json(f'status_lista_{inst}', {})
+    if cache.get('ts', 0) > time.time() - 6 * 3600 and cache.get('jids'):
+        return cache['jids']
     jids = set()
     try:
         for ct in evo('POST', f'/chat/findContacts/{inst}', {}, timeout=60) or []:
@@ -2919,6 +2952,7 @@ def contatos_status(inst):
                     jids.add(j)
     except Exception:
         pass
+    set_cfg(f'status_lista_{inst}', json.dumps({'ts': time.time(), 'jids': sorted(jids)}))
     return sorted(jids)
 
 
@@ -2929,6 +2963,20 @@ def enviar_status(inst, corpo):
     payload = dict(corpo, allContacts=not lista, statusJidList=lista)
     r = evo('POST', f'/message/sendStatus/{inst}', payload, timeout=180)
     return f'ok · {len(lista)} contato(s) na lista' + ('' if lista else ' (allContacts)')
+
+
+def testar_status():
+    for inst in status_cfg().get('chips') or instancias():
+        if estado_chip(inst) != 'open':
+            marcar_status(inst, False, 'teste', 'chip desconectado')
+            continue
+        marcar_status(inst, None, 'teste', 'postando…')
+        corpo = {'type': 'text', 'content': f'💜 Teste do PostZap · {data_sub(agora())} {agora().strftime("%H:%M")}',
+                 'backgroundColor': '#7c3aed', 'font': 1}
+        try:
+            marcar_status(inst, True, 'teste', enviar_status(inst, corpo))
+        except Exception as e:
+            marcar_status(inst, False, 'teste', 'falhou: ' + str(e)[:300])
 
 
 def marcar_status(inst, ok, oque, info):
@@ -3121,12 +3169,23 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
+                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), amiga_img=AMIGA_IA.exists(), amiga_img_status=get_cfg('amiga_img_status', ''), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
                 qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
                 return self.send_json(historico((qs.get('periodo') or ['7'])[0], (qs.get('mes') or [''])[0]))
+            if p == '/api/amiga_img':
+                import base64
+                if AMIGA_IA.exists():
+                    t = AMIGA_IA.read_text()
+                    corpo = base64.b64decode(t)
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'image/jpeg' if t.startswith('/9j') else 'image/png')
+                    self.send_header('Cache-Control', 'no-cache')
+                    self.end_headers()
+                    self.wfile.write(corpo)
+                    return
             if p.startswith('/api/convite_img/'):       # prévia das imagens fixas do convite
                 imgs = imagens_convite()
                 n = int(re.sub(r'\D', '', p.rsplit('/', 1)[-1]) or 0)
@@ -3188,7 +3247,7 @@ class H(BaseHTTPRequestHandler):
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
                                        'ctas': get_json('ctas', CTAS_PADRAO), 'cta_modo': get_cfg('cta_modo', 'frases'),
-                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'chips_todos': instancias(), 'status_ultimo': get_json('status_ultimo', {}), 'modo_link': modo_link(),
+                                       'temas_pai': temas_pai(), 'status': status_cfg(), 'chips_todos': instancias(), 'chips_num': {i: get_cfg(f'numero_{i}') for i in instancias()}, 'status_ultimo': get_json('status_ultimo', {}), 'modo_link': modo_link(),
                                        'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': focos_nomes(),
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
@@ -3429,12 +3488,24 @@ class H(BaseHTTPRequestHandler):
             r['gemini'] = 'encontrada' if (chave_env('GEMINI_API_KEY') or chave_env('GOOGLE_API_KEY')) else 'NÃO encontrada'
             r['previa'] = ('data:' + ('image/jpeg' if img.startswith('/9j') else 'image/png') + ';base64,' + img) if img else ''
             return self.send_json(r)
+        if p == '/api/engajamento/amiga_img':           # gera outra imagem das amigas (em segundo plano)
+            def _g():
+                try:
+                    set_cfg('amiga_img_status', 'ok: gerada pelo ' + gerar_imagem_amiga())
+                except Exception as ex:
+                    set_cfg('amiga_img_status', 'falhou: ' + str(ex)[:200])
+            set_cfg('amiga_img_status', 'gerando')
+            threading.Thread(target=_g, daemon=True).start()
+            return self.send_json({'ok': True})
         if p == '/api/engajamento/agora':
             fid = (rodar_mensagem_do_dia() if b.get('tipo') == 'msg' else rodar_mensagem_do_dia('noite') if b.get('tipo') == 'noite'
                    else rodar_convite_pedidos() if b.get('tipo') == 'convite' else rodar_convite_amiga() if b.get('tipo') == 'amiga'
                    else rodar_enquete())
             return self.send_json({'id': fid})
-        if p == '/api/status/testar':                # posta um Status de teste agora, nos chips marcados
+        if p == '/api/status/testar':                # posta um Status de teste (em segundo plano: pode levar minutos)
+            threading.Thread(target=testar_status, daemon=True).start()
+            return self.send_json({'ok': True})
+        if p == '/api/status/testar_velho':
             res = {}
             for inst in status_cfg().get('chips') or instancias():
                 if estado_chip(inst) != 'open':

@@ -328,6 +328,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         <div class="corpo"><p class="muted">Mensagem com os links de todos os seus grupos pra elas chamarem as amigas. Grupo cheio (1.000+) sai da lista sozinho. Os links são pegos na hora por um chip admin.</p>
           <div class="q" style="display:block"><div class="t"><b>Em quais dias?</b></div><div id="egAmigaDias" class="row" style="margin-top:6px"></div></div>
           <div class="q"><div class="t"><b>Que horas?</b></div><div class="v"><input type="time" id="egAmigaH"></div></div>
+          <div class="q" style="display:block"><div class="t"><b>🖼️ Imagem</b><small>Feita pela IA (Gemini → ChatGPT) e reusada em todos os convites.</small></div>
+            <div id="egAmigaImg" style="margin-top:6px"></div>
+            <button class="b" type="button" onclick="gerarAmiga()">🎨 Gerar outra imagem</button> <span class="muted" id="egAmigaSt"></span></div>
           <div class="q" style="display:block"><div class="t"><b>Quais grupos entram na lista?</b><small>Nenhum marcado = todos onde um chip é admin.</small></div>
             <div id="egAmigaGrupos" style="max-height:220px;overflow:auto;margin-top:6px"></div></div></div></details>
     </div>
@@ -966,6 +969,8 @@ async function carregarEng(){
   $('#egAmiga').checked = !!ENG.amiga_ativo; $('#egAmigaH').value = ENG.amiga_hora || '12:30';
   $('#egAmigaDias').innerHTML = DSEM.map((d, i) => `<label class="chk" style="border:0;padding:4px 10px;border-radius:8px;background:var(--bg)"><input type="checkbox" class="egAd" value="${i}" ${ad.includes(i) ? 'checked' : ''}> ${d}</label>`).join('');
   $('#egAmigaGrupos').innerHTML = (ENG.grupos_admin || []).map(g => `<label class="chk" style="display:block"><input type="checkbox" class="egAg" value="${esc(g.jid)}" ${ag2.includes(g.jid) ? 'checked' : ''}> ${esc(g.nome)}</label>`).join('') || '<p class="muted">Nenhum grupo onde um chip é admin. Toque em 🔄 Buscar grupos em 👥 Grupos.</p>';
+  $('#egAmigaImg').innerHTML = ENG.amiga_img ? `<img src="${B}api/amiga_img?v=${Date.now()}" style="width:180px;border-radius:12px">` : '<span class="muted">Ainda sem imagem: é criada no primeiro convite (ou toque em Gerar).</span>';
+  $('#egAmigaSt').textContent = ENG.amiga_img_status === 'gerando' ? '⏳ gerando…' : ENG.amiga_img_status || '';
   const img = v => v ? 'com imagem' : 'só texto', off = '<span class="muted">desligado</span>';
   $('#egResMsg').innerHTML = ENG.msg_ativo ? `${ENG.msg_hora} · ${img(ENG.msg_imagem)}` : off;
   $('#egResNoite').innerHTML = ENG.noite_ativo ? `${ENG.noite_hora} · ${img(ENG.noite_imagem !== false)}` : off;
@@ -1035,8 +1040,13 @@ async function trocarConvite(inp, somar){
 async function convitePadrao(){ await api('engajamento/convite_img', {padrao: true}); await carregarEng(); }
 async function testarStatus(){
   $('#stUlt').textContent = 'Postando o teste… (pode levar 1 min)';
-  try { const r = await api('status/testar', {}); $('#stUlt').innerHTML = Object.entries(r).map(([c, v]) => `<div>${String(v).startsWith('ok') ? '✅' : '❌'} <b>${c}:</b> ${esc(v)}</div>`).join('') || 'Nenhum chip marcado.'; }
-  catch(e){ $('#stUlt').textContent = '⚠️ ' + e.message; }
+  try { await api('status/testar', {}); } catch(e){ $('#stUlt').textContent = '⚠️ ' + e.message; return; }
+  $('#stUlt').textContent = '⏳ Postando o teste… o resultado aparece aqui em 1–3 min (na 1ª vez demora mais: busca os contatos).';
+  for (let k = 0; k < 24; k++) { await new Promise(r => setTimeout(r, 10000)); MSG = await api('config'); carregarMensagens(); if (!JSON.stringify(MSG.status_ultimo || {}).includes('postando')) break; }
+}
+async function gerarAmiga(){
+  await api('engajamento/amiga_img', {}); $('#egAmigaSt').textContent = '⏳ gerando… (até 1–2 min)';
+  for (let k = 0; k < 18; k++) { await new Promise(r => setTimeout(r, 8000)); await carregarEng(); if (ENG.amiga_img_status !== 'gerando') break; }
 }
 async function testarIA(){
   $('#egTeste').innerHTML = 'Testando… (a imagem pode levar até 1 min)';
@@ -1116,10 +1126,10 @@ function carregarMensagens(){
   document.querySelectorAll('input[name=mlink]').forEach(r => r.checked = r.value === MSG.modo_link);
   const st = MSG.status || {}; $('#stAtivo').checked = st.ativo; $('#stOfertas').checked = st.ofertas !== false;
   $('#stEng').checked = st.engajamento !== false; $('#stMax').value = st.max_dia || 5;
-  $('#stChips').innerHTML = (MSG.chips_todos || []).map(c => `<label class="chk"><input type="checkbox" class="stChip" value="${c}" ${(st.chips || []).includes(c) ? 'checked' : ''}> ${c}</label>`).join('');
+  $('#stChips').innerHTML = (MSG.chips_todos || []).map(c => `<label class="chk"><input type="checkbox" class="stChip" value="${c}" ${(st.chips || []).includes(c) ? 'checked' : ''}> ${c}${(MSG.chips_num || {})[c] ? ' <span class="muted">· +' + esc(MSG.chips_num[c]) + '</span>' : ' <span class="muted">· não conectado</span>'}</label>`).join('');
   $('#stLem').checked = st.lembrete_ativo !== false; $('#stLemN').value = st.lembrete_cada || 5; $('#stLemT').value = st.lembrete_texto || '';
   const su = MSG.status_ultimo || {};
-  $('#stUlt').innerHTML = Object.keys(su).length ? '<b>Último Status de cada chip:</b>' + Object.entries(su).map(([c, v]) => `<div>${v.ok ? '✅' : '❌'} ${c} · ${fdata(v.quando, true)} · ${esc(v.oque)} · <span class="muted">${esc(v.info)}</span></div>`).join('')
+  $('#stUlt').innerHTML = Object.keys(su).length ? '<b>Último Status de cada chip:</b>' + Object.entries(su).map(([c, v]) => `<div>${v.ok === null ? '⏳' : v.ok ? '✅' : '❌'} ${c} · ${fdata(v.quando, true)} · ${esc(v.oque)} · <span class="muted">${esc(v.info)}</span></div>`).join('')
     : '<span class="muted">Nenhum Status postado ainda.</span>';
   $('#mchamadas').innerHTML = ['Todas', ...MSG.lojas.filter(l => l !== 'Outras')].map(l => `<label>${esc(l)}
     <textarea data-cham="${esc(l)}" style="min-height:90px" placeholder="*APROVEITA QUE TÁ BARATO* 🔥">${esc((MSG.chamadas[l] || []).join('\n'))}</textarea></label>`).join('');
