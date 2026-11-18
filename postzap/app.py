@@ -949,12 +949,13 @@ RITMO_PADRAO = {
     'aquec_inicio': 6, 'aquec_passo': 2, 'aquec_max': 20, 'aquec_desde': '',   # posts/dia por grupo: 6 → +2/dia → 20
     # nichos por horário: em cada faixa, as rajadas dão preferência a esses nichos
     'nichos_ativo': True, 'nicho_estrito': False,
-    'nichos_horario': [
-        {'de': '06:00', 'ate': '11:00', 'nichos': ['🏠 Casa e decoração', '🛋️ Móveis']},
-        {'de': '11:00', 'ate': '14:00', 'nichos': ['🍳 Cozinha e utensílios', '🔌 Eletrodomésticos']},
-        {'de': '14:00', 'ate': '17:00', 'nichos': ['💇 Beleza e cabelo']},
-        {'de': '17:00', 'ate': '20:00', 'nichos': ['👗 Moda', '🧸 Infantil', '🐶 Pet']},
-        {'de': '20:00', 'ate': '23:59', 'nichos': ['💇 Beleza e cabelo', '🎧 Eletrônicos', '🔌 Eletrodomésticos']},
+    'nichos_horario': [     # baseado nas vendas reais (Ago25–Jul26): quando cada nicho vende mais
+        {'de': '06:00', 'ate': '10:00', 'nichos': ['🏠 Casa e decoração', '🛋️ Móveis']},
+        {'de': '10:00', 'ate': '12:00', 'nichos': ['👗 Moda', '💇 Beleza e cabelo']},
+        {'de': '12:00', 'ate': '15:00', 'nichos': ['🔌 Eletrodomésticos', '🍳 Cozinha e utensílios', '🛋️ Móveis']},
+        {'de': '15:00', 'ate': '18:00', 'nichos': ['🏠 Casa e decoração', '🔌 Eletrodomésticos', '👗 Moda']},
+        {'de': '18:00', 'ate': '20:00', 'nichos': ['🧸 Infantil', '🐶 Pet', '👗 Moda']},
+        {'de': '20:00', 'ate': '23:59', 'nichos': ['👗 Moda', '💇 Beleza e cabelo', '🏠 Casa e decoração', '🛋️ Móveis']},
     ],
 }
 
@@ -980,6 +981,14 @@ def nicho_do_item(item):
 def ritmo():
     r = dict(RITMO_PADRAO)
     r.update(get_json('ritmo', {}))
+    if get_cfg('migr_nichos_dados') != '1':        # 1ª vez: faixas novas, baseadas nas vendas reais
+        r['nichos_horario'] = RITMO_PADRAO['nichos_horario']
+        set_cfg('ritmo', json.dumps(r))
+        d = get_json('divulgador', {})
+        if d:
+            d.update({'palavras': DIVULGADOR_PADRAO['palavras'], 'horarios': DIVULGADOR_PADRAO['horarios']})
+            set_cfg('divulgador', json.dumps(d, ensure_ascii=False))
+        set_cfg('migr_nichos_dados', '1')
     if not r.get('aquec_desde'):
         r['aquec_desde'] = agora().date().isoformat()
         set_cfg('ritmo', json.dumps(r))
@@ -1536,11 +1545,14 @@ def _tratar(inst, numero, texto, citado=''):
 DIVULGADOR_PADRAO = {
     'ativo': False,
     'modo': 'aprovar',                      # aprovar: manda as sugestões ao FILA POST ZAP | automatico: já aprova (rajadas)
-    'horarios': ['07:40', '12:10', '17:10'],   # quando minerar (manda antes dos picos 13–15h, 18h e 20–21h)
+    'horarios': ['05:40', '09:40', '11:40', '14:40', '17:40', '19:40'],   # 20 min antes de cada faixa de nicho
     'por_rodada': 4,                        # quantos posts novos por rodada
-    'palavras': ['escova secadora', 'chapinha', 'secador de cabelo', 'modelador de cachos', 'kit maquiagem', 'perfume feminino',
-                 'air fryer', 'panela elétrica', 'aspirador robô', 'jogo de panelas', 'cafeteira', 'liquidificador',
-                 'tapete sala', 'jogo de cama', 'organizador', 'fone bluetooth', 'smartwatch', 'brinquedo infantil'],
+    # O que mais vende nos seus pedidos (Ago25–Jul26): vestido, conjunto e calça lideram de longe
+    'palavras': ['vestido feminino', 'conjunto feminino', 'calça feminina', 'legging', 'sutiã', 'moletom feminino', 'pijama feminino',
+                 'secador de cabelo', 'escova secadora', 'perfume feminino', 'shampoo',
+                 'jogo de lençol', 'cortina', 'tapete sala', 'organizador', 'toalha de banho', 'cobertor', 'travesseiro',
+                 'cadeira', 'colchão', 'guarda-roupa', 'penteadeira', 'gaveteiro', 'estante',
+                 'aspirador', 'ventilador', 'climatizador', 'air fryer', 'jogo de panelas', 'brinquedo infantil'],
     'comissao_min': 9.0,                    # R$ por venda (piso do Garimpo)
     'nota_min': 4.6, 'vendas_min': 300,
     'nao_repetir_dias': 7,

@@ -39,4 +39,10 @@
 - **Divulgador do PostZap** (aba 🤖): minera ofertas na Shopee nos horários configurados e manda ao grupo
   FILA POST ZAP (para aprovar ou já aprovadas). Segue as mesmas regras do Garimpo: comissão ≥ R$ 9, nunca
   suplementos/vitaminas/colágeno/whey. Ao mudar critérios de curadoria, ajustar também as palavras/filtros dele.
+- **Nichos que mais vendem** (shopee_pedidos, Ago25–Jul26, pedidos concluídos/pendentes): Moda lidera de longe
+  (23 mil pedidos, R$ 75,7 mil de comissão — vestido, conjunto e calça são os campeões; calça tem a maior comissão média,
+  R$ 6,52), depois Infantil, Beleza, Casa/decoração, Cozinha, Pet, Móveis (ticket R$ 86, comissão média R$ 3,22),
+  Eletrônicos e Eletrodomésticos (ticket R$ 91). Horários: Moda e Beleza 20–22h e 10–11h; Eletro 11–14h e 17h;
+  Móveis 21h e 13–14h; Casa/decoração espalhado, com 21–22h e 13–17h. Comissão média por pedido é baixa (R$ 1,5–6,5):
+  o piso de R$ 9 por produto deixa de fora a maior parte da moda — produtos de moda acima do piso são raros e valiosos.
 - **Black Friday 2026: sexta 27Nov26.** Aquecimento dos grupos começou em 18Nov26 (6 posts/dia por grupo, +2/dia, até 20).
