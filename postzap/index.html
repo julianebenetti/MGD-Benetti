@@ -482,17 +482,28 @@ function regerar(){
 }
 function usarLista(id){
   const l = LISTAS.find(x => x.id === id); const gs = JSON.parse(l.grupos || '[]');
-  document.querySelectorAll('#dgrupos input').forEach(i => i.checked = gs.includes(i.value));
+  document.querySelectorAll('#dgrupos input').forEach(i => { if (gs.includes(i.value)) i.checked = true; });   // soma a lista aos já marcados
+  contarDlg();
 }
+function filtrarDlg(){
+  const q = $('#dbusca').value.toLowerCase();
+  document.querySelectorAll('#dgrupos label.chk').forEach(l => l.style.display = l.textContent.toLowerCase().includes(q) ? '' : 'none');
+}
+function contarDlg(){ const n = document.querySelectorAll('#dgrupos input:checked').length; $('#dcont').textContent = n ? `✓ ${n} grupo(s) marcado(s)` : 'nenhum marcado'; }
+function marcarDlg(v){ document.querySelectorAll('#dgrupos label.chk').forEach(l => { if (l.style.display !== 'none') l.querySelector('input').checked = v; }); contarDlg(); }
 function gruposChecks(sel){
   $('#dlistas').innerHTML = LISTAS.map(l => `<button class="b" style="padding:3px 8px" onclick="usarLista(${l.id})">📋 ${esc(l.nome)}</button>`).join(' ');
-  const ativos = GRUPOS.filter(g => g.ativo || sel.includes(g.jid));
-  return ativos.map(g => `<label class="chk"><input type="checkbox" value="${esc(g.jid)}" ${sel.includes(g.jid)?'checked':''}> ${esc(g.nome)} <span class="muted">(${g.hoje} hoje)</span></label>`).join('')
-    || '<p class="warn">Nenhum grupo marcado. Vá em 👥 Grupos e marque onde pode postar.</p>';
+  const todos = GRUPOS.filter(g => !g.fila).sort((a, b) => (sel.includes(b.jid) - sel.includes(a.jid)) || (!!b.ativo - !!a.ativo) || String(a.nome).localeCompare(String(b.nome)));
+  if (!todos.length) return '<p class="warn">Nenhum grupo encontrado. Confira em 🔗 WhatsApp se os chips estão conectados.</p>';
+  return `<div class="row" style="gap:6px;margin:4px 0"><input id="dbusca" placeholder="🔎 Buscar grupo…" oninput="filtrarDlg()" style="flex:1">
+    <button class="b" type="button" style="padding:3px 8px" onclick="marcarDlg(true)">Marcar todos</button><button class="b" type="button" style="padding:3px 8px" onclick="marcarDlg(false)">Limpar</button></div>
+    <div class="muted" id="dcont" style="font-size:12px"></div>
+    <div style="max-height:200px;overflow:auto;border:1px solid #eee;border-radius:8px;padding:4px" onchange="contarDlg()">` +
+    todos.map(g => `<label class="chk" style="display:block"><input type="checkbox" value="${esc(g.jid)}" ${sel.includes(g.jid)?'checked':''}> ${esc(g.nome)} <span class="muted">(${g.hoje || 0} hoje)</span></label>`).join('') + '</div>';
 }
 function abrirDlg(tit, texto, grupos, quando){
   $('#dtit').textContent = tit; $('#dtexto').value = texto; $('#derr').textContent = '';
-  $('#dgrupos').innerHTML = gruposChecks(grupos); $('#dquando').value = quando ? quando.slice(0,16) : '';
+  $('#dgrupos').innerHTML = gruposChecks(grupos); if ($('#dcont')) contarDlg(); $('#dquando').value = quando ? quando.slice(0,16) : '';
   dlg.showModal();
 }
 async function outraLoja(){
@@ -525,7 +536,8 @@ async function trocarFoto(url){
   const p = await api('preparar', {...EDIT.novo, link: EDIT.novo.link_afiliado});   // novo link curto com a foto
   EDIT.novo.link = p.link; EDIT.mexeu = false; regerar();
 }
-function editar(id){ const it = FILA.find(x => x.id === id); EDIT = {id};
+async function editar(id){ const it = FILA.find(x => x.id === id); EDIT = {id};
+  if (!GRUPOS.length) { const j = await api('grupos'); GRUPOS = j.grupos; LISTAS = j.listas; }
   if (!JSON.parse(it.grupos || '[]').length) it.grupos = JSON.stringify(GRUPOS.filter(g => g.ativo && !g.fila).map(g => g.jid));
   $('#dcampos').classList.add('hide');
   abrirDlg(it.produto, it.texto, JSON.parse(it.grupos || '[]'), it.agendado_para);
