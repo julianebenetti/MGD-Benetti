@@ -228,15 +228,21 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <button class="b" type="button" onclick="engAgora('msg')">✨ Gerar uma agora (manda pro FILA POST ZAP)</button></div>
 
     <div class="card" style="background:hsla(240,60%,55%,.08)"><b>🌙 Mensagem da noite</b>
-      <p class="muted">Boa noite carinhoso, pergunta leve, lembrete de ativar as notificações, contagem para a Black Friday/Natal… com imagem de clima noturno.</p>
+      <p class="muted">Boa noite carinhoso, pergunta leve, lembrete de ativar as notificações, contagem para a Black Friday/Natal… com uma
+      imagem criada pela IA, de clima noturno.</p>
       <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egNoite"></div></div>
       <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egNoiteH"></div></div>
+      <div class="q"><div class="t"><b>Com imagem da IA?</b><small>Sem imagem, vai só o texto.</small></div><div class="v"><input type="checkbox" id="egNoiteImg"></div></div>
       <button class="b" type="button" onclick="engAgora('noite')">🌙 Gerar uma agora (manda pro FILA POST ZAP)</button></div>
 
     <div class="card" style="background:hsla(200,70%,55%,.07)"><b>📊 Enquete diária</b>
       <p class="muted">Pergunta o que o grupo quer ver. Os mais votados (últimos 2 dias) ganham prioridade no 🤖 Divulgador.</p>
       <div class="q"><div class="t"><b>Ligada?</b></div><div class="v"><input type="checkbox" id="egEnq"></div></div>
-      <div class="q"><div class="t"><b>Que horas sai?</b></div><div class="v"><input type="time" id="egEnqH"></div></div>
+      <div class="q" style="display:block"><div class="t"><b>Quando sai?</b></div>
+        <label class="chk"><input type="radio" name="egEnqHM" value="aleatorio"> <span><b>Num horário diferente a cada noite</b> (recomendado), entre
+          <input type="time" id="egJan1" style="width:110px"> e <input type="time" id="egJan2" style="width:110px"> — longe da mensagem da noite.
+          <span class="muted" id="egEnqHoje"></span></span></label>
+        <label class="chk"><input type="radio" name="egEnqHM" value="fixo"> <span><b>Sempre às</b> <input type="time" id="egEnqH" style="width:110px"></span></label></div>
       <div class="q" style="display:block"><div class="t"><b>Como escolher as opções?</b></div>
         <label class="chk"><input type="radio" name="egModo" value="rodizio"> <span><b>Rodízio (recomendado)</b> — pacotes de opções que combinam (moda, casa,
           achadinhos, festas), trocando a cada <input type="number" id="egTroca" min="1" max="14" style="width:60px"> dia(s). Assim a enquete não fica repetitiva.</span></label>
@@ -267,6 +273,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <div class="q" style="display:block"><div class="t"><b>Canais PÚBLICOS do Telegram</b><small>Um por linha, ex.: @nomedocanal (confere a cada ~10 min)</small></div>
         <textarea id="egTg" style="min-height:80px;margin-top:6px"></textarea></div></div>
 
+    <div class="card"><div class="row"><b style="flex:1">🔧 A IA está funcionando?</b>
+      <button class="b" type="button" onclick="testarIA()">🔧 Testar IA (texto e imagem)</button></div>
+      <div id="egTeste" class="muted" style="margin-top:6px">Mostra se a chave da OpenAI foi encontrada e o motivo, se o texto ou a imagem falharem.</div></div>
     <div class="card"><div class="q"><div class="t"><b>Mandar para eu aprovar antes?</b><small>Desmarcado: mensagem do dia e enquete já saem aprovadas.</small></div>
       <div class="v"><input type="checkbox" id="egAprovar"></div></div></div>
     </div>
@@ -792,7 +801,10 @@ let ENG = {};
 async function carregarEng(){
   ENG = await api('engajamento'); if (!GRUPOS.length) await carregarGrupos();
   $('#egMsg').checked = ENG.msg_ativo; $('#egMsgH').value = ENG.msg_hora; $('#egImg').checked = ENG.msg_imagem;
-  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora;
+  $('#egNoite').checked = ENG.noite_ativo; $('#egNoiteH').value = ENG.noite_hora; $('#egNoiteImg').checked = ENG.noite_imagem !== false;
+  document.querySelectorAll('input[name=egEnqHM]').forEach(r => r.checked = r.value === (ENG.enquete_hora_modo || 'aleatorio'));
+  [$('#egJan1').value, $('#egJan2').value] = ENG.enquete_janela || ['19:00', '22:00'];
+  $('#egEnqHoje').textContent = ENG.enquete_hora_modo === 'fixo' ? '' : `· hoje sorteou ${ENG.enquete_hora_hoje}`;
   document.querySelectorAll('input[name=egModo]').forEach(r => { r.checked = r.value === (ENG.enquete_modo || 'rodizio'); r.onchange = mostrarModoEnq; });
   $('#egTroca').value = ENG.enquete_troca_dias || 2;
   const chipsOp = ops => ops.map(o => `<span class="tag" style="background:hsla(${COR_NICHO[o] ?? corFoco(o)},70%,55%,.2)">${esc(o)}</span>`).join(' ');
@@ -825,13 +837,21 @@ function desenharMonGrupos(){
 }
 async function salvarEng(){
   await api('engajamento', {msg_ativo: $('#egMsg').checked, msg_hora: $('#egMsgH').value, msg_imagem: $('#egImg').checked,
-    noite_ativo: $('#egNoite').checked, noite_hora: $('#egNoiteH').value,
+    noite_ativo: $('#egNoite').checked, noite_hora: $('#egNoiteH').value, noite_imagem: $('#egNoiteImg').checked,
+    enquete_hora_modo: (document.querySelector('input[name=egEnqHM]:checked') || {}).value, enquete_janela: [$('#egJan1').value, $('#egJan2').value],
     enquete_modo: (document.querySelector('input[name=egModo]:checked') || {}).value, enquete_troca_dias: $('#egTroca').value,
     enquete_ativo: $('#egEnq').checked, enquete_hora: $('#egEnqH').value, enquete_pergunta: $('#egPerg').value, peso_votos: $('#egPeso').value,
     enquete_opcoes: [...document.querySelectorAll('.egOp:checked')].map(i => i.value).slice(0, 12),
     inbox_ativo: $('#egInbox').checked, inbox_max_dia: $('#egInboxMax').value,
     monitor_ativo: $('#egMon').checked, monitor_grupos: [...MONSEL], monitor_telegram: $('#egTg').value.split('\n'), aprovar: $('#egAprovar').checked});
   await carregarEng(); $('#egOk').textContent = 'Salvo ✓';
+}
+async function testarIA(){
+  $('#egTeste').innerHTML = 'Testando… (a imagem pode levar até 1 min)';
+  try { const r = await api('engajamento/teste_ia', {});
+    const linha = (n, v) => `<div>${v.startsWith('ok') || v === 'encontrada' ? '✅' : '❌'} <b>${n}:</b> ${esc(v)}</div>`;
+    $('#egTeste').innerHTML = linha('Chave da OpenAI', r.chave) + linha('Texto', r.texto) + linha('Imagem', r.imagem); }
+  catch(e){ $('#egTeste').textContent = '⚠️ ' + e.message; }
 }
 async function engAgora(tipo){
   $('#egOk').textContent = tipo === 'enq' ? 'Mandando a enquete…' : 'Criando texto e imagem com a IA… (pode levar 1–2 min)';
