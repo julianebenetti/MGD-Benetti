@@ -35,6 +35,13 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 .q .v{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.q .v input{width:90px}.q .v input[type=time]{width:120px}.q .v input[type=checkbox]{width:auto}
 .salvar{position:sticky;bottom:0;background:var(--card);padding:10px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .pend{color:var(--warn);font-weight:600}
+table.grade{border-collapse:separate;border-spacing:4px;min-width:640px;width:100%}
+table.grade th{font-size:12px;color:var(--mut);font-weight:600;vertical-align:bottom;padding-bottom:4px}
+table.grade th input{width:96px;padding:3px;font-size:12px;text-align:center}
+table.grade td.n{font-size:13.5px;white-space:nowrap;padding-right:6px}
+table.grade td.c{height:30px;border-radius:7px;text-align:center;cursor:pointer;background:var(--bg);color:#fff;font-weight:700;user-select:none}
+table.grade td.c:hover{outline:2px solid var(--bd)}table.grade tr.sep td{padding-top:8px;color:var(--mut);font-size:11px;font-weight:700}
+.pico{display:inline-block;font-size:10.5px;background:#fff3c4;color:#8a6200;border-radius:6px;padding:1px 5px;margin-top:2px}
 details.mini{background:var(--card);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px}
 details.mini>summary{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:9px 12px;cursor:pointer;list-style:none}
 details.mini>summary::-webkit-details-marker{display:none}
@@ -104,8 +111,9 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <small>Em cada faixa, as rajadas postam primeiro os posts desses nichos e focos (➕ Plus Size, ✝️ Evangélica, 🎄 Natal). O 🤖 Divulgador também busca o que é da faixa que vai começar.</small></div>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicAt"> Usar nichos por horário</label>
           <label class="chk" style="border:0"><input type="checkbox" id="rNicEs"> Só posta o nicho da hora (se não tiver nenhum, espera). Desmarcado: posta outro nicho.</label>
-          <div id="rFaixas"></div>
-          <button class="b" type="button" onclick="addFaixa()">➕ Adicionar faixa</button></div>
+          <div style="overflow-x:auto"><table id="rGrade" class="grade"></table></div>
+          <div class="row" style="margin-top:6px"><button class="b" type="button" onclick="addFaixa()">➕ Adicionar horário</button>
+            <span class="muted">Toque no quadradinho para ligar/desligar · mude o horário no topo de cada coluna · 🗑️ tira a coluna</span></div></div>
         <div class="q"><div class="t"><b>🔄 Recomeçar o aquecimento a partir de hoje?</b><small>Volta para o número inicial e sobe de novo.</small></div>
           <div class="v"><label class="chk" style="border:0"><input type="checkbox" id="rReini"> sim, recomeçar</label></div></div>
       </div>
@@ -410,17 +418,33 @@ function mostrarRitmo(){
   [$('#rPau1').value, $('#rPau2').value] = r.pausa; [$('#rGr1').value, $('#rGr2').value] = r.entre_grupos;
   $('#rAq1').value = r.aquec_inicio; $('#rAq2').value = r.aquec_passo; $('#rAq3').value = r.aquec_max;
   $('#rNicAt').checked = r.nichos_ativo; $('#rNicEs').checked = r.nicho_estrito;
-  $('#rFaixas').innerHTML = ''; (r.nichos_horario || []).forEach(addFaixa);
+  FAIXAS = JSON.parse(JSON.stringify(r.nichos_horario || [])); desenharGrade();
   if (MSG.nichos_agora && MSG.nichos_agora.length) $('#ritmoResumo').textContent += ' · agora: ' + MSG.nichos_agora.join(', ');
 }
-function addFaixa(f){
-  f = f && f.de ? f : {de: '', ate: '', nichos: []};
-  const d = document.createElement('div'); d.className = 'faixa card'; d.style.margin = '8px 0';
-  d.innerHTML = `<div class="row">das <input type="time" class="fde" value="${f.de}" style="width:120px"> às <input type="time" class="fate" value="${f.ate}" style="width:120px">
-    <button class="b" type="button" onclick="this.closest('.faixa').remove();pendente('rOk')">🗑️</button></div>
-    <div class="row" style="margin-top:6px"><span class="muted" style="width:52px">Nichos:</span>${MSG.nichos.map(n => `<label class="chk" style="border:0;padding:2px 8px 2px 0"><input type="checkbox" value="${esc(n)}" ${f.nichos.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>
-    <div class="row" style="margin-top:2px"><span class="muted" style="width:52px">Focos:</span>${MSG.focos.map(n => `<label class="chk" style="border:0;padding:2px 8px 2px 0;background:hsla(${COR_FOCO[n]},75%,55%,.15);border-radius:6px;padding-left:6px"><input type="checkbox" value="${esc(n)}" ${f.nichos.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>`;
-  $('#rFaixas').appendChild(d);
+// Grade: horários nas colunas, nichos e temas nas linhas (estado em FAIXAS, salvo junto com o resto do Ritmo)
+let FAIXAS = [];
+const PICOS = [['13:00', '15:00', 'pico 13–15h'], ['18:00', '19:00', 'pico 18h'], ['20:00', '21:00', 'pico 20–21h']];
+function picoDe(f){ const p = PICOS.find(([a, b]) => f.de < b && a < f.ate); return p ? `<br><span class="pico">${p[2]}</span>` : ''; }
+function desenharGrade(){
+  FAIXAS.sort((a, b) => (a.de || '99').localeCompare(b.de || '99'));
+  const cab = '<tr><th></th>' + FAIXAS.map((f, i) => `<th><input type="time" value="${f.de}" onchange="FAIXAS[${i}].de=this.value;pendente('rOk');desenharGrade()"><br>às<br>
+    <input type="time" value="${f.ate}" onchange="FAIXAS[${i}].ate=this.value;pendente('rOk')">${picoDe(f)}<br>
+    <span style="cursor:pointer" title="Tirar este horário" onclick="FAIXAS.splice(${i},1);pendente('rOk');desenharGrade()">🗑️</span></th>`).join('') + '</tr>';
+  const linha = (n, h) => `<tr><td class="n">${esc(n)}</td>` + FAIXAS.map((f, i) => {
+    const on = (f.nichos || []).includes(n);
+    return `<td class="c" style="${on ? `background:hsla(${h},65%,48%,.9)` : ''}" onclick="alternarCelula(${i}, '${esc(n).replace(/'/g, "\\'")}')">${on ? '✓' : ''}</td>`;
+  }).join('') + '</tr>';
+  $('#rGrade').innerHTML = cab + MSG.nichos.map(n => linha(n, COR_NICHO[n] ?? 0)).join('') +
+    `<tr class="sep"><td colspan="${FAIXAS.length + 1}">TEMAS</td></tr>` + MSG.focos.map(n => linha(n, corFoco(n))).join('');
+}
+function alternarCelula(i, n){
+  const l = FAIXAS[i].nichos = FAIXAS[i].nichos || [];
+  const k = l.indexOf(n); k >= 0 ? l.splice(k, 1) : l.push(n);
+  pendente('rOk'); desenharGrade();
+}
+function addFaixa(){
+  const ult = FAIXAS[FAIXAS.length - 1];
+  FAIXAS.push({de: ult ? ult.ate : '08:00', ate: '23:59', nichos: []}); pendente('rOk'); desenharGrade();
 }
 function pendente(id){ $('#' + id).innerHTML = '<span class="pend">● alterações não salvas</span>'; }
 async function salvarRitmo(){
@@ -429,8 +453,7 @@ async function salvarRitmo(){
     pausa: [$('#rPau1').value, $('#rPau2').value], entre_grupos: [$('#rGr1').value, $('#rGr2').value],
     aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, reiniciar_aquecimento: reiniciar,
     nichos_ativo: $('#rNicAt').checked, nicho_estrito: $('#rNicEs').checked,
-    nichos_horario: [...document.querySelectorAll('#rFaixas .faixa')].map(d => ({de: d.querySelector('.fde').value, ate: d.querySelector('.fate').value,
-      nichos: [...d.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value)}))});
+    nichos_horario: FAIXAS.filter(f => f.de && f.ate)});
   MSG = await api('config'); mostrarRitmo(); $('#rReini').checked = false;
   $('#rOk').textContent = `Salvo ✓ — hoje: até ${j.limite_hoje} posts por grupo`;
 }
