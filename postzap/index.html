@@ -66,6 +66,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         <option value="">Todas as fontes</option><option value="central_video">🎬 Vendeu em vídeo</option>
         <option value="central_ideias">💡 Ideias da Central</option><option value="garimpo">⛏️ Garimpo</option>
       </select>
+      <select id="fnicho" style="width:auto" onchange="renderProdutos()"><option value="">Todos os nichos</option></select>
       <button class="b" onclick="carregarProdutos()">↻</button>
     </div>
     <div class="card"><b>➕ Oferta de outra loja</b> <span class="muted">(Magalu, Mercado Livre, Amazon…)</span>
@@ -94,6 +95,12 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v">+ <input id="rAq2" type="number" min="0"> por dia</div></div>
         <div class="q"><div class="t"><b>🔝 Até no máximo quantos posts por dia (em cada grupo)?</b></div>
           <div class="v"><input id="rAq3" type="number" min="1"> posts/dia</div></div>
+        <div class="q" style="display:block"><div class="t"><b>🗂️ Nichos por horário</b>
+          <small>Em cada faixa, as rajadas postam primeiro os posts desses nichos. O 🤖 Divulgador também busca o nicho da faixa que vai começar.</small></div>
+          <label class="chk" style="border:0"><input type="checkbox" id="rNicAt"> Usar nichos por horário</label>
+          <label class="chk" style="border:0"><input type="checkbox" id="rNicEs"> Só posta o nicho da hora (se não tiver nenhum, espera). Desmarcado: posta outro nicho.</label>
+          <div id="rFaixas"></div>
+          <button class="b" type="button" onclick="addFaixa()">➕ Adicionar faixa</button></div>
         <div class="q"><div class="t"><b>🔄 Recomeçar o aquecimento a partir de hoje?</b><small>Volta para o número inicial e sobe de novo.</small></div>
           <div class="v"><label class="chk" style="border:0"><input type="checkbox" id="rReini"> sim, recomeçar</label></div></div>
       </div>
@@ -280,10 +287,11 @@ async function carregarProdutos(){
   renderProdutos();
 }
 function renderProdutos(){
-  const q = $('#busca').value.toLowerCase(), f = $('#fonte').value;
-  const lista = PRODUTOS.filter(p => (!f || p.origem === f) && (!q || p.produto.toLowerCase().includes(q)));
+  const q = $('#busca').value.toLowerCase(), f = $('#fonte').value, fn = $('#fnicho').value;
+  if ($('#fnicho').options.length < 2) $('#fnicho').innerHTML += MSG.nichos.map(n => `<option>${esc(n)}</option>`).join('');
+  const lista = PRODUTOS.filter(p => (!f || p.origem === f) && (!fn || p.nicho === fn) && (!q || p.produto.toLowerCase().includes(q)));
   $('#produtos').innerHTML = lista.map((p, i) => `<div class="card prod">
-    <span class="tag">${ROTULO[p.origem]}</span>
+    <span class="tag">${ROTULO[p.origem]}</span> <span class="tag">${esc(p.nicho || '')}</span>
     <h3>${esc(p.produto)}</h3>
     <div class="muted">R$ ${esc(p.preco)} · comissão R$ ${esc(p.comissao)} · ${esc(p.vendas)} vendas · ⭐ ${esc(p.nota)}</div>
     <div class="muted">${esc(p.detalhe)}</div>
@@ -369,13 +377,27 @@ function mostrarRitmo(){
   $('#rIni').value = r.inicio; $('#rFim').value = r.fim; [$('#rRaj1').value, $('#rRaj2').value] = r.rajada;
   [$('#rPau1').value, $('#rPau2').value] = r.pausa; [$('#rGr1').value, $('#rGr2').value] = r.entre_grupos;
   $('#rAq1').value = r.aquec_inicio; $('#rAq2').value = r.aquec_passo; $('#rAq3').value = r.aquec_max;
+  $('#rNicAt').checked = r.nichos_ativo; $('#rNicEs').checked = r.nicho_estrito;
+  $('#rFaixas').innerHTML = ''; (r.nichos_horario || []).forEach(addFaixa);
+  if (MSG.nichos_agora && MSG.nichos_agora.length) $('#ritmoResumo').textContent += ' · agora: ' + MSG.nichos_agora.join(', ');
+}
+function addFaixa(f){
+  f = f && f.de ? f : {de: '', ate: '', nichos: []};
+  const d = document.createElement('div'); d.className = 'faixa card'; d.style.margin = '8px 0';
+  d.innerHTML = `<div class="row">das <input type="time" class="fde" value="${f.de}" style="width:120px"> às <input type="time" class="fate" value="${f.ate}" style="width:120px">
+    <button class="b" type="button" onclick="this.closest('.faixa').remove();pendente('rOk')">🗑️</button></div>
+    <div class="row" style="margin-top:6px">${MSG.nichos.map(n => `<label class="chk" style="border:0;padding:2px 8px 2px 0"><input type="checkbox" value="${esc(n)}" ${f.nichos.includes(n) ? 'checked' : ''}> ${esc(n)}</label>`).join('')}</div>`;
+  $('#rFaixas').appendChild(d);
 }
 function pendente(id){ $('#' + id).innerHTML = '<span class="pend">● alterações não salvas</span>'; }
 async function salvarRitmo(){
   const reiniciar = $('#rReini').checked;
   const j = await api('ritmo', {inicio: $('#rIni').value, fim: $('#rFim').value, rajada: [$('#rRaj1').value, $('#rRaj2').value],
     pausa: [$('#rPau1').value, $('#rPau2').value], entre_grupos: [$('#rGr1').value, $('#rGr2').value],
-    aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, reiniciar_aquecimento: reiniciar});
+    aquec_inicio: $('#rAq1').value, aquec_passo: $('#rAq2').value, aquec_max: $('#rAq3').value, reiniciar_aquecimento: reiniciar,
+    nichos_ativo: $('#rNicAt').checked, nicho_estrito: $('#rNicEs').checked,
+    nichos_horario: [...document.querySelectorAll('#rFaixas .faixa')].map(d => ({de: d.querySelector('.fde').value, ate: d.querySelector('.fate').value,
+      nichos: [...d.querySelectorAll('input[type=checkbox]:checked')].map(i => i.value)}))});
   MSG = await api('config'); mostrarRitmo(); $('#rReini').checked = false;
   $('#rOk').textContent = `Salvo ✓ — hoje: até ${j.limite_hoje} posts por grupo`;
 }
@@ -389,7 +411,10 @@ async function carregarFila(){
     ? `<b class="warn">⏸️ Envios pausados</b> <button class="b p" onclick="pausar(false)">▶️ Retomar</button>`
     : `<button class="b" onclick="pausar(true)">⏸️ Pausar todos os envios</button>`;
   const nome = jid => (GRUPOS.find(g => g.jid === jid) || {}).nome || jid;
-  const card = it => `<div class="card"><div class="row"><b style="flex:1">${esc(it.produto)}</b><span class="tag">${ST[it.status]||it.status}</span></div>
+  const selNicho = it => it.nicho ? (['rascunho','erro','aprovado'].includes(it.status)
+      ? `<select style="width:auto;padding:2px 6px;font-size:12px" onchange="mudarNicho(${it.id}, this.value)">${MSG.nichos.map(n => `<option ${n === it.nicho ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`
+      : `<span class="tag">${esc(it.nicho)}</span>`) : '';
+  const card = it => `<div class="card"><div class="row"><b style="flex:1">#${it.id} ${esc(it.produto)}</b>${selNicho(it)}<span class="tag">${ST[it.status]||it.status}</span></div>
     <div class="muted">${ROTULO[it.origem]||''} · ${JSON.parse(it.grupos||'[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).map(nome).map(esc).join(', ') || 'sem grupos'}
     ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}
     ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
@@ -404,6 +429,7 @@ async function carregarFila(){
   $('#fila').innerHTML = FILA.filter(x => !['enviado'].includes(x.status)).map(card).join('') || '<p class="muted">Nada aguardando. Prepare uma postagem em 🛍️ Produtos.</p>';
   $('#hist').innerHTML = FILA.filter(x => x.status === 'enviado').map(card).join('') || '<p class="muted">Nada enviado ainda.</p>';
 }
+async function mudarNicho(id, nicho){ await api('fila/nicho', {id, nicho}); }
 async function aprovar(id){ try { await api('fila/aprovar', {id}); } catch(e){ alert(e.message); } carregarFila(); }
 async function acao(a, id){ await api('fila/' + a, {id}); carregarFila(); }
 async function pausar(v){ await api('pausar', {pausado:v}); carregarFila(); }

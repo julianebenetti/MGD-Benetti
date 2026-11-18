@@ -275,6 +275,7 @@ def produtos_garimpo(limite=150):
         out.append({'origem': 'garimpo', 'chave': chave, 'produto': p.get('produto') or '', 'loja': p.get('loja') or '',
                     'preco': br(p.get('preco')), 'comissao': br(com), 'vendas': p.get('vendas') or 0,
                     'nota': p.get('nota') or '', 'link': p['link'],
+                    'nicho': classificar_nicho(p.get('produto'), p.get('nicho')),
                     'detalhe': ' · '.join(x for x in (p.get('nicho'), p.get('tipo'), data_tela(p.get('data_indicacao'))) if x)})
     return out, ''
 
@@ -303,6 +304,7 @@ def produtos_central():
             out.append({'origem': 'central_ideias', 'chave': chave, 'produto': r.get('produto', ''),
                         'loja': r.get('loja', ''), 'preco': br(r.get('preco')), 'comissao': br(r.get('comissao')),
                         'vendas': r.get('vendas') or 0, 'nota': r.get('nota') or '', 'link': r['link'],
+                        'nicho': classificar_nicho(r.get('produto'), f"{r.get('secao', '')} {r.get('tema', '')}"),
                         'detalhe': f"Ideias de {data_tela(data.get('dia'))} · {r.get('secao', '')}"})
     for p in posts:
         chave = p['product_key'] or ''
@@ -318,6 +320,7 @@ def produtos_central():
                     'nota': info.get('ratingStar') or '', 'link': links[0],
                     'imagem': info.get('imageUrl', ''),
                     'chamada': (json.loads(p['metadata'] or '{}') or {}).get('headline', ''),
+                    'nicho': classificar_nicho(p['product_name']),
                     'detalhe': f"Já postado em vídeo · {data_tela(p['posted_at'])}"})
     return out, ''
 
@@ -427,6 +430,49 @@ def data_tela(valor, hora=False):
     return data_sub(d) + (f" {d:%H:%M}" if hora and isinstance(d, datetime) else '')
 
 
+NICHOS = ['🏠 Casa e decoração', '🍳 Cozinha e utensílios', '🔌 Eletrodomésticos', '💇 Beleza e cabelo', '👗 Moda',
+          '🧸 Infantil', '🎧 Eletrônicos', '🛋️ Móveis', '🐶 Pet', '📦 Outros']
+_REGRAS_NICHO = [   # a primeira que bate vale (ordem importa: "forma para air fryer" é cozinha, "air fryer" é eletro)
+    ('🐶 Pet', r'\bpet\b|cachorr|gato|ra[cç][aã]o|coleira|arranhador|caminha pet|tapete higi'),
+    ('🧸 Infantil', r'infantil|beb[eê]|brinquedo|boneca|carrinho de|crian[cç]a|kids|fralda|mamadeira|chupeta|pel[uú]cia'),
+    ('💇 Beleza e cabelo', r'escova (secadora|rotativa|alisadora|modeladora)|secador|chapinha|prancha|modelador|cabelo|maquiag|batom|'
+                          r'\bbase\b|perfume|skin ?care|s[eé]rum|hidratante|shampoo|condicionador|\bunha|c[ií]lios|depila|barbeador|'
+                          r'beleza|cosm[eé]t|creme facial|protetor solar|esmalte|pinc[eé]is'),
+    ('🍳 Cozinha e utensílios', r'\bformas?\b|assadeira|silicone|descart[aá]ve|potes?\b|tigela|escorredor|t[aá]bua|utens[ií]lio|'
+                               r'talher|faca|garrafa|copos?\b|x[ií]cara|caneca|pano de prato|porta tempero|marmita|'
+                               r'organizador de geladeira|jogo de panelas|panelas? antiaderente|frigideira|ralador|esp[aá]tula|cozinha'),
+    ('🔌 Eletrodomésticos', r'air ?fryer|fritadeira|liquidificador|cafeteira|aspirador|micro-?ondas|ventilador|ar[- ]condicionado|'
+                           r'batedeira|panela (el[eé]trica|de press[aã]o el)|mixer|processador|ferro de passar|purificador|'
+                           r'sanduicheira|grill|forno el[eé]trico|chaleira el|geladeira|lava|umidificador|climatizador'),
+    ('🎧 Eletrônicos', r'fone|smartwatch|rel[oó]gio intelig|celular|carregador|caixa de som|\btv\b|notebook|mouse|teclado|'
+                      r'c[aâ]mera|smart|bluetooth|power ?bank|tablet|projetor|ring light|cabo usb'),
+    ('🛋️ Móveis', r'cadeira|\bmesa\b|guarda-?roupa|arm[aá]rio|sof[aá]|\brack\b|cama box|colch[aã]o|estante|c[oô]moda|'
+                  r'penteadeira|gaveteiro|paneleiro|banqueta|escrivaninha'),
+    ('🏠 Casa e decoração', r'tapete|cortina|almofada|quadro|espelho|vaso|lumin[aá]ria|jogo de cama|len[cç]ol|edredom|colcha|'
+                           r'manta|cobertor|toalha|organizador|cabide|prateleira|decora|banheiro|travesseiro|lixeira|varal|'
+                           r'cesto|jardim|abajur|porta-?retrato|casa'),
+    ('👗 Moda', r'vestido|blusa|cal[cç]a|short|saia|macac[aã]o|legging|conjunto|suti[aã]|calcinha|cueca|t[eê]nis|sand[aá]lia|'
+               r'chinelo|bolsa|mochila|carteira|biqu[ií]ni|mai[oô]|camis|jaqueta|moletom|pijama|meia|bon[eé]|[oó]culos|brinco|colar'),
+]
+_DICA_NICHO = {'casa': '🏠 Casa e decoração', 'decor': '🏠 Casa e decoração', 'moveis': '🛋️ Móveis', 'móveis': '🛋️ Móveis',
+               'eletro': '🔌 Eletrodomésticos', 'beleza': '💇 Beleza e cabelo', 'cabelo': '💇 Beleza e cabelo',
+               'moda': '👗 Moda', 'pet': '🐶 Pet', 'infantil': '🧸 Infantil', 'cozinha': '🍳 Cozinha e utensílios',
+               'utens': '🍳 Cozinha e utensílios', 'eletron': '🎧 Eletrônicos', 'tapete': '🏠 Casa e decoração'}
+
+
+def classificar_nicho(produto, dica=''):
+    """Nicho pelo nome do produto (e, se não der, pela seção/nicho de onde ele veio)."""
+    t = (produto or '').lower()
+    for nicho, pad in _REGRAS_NICHO:
+        if re.search(pad, t):
+            return nicho
+    d = (dica or '').lower()
+    for k, n in _DICA_NICHO.items():
+        if k in d:
+            return n
+    return '📦 Outros'
+
+
 def ids_da_chave(chave):
     m = re.fullmatch(r'(\d+):(\d+)', chave or '')
     return (int(m.group(1)), int(m.group(2))) if m else None
@@ -471,6 +517,8 @@ def preparar(p):
     # previa: passa pela página do PostZap (miniatura garantida + cliques por grupo), redireciona na hora.
     p['link'] = (link if modo_link() == 'direto' else criar_link_curto(link, p.get('produto', ''), p.get('imagem', ''))) if link else ''
     p['loja'] = 'Shopee' if ids else (p.get('loja') or loja_do_link(link) or 'Outras')
+    if not p.get('nicho') or p['nicho'] not in NICHOS:
+        p['nicho'] = classificar_nicho(p.get('produto'), p.get('nicho') or p.get('palavra') or '')
     if 'cupom' not in p:
         p['cupom'], p['cupom_texto'] = cupom_para(p['loja'])
     if not p.get('chamada') and p.get('produto'):
@@ -899,7 +947,34 @@ RITMO_PADRAO = {
     'pausa': [40, 90],                      # minutos de pausa entre rajadas (sorteado)
     'entre_grupos': [120, 300],             # segundos entre um grupo e outro no mesmo post
     'aquec_inicio': 6, 'aquec_passo': 2, 'aquec_max': 20, 'aquec_desde': '',   # posts/dia por grupo: 6 → +2/dia → 20
+    # nichos por horário: em cada faixa, as rajadas dão preferência a esses nichos
+    'nichos_ativo': True, 'nicho_estrito': False,
+    'nichos_horario': [
+        {'de': '06:00', 'ate': '11:00', 'nichos': ['🏠 Casa e decoração', '🛋️ Móveis']},
+        {'de': '11:00', 'ate': '14:00', 'nichos': ['🍳 Cozinha e utensílios', '🔌 Eletrodomésticos']},
+        {'de': '14:00', 'ate': '17:00', 'nichos': ['💇 Beleza e cabelo']},
+        {'de': '17:00', 'ate': '20:00', 'nichos': ['👗 Moda', '🧸 Infantil', '🐶 Pet']},
+        {'de': '20:00', 'ate': '23:59', 'nichos': ['💇 Beleza e cabelo', '🎧 Eletrônicos', '🔌 Eletrodomésticos']},
+    ],
 }
+
+
+def nichos_da_hora(r=None, quando=None):
+    r = r or ritmo()
+    if not r.get('nichos_ativo'):
+        return []
+    hm = (quando or agora()).strftime('%H:%M')
+    for f in r.get('nichos_horario') or []:
+        if f.get('de', '') <= hm < f.get('ate', ''):
+            return f.get('nichos') or []
+    return []
+
+
+def nicho_do_item(item):
+    try:
+        return (json.loads(item['dados'] or '{}') or {}).get('nicho') or classificar_nicho(item['produto'])
+    except (ValueError, KeyError, TypeError):
+        return '📦 Outros'
 
 
 def ritmo():
@@ -954,8 +1029,13 @@ def proximo_item():
     if prox and prox > agora_iso:
         return None
     with db() as c:
-        item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND (agendado_para IS NULL OR agendado_para='') "
-                         "ORDER BY aprovado_em LIMIT 1").fetchone()
+        candidatos = c.execute("SELECT * FROM fila WHERE status='aprovado' AND (agendado_para IS NULL OR agendado_para='') "
+                               "ORDER BY aprovado_em").fetchall()
+    da_hora = nichos_da_hora(r)
+    if da_hora:                     # rajada do nicho da hora; sem nenhum desse nicho: outro (ou espera, se estrito)
+        do_nicho = [x for x in candidatos if nicho_do_item(x) in da_hora]
+        candidatos = do_nicho or ([] if r.get('nicho_estrito') else candidatos)
+    item = candidatos[0] if candidatos else None
     if not item:
         return None
     restante = int(get_cfg('rajada_restante', '0') or 0)
@@ -1295,7 +1375,7 @@ def montar_post_do_link(url):
 
 
 MENU_CURTO = ("↩️ *Responda em cima desta mensagem* (ou da foto) com: *1* postar · *1 vip* · *2* chamada · *3* De · "
-              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *0* descartar")
+              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *8* nicho · *0* descartar")
 
 
 def item_alvo(numero, texto, citado, conv):
@@ -1344,7 +1424,7 @@ def _tratar(inst, numero, texto, citado=''):
             mostrar_previa(inst, numero, fid)
             extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
             sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: responda *4 99,90*.'
-            responder(inst, numero, f"📌 *Post #{fid} pronto* · {p['produto'][:45]} · vai para {len(grupos)} grupo(s)"
+            responder(inst, numero, f"📌 *Post #{fid} pronto* · {p.get('nicho', '')} · {p['produto'][:45]} · vai para {len(grupos)} grupo(s)"
                                     f"{extra}{sem_preco}\n\n{MENU_CURTO}", fid=fid)
         n = len(pendentes(numero))
         if len(links) > 1 and n:
@@ -1398,8 +1478,11 @@ def _tratar(inst, numero, texto, citado=''):
             na_frente = c.execute("SELECT COUNT(*) FROM fila WHERE status IN ('aprovado','enviando') AND id!=? AND "
                                   "(agendado_para IS NULL OR agendado_para='')", (fid,)).fetchone()[0]
         prev = proxima_saida()
+        nicho = nicho_do_item(item)
+        faixa = next((f"{f['de']}–{f['ate']}" for f in (ritmo().get('nichos_horario') or []) if nicho in f.get('nichos', [])), '')
         quando_txt = (f"sai em {data_tela(quando, True)}" if quando else
-                      f"entrou na fila ({na_frente} na frente) · próxima rajada a partir de {data_tela(prev.isoformat(), True)}")
+                      f"entrou na fila ({na_frente} na frente) · próxima rajada a partir de {data_tela(prev.isoformat(), True)}"
+                      + (f" · {nicho} sai de preferência das {faixa}" if faixa and ritmo().get('nichos_ativo') else ''))
         return responder(inst, numero, f"✅ Post #{fid} aprovado! {quando_txt} · {len(grupos)} grupo(s). Aviso quando sair.")
     if cmd in ('2', '3', '4'):
         esp = {'2': 'chamada', '3': 'de', '4': 'por'}[cmd]
@@ -1434,6 +1517,12 @@ def _tratar(inst, numero, texto, citado=''):
         regravar(item, estilo=alvo)
         mostrar_previa(inst, numero, fid)
         return responder(inst, numero, f'👆 Post #{fid}: estilo "{alvo}".\n\n{MENU_CURTO}', fid=fid)
+    if cmd == '8':
+        alvo = next((n for n in NICHOS if resto.strip() and normalizar(resto) in normalizar(n)), None)
+        if not alvo:
+            return responder(inst, numero, '🗂️ Nichos: ' + ', '.join(NICHOS) + '. Ex.: *8 cozinha*', fid=fid)
+        regravar(item, nicho=alvo)
+        return responder(inst, numero, f'🗂️ Post #{fid} agora é do nicho {alvo}.', fid=fid)
     if cmd == '0':
         with _lock, db() as c:
             c.execute("UPDATE fila SET status='descartado' WHERE id=?", (fid,))
@@ -1527,6 +1616,12 @@ def rodar_divulgador(manual=False):
     if not jid:
         log.warning('Divulgador: sem grupo FILA POST ZAP com chip conectado')
         return 0, 'Crie o grupo FILA POST ZAP com um chip conectado dentro.'
+    r = ritmo()
+    alvo = nichos_da_hora(r, agora() + timedelta(minutes=40))     # o nicho da faixa que vai começar
+    if alvo and not manual:
+        palavras = [w for w in d['palavras'] if classificar_nicho(w) in alvo]
+        if palavras:
+            d = dict(d, palavras=palavras)
     escolhidos = minerar(d)
     if not escolhidos:
         return 0, 'Nenhum produto novo passou nos filtros agora.'
@@ -1536,7 +1631,7 @@ def rodar_divulgador(manual=False):
     feitos = 0
     for n in escolhidos:
         try:
-            p = preparar({'origem': 'divulgador', 'chave': n['chave'], 'produto': n['productName'],
+            p = preparar({'origem': 'divulgador', 'chave': n['chave'], 'produto': n['productName'], 'palavra': n['palavra'],
                           'imagem': n.get('imageUrl', ''), 'preco': br(n.get('priceMin'))})
         except Exception as e:
             log.warning(f'Divulgador: preparar falhou: {e}')
@@ -1553,7 +1648,7 @@ def rodar_divulgador(manual=False):
                              'aprovado' if auto else 'rascunho', agora().isoformat() if auto else None))
             fid = cur.lastrowid
         mostrar_previa(inst, jid, fid)
-        info = (f"🤖 *Post #{fid}* · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
+        info = (f"🤖 *Post #{fid}* · {p.get('nicho', '')} · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
                 f"⭐ {n.get('ratingStar')} · busca \"{n['palavra']}\"")
         responder(inst, jid, info + ('\n✅ Já aprovado (sai na próxima rajada). Responda *0* em cima para cancelar.'
                                      if auto else f'\n\n{MENU_CURTO}'), fid=fid)
@@ -1680,12 +1775,14 @@ class H(BaseHTTPRequestHandler):
                             'COUNT(*) n FROM cliques k LEFT JOIN grupos g '
                             'ON g.rowid=k.grupo WHERE k.codigo=? GROUP BY k.grupo ORDER BY n DESC', (cod,))] if cod else []
                         r['sub_ids'] = (json.loads(r.get('dados') or '{}') or {}).get('sub_ids')
+                        r['nicho'] = nicho_do_item(r) if r.get('origem') != 'aviso' else ''
                 return self.send_json({'fila': rows, 'pausado': get_cfg('pausado') == '1'})
             if p == '/api/config':
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
                                        'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
-                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(),
+                                       'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS,
+                                       'nichos_agora': nichos_da_hora(),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
             log.exception('GET')
@@ -1781,6 +1878,14 @@ class H(BaseHTTPRequestHandler):
             return self.send_json({'ok': True})
         if p == '/api/ritmo':
             r = ritmo()
+            if isinstance(b.get('nichos_horario'), list):
+                r['nichos_horario'] = sorted(
+                    [{'de': f['de'], 'ate': f['ate'], 'nichos': [n for n in f.get('nichos', []) if n in NICHOS]}
+                     for f in b['nichos_horario'] if re.fullmatch(r'\d{2}:\d{2}', f.get('de', '')) and
+                     re.fullmatch(r'\d{2}:\d{2}', f.get('ate', ''))], key=lambda f: f['de'])
+            for k in ('nichos_ativo', 'nicho_estrito'):
+                if k in b:
+                    r[k] = bool(b[k])
             for k in ('inicio', 'fim'):
                 if re.fullmatch(r'\d{2}:\d{2}', str(b.get(k, ''))):
                     r[k] = b[k]
@@ -1847,6 +1952,14 @@ class H(BaseHTTPRequestHandler):
                     return self.send_json({'erro': 'Escolha pelo menos um grupo antes de aprovar.'}, 400)
                 c.execute("UPDATE fila SET status='aprovado', aprovado_em=?, erro=NULL WHERE id=? "
                           "AND status IN ('rascunho','erro')", (agora().isoformat(), b['id']))
+            return self.send_json({'ok': True})
+        if p == '/api/fila/nicho':
+            it = item_fila(b['id'])
+            if it and b.get('nicho') in NICHOS:
+                dados = json.loads(it.get('dados') or '{}')
+                dados['nicho'] = b['nicho']
+                with _lock, db() as c:
+                    c.execute('UPDATE fila SET dados=? WHERE id=?', (json.dumps(dados), b['id']))
             return self.send_json({'ok': True})
         if p == '/api/fila/voltar':
             with _lock, db() as c:
