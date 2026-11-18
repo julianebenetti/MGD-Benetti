@@ -484,8 +484,13 @@ async function carregarFila(){
        <span class="muted">para os posts sem grupo (ou para todos da fila), usando a lista escolhida ao lado de "Aprovar todos"</span></div>` + naFila.map(mini).join('') : '');
   const env = FILA.filter(x => x.status === 'enviado');
   setTimeout(() => document.querySelectorAll('details.mini').forEach(d => { if (abertos.has(d.querySelector('summary b').textContent)) d.open = true; }));
-  $('#hist').innerHTML = env.length ? `<p class="muted">${env.length} post(s) enviados · toque para ver o post completo</p>` + env.map(mini).join('')
-                                    : '<p class="muted">Nada enviado ainda.</p>';
+  $('#hist').innerHTML = (env.length ? `<p class="muted">${env.length} post(s) enviados · toque para ver o post completo</p>` + env.map(mini).join('')
+                                     : '<p class="muted">Nada enviado ainda.</p>') +
+    ((j.descartados || []).length ? `<details class="card" style="margin-top:16px"><summary><b>🗑️ Descartados (${j.descartados.length})</b>
+      <span class="muted">· descartou sem querer? restaure aqui</span></summary>` + j.descartados.map(d => `<div class="chk">
+      <b>#${d.id}</b> <span style="flex:1">${esc(d.produto)}</span>
+      ${d.enviados ? `<span class="tag">já foi para ${d.enviados} grupo(s)</span>` : ''}
+      <button class="b" onclick="restaurar(${d.id})">↩️ Restaurar</button></div>`).join('') + '</details>' : '');
 }
 async function mudarNicho(id, nicho){ await api('fila/nicho', {id, nicho}); }
 async function definirGrupos(){
@@ -503,6 +508,11 @@ async function aprovarTodos(){
   const j = await api('fila/aprovar_todos', {lista});
   alert(`✅ ${j.aprovados.length} aprovado(s). Saem nas rajadas a partir de ${fdata(j.proxima, true)}.` +
         (j.sem_grupo.length ? `\n⚠️ ${j.sem_grupo.length} sem grupo: marque grupos em 👥 Grupos.` : ''));
+  carregarFila();
+}
+async function restaurar(id){
+  const j = await api('fila/restaurar', {id});
+  alert(j.para === 'enviado' ? '✅ Restaurado: ele já tinha sido enviado, então voltou para o Histórico.' : '✅ Restaurado: voltou para "Precisam de você".');
   carregarFila();
 }
 async function aprovar(id){ try { await api('fila/aprovar', {id}); } catch(e){ alert(e.message); } carregarFila(); }

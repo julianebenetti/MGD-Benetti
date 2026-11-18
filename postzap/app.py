@@ -1653,9 +1653,10 @@ def _tratar(inst, numero, texto, citado=''):
         return responder(inst, numero, f'🗂️ Post #{fid} agora é do nicho {alvo}.', fid=fid)
     if cmd == '0':
         with _lock, db() as c:
-            c.execute("UPDATE fila SET status='descartado' WHERE id=?", (fid,))
+            ja_foi = c.execute('SELECT COUNT(*) FROM envios WHERE fila_id=? AND ok=1', (fid,)).fetchone()[0]
+            c.execute("UPDATE fila SET status=? WHERE id=?", ('enviado' if ja_foi else 'descartado', fid))
         conversa_set(numero, None)
-        return responder(inst, numero, f'🗑️ Post #{fid} descartado.')
+        return responder(inst, numero, f'🗑️ Post #{fid} descartado.' + (f' (já tinha ido para {ja_foi} grupo(s): fica no histórico)' if ja_foi else ''))
     responder(inst, numero, MENU_AVISO if item['origem'] == 'aviso' else f'Post #{fid}:\n{menu()}', fid=fid)
 
 
@@ -1932,7 +1933,11 @@ class H(BaseHTTPRequestHandler):
                         r['sub_ids'] = (json.loads(r.get('dados') or '{}') or {}).get('sub_ids')
                         r['nicho'] = nicho_do_item(r) if r.get('origem') != 'aviso' else ''
                         r['focos'] = focos_do_item(r) if r.get('origem') != 'aviso' else []
-                return self.send_json({'fila': rows, 'pausado': get_cfg('pausado') == '1'})
+                with db() as c:
+                    descartados = [dict(r) for r in c.execute(
+                        "SELECT f.id, f.produto, f.criado_em, (SELECT COUNT(*) FROM envios e WHERE e.fila_id=f.id AND e.ok=1) enviados "
+                        "FROM fila f WHERE status='descartado' ORDER BY id DESC LIMIT 40")]
+                return self.send_json({'fila': rows, 'descartados': descartados, 'pausado': get_cfg('pausado') == '1'})
             if p == '/api/config':
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
@@ -2150,8 +2155,22 @@ class H(BaseHTTPRequestHandler):
             return self.send_json({'ok': True})
         if p == '/api/fila/descartar':
             with _lock, db() as c:
-                c.execute("UPDATE fila SET status='descartado' WHERE id=? AND status!='enviando'", (b['id'],))
-            return self.send_json({'ok': True})
+                ja_foi = c.execute('SELECT COUNT(*) FROM envios WHERE fila_id=? AND ok=1', (b['id'],)).fetchone()[0]
+                if ja_foi:      # já saiu para algum grupo: só tira da fila e fica no histórico como enviado
+                    c.execute("UPDATE fila SET status='enviado', enviado_em=COALESCE(enviado_em, ?), erro=? WHERE id=? "
+                              "AND status!='enviando'", (agora().isoformat(), f'Interrompido por você — já tinha ido para {ja_foi} grupo(s).', b['id']))
+                else:
+                    c.execute("UPDATE fila SET status='descartado' WHERE id=? AND status!='enviando'", (b['id'],))
+            return self.send_json({'ok': True, 'ja_enviado': ja_foi})
+        if p == '/api/fila/restaurar':
+            with _lock, db() as c:
+                ja_foi = c.execute('SELECT COUNT(*), MAX(quando) FROM envios WHERE fila_id=? AND ok=1', (b['id'],)).fetchone()
+                if ja_foi[0]:
+                    c.execute("UPDATE fila SET status='enviado', enviado_em=COALESCE(enviado_em, ?) WHERE id=? AND status='descartado'",
+                              (ja_foi[1], b['id']))
+                else:
+                    c.execute("UPDATE fila SET status='rascunho' WHERE id=? AND status='descartado'", (b['id'],))
+            return self.send_json({'ok': True, 'para': 'enviado' if ja_foi[0] else 'rascunho'})
         self.send_json({'erro': 'não encontrado'}, 404)
 
 
