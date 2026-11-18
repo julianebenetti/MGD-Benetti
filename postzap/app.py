@@ -354,6 +354,51 @@ def shopee_gql(query):
     return data['data']
 
 
+ID_PADROES = (re.compile(r'/(?:product|opaanlp)/(\d+)/(\d+)'), re.compile(r'-i\.(\d+)\.(\d+)'),
+              re.compile(r'[?&]shopid=(\d+).*?[?&]itemid=(\d+)', re.I))
+
+
+def ids_no_texto(texto):
+    t = urllib.parse.unquote(urllib.parse.unquote(texto or ''))   # destino escondido em ?next= (tela de login)
+    for pad in ID_PADROES:
+        m = pad.search(t)
+        if m:
+            return f'{m.group(1)}:{m.group(2)}'
+    return None
+
+
+class _SemRedirecionar(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **k):
+        return None
+
+
+def ids_do_link_shopee(url):
+    """Link curto (s.shopee.com.br, shp.ee) → 'loja:item'. Segue cada redirecionamento à mão (GET, como navegador)
+    e procura os ids em cada endereço e, no fim, no HTML da página."""
+    abrir = urllib.request.build_opener(_SemRedirecionar)
+    atual = url
+    for _ in range(8):
+        ids = ids_no_texto(atual)
+        if ids:
+            return ids
+        req = urllib.request.Request(atual, headers={
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Mobile Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml', 'Accept-Language': 'pt-BR,pt;q=0.9'})
+        try:
+            with abrir.open(req, timeout=20) as r:
+                return ids_no_texto(r.read(400_000).decode('utf-8', 'ignore'))
+        except urllib.error.HTTPError as e:
+            destino = e.headers.get('Location')
+            if e.code in (301, 302, 303, 307, 308) and destino:
+                atual = urllib.parse.urljoin(atual, destino)
+                continue
+            return ids_no_texto(e.read(400_000).decode('utf-8', 'ignore'))
+        except Exception as e:
+            log.warning(f'Não consegui abrir {atual}: {e}')
+            return None
+    return ids_no_texto(atual)
+
+
 def ids_da_chave(chave):
     m = re.fullmatch(r'(\d+):(\d+)', chave or '')
     return (int(m.group(1)), int(m.group(2))) if m else None
@@ -952,14 +997,12 @@ def _tratar(inst, numero, texto):
         responder(inst, numero, '⏳ Montando a postagem…')
         url = link.group(0).rstrip('.,)')
         ids = None
-        if 'shopee' in url or 'shp.ee' in url:
-            try:
-                final = urllib.request.urlopen(urllib.request.Request(url, method='HEAD', headers={
-                    'User-Agent': 'Mozilla/5.0'}), timeout=15).geturl()
-            except Exception:
-                final = url
-            m = re.search(r'/product/(\d+)/(\d+)', final) or re.search(r'i\.(\d+)\.(\d+)', final)
-            ids = f'{m.group(1)}:{m.group(2)}' if m else None
+        e_shopee = 'shopee' in url or 'shp.ee' in url
+        if e_shopee:
+            ids = ids_do_link_shopee(url)
+            if not ids:
+                return responder(inst, numero, '⚠️ Não consegui descobrir qual é o produto desse link da Shopee. '
+                                               'Tente mandar o link copiado de dentro do produto (Compartilhar → Copiar link).')
         if ids:
             p = {'origem': 'whatsapp', 'chave': ids, 'link': url if 's.shopee' in url else '', 'produto': ''}
             nodes = []
@@ -969,6 +1012,9 @@ def _tratar(inst, numero, texto):
             except Exception:
                 pass
             p['produto'] = nodes[0]['productName'] if nodes else ''
+            if not nodes:
+                p['avisos'] = ['A Shopee não devolveu os dados desse produto agora (pode ter saído do ar ou a chave '
+                               'de afiliado não foi encontrada). Mande *2* para escrever a chamada e *4* para o preço.']
             p = preparar(p)
         else:
             p = ler_link(url)
@@ -978,7 +1024,8 @@ def _tratar(inst, numero, texto):
             return responder(inst, numero, '🚫 Produto de suplementação: não posto esse tipo de produto.')
         if not p.get('produto'):
             p['produto'] = 'Oferta'
-            p['avisos'].append('Não consegui ler o nome do produto: mande *2* para escrever a chamada e edite no app se quiser.')
+            p['avisos'] = [a for a in p['avisos'] if 'nome do produto' not in a] + [
+                'Não consegui ler o nome do produto: mande *2* para escrever a chamada (o nome dá para editar no app).']
         if not p.get('chamada'):
             p['chamada'] = gerar_chamada(p['produto'], p.get('loja', ''))
         p['produto'] = p['produto'][:120]
