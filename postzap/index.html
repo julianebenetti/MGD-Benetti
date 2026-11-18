@@ -385,7 +385,13 @@ async function salvarMensagens(){
   await api('mensagens', {modelos: MSG.modelos, estilo_loja, chamadas, chamada_modo: $('#mmodo').value});
   MSG = await api('config'); $('#mok').textContent = 'Salvo ✓'; setTimeout(() => $('#mok').textContent = '', 3000);
 }
-async function ativar(jid, ativo){ await api('grupos/ativo', {jid, ativo}); GRUPOS.find(g => g.jid === jid).ativo = ativo ? 1 : 0; }
+async function ativar(jid, ativo){
+  const el = event && event.target;
+  try { await api('grupos/ativo', {jid, ativo}); GRUPOS.find(g => g.jid === jid).ativo = ativo ? 1 : 0; }
+  catch(e){ if (el) el.checked = !ativo; return alert('Não salvou: ' + e.message); }
+  if (el) { const t = document.createElement('b'); t.className = 'tag'; t.textContent = ativo ? '✓ Salvo' : '✓ Removido';
+    el.parentElement.appendChild(t); setTimeout(() => t.remove(), 1500); }
+}
 async function atualizarGrupos(){ try { const j = await api('grupos/atualizar', {}); alert(j.total + ' grupos encontrados'); } catch(e){ alert(e.message); } carregarGrupos(); }
 
 async function statusWa(){
