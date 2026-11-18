@@ -81,6 +81,7 @@ MODELO_PADRAO = """*{chamada}*
 💳 {parcelamento}
 🎟️ Cupom: *{cupom}* {cupom_texto}
 
+👉 {cta}
 🔗 *Compre aqui:* {link}
 
 ⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento."""
@@ -97,7 +98,7 @@ ESTILOS_PADRAO = {
 *Por: {preco}* 🔥
 🎟️ Cupom: *{cupom}* {cupom_texto}
 
-🏃‍♀️ Corre que acaba rápido!
+👉 {cta}
 🔗 {link}
 
 ⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento.""",
@@ -110,6 +111,7 @@ Use o cupom: *{cupom}* {cupom_texto}
 ~De: {preco_de}~ 🔻{desconto}
 *Por: {preco}* ✅
 
+👉 {cta}
 🔗 *Compre aqui:* {link}
 
 ⚠️ Cupom sujeito a disponibilidade e às regras da loja.""",
@@ -122,6 +124,7 @@ Use o cupom: *{cupom}* {cupom_texto}
 *Por: {preco}* ✅
 🎟️ Cupom: *{cupom}* {cupom_texto}
 
+👉 {cta}
 🔗 {link}
 
 ⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento.""",
@@ -206,7 +209,45 @@ def modelos():
         m = dict(ESTILOS_PADRAO)
         if get_cfg('modelo'):
             m['Padrão'] = get_cfg('modelo')
+    if get_cfg('migr_cta') != '1':              # 1ª vez: põe a linha da CTA ({cta}) antes do link nos estilos salvos
+        for k, v in m.items():
+            if '{cta}' not in v and '{link}' in v:
+                ls = v.split('\n')
+                i = next(j for j, l in enumerate(ls) if '{link}' in l)
+                ls.insert(i, '👉 {cta}')
+                m[k] = '\n'.join(ls)
+        set_cfg('modelos', json.dumps(m, ensure_ascii=False))
+        set_cfg('migr_cta', '1')
     return m
+
+
+CTAS_PADRAO = ['Corre que é por tempo limitado! 🏃‍♀️', 'Aproveita antes que acabe o estoque! 🔥', 'Garanta o seu agora! 🛒',
+               'Clica no link e confere! 👇', 'Esse preço não vai durar! ⏳', 'Últimas unidades com esse valor! ⚡',
+               'Vale cada centavo, confia! 💖', 'Compartilha com quem vai amar! 💬']
+
+
+def gerar_cta(produto):
+    """CTA (chamada para ação) do post, revezando entre as suas (✏️ Mensagens) ou criada pela IA."""
+    modo = get_cfg('cta_modo', 'frases')
+    lista = [c for c in get_json('ctas', CTAS_PADRAO) if c.strip()]
+    if modo == 'nenhum':
+        return ''
+    if lista and (modo == 'frases' or (modo == 'misto' and random.random() < 0.5) or not chave_openai()):
+        return random.choice(lista).strip()
+    try:
+        req = urllib.request.Request('https://api.openai.com/v1/chat/completions', headers={
+            'Authorization': f'Bearer {chave_openai()}', 'Content-Type': 'application/json'},
+            data=json.dumps({'model': CFG['openai_model'], 'messages': [{'role': 'user', 'content':
+                'Escreva UMA frase curta (máx. 8 palavras) de chamada para ação para um grupo de ofertas no WhatsApp, '
+                'com 1 emoji no final, sem preço, sem promessas falsas, sem aspas. Estilo: ' + '; '.join(lista[:4]) +
+                f'. Produto: {produto}'}]}).encode())
+        with urllib.request.urlopen(req, timeout=30) as r:
+            txt = json.load(r)['choices'][0]['message']['content'].strip().strip('"').splitlines()[0]
+        if 3 < len(txt) < 80:
+            return txt
+    except Exception as e:
+        log.warning(f'CTA pela IA falhou: {e}')
+    return random.choice(lista).strip() if lista else ''
 
 
 def estilo_da_loja(loja):
@@ -489,8 +530,16 @@ TEMAS_PRONTOS = {
     '🎒 Volta às aulas': (r'volta [aà]s aulas|material escolar|mochila escolar|estojo|caderno|lancheira',
                          ['material escolar', 'mochila escolar', 'estojo escolar', 'lancheira', 'kit caderno'], False),
 }
+TEMA_PAI_PRONTO = {'➕ Plus Size': '👗 Moda', '✝️ Evangélica': '👗 Moda', '🎆 Réveillon': '👗 Moda',
+                   '☀️ Verão e praia': '👗 Moda', '🎄 Natal': '🏠 Casa e decoração', '🎒 Volta às aulas': '🧸 Infantil'}
 FOCOS = list(TEMAS_PRONTOS)          # nomes dos temas prontos (os criados por ela vêm de focos_nomes())
 _REGRAS_FOCO = [(n, v[0]) for n, v in TEMAS_PRONTOS.items()]
+
+
+def temas_pai(d=None):
+    """Tema → categoria a que ele pertence (mesma cor e aparece embaixo dela na grade). Temas criados: escolhidos por ela."""
+    d = d or divulgador_cfg()
+    return {**TEMA_PAI_PRONTO, **{k: v for k, v in (d.get('temas_pai') or {}).items() if v in NICHOS}}
 
 
 def focos_nomes(d=None):
@@ -576,6 +625,8 @@ def preparar(p):
         p['cupom'], p['cupom_texto'] = cupom_para(p['loja'])
     if not p.get('chamada') and p.get('produto'):
         p['chamada'] = gerar_chamada(p['produto'], p['loja'])
+    if 'cta' not in p:
+        p['cta'] = gerar_cta(p.get('produto', ''))
     p.setdefault('estilo', 'Cupom' if p.get('cupom') and 'Cupom' in modelos() and estilo_da_loja(p['loja']) == 'Padrão'
                  else estilo_da_loja(p['loja']))
     p['avisos'] = avisos
@@ -1915,7 +1966,7 @@ class H(BaseHTTPRequestHandler):
                                       c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (r['jid'],))]
                 return self.send_json({'grupos': rows, 'listas': listas()})
             if p == '/api/divulgador':
-                return self.send_json(dict(divulgador_cfg(), prontos=FOCOS))
+                return self.send_json(dict(divulgador_cfg(), prontos=FOCOS, temas_pai=temas_pai(), nichos=NICHOS))
             if p == '/api/cupons':
                 with db() as c:
                     return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
@@ -1941,7 +1992,9 @@ class H(BaseHTTPRequestHandler):
             if p == '/api/config':
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
                                        'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
-                                       'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'), 'modo_link': modo_link(),
+                                       'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
+                                       'ctas': get_json('ctas', CTAS_PADRAO), 'cta_modo': get_cfg('cta_modo', 'frases'),
+                                       'temas_pai': temas_pai(), 'modo_link': modo_link(),
                                        'ritmo': ritmo(), 'limite_hoje': limite_hoje(), 'nichos': NICHOS, 'focos': focos_nomes(),
                                        'nichos_agora': nichos_da_hora(), 'grupos_ativos': len(grupos_ativos()),
                                        'proxima_saida': proxima_saida().isoformat(), 'repetir_dias': CFG['repetir_dias']})
@@ -2005,6 +2058,10 @@ class H(BaseHTTPRequestHandler):
                 set_cfg('chamadas', json.dumps(b['chamadas'], ensure_ascii=False))
             if b.get('modo_link') in ('direto', 'previa'):
                 set_cfg('modo_link', b['modo_link'])
+            if isinstance(b.get('ctas'), list):
+                set_cfg('ctas', json.dumps([c.strip() for c in b['ctas'] if c.strip()][:40], ensure_ascii=False))
+            if b.get('cta_modo') in ('frases', 'ia', 'misto', 'nenhum'):
+                set_cfg('cta_modo', b['cta_modo'])
             if b.get('chamada_modo') in ('ia', 'frases', 'misto'):
                 set_cfg('chamada_modo', b['chamada_modo'])
             return self.send_json({'ok': True})
@@ -2079,6 +2136,8 @@ class H(BaseHTTPRequestHandler):
                 for n, v in TEMAS_PRONTOS.items():
                     d['palavras_foco'].setdefault(n, list(v[1]))
                 d['focos_ativos'] = [f for f in d['focos_ativos'] if f in d['palavras_foco']]
+            if isinstance(b.get('temas_pai'), dict):
+                d['temas_pai'] = {k: v for k, v in b['temas_pai'].items() if v in NICHOS and k not in TEMAS_PRONTOS}
             if str(b.get('peso_foco', '')).replace('.', '', 1).isdigit():
                 d['peso_foco'] = min(5.0, max(1.0, float(b['peso_foco'])))
             if isinstance(b.get('palavras'), list):

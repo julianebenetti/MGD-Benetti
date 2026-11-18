@@ -161,6 +161,8 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
       <label class="chk"><input type="radio" name="dvModo" value="automatico"> <span><b>Postar sozinho</b> — já entram aprovados e saem nas rajadas;
         responda <b>0</b> em cima de um para cancelar antes de sair</span></label></div>
       <div class="form" oninput="pendente('dvOk')" onchange="pendente('dvOk')">
+        <details id="dvCfg" ontoggle="try{localStorage.dvCfg=this.open?1:0}catch(e){}"><summary style="cursor:pointer;padding:8px 0">
+          <b>⚙️ Configurações da busca</b> <span class="muted">(horários, quantidade, comissão mínima, nota, vendas…) — toque para abrir/fechar</span></summary>
         <div class="q"><div class="t"><b>⏰ Em que horários ele busca ofertas?</b><small>Separe por vírgula. Padrão: antes dos picos (13–15h, 18h, 20–21h).</small></div>
           <div class="v"><input id="dvHor" style="width:200px" placeholder="07:40, 12:10, 17:10"></div></div>
         <div class="q"><div class="t"><b>📦 Quantos posts novos em cada busca?</b></div>
@@ -175,14 +177,16 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v"><input id="dvVend" type="number" min="0"> vendas</div></div>
         <div class="q"><div class="t"><b>🔁 Depois de postar, quanto tempo sem repetir o mesmo produto?</b></div>
           <div class="v"><input id="dvRep" type="number" min="1"> dias</div></div>
+        </details>
         <div class="q" style="display:block"><div class="t"><b>🎯 Temas da mineração (público, datas e ocasiões)</b>
           <small>Ligue só o que quer buscar agora. Cada tema tem as próprias palavras de busca e ganha prioridade no ranking.
           São independentes: um vestido plus size comum fica só com ➕ Plus Size.</small></div>
           <div id="dvFocos"></div>
           <button class="b" type="button" onclick="novoTema()">➕ Novo tema</button>
           <div class="row" style="margin-top:6px">Prioridade dos temas ligados no ranking: <input id="dvPeso" type="number" min="1" max="5" step="0.1" style="width:80px"> × <small class="muted">(1 = sem prioridade · 1,6 = 60% a mais)</small></div></div>
+        <details><summary style="cursor:pointer;padding:8px 0"><b>🔎 Outras buscas (gerais)</b> <span class="muted">— toque para abrir/fechar</span></summary>
         <div class="q" style="display:block"><div class="t"><b>🔎 Outras buscas (gerais)</b><small>Uma palavra de busca por linha (ex.: escova secadora).</small></div>
-          <textarea id="dvPal" style="min-height:160px;margin-top:6px"></textarea></div>
+          <textarea id="dvPal" style="min-height:160px;margin-top:6px"></textarea></div></details>
       </div>
       <div class="salvar"><button class="b p" onclick="salvarDiv()">💾 Salvar</button>
         <button class="b" onclick="testarDiv()">🔍 Testar (ver o que ele acharia agora)</button>
@@ -212,7 +216,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
     </div>
     <div class="card"><b>🎨 Estilos de mensagem</b>
       <p class="muted">Campos: {chamada} {produto} {preco_de} {preco} {desconto} {cupom} {cupom_texto} {pix} {parcelamento} {loja} {link}.
-      Uma linha some sozinha quando os campos dela estão vazios (ex.: sem "De:", sem cupom). {desconto} é calculado do De/Por.
+      {cta} = chamada para ação (veja abaixo). Uma linha some sozinha quando os campos dela estão vazios (ex.: sem "De:", sem cupom). {desconto} é calculado do De/Por.
       WhatsApp: *negrito*, _itálico_, ~riscado~.</p>
       <div class="row"><select id="mestilo" style="width:auto" onchange="mostrarEstilo()"></select>
         <button class="b" onclick="novoEstilo()">➕ Novo estilo</button>
@@ -228,6 +232,12 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
         <option value="misto">🔀 Misturar (metade cada)</option></select></div>
       <p class="muted">Suas frases (uma por linha), revezando ao acaso. "Todas" vale para lojas sem frases próprias.</p>
       <div id="mchamadas" class="grid"></div></div>
+    <div class="card"><b>👉 Chamadas para ação (CTA)</b>
+      <p class="muted">A frase que vai antes do link (linha <b>👉 {cta}</b> dos estilos). Cada post sorteia uma — assim as mensagens não ficam todas iguais.</p>
+      <div class="row" style="margin:8px 0"><span>De onde vem a CTA:</span>
+        <select id="mctamodo" style="width:auto"><option value="frases">📝 Revezar entre as minhas frases</option><option value="ia">🤖 IA cria uma para cada produto</option>
+        <option value="misto">🔀 Misturar (metade cada)</option><option value="nenhum">🚫 Sem CTA</option></select></div>
+      <textarea id="mctas" style="min-height:170px" placeholder="Uma frase por linha"></textarea></div>
     <button class="b p" onclick="salvarMensagens()">💾 Salvar mensagens</button> <span id="mok" class="muted"></span>
   </section>
 </main>
@@ -277,7 +287,8 @@ const $ = s => document.querySelector(s);
 const COR_NICHO = {'🏠 Casa e decoração': 28, '🍳 Cozinha e utensílios': 45, '🔌 Eletrodomésticos': 200, '💇 Beleza e cabelo': 320,
   '👗 Moda': 275, '🧸 Infantil': 55, '🎧 Eletrônicos': 220, '🛋️ Móveis': 95, '🐶 Pet': 160, '📦 Outros': 0};
 const COR_FOCO_FIXA = {'➕ Plus Size': 330, '✝️ Evangélica': 210, '🎄 Natal': 130, '🎆 Réveillon': 50, '☀️ Verão e praia': 185, '🎒 Volta às aulas': 15};
-const corFoco = f => COR_FOCO_FIXA[f] ?? ([...f].reduce((a, c) => (a * 31 + c.codePointAt(0)) % 360, 7));   // tema novo: cor própria
+// tema ligado a uma categoria usa a MESMA cor dela (Plus Size = cor da Moda…); sem categoria: cor própria
+const corFoco = f => COR_NICHO[((typeof MSG !== 'undefined' && MSG.temas_pai) || {})[f]] ?? COR_FOCO_FIXA[f] ?? ([...f].reduce((a, c) => (a * 31 + c.codePointAt(0)) % 360, 7));
 const COR_FOCO = new Proxy({}, {get: (_, f) => corFoco(String(f))});
 const COR_STATUS = {rascunho: '#e0a100', erro: '#d64545', aprovado: '#3b82f6', enviando: '#8b5cf6', enviado: '#16a34a', descartado: '#999'};
 function tom(nicho, focos){
@@ -285,7 +296,7 @@ function tom(nicho, focos){
   return h === undefined ? '' : `background-color:hsla(${h},70%,55%,.10);`;
 }
 const etiquetas = (nicho, focos) => (nicho ? `<span class="tag" style="background:hsla(${COR_NICHO[nicho] ?? 0},70%,55%,.18)">${esc(nicho)}</span> ` : '') +
-  (focos || []).map(f => `<span class="tag" style="background:hsla(${COR_FOCO[f]},75%,55%,.25)">${esc(f)}</span>`).join(' ');
+  (focos || []).map(f => `<span class="tag" style="background:hsla(${corFoco(f)},75%,55%,.30);border:1px dashed hsla(${corFoco(f)},60%,40%,.6)">${esc(f)}</span>`).join(' ');
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 // Datas sempre no padrão ddMmmaa (18Nov26); com hora: 18Nov26 20:30
 function fdata(v, hora){
@@ -296,7 +307,7 @@ function fdata(v, hora){
   return p(d.getDate()) + MESES[d.getMonth()] + String(d.getFullYear()).slice(2) + (hora ? ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) : '');
 }
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let PRODUTOS = [], GRUPOS = [], LISTAS = [], MODELO = '', FILA = [], EDIT = null, MSG = {}, CUPONS = [];
+let DIV = {}, PRODUTOS = [], GRUPOS = [], LISTAS = [], MODELO = '', FILA = [], EDIT = null, MSG = {}, CUPONS = [];
 
 async function api(path, body) {
   const r = await fetch(B + 'api/' + path, body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {});
@@ -437,12 +448,14 @@ function desenharGrade(){
   const cab = '<tr><th></th>' + FAIXAS.map((f, i) => `<th><input type="time" value="${f.de}" onchange="FAIXAS[${i}].de=this.value;pendente('rOk');desenharGrade()"><br>às<br>
     <input type="time" value="${f.ate}" onchange="FAIXAS[${i}].ate=this.value;pendente('rOk')">${picoDe(f)}<br>
     <span style="cursor:pointer" title="Tirar este horário" onclick="FAIXAS.splice(${i},1);pendente('rOk');desenharGrade()">🗑️</span></th>`).join('') + '</tr>';
-  const linha = (n, h) => `<tr><td class="n">${esc(n)}</td>` + FAIXAS.map((f, i) => {
+  const linha = (n, h, sub) => `<tr><td class="n" style="${sub ? 'padding-left:18px;color:var(--mut)' : ''}">${sub ? '↳ ' : ''}${esc(n)}</td>` + FAIXAS.map((f, i) => {
     const on = (f.nichos || []).includes(n);
     return `<td class="c" style="${on ? `background:hsla(${h},65%,48%,.9)` : ''}" onclick="alternarCelula(${i}, '${esc(n).replace(/'/g, "\\'")}')">${on ? '✓' : ''}</td>`;
   }).join('') + '</tr>';
-  $('#rGrade').innerHTML = cab + MSG.nichos.map(n => linha(n, COR_NICHO[n] ?? 0)).join('') +
-    `<tr class="sep"><td colspan="${FAIXAS.length + 1}">TEMAS</td></tr>` + MSG.focos.map(n => linha(n, corFoco(n))).join('');
+  const pai = MSG.temas_pai || {}, soltos = MSG.focos.filter(t => !pai[t]);
+  $('#rGrade').innerHTML = cab + MSG.nichos.map(n => linha(n, COR_NICHO[n] ?? 0) +
+      MSG.focos.filter(t => pai[t] === n).map(t => linha(t, COR_NICHO[n] ?? 0, true)).join('')).join('') +
+    (soltos.length ? `<tr class="sep"><td colspan="${FAIXAS.length + 1}">OUTROS TEMAS</td></tr>` + soltos.map(n => linha(n, corFoco(n))).join('') : '');
   desenharLinha();
 }
 // Linha do tempo (resumo do dia) em cima da grade: cada faixa no tamanho real do horário; toque = destaca a coluna
@@ -634,13 +647,15 @@ async function alternarCupom(id){ const c = CUPONS.find(x => x.id === id); await
 async function excluirCupom(id){ if (confirm('Excluir este cupom?')) { await api('cupons/excluir', {id}); carregarCupons(); } }
 
 async function carregarDiv(){
-  const d = await api('divulgador');
+  const d = await api('divulgador'); DIV = d;
+  try { $('#dvCfg').open = localStorage.dvCfg === '1'; } catch(e){}
   $('#dvAtivo').checked = d.ativo; document.querySelectorAll('input[name=dvModo]').forEach(r => r.checked = r.value === d.modo);
   $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min; $('#dvComModa').value = d.comissao_min_moda;
   $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias;
   $('#dvPal').value = d.palavras.join('\n'); $('#dvPeso').value = d.peso_foco;
   $('#dvFocos').innerHTML = '';
-  Object.keys(d.palavras_foco || {}).forEach(f => addTema(f, d.palavras_foco[f], d.focos_ativos.includes(f), !(d.prontos || []).includes(f)));
+  const ordem = Object.keys(d.palavras_foco || {}).sort((a, b) => (d.nichos.indexOf(d.temas_pai[a]) + 1 || 99) - (d.nichos.indexOf(d.temas_pai[b]) + 1 || 99));
+  ordem.forEach(f => addTema(f, d.palavras_foco[f], d.focos_ativos.includes(f), !(d.prontos || []).includes(f)));
 }
 async function salvarDiv(){
   await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
@@ -648,13 +663,19 @@ async function salvarDiv(){
     comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
     palavras: $('#dvPal').value.split('\n'), peso_foco: $('#dvPeso').value,
     focos_ativos: [...document.querySelectorAll('.dvFocoAt:checked')].map(i => i.value),
-    palavras_foco: Object.fromEntries([...document.querySelectorAll('.dvFocoPal')].map(t => [t.dataset.foco, t.value.split('\n')]))});
+    palavras_foco: Object.fromEntries([...document.querySelectorAll('.dvFocoPal')].map(t => [t.dataset.foco, t.value.split('\n')])),
+    temas_pai: Object.fromEntries([...document.querySelectorAll('.dvPai')].filter(s => s.value).map(s => [s.dataset.tema, s.value]))});
+  MSG = await api('config');
   await carregarDiv(); $('#dvOk').textContent = 'Salvo ✓';
 }
-function addTema(nome, palavras, ativo, criado){
-  const div = document.createElement('div'); div.className = 'card tema'; div.style.cssText = `margin:8px 0;background:hsla(${corFoco(nome)},75%,55%,.10)`;
+function addTema(nome, palavras, ativo, criado, paiNovo){
+  const pai = paiNovo || (DIV.temas_pai || {})[nome] || '';
+  const div = document.createElement('div'); div.className = 'card tema';
+  div.style.cssText = `margin:8px 0;background:hsla(${pai ? COR_NICHO[pai] : corFoco(nome)},70%,55%,.13);border-left:6px solid hsla(${pai ? COR_NICHO[pai] : corFoco(nome)},60%,48%,.9)`;
   div.innerHTML = `<div class="row"><label class="chk" style="border:0;flex:1"><input type="checkbox" class="dvFocoAt" value="${esc(nome)}" ${ativo ? 'checked' : ''}>
       <b>${esc(nome)}</b> <span class="muted">${ativo ? '· ligado' : '· desligado'}</span></label>
+      ${criado ? `<select class="dvPai" data-tema="${esc(nome)}" style="width:auto" onchange="pendente('dvOk')"><option value="">sem categoria</option>${(DIV.nichos || []).map(n => `<option ${n === pai ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select>`
+               : `<span class="muted">${pai ? 'de ' + esc(pai) : ''}</span>`}
       ${criado ? `<button class="b" type="button" onclick="this.closest('.tema').remove();pendente('dvOk')">🗑️</button>` : ''}</div>
     <details><summary class="muted">Palavras de busca (${(palavras || []).length})</summary>
     <textarea class="dvFocoPal" data-foco="${esc(nome)}" style="min-height:90px">${esc((palavras || []).join('\n'))}</textarea></details>`;
@@ -665,6 +686,7 @@ function novoTema(){
   const nome = prompt('Nome do tema, com um emoji na frente (ex.: 🎁 Dia das Mães, 👟 Tênis, 💍 Festa e casamento):'); if (!nome) return;
   const pal = prompt('Palavras de busca, separadas por vírgula (ex.: presente dia das mães, kit presente mãe):') || '';
   addTema(nome.trim(), pal.split(',').map(x => x.trim()).filter(Boolean), true, true); pendente('dvOk');
+  alert('Escolha ao lado do nome a categoria do tema (ex.: 👗 Moda) — ele fica com a mesma cor e aparece embaixo dela na grade. Depois clique em 💾 Salvar.');
 }
 async function testarDiv(){
   $('#dvRes').innerHTML = '<p class="muted">Buscando na Shopee… (pode levar 1 min)</p>';
@@ -685,7 +707,7 @@ function carregarMensagens(){
   $('#mestilo').innerHTML = nomes.map(n => `<option>${esc(n)}</option>`).join(''); mostrarEstilo();
   $('#mlojas').innerHTML = MSG.lojas.map(l => `<label>${esc(l)}<br><select data-loja="${esc(l)}">${nomes.map(n =>
     `<option ${(MSG.estilo_loja[l] || 'Padrão') === n ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>`).join('');
-  $('#mmodo').value = MSG.chamada_modo;
+  $('#mmodo').value = MSG.chamada_modo; $('#mctamodo').value = MSG.cta_modo || 'frases'; $('#mctas').value = (MSG.ctas || []).join('\n');
   document.querySelectorAll('input[name=mlink]').forEach(r => r.checked = r.value === MSG.modo_link);
   $('#mchamadas').innerHTML = ['Todas', ...MSG.lojas.filter(l => l !== 'Outras')].map(l => `<label>${esc(l)}
     <textarea data-cham="${esc(l)}" style="min-height:90px" placeholder="*APROVEITA QUE TÁ BARATO* 🔥">${esc((MSG.chamadas[l] || []).join('\n'))}</textarea></label>`).join('');
@@ -704,7 +726,8 @@ async function salvarMensagens(){
   const estilo_loja = {}; document.querySelectorAll('#mlojas select').forEach(s => estilo_loja[s.dataset.loja] = s.value);
   const chamadas = {}; document.querySelectorAll('#mchamadas textarea').forEach(t => chamadas[t.dataset.cham] = t.value.split('\n').map(x => x.trim()).filter(Boolean));
   const modo_link = (document.querySelector('input[name=mlink]:checked') || {}).value;
-  await api('mensagens', {modelos: MSG.modelos, estilo_loja, chamadas, chamada_modo: $('#mmodo').value, modo_link});
+  await api('mensagens', {modelos: MSG.modelos, estilo_loja, chamadas, chamada_modo: $('#mmodo').value, modo_link,
+    cta_modo: $('#mctamodo').value, ctas: $('#mctas').value.split('\n')});
   MSG = await api('config'); $('#mok').textContent = 'Salvo ✓'; setTimeout(() => $('#mok').textContent = '', 3000);
 }
 async function ativar(jid, ativo){
