@@ -39,6 +39,8 @@
 - **Divulgador do PostZap** (aba 🤖): minera ofertas na Shopee nos horários configurados e manda ao grupo
   FILA POST ZAP (para aprovar ou já aprovadas). Segue as mesmas regras do Garimpo: comissão ≥ R$ 9, nunca
   suplementos/vitaminas/colágeno/whey. Ao mudar critérios de curadoria, ajustar também as palavras/filtros dele.
+  **Exceção (decisão da Juliane, 18Nov26): 👗 Moda tem piso de R$ 4** no PostZap (Divulgador e lista de produtos) —
+  o público do WhatsApp gosta de produto barato. Os demais nichos continuam com piso de R$ 9.
 - **Nichos que mais vendem** (shopee_pedidos, Ago25–Jul26, pedidos concluídos/pendentes): Moda lidera de longe
   (23 mil pedidos, R$ 75,7 mil de comissão — vestido, conjunto e calça são os campeões; calça tem a maior comissão média,
   R$ 6,52), depois Infantil, Beleza, Casa/decoração, Cozinha, Pet, Móveis (ticket R$ 86, comissão média R$ 3,22),

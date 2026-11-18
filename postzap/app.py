@@ -269,7 +269,7 @@ def produtos_garimpo(limite=150):
     out = []
     for p in rows:
         com = max(num(p.get('comissao_reais')), num(p.get('cpa_maximo')))
-        if bloqueado(p.get('produto')) or com < CFG['comissao_min'] or not p.get('link'):
+        if bloqueado(p.get('produto')) or com < piso_comissao(classificar_nicho(p.get('produto'), p.get('nicho'))) or not p.get('link'):
             continue
         chave = f"{p.get('shop_id')}:{p.get('item_id')}" if p.get('item_id') else f"g{p['id']}"
         out.append({'origem': 'garimpo', 'chave': chave, 'produto': p.get('produto') or '', 'loja': p.get('loja') or '',
@@ -298,7 +298,8 @@ def produtos_central():
         data = json.loads(meta[0] or '{}')
         for r in data.get('rows', []):
             chave = '/'.join(r.get('link_produto', '').rstrip('/').split('/')[-2:]).replace('/', ':')
-            if not r.get('link') or bloqueado(r.get('produto')) or num(r.get('comissao')) < CFG['comissao_min']:
+            if not r.get('link') or bloqueado(r.get('produto')) or \
+                    num(r.get('comissao')) < piso_comissao(classificar_nicho(r.get('produto'), r.get('secao'))):
                 continue
             vistos.add(chave)
             out.append({'origem': 'central_ideias', 'chave': chave, 'produto': r.get('produto', ''),
@@ -1554,9 +1555,18 @@ DIVULGADOR_PADRAO = {
                  'cadeira', 'colchão', 'guarda-roupa', 'penteadeira', 'gaveteiro', 'estante',
                  'aspirador', 'ventilador', 'climatizador', 'air fryer', 'jogo de panelas', 'brinquedo infantil'],
     'comissao_min': 9.0,                    # R$ por venda (piso do Garimpo)
+    'comissao_min_moda': 4.0,               # exceção: público do WhatsApp gosta de moda barata (decisão 18Nov26)
     'nota_min': 4.6, 'vendas_min': 300,
     'nao_repetir_dias': 7,
 }
+
+
+def piso_comissao(nicho, d=None):
+    """Piso de comissão (R$ por venda): R$ 9 em geral; 👗 Moda tem piso próprio (padrão R$ 4)."""
+    d = d or divulgador_cfg()
+    if nicho == '👗 Moda':
+        return float(d.get('comissao_min_moda', 4.0))
+    return float(d.get('comissao_min', 9.0))
 
 
 def divulgador_cfg():
@@ -1593,11 +1603,13 @@ def minerar(d=None, limite_busca=20):
                     continue
                 vistos.add(chave)
                 com, nota, vendas = comissao_reais(n), float(n.get('ratingStar') or 0), int(n.get('sales') or 0)
-                if bloqueado(n.get('productName')) or com < float(d['comissao_min']) or nota < float(d['nota_min']) \
+                if bloqueado(n.get('productName')) or com < piso_comissao(classificar_nicho(n.get('productName'), palavra), d) \
+                        or nota < float(d['nota_min']) \
                         or vendas < int(d['vendas_min']):
                     continue
-                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra,
-                          'pontos': com * (1 + min(vendas, 20000) / 2000) * (nota / 5)})
+                piso = piso_comissao(classificar_nicho(n.get('productName'), palavra), d)
+                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra,   # pontos relativos ao piso do nicho
+                          'pontos': (com / piso) * (1 + min(vendas, 20000) / 2000) * (nota / 5)})
                 achados.append(n)
     achados.sort(key=lambda x: -x['pontos'])
     escolhidos, por_palavra = [], {}
@@ -1924,11 +1936,12 @@ class H(BaseHTTPRequestHandler):
                 d['horarios'] = sorted(h for h in b['horarios'] if re.fullmatch(r'\d{2}:\d{2}', h))
             if isinstance(b.get('palavras'), list):
                 d['palavras'] = [x.strip() for x in b['palavras'] if x.strip()][:40]
-            for k, tipo in (('por_rodada', int), ('comissao_min', float), ('nota_min', float), ('vendas_min', int),
+            for k, tipo in (('por_rodada', int), ('comissao_min', float), ('comissao_min_moda', float), ('nota_min', float), ('vendas_min', int),
                             ('nao_repetir_dias', int)):
                 if str(b.get(k, '')).replace('.', '', 1).replace(',', '', 1).isdigit():
                     d[k] = tipo(str(b[k]).replace(',', '.'))
             d['comissao_min'] = max(9.0, d['comissao_min'])          # piso do Garimpo: nunca abaixo de R$ 9
+            d['comissao_min_moda'] = max(1.0, d.get('comissao_min_moda', 4.0))
             set_cfg('divulgador', json.dumps(d, ensure_ascii=False))
             return self.send_json({'ok': True})
         if p == '/api/divulgador/rodar':

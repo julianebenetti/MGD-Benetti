@@ -141,8 +141,10 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v"><input id="dvHor" style="width:200px" placeholder="07:40, 12:10, 17:10"></div></div>
         <div class="q"><div class="t"><b>📦 Quantos posts novos em cada busca?</b></div>
           <div class="v"><input id="dvQtd" type="number" min="1" max="15"> posts</div></div>
-        <div class="q"><div class="t"><b>💰 Comissão mínima por venda?</b><small>Nunca abaixo de R$ 9 (regra do Garimpo).</small></div>
+        <div class="q"><div class="t"><b>💰 Comissão mínima por venda (demais nichos)?</b><small>Nunca abaixo de R$ 9 (regra do Garimpo).</small></div>
           <div class="v">R$ <input id="dvCom" type="number" min="9" step="0.5"></div></div>
+        <div class="q"><div class="t"><b>👗 Comissão mínima para MODA?</b><small>Exceção: o público do WhatsApp gosta de moda barata.</small></div>
+          <div class="v">R$ <input id="dvComModa" type="number" min="1" step="0.5"></div></div>
         <div class="q"><div class="t"><b>⭐ Nota mínima do produto?</b></div>
           <div class="v"><input id="dvNota" type="number" min="0" max="5" step="0.1"></div></div>
         <div class="q"><div class="t"><b>🛒 Mínimo de vendas do produto?</b></div>
@@ -493,14 +495,14 @@ async function excluirCupom(id){ if (confirm('Excluir este cupom?')) { await api
 async function carregarDiv(){
   const d = await api('divulgador');
   $('#dvAtivo').checked = d.ativo; document.querySelectorAll('input[name=dvModo]').forEach(r => r.checked = r.value === d.modo);
-  $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min;
+  $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min; $('#dvComModa').value = d.comissao_min_moda;
   $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias;
   $('#dvPal').value = d.palavras.join('\n');
 }
 async function salvarDiv(){
   await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
     horarios: $('#dvHor').value.split(',').map(x => x.trim().padStart(5, '0')).filter(Boolean), por_rodada: $('#dvQtd').value,
-    comissao_min: $('#dvCom').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
+    comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
     palavras: $('#dvPal').value.split('\n')});
   await carregarDiv(); $('#dvOk').textContent = 'Salvo ✓';
 }
