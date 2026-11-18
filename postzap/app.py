@@ -403,6 +403,14 @@ def ids_do_link_shopee(url):
     return ids_no_texto(atual)
 
 
+MESES = ('Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez')
+
+
+def data_sub(d):
+    """Data dos Sub IDs no padrão ddMmmaa (ex.: 18Nov26), o mesmo do robô do Shopee Vídeo."""
+    return f"{d.day:02d}{MESES[d.month - 1]}{d:%y}"
+
+
 def ids_da_chave(chave):
     m = re.fullmatch(r'(\d+):(\d+)', chave or '')
     return (int(m.group(1)), int(m.group(2))) if m else None
@@ -431,7 +439,7 @@ def preparar(p):
         try:
             origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
             subs = [CFG['sub_id'], re.sub(r'[^A-Za-z0-9]', '', p.get('origem') or 'app')[:20] or 'app',
-                    'd' + agora().strftime('%y%m%d')]
+                    data_sub(agora())]
             link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
                               f'subIds:{json.dumps(subs)}}}){{shortLink}}}}')['generateShortLink']['shortLink']
             p['sub_ids'] = subs
