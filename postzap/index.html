@@ -385,6 +385,7 @@ async function trocarFoto(url){
   EDIT.novo.link = p.link; EDIT.mexeu = false; regerar();
 }
 function editar(id){ const it = FILA.find(x => x.id === id); EDIT = {id};
+  if (!JSON.parse(it.grupos || '[]').length) it.grupos = JSON.stringify(GRUPOS.filter(g => g.ativo && !g.fila).map(g => g.jid));
   $('#dcampos').classList.add('hide');
   abrirDlg(it.produto, it.texto, JSON.parse(it.grupos || '[]'), it.agendado_para);
 }
@@ -462,12 +463,12 @@ async function carregarFila(){
       it.cliques_grupo.map(g => esc(g.nome) + ': ' + g.n).join(' · ') : ''}${it.sub_ids ? ' · Sub IDs Shopee: ' + it.sub_ids.map(esc).join(' / ') : ''}</p>` : ''}
     <p class="row" style="margin:0">
     ${['rascunho','erro'].includes(it.status) ? `<button class="b p" onclick="aprovar(${it.id})">✅ Aprovar</button><button class="b" onclick="editar(${it.id})">✏️ Editar</button>` : ''}
-    ${it.status==='aprovado' ? `<button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
+    ${it.status==='aprovado' ? `<button class="b" onclick="editar(${it.id})">✏️ Editar (grupos, texto, horário)</button><button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
     ${!['enviando','enviado'].includes(it.status) ? `<button class="b" onclick="acao('descartar',${it.id})">🗑️ Descartar</button>` : ''}</p></div>`;
   // card reduzido (uma linha; toque para abrir o completo)
   const mini = it => `<details class="mini" style="${tom(it.nicho, it.focos)}border-left:6px solid ${COR_STATUS[it.status] || '#999'}"><summary><b>#${it.id}</b> ${it.nicho ? etiquetas(it.nicho, it.focos) : '<span class="tag">📢 Aviso</span>'}
       <span class="mnome">${esc(it.produto)}</span>
-      <span class="muted">${JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length} grupo(s)
+      <span class="muted">${(n => n ? n + ' grupo(s)' : '<span class="warn">sem grupo → vai para os marcados</span>')(JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length)}
       ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}${it.enviado_em ? ' · ✅ ' + esc(fdata(it.enviado_em, true)) : ''}
       ${it.link && it.status === 'enviado' ? ' · 👆 ' + (it.cliques || 0) : ''}</span>
       <span class="tag">${ST[it.status] || it.status}</span></summary>${card(it)}</details>`;
@@ -478,13 +479,24 @@ async function carregarFila(){
     (precisa.length ? `<h3 style="margin:8px 0">📝 Precisam de você (${precisa.length})</h3>` + precisa.map(card).join('')
                     : '<p class="muted">✨ Nada esperando sua aprovação.</p>') +
     (naFila.length ? `<h3 style="margin:16px 0 8px">⏳ Na fila de envio (${naFila.length}) <span class="muted" style="font-weight:400;font-size:13px">
-       · saem nas rajadas a partir de ${esc(fdata(MSG.proxima_saida, true))}</span></h3>` + naFila.map(mini).join('') : '');
+       · saem nas rajadas a partir de ${esc(fdata(MSG.proxima_saida, true))}</span></h3>
+       <div class="row" style="margin-bottom:8px"><button class="b" onclick="definirGrupos()">📋 Definir grupos</button>
+       <span class="muted">para os posts sem grupo (ou para todos da fila), usando a lista escolhida ao lado de "Aprovar todos"</span></div>` + naFila.map(mini).join('') : '');
   const env = FILA.filter(x => x.status === 'enviado');
   setTimeout(() => document.querySelectorAll('details.mini').forEach(d => { if (abertos.has(d.querySelector('summary b').textContent)) d.open = true; }));
   $('#hist').innerHTML = env.length ? `<p class="muted">${env.length} post(s) enviados · toque para ver o post completo</p>` + env.map(mini).join('')
                                     : '<p class="muted">Nada enviado ainda.</p>';
 }
 async function mudarNicho(id, nicho){ await api('fila/nicho', {id, nicho}); }
+async function definirGrupos(){
+  const lista = $('#listaTodos').value ? Number($('#listaTodos').value) : null;
+  const nome = lista ? 'a lista ' + $('#listaTodos').selectedOptions[0].textContent.replace('só na lista ', '') : 'os grupos marcados em 👥 Grupos';
+  const todos = confirm(`Usar ${nome}.\n\nOK = só nos posts SEM grupo\nCancelar = escolher depois`) ? false : null;
+  if (todos === null) return;
+  try { const j = await api('fila/definir_grupos', {lista, todos}); alert(`✅ ${j.alterados.length} post(s) agora vão para ${j.grupos} grupo(s).`); }
+  catch(e){ alert(e.message); }
+  carregarFila();
+}
 async function aprovarTodos(){
   const lista = $('#listaTodos').value ? Number($('#listaTodos').value) : null;
   if (!confirm('Aprovar todos os posts que estão aguardando? Eles saem nas rajadas, no horário configurado.')) return;

@@ -1140,7 +1140,12 @@ def processar_fila():
     with _lock, db() as c:
         c.execute("UPDATE fila SET status='enviando' WHERE id=?", (item['id'],))
     fila = grupos_fila()
-    grupos = [g for g in json.loads(item['grupos'] or '[]') if g not in fila]   # o grupo da fila nunca recebe post
+    grupos = [g for g in (json.loads(item['grupos'] or '[]') or grupos_ativos()) if g not in fila]  # sem grupo: os marcados agora
+    if not grupos:
+        with _lock, db() as c:
+            c.execute("UPDATE fila SET status='erro', erro=? WHERE id=?",
+                      ('Nenhum grupo: marque grupos em 👥 Grupos ou use 📋 Definir grupos e aprove de novo.', item['id']))
+        return
     random.shuffle(grupos)                     # ordem dos grupos também muda a cada postagem
     erros, usados, anterior = [], {}, None
     for i, jid in enumerate(grupos):
@@ -2105,7 +2110,7 @@ class H(BaseHTTPRequestHandler):
             return self.send_json({'id': cur.lastrowid})
         if p == '/api/fila/editar':
             with _lock, db() as c:
-                c.execute("UPDATE fila SET texto=?, grupos=?, agendado_para=? WHERE id=? AND status IN ('rascunho','erro')",
+                c.execute("UPDATE fila SET texto=?, grupos=?, agendado_para=? WHERE id=? AND status IN ('rascunho','erro','aprovado')",
                           (b.get('texto'), json.dumps(b.get('grupos') or []), b.get('agendado_para') or '', b['id']))
             return self.send_json({'ok': True})
         if p == '/api/fila/aprovar':
@@ -2114,6 +2119,17 @@ class H(BaseHTTPRequestHandler):
             if sem or not it:
                 return self.send_json({'erro': 'Nenhum grupo marcado: marque grupos em 👥 Grupos (ou escolha no ✏️ Editar).'}, 400)
             return self.send_json({'ok': True})
+        if p == '/api/fila/definir_grupos':           # posts sem grupo (ou todos da fila) → lista escolhida / marcados
+            lista = next((l for l in listas() if l['id'] == b.get('lista')), None)
+            gs = [g for g in (json.loads(lista['grupos']) if lista else grupos_ativos()) if g not in grupos_fila()]
+            if not gs:
+                return self.send_json({'erro': 'Nenhum grupo: marque grupos em 👥 Grupos (ou crie a lista).'}, 400)
+            with _lock, db() as c:
+                ids = [r[0] for r in c.execute("SELECT id, grupos FROM fila WHERE status IN ('rascunho','erro','aprovado')")
+                       if b.get('todos') or not json.loads(r[1] or '[]')]
+                for i in ids:
+                    c.execute('UPDATE fila SET grupos=? WHERE id=?', (json.dumps(gs), i))
+            return self.send_json({'alterados': ids, 'grupos': len(gs)})
         if p == '/api/fila/aprovar_todos':
             lista = next((l for l in listas() if l['id'] == b.get('lista')), None)
             with db() as c:
