@@ -66,6 +66,7 @@ CFG = {
     'url_publica': os.getenv('URL_PUBLICA', 'https://posts.descontoirresistivel.com.br/zap').rstrip('/'),
     'titulo_previa': os.getenv('TITULO_PREVIA', '@descontoirresistivel'),
     'sub_id': os.getenv('SUB_ID', 'postzap'),
+    'amazon_tag': os.getenv('AMAZON_TAG', '').strip(),
     'central_env': os.getenv('CENTRAL_ENV', '/opt/shopee-video/shopee-video-automation/.env'),
 }
 BLOQUEADOS = ('suplement', 'vitamin', 'colágeno', 'colageno', 'whey', 'creatina', 'termogênic', 'termogenic')
@@ -152,6 +153,9 @@ CREATE TABLE IF NOT EXISTS cupons (
 );
 CREATE TABLE IF NOT EXISTS chip_eventos (    -- conexões/quedas de cada chip (para ver reconexões frequentes)
     id INTEGER PRIMARY KEY AUTOINCREMENT, instancia TEXT, estado TEXT, numero TEXT, nome TEXT, quando TEXT
+);
+CREATE TABLE IF NOT EXISTS cliques (          -- cada clique de pessoa (robôs de prévia não contam), por grupo
+    id INTEGER PRIMARY KEY AUTOINCREMENT, codigo TEXT, grupo INTEGER, quando TEXT
 );
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
@@ -422,13 +426,22 @@ def preparar(p):
                 avisos.append('Produto não encontrado na Shopee agora (pode ter saído do ar).')
         except Exception as e:
             avisos.append(f'Não consegui atualizar foto/preço: {e}')
-        if 's.shopee.com.br' not in link:
-            try:
-                origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
-                link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
-                                  f'subIds:[{json.dumps(CFG["sub_id"])}]}}){{shortLink}}}}')['generateShortLink']['shortLink']
-            except Exception as e:
-                avisos.append(f'Não consegui gerar o link de afiliado: {e}')
+        # Sempre gera o SEU link de afiliado (mesmo que tenham mandado um s.shopee de outra pessoa), com Sub IDs
+        # para ver no relatório da Shopee: postzap · origem · data
+        try:
+            origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
+            subs = [CFG['sub_id'], re.sub(r'[^A-Za-z0-9]', '', p.get('origem') or 'app')[:20] or 'app',
+                    'd' + agora().strftime('%y%m%d')]
+            link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
+                              f'subIds:{json.dumps(subs)}}}){{shortLink}}}}')['generateShortLink']['shortLink']
+            p['sub_ids'] = subs
+        except Exception as e:
+            avisos.append(f'⚠️ Link NÃO convertido para o seu link de afiliado ({str(e)[:80]}). '
+                          'Confira as chaves da Shopee antes de aprovar.')
+    if link and loja_do_link(link) == 'Amazon':
+        link, aviso = converter_amazon(link)
+        if aviso:
+            avisos.append(aviso)
     p['link_afiliado'] = link
     p['link'] = criar_link_curto(link, p.get('produto', ''), p.get('imagem', '')) if link else ''
     p['loja'] = 'Shopee' if ids else (p.get('loja') or loja_do_link(link) or 'Outras')
@@ -496,6 +509,37 @@ def ler_link(url):
     return info
 
 
+def converter_amazon(url):
+    """Coloca a SUA tag de associada (AMAZON_TAG no .env) no link da Amazon; amzn.to é aberto antes."""
+    if not CFG['amazon_tag']:
+        return url, 'Amazon: sem AMAZON_TAG no .env, o link vai como você mandou (confira se é o seu link de associada).'
+    final = url
+    if 'amzn.to' in url or 'a.co/' in url:
+        try:
+            abrir = urllib.request.build_opener(_SemRedirecionar)
+            for _ in range(5):
+                try:
+                    abrir.open(urllib.request.Request(final, headers={'User-Agent': 'Mozilla/5.0'}), timeout=15)
+                    break
+                except urllib.error.HTTPError as e:
+                    if e.code in (301, 302, 303, 307, 308) and e.headers.get('Location'):
+                        final = urllib.parse.urljoin(final, e.headers['Location'])
+                    else:
+                        break
+        except Exception as e:
+            return url, f'Amazon: não consegui abrir o link curto ({str(e)[:60]}); vai como você mandou.'
+    u = urllib.parse.urlparse(final)
+    if 'amazon.' not in u.netloc:
+        return url, 'Amazon: não reconheci o link; vai como você mandou.'
+    q = [(k, v) for k, v in urllib.parse.parse_qsl(u.query) if k not in ('tag', 'linkCode', 'ref_', 'ascsubtag')]
+    q.append(('tag', CFG['amazon_tag']))
+    return urllib.parse.urlunparse(u._replace(query=urllib.parse.urlencode(q))), ''
+
+
+ROBOS = ('whatsapp', 'facebookexternalhit', 'facebot', 'telegrambot', 'twitterbot', 'slackbot', 'discordbot',
+         'bot', 'crawler', 'spider', 'preview', 'curl', 'python-urllib', 'headless')
+
+
 def criar_link_curto(destino, titulo, imagem):
     import secrets
     with _lock, db() as c:
@@ -507,13 +551,17 @@ def criar_link_curto(destino, titulo, imagem):
     return f"{CFG['url_publica']}/l/{codigo}"
 
 
-def pagina_link(codigo):
-    """Página do link curto: o WhatsApp lê og:title/og:image (a miniatura), a pessoa é levada à Shopee."""
+def pagina_link(codigo, grupo=None, agente=''):
+    """Página do link curto: o WhatsApp lê og:title/og:image (a miniatura), a pessoa é levada à loja.
+    Conta só cliques de pessoas (o robô do WhatsApp que monta a prévia não conta), e de qual grupo veio (?g=)."""
     import html as h
+    humano = not any(r in (agente or '').lower() for r in ROBOS)
     with _lock, db() as c:
         r = c.execute('SELECT * FROM links WHERE codigo=?', (codigo,)).fetchone()
-        if r:
+        if r and humano:
             c.execute('UPDATE links SET cliques=cliques+1 WHERE codigo=?', (codigo,))
+            c.execute('INSERT INTO cliques (codigo, grupo, quando) VALUES (?,?,?)',
+                      (codigo, int(grupo) if str(grupo or '').isdigit() else None, agora().isoformat()))
     if not r:
         return None
     d, t, img = h.escape(r['destino']), h.escape(CFG['titulo_previa']), h.escape(r['imagem'] or '')
@@ -770,11 +818,17 @@ def processar_fila():
             continue
         inst = sortear_chip(jid, anterior)
         ok, erro = 1, None
+        envio = dict(item)
+        if item['link'] and '/l/' in item['link']:      # link com a marca do grupo → cliques por grupo
+            with db() as c:
+                gid = c.execute('SELECT rowid FROM grupos WHERE jid=?', (jid,)).fetchone()
+            if gid:
+                envio['texto'] = (item['texto'] or '').replace(item['link'], f"{item['link']}?g={gid[0]}")
         if not inst:
             ok, erro = 0, 'nenhum chip conectado está neste grupo'
         else:
             try:
-                enviar_item(inst, jid, dict(item))
+                enviar_item(inst, jid, envio)
                 usados[inst] = usados.get(inst, 0) + 1
                 anterior = inst
                 log.info(f"Fila {item['id']} → {nome} pelo chip {inst}")
@@ -1167,7 +1221,8 @@ class H(BaseHTTPRequestHandler):
             self.wfile.write(html)
             return
         if p.startswith('/l/'):
-            pg = pagina_link(p[3:])
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            pg = pagina_link(p[3:], (qs.get('g') or [None])[0], self.headers.get('User-Agent', ''))
             self.send_response(200 if pg else 404)
             self.send_header('Content-Type', 'text/html; charset=utf-8')
             self.end_headers()
@@ -1200,6 +1255,14 @@ class H(BaseHTTPRequestHandler):
                 with db() as c:
                     rows = [dict(r) for r in c.execute(
                         "SELECT * FROM fila WHERE status!='descartado' ORDER BY id DESC LIMIT 200")]
+                    for r in rows:                      # cliques de pessoas, total e por grupo
+                        cod = (r.get('link') or '').rsplit('/l/', 1)[-1] if '/l/' in (r.get('link') or '') else ''
+                        r['cliques'] = c.execute('SELECT COUNT(*) FROM cliques WHERE codigo=?', (cod,)).fetchone()[0] if cod else 0
+                        r['cliques_grupo'] = [dict(x) for x in c.execute(
+                            "SELECT COALESCE(g.nome, '(sem grupo)') nome, "
+                            'COUNT(*) n FROM cliques k LEFT JOIN grupos g '
+                            'ON g.rowid=k.grupo WHERE k.codigo=? GROUP BY k.grupo ORDER BY n DESC', (cod,))] if cod else []
+                        r['sub_ids'] = (json.loads(r.get('dados') or '{}') or {}).get('sub_ids')
                 return self.send_json({'fila': rows, 'pausado': get_cfg('pausado') == '1'})
             if p == '/api/config':
                 return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),

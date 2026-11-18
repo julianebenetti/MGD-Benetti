@@ -295,6 +295,8 @@ async function carregarFila(){
     ${it.enviado_em ? ' · enviado ' + esc(new Date(it.enviado_em).toLocaleString('pt-BR')) : ''}</div>
     <pre style="white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto)}</pre>
     ${it.erro ? `<p class="err">${esc(it.erro)}</p>` : ''}
+    ${it.link ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
+      it.cliques_grupo.map(g => esc(g.nome) + ': ' + g.n).join(' · ') : ''}${it.sub_ids ? ' · Sub IDs Shopee: ' + it.sub_ids.map(esc).join(' / ') : ''}</p>` : ''}
     <p class="row" style="margin:0">
     ${['rascunho','erro'].includes(it.status) ? `<button class="b p" onclick="aprovar(${it.id})">✅ Aprovar</button><button class="b" onclick="editar(${it.id})">✏️ Editar</button>` : ''}
     ${it.status==='aprovado' ? `<button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
