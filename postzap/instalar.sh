@@ -53,6 +53,14 @@ sed -i "s#^EVOLUTION_URL=.*#EVOLUTION_URL=http://127.0.0.1:$EVO_PORTA#" .env
 
 echo "▶ Docker (WhatsApp / Evolution API)"
 if ! command -v docker >/dev/null; then curl -fsSL https://get.docker.com | $SUDO sh; fi
+# Versão antiga guardava o banco do WhatsApp dentro desta pasta (e as atualizações estragavam as permissões dele).
+# Agora fica num volume do Docker; a pasta antiga é descartada (ainda não havia chip conectado nela).
+if [ -d evolution-data ]; then
+  echo "▶ Movendo o banco do WhatsApp para um volume próprio"
+  $SUDO docker compose down >/dev/null 2>&1 || true
+  $SUDO rm -rf evolution-data
+fi
+
 if ! $SUDO docker compose version >/dev/null 2>&1; then
   echo "▶ Instalando o Docker Compose"
   $SUDO apt-get install -y -qq docker-compose-plugin >/dev/null 2>&1 \

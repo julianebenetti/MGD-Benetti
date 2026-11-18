@@ -18,7 +18,7 @@ services:
       CONFIG_SESSION_PHONE_NAME: Chrome
       DEL_INSTANCE: "false"
     volumes:
-      - ./evolution-data/instances:/evolution/instances
+      - evolution_instances:/evolution/instances
     depends_on:
       - postgres
   postgres:
@@ -30,4 +30,9 @@ services:
       POSTGRES_PASSWORD: evolution
       POSTGRES_DB: evolution
     volumes:
-      - ./evolution-data/postgres:/var/lib/postgresql/data
+      - evolution_pg:/var/lib/postgresql/data
+
+# Volumes do Docker (fora da pasta do código: atualizações e permissões não mexem neles)
+volumes:
+  evolution_instances:
+  evolution_pg:
