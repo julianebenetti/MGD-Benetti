@@ -583,7 +583,7 @@ async function carregarFila(){
   // card reduzido (uma linha; toque para abrir o completo)
   const mini = it => `<details class="mini" style="${tom(it.nicho, it.focos)}border-left:6px solid ${COR_STATUS[it.status] || '#999'}"><summary><b>#${it.id}</b> ${it.nicho ? etiquetas(it.nicho, it.focos) : '<span class="tag">📢 Aviso</span>'}
       <span class="mnome">${esc(it.produto)}</span>
-      <span class="muted">${(n => n ? n + ' grupo(s)' : '<span class="warn">sem grupo → vai para os marcados</span>')(JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length)}
+      <span class="muted">${it.status === 'enviado' ? (it.grupos_enviados || 0) + ' grupo(s)' : (n => n ? n + ' grupo(s)' : '<span class="warn">sem grupo → vai para os marcados</span>')(JSON.parse(it.grupos || '[]').filter(j => !(GRUPOS.find(g => g.jid === j) || {}).fila).length)}
       ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}${it.enviado_em ? ' · ✅ ' + esc(fdata(it.enviado_em, true)) : ''}
       ${it.link && it.status === 'enviado' ? ' · 👆 ' + (it.cliques || 0) : ''}</span>
       <span class="tag">${ST[it.status] || it.status}</span></summary>${card(it)}</details>`;

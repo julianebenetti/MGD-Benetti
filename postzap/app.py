@@ -545,7 +545,7 @@ TEMAS_PRONTOS = {
     '👟 Calçados': (r't[eê]nis|sand[aá]lia|chinelo|sapat|\bbota|rasteirinha|tamanco|\bmule\b|scarpin|papete|sapatilha',
                    ['sandália feminina', 'tênis feminino', 'chinelo feminino', 'rasteirinha', 'tamanco', 'papete feminina'], False),
     '👜 Bolsas e acessórios': (r'bolsa|carteira|bijuteria|brinco|colar|pulseira|rel[oó]gio(?! intelig)|[oó]culos de sol|'
-                              r'\bcinto\b|piranha de cabelo|tiara',
+                              r'piranha de cabelo|tiara',
                               ['bolsa feminina', 'bolsa transversal', 'kit bijuteria', 'relógio feminino', 'óculos de sol feminino',
                                'carteira feminina'], False),
     '🏋️ Fitness': (r'legging|fitness|academia|treino|top esportivo|macaquinho|cal[cç]a de compress',
@@ -2366,6 +2366,8 @@ class H(BaseHTTPRequestHandler):
                         r['sub_ids'] = (json.loads(r.get('dados') or '{}') or {}).get('sub_ids')
                         r['nicho'] = nicho_do_item(r) if r.get('origem') != 'aviso' else ''
                         r['focos'] = focos_do_item(r) if r.get('origem') != 'aviso' else []
+                        r['grupos_enviados'] = c.execute('SELECT COUNT(DISTINCT jid) FROM envios WHERE fila_id=? AND ok=1',
+                                                         (r['id'],)).fetchone()[0]
                 with db() as c:
                     descartados = [dict(r) for r in c.execute(
                         "SELECT f.id, f.produto, f.criado_em, (SELECT COUNT(*) FROM envios e WHERE e.fila_id=f.id AND e.ok=1) enviados "
