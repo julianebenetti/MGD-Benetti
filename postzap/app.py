@@ -74,12 +74,58 @@ MODELO_PADRAO = """*{chamada}*
 
 🛍️ {produto}
 
-~De: {preco_de}~
+~De: {preco_de}~ 🔻{desconto}
 *Por: {preco}* ✅
+💠 {pix} no Pix
+💳 {parcelamento}
+🎟️ Cupom: *{cupom}* {cupom_texto}
 
 🔗 *Compre aqui:* {link}
 
 ⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento."""
+
+# Estilos prontos (editáveis no app). Linha cujos campos {..} estão todos vazios some sozinha.
+ESTILOS_PADRAO = {
+    'Padrão': MODELO_PADRAO,
+    'Relâmpago': """⚡ *OFERTA RELÂMPAGO* ⚡
+*{chamada}*
+
+🛍️ {produto}
+
+~De: {preco_de}~ 🔻{desconto}
+*Por: {preco}* 🔥
+🎟️ Cupom: *{cupom}* {cupom_texto}
+
+🏃‍♀️ Corre que acaba rápido!
+🔗 {link}
+
+⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento.""",
+    'Cupom': """🎟️ *CUPOM LIBERADO!*
+*{chamada}*
+
+🛍️ {produto}
+
+Use o cupom: *{cupom}* {cupom_texto}
+~De: {preco_de}~ 🔻{desconto}
+*Por: {preco}* ✅
+
+🔗 *Compre aqui:* {link}
+
+⚠️ Cupom sujeito a disponibilidade e às regras da loja.""",
+    'VIP': """👑 *EXCLUSIVO DO GRUPO VIP* 👑
+*{chamada}*
+
+🛍️ {produto}
+
+~De: {preco_de}~ 🔻{desconto}
+*Por: {preco}* ✅
+🎟️ Cupom: *{cupom}* {cupom_texto}
+
+🔗 {link}
+
+⚠️ Todas as promoções estão sujeitas a alterações a qualquer momento.""",
+}
+LOJAS_NOMES = ('Shopee', 'Magalu', 'Mercado Livre', 'Amazon', 'Outras')
 
 # ---------------------------------------------------------------- banco próprio
 
@@ -100,6 +146,10 @@ CREATE TABLE IF NOT EXISTS envios (
 CREATE TABLE IF NOT EXISTS config (k TEXT PRIMARY KEY, v TEXT);
 CREATE TABLE IF NOT EXISTS grupo_chips (jid TEXT, instancia TEXT, PRIMARY KEY (jid, instancia));
 CREATE TABLE IF NOT EXISTS conversa (numero TEXT PRIMARY KEY, fila_id INTEGER, esperando TEXT);
+CREATE TABLE IF NOT EXISTS listas (id INTEGER PRIMARY KEY AUTOINCREMENT, nome TEXT UNIQUE, grupos TEXT DEFAULT '[]');
+CREATE TABLE IF NOT EXISTS cupons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, loja TEXT, codigo TEXT, texto TEXT, validade TEXT, ativo INTEGER DEFAULT 1
+);
 CREATE TABLE IF NOT EXISTS links (           -- links curtos com prévia (foto + título) no WhatsApp
     codigo TEXT PRIMARY KEY, destino TEXT, titulo TEXT, imagem TEXT, criado_em TEXT, cliques INTEGER DEFAULT 0
 );
@@ -117,7 +167,7 @@ def init_db():
     with db() as c:
         c.executescript(SCHEMA)
         for tab, col in (('envios', 'instancia TEXT'), ('fila', 'dados TEXT'), ('fila', 'pedido_por TEXT'),
-                         ('fila', 'pedido_inst TEXT')):
+                         ('fila', 'pedido_inst TEXT'), ('grupo_chips', 'admin INTEGER'), ('grupos', 'admin INTEGER')):
             if col.split()[0] not in {r[1] for r in c.execute(f'PRAGMA table_info({tab})')}:
                 c.execute(f'ALTER TABLE {tab} ADD COLUMN {col}')
 
@@ -131,6 +181,35 @@ def get_cfg(k, default=''):
 def set_cfg(k, v):
     with _lock, db() as c:
         c.execute('INSERT OR REPLACE INTO config VALUES (?,?)', (k, v))
+
+
+def get_json(k, default):
+    try:
+        return json.loads(get_cfg(k, '')) if get_cfg(k, '') else default
+    except ValueError:
+        return default
+
+
+def modelos():
+    m = get_json('modelos', None)
+    if not m:                                   # 1ª vez: estilos prontos (o modelo antigo vira o "Padrão")
+        m = dict(ESTILOS_PADRAO)
+        if get_cfg('modelo'):
+            m['Padrão'] = get_cfg('modelo')
+    return m
+
+
+def estilo_da_loja(loja):
+    return get_json('estilo_loja', {}).get(loja or 'Outras') or get_json('estilo_loja', {}).get('Outras') or 'Padrão'
+
+
+def cupom_para(loja):
+    hoje = agora().date().isoformat()
+    with db() as c:
+        r = c.execute("SELECT codigo, texto FROM cupons WHERE ativo=1 AND (loja=? OR loja='Todas') "
+                      "AND (validade IS NULL OR validade='' OR validade>=?) ORDER BY id DESC LIMIT 1",
+                      (loja or '', hoje)).fetchone()
+    return (r[0], r[1] or '') if r else ('', '')
 
 
 def agora():
@@ -304,6 +383,13 @@ def preparar(p):
                 avisos.append(f'Não consegui gerar o link de afiliado: {e}')
     p['link_afiliado'] = link
     p['link'] = criar_link_curto(link, p.get('produto', ''), p.get('imagem', '')) if link else ''
+    p['loja'] = 'Shopee' if ids else (p.get('loja') or loja_do_link(link) or 'Outras')
+    if 'cupom' not in p:
+        p['cupom'], p['cupom_texto'] = cupom_para(p['loja'])
+    if not p.get('chamada') and p.get('produto'):
+        p['chamada'] = gerar_chamada(p['produto'], p['loja'])
+    p.setdefault('estilo', 'Cupom' if p.get('cupom') and 'Cupom' in modelos() and estilo_da_loja(p['loja']) == 'Padrão'
+                 else estilo_da_loja(p['loja']))
     p['avisos'] = avisos
     return p
 
@@ -476,19 +562,60 @@ def atualizar_grupos():
     for inst in instancias():
         if estado_chip(inst, cache_seg=0) != 'open':
             continue
-        lista = evo('GET', f"/group/fetchAllGroups/{inst}?getParticipants=false", timeout=60)
+        dono = numero_do_chip(inst)
+        try:
+            lista = evo('GET', f"/group/fetchAllGroups/{inst}?getParticipants=true", timeout=240)
+        except RuntimeError:
+            lista = evo('GET', f"/group/fetchAllGroups/{inst}?getParticipants=false", timeout=120)
         with _lock, db() as c:
             c.execute('DELETE FROM grupo_chips WHERE instancia=?', (inst,))
             for g in lista:
                 total.add(g['id'])
+                adm = chip_e_admin(g.get('participants'), dono)
                 c.execute('INSERT INTO grupos (jid, nome) VALUES (?,?) ON CONFLICT(jid) DO UPDATE SET nome=excluded.nome',
                           (g['id'], g.get('subject') or g['id']))
-                c.execute('INSERT OR IGNORE INTO grupo_chips VALUES (?,?)', (g['id'], inst))
+                c.execute('INSERT OR REPLACE INTO grupo_chips (jid, instancia, admin) VALUES (?,?,?)', (g['id'], inst, adm))
+    with _lock, db() as c:      # grupo é "seu" quando algum chip é admin nele
+        c.execute('UPDATE grupos SET admin=(SELECT MAX(admin) FROM grupo_chips gc WHERE gc.jid=grupos.jid)')
     return len(total)
+
+
+def numero_do_chip(inst):
+    try:
+        info = evo('GET', f'/instance/fetchInstances?instanceName={inst}')
+        info = info[0] if isinstance(info, list) and info else {}
+        return digitos((info.get('ownerJid') or '').split('@')[0])
+    except RuntimeError:
+        return ''
+
+
+def chip_e_admin(participantes, dono):
+    """1 = o chip é admin no grupo · 0 = não é · None = não deu para saber."""
+    if participantes is None or not dono:
+        return None
+    for pt in participantes:
+        ids = [pt.get('id'), pt.get('phoneNumber'), pt.get('jid'), pt.get('pn')]
+        if any(len(digitos(x)) >= 8 and digitos(x)[-8:] == dono[-8:] for x in ids if x):
+            return 1 if pt.get('admin') in ('admin', 'superadmin') or pt.get('isAdmin') else 0
+    return 0
 
 
 def enviar_texto(inst, jid, texto, previa=True):
     evo('POST', f"/message/sendText/{inst}", {'number': jid, 'text': texto, 'linkPreview': previa}, timeout=60)
+
+
+MIDIA_DIR = BASE / 'midia'
+
+
+def enviar_item(inst, jid, item):
+    dados = json.loads(item.get('dados') or '{}')
+    midia = dados.get('midia')
+    if midia and Path(midia).exists():
+        evo('POST', f"/message/sendMedia/{inst}", {
+            'number': jid, 'mediatype': dados.get('midia_tipo', 'image'), 'mimetype': dados.get('mimetype', 'image/jpeg'),
+            'caption': item['texto'] or '', 'media': Path(midia).read_text(), 'fileName': Path(midia).stem}, timeout=180)
+    else:
+        enviar_texto(inst, jid, item['texto'])
 
 
 # ---------------------------------------------------------------- envio (fila aprovada)
@@ -501,7 +628,8 @@ def posts_hoje(c, jid):
 def sortear_chip(jid, evitar=None):
     """Sorteia entre os chips conectados que estão no grupo; evita repetir o mesmo chip da postagem anterior."""
     with db() as c:
-        chips = [r[0] for r in c.execute('SELECT instancia FROM grupo_chips WHERE jid=?', (jid,))]
+        rows = c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (jid,)).fetchall()
+        chips = [r[0] for r in rows if r[1] == 1] or [r[0] for r in rows]   # chips admin primeiro
         ultimo = c.execute('SELECT instancia FROM envios WHERE jid=? AND ok=1 ORDER BY id DESC LIMIT 1', (jid,)).fetchone()
     chips = [x for x in chips if x in instancias() and estado_chip(x) == 'open'] or \
             [x for x in instancias() if estado_chip(x) == 'open' and not chips]
@@ -551,7 +679,7 @@ def processar_fila():
             ok, erro = 0, 'nenhum chip conectado está neste grupo'
         else:
             try:
-                enviar_texto(inst, jid, item['texto'])
+                enviar_item(inst, jid, dict(item))
                 usados[inst] = usados.get(inst, 0) + 1
                 anterior = inst
                 log.info(f"Fila {item['id']} → {nome} pelo chip {inst}")
@@ -587,8 +715,13 @@ def chave_openai():
     return k
 
 
-def gerar_chamada(produto):
-    """Frase curta em MAIÚSCULAS com 1 emoji, no estilo dos grupos de ofertas. Sem IA: frase padrão."""
+def gerar_chamada(produto, loja=''):
+    """Chamada curta em MAIÚSCULAS. Modo (app ✏️ Mensagens): ia | frases (as suas, por loja) | misto."""
+    modo = get_cfg('chamada_modo', 'ia')
+    frases_loja = get_json('chamadas', {})
+    frases = [f for f in (frases_loja.get(loja) or frases_loja.get('Todas') or []) if f.strip()]
+    if frases and (modo == 'frases' or (modo == 'misto' and random.random() < 0.5)):
+        return random.choice(frases).strip()
     key = chave_openai()
     if key and produto:
         prompt = ("Você escreve chamadas para grupos de ofertas no WhatsApp. Crie UMA chamada curta (máx. 7 palavras) "
@@ -607,18 +740,51 @@ def gerar_chamada(produto):
                 return txt.upper()
         except Exception as e:
             log.warning(f'Chamada automática falhou: {e}')
-    return 'OFERTA IMPERDÍVEL! 🔥'
+    return random.choice(frases).strip() if frases else 'OFERTA IMPERDÍVEL! 🔥'
 
 
 # ---------------------------------------------------------------- conversa no WhatsApp (mandar links)
 
-MENU = ("Responda com:\n*1* ✅ aprovar e postar agora\n*2* ✏️ trocar a chamada\n*3* 💸 colocar o preço \"De:\"\n"
-        "*4* 💰 trocar o preço \"Por:\"\n*5* 🕒 agendar (ex.: *5 20h* ou *5 20:30*)\n*0* 🗑️ descartar")
+def menu():
+    nomes = ', '.join(l['nome'] for l in listas())
+    estilos = ', '.join(modelos())
+    return ("Responda com:\n*1* ✅ aprovar e postar agora" + (f"  (só numa lista: *1 {listas()[0]['nome'].lower()}* · listas: {nomes})" if nomes else '')
+            + "\n*2* ✏️ trocar a chamada\n*3* 💸 colocar o preço \"De:\"\n*4* 💰 trocar o preço \"Por:\"\n"
+            "*5* 🕒 agendar (ex.: *5 20h* ou *5 20:30*)\n*6* 🎟️ cupom (ex.: *6 PROMO10* · *6 0* tira)\n"
+            f"*7* 🎨 estilo ({estilos}) ex.: *7 relâmpago*\n*0* 🗑️ descartar")
+
+
+MENU_AVISO = "Responda com:\n*1* ✅ enviar agora (ou *1 nome-da-lista*)\n*5* 🕒 agendar (ex.: *5 20h*)\n*0* 🗑️ descartar"
 
 
 def montar_texto(p):
-    linhas = [l for l in (get_cfg('modelo', MODELO_PADRAO)).split('\n') if '{preco_de}' not in l or p.get('preco_de')]
-    return re.sub(r'\{(\w+)\}', lambda m: str(p.get(m.group(1), '') or ''), '\n'.join(linhas))
+    """Texto final pelo estilo escolhido. Linha com campos {..} todos vazios some (ex.: sem "De:", sem cupom)."""
+    p = dict(p)
+    p['chamada'] = re.sub(r'\s+', ' ', str(p.get('chamada') or '').replace('*', '')).strip()   # o estilo já põe o negrito
+    de, por = num(p.get('preco_de')), num(p.get('preco'))
+    p['desconto'] = f"{round((1 - por / de) * 100)}% OFF" if de > por > 0 else ''
+    m = modelos()
+    tpl = m.get(p.get('estilo') or '') or m.get('Padrão') or MODELO_PADRAO
+    saida = []
+    for linha in tpl.split('\n'):
+        campos = re.findall(r'\{(\w+)\}', linha)
+        if campos and not any(str(p.get(k) or '').strip() for k in campos):
+            continue
+        saida.append(re.sub(r'\{(\w+)\}', lambda x: str(p.get(x.group(1)) or ''), linha).rstrip())
+    return re.sub(r'\n{3,}', '\n\n', '\n'.join(saida)).strip()
+
+
+def listas():
+    with db() as c:
+        return [dict(r) for r in c.execute('SELECT * FROM listas ORDER BY nome')]
+
+
+def achar_lista(nome):
+    n = (nome or '').strip().lower()
+    for l in listas():
+        if l['nome'].lower() == n or l['nome'].lower().startswith(n):
+            return l
+    return None
 
 
 def digitos(x):
@@ -685,18 +851,48 @@ def receber_webhook(payload):
     if not autorizado([jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]):
         return
     msg = data.get('message') or {}
+    midia = 'image' if msg.get('imageMessage') else 'video' if msg.get('videoMessage') else None
     texto = (msg.get('conversation') or (msg.get('extendedTextMessage') or {}).get('text')
-             or (msg.get('imageMessage') or {}).get('caption') or '').strip()
+             or (msg.get('imageMessage') or {}).get('caption') or (msg.get('videoMessage') or {}).get('caption') or '').strip()
     if texto:
-        threading.Thread(target=tratar_mensagem, args=(inst, jid, texto), daemon=True).start()
+        info = {'tipo': midia, 'key': key, 'mimetype': (msg.get(f'{midia}Message') or {}).get('mimetype')} if midia else None
+        threading.Thread(target=tratar_mensagem, args=(inst, jid, texto, info), daemon=True).start()
 
 
-def tratar_mensagem(inst, numero, texto):
+def tratar_mensagem(inst, numero, texto, midia=None):
     try:
+        if re.match(r'/todos\b', texto, re.I):
+            return novo_aviso(inst, numero, re.sub(r'^/todos\s*', '', texto, flags=re.I), midia)
         _tratar(inst, numero, texto)
     except Exception as e:
         log.exception('Conversa')
         responder(inst, numero, f'⚠️ Deu erro: {str(e)[:150]}')
+
+
+def novo_aviso(inst, numero, texto, midia=None):
+    """/todos + texto (ou foto/vídeo com /todos na legenda): vai igualzinho para os grupos, depois da aprovação."""
+    dados = {}
+    if midia:
+        r = evo('POST', f'/chat/getBase64FromMediaMessage/{inst}', {'message': {'key': midia['key']}, 'convertToMp4': False},
+                timeout=120)
+        b64 = r.get('base64') or ''
+        if not b64:
+            return responder(inst, numero, '⚠️ Não consegui baixar a foto/vídeo. Tente mandar de novo.')
+        MIDIA_DIR.mkdir(exist_ok=True)
+        arq = MIDIA_DIR / f"{int(time.time() * 1000)}.b64"
+        arq.write_text(b64)
+        dados = {'midia': str(arq), 'midia_tipo': midia['tipo'], 'mimetype': r.get('mimetype') or midia.get('mimetype')}
+    if not texto and not dados:
+        return responder(inst, numero, '📢 Mande assim: */todos* seu recado (pode ser legenda de foto ou vídeo).')
+    grupos = grupos_ativos()
+    with _lock, db() as c:
+        cur = c.execute('INSERT INTO fila (origem, chave, produto, texto, grupos, criado_em, dados, pedido_por, pedido_inst) '
+                        'VALUES (?,?,?,?,?,?,?,?,?)', ('aviso', '', '📢 ' + (texto.splitlines()[0][:50] if texto else 'Aviso com mídia'),
+                                                       texto, json.dumps(grupos), agora().isoformat(), json.dumps(dados), numero, inst))
+        fid = cur.lastrowid
+    conversa_set(numero, fid)
+    tipo = {'image': ' + 📷 foto', 'video': ' + 🎬 vídeo'}.get(dados.get('midia_tipo'), '')
+    responder(inst, numero, f"📢 *Aviso pronto*{tipo}\n\n{texto}\n\n👆 Vai para {len(grupos)} grupo(s).\n\n{MENU_AVISO}")
 
 
 def _tratar(inst, numero, texto):
@@ -733,7 +929,8 @@ def _tratar(inst, numero, texto):
         if not p.get('produto'):
             p['produto'] = 'Oferta'
             p['avisos'].append('Não consegui ler o nome do produto: mande *2* para escrever a chamada e edite no app se quiser.')
-        p['chamada'] = gerar_chamada(p['produto'])
+        if not p.get('chamada'):
+            p['chamada'] = gerar_chamada(p['produto'], p.get('loja', ''))
         p['produto'] = p['produto'][:120]
         grupos = grupos_ativos()
         with _lock, db() as c:
@@ -747,7 +944,7 @@ def _tratar(inst, numero, texto):
         responder(inst, numero, item['texto'], previa=True)
         extra = ('\n⚠️ ' + '\n⚠️ '.join(p['avisos'])) if p.get('avisos') else ''
         sem_preco = '' if p.get('preco') else '\n⚠️ Sem preço: mande *4* para colocar.'
-        responder(inst, numero, f"👆 Prévia · vai para {len(grupos)} grupo(s){extra}{sem_preco}\n\n{MENU}")
+        responder(inst, numero, f"👆 Prévia · vai para {len(grupos)} grupo(s){extra}{sem_preco}\n\n{menu()}")
         return
 
     item = item_fila(conv['fila_id']) if conv['fila_id'] else None
@@ -761,8 +958,18 @@ def _tratar(inst, numero, texto):
         valor = t.upper() if campo == 'chamada' else br(t)
         regravar(item, **{campo: valor})
         responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
-        return responder(inst, numero, f'👆 Atualizado.\n\n{MENU}')
+        return responder(inst, numero, f'👆 Atualizado.\n\n{menu()}')
     cmd, _, resto = t.partition(' ')
+    if item['origem'] == 'aviso' and cmd not in ('1', '5', '0'):
+        return responder(inst, numero, MENU_AVISO)
+    if cmd == '1' and resto.strip():
+        lista = achar_lista(resto)
+        if not lista:
+            nomes = ', '.join(l['nome'] for l in listas()) or 'nenhuma (crie no app, 👥 Grupos)'
+            return responder(inst, numero, f'⚠️ Não achei a lista "{resto}". Listas: {nomes}')
+        with _lock, db() as c:
+            c.execute('UPDATE fila SET grupos=? WHERE id=?', (lista['grupos'], item['id']))
+        item = item_fila(item['id'])
     if cmd == '1':
         grupos = json.loads(item['grupos'] or '[]')
         if not grupos:
@@ -793,12 +1000,25 @@ def _tratar(inst, numero, texto):
                       (quando.isoformat(), agora().isoformat(), item['id']))
         conversa_set(numero, None)
         return responder(inst, numero, f"🕒 Agendado para {quando.strftime('%d/%m às %H:%M')}. Aviso quando postar.")
+    if cmd == '6':
+        cod = resto.strip()
+        regravar(item, cupom='' if cod in ('', '0') else cod.upper(), cupom_texto='')
+        responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
+        return responder(inst, numero, f"👆 {'Cupom removido' if cod in ('', '0') else 'Cupom colocado'}.\n\n{menu()}")
+    if cmd == '7':
+        nomes = list(modelos())
+        alvo = next((n for n in nomes if n.lower().startswith(resto.strip().lower()) and resto.strip()), None)
+        if not alvo:
+            return responder(inst, numero, f"🎨 Estilos: {', '.join(nomes)}. Ex.: *7 {nomes[-1].lower()}*")
+        regravar(item, estilo=alvo)
+        responder(inst, numero, item_fila(item['id'])['texto'], previa=True)
+        return responder(inst, numero, f'👆 Estilo "{alvo}".\n\n{menu()}')
     if cmd == '0':
         with _lock, db() as c:
             c.execute("UPDATE fila SET status='descartado' WHERE id=?", (item['id'],))
         conversa_set(numero, None)
         return responder(inst, numero, '🗑️ Descartado.')
-    responder(inst, numero, MENU)
+    responder(inst, numero, MENU_AVISO if item['origem'] == 'aviso' else menu())
 
 
 # ---------------------------------------------------------------- login simples
@@ -873,15 +1093,21 @@ class H(BaseHTTPRequestHandler):
                     rows = [dict(r) for r in c.execute('SELECT * FROM grupos ORDER BY ativo DESC, nome')]
                     for r in rows:
                         r['hoje'] = posts_hoje(c, r['jid'])
-                        r['chips'] = [x[0] for x in c.execute('SELECT instancia FROM grupo_chips WHERE jid=?', (r['jid'],))]
-                return self.send_json({'grupos': rows})
+                        r['chips'] = [{'chip': x[0], 'admin': x[1]} for x in
+                                      c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (r['jid'],))]
+                return self.send_json({'grupos': rows, 'listas': listas()})
+            if p == '/api/cupons':
+                with db() as c:
+                    return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
             if p == '/api/fila':
                 with db() as c:
                     rows = [dict(r) for r in c.execute(
                         "SELECT * FROM fila WHERE status!='descartado' ORDER BY id DESC LIMIT 200")]
                 return self.send_json({'fila': rows, 'pausado': get_cfg('pausado') == '1'})
             if p == '/api/config':
-                return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO),
+                return self.send_json({'modelo': get_cfg('modelo', MODELO_PADRAO), 'modelos': modelos(),
+                                       'estilo_loja': get_json('estilo_loja', {}), 'lojas': LOJAS_NOMES,
+                                       'chamadas': get_json('chamadas', {}), 'chamada_modo': get_cfg('chamada_modo', 'ia'),
                                        'intervalo': [CFG['intervalo_min'], CFG['intervalo_max']],
                                        'limite_dia': CFG['limite_dia'], 'repetir_dias': CFG['repetir_dias']})
         except Exception as e:
@@ -931,8 +1157,48 @@ class H(BaseHTTPRequestHandler):
             evo('DELETE', f"/instance/logout/{b['instancia']}")
             _estado_cache.pop(b['instancia'], None)
             return self.send_json({'ok': True})
-        if p == '/api/modelo':
-            set_cfg('modelo', b.get('modelo') or MODELO_PADRAO)
+        if p == '/api/montar':
+            return self.send_json({'texto': montar_texto(b)})
+        if p == '/api/mensagens':                       # estilos, estilo por loja e frases de chamada
+            if isinstance(b.get('modelos'), dict) and b['modelos']:
+                m = {k.strip(): v for k, v in b['modelos'].items() if k.strip() and v.strip()}
+                m.setdefault('Padrão', MODELO_PADRAO)
+                set_cfg('modelos', json.dumps(m, ensure_ascii=False))
+            if isinstance(b.get('estilo_loja'), dict):
+                set_cfg('estilo_loja', json.dumps(b['estilo_loja'], ensure_ascii=False))
+            if isinstance(b.get('chamadas'), dict):
+                set_cfg('chamadas', json.dumps(b['chamadas'], ensure_ascii=False))
+            if b.get('chamada_modo') in ('ia', 'frases', 'misto'):
+                set_cfg('chamada_modo', b['chamada_modo'])
+            return self.send_json({'ok': True})
+        if p == '/api/listas/salvar':
+            nome = (b.get('nome') or '').strip()
+            if not nome:
+                return self.send_json({'erro': 'Dê um nome para a lista.'}, 400)
+            with _lock, db() as c:
+                if b.get('id'):
+                    c.execute('UPDATE listas SET nome=?, grupos=? WHERE id=?', (nome, json.dumps(b.get('grupos') or []), b['id']))
+                else:
+                    c.execute('INSERT INTO listas (nome, grupos) VALUES (?,?)', (nome, json.dumps(b.get('grupos') or [])))
+            return self.send_json({'ok': True})
+        if p == '/api/listas/excluir':
+            with _lock, db() as c:
+                c.execute('DELETE FROM listas WHERE id=?', (b['id'],))
+            return self.send_json({'ok': True})
+        if p == '/api/cupons/salvar':
+            if not (b.get('codigo') or '').strip():
+                return self.send_json({'erro': 'Informe o código do cupom.'}, 400)
+            with _lock, db() as c:
+                vals = (b.get('loja') or 'Todas', b['codigo'].strip().upper(), (b.get('texto') or '').strip(),
+                        b.get('validade') or '', 1 if b.get('ativo', True) else 0)
+                if b.get('id'):
+                    c.execute('UPDATE cupons SET loja=?, codigo=?, texto=?, validade=?, ativo=? WHERE id=?', vals + (b['id'],))
+                else:
+                    c.execute('INSERT INTO cupons (loja, codigo, texto, validade, ativo) VALUES (?,?,?,?,?)', vals)
+            return self.send_json({'ok': True})
+        if p == '/api/cupons/excluir':
+            with _lock, db() as c:
+                c.execute('DELETE FROM cupons WHERE id=?', (b['id'],))
             return self.send_json({'ok': True})
         if p == '/api/pausar':
             set_cfg('pausado', '1' if b.get('pausado') else '0')
@@ -941,11 +1207,12 @@ class H(BaseHTTPRequestHandler):
             if bloqueado(b.get('produto')):
                 return self.send_json({'erro': 'Produto de suplementação não pode ser postado.'}, 400)
             with _lock, db() as c:
+                dados = {k: v for k, v in b.items() if k not in ('texto', 'grupos', 'agendado_para', 'midia')}
                 cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, '
-                                'agendado_para, criado_em) VALUES (?,?,?,?,?,?,?,?,?,?)',
+                                'agendado_para, criado_em, dados) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                                 (b.get('origem'), b.get('chave'), b.get('produto'), b.get('preco'), b.get('comissao'),
                                  b.get('link'), b.get('texto'), json.dumps(b.get('grupos') or []),
-                                 b.get('agendado_para') or '', agora().isoformat()))
+                                 b.get('agendado_para') or '', agora().isoformat(), json.dumps(dados)))
             return self.send_json({'id': cur.lastrowid})
         if p == '/api/fila/editar':
             with _lock, db() as c:

@@ -46,7 +46,8 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
   <button data-t="historico">📜 Histórico</button>
   <button data-t="grupos">👥 Grupos</button>
   <button data-t="conexao">🔗 WhatsApp</button>
-  <button data-t="modelo">✏️ Modelo</button>
+  <button data-t="modelo">✏️ Mensagens</button>
+  <button data-t="cupons">🎟️ Cupons</button>
 </nav>
 <main>
   <section id="t-produtos">
@@ -65,28 +66,59 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
   </section>
 
   <section id="t-fila" class="hide">
-    <div class="row" style="margin-bottom:12px"><span id="pausa"></span></div>
+    <div class="row" style="margin-bottom:12px"><span id="pausa"></span>
+      <button class="b" onclick="novoAviso()">📢 Novo aviso para os grupos</button></div>
     <div id="fila"></div>
   </section>
 
   <section id="t-historico" class="hide"><div id="hist"></div></section>
 
   <section id="t-grupos" class="hide">
+    <div class="card"><div class="row"><b style="flex:1">📋 Listas de grupos</b>
+      <button class="b" onclick="editarLista(null)">➕ Nova lista</button></div>
+      <p class="muted">Ex.: "VIP", "Achados". Na hora de postar, um clique escolhe todos os grupos da lista — ou, no WhatsApp, responda <b>1 vip</b>.</p>
+      <div id="listas"></div></div>
     <div class="card"><div class="row"><b style="flex:1">Marque os grupos onde o PostZap pode postar</b>
       <button class="b p" onclick="atualizarGrupos()">↻ Buscar grupos do WhatsApp</button></div>
-      <p class="muted">"Buscar grupos" lê os grupos dos chips conectados. Cada grupo mostra quais chips estão nele — o envio sorteia entre eles.</p>
+      <p class="muted">"Buscar grupos" lê os grupos dos chips conectados (pode levar 1–2 min). O envio sorteia entre os chips do grupo, dando preferência aos que são admin.</p>
+      <div class="row" style="margin-bottom:8px"><input id="gbusca" placeholder="Buscar grupo…" style="flex:1;min-width:160px" oninput="renderGrupos()">
+        <label class="chk" style="border:0"><input type="checkbox" id="gadmin" checked onchange="renderGrupos()"> Só grupos onde algum chip é admin</label></div>
       <div id="grupos"></div></div>
+  </section>
+
+  <section id="t-cupons" class="hide">
+    <div class="card"><b>🎟️ Novo cupom</b>
+      <p class="muted">O cupom ativo da loja entra sozinho nas postagens (linha "🎟️ Cupom: …"). Vencido não entra.</p>
+      <div class="row"><select id="cloja" style="width:auto"></select>
+        <input id="ccod" placeholder="Código (ex.: PROMO10)" style="flex:1;min-width:120px">
+        <input id="ctexto" placeholder="Texto (ex.: 10% OFF acima de R$ 50)" style="flex:2;min-width:160px">
+        <input id="cval" type="date" style="width:auto" title="Válido até (opcional)">
+        <button class="b p" onclick="salvarCupom()">Salvar</button></div><p id="cerr" class="err"></p></div>
+    <div id="cupons"></div>
   </section>
 
   <section id="t-conexao" class="hide"><div class="card" id="conexao">…</div></section>
 
   <section id="t-modelo" class="hide">
-    <div class="card"><b>Modelo da mensagem</b>
-      <p class="muted">Campos: {chamada} {produto} {preco_de} {preco} {comissao} {vendas} {nota} {loja} {link}.
-      A linha com {preco_de} some quando não há preço antigo. WhatsApp: *negrito*, _itálico_, ~riscado~.
-      O {link} é o seu link curto com prévia (foto do produto + título), igual ao dos grupos de ofertas.</p>
-      <textarea id="modelo"></textarea><br><br><button class="b p" onclick="salvarModelo()">Salvar modelo</button> <span id="mok" class="muted"></span>
+    <div class="card"><b>🎨 Estilos de mensagem</b>
+      <p class="muted">Campos: {chamada} {produto} {preco_de} {preco} {desconto} {cupom} {cupom_texto} {pix} {parcelamento} {loja} {link}.
+      Uma linha some sozinha quando os campos dela estão vazios (ex.: sem "De:", sem cupom). {desconto} é calculado do De/Por.
+      WhatsApp: *negrito*, _itálico_, ~riscado~.</p>
+      <div class="row"><select id="mestilo" style="width:auto" onchange="mostrarEstilo()"></select>
+        <button class="b" onclick="novoEstilo()">➕ Novo estilo</button>
+        <button class="b" onclick="excluirEstilo()">🗑️ Excluir este</button></div>
+      <textarea id="modelo" style="margin-top:8px;min-height:240px" oninput="MSG.modelos[$('#mestilo').value]=this.value"></textarea>
     </div>
+    <div class="card"><b>🏬 Estilo padrão de cada loja</b>
+      <p class="muted">Sem estilo escolhido, a postagem usa este. Se a loja tem cupom ativo e está no "Padrão", usa o estilo "Cupom".</p>
+      <div id="mlojas" class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))"></div></div>
+    <div class="card"><b>📣 Chamadas</b>
+      <div class="row" style="margin:8px 0"><span>De onde vem a chamada:</span>
+        <select id="mmodo" style="width:auto"><option value="ia">🤖 Só IA</option><option value="frases">📝 Só as minhas frases</option>
+        <option value="misto">🔀 Misturar (metade cada)</option></select></div>
+      <p class="muted">Suas frases (uma por linha), revezando ao acaso. "Todas" vale para lojas sem frases próprias.</p>
+      <div id="mchamadas" class="grid"></div></div>
+    <button class="b p" onclick="salvarMensagens()">💾 Salvar mensagens</button> <span id="mok" class="muted"></span>
   </section>
 </main>
 </div>
@@ -100,12 +132,16 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
         <input id="dchamada" placeholder="Chamada em maiúsculas (ex.: TREINE CONFORTÁVEL E SEM TRANSPARÊNCIA! 🏋️)" oninput="regerar()">
         <div class="row" style="margin-top:8px"><input id="dde" placeholder="De: (opcional)" style="flex:1" oninput="regerar()">
         <input id="dpor" placeholder="Por:" style="flex:1" oninput="regerar()"></div>
+        <div class="row" style="margin-top:8px"><input id="dcupom" placeholder="Cupom (opcional)" style="flex:1" oninput="regerar()">
+        <input id="dpix" placeholder="Preço no Pix (opcional)" style="flex:1" oninput="regerar()">
+        <input id="dparc" placeholder="Parcelamento (ex.: 10x sem juros)" style="flex:1" oninput="regerar()"></div>
+        <div class="row" style="margin-top:8px"><span class="muted">Estilo:</span><select id="destilo" style="width:auto" onchange="regerar()"></select></div>
       </div>
     </div>
     <p id="davisos" class="warn"></p>
   </div>
   <textarea id="dtexto" oninput="EDIT.mexeu=true"></textarea>
-  <p><b>Grupos</b></p><div id="dgrupos" style="max-height:200px;overflow:auto"></div>
+  <p><b>Grupos</b> <span id="dlistas"></span></p><div id="dgrupos" style="max-height:200px;overflow:auto"></div>
   <p><b>Quando postar</b> <span class="muted">(vazio = assim que aprovar)</span></p>
   <input id="dquando" type="datetime-local">
   <p class="row" style="justify-content:flex-end;margin-bottom:0">
@@ -115,11 +151,20 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
   </p><p id="derr" class="err"></p>
 </div></dialog>
 
+<dialog id="dlgLista"><div class="in">
+  <h3 style="margin-top:0">📋 Lista de grupos</h3>
+  <input id="listaNome" placeholder="Nome da lista (ex.: VIP)">
+  <p class="muted">Marque os grupos desta lista:</p>
+  <div id="listaGrupos" style="max-height:50vh;overflow:auto"></div>
+  <p class="row" style="justify-content:flex-end;margin-bottom:0">
+    <button class="b" onclick="dlgLista.close()">Cancelar</button><button class="b p" onclick="salvarLista()">Salvar lista</button></p>
+</div></dialog>
+
 <script>
 const B = location.pathname.startsWith('/zap') ? '/zap/' : '/';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let PRODUTOS = [], GRUPOS = [], MODELO = '', FILA = [], EDIT = null;
+let PRODUTOS = [], GRUPOS = [], LISTAS = [], MODELO = '', FILA = [], EDIT = null, MSG = {}, CUPONS = [];
 
 async function api(path, body) {
   const r = await fetch(B + 'api/' + path, body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {});
@@ -137,11 +182,12 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => aba(b.dat
 function aba(t){
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   document.querySelectorAll('main section').forEach(s => s.classList.toggle('hide', s.id !== 't-' + t));
-  ({produtos:carregarProdutos, fila:carregarFila, historico:carregarFila, grupos:carregarGrupos, conexao:carregarConexao})[t]?.();
+  ({produtos:carregarProdutos, fila:carregarFila, historico:carregarFila, grupos:carregarGrupos, conexao:carregarConexao,
+    modelo:carregarMensagens, cupons:carregarCupons})[t]?.();
 }
 
 async function iniciar(){
-  try { const c = await api('config'); MODELO = c.modelo; $('#modelo').value = MODELO; } catch(e){ return; }
+  try { MSG = await api('config'); } catch(e){ return; }
   $('#login').classList.add('hide'); $('#app').classList.remove('hide');
   carregarProdutos(); carregarGrupos(); statusWa(); setInterval(statusWa, 60000); setInterval(()=>{ if(!$('#t-fila').classList.contains('hide')||!$('#t-historico').classList.contains('hide')) carregarFila(); }, 20000);
 }
@@ -166,19 +212,21 @@ function renderProdutos(){
     <a class="muted" href="${esc(p.link)}" target="_blank" rel="noopener">abrir link</a></p></div>`).join('') || '<p class="muted">Nenhum produto.</p>';
 }
 
-function montar(p){
-  return MODELO.split('\n')
-    .filter(l => !/\{preco_de\}/.test(l) || p.preco_de)        // sem preço antigo: some a linha "De:"
-    .join('\n').replace(/\{(\w+)\}/g, (m, k) => p[k] ?? '');
-}
+let _tm;
 function regerar(){
   if (!EDIT || !EDIT.novo) return;
-  Object.assign(EDIT.novo, {chamada: $('#dchamada').value.toUpperCase(), preco_de: $('#dde').value, preco: $('#dpor').value});
+  Object.assign(EDIT.novo, {chamada: $('#dchamada').value.toUpperCase(), preco_de: $('#dde').value, preco: $('#dpor').value,
+    cupom: $('#dcupom').value.toUpperCase(), pix: $('#dpix').value, parcelamento: $('#dparc').value, estilo: $('#destilo').value});
   if (EDIT.mexeu) { $('#derr').textContent = 'Você editou o texto à mão: ajuste direto nele.'; return; }
-  $('#dtexto').value = montar(EDIT.novo);
+  clearTimeout(_tm); _tm = setTimeout(async () => { $('#dtexto').value = (await api('montar', EDIT.novo)).texto; }, 250);
+}
+function usarLista(id){
+  const l = LISTAS.find(x => x.id === id); const gs = JSON.parse(l.grupos || '[]');
+  document.querySelectorAll('#dgrupos input').forEach(i => i.checked = gs.includes(i.value));
 }
 function gruposChecks(sel){
-  const ativos = GRUPOS.filter(g => g.ativo);
+  $('#dlistas').innerHTML = LISTAS.map(l => `<button class="b" style="padding:3px 8px" onclick="usarLista(${l.id})">📋 ${esc(l.nome)}</button>`).join(' ');
+  const ativos = GRUPOS.filter(g => g.ativo || sel.includes(g.jid));
   return ativos.map(g => `<label class="chk"><input type="checkbox" value="${esc(g.jid)}" ${sel.includes(g.jid)?'checked':''}> ${esc(g.nome)} <span class="muted">(${g.hoje} hoje)</span></label>`).join('')
     || '<p class="warn">Nenhum grupo marcado. Vá em 👥 Grupos e marque onde pode postar.</p>';
 }
@@ -199,7 +247,9 @@ async function novoProduto(base){
   abrirDlg(base.produto, 'Buscando foto, preço atual e gerando o link…', [], '');
   let p;
   try { p = await api('preparar', {...base}); } catch(e){ $('#dtexto').value = ''; $('#derr').textContent = e.message; return; }
-  EDIT = {novo: {...p, chamada: (p.chamada || '').toUpperCase(), preco_de: ''}};
+  EDIT = {novo: {...p, chamada: (p.chamada || '').toUpperCase(), preco_de: p.preco_de || ''}};
+  $('#destilo').innerHTML = Object.keys(MSG.modelos).map(n => `<option ${n === p.estilo ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  $('#dcupom').value = p.cupom || ''; $('#dpix').value = ''; $('#dparc').value = '';
   if (base.origem === 'manual') {
     $('#dtit').innerHTML = `<span class="tag">${esc(p.loja || 'Outra loja')}</span> <input id="dnome" value="${esc(p.produto)}" placeholder="Nome do produto" oninput="EDIT.novo.produto=this.value;regerar()" style="margin-top:6px">
       <input id="dfoto" value="${esc(p.imagem)}" placeholder="Link da foto (opcional, para a miniatura)" style="margin-top:6px" onchange="trocarFoto(this.value)">`;
@@ -208,7 +258,7 @@ async function novoProduto(base){
   $('#dchamada').value = EDIT.novo.chamada; $('#dde').value = ''; $('#dpor').value = p.preco || '';
   $('#davisos').innerHTML = (p.avisos || []).map(esc).join('<br>') + (p.imagem ? '' : '<br>Sem foto: a prévia vai sem miniatura.');
   $('#dgrupos').innerHTML = gruposChecks(GRUPOS.filter(g => g.ativo).map(g => g.jid));
-  $('#dtexto').value = montar(EDIT.novo);
+  $('#dtexto').value = (await api('montar', EDIT.novo)).texto;
 }
 async function trocarFoto(url){
   EDIT.novo.imagem = url; $('#dimg').src = url; $('#dimg').style.visibility = url ? '' : 'hidden';
@@ -257,9 +307,83 @@ async function acao(a, id){ await api('fila/' + a, {id}); carregarFila(); }
 async function pausar(v){ await api('pausar', {pausado:v}); carregarFila(); }
 
 async function carregarGrupos(){
-  GRUPOS = (await api('grupos')).grupos;
-  $('#grupos').innerHTML = GRUPOS.map(g => `<label class="chk"><input type="checkbox" ${g.ativo?'checked':''} onchange="ativar('${esc(g.jid)}',this.checked)"> ${esc(g.nome)} <span class="muted">· ${g.hoje} post(s) hoje · chips: ${(g.chips||[]).map(esc).join(', ') || 'nenhum'}</span></label>`).join('')
-    || '<p class="muted">Nenhum grupo ainda. Conecte o WhatsApp e clique em "Buscar grupos".</p>';
+  const j = await api('grupos'); GRUPOS = j.grupos; LISTAS = j.listas; renderGrupos();
+}
+function renderGrupos(){
+  const q = ($('#gbusca').value || '').toLowerCase(), soAdm = $('#gadmin').checked;
+  const semInfo = GRUPOS.every(g => g.admin == null);
+  const lista = GRUPOS.filter(g => (!q || g.nome.toLowerCase().includes(q)) && (!soAdm || semInfo || g.admin == 1 || g.ativo));
+  $('#grupos').innerHTML = (semInfo && GRUPOS.length ? '<p class="warn">Ainda não sei em quais grupos os chips são admin: clique em "Buscar grupos" de novo.</p>' : '') +
+    (lista.map(g => `<label class="chk"><input type="checkbox" ${g.ativo?'checked':''} onchange="ativar('${esc(g.jid)}',this.checked)"> ${esc(g.nome)}
+      ${g.admin == 1 ? '<span class="tag">admin</span>' : ''} <span class="muted">· ${g.hoje} post(s) hoje · chips: ${(g.chips||[]).map(c => esc(c.chip) + (c.admin == 1 ? '👑' : '')).join(', ') || 'nenhum'}</span></label>`).join('')
+    || '<p class="muted">Nenhum grupo. Conecte o WhatsApp e clique em "Buscar grupos".</p>');
+  $('#listas').innerHTML = LISTAS.map(l => `<div class="chk"><b style="flex:1">📋 ${esc(l.nome)}</b> <span class="muted">${JSON.parse(l.grupos).length} grupo(s)</span>
+    <button class="b" onclick="editarLista(${l.id})">✏️</button><button class="b" onclick="excluirLista(${l.id})">🗑️</button></div>`).join('') || '<p class="muted">Nenhuma lista ainda.</p>';
+}
+function editarLista(id){
+  const l = LISTAS.find(x => x.id === id) || {nome:'', grupos:'[]'}; const sel = JSON.parse(l.grupos);
+  const base = GRUPOS.filter(g => g.admin == 1 || g.ativo || sel.includes(g.jid) || GRUPOS.every(x => x.admin == null));
+  EDIT = {lista: id};
+  $('#listaNome').value = l.nome;
+  $('#listaGrupos').innerHTML = base.map(g => `<label class="chk"><input type="checkbox" value="${esc(g.jid)}" ${sel.includes(g.jid)?'checked':''}> ${esc(g.nome)}</label>`).join('');
+  dlgLista.showModal();
+}
+async function salvarLista(){
+  const grupos = [...document.querySelectorAll('#listaGrupos input:checked')].map(i => i.value);
+  try { await api('listas/salvar', {id: EDIT.lista, nome: $('#listaNome').value, grupos}); dlgLista.close(); carregarGrupos(); }
+  catch(e){ alert(e.message); }
+}
+async function excluirLista(id){ if (confirm('Excluir esta lista? (os grupos continuam)')) { await api('listas/excluir', {id}); carregarGrupos(); } }
+
+async function novoAviso(){
+  const texto = prompt('Recado para os grupos (vai igualzinho, sem modelo):'); if (!texto) return;
+  const grupos = GRUPOS.filter(g => g.ativo).map(g => g.jid);
+  const {id} = await api('fila/criar', {origem:'aviso', produto:'📢 ' + texto.split('\n')[0].slice(0,50), texto, grupos});
+  await carregarFila(); editar(id);
+}
+
+async function carregarCupons(){
+  $('#cloja').innerHTML = ['Todas', ...MSG.lojas.filter(l => l !== 'Outras')].map(l => `<option>${esc(l)}</option>`).join('');
+  CUPONS = (await api('cupons')).cupons;
+  const hoje = new Date().toISOString().slice(0,10);
+  $('#cupons').innerHTML = CUPONS.map(c => `<div class="card row"><b style="min-width:110px">🎟️ ${esc(c.codigo)}</b>
+    <span class="tag">${esc(c.loja)}</span><span style="flex:1">${esc(c.texto || '')}</span>
+    <span class="muted">${c.validade ? 'até ' + c.validade.split('-').reverse().join('/') : 'sem validade'}${c.validade && c.validade < hoje ? ' <b class="err">vencido</b>' : ''}</span>
+    <button class="b" onclick="alternarCupom(${c.id})">${c.ativo ? '⏸️ Pausar' : '▶️ Ativar'}</button>
+    <button class="b" onclick="excluirCupom(${c.id})">🗑️</button></div>`).join('') || '<p class="muted">Nenhum cupom cadastrado.</p>';
+}
+async function salvarCupom(){
+  try { await api('cupons/salvar', {loja: $('#cloja').value, codigo: $('#ccod').value, texto: $('#ctexto').value, validade: $('#cval').value});
+    $('#ccod').value = $('#ctexto').value = $('#cval').value = ''; $('#cerr').textContent = ''; carregarCupons(); }
+  catch(e){ $('#cerr').textContent = e.message; }
+}
+async function alternarCupom(id){ const c = CUPONS.find(x => x.id === id); await api('cupons/salvar', {...c, ativo: !c.ativo}); carregarCupons(); }
+async function excluirCupom(id){ if (confirm('Excluir este cupom?')) { await api('cupons/excluir', {id}); carregarCupons(); } }
+
+function carregarMensagens(){
+  const nomes = Object.keys(MSG.modelos);
+  $('#mestilo').innerHTML = nomes.map(n => `<option>${esc(n)}</option>`).join(''); mostrarEstilo();
+  $('#mlojas').innerHTML = MSG.lojas.map(l => `<label>${esc(l)}<br><select data-loja="${esc(l)}">${nomes.map(n =>
+    `<option ${(MSG.estilo_loja[l] || 'Padrão') === n ? 'selected' : ''}>${esc(n)}</option>`).join('')}</select></label>`).join('');
+  $('#mmodo').value = MSG.chamada_modo;
+  $('#mchamadas').innerHTML = ['Todas', ...MSG.lojas.filter(l => l !== 'Outras')].map(l => `<label>${esc(l)}
+    <textarea data-cham="${esc(l)}" style="min-height:90px" placeholder="*APROVEITA QUE TÁ BARATO* 🔥">${esc((MSG.chamadas[l] || []).join('\n'))}</textarea></label>`).join('');
+}
+function mostrarEstilo(){ $('#modelo').value = MSG.modelos[$('#mestilo').value] || ''; }
+function novoEstilo(){
+  const n = prompt('Nome do novo estilo (ex.: Fitness, Lançamento):'); if (!n) return;
+  MSG.modelos[n] = MSG.modelos[$('#mestilo').value]; const atual = $('#modelo').value;
+  carregarMensagens(); $('#mestilo').value = n; $('#modelo').value = MSG.modelos[n] = atual;
+}
+function excluirEstilo(){
+  const n = $('#mestilo').value; if (n === 'Padrão') return alert('O estilo Padrão não pode ser excluído.');
+  if (confirm('Excluir o estilo "' + n + '"?')) { delete MSG.modelos[n]; carregarMensagens(); }
+}
+async function salvarMensagens(){
+  const estilo_loja = {}; document.querySelectorAll('#mlojas select').forEach(s => estilo_loja[s.dataset.loja] = s.value);
+  const chamadas = {}; document.querySelectorAll('#mchamadas textarea').forEach(t => chamadas[t.dataset.cham] = t.value.split('\n').map(x => x.trim()).filter(Boolean));
+  await api('mensagens', {modelos: MSG.modelos, estilo_loja, chamadas, chamada_modo: $('#mmodo').value});
+  MSG = await api('config'); $('#mok').textContent = 'Salvo ✓'; setTimeout(() => $('#mok').textContent = '', 3000);
 }
 async function ativar(jid, ativo){ await api('grupos/ativo', {jid, ativo}); GRUPOS.find(g => g.jid === jid).ativo = ativo ? 1 : 0; }
 async function atualizarGrupos(){ try { const j = await api('grupos/atualizar', {}); alert(j.total + ' grupos encontrados'); } catch(e){ alert(e.message); } carregarGrupos(); }
@@ -285,7 +409,7 @@ async function carregarConexao(){
     </div>`).join('') + `<button class="b" onclick="carregarConexao()">↻ Atualizar</button>`;
 }
 async function desconectar(instancia){ if (confirm('Desconectar o chip ' + instancia + '?')) { await api('whatsapp/desconectar', {instancia}); carregarConexao(); } }
-async function salvarModelo(){ MODELO = $('#modelo').value; await api('modelo', {modelo: MODELO}); $('#mok').textContent = 'Salvo ✓'; }
+
 
 iniciar();
 </script>

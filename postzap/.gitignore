@@ -1,3 +1,4 @@
 .env
 postzap.db*
 evolution-data/
+midia/

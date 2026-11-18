@@ -23,6 +23,16 @@ App **separado** da AfiliDash e do robô do Shopee Vídeo para postar links da S
 - Avisa quando o produto já foi postado; histórico de tudo que saiu; botão ⏸️ para pausar todos os envios.
 - Dados próprios em `postzap.db` (grupos, fila, histórico). Não usa nenhuma tabela da AfiliDash.
 
+## Fase 1 (listas, cupons, estilos)
+- 📋 **Listas de grupos** (👥 Grupos): "VIP", "Achados"… um clique na postagem ou `1 vip` no WhatsApp.
+- 👑 **Só grupos onde algum chip é admin** (filtro ligado por padrão); o envio prefere o chip admin do grupo.
+- 🎟️ **Cupons**: o cupom ativo da loja entra sozinho na postagem (vencido não entra).
+- 🎨 **Estilos**: Padrão, Relâmpago, Cupom, VIP (editáveis, dá para criar novos) e estilo padrão por loja.
+  Campos novos: {desconto} (calculado do De/Por), {cupom}, {pix}, {parcelamento}. Linha com campos vazios some.
+- 📣 **Chamadas**: só IA, só as suas frases (por loja) ou misturado.
+- 📢 **Avisos**: `/todos` + recado (ou foto/vídeo com `/todos` na legenda) vai igualzinho para os grupos, depois do `1`.
+- WhatsApp: `6 CUPOM` (ou `6 0` tira) · `7 relâmpago` troca o estilo.
+
 ## Instalar no VPS (terminal da Hostinger)
 ```
 curl -fsSL https://raw.githubusercontent.com/julianebenetti/MGD-Benetti/claude/admiring-dirac-ku5zlh/postzap/instalar.sh | bash
