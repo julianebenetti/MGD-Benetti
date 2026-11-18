@@ -625,7 +625,12 @@ def evo(method, path, body=None, timeout=30):
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             txt = r.read().decode() or '{}'
-            return json.loads(txt)
+            res = json.loads(txt)
+        if path.startswith('/message/send') and isinstance(res, dict):
+            mid = (res.get('key') or {}).get('id')
+            if mid:
+                _marcar_visto(mid)        # respostas do próprio PostZap nunca viram comando (nos outros chips)
+        return res
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"Evolution {e.code}: {e.read().decode()[:200]}")
     except urllib.error.URLError as e:
@@ -633,6 +638,34 @@ def evo(method, path, body=None, timeout=30):
 
 
 _webhook_ok = set()
+_vistos, _vistos_lock = {}, threading.Lock()
+
+
+def _marcar_visto(mid):
+    """True se a mensagem já foi vista. Os 3 chips recebem a mesma mensagem do grupo da fila: só um responde."""
+    with _vistos_lock:
+        if mid in _vistos:
+            return True
+        _vistos[mid] = time.time()
+        if len(_vistos) > 5000:
+            for k, _ in sorted(_vistos.items(), key=lambda x: x[1])[:2500]:
+                _vistos.pop(k, None)
+        return False
+
+
+def normalizar(t):
+    import unicodedata
+    return re.sub(r'[^a-z0-9]', '', unicodedata.normalize('NFKD', t or '').encode('ascii', 'ignore').decode().lower())
+
+
+def e_grupo_fila(nome):
+    n = normalizar(nome)
+    return 'filapostzap' in n
+
+
+def grupos_fila():
+    with db() as c:
+        return {r[0] for r in c.execute('SELECT jid, nome FROM grupos') if e_grupo_fila(r[1])}
 _estado_cache = {}
 
 
@@ -859,7 +892,8 @@ def processar_fila():
         if not item:
             return
         c.execute("UPDATE fila SET status='enviando' WHERE id=?", (item['id'],))
-    grupos = json.loads(item['grupos'] or '[]')
+    fila = grupos_fila()
+    grupos = [g for g in json.loads(item['grupos'] or '[]') if g not in fila]   # o grupo da fila nunca recebe post
     random.shuffle(grupos)                     # ordem dos grupos também muda a cada postagem
     erros, usados, anterior = [], {}, None
     for i, jid in enumerate(grupos):
@@ -1021,8 +1055,9 @@ def responder(inst, para, texto, previa=False):
 
 
 def grupos_ativos():
+    fila = grupos_fila()
     with db() as c:
-        return [r[0] for r in c.execute('SELECT jid FROM grupos WHERE ativo=1')]
+        return [r[0] for r in c.execute('SELECT jid FROM grupos WHERE ativo=1') if r[0] not in fila]
 
 
 def conversa_get(numero):
@@ -1060,9 +1095,26 @@ def receber_webhook(payload):
         data = data[0] if data else {}
     key = data.get('key') or {}
     jid = key.get('remoteJid') or ''
-    if key.get('fromMe') or jid.endswith('@g.us') or jid.endswith('@broadcast'):
+    if key.get('fromMe') or jid.endswith('@broadcast'):
         return
-    if not autorizado([jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]):
+    if jid.endswith('@g.us'):                    # grupo: só o "FILA POST ZAP" vira lugar de comandos
+        if jid not in grupos_fila():
+            nome = ''
+            try:
+                nome = (evo('GET', f'/group/findGroupInfos/{inst}?groupJid={jid}') or {}).get('subject', '')
+            except RuntimeError:
+                pass
+            if not e_grupo_fila(nome):
+                return
+            with _lock, db() as c:
+                c.execute('INSERT INTO grupos (jid, nome, ativo) VALUES (?,?,0) ON CONFLICT(jid) DO UPDATE SET nome=excluded.nome',
+                          (jid, nome))
+        quem = [key.get('participant'), key.get('participantAlt'), key.get('participantPn'), data.get('participant')]
+    else:
+        quem = [jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]
+    if not autorizado([x for x in quem if x]):
+        return
+    if key.get('id') and _marcar_visto(key['id']):   # já tratada por outro chip, ou é resposta do próprio PostZap
         return
     msg = data.get('message') or {}
     midia = 'image' if msg.get('imageMessage') else 'video' if msg.get('videoMessage') else None
@@ -1315,6 +1367,7 @@ class H(BaseHTTPRequestHandler):
                     rows = [dict(r) for r in c.execute('SELECT * FROM grupos ORDER BY ativo DESC, nome')]
                     for r in rows:
                         r['hoje'] = posts_hoje(c, r['jid'])
+                        r['fila'] = e_grupo_fila(r['nome'])
                         r['chips'] = [{'chip': x[0], 'admin': x[1]} for x in
                                       c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (r['jid'],))]
                 return self.send_json({'grupos': rows, 'listas': listas()})

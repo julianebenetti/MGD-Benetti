@@ -23,6 +23,11 @@ App **separado** da AfiliDash e do robô do Shopee Vídeo para postar links da S
 - Avisa quando o produto já foi postado; histórico de tudo que saiu; botão ⏸️ para pausar todos os envios.
 - Dados próprios em `postzap.db` (grupos, fila, histórico). Não usa nenhuma tabela da AfiliDash.
 
+## Grupo de comandos "FILA POST ZAP"
+Qualquer grupo com **FILA POST ZAP** no nome (com pelo menos um chip dentro) funciona igual à conversa particular:
+mande o link ali e responda `1`, `1 vip`, `2`… Só números de `NUMEROS_AUTORIZADOS` são atendidos, só um chip responde
+(mesmo com os 3 no grupo) e esse grupo nunca recebe postagens.
+
 ## Fase 1 (listas, cupons, estilos)
 - 📋 **Listas de grupos** (👥 Grupos): "VIP", "Achados"… um clique na postagem ou `1 vip` no WhatsApp.
 - 👑 **Só grupos onde algum chip é admin** (filtro ligado por padrão); o envio prefere o chip admin do grupo.

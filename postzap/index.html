@@ -329,9 +329,11 @@ async function carregarGrupos(){
 function renderGrupos(){
   const q = ($('#gbusca').value || '').toLowerCase(), soAdm = $('#gadmin').checked;
   const semInfo = GRUPOS.every(g => g.admin == null);
-  const lista = GRUPOS.filter(g => (!q || g.nome.toLowerCase().includes(q)) && (!soAdm || semInfo || g.admin == 1 || g.ativo));
+  const lista = GRUPOS.filter(g => (!q || g.nome.toLowerCase().includes(q)) && (!soAdm || semInfo || g.admin == 1 || g.ativo || g.fila))
+    .sort((a, b) => (b.fila ? 1 : 0) - (a.fila ? 1 : 0));
   $('#grupos').innerHTML = (semInfo && GRUPOS.length ? '<p class="warn">Ainda não sei em quais grupos os chips são admin: clique em "Buscar grupos" de novo.</p>' : '') +
-    (lista.map(g => `<label class="chk"><input type="checkbox" ${g.ativo?'checked':''} onchange="ativar('${esc(g.jid)}',this.checked)"> ${esc(g.nome)}
+    (lista.map(g => g.fila ? `<div class="chk">📥 <b>${esc(g.nome)}</b> <span class="tag">grupo de comandos</span>
+      <span class="muted">· mande os links aqui · nunca recebe postagens</span></div>` : `<label class="chk"><input type="checkbox" ${g.ativo?'checked':''} onchange="ativar('${esc(g.jid)}',this.checked)"> ${esc(g.nome)}
       ${g.admin == 1 ? '<span class="tag">admin</span>' : ''} <span class="muted">· ${g.hoje} post(s) hoje · chips: ${(g.chips||[]).map(c => esc(c.chip) + (c.admin == 1 ? '👑' : '')).join(', ') || 'nenhum'}</span></label>`).join('')
     || '<p class="muted">Nenhum grupo. Conecte o WhatsApp e clique em "Buscar grupos".</p>');
   $('#listas').innerHTML = LISTAS.map(l => `<div class="chk"><b style="flex:1">📋 ${esc(l.nome)}</b> <span class="muted">${JSON.parse(l.grupos).length} grupo(s)</span>
