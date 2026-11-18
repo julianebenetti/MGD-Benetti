@@ -1358,6 +1358,10 @@ def _tratar(inst, numero, texto, citado=''):
                                         + '\n\nResponda em cima da prévia, ou mande *#número comando* (ex.: *#' + str(ps[0]['id'])
                                         + ' 1*).') if ps else '📭 Nenhum post esperando resposta.')
     item, t = item_alvo(numero, t, citado, conv)
+    if item and item['status'] == 'aprovado' and t.strip() == '0':        # cancelar um aprovado que ainda não saiu
+        with _lock, db() as c:
+            c.execute("UPDATE fila SET status='descartado' WHERE id=? AND status='aprovado'", (item['id'],))
+        return responder(inst, numero, f"🗑️ Post #{item['id']} cancelado (não vai sair).")
     if not item or item['status'] not in ('rascunho', 'erro'):
         if item and item['status'] in ('aprovado', 'enviando', 'enviado'):
             return responder(inst, numero, f"ℹ️ O post #{item['id']} já foi aprovado ({item['status']}).")
@@ -1436,6 +1440,144 @@ def _tratar(inst, numero, texto, citado=''):
         conversa_set(numero, None)
         return responder(inst, numero, f'🗑️ Post #{fid} descartado.')
     responder(inst, numero, MENU_AVISO if item['origem'] == 'aviso' else f'Post #{fid}:\n{menu()}', fid=fid)
+
+
+# ---------------------------------------------------------------- divulgador (minera ofertas sozinho)
+
+DIVULGADOR_PADRAO = {
+    'ativo': False,
+    'modo': 'aprovar',                      # aprovar: manda as sugestões ao FILA POST ZAP | automatico: já aprova (rajadas)
+    'horarios': ['07:40', '12:10', '17:10'],   # quando minerar (manda antes dos picos 13–15h, 18h e 20–21h)
+    'por_rodada': 4,                        # quantos posts novos por rodada
+    'palavras': ['escova secadora', 'chapinha', 'secador de cabelo', 'modelador de cachos', 'kit maquiagem', 'perfume feminino',
+                 'air fryer', 'panela elétrica', 'aspirador robô', 'jogo de panelas', 'cafeteira', 'liquidificador',
+                 'tapete sala', 'jogo de cama', 'organizador', 'fone bluetooth', 'smartwatch', 'brinquedo infantil'],
+    'comissao_min': 9.0,                    # R$ por venda (piso do Garimpo)
+    'nota_min': 4.6, 'vendas_min': 300,
+    'nao_repetir_dias': 7,
+}
+
+
+def divulgador_cfg():
+    d = dict(DIVULGADOR_PADRAO)
+    d.update(get_json('divulgador', {}))
+    return d
+
+
+def comissao_reais(prod):
+    rate = float(prod.get('commissionRate') or 0)
+    rate = rate / 100 if rate > 1 else rate
+    return round(float(prod.get('priceMin') or 0) * rate, 2)
+
+
+def minerar(d=None, limite_busca=20):
+    """Busca nas palavras-chave (mais vendidos e maior comissão), aplica os filtros e devolve os melhores."""
+    d = d or divulgador_cfg()
+    campos = 'itemId shopId productName shopName priceMin priceMax ratingStar sales commissionRate imageUrl'
+    vistos, achados = set(), []
+    corte = (agora() - timedelta(days=int(d['nao_repetir_dias']))).isoformat()
+    with db() as c:
+        recentes = {r[0] for r in c.execute("SELECT chave FROM fila WHERE criado_em>=? AND status!='descartado'", (corte,))}
+    for palavra in d['palavras']:
+        for ordem in (2, 5):                   # 2 = mais vendidos · 5 = maior comissão
+            try:
+                nodes = shopee_gql(f'{{productOfferV2(keyword:{json.dumps(palavra, ensure_ascii=False)},'
+                                   f'limit:{limite_busca},sortType:{ordem}){{nodes{{{campos}}}}}}}')['productOfferV2']['nodes']
+            except Exception as e:
+                log.warning(f'Divulgador: busca "{palavra}" falhou: {e}')
+                continue
+            for n in nodes:
+                chave = f"{n.get('shopId')}:{n.get('itemId')}"
+                if chave in vistos or chave in recentes:
+                    continue
+                vistos.add(chave)
+                com, nota, vendas = comissao_reais(n), float(n.get('ratingStar') or 0), int(n.get('sales') or 0)
+                if bloqueado(n.get('productName')) or com < float(d['comissao_min']) or nota < float(d['nota_min']) \
+                        or vendas < int(d['vendas_min']):
+                    continue
+                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra,
+                          'pontos': com * (1 + min(vendas, 20000) / 2000) * (nota / 5)})
+                achados.append(n)
+    achados.sort(key=lambda x: -x['pontos'])
+    escolhidos, por_palavra = [], {}
+    for n in achados:                          # variedade: no máximo 1 por palavra-chave na rodada
+        if por_palavra.get(n['palavra']):
+            continue
+        por_palavra[n['palavra']] = 1
+        escolhidos.append(n)
+        if len(escolhidos) >= int(d['por_rodada']):
+            break
+    return escolhidos
+
+
+def destino_fila():
+    """(grupo FILA POST ZAP, chip conectado nele) para mandar as sugestões."""
+    for jid in grupos_fila():
+        with db() as c:
+            chips = [r[0] for r in c.execute('SELECT instancia FROM grupo_chips WHERE jid=?', (jid,))]
+        for inst in chips + instancias():
+            if estado_chip(inst) == 'open':
+                return jid, inst
+    return None, None
+
+
+def rodar_divulgador(manual=False):
+    d = divulgador_cfg()
+    jid, inst = destino_fila()
+    if not jid:
+        log.warning('Divulgador: sem grupo FILA POST ZAP com chip conectado')
+        return 0, 'Crie o grupo FILA POST ZAP com um chip conectado dentro.'
+    escolhidos = minerar(d)
+    if not escolhidos:
+        return 0, 'Nenhum produto novo passou nos filtros agora.'
+    auto = d['modo'] == 'automatico' and not manual
+    responder(inst, jid, f"🤖 *Divulgador* · {len(escolhidos)} oferta(s) nova(s) "
+                         f"({'já aprovadas, saem nas rajadas' if auto else 'responda em cima de cada uma'})")
+    feitos = 0
+    for n in escolhidos:
+        try:
+            p = preparar({'origem': 'divulgador', 'chave': n['chave'], 'produto': n['productName'],
+                          'imagem': n.get('imageUrl', ''), 'preco': br(n.get('priceMin'))})
+        except Exception as e:
+            log.warning(f'Divulgador: preparar falhou: {e}')
+            continue
+        if not p.get('link') or any('NÃO convertido' in a for a in p.get('avisos', [])):
+            continue                            # nunca sugere sem o seu link de afiliado
+        p['produto'] = p['produto'][:120]
+        grupos = grupos_ativos()
+        with _lock, db() as c:
+            cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, criado_em, dados, '
+                            'pedido_por, pedido_inst, status, aprovado_em) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                            ('divulgador', p['chave'], p['produto'], p.get('preco'), br(n['comissao_rs']), p['link'],
+                             montar_texto(p), json.dumps(grupos), agora().isoformat(), json.dumps(p), jid, inst,
+                             'aprovado' if auto else 'rascunho', agora().isoformat() if auto else None))
+            fid = cur.lastrowid
+        mostrar_previa(inst, jid, fid)
+        info = (f"🤖 *Post #{fid}* · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
+                f"⭐ {n.get('ratingStar')} · busca \"{n['palavra']}\"")
+        responder(inst, jid, info + ('\n✅ Já aprovado (sai na próxima rajada). Responda *0* em cima para cancelar.'
+                                     if auto else f'\n\n{MENU_CURTO}'), fid=fid)
+        feitos += 1
+    return feitos, ''
+
+
+def agenda_divulgador():
+    """Roda nos horários escolhidos (uma vez por horário por dia)."""
+    while True:
+        try:
+            d = divulgador_cfg()
+            if d['ativo']:
+                hoje, hm = agora().date().isoformat(), agora().strftime('%H:%M')
+                for h in d['horarios']:
+                    marca = f'div_{hoje}_{h}'
+                    if hm >= h and hm < (datetime.strptime(h, '%H:%M') + timedelta(minutes=30)).strftime('%H:%M') \
+                            and not get_cfg(marca):
+                        set_cfg(marca, '1')
+                        n, msg = rodar_divulgador()
+                        log.info(f'Divulgador {h}: {n} post(s) {msg}')
+        except Exception:
+            log.exception('Divulgador')
+        time.sleep(60)
 
 
 # ---------------------------------------------------------------- login simples
@@ -1521,6 +1663,8 @@ class H(BaseHTTPRequestHandler):
                         r['chips'] = [{'chip': x[0], 'admin': x[1]} for x in
                                       c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (r['jid'],))]
                 return self.send_json({'grupos': rows, 'listas': listas()})
+            if p == '/api/divulgador':
+                return self.send_json(divulgador_cfg())
             if p == '/api/cupons':
                 with db() as c:
                     return self.send_json({'cupons': [dict(r) for r in c.execute('SELECT * FROM cupons ORDER BY ativo DESC, id DESC')]})
@@ -1652,6 +1796,31 @@ class H(BaseHTTPRequestHandler):
                 r['aquec_desde'] = agora().date().isoformat()
             set_cfg('ritmo', json.dumps(r))
             return self.send_json({'ok': True, 'limite_hoje': limite_hoje(r)})
+        if p == '/api/divulgador':
+            d = divulgador_cfg()
+            for k in ('ativo',):
+                if k in b:
+                    d[k] = bool(b[k])
+            if b.get('modo') in ('aprovar', 'automatico'):
+                d['modo'] = b['modo']
+            if isinstance(b.get('horarios'), list):
+                d['horarios'] = sorted(h for h in b['horarios'] if re.fullmatch(r'\d{2}:\d{2}', h))
+            if isinstance(b.get('palavras'), list):
+                d['palavras'] = [x.strip() for x in b['palavras'] if x.strip()][:40]
+            for k, tipo in (('por_rodada', int), ('comissao_min', float), ('nota_min', float), ('vendas_min', int),
+                            ('nao_repetir_dias', int)):
+                if str(b.get(k, '')).replace('.', '', 1).replace(',', '', 1).isdigit():
+                    d[k] = tipo(str(b[k]).replace(',', '.'))
+            d['comissao_min'] = max(9.0, d['comissao_min'])          # piso do Garimpo: nunca abaixo de R$ 9
+            set_cfg('divulgador', json.dumps(d, ensure_ascii=False))
+            return self.send_json({'ok': True})
+        if p == '/api/divulgador/rodar':
+            n, msg = rodar_divulgador(manual=True)
+            return self.send_json({'feitos': n, 'msg': msg})
+        if p == '/api/divulgador/testar':
+            return self.send_json({'produtos': [{'produto': n['productName'], 'comissao': br(n['comissao_rs']),
+                                                 'vendas': n.get('sales'), 'nota': n.get('ratingStar'), 'palavra': n['palavra'],
+                                                 'preco': br(n.get('priceMin'))} for n in minerar()]})
         if p == '/api/pausar':
             set_cfg('pausado', '1' if b.get('pausado') else '0')
             return self.send_json({'ok': True})
@@ -1698,6 +1867,7 @@ def main():
         c.execute("UPDATE fila SET status='aprovado' WHERE status='enviando'")
     threading.Thread(target=worker, daemon=True).start()
     threading.Thread(target=monitor_chips, daemon=True).start()
+    threading.Thread(target=agenda_divulgador, daemon=True).start()
     if not CFG['autorizados']:
         log.warning('NUMEROS_AUTORIZADOS vazio: a conversa de links pelo WhatsApp fica desligada')
     srv = ThreadingHTTPServer(('127.0.0.1', CFG['porta']), H)

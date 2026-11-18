@@ -48,6 +48,7 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
   <button data-t="conexao">🔗 WhatsApp</button>
   <button data-t="modelo">✏️ Mensagens</button>
   <button data-t="cupons">🎟️ Cupons</button>
+  <button data-t="divulgador">🤖 Divulgador</button>
 </nav>
 <main>
   <section id="t-produtos">
@@ -99,6 +100,31 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
       <div class="row" style="margin-bottom:8px"><input id="gbusca" placeholder="Buscar grupo…" style="flex:1;min-width:160px" oninput="renderGrupos()">
         <label class="chk" style="border:0"><input type="checkbox" id="gadmin" checked onchange="renderGrupos()"> Só grupos onde algum chip é admin</label></div>
       <div id="grupos"></div></div>
+  </section>
+
+  <section id="t-divulgador" class="hide">
+    <div class="card"><div class="row"><b style="flex:1">🤖 Divulgador automático</b>
+      <label class="chk" style="border:0"><input type="checkbox" id="dvAtivo"> <b>Ligado</b></label></div>
+      <p class="muted">Nos horários escolhidos, o PostZap busca ofertas na Shopee (mesma API do MCP), aplica os filtros
+      (comissão mínima R$ 9, nunca suplementos, sem repetir) e manda os melhores para o grupo <b>FILA POST ZAP</b>, cada um como
+      📌 Post #N — com o seu link de afiliado e a chamada prontos.</p>
+      <label class="chk"><input type="radio" name="dvModo" value="aprovar"> <span><b>Mandar para eu aprovar</b> — responda em cima de cada um (1, 7, 0…)</span></label>
+      <label class="chk"><input type="radio" name="dvModo" value="automatico"> <span><b>Postar sozinho</b> — já entram aprovados e saem nas rajadas;
+        responda <b>0</b> em cima de um para cancelar antes de sair</span></label>
+      <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-top:10px">
+        <label>Horários (vírgula)<input id="dvHor" placeholder="07:40, 12:10, 17:10"></label>
+        <label>Posts por rodada<input id="dvQtd" type="number" min="1" max="15"></label>
+        <label>Comissão mínima (R$)<input id="dvCom" type="number" min="9" step="0.5"></label>
+        <label>Nota mínima<input id="dvNota" type="number" min="0" max="5" step="0.1"></label>
+        <label>Vendas mínimas<input id="dvVend" type="number" min="0"></label>
+        <label>Não repetir por (dias)<input id="dvRep" type="number" min="1"></label>
+      </div>
+      <label style="display:block;margin-top:10px">Palavras de busca (uma por linha)
+        <textarea id="dvPal" style="min-height:160px"></textarea></label>
+      <p class="row"><button class="b p" onclick="salvarDiv()">💾 Salvar</button>
+        <button class="b" onclick="testarDiv()">🔍 Testar (ver o que ele acharia agora)</button>
+        <button class="b" onclick="rodarDiv()">🚀 Rodar agora (manda pro FILA POST ZAP)</button> <span id="dvOk" class="muted"></span></p>
+      <div id="dvRes"></div></div>
   </section>
 
   <section id="t-cupons" class="hide">
@@ -213,7 +239,7 @@ function aba(t){
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
   document.querySelectorAll('main section').forEach(s => s.classList.toggle('hide', s.id !== 't-' + t));
   ({produtos:carregarProdutos, fila:carregarFila, historico:carregarFila, grupos:carregarGrupos, conexao:carregarConexao,
-    modelo:carregarMensagens, cupons:carregarCupons})[t]?.();
+    modelo:carregarMensagens, cupons:carregarCupons, divulgador:carregarDiv})[t]?.();
 }
 
 async function iniciar(){
@@ -408,6 +434,34 @@ async function salvarCupom(){
 async function alternarCupom(id){ const c = CUPONS.find(x => x.id === id); await api('cupons/salvar', {...c, ativo: !c.ativo}); carregarCupons(); }
 async function excluirCupom(id){ if (confirm('Excluir este cupom?')) { await api('cupons/excluir', {id}); carregarCupons(); } }
 
+async function carregarDiv(){
+  const d = await api('divulgador');
+  $('#dvAtivo').checked = d.ativo; document.querySelectorAll('input[name=dvModo]').forEach(r => r.checked = r.value === d.modo);
+  $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min;
+  $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias;
+  $('#dvPal').value = d.palavras.join('\n');
+}
+async function salvarDiv(){
+  await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
+    horarios: $('#dvHor').value.split(',').map(x => x.trim().padStart(5, '0')).filter(Boolean), por_rodada: $('#dvQtd').value,
+    comissao_min: $('#dvCom').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
+    palavras: $('#dvPal').value.split('\n')});
+  $('#dvOk').textContent = 'Salvo ✓'; carregarDiv();
+}
+async function testarDiv(){
+  $('#dvRes').innerHTML = '<p class="muted">Buscando na Shopee… (pode levar 1 min)</p>';
+  try { const j = await api('divulgador/testar', {});
+    $('#dvRes').innerHTML = j.produtos.length ? '<p><b>Ele mandaria agora:</b></p>' + j.produtos.map(p => `<div class="chk"><span style="flex:1">${esc(p.produto)}</span>
+      <span class="muted">R$ ${esc(p.preco)} · comissão <b>R$ ${esc(p.comissao)}</b> · ${esc(p.vendas)} vendas · ⭐ ${esc(p.nota)} · "${esc(p.palavra)}"</span></div>`).join('')
+      : '<p class="muted">Nada passou nos filtros agora.</p>'; }
+  catch(e){ $('#dvRes').innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+async function rodarDiv(){
+  if (!confirm('Buscar ofertas agora e mandar para o FILA POST ZAP?')) return;
+  $('#dvOk').textContent = 'Rodando…';
+  try { const j = await api('divulgador/rodar', {}); $('#dvOk').textContent = j.feitos ? `✓ ${j.feitos} post(s) enviados ao FILA POST ZAP` : j.msg; }
+  catch(e){ $('#dvOk').textContent = e.message; }
+}
 function carregarMensagens(){
   const nomes = Object.keys(MSG.modelos);
   $('#mestilo').innerHTML = nomes.map(n => `<option>${esc(n)}</option>`).join(''); mostrarEstilo();

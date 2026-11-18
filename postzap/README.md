@@ -32,6 +32,12 @@ mande o link ali e responda `1`, `1 vip`, `2`… Só números de `NUMEROS_AUTORI
 (📌 *Post #12 pronto*). Responda **em cima** da prévia daquele post (deslizar → responder) com `1`, `1 vip`, `3 149,90`,
 `7 relâmpago`, `0`… — ou escreva `#12 1`. `pendentes` lista os que esperam resposta.
 
+## 🤖 Divulgador
+Nos horários escolhidos (padrão 07:40, 12:10, 17:10 — antes dos picos), busca ofertas na Shopee pelas palavras-chave,
+filtra (comissão ≥ R$ 9, nota, vendas, sem suplementos, sem repetir em 7 dias), escolhe os melhores (1 por palavra) e manda
+ao FILA POST ZAP como 📌 Post #N. Modo "aprovar" (você responde em cima) ou "postar sozinho" (já aprovados, saem nas
+rajadas; `0` em cima cancela). "Testar" mostra o que ele acharia sem mandar nada.
+
 ## Ritmo de envio (aba ✅ Aprovação → ⏱️ Ritmo)
 Posts aprovados saem em **rajadas** (1–3 posts, pausa de 40–90 min, sorteado), só das 8h às 22h, com 2–5 min entre
 grupos. **Aquecimento:** 6 posts/dia por grupo no 1º dia, +2 por dia, até 20. Agendado com hora (`5 20h`) sai na hora.
