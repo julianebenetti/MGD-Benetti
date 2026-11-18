@@ -4,6 +4,11 @@
 - O dashboard principal se chama **AfiliDash** — não usar mais o nome "BenettiDash".
   `BenettiDash.html` é um arquivo antigo/legado no repositório; não é mais usado.
 
+## Sincronização AfiliDash → Supabase
+- A AfiliDash (repo `julianebenetti/afilidash`) foi feita para a Netlify: grava no Supabase pelas funções
+  `/.netlify/functions/*`. No VPS elas rodam pelo pacote `afilidash-vps/` deste repositório (serviço
+  `afilidash-funcoes`, porta 8791, Nginx do site da AfiliDash). Sem ele, a sincronização para (parou em 25Jul26).
+
 ## Hospedagem
 - A AfiliDash roda no **VPS da Hostinger** (não é hospedagem compartilhada via hPanel
   File Manager comum — é um VPS). É essa a única hospedagem em uso atualmente.
@@ -16,7 +21,8 @@
   de suplementação alimentar/nutricional — a Juliane não anuncia esse tipo de produto,
   mesmo que passe nos critérios de comissão/nota/vendas.
 - Piso mínimo de comissão pra um produto entrar no garimpo: R$9,00 (CPA máximo/comissão
-  em reais). Abaixo disso nem inserir.
+  em reais). Abaixo disso nem inserir. **Exceção: 👗 Moda (roupas, calçados, bolsas, acessórios, moda praia,
+  fitness, plus size) = R$4,00** (decisão da Juliane em 18Nov26; vale no Garimpo e no PostZap).
 - Existe uma rotina diária automática (Routine `Garimpo de Produtos — Curadoria diária`)
   que roda essa curadoria sozinha todo dia às 7h (Brasília). Se precisar ajustar critérios
   de busca no futuro, atualizar o prompt dessa rotina também, não só fazer buscas manuais.
