@@ -1016,6 +1016,10 @@ def enviar_texto(inst, jid, texto, previa=True):
 MIDIA_DIR = BASE / 'midia'
 
 
+def assinatura_midia(nome):
+    return hashlib.sha256(f"{CFG['webhook_segredo'] or CFG.get('senha', '')}:{nome}".encode()).hexdigest()[:20]
+
+
 def enviar_item(inst, jid, item):
     dados = json.loads(item.get('dados') or '{}')
     if dados.get('enquete'):
@@ -1030,8 +1034,26 @@ def enviar_item(inst, jid, item):
         return res
     midia = dados.get('midia')
     if midia and Path(midia).exists():
+        tipo = dados.get('midia_tipo', 'image')
+        if tipo == 'image':
+            # Imagem grande em base64 (IA) às vezes é aceita e nunca entregue. Deixa leve e manda como LINK (igual às fotos
+            # dos produtos, que sempre chegam): a Evolution baixa do PostZap.
+            t = Path(midia).read_text()
+            if len(t) > 400_000:
+                t2 = reduzir_imagem(t)
+                if t2 != t:
+                    Path(midia).write_text(t2)
+                    t = t2
+            nome = Path(midia).name
+            url = f"{CFG['url_publica']}/m/{nome}?k={assinatura_midia(nome)}"
+            try:
+                return evo('POST', f"/message/sendMedia/{inst}", {
+                    'number': jid, 'mediatype': 'image', 'mimetype': 'image/jpeg' if t.startswith('/9j') else 'image/png',
+                    'caption': item['texto'] or '', 'media': url, 'fileName': nome.replace('.b64', '.jpg')}, timeout=180)
+            except RuntimeError as e:
+                log.warning(f'Imagem por link falhou ({e}); tentando em base64')
         return evo('POST', f"/message/sendMedia/{inst}", {
-            'number': jid, 'mediatype': dados.get('midia_tipo', 'image'), 'mimetype': dados.get('mimetype', 'image/jpeg'),
+            'number': jid, 'mediatype': tipo, 'mimetype': dados.get('mimetype', 'image/jpeg'),
             'caption': item['texto'] or '', 'media': Path(midia).read_text(), 'fileName': Path(midia).stem}, timeout=180)
     elif dados.get('imagem') and modo_link() != 'previa' and item.get('origem') != 'aviso':
         # Link direto: o WhatsApp não consegue montar a miniatura da Shopee → vai a foto do produto com o texto
@@ -3207,6 +3229,23 @@ class H(BaseHTTPRequestHandler):
             self.send_header('Content-Length', str(len(html)))
             self.end_headers()
             self.wfile.write(html)
+            return
+        if p.startswith('/m/'):                     # imagem do post pra Evolution baixar (link assinado, sem login)
+            nome = p[3:]
+            qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            arq = MIDIA_DIR / nome
+            if re.fullmatch(r'[\w.-]+\.b64', nome) and arq.exists() and (qs.get('k') or [''])[0] == assinatura_midia(nome):
+                import base64
+                t = arq.read_text()
+                corpo = base64.b64decode(t)
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/jpeg' if t.startswith('/9j') else 'image/png')
+                self.send_header('Content-Length', str(len(corpo)))
+                self.end_headers()
+                self.wfile.write(corpo)
+                return
+            self.send_response(404)
+            self.end_headers()
             return
         if p.startswith('/l/'):
             qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
