@@ -349,7 +349,7 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
 
     <!-- ================= IA ================= -->
     <div class="egp" data-p="ia">
-      <div class="card"><div class="q"><div class="t"><b>✅ Mandar tudo pra eu aprovar antes?</b><small>Desmarcado: mensagens, enquete e convite já saem aprovados.</small></div>
+      <div class="card"><div class="q"><div class="t"><b>✅ Mandar pra eu aprovar antes?</b><small>Desmarcado (recomendado): bom dia, boa noite, enquete e convites saem DIRETO pros grupos na hora marcada — você só recebe um aviso no FILA POST ZAP.</small></div>
         <div class="v"><input type="checkbox" class="sw" id="egAprovar"></div></div></div>
       <div class="card"><div class="q"><div class="t"><b>🖼️ Quem cria as imagens?</b><small>Gemini (Google) e ChatGPT (OpenAI) fazem fotos bonitas.</small></div>
         <div class="v"><select id="egImgOrdem"><option value="gemini,openai">Gemini, depois ChatGPT</option><option value="openai,gemini">ChatGPT, depois Gemini</option>
@@ -988,7 +988,7 @@ async function carregarEng(){
   $('#egResAmiga').innerHTML = ENG.amiga_ativo ? `${ad.map(i => DSEM[i]).join(', ') || 'nenhum dia'} · ${ENG.amiga_hora} · ${(ENG.amiga_lista || []).length} grupo(s)` : off;
   $('#egResMon').innerHTML = ENG.monitor_ativo ? `${(ENG.monitor_grupos || []).length} grupo(s) · ${(ENG.monitor_telegram || []).length} canal(is)` : off;
   const ag = ENG.agenda_hoje || {itens: []};
-  $('#egAgenda').innerHTML = `<b>📅 Hoje nos grupos · ${fdata(new Date().toISOString().slice(0, 10))}</b> <span class="muted">· ${ENG.aprovar ? 'tudo passa pelo FILA POST ZAP pra você aprovar' : 'sai direto, sem aprovação'}</span>
+  $('#egAgenda').innerHTML = `<b>📅 Hoje nos grupos · ${fdata(new Date().toISOString().slice(0, 10))}</b> <span class="muted">· ${ENG.aprovar ? 'passa pelo FILA POST ZAP pra você aprovar' : '🚀 sai direto pros grupos na hora marcada'}</span>
     <div class="tl">${ag.itens.map(x => `<div class="${x.ativo ? '' : 'off'}"><b>${x.hora}</b><br>${x.nome}<br><span class="muted">${!x.ativo ? 'desligado' : x.feito ? '✅ já gerado' : '⏳ aguardando'}</span></div>`).join('')}
     ${ag.convite_proximo ? `<div><b>${ag.convite_proximo}</b><br>💌 Convite<br><span class="muted">próximo</span></div>` : ''}</div>`;
 }

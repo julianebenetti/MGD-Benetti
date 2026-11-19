@@ -1067,7 +1067,8 @@ def mostrar_previa(inst, numero, fid):
 
 def posts_hoje(c, jid):
     inicio = agora().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
-    return c.execute('SELECT COUNT(*) FROM envios WHERE jid=? AND ok=1 AND quando>=?', (jid, inicio)).fetchone()[0]
+    return c.execute("SELECT COUNT(*) FROM envios e JOIN fila f ON f.id=e.fila_id WHERE e.jid=? AND e.ok=1 AND e.quando>=? "
+                     "AND f.origem!='aviso'", (jid, inicio)).fetchone()[0]   # engajamento/avisos não contam no limite
 
 
 def sortear_chip(jid, evitar=None):
@@ -1273,6 +1274,11 @@ def proximos_itens():
     with db() as c:
         item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND agendado_para!='' AND agendado_para IS NOT NULL "
                          "AND agendado_para<=? ORDER BY agendado_para LIMIT 1", (agora_iso,)).fetchone()
+    if item:
+        return [item]
+    with db() as c:                              # engajamento/avisos aprovados saem NA HORA (não esperam rajada nem faixa)
+        item = c.execute("SELECT * FROM fila WHERE status='aprovado' AND origem='aviso' AND (agendado_para IS NULL OR agendado_para='') "
+                         "ORDER BY aprovado_em LIMIT 1").fetchone()
     if item:
         return [item]
     if not no_horario(r):
@@ -2137,7 +2143,7 @@ ENG_PADRAO = {
     'enquete_modo': 'rodizio',             # rodizio: pacotes de opções que combinam, trocando a cada N dias | fixa: as opções escolhidas
     'enquete_troca_dias': 2,
     'peso_votos': 1.5,                      # o mais votado vale até 50% a mais no Divulgador (proporcional aos votos)
-    'aprovar': True,                        # mensagem do dia e enquete vão ao FILA POST ZAP para você aprovar
+    'aprovar': False,                       # False: engajamento sai direto pros grupos (só avisa no FILA POST ZAP)
     'inbox_ativo': False, 'inbox_max_dia': 5,
     'inbox_gatilho': 'quero',               # só responde mensagem que COMEÇA com uma dessas palavras (separadas por vírgula)
     'inbox_chips': [],                      # chips que atendem pedidos (vazio = todos); desmarque o seu WhatsApp pessoal
@@ -2148,7 +2154,11 @@ ENG_PADRAO = {
 
 def eng_cfg():
     d = dict(ENG_PADRAO)
-    d.update(get_json('engajamento', {}))
+    salvo = get_json('engajamento', {})
+    if salvo and not salvo.get('_direto'):       # 19Nov26: engajamento passou a sair direto (decisão da Juliane)
+        salvo.update(aprovar=False, _direto=True)
+        set_cfg('engajamento', json.dumps(salvo, ensure_ascii=False))
+    d.update(salvo)
     return d
 
 
@@ -2408,7 +2418,7 @@ def criar_post_engajamento(origem, texto, dados, produto):
     if jid_fila:
         mostrar_previa(inst_fila, jid_fila, fid)
         responder(inst_fila, jid_fila, f"💬 *{produto} #{fid}* · " + ('responda *1* em cima para enviar aos grupos (ou *0*)'
-                  if status == 'rascunho' else 'já aprovado, sai na próxima rajada (responda *0* em cima para cancelar)'), fid=fid)
+                  if status == 'rascunho' else 'saindo AGORA pros grupos 🚀'), fid=fid)
     return fid
 
 
