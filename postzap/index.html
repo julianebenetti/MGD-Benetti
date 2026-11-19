@@ -223,25 +223,25 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
   <section id="t-engajamento" class="hide">
     <style>
       .egtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-      .egtabs button{border:1px solid var(--borda,#ddd);background:#fff;border-radius:20px;padding:7px 14px;font-weight:700;cursor:pointer}
-      .egtabs button.on{background:#e7f6ee;border-color:#16a34a;color:#166534}
-      details.rot{background:#fff;border:1px solid #e5e5e5;border-radius:14px;margin:10px 0;padding:0 14px}
+      .egtabs button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:20px;padding:7px 14px;font-weight:700;cursor:pointer}
+      .egtabs button.on{background:var(--chip);border-color:var(--pri);color:var(--pri)}
+      details.rot{background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;margin:10px 0;padding:0 14px}
       details.rot>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 0;cursor:pointer;flex-wrap:wrap}
       details.rot>summary::-webkit-details-marker{display:none}
       details.rot>summary .tit{font-weight:700;flex:1;min-width:160px}
-      details.rot>summary .res{color:#777;font-size:12px}
-      details.rot>summary .eng{font-size:12px;color:#777}
+      details.rot>summary .res{color:var(--mut);font-size:12px}
+      details.rot>summary .eng{font-size:12px;color:var(--mut)}
       details.rot[open]>summary .eng::after{content:'▲'} details.rot:not([open])>summary .eng::after{content:'⚙️'}
-      details.rot .corpo{border-top:1px solid #eee;padding:8px 0 12px}
-      input.sw{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:12px;background:#ccc;position:relative;cursor:pointer;margin:0;flex:none;transition:.2s}
+      details.rot .corpo{border-top:1px solid var(--bd);padding:8px 0 12px}
+      input.sw{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:12px;background:var(--bd);position:relative;cursor:pointer;margin:0;flex:none;transition:.2s}
       input.sw:checked{background:#16a34a}
       input.sw::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s}
       input.sw:checked::after{left:21px}
       .tl{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-      .tl>div{flex:1;min-width:120px;border-left:3px solid #a78bfa;padding:4px 10px;background:#faf8ff;border-radius:0 8px 8px 0}
-      .tl>div.off{opacity:.45;border-color:#ccc}
+      .tl>div{flex:1;min-width:120px;border-left:3px solid #a78bfa;padding:4px 10px;background:var(--bg);border-radius:0 8px 8px 0}
+      .tl>div.off{opacity:.55;border-color:var(--bd)}
       .egp{display:none} .egp.on{display:block}
-      .avan{margin-top:8px} .avan summary{color:#777;font-size:13px;cursor:pointer}
+      .avan{margin-top:8px} .avan summary{color:var(--mut);font-size:13px;cursor:pointer}
     </style>
 
     <div class="card" id="egAgenda"></div>
@@ -564,7 +564,7 @@ function gruposChecks(sel){
   return `<div class="row" style="gap:6px;margin:4px 0"><input id="dbusca" placeholder="🔎 Buscar grupo…" oninput="filtrarDlg()" style="flex:1">
     <button class="b" type="button" style="padding:3px 8px" onclick="marcarDlg(true)">Marcar todos</button><button class="b" type="button" style="padding:3px 8px" onclick="marcarDlg(false)">Limpar</button></div>
     <div class="muted" id="dcont" style="font-size:12px"></div>
-    <div style="max-height:200px;overflow:auto;border:1px solid #eee;border-radius:8px;padding:4px" onchange="contarDlg()">` +
+    <div style="max-height:200px;overflow:auto;border:1px solid var(--bd);border-radius:8px;padding:4px" onchange="contarDlg()">` +
     todos.map(g => `<label class="chk" style="display:block"><input type="checkbox" value="${esc(g.jid)}" ${sel.includes(g.jid)?'checked':''}> ${esc(g.nome)} <span class="muted">(${g.hoje || 0} hoje)</span></label>`).join('') + '</div>';
 }
 function abrirDlg(tit, texto, grupos, quando){
@@ -1031,7 +1031,7 @@ async function salvarEng(){
   await carregarEng(); $('#egOk').textContent = '✓ Salvo automaticamente às ' + new Date().toTimeString().slice(0, 5);
 }
 function desenharConvite(){
-  $('#egConvImgs').innerHTML = (ENG.convite_imgs || []).map((n, i) => `<img src="${B}api/convite_img/${i}?v=${Date.now()}" title="${esc(n)}" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid #ddd">`).join('');
+  $('#egConvImgs').innerHTML = (ENG.convite_imgs || []).map((n, i) => `<img src="${B}api/convite_img/${i}?v=${Date.now()}" title="${esc(n)}" style="width:110px;height:110px;object-fit:cover;border-radius:12px;border:1px solid var(--bd)">`).join('');
   $('#egConvPadrao').style.display = ENG.convite_suas ? '' : 'none';
 }
 async function trocarConvite(inp, somar){

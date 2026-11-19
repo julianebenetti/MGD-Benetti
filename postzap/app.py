@@ -2795,8 +2795,14 @@ CUPOM_RE = re.compile(r'(?i)\bcupom\b|\bcupons\b|\bcódigo\b|\bcodigo\b')
 
 def stat_monitor(fonte, **inc):
     """Painel do monitor: por fonte, quando leu pela última vez, quantas mensagens/achados e o último erro."""
+    fonte = fonte.replace('@@', '@')
     with _lock:
         st = get_json('monitor_stat', {})
+        for velho in [k for k in st if '@@' in k]:          # junta a linha duplicada antiga (@@canal)
+            novo = velho.replace('@@', '@')
+            a, b = st.pop(velho), st.setdefault(novo, {'msgs': 0, 'achados': 0, 'cupons': 0})
+            for k in ('msgs', 'achados', 'cupons'):
+                b[k] = b.get(k, 0) + a.get(k, 0)
         f = st.setdefault(fonte, {'msgs': 0, 'achados': 0, 'cupons': 0})
         f['visto'] = agora().strftime('%Y-%m-%dT%H:%M')
         for k, v in inc.items():
@@ -2997,7 +3003,7 @@ def agenda_engajamento():
                         posts = ler_telegram(canal)
                         novos = [p for p in posts if num(p[0]) > ultimo] if ultimo else posts[-3:]   # 1ª vez: só os 3 últimos
                         for pid, txt in novos[-10:]:
-                            processar_achado(txt, f'Telegram @{canal}')
+                            processar_achado(txt, f'Telegram @{canal.strip().lstrip("@")}')
                         if posts:
                             set_cfg(f'tg_{canal}', str(max(num(p[0]) for p in posts)))
                         else:
