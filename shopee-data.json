@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795115837,
-  "updated_at_br": "19/11/2026 16:13",
+  "updated_at": 1795123027,
+  "updated_at_br": "19/11/2026 18:12",
   "period_days": 90,
-  "total_orders": 5055,
-  "total_conversions": 4839,
+  "total_orders": 5053,
+  "total_conversions": 4837,
   "orders": [
     {
       "ID do pedido": "261119NYQXD41M",
@@ -3657,7 +3657,7 @@
     },
     {
       "ID do pedido": "261118M0C0NV27",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-18 07:53:19",
       "Sub_id1": "",
       "Valor de Compra(R$)": "27.99",
@@ -3669,7 +3669,7 @@
       "Comissao total do pedido(R$)": "0.8397",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vestido QUEIMA DE ESTOQUE!! Envio Rápido mais vendidos Moda   Feminina com Laço  Casual  Verão elegante",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19678442442",
       "ID da loja": "444752128",
       "Nome da loja": "IMPULSIONA MODAS BRASIL",
@@ -3677,7 +3677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248687598132838",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-18"
     },
     {
@@ -3782,7 +3782,7 @@
     },
     {
       "ID do pedido": "261118KF876QPT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-18 02:46:58",
       "Sub_id1": "",
       "Valor de Compra(R$)": "56.9",
@@ -3794,7 +3794,7 @@
       "Comissao total do pedido(R$)": "1.707",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vestido Feminino curto Floral elegante com Lastex   Alcinha reguláveis Babado Verão com  faixa",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58264888174",
       "ID da loja": "1705701277",
       "Nome da loja": "MODAS EMIL",
@@ -3802,7 +3802,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248669217159984",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-18"
     },
     {
@@ -5057,7 +5057,7 @@
     },
     {
       "ID do pedido": "261118JNWYN9HH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-17 19:13:50",
       "Sub_id1": "",
       "Valor de Compra(R$)": "26.9",
@@ -5069,7 +5069,7 @@
       "Comissao total do pedido(R$)": "0.807",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Sandália Rasteira Diva Com Fivela E Bico Quadrado E Solado Expandido E Palmilha Confort",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58219637552",
       "ID da loja": "1907478644",
       "Nome da loja": "Terto lu",
@@ -5077,7 +5077,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248642030157825",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-17"
     },
     {
@@ -18407,7 +18407,7 @@
     },
     {
       "ID do pedido": "261111356SMKDX",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-11 15:04:36",
       "Sub_id1": "06Nov26VEAmacaquinhoamarracao",
       "Valor de Compra(R$)": "33.99",
@@ -18419,7 +18419,7 @@
       "Comissao total do pedido(R$)": "2.54925",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 5 ou 3 Calcinhas Fio Duplo Pala Dupla Reforçada Reduz Medidas Cintura Alta Feminina Sustentação",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22894153531",
       "ID da loja": "562181193",
       "Nome da loja": "CLARA BEAUTY LINGERIE",
@@ -18427,7 +18427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248108676146216",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-11"
     },
     {
@@ -21632,7 +21632,7 @@
     },
     {
       "ID do pedido": "2611100PN04D02",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-10 15:38:47",
       "Sub_id1": "28Out26VEAtapetehigienicoV3",
       "Valor de Compra(R$)": "16.89",
@@ -21644,7 +21644,7 @@
       "Comissao total do pedido(R$)": "1.0134",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Jornal Biodegradável Para Pet Atóxico Com Alta Absorção E Papel Para Dejetos De Cães E Gatos 52/100/200/300/400 Folhas",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58214511366",
       "ID da loja": "537726110",
       "Nome da loja": "Maranduba Variedades",
@@ -21652,7 +21652,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248024327107245",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-10"
     },
     {
@@ -23532,7 +23532,7 @@
     },
     {
       "ID do pedido": "261110UY1RG3NU",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 22:04:18",
       "Sub_id1": "06Nov26VEAmacaquinhoamarracao",
       "Valor de Compra(R$)": "26.99",
@@ -23544,7 +23544,7 @@
       "Comissao total do pedido(R$)": "0.8097",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Blusa Feminina PLUS SIZE DECOTE QUADRADO Básica Manga Curta Elegante",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "49217439261",
       "ID da loja": "602566776",
       "Nome da loja": "Noahbella01",
@@ -23552,7 +23552,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247961058188498",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
@@ -26507,7 +26507,7 @@
     },
     {
       "ID do pedido": "261109ST67QRFT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 01:32:03",
       "Sub_id1": "06Nov26VEAconjuntocolete",
       "Valor de Compra(R$)": "21.99",
@@ -26519,7 +26519,7 @@
       "Comissao total do pedido(R$)": "0.6597",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "10 azevinho artificial de natal,holly berry vermelho natalino",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58200051025",
       "ID da loja": "781149588",
       "Nome da loja": "UP DOWN",
@@ -26527,7 +26527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247887120190270",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
@@ -26832,7 +26832,7 @@
     },
     {
       "ID do pedido": "261109SQHAQ7TH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-09 00:44:34",
       "Sub_id1": "06Nov26VEAconjuntocolete",
       "Valor de Compra(R$)": "79.99",
@@ -26844,7 +26844,7 @@
       "Comissao total do pedido(R$)": "16.7979",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "conjunto Alfaiataria Feminino plus size G1/G2/G3 tecido premium entrega rapida",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58211492434",
       "ID da loja": "537516899",
       "Nome da loja": "JHALUI MODAS",
@@ -26852,7 +26852,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "247884271194838",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-09"
     },
     {
@@ -27557,7 +27557,7 @@
     },
     {
       "ID do pedido": "261109SFWFQKGT",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-08 22:28:09",
       "Sub_id1": "06Nov26VEAconjuntoalcinha",
       "Valor de Compra(R$)": "28.76",
@@ -27569,7 +27569,7 @@
       "Comissao total do pedido(R$)": "0.8628",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Camiseta Unissex Estampa Pokémon, camiseta casual de verão, Alta Qualidade, Promoção Envio Rápido",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22094883149",
       "ID da loja": "1375848256",
       "Nome da loja": "Shape.store",
@@ -27577,7 +27577,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247876089163090",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-08"
     },
     {
@@ -28307,7 +28307,7 @@
     },
     {
       "ID do pedido": "261109S1XMBPGV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-08 18:18:15",
       "Sub_id1": "06Nov26VEAconjuntoalcinha",
       "Valor de Compra(R$)": "32.76",
@@ -28319,7 +28319,7 @@
       "Comissao total do pedido(R$)": "2.06388",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Body Feminino Suplex com Bojo Detalhe Fivela Modelador Confortável Moda Casual Elegante",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22394988295",
       "ID da loja": "1482041235",
       "Nome da loja": "LUA KATE FASHION",
@@ -28327,7 +28327,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247861095181150",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-08"
     },
     {
@@ -28507,7 +28507,7 @@
     },
     {
       "ID do pedido": "261109RU9R5XT5",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-08 16:19:12",
       "Sub_id1": "04Nov26VEAconjuntocrocheV2",
       "Valor de Compra(R$)": "96.04",
@@ -28519,7 +28519,7 @@
       "Comissao total do pedido(R$)": "2.8812",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tênis Heating Masculino Esportivo Caminhada Academia Treinos Solado Antiderrapante Eva Corre Reforçado ALIF",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58256017311",
       "ID da loja": "871917442",
       "Nome da loja": "Lanes Shoes",
@@ -28527,7 +28527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247853952107226",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-08"
     },
     {
@@ -31607,7 +31607,7 @@
     },
     {
       "ID do pedido": "261107NWWAJRCN",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-07 12:28:00",
       "Sub_id1": "03Nov26VEAmacaquinhoplusdecote",
       "Valor de Compra(R$)": "54.9",
@@ -31619,7 +31619,7 @@
       "Comissao total do pedido(R$)": "1.8117",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Arara Guarda Roupa Dobrável Armário Organizador Multiuso Roupeiro Cabideiro Sapateira Prateleira",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58266900994",
       "ID da loja": "1005725674",
       "Nome da loja": "Casa Quentinho",
@@ -31627,7 +31627,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247753677198562",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-07"
     },
     {
@@ -32107,7 +32107,7 @@
     },
     {
       "ID do pedido": "261107MX9AMFDS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-07 03:02:00",
       "Sub_id1": "28Out26VEAtapetehigienicoV3",
       "Valor de Compra(R$)": "47.99",
@@ -32119,7 +32119,7 @@
       "Comissao total do pedido(R$)": "15.8367",
       "Tipo de atribuicao": "Pedido na mesma loja",
       "Nome do Item": "50 unid - Tapete Higiênico PetCharm Slim -Tamanho 50cm x 60cm Para Cachorros",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18899838992",
       "ID da loja": "908280603",
       "Nome da loja": "Pet Charm",
@@ -32127,12 +32127,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "247719720163049",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-07"
     },
     {
       "ID do pedido": "261107MX45MN51",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-07 02:59:07",
       "Sub_id1": "28Out26VEAtapetehigienicoV3",
       "Valor de Compra(R$)": "47.9",
@@ -32144,7 +32144,7 @@
       "Comissao total do pedido(R$)": "2.5866",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 50 ou 100 Un Tapete Higiênico Para Cães De Qualidade 60x50cm Cachorros",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "26378312324",
       "ID da loja": "829646892",
       "Nome da loja": "Pet Tobby",
@@ -32152,7 +32152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247719547153034",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-07"
     },
     {
@@ -126327,56 +126327,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "241046978162818",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-21"
-    },
-    {
-      "ID do pedido": "2608221A96PXPA",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-21 21:03:27",
-      "Sub_id1": "31Jul26VIPcalcinhaalgodao",
-      "Valor de Compra(R$)": "21.9",
-      "Comissao liquida do afiliado(R$)": "1.33152",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "2.40%",
-      "Comissao Shopee(R$)": "0.876",
-      "Comissao do vendedor(R$)": "0.5256",
-      "Comissao total do pedido(R$)": "1.4016",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Aprenda a Biblia com 3 Palavrinhas Jogo de Cartas + Livreto",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18797996562",
-      "ID da loja": "373289765",
-      "Nome da loja": "Lucas dos Livros",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241045406193008",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-21"
-    },
-    {
-      "ID do pedido": "26082214749T8R",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-21 19:14:54",
-      "Sub_id1": "31Jul26VEAcalcinhaalgodao",
-      "Valor de Compra(R$)": "13.95",
-      "Comissao liquida do afiliado(R$)": "0.5301",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "0.558",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0.558",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit De Escova Raquete + Escova Magica +Touca Cetim",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "18699334469",
-      "ID da loja": "1310094668",
-      "Nome da loja": "Espress.br",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241038894108523",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-21"
     }
