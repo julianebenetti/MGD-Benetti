@@ -1266,8 +1266,8 @@ def proxima_saida():
 
 
 def proximos_itens():
-    """Agendado com hora marcada sai sozinho na hora. Fora isso, uma RAJADA: sorteia quantos posts (ex.: 1–3),
-    pega os primeiros da fila (preferindo o nicho da hora) e marca a pausa até a próxima rajada."""
+    """Agendado com hora marcada sai sozinho na hora. Fora isso, uma RAJADA: sorteia quantos posts (ex.: 1–3) e escolhe
+    na fila aprovada (que funciona como estoque) pelo cronograma de nichos do horário; faltando, o nicho que menos saiu hoje."""
     r = ritmo()
     agora_iso = agora().isoformat()
     with db() as c:
@@ -1284,16 +1284,40 @@ def proximos_itens():
         candidatos = c.execute("SELECT * FROM fila WHERE status='aprovado' AND (agendado_para IS NULL OR agendado_para='') "
                                "ORDER BY aprovado_em").fetchall()
     da_hora = nichos_da_hora(r)
-    if da_hora:                     # rajada do nicho da hora; completa com outros (a não ser que seja estrito)
-        do_nicho = [x for x in candidatos if x['origem'] == 'aviso' or nicho_do_item(x) in da_hora
-                    or set(focos_do_item(x)) & set(da_hora)]          # avisos/engajamento saem em qualquer faixa
-        resto = [x for x in candidatos if x not in do_nicho]
-        candidatos = do_nicho + ([] if r.get('nicho_estrito') else resto)
     if not candidatos:
         return []
+    # Fila aprovada = estoque. Escolhe pelo cronograma de nichos do horário, alternando entre os nichos da faixa;
+    # sem nada da faixa (ou fora das faixas), vai o nicho que MENOS saiu hoje — assim a moda não domina tudo.
+    hoje = agora().date().isoformat()
+    with db() as c:
+        saidos = c.execute("SELECT DISTINCT f.* FROM envios e JOIN fila f ON f.id=e.fila_id WHERE e.ok=1 AND substr(e.quando,1,10)=?",
+                           (hoje,)).fetchall()
+    cont = {}
+    for x in saidos:
+        if x['origem'] != 'aviso':
+            cont[nicho_do_item(x)] = cont.get(nicho_do_item(x), 0) + 1
+
+    def da_faixa(x):
+        return x['origem'] == 'aviso' or nicho_do_item(x) in da_hora or bool(set(focos_do_item(x)) & set(da_hora))
+
+    if da_hora and r.get('nicho_estrito'):
+        candidatos = [x for x in candidatos if da_faixa(x)]
+        if not candidatos:
+            return []
     n = random.randint(*sorted(r['rajada']))
+    escolhidos, resto = [], list(candidatos)
+    while resto and len(escolhidos) < n:
+        def chave(x):
+            nic = 'aviso' if x['origem'] == 'aviso' else nicho_do_item(x)
+            return (0 if x['origem'] == 'aviso' else 1 if (da_hora and da_faixa(x)) else 2,
+                    cont.get(nic, 0), x['aprovado_em'] or '')
+        x = min(resto, key=chave)
+        resto.remove(x)
+        escolhidos.append(x)
+        if x['origem'] != 'aviso':
+            cont[nicho_do_item(x)] = cont.get(nicho_do_item(x), 0) + 1
     set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(*r['pausa']))).isoformat())
-    return candidatos[:n]
+    return escolhidos
 
 
 def _link_do_grupo(item, jid):
