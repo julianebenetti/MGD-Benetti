@@ -38,7 +38,22 @@ dialog .in{padding:16px}dialog::backdrop{background:#0008}
 table.hist{border-collapse:collapse;width:100%;font-size:13.5px}table.hist th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;padding:6px 8px;border-bottom:2px solid var(--bd);white-space:nowrap}
 table.hist td{padding:7px 8px;border-bottom:1px solid var(--bd)}table.hist tr.dia td{background:var(--chip);font-weight:700;padding-top:10px}
 table.hist td.n,table.hist th.n{text-align:center}table.hist tr.post{cursor:pointer}table.hist tr.post:hover td{background:var(--bg)}
-table.hist tr.det td{background:var(--bg);white-space:pre-wrap;font-size:12.5px}.hsub.on{background:var(--chip);color:var(--pri);border-color:var(--pri)}
+table.hist tr.det td{background:var(--bg);white-space:pre-wrap;font-size:13px;word-break:break-word;overflow-wrap:anywhere}
+.zap{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;max-width:520px;line-height:1.45}
+.zap a{color:var(--pri);word-break:break-all}
+@media (max-width:640px){
+ #hTab tr:first-child{display:none}
+ #hTab,#hTab tbody{display:block}
+ #hTab tr.dia{display:block}#hTab tr.dia td{display:block;font-size:13px}
+ #hTab tr.post{display:grid;grid-template-columns:auto auto 1fr;grid-template-areas:"h n t" "p p p" "g v c";gap:4px 10px;padding:10px 8px;border-bottom:1px solid var(--bd)}
+ #hTab tr.post td{border:0;padding:0;text-align:left;background:transparent!important}
+ #hTab tr.post td:nth-child(1){grid-area:h;font-weight:700}#hTab tr.post td:nth-child(2){grid-area:n;color:var(--mut)}
+ #hTab tr.post td:nth-child(3){grid-area:t;justify-self:end}#hTab tr.post td:nth-child(4){grid-area:p;font-weight:600}
+ #hTab tr.post td:nth-child(5){grid-area:g}#hTab tr.post td:nth-child(5)::before{content:'👥 '}
+ #hTab tr.post td:nth-child(6){grid-area:v}#hTab tr.post td:nth-child(6)::before{content:'🛒 '}
+ #hTab tr.post td:nth-child(7){grid-area:c}#hTab tr.post td:nth-child(7)::before{content:'💰 '}
+ #hTab tr.det{display:block}#hTab tr.det td{display:block;padding:8px}
+}.hsub.on{background:var(--chip);color:var(--pri);border-color:var(--pri)}
 table.hist .fixa{position:sticky;left:0;background:var(--card);white-space:nowrap;z-index:1;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .seg2 button{padding:4px 10px}.seg2 button.on{background:var(--chip);color:var(--pri);border-color:var(--pri)}
 .linha{position:relative;display:flex;height:64px;border-radius:12px;overflow:hidden;border:1px solid var(--bd);margin:10px 0 2px;background:var(--bg)}
@@ -802,7 +817,7 @@ function desenharPosts(){
   const rs = v => 'R$ ' + Number(v || 0).toFixed(2).replace('.', ',');
   $('#hResumo').innerHTML = `${ps.length} post(s) · ${ps.reduce((s, p) => s + p.grupos, 0)} envios · <b>🛒 ${ps.reduce((s, p) => s + (p.vendas || 0), 0)} venda(s)</b>
     · <b>💰 ${rs(ps.reduce((s, p) => s + (p.comissao || 0), 0))}</b> <span class="muted">(Shopee, atualizado ${HIST.vendas_atualizado ? fdata(HIST.vendas_atualizado, true) : 'ainda não'})</span>
-    <button class="b" style="padding:2px 8px" onclick="atualizarVendas()">↻</button>`;
+    <button class="b" style="padding:2px 8px" onclick="atualizarVendas()">↻</button> <button class="b" style="padding:2px 8px" onclick="repostarVendidos()">🔁 Recolocar na fila os que venderam</button>`;
   const porDia = {};
   ps.forEach(p => (porDia[p.quando.slice(0, 10)] = porDia[p.quando.slice(0, 10)] || []).push(p));
   const DS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -825,10 +840,21 @@ async function atualizarVendas(){
   try { await api('vendas/atualizar', {}); } catch(e){ alert('Shopee: ' + e.message); }
   carregarHistorico();
 }
+async function repostar(id){
+  try { const j = await api('fila/repostar', {id}); alert(`✅ Voltou pra fila como #${j.id}: sai numa das próximas rajadas.`); carregarFila(); }
+  catch(e){ alert(e.message); }
+}
+async function repostarVendidos(){
+  try { const j = await api('fila/repostar_vendidos', {}); alert(j.n ? `✅ ${j.n} produto(s) que venderam voltaram pra fila.` : 'Nenhum produto vendido pra recolocar agora (os que venderam já estão na fila ou saíram há menos de 2 dias).'); carregarFila(); }
+  catch(e){ alert(e.message); }
+}
 function verPost(tr, id){
   if (tr.nextElementSibling && tr.nextElementSibling.classList.contains('det')) return tr.nextElementSibling.remove();
   const it = FILA.find(x => x.id === id);
-  tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="7">${esc(it ? it.texto : '(texto não disponível)')}</td></tr>`);
+  const zap = t => esc(t).replace(/\*([^*\n]+)\*/g, '<b>$1</b>').replace(/_([^_\n]+)_/g, '<i>$1</i>')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank">$1</a>');
+  tr.insertAdjacentHTML('afterend', `<tr class="det"><td colspan="7"><div class="zap">${it ? zap(it.texto) : '(texto não disponível)'}</div>
+    ${it && it.origem !== 'aviso' ? `<button class="b" style="margin-top:8px" onclick="repostar(${id})">🔁 Repostar este produto</button>` : ''}</td></tr>`);
 }
 function desenharGruposHist(){
   const MS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];

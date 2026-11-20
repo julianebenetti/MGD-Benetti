@@ -3197,6 +3197,39 @@ def coletar_vendas(dias=10):
     return total
 
 
+def repostar(fid, dias_min=0):
+    """Copia um post já enviado de volta pra fila (aprovado). Não duplica se o produto já está esperando na fila."""
+    with db() as c:
+        it = c.execute('SELECT * FROM fila WHERE id=?', (fid,)).fetchone()
+        if not it or it['origem'] == 'aviso':
+            return None
+        if it['chave'] and c.execute("SELECT 1 FROM fila WHERE chave=? AND status IN ('aprovado','rascunho','enviando')",
+                                     (it['chave'],)).fetchone():
+            return None
+        if dias_min:
+            ult = c.execute("SELECT MAX(e.quando) FROM envios e JOIN fila f ON f.id=e.fila_id WHERE f.chave=? AND e.ok=1",
+                            (it['chave'],)).fetchone()[0]
+            if ult and ult > (agora() - timedelta(days=dias_min)).isoformat():
+                return None
+    dados = json.loads(it['dados'] or '{}')
+    dados['revenda'] = True
+    with _lock, db() as c:
+        cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, status, criado_em, aprovado_em, '
+                        'dados) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                        (it['origem'], it['chave'], it['produto'], it['preco'], it['comissao'], it['link'], it['texto'], it['grupos'],
+                         'aprovado', agora().isoformat(), agora().isoformat(), json.dumps(dados, ensure_ascii=False)))
+        return cur.lastrowid
+
+
+def repostar_vendidos(dias_min=2):
+    """Produtos que venderam (últimos 30 dias, sem cancelados) voltam pra fila — 1 vez, se não saíram nos últimos N dias."""
+    with db() as c:
+        fids = [r[0] for r in c.execute(
+            "SELECT MAX(fila_id) FROM vendas WHERE fila_id IS NOT NULL AND status NOT IN ('CANCELLED','UNPAID') AND quando>=? "
+            "GROUP BY item", ((agora() - timedelta(days=30)).isoformat(),))]
+    return [x for x in (repostar(f, dias_min) for f in fids) if x]
+
+
 def agenda_vendas():
     n = 0
     while True:
@@ -3208,6 +3241,10 @@ def agenda_vendas():
         n += 1
         try:
             coletar_vendas()
+            if get_cfg('repostar_vendidos', '1') == '1':      # quem vendeu volta pra fila sozinho
+                novos = repostar_vendidos()
+                if novos:
+                    log.info(f'Recolocados na fila (venderam): {novos}')
         except Exception as e:
             log.warning(f'Vendas da Shopee: {e}')
         time.sleep(2 * 3600)                     # a cada 2 horas
@@ -3757,6 +3794,17 @@ class H(BaseHTTPRequestHandler):
                 else:
                     c.execute("UPDATE fila SET status='descartado' WHERE id=? AND status!='enviando'", (b['id'],))
             return self.send_json({'ok': True, 'ja_enviado': ja_foi})
+        if p == '/api/fila/repostar':
+            fid = repostar(int(b.get('id') or 0))
+            if not fid:
+                return self.send_json({'erro': 'esse produto já está esperando na fila'}, 400)
+            return self.send_json({'id': fid})
+        if p == '/api/fila/repostar_vendidos':
+            try:
+                coletar_vendas()
+            except Exception as e:
+                log.warning(f'Vendas: {e}')
+            return self.send_json({'n': len(repostar_vendidos())})
         if p == '/api/fila/restaurar':
             with _lock, db() as c:
                 ja_foi = c.execute('SELECT COUNT(*), MAX(quando) FROM envios WHERE fila_id=? AND ok=1', (b['id'],)).fetchone()
