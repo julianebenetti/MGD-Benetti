@@ -39,7 +39,7 @@
 ## PostZap (posts.descontoirresistivel.com.br/zap)
 - App separado da AfiliDash (pasta `postzap/`), no mesmo VPS, para postar ofertas nos grupos de WhatsApp
   com aprovação. Não mexer em tabelas da AfiliDash nem no robô do Shopee Vídeo (só leitura).
-- Links postados sempre convertidos para o link de afiliado da Juliane e rastreáveis (Sub IDs).
+- Links postados sempre convertidos para o link de afiliado da Juliane e rastreáveis (Sub IDs). Formato por grupo (desde 20Nov26): `postzap-grupo07-20Nov26` (número tirado do nome do grupo "#07…"; sem número: `g<id>`).
 - **Horários de pico de venda** (estudo do robô do Shopee Vídeo, 05Nov26): **13h–15h, 18h e 20h–21h**; compras por
   impulso; beleza/cabelo = maior parte dos pedidos. Agendar os melhores posts nesses horários.
 - **Divulgador do PostZap** (aba 🤖): minera ofertas na Shopee nos horários configurados e manda ao grupo

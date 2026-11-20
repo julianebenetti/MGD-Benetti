@@ -725,12 +725,33 @@ def modo_link():
     return get_cfg('modo_link', 'direto')
 
 
+def codigos_grupos():
+    """Código curto de cada grupo pro Sub ID, tirado do nome: "#07🚨VEM ECONOMIZAR…" → grupo07.
+    Sem número no nome (ou número repetido): g<id interno>."""
+    with db() as c:
+        rows = c.execute('SELECT rowid, jid, nome FROM grupos').fetchall()
+    num = {r[1]: (re.match(r'\s*#?\s*(\d{1,3})\b', r[2] or '') or [None, None])[1] for r in rows}
+    vistos = {}
+    for n in num.values():
+        if n:
+            vistos[int(n)] = vistos.get(int(n), 0) + 1
+    return {r[1]: (f'grupo{int(num[r[1]]):02d}' if num[r[1]] and vistos[int(num[r[1]])] == 1 else f'g{r[0]}') for r in rows}
+
+
 def link_shopee_do_grupo(item, gid):
-    """Link de afiliado só deste grupo: Sub IDs postzap · origem · data · g<grupo> → vendas por grupo no relatório."""
+    """Link de afiliado só deste grupo. Sub ID: postzap-grupo07-20Nov26 → vendas por grupo no relatório."""
     ids = ids_da_chave(item.get('chave'))
+    if not ids:                                  # post sem a chave do produto: tira do próprio link
+        try:
+            ids = ids_da_chave(ids_do_link_shopee(item.get('link') or ''))
+        except Exception:
+            ids = None
     if not ids:
+        log.warning(f"Link por grupo: não achei o produto do post #{item.get('id')}")
         return None
-    subs = [CFG['sub_id'], re.sub(r'[^A-Za-z0-9]', '', item.get('origem') or 'app')[:20] or 'app', data_sub(agora()), f'g{gid}']
+    with db() as c:
+        jid = (c.execute('SELECT jid FROM grupos WHERE rowid=?', (gid,)).fetchone() or [None])[0]
+    subs = [CFG['sub_id'], codigos_grupos().get(jid, f'g{gid}'), data_sub(agora())]
     origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
     return shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
                       f'subIds:{json.dumps(subs)}}}){{shortLink}}}}')['generateShortLink']['shortLink']
@@ -3138,6 +3159,7 @@ def coletar_vendas(dias=10):
     scroll, total = None, 0
     with db() as c:
         gid_jid = {str(r[0]): r[1] for r in c.execute('SELECT rowid, jid FROM grupos')}
+    codigos = codigos_grupos()
     for _ in range(40):
         arg = f', scrollId: "{scroll}"' if scroll else ''
         d = shopee_gql('{conversionReport(purchaseTimeStart: %d, purchaseTimeEnd: %d, limit: 100%s){nodes{purchaseTime '
@@ -3147,8 +3169,11 @@ def coletar_vendas(dias=10):
             partes = [p for p in (n.get('utmContent') or '').split('-') if p]
             if not partes or partes[0] != CFG['sub_id']:
                 continue                         # venda que não veio do PostZap
-            g = next((p[1:] for p in partes[1:] if re.fullmatch(r'g\d+', p)), None)
-            jid = gid_jid.get(g) if g else None
+            cod_jid = {v.lower(): k for k, v in codigos.items()}
+            jid = next((cod_jid[p.lower()] for p in partes[1:] if p.lower() in cod_jid and p.lower().startswith('grupo')), None)
+            if not jid:                          # formato antigo: ...-g<id interno>
+                g = next((p[1:] for p in partes[1:] if re.fullmatch(r'[gG]\d+', p)), None)
+                jid = gid_jid.get(g) if g else None
             quando = datetime.fromtimestamp(int(n.get('purchaseTime') or 0), BRT).isoformat()
             for o in n.get('orders') or []:
                 for it in o.get('items') or []:
