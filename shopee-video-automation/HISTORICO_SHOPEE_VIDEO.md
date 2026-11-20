@@ -82,6 +82,22 @@ Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo,
    pessoas adultas no vídeo.
 4. Fixar e fazer versões do **vestido midi floral** (65% da comissão); conferir se a cor do vídeo está no anúncio.
 
+## Levantamento de 19/11/2026 (Insights, conta pedrita.bambam.store)
+
+- **Últimos 7 dias (12–18/11):** 3 vídeos com receita (−40%) · **50,2 mil visualizações (+1.525%)** · tempo médio
+  24 s (−27%) · 600 cliques (+71%) · 10 pedidos (+25%) · R$ 845,30 vendidos (+204%) · **comissão R$ 68,50 (+113%)**.
+  Vendas: picos em 15/11 (~R$ 310) e 17/11 (~R$ 290); a punição de 17/11 20:30 interrompeu.
+- **Mês (01–18/11):** 9 vídeos com receita · 52,1 mil visualizações · tempo médio 59 s · 1,1 mil cliques · 23 pedidos ·
+  R$ 1,3 mil vendidos · **comissão R$ 121,80** (R$ 5,30 por pedido).
+- **O que vendeu (mês):** vestido midi floral (vídeo de 24/08) **11 itens, R$ 81,70 = 67% da comissão** · Papai Noel
+  2, R$ 13,50 · escova rotativa (vídeo de 07/08/2025) 2 itens, **R$ 465,90 vendidos e só R$ 8,90 de comissão (~2%)** ·
+  sapatilha 1, R$ 7,30 · suporte PS5 1, R$ 7,30 · árvore MDF 3, R$ 0,60 · luminárias, lego (anúncio inválido) e
+  vestido infantil: centavos. Nos 7 dias, as vendas vieram de vídeos antigos (vestido, escova, PS5).
+- **Público:** 45+ = 50%, 35–44 = 23%, 25–34 = 19%.
+- **Leitura:** a entrega VOLTOU (de 3 mil para 50 mil visualizações em 7 dias) antes da punição de 17/11. O vestido
+  segue sendo o carro-chefe. A escova vende bem, mas o link paga ~2%: o mesmo modelo (Mondial ER-10 5 em 1) paga
+  8% (≈ R$ 19) em outras lojas.
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar
