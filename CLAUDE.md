@@ -66,4 +66,4 @@
   recebe as 3 melhores ofertas com Sub ID `inbox`; só responde mensagem que começa com a palavra-gatilho "QUERO", só nos chips
   escolhidos (o chip1 NÃO é o WhatsApp pessoal dela — corrigido em 18Nov26) e fica quieto com quem ela conversou nas últimas 12h) e monitor de grupos de WhatsApp/canais públicos do Telegram (links
   da Shopee viram post com o link dela; cupons viram aviso para revisar). Desde 19Nov26 o engajamento (bom dia, noite, enquete, convites) sai DIRETO pros grupos na hora marcada, sem esperar rajada nem aprovação, e não conta no limite diário de posts; o FILA POST ZAP só recebe aviso.
-- **Black Friday 2026: sexta 27Nov26.** Aquecimento dos grupos começou em 18Nov26 (6 posts/dia por grupo, +2/dia, até 20).
+- **Black Friday 2026: sexta 27Nov26.** Aquecimento dos grupos começou em 18Nov26 (6 posts/dia por grupo, +2/dia, até 20); em 20Nov26 a Juliane subiu o limite para 30 posts/dia por grupo na reta da Black Friday (decisão dela). Acompanhar as saídas de membros no Histórico.
