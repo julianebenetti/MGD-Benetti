@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795162715,
-  "updated_at_br": "20/11/2026 05:14",
+  "updated_at": 1795172118,
+  "updated_at_br": "20/11/2026 07:51",
   "period_days": 90,
-  "total_orders": 5022,
-  "total_conversions": 4808,
+  "total_orders": 5021,
+  "total_conversions": 4807,
   "orders": [
     {
       "ID do pedido": "261119NYQXD41M",
@@ -4757,7 +4757,7 @@
     },
     {
       "ID do pedido": "261118JW26VBVA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-17 21:21:29",
       "Sub_id1": "",
       "Valor de Compra(R$)": "10.5",
@@ -4769,7 +4769,7 @@
       "Comissao total do pedido(R$)": "0.441",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "1 Kit Suporte Ajustável Parede Para Telefone Prático E Moderno Para Sua Casa",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23694665210",
       "ID da loja": "832040275",
       "Nome da loja": "P&H  Oficial",
@@ -4777,7 +4777,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248649688134446",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-17"
     },
     {
@@ -11507,7 +11507,7 @@
     },
     {
       "ID do pedido": "2611137XWNMNYH",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-13 12:55:29",
       "Sub_id1": "09Nov26VEAtravessaambar",
       "Valor de Compra(R$)": "10.02",
@@ -11519,7 +11519,7 @@
       "Comissao total do pedido(R$)": "0.7515",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "BODY SPLASH PERFUME - HOMEM, ZAAD, LILY",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58261054804",
       "ID da loja": "1535856741",
       "Nome da loja": "an.industria",
@@ -11527,7 +11527,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248273726194778",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-13"
     },
     {
@@ -125527,31 +125527,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241095871139898",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-22"
-    },
-    {
-      "ID do pedido": "2608222NDJYJSY",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-22 09:55:24",
-      "Sub_id1": "19Ago26VIPcalcinhaalgodao45a54",
-      "Valor de Compra(R$)": "93.99",
-      "Comissao liquida do afiliado(R$)": "3.57162",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "3.7596",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "3.7596",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Bermuda Cargo Masculina Jeans Premium com Bolsos Laterais Estilo Americano Streetwear Casual",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "58216189948",
-      "ID da loja": "1657569395",
-      "Nome da loja": "MM JEANS WEAR",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241091724171412",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-22"
     }
