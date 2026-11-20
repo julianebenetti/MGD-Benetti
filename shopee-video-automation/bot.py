@@ -49,6 +49,7 @@ logger = logging.getLogger('bot')
 BASE = Path(__file__).parent
 ASK_AFTER_SECONDS = 8   # só o tempo de chegarem os outros vídeos de um álbum (o link pode vir em um deles)
 BATCH_LINK_TTL = 600
+JOB_STUCK_MINUTES = int(os.getenv('TRABALHO_TRAVADO_MIN', '40'))   # trabalho preso: reinicia o robô
 LOOSE_LINK_SECONDS = 900   # link solto só vale para os vídeos sem link que chegaram nos últimos 15 min
 FAILED_RETRY_TTL = 1800
 COVER_SECONDS = float(os.getenv('CAPA_SEGUNDOS', '1'))
@@ -193,7 +194,8 @@ class Bot:
                        # agendar (validação por IA, até 1 min cada) e limpar mensagens numa fila própria: os botões
                        # de Editados (capa, legenda, headline, print) não esperam atrás deles
                        'approve': queue.Queue(), 'tidy': queue.Queue()}
-        self.approving: set = set()   # posts com agendamento na fila ou em andamento
+        self.approving: set = set()
+        self.running: Dict[int, tuple] = {}   # trabalho em andamento em cada fila: (tipo, início)   # posts com agendamento na fila ou em andamento
         self.pending: List[Dict] = []
         self.album_links: Dict[str, Dict] = {}
         self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
@@ -1551,7 +1553,43 @@ class Bot:
 
     # ---------- Relógio ----------
 
+    def watchdog(self):
+        """
+        Um trabalho preso há mais de JOB_STUCK_MINUTES (Shopee/IA sem responder) trava a fila inteira: o robô avisa e
+        reinicia sozinho (o serviço volta em 5 s e retoma os vídeos que estavam na fila).
+        """
+        stuck = [(kind, (time.time() - start) / 60) for kind, start in list(self.running.values())
+                 if time.time() - start > JOB_STUCK_MINUTES * 60]
+        if not stuck:
+            return
+        what = ', '.join(f"{k} ({m:.0f} min)" for k, m in stuck)
+        logger.error(f"Trabalho travado: {what}; reiniciando o robô")
+        try:
+            self.tg.send_text(RELATORIO or ENVIOS, f"♻️ Um trabalho travou ({html.escape(what)}): reiniciei o robô para "
+                                                   "destravar as filas. Vídeos na fila são retomados; print de variação "
+                                                   "ou /montar mandados nesse período: mande de novo.")
+        finally:
+            os._exit(1)
+
+    def queue_text(self) -> str:
+        names = {'video': '🎬 vídeos/pack', 'ui': '✅ Editados (capa, legenda, prints)', 'approve': '📅 agendamentos',
+                 'lia': '🤖 LiA', 'report': '📊 relatórios', 'ideas': '💡 ideias', 'tidy': '🧹 limpeza'}
+        lines = ["⚙️ <b>Filas do robô</b>"]
+        for key, q in self.queues.items():
+            lines.append(f"• {names.get(key, key)}: {q.qsize()} esperando")
+        running = list(self.running.values())
+        lines.append("\n<b>Em andamento</b>" if running else "\nNada em andamento agora.")
+        for kind, start in running:
+            lines.append(f"• {html.escape(kind)} há {(time.time() - start) / 60:.0f} min")
+        pack = self.pack_state()
+        if pack.get('link'):
+            lines.append(f"\n📦 Pack aberto: {len(pack.get('principais', []))} vídeo(s), "
+                         f"{len(pack.get('vinhetas', []))} vinheta(s)"
+                         + (" · esperando você escolher a loja" if pack.get('escolhendo') else ''))
+        return '\n'.join(lines)
+
     def tick(self):
+        self.watchdog()
         self.pack_tick()
         for album in [a for a, v in self.album_links.items() if time.time() - v['at'] > BATCH_LINK_TTL]:
             del self.album_links[album]
@@ -2670,6 +2708,8 @@ class Bot:
     def worker(self, jobs: queue.Queue):
         while True:
             job = jobs.get()
+            me = threading.get_ident()
+            self.running[me] = (job[0], time.time())
             try:
                 if job[0] == 'video':
                     self.job_video(*job[1:])
@@ -2742,6 +2782,7 @@ class Bot:
             except Exception:
                 logger.exception(f"Falha no job {job[0]}")
             finally:
+                self.running.pop(me, None)
                 if job[0] in ('approve', 'use_identical'):
                     self.approving.discard(job[1])
 
@@ -2848,6 +2889,9 @@ class Bot:
             self.tg.send_text(thread or RELATORIO, "📊 Montando o painel do Shopee Vídeo…")
             self.submit(('panel', thread or RELATORIO))
             return
+        if command.lower().startswith('/fila'):
+            self.tg.send_text(thread or RELATORIO, self.queue_text())
+            return
         if command.lower().startswith('/posteitudo'):
             self.on_post_all_command(thread)
             return
@@ -2890,8 +2934,16 @@ class Bot:
             return
         if thread == ENVIOS:
             self.on_envios(msg)
-        elif thread == EDITADOS and msg.get('reply_to_message') and not msg.get('from', {}).get('is_bot'):
+        elif thread == EDITADOS and msg.get('reply_to_message') and not msg.get('from', {}).get('is_bot') \
+                and msg['reply_to_message'].get('message_id') != msg.get('message_thread_id'):
             self.on_editados_reply(msg)
+        elif thread == EDITADOS and not msg.get('from', {}).get('is_bot') and (
+                msg.get('photo') or msg.get('document', {}).get('mime_type', '').startswith('image/')):
+            # print solto (sem responder): o robô não sabe de qual vídeo é
+            self.tg.react(msg['message_id'], '🤔')
+            self.tg.send_text(EDITADOS, "🖼️ Não sei de qual vídeo é este print. Segure a mensagem <b>🖼️ Responda esta "
+                                        "mensagem com o print das variações</b> do vídeo certo, toque em "
+                                        "<b>Responder</b> e mande o print ali.", reply_to=msg['message_id'])
 
     # ---------- Central Post TikTok (tópico Brutos) ----------
 
@@ -2993,6 +3045,7 @@ class Bot:
             ('painel', 'Painel da operação no Shopee Vídeo (sai sozinho todo dia às 8h)'),
             ('estudo', 'Levantamento do Shopee Vídeo agora (o automático vem a cada 3 dias)'),
             ('montar', '📦 Pack: monta agora os vídeos recebidos (senão monta sozinho em 90 s)'),
+            ('fila', 'Mostra o que o robô está fazendo e o que está na fila'),
             ('posteitudo', 'Marca de uma vez como postados os vídeos da Agenda (pede confirmação)'),
             ('contas', 'Contas do Shopee Vídeo e em qual celular cada uma usa a LiA'),
             ('conta', 'Guarda/atualiza uma conta: /conta usuario | aparelho | observação'),

@@ -39,7 +39,8 @@ def ask_json(content: Union[str, List[Dict]], schema: Dict, name: str = 'respost
     """`content`: texto, ou lista de blocos {'type': 'text'|'image', ...} (imagem em base64)."""
     global _client
     if _client is None:
-        _client = OpenAI(http_client=_http_client())
+        # sem limite, uma chamada pendurada travava a fila inteira (pack, prints de variação) por até ~30 min
+        _client = OpenAI(http_client=_http_client(), timeout=float(os.getenv('IA_TIMEOUT', '120')), max_retries=1)
 
     if not isinstance(content, str):
         content = [_to_openai(b) for b in content]
