@@ -1401,7 +1401,7 @@ def processar_fila():
             with db() as c:
                 if c.execute('SELECT 1 FROM envios WHERE fila_id=? AND jid=? AND ok=1', (it['id'], jid)).fetchone():
                     continue
-                if posts_hoje(c, jid) >= limite:
+                if it['origem'] != 'aviso' and posts_hoje(c, jid) >= limite:   # engajamento/avisos não têm limite
                     it['_erros'].append(f'{nome}: limite de hoje ({limite} posts/grupo, aquecimento) atingido')
                     continue
             if enviou:
