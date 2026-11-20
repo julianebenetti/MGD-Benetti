@@ -634,8 +634,7 @@ def preparar(p):
         # para ver no relatório da Shopee: postzap · origem · data
         try:
             origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
-            subs = [CFG['sub_id'], re.sub(r'[^A-Za-z0-9]', '', p.get('origem') or 'app')[:20] or 'app',
-                    data_sub(agora())]
+            subs = [CFG['sub_id'], re.sub(r'[^A-Za-z0-9]', '', p.get('origem') or 'app')[:20] or 'app']
             link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
                               f'subIds:{json.dumps(subs)}}}){{shortLink}}}}')['generateShortLink']['shortLink']
             p['sub_ids'] = subs
@@ -751,10 +750,18 @@ def link_shopee_do_grupo(item, gid):
         return None
     with db() as c:
         jid = (c.execute('SELECT jid FROM grupos WHERE rowid=?', (gid,)).fetchone() or [None])[0]
-    subs = [CFG['sub_id'], codigos_grupos().get(jid, f'g{gid}'), data_sub(agora())]
+    subs = [CFG['sub_id'], codigos_grupos().get(jid, f'g{gid}')]   # sem data (decisão da Juliane, 20Nov26)
+    chave_cache = f"{ids[0]}:{ids[1]}:{subs[1]}"
+    if chave_cache in _links_grupo:              # mesmo produto + mesmo grupo = mesmo link (não gera de novo)
+        return _links_grupo[chave_cache]
     origem = f'https://shopee.com.br/product/{ids[0]}/{ids[1]}'
-    return shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
+    link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:{json.dumps(origem)},'
                       f'subIds:{json.dumps(subs)}}}){{shortLink}}}}')['generateShortLink']['shortLink']
+    _links_grupo[chave_cache] = link
+    return link
+
+
+_links_grupo = {}
 
 
 def converter_amazon(url):
@@ -2783,7 +2790,7 @@ def pedido_inbox(inst, jid, texto):
         try:
             link = shopee_gql(f'mutation{{generateShortLink(input:{{originUrl:'
                               f'{json.dumps(f"https://shopee.com.br/product/{x["shopId"]}/{x["itemId"]}")},'
-                              f'subIds:{json.dumps([CFG["sub_id"], "inbox", data_sub(agora())])}}}){{shortLink}}}}')['generateShortLink']['shortLink']
+                              f'subIds:{json.dumps([CFG["sub_id"], "inbox"])}}}){{shortLink}}}}')['generateShortLink']['shortLink']
         except Exception:
             continue
         linhas.append(f"🛍️ *{x['productName'][:70]}*\n💰 R$ {br(x.get('priceMin'))} · ⭐ {x.get('ratingStar')} · {int(x.get('sales') or 0)} vendidos\n👉 {link}")
