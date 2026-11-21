@@ -1,6 +1,6 @@
 {
-  "updated_at": 1795233083,
-  "updated_at_br": "21/11/2026 00:47",
+  "updated_at": 1795248690,
+  "updated_at_br": "21/11/2026 05:07",
   "period_days": 90,
   "total_orders": 5111,
   "total_conversions": 4889,
@@ -9257,7 +9257,7 @@
     },
     {
       "ID do pedido": "261117J3RXT5TE",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-17 13:48:54",
       "Sub_id1": "",
       "Valor de Compra(R$)": "24.98",
@@ -9269,7 +9269,7 @@
       "Comissao total do pedido(R$)": "0.7494",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "KIT 2 VELAS DE IGNIÇÃO PARA ROÇADEIRA E MOTOSSERRA UNIVERSAL NK",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22898064798",
       "ID da loja": "1322953131",
       "Nome da loja": "IMPACTO ECOMMERCE LTDA",
@@ -9277,7 +9277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248622534130730",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-17"
     },
     {
@@ -10982,7 +10982,7 @@
     },
     {
       "ID do pedido": "261116FSUBWT3U",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-16 15:45:58",
       "Sub_id1": "28Out26VEAtapetehigienicoV5",
       "Valor de Compra(R$)": "14.5",
@@ -10994,7 +10994,7 @@
       "Comissao total do pedido(R$)": "0.435",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Avental de Plástico com Manga Longa à Prova d'Água para Bebês e Crianças Meninas e Meninos",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58261759754",
       "ID da loja": "1423693653",
       "Nome da loja": "Rafa store20241",
@@ -11002,7 +11002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248543158109823",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-16"
     },
     {
