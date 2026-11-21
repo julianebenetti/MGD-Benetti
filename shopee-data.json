@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795273899,
-  "updated_at_br": "21/11/2026 12:07",
+  "updated_at": 1795278686,
+  "updated_at_br": "21/11/2026 13:27",
   "period_days": 90,
-  "total_orders": 5278,
-  "total_conversions": 5041,
+  "total_orders": 5277,
+  "total_conversions": 5040,
   "orders": [
     {
       "ID do pedido": "261121TYU6D3N2",
@@ -3732,7 +3732,7 @@
     },
     {
       "ID do pedido": "261120SENKBWTG",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-20 11:52:30",
       "Sub_id1": "",
       "Valor de Compra(R$)": "27.01",
@@ -3744,7 +3744,7 @@
       "Comissao total do pedido(R$)": "0.8103",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Pote Petisqueira Multiuso Square 400ml Acrílico C/ 10 Unid.",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23994434095",
       "ID da loja": "968862942",
       "Nome da loja": "Marco Zero Festas",
@@ -3752,7 +3752,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248874750808609",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-20"
     },
     {
@@ -15107,7 +15107,7 @@
     },
     {
       "ID do pedido": "261117GGKH2BEV",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-16 22:33:11",
       "Sub_id1": "28Out26VEAtapetehigienicoV5",
       "Valor de Compra(R$)": "41.82",
@@ -15119,7 +15119,7 @@
       "Comissao total do pedido(R$)": "1.75644",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapete Higiênico 50x60cm 50Un Economico p/ Cachorro Pet Gel Borda com Cola Custo Benefício",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58253910957",
       "ID da loja": "1489977996",
       "Nome da loja": "Leleko Pet",
@@ -15127,7 +15127,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248567591128036",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-16"
     },
     {
@@ -20607,7 +20607,7 @@
     },
     {
       "ID do pedido": "261113622N39NA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-12 18:46:35",
       "Sub_id1": "10Nov26VEAbebereborn",
       "Valor de Compra(R$)": "32.99",
@@ -20619,7 +20619,7 @@
       "Comissao total do pedido(R$)": "0.9897",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Joelheira Quente Elétrica USB Para Alivio De Dores No Joelho Infravermelho JH",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58215162387",
       "ID da loja": "1025814863",
       "Nome da loja": "J H presentes",
@@ -20627,7 +20627,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248208395152696",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-12"
     },
     {
@@ -36232,7 +36232,7 @@
     },
     {
       "ID do pedido": "261109RU6K3WNC",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-08 16:17:27",
       "Sub_id1": "08Nov26VEAkit4suportevaso",
       "Valor de Compra(R$)": "61.98",
@@ -36244,7 +36244,7 @@
       "Comissao total do pedido(R$)": "3.90474",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Jogo de Sousplat Redondo 2/4/8 Peças Novo, Elegante para Decoração de Mesa, Apoio para Prato",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58269918756",
       "ID da loja": "1912142877",
       "Nome da loja": "KATIA COMERCIO",
@@ -36252,7 +36252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247853846125732",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-08"
     },
     {
@@ -131927,31 +131927,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241202438145858",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-23"
-    },
-    {
-      "ID do pedido": "2608245U7HN39H",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-23 16:17:23",
-      "Sub_id1": "27Jun26MochilaExpansivelVs2",
-      "Valor de Compra(R$)": "29.9",
-      "Comissao liquida do afiliado(R$)": "1.30663",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.60%",
-      "Comissao Shopee(R$)": "1.196",
-      "Comissao do vendedor(R$)": "0.1794",
-      "Comissao total do pedido(R$)": "1.3754",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Mochila Grande Masculina Feminina Executiva Impermeável Reforçada com Bolso para Notebook - Preto",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "43625565894",
-      "ID da loja": "752743341",
-      "Nome da loja": "Fenix Abdon",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241201043115616",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-23"
     }
