@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795248690,
-  "updated_at_br": "21/11/2026 05:07",
+  "updated_at": 1795257592,
+  "updated_at_br": "21/11/2026 07:35",
   "period_days": 90,
-  "total_orders": 5111,
-  "total_conversions": 4889,
+  "total_orders": 5110,
+  "total_conversions": 4888,
   "orders": [
     {
       "ID do pedido": "261120RG6VH5NN",
@@ -2357,7 +2357,7 @@
     },
     {
       "ID do pedido": "261119Q6NK3MBQ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-19 14:24:01",
       "Sub_id1": "",
       "Valor de Compra(R$)": "109.99",
@@ -2369,7 +2369,7 @@
       "Comissao total do pedido(R$)": "4.94955",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Ventilador de Mesa e Coluna Ajustável 4 em 1 5 Velocidades USB Silencioso e com Aromatizador Altura Regulável",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58219137331",
       "ID da loja": "1868885344",
       "Nome da loja": "Vitta Home_",
@@ -2377,7 +2377,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248797441111557",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-19"
     },
     {
@@ -127752,31 +127752,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241184558192270",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-23"
-    },
-    {
-      "ID do pedido": "26082357FDAS8Y",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-23 10:23:52",
-      "Sub_id1": "17Jul26CalcaJogger",
-      "Valor de Compra(R$)": "32.99",
-      "Comissao liquida do afiliado(R$)": "1.25362",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.3196",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.3196",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 2 Camisetas Femininas Plus Size Tapa Bumbum Dry Fit Academia Fitness Alongada Legging Treino",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "19499889637",
-      "ID da loja": "1185469635",
-      "Nome da loja": "Torra Shop",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241179832183534",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-23"
     }
