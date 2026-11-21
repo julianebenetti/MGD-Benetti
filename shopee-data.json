@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795291326,
-  "updated_at_br": "21/11/2026 16:57",
+  "updated_at": 1795294521,
+  "updated_at_br": "21/11/2026 17:50",
   "period_days": 90,
-  "total_orders": 5269,
-  "total_conversions": 5032,
+  "total_orders": 5268,
+  "total_conversions": 5031,
   "orders": [
     {
       "ID do pedido": "261121TYU6D3N2",
@@ -12307,7 +12307,7 @@
     },
     {
       "ID do pedido": "261118K1CPKXJS",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-17 22:38:56",
       "Sub_id1": "03Nov26VEAmacaquinhoplusdecote",
       "Valor de Compra(R$)": "65.45",
@@ -12319,7 +12319,7 @@
       "Comissao total do pedido(R$)": "2.7489",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Blusa De Moletom Racing Automobilismo Gp Moto Carro Corrida BMW Escolha O Seu",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "18741218810",
       "ID da loja": "569634257",
       "Nome da loja": "Super_Moletons",
@@ -12327,7 +12327,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248654335143252",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-17"
     },
     {
@@ -26657,7 +26657,7 @@
     },
     {
       "ID do pedido": "26111130CYPHNB",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-11 13:38:36",
       "Sub_id1": "03Nov26VEAconjuntoplusassimetrico",
       "Valor de Compra(R$)": "32.72",
@@ -26669,7 +26669,7 @@
       "Comissao total do pedido(R$)": "1.9632",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Short Feminino Risca de Giz Estica Confortável",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23394534067",
       "ID da loja": "603699721",
       "Nome da loja": "RIEVE MODAS",
@@ -26677,7 +26677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248103515117560",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-11"
     },
     {
@@ -36132,7 +36132,7 @@
     },
     {
       "ID do pedido": "261109RVY91Y0E",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-08 16:49:08",
       "Sub_id1": "06Nov26VEAtankinitropicalV2",
       "Valor de Compra(R$)": "38.27",
@@ -36144,7 +36144,7 @@
       "Comissao total do pedido(R$)": "1.1481",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Boleador de Massa de Pães e Doces",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58270944311",
       "ID da loja": "332970633",
       "Nome da loja": "GM.tudo3D",
@@ -36152,7 +36152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247855748185721",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-08"
     },
     {
@@ -37407,7 +37407,7 @@
     },
     {
       "ID do pedido": "261108Q8K0MXU9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-08 01:11:43",
       "Sub_id1": "04Nov26VEAshortalfaiataria",
       "Valor de Compra(R$)": "18.9",
@@ -37419,7 +37419,7 @@
       "Comissao total do pedido(R$)": "0.567",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Esmalte Gel Para Unhas Real Love Linha Light 10ml",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58211467844",
       "ID da loja": "1807050416",
       "Nome da loja": "Desconto Max Atacado e Varejo",
@@ -37427,7 +37427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247799502133554",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-08"
     },
     {
@@ -40182,7 +40182,7 @@
     },
     {
       "ID do pedido": "261107MGH12CHJ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-06 22:55:46",
       "Sub_id1": "06Nov26VEAmacaquinhoamarracao",
       "Valor de Compra(R$)": "10",
@@ -40194,7 +40194,7 @@
       "Comissao total do pedido(R$)": "0.45",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Massageador Elétrico Portátil Cervical EMS Alivia Dores Corpo Pescoço",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "21999493532",
       "ID da loja": "1072624004",
       "Nome da loja": "HH IMPORTADORA",
@@ -40202,7 +40202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "247704946184843",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-06"
     },
     {
@@ -131702,31 +131702,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_SAME_SHOP",
       "conversionId": "241217868100078",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-23"
-    },
-    {
-      "ID do pedido": "26082469SGCMSE",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-23 20:37:58",
-      "Sub_id1": "17Jul26CheiroRicoContaNew",
-      "Valor de Compra(R$)": "39.9",
-      "Comissao liquida do afiliado(R$)": "1.5162",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "0.00%",
-      "Comissao Shopee(R$)": "1.596",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "1.596",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Kit 2 Shorts Tactel Elastano Masculino Bermuda Academia Praia Bolsos Cordão Ultra Leve",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "51852164616",
-      "ID da loja": "1494157770",
-      "Nome da loja": "Mavie Têxtil",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241216678152928",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-23"
     }
