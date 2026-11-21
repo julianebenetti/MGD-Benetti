@@ -559,13 +559,17 @@ TEMAS_PRONTOS = {
     '🎁 Presentes': (r'presente|amigo secreto|lembrancinha|caixa (de )?presente|kit presente',
                     ['kit presente feminino', 'presente para mãe', 'presente amigo secreto', 'kit presente beleza',
                      'presente criativo'], False),
+    '🧽 Limpeza da casa': (r'limpeza|\bmop\b|rodo|vassoura|esfreg|esponja|pano (de )?(microfibra|ch[aã]o|limpeza)|balde|'
+                          r'escova sanit|desentup|dispenser|lixeira|limpa (vidro|piso)|tira manchas|flanela|organizador de limpeza',
+                          ['mop giratório', 'kit limpeza casa', 'rodo mágico', 'pano microfibra', 'vassoura mágica',
+                           'escova sanitária', 'balde mop', 'esponja limpeza', 'lixeira banheiro', 'dispenser detergente pia'], True),
     '🧔 Masculino': (r'masculin|\bhomem\b|cueca|barba|camisa polo|bermuda',
                     ['camiseta masculina', 'bermuda masculina', 'kit cueca', 'tênis masculino', 'kit barba'], False),
 }
 TEMA_PAI_PRONTO = {'➕ Plus Size': '👗 Moda', '✝️ Evangélica': '👗 Moda', '🎆 Réveillon': '👗 Moda',
                    '☀️ Verão e praia': '👗 Moda', '🎄 Natal': '🏠 Casa e decoração', '🎒 Volta às aulas': '🧸 Infantil',
                    '👙 Moda íntima': '👗 Moda', '👟 Calçados': '👗 Moda', '👜 Bolsas e acessórios': '👗 Moda',
-                   '🏋️ Fitness': '👗 Moda', '🧔 Masculino': '👗 Moda'}     # 🎁 Presentes: várias categorias (cor própria)
+                   '🏋️ Fitness': '👗 Moda', '🧔 Masculino': '👗 Moda', '🧽 Limpeza da casa': '🏠 Casa e decoração'}     # 🎁 Presentes: várias categorias (cor própria)
 FOCOS = list(TEMAS_PRONTOS)          # nomes dos temas prontos (os criados por ela vêm de focos_nomes())
 _REGRAS_FOCO = [(n, v[0]) for n, v in TEMAS_PRONTOS.items()]
 
@@ -619,13 +623,27 @@ def preparar(p):
     link = p.get('link') or ''
     if ids:
         try:
-            nodes = shopee_gql(f'{{productOfferV2(shopId:{ids[0]},itemId:{ids[1]},limit:1)'
-                               '{nodes{productName priceMin priceMax imageUrl sales ratingStar}}}')['productOfferV2']['nodes']
+            extra = '' if get_cfg('sem_campo_desconto') == '1' else ' priceDiscountRate'
+            try:
+                nodes = shopee_gql(f'{{productOfferV2(shopId:{ids[0]},itemId:{ids[1]},limit:1)'
+                                   '{nodes{productName priceMin priceMax imageUrl sales ratingStar' + extra + '}}}')['productOfferV2']['nodes']
+            except Exception as e:
+                if not extra or 'priceDiscountRate' not in str(e):
+                    raise
+                set_cfg('sem_campo_desconto', '1')
+                nodes = shopee_gql(f'{{productOfferV2(shopId:{ids[0]},itemId:{ids[1]},limit:1)'
+                                   '{nodes{productName priceMin priceMax imageUrl sales ratingStar}}}')['productOfferV2']['nodes']
             if nodes:
                 n = nodes[0]
                 p['imagem'] = n.get('imageUrl') or p.get('imagem', '')
                 if n.get('priceMin'):
                     p['preco'] = br(n['priceMin'])
+                desc = int(float(n.get('priceDiscountRate') or 0))
+                p['desconto_pct'] = desc                 # promoção de verdade? (desconto da própria Shopee)
+                if desc >= 10 and n.get('priceMin') and not p.get('preco_de'):
+                    p['preco_de'] = br(float(n['priceMin']) / (1 - desc / 100))
+                if desc < 10:
+                    avisos.append('🏷️ Sem desconto na Shopee agora (preço cheio).')
             else:
                 avisos.append('Produto não encontrado na Shopee agora (pode ter saído do ar).')
         except Exception as e:
@@ -1352,6 +1370,18 @@ def proximos_itens():
     for x in saidos:
         if x['origem'] != 'aviso':
             cont[nicho_do_item(x)] = cont.get(nicho_do_item(x), 0) + 1
+    dmin = int(divulgador_cfg().get('desconto_min', 20))
+
+    def promo(x):
+        try:
+            return int(json.loads(x['dados'] or '{}').get('desconto_pct') or 0) >= dmin
+        except (ValueError, TypeError):
+            return False
+    ofertas = [x for x in saidos if x['origem'] != 'aviso']
+    n_promo = sum(1 for x in ofertas if promo(x))
+    with db() as c:                              # produto que saiu nos últimos 2 dias vai pro fim da fila
+        recentes = {r[0] for r in c.execute("SELECT DISTINCT f.chave FROM envios e JOIN fila f ON f.id=e.fila_id WHERE e.ok=1 AND e.quando>=?",
+                                            ((agora() - timedelta(days=2)).isoformat(),)) if r[0]}
 
     def da_faixa(x):
         return x['origem'] == 'aviso' or nicho_do_item(x) in da_hora or bool(set(focos_do_item(x)) & set(da_hora))
@@ -1363,15 +1393,19 @@ def proximos_itens():
     n = random.randint(*sorted(r['rajada']))
     escolhidos, resto = [], list(candidatos)
     while resto and len(escolhidos) < n:
+        falta_promo = n_promo * 2 < len(ofertas) + len(escolhidos) + 1    # menos da metade em promoção até agora
         def chave(x):
             nic = 'aviso' if x['origem'] == 'aviso' else nicho_do_item(x)
             return (0 if x['origem'] == 'aviso' else 1 if (da_hora and da_faixa(x)) else 2,
+                    1 if (x['chave'] in recentes and x['origem'] != 'aviso') else 0,
+                    0 if (falta_promo and promo(x)) else 1,
                     cont.get(nic, 0), x['aprovado_em'] or '')
         x = min(resto, key=chave)
         resto.remove(x)
         escolhidos.append(x)
         if x['origem'] != 'aviso':
             cont[nicho_do_item(x)] = cont.get(nicho_do_item(x), 0) + 1
+            n_promo += 1 if promo(x) else 0
     set_cfg('proxima_rajada', (agora() + timedelta(minutes=random.randint(*r['pausa']))).isoformat())
     return escolhidos
 
@@ -2056,7 +2090,9 @@ DIVULGADOR_PADRAO = {
     'comissao_min': 9.0,                    # R$ por venda (piso do Garimpo)
     'comissao_min_moda': 4.0,               # exceção: público do WhatsApp gosta de moda barata (decisão 18Nov26)
     'nota_min': 4.6, 'vendas_min': 300,
-    'nao_repetir_dias': 7,
+    'nao_repetir_dias': 15,                 # não sugere de novo produto que passou pelo PostZap nesses dias
+    'desconto_min': 20,                     # % de desconto pra contar como "promoção de verdade"
+    'metade_promo': True,                   # pelo menos metade das sugestões (e dos envios) em promoção de verdade
 }
 
 
@@ -2075,6 +2111,16 @@ def divulgador_cfg():
     for n, v in TEMAS_PRONTOS.items():      # temas prontos novos aparecem (desligados) para quem já tinha salvo
         pf.setdefault(n, list(v[1]))
     d['palavras_foco'] = pf
+    if get_cfg('migr_limpeza') != '1':        # 21Nov26: tema Limpeza da casa ligado; 15 dias sem repetir
+        salvo = get_json('divulgador', {})
+        if salvo:
+            fa = list(salvo.get('focos_ativos') or d['focos_ativos'])
+            if '🧽 Limpeza da casa' not in fa:
+                fa.append('🧽 Limpeza da casa')
+            salvo.update(focos_ativos=fa, nao_repetir_dias=max(15, int(salvo.get('nao_repetir_dias') or 0)))
+            set_cfg('divulgador', json.dumps(salvo, ensure_ascii=False))
+            d.update(focos_ativos=fa, nao_repetir_dias=salvo['nao_repetir_dias'])
+        set_cfg('migr_limpeza', '1')
     return d
 
 
@@ -2088,10 +2134,14 @@ def minerar(d=None, limite_busca=20):
     """Busca nas palavras-chave (mais vendidos e maior comissão), aplica os filtros e devolve os melhores."""
     d = d or divulgador_cfg()
     campos = 'itemId shopId productName shopName priceMin priceMax ratingStar sales commissionRate imageUrl'
+    if get_cfg('sem_campo_desconto') != '1':
+        campos += ' priceDiscountRate'
     vistos, achados = set(), []
     corte = (agora() - timedelta(days=int(d['nao_repetir_dias']))).isoformat()
-    with db() as c:
+    with db() as c:                            # não repete: criado na fila OU enviado nos últimos N dias (qualquer origem)
         recentes = {r[0] for r in c.execute("SELECT chave FROM fila WHERE criado_em>=? AND status!='descartado'", (corte,))}
+        recentes |= {r[0] for r in c.execute("SELECT f.chave FROM envios e JOIN fila f ON f.id=e.fila_id WHERE e.ok=1 AND e.quando>=?",
+                                             (corte,))}
     todas = list(d['palavras']) + [w for f in d.get('focos_ativos', []) for w in (d.get('palavras_foco') or {}).get(f, [])]
     for palavra in dict.fromkeys(todas):
         for ordem in (2, 5):                   # 2 = mais vendidos · 5 = maior comissão
@@ -2099,6 +2149,9 @@ def minerar(d=None, limite_busca=20):
                 nodes = shopee_gql(f'{{productOfferV2(keyword:{json.dumps(palavra, ensure_ascii=False)},'
                                    f'limit:{limite_busca},sortType:{ordem}){{nodes{{{campos}}}}}}}')['productOfferV2']['nodes']
             except Exception as e:
+                if 'priceDiscountRate' in campos and 'priceDiscountRate' in str(e):   # API sem o campo: segue sem ele
+                    set_cfg('sem_campo_desconto', '1')
+                    campos = campos.replace(' priceDiscountRate', '')
                 log.warning(f'Divulgador: busca "{palavra}" falhou: {e}')
                 continue
             for n in nodes:
@@ -2113,20 +2166,28 @@ def minerar(d=None, limite_busca=20):
                     continue
                 piso = piso_comissao(classificar_nicho(n.get('productName'), palavra), d)
                 focos = [f for f in classificar_focos(n.get('productName'), palavra) if f in d.get('focos_ativos', [])]
-                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra, 'focos': focos,  # relativo ao piso do nicho
+                desc = int(float(n.get('priceDiscountRate') or 0))
+                n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra, 'focos': focos, 'desconto': desc,
                           'pontos': (com / piso) * (1 + min(vendas, 20000) / 2000) * (nota / 5)
+                                    * (1 + min(desc, 70) / 50)       # desconto de verdade pesa no ranking
                                     * (float(d.get('peso_foco', 1.6)) if focos else 1)
                                     * peso_votado(classificar_nicho(n.get('productName'), palavra), focos)})
                 achados.append(n)
     achados.sort(key=lambda x: -x['pontos'])
+    total = int(d['por_rodada'])
     escolhidos, por_palavra = [], {}
-    for n in achados:                          # variedade: no máximo 1 por palavra-chave na rodada
-        if por_palavra.get(n['palavra']):
-            continue
-        por_palavra[n['palavra']] = 1
-        escolhidos.append(n)
-        if len(escolhidos) >= int(d['por_rodada']):
-            break
+
+    def pegar(lista, ate):
+        for n in lista:                        # variedade: no máximo 1 por palavra-chave na rodada
+            if len(escolhidos) >= ate:
+                return
+            if por_palavra.get(n['palavra']) or n in escolhidos:
+                continue
+            por_palavra[n['palavra']] = 1
+            escolhidos.append(n)
+    if d.get('metade_promo'):                  # primeiro, pelo menos metade em promoção de verdade
+        pegar([n for n in achados if n['desconto'] >= int(d.get('desconto_min', 20))], (total + 1) // 2)
+    pegar(achados, total)
     return escolhidos
 
 
@@ -2165,7 +2226,10 @@ def rodar_divulgador(manual=False):
         try:
             p = preparar({'origem': 'divulgador', 'chave': n['chave'], 'produto': n['productName'], 'palavra': n['palavra'],
                           'focos': classificar_focos(n['productName'], n['palavra']),
-                          'imagem': n.get('imageUrl', ''), 'preco': br(n.get('priceMin'))})
+                          'imagem': n.get('imageUrl', ''), 'preco': br(n.get('priceMin')),
+                          'desconto_pct': n.get('desconto', 0),
+                          'preco_de': br(float(n['priceMin']) / (1 - n['desconto'] / 100))
+                                      if n.get('desconto', 0) >= 10 and n.get('priceMin') else ''})
         except Exception as e:
             log.warning(f'Divulgador: preparar falhou: {e}')
             continue
@@ -2182,7 +2246,7 @@ def rodar_divulgador(manual=False):
             fid = cur.lastrowid
         mostrar_previa(inst, jid, fid)
         info = (f"🤖 *Post #{fid}* · {' · '.join([p.get('nicho', '')] + p.get('focos', []))} · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
-                f"⭐ {n.get('ratingStar')} · busca \"{n['palavra']}\"")
+                f"⭐ {n.get('ratingStar')}" + (f" · 🔥 {n['desconto']}% OFF" if n.get('desconto') else ' · sem desconto') + f" · busca \"{n['palavra']}\"")
         responder(inst, jid, info + ('\n✅ Já aprovado (sai na próxima rajada). Responda *0* em cima para cancelar.'
                                      if auto else f'\n\n{MENU_CURTO}'), fid=fid)
         feitos += 1
@@ -3260,7 +3324,7 @@ def repostar(fid, dias_min=0):
         return cur.lastrowid
 
 
-def repostar_vendidos(dias_min=2):
+def repostar_vendidos(dias_min=5):
     """Produtos que venderam (últimos 30 dias, sem cancelados) voltam pra fila — 1 vez, se não saíram nos últimos N dias."""
     with db() as c:
         fids = [r[0] for r in c.execute(
@@ -3628,9 +3692,11 @@ class H(BaseHTTPRequestHandler):
             if isinstance(b.get('palavras'), list):
                 d['palavras'] = [x.strip() for x in b['palavras'] if x.strip()][:40]
             for k, tipo in (('por_rodada', int), ('comissao_min', float), ('comissao_min_moda', float), ('nota_min', float), ('vendas_min', int),
-                            ('nao_repetir_dias', int)):
+                            ('nao_repetir_dias', int), ('desconto_min', int)):
                 if str(b.get(k, '')).replace('.', '', 1).replace(',', '', 1).isdigit():
                     d[k] = tipo(str(b[k]).replace(',', '.'))
+            if 'metade_promo' in b:
+                d['metade_promo'] = bool(b['metade_promo'])
             d['comissao_min'] = max(9.0, d['comissao_min'])          # piso do Garimpo: nunca abaixo de R$ 9
             d['comissao_min_moda'] = max(1.0, d.get('comissao_min_moda', 4.0))
             set_cfg('divulgador', json.dumps(d, ensure_ascii=False))

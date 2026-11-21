@@ -218,6 +218,8 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v"><input id="dvVend" type="number" min="0"> vendas</div></div>
         <div class="q"><div class="t"><b>🔁 Depois de postar, quanto tempo sem repetir o mesmo produto?</b></div>
           <div class="v"><input id="dvRep" type="number" min="1"> dias</div></div>
+        <div class="q"><div class="t"><b>🔥 Promoção de verdade</b><small>Pelo menos metade das sugestões e dos envios com desconto de verdade na Shopee (o post mostra o "De:" riscado).</small></div>
+          <div class="v"><input type="checkbox" id="dvPromo"> a partir de <input id="dvDesc" type="number" min="5" max="90" style="width:70px">% OFF</div></div>
         </details>
         <div class="q" style="display:block"><div class="t"><b>🎯 Temas da mineração (público, datas e ocasiões)</b>
           <small>Ligue só o que quer buscar agora. Cada tema tem as próprias palavras de busca e ganha prioridade no ranking.
@@ -1111,7 +1113,7 @@ async function carregarDiv(){
   try { $('#dvCfg').open = localStorage.dvCfg === '1'; } catch(e){}
   $('#dvAtivo').checked = d.ativo; document.querySelectorAll('input[name=dvModo]').forEach(r => r.checked = r.value === d.modo);
   $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min; $('#dvComModa').value = d.comissao_min_moda;
-  $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias;
+  $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias; $('#dvPromo').checked = d.metade_promo !== false; $('#dvDesc').value = d.desconto_min || 20;
   $('#dvPal').value = d.palavras.join('\n'); $('#dvPeso').value = d.peso_foco;
   $('#dvFocos').innerHTML = '';
   const ordem = Object.keys(d.palavras_foco || {}).sort((a, b) => (d.nichos.indexOf(d.temas_pai[a]) + 1 || 99) - (d.nichos.indexOf(d.temas_pai[b]) + 1 || 99));
@@ -1120,7 +1122,7 @@ async function carregarDiv(){
 async function salvarDiv(){
   await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
     horarios: $('#dvHor').value.split(',').map(x => x.trim().padStart(5, '0')).filter(Boolean), por_rodada: $('#dvQtd').value,
-    comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value,
+    comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value, metade_promo: $('#dvPromo').checked, desconto_min: $('#dvDesc').value,
     palavras: $('#dvPal').value.split('\n'), peso_foco: $('#dvPeso').value,
     focos_ativos: [...document.querySelectorAll('.dvFocoAt:checked')].map(i => i.value),
     palavras_foco: Object.fromEntries([...document.querySelectorAll('.dvFocoPal')].map(t => [t.dataset.foco, t.value.split('\n')])),

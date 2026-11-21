@@ -47,6 +47,10 @@
   suplementos/vitaminas/colágeno/whey. Ao mudar critérios de curadoria, ajustar também as palavras/filtros dele.
   **Exceção (decisão da Juliane, 18Nov26): 👗 Moda tem piso de R$ 4** no PostZap (Divulgador e lista de produtos) —
   o público do WhatsApp gosta de produto barato. Os demais nichos continuam com piso de R$ 9.
+- **Promoção de verdade e sem repetir (decisão da Juliane, 21Nov26):** pelo menos **metade** das sugestões do Divulgador e dos
+  envios com desconto real na Shopee (≥ 20% OFF, campo priceDiscountRate; o post mostra o "De:" riscado). Não repetir produto:
+  Divulgador ignora o que passou pelo PostZap nos últimos 15 dias; a rajada joga pro fim o que saiu nos últimos 2 dias; vendidos
+  voltam pra fila só depois de 5 dias. Tema **🧽 Limpeza da casa** (rotina diária: mop, rodo, pano microfibra…) ligado, sob Casa.
 - **Nichos que mais vendem** (shopee_pedidos, Ago25–Jul26, pedidos concluídos/pendentes): Moda lidera de longe
   (23 mil pedidos, R$ 75,7 mil de comissão — vestido, conjunto e calça são os campeões; calça tem a maior comissão média,
   R$ 6,52), depois Infantil, Beleza, Casa/decoração, Cozinha, Pet, Móveis (ticket R$ 86, comissão média R$ 3,22),
