@@ -741,6 +741,7 @@ async function carregarFila(){
         style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);background:var(--bg)"
         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'muted',textContent:'(sem imagem)'}))"></a>` : ''}
       <pre style="flex:1;margin:0;white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto || (JSON.parse(it.dados || '{}').enquete ? '📊 ' + JSON.parse(it.dados).enquete.pergunta + '\n• ' + JSON.parse(it.dados).enquete.opcoes.join('\n• ') : ''))}</pre></div>
+    ${it.repetido ? `<p class="warn" style="margin:6px 0">🔁 Esse produto ${esc(it.repetido)}.</p>` : ''}
     ${it.erro ? `<p class="err">${esc(it.erro)}</p>` : ''}
     ${it.link && it.status === 'enviado' ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
       it.cliques_grupo.map(g => esc(g.nome) + ': ' + g.n).join(' · ') : ''}${it.sub_ids ? ' · Sub IDs Shopee: ' + it.sub_ids.map(esc).join(' / ') : ''}</p>` : ''}
@@ -758,7 +759,9 @@ async function carregarFila(){
   const precisa = FILA.filter(x => ['rascunho', 'erro'].includes(x.status));
   const naFila = FILA.filter(x => ['aprovado', 'enviando'].includes(x.status))
     .sort((a, b) => (a.status === 'enviando' ? -1 : 0) - (b.status === 'enviando' ? -1 : 0));
-  $('#fila').innerHTML =
+  $('#fila').innerHTML = `<div class="card"><b>🔎 Já postei esse produto?</b> <small class="muted">cole o link e confira antes de mandar pro FILA POST ZAP</small>
+      <div class="row" style="margin-top:6px;gap:6px"><input id="jaLink" placeholder="https://s.shopee.com.br/…" style="flex:1">
+      <button class="b" type="button" onclick="jaPostei()">Conferir</button></div><div id="jaRes" style="margin-top:6px"></div></div>` +
     (precisa.length ? `<h3 style="margin:8px 0">📝 Precisam de você (${precisa.length})</h3>` + precisa.map(card).join('')
                     : '<p class="muted">✨ Nada esperando sua aprovação.</p>') +
     (naFila.length ? `<h3 style="margin:16px 0 8px">⏳ Na fila de envio (${naFila.length}) <span class="muted" style="font-weight:400;font-size:13px">
@@ -839,6 +842,11 @@ async function atualizarVendas(){
   $('#hResumo').insertAdjacentHTML('beforeend', ' <span class="muted">buscando na Shopee…</span>');
   try { await api('vendas/atualizar', {}); } catch(e){ alert('Shopee: ' + e.message); }
   carregarHistorico();
+}
+async function jaPostei(){
+  const link = $('#jaLink').value.trim(); if (!link) return;
+  $('#jaRes').textContent = 'Conferindo…';
+  try { $('#jaRes').textContent = (await api('ja_postei', {link})).msg; } catch(e){ $('#jaRes').textContent = '⚠️ ' + e.message; }
 }
 async function repostar(id){
   try { const j = await api('fila/repostar', {id}); alert(`✅ Voltou pra fila como #${j.id}: sai numa das próximas rajadas.`); carregarFila(); }

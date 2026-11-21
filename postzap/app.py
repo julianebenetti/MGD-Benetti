@@ -1853,6 +1853,28 @@ def pendentes(numero):
                                            "ORDER BY id", (numero,))]
 
 
+def situacao_produto(chave, ignorar_id=None):
+    """Esse produto já passou pelo PostZap? → {'fila': (#id, status) | None, 'saiu': 'dd Mmm aa HH:MM' | None, 'grupos': n}"""
+    if not chave:
+        return {'fila': None, 'saiu': None, 'grupos': 0}
+    with db() as c:
+        f = c.execute("SELECT id, status FROM fila WHERE chave=? AND status IN ('rascunho','aprovado','enviando') AND id!=? "
+                      "ORDER BY id DESC LIMIT 1", (chave, ignorar_id or 0)).fetchone()
+        e = c.execute("SELECT MAX(e.quando), COUNT(DISTINCT e.jid) FROM envios e JOIN fila x ON x.id=e.fila_id "
+                      "WHERE x.chave=? AND e.ok=1", (chave,)).fetchone()
+    saiu = f"{data_sub(datetime.fromisoformat(e[0]))} {e[0][11:16]}" if e and e[0] else None
+    return {'fila': (f[0], f[1]) if f else None, 'saiu': saiu, 'grupos': e[1] if e and e[0] else 0}
+
+
+def aviso_repetido(sit):
+    partes = []
+    if sit['fila']:
+        partes.append(f"já está na fila como *#{sit['fila'][0]}* ({ {'rascunho': 'esperando aprovação', 'aprovado': 'aprovado', 'enviando': 'saindo agora'}.get(sit['fila'][1], sit['fila'][1])})")
+    if sit['saiu']:
+        partes.append(f"já foi postado em *{sit['saiu']}* ({sit['grupos']} grupo(s))")
+    return ' e '.join(partes)
+
+
 def _tratar(inst, numero, texto, citado=''):
     conv = conversa_get(numero)
     links = [u.rstrip('.,)') for u in re.findall(r'https?://\S+', texto)]
@@ -1863,10 +1885,20 @@ def _tratar(inst, numero, texto, citado=''):
             responder(inst, numero, '⏳ Montando a postagem…')
         for url in links:
             try:
+                ids_url = ids_do_link_shopee(url) if ('shopee' in url or 'shp.ee' in url) else None
+            except Exception:
+                ids_url = None
+            sit = situacao_produto(ids_url)
+            if sit['fila']:                          # repetido na fila: não monta de novo
+                responder(inst, numero, f"🔁 {url[:60]}\nEsse produto {aviso_repetido(sit)}. Não montei de novo.", fid=sit['fila'][0])
+                continue
+            try:
                 p = montar_post_do_link(url)
             except ValueError as e:
                 responder(inst, numero, f'⚠️ {url[:60]}\n{e}')
                 continue
+            if sit['saiu']:
+                p['avisos'] = (p.get('avisos') or []) + [f"🔁 Esse produto {aviso_repetido(sit)}. Se não quiser repetir, responda *0*."]
             grupos = grupos_ativos()
             with _lock, db() as c:
                 cur = c.execute('INSERT INTO fila (origem, chave, produto, preco, comissao, link, texto, grupos, criado_em, '
@@ -3432,6 +3464,9 @@ class H(BaseHTTPRequestHandler):
                         _d = json.loads(r.get('dados') or '{}')
                         r['thumb'] = bool((_d.get('midia') and _d.get('midia_tipo', 'image') == 'image') or
                                           (_d.get('imagem') and modo_link() != 'previa'))
+                        if r.get('status') in ('rascunho', 'aprovado', 'erro') and r.get('origem') != 'aviso':
+                            _s = situacao_produto(r.get('chave'), r['id'])
+                            r['repetido'] = aviso_repetido(_s).replace('*', '') if (_s['saiu'] or _s['fila']) else ''
                         r['grupos_enviados'] = c.execute('SELECT COUNT(DISTINCT jid) FROM envios WHERE fila_id=? AND ok=1',
                                                          (r['id'],)).fetchone()[0]
                 with db() as c:
@@ -3801,6 +3836,17 @@ class H(BaseHTTPRequestHandler):
                 else:
                     c.execute("UPDATE fila SET status='descartado' WHERE id=? AND status!='enviando'", (b['id'],))
             return self.send_json({'ok': True, 'ja_enviado': ja_foi})
+        if p == '/api/ja_postei':                    # cola um link → diz se o produto já passou pelo PostZap
+            url = str(b.get('link') or '').strip()
+            try:
+                ids = ids_do_link_shopee(url) if url else None
+            except Exception:
+                ids = None
+            if not ids:
+                return self.send_json({'msg': '⚠️ Não consegui ler esse link da Shopee.'})
+            sit = situacao_produto(ids)
+            return self.send_json({'msg': ('🔁 Esse produto ' + aviso_repetido(sit).replace('*', '') + '.') if (sit['fila'] or sit['saiu'])
+                                   else '✅ Produto novo: nunca passou pelo PostZap. Pode mandar!'})
         if p == '/api/fila/repostar':
             fid = repostar(int(b.get('id') or 0))
             if not fid:
