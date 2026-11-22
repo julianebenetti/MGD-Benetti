@@ -12,6 +12,7 @@ import logging
 from datetime import date, timedelta
 import os
 import queue
+import random
 import threading
 import time
 from datetime import datetime
@@ -920,7 +921,9 @@ class Bot:
         note = checked['note']
         post = self.db.get_post(post_id)
         final = str(Path(post['video_path']).with_name(f"final_{post_id}.mp4"))
-        if not self.pipeline.video.prepend_cover(post['cover_path'], post['video_path'], final, COVER_SECONDS):
+        sticker = self.pick_sticker(post)
+        if not self.pipeline.video.prepend_cover(post['cover_path'], post['video_path'], final, COVER_SECONDS,
+                                                 sticker):
             self.db.update_post(post_id, status='editado')
             self.refresh_buttons(self.db.get_post(post_id))
             self.tg.send_text(EDITADOS, "⚠️ Não consegui juntar a capa ao vídeo. Tente aprovar de novo.",
@@ -941,6 +944,29 @@ class Bot:
         self.db.update_post(post_id, agenda_msgs=ids)
         if self.lia and self.lia_when == 'aprovar':
             self.send_to_lia(self.db.get_post(post_id))
+
+    def pick_sticker(self, post: Dict) -> Optional[str]:
+        """
+        Figurinha do vídeo (assets/figurinhas), variando: nunca a mesma de um dos últimos vídeos. 'cores' só em
+        produto com variações (cartão de cores na capa); 'qualidade' só com nota 4,7+. FIGURINHAS=nao desliga.
+        """
+        if os.getenv('FIGURINHAS', 'sim').strip().lower() in ('nao', 'não', '0', 'false'):
+            return None
+        folder = BASE / 'assets' / 'figurinhas'
+        files = sorted(folder.glob('*.png'))
+        if not files:
+            return None
+        has_colors = bool(post.get('sticker_path')) or post.get('variacoes') == 'ok'
+        rating = float((post.get('products') or [{}])[0].get('ratingStar') or 0)
+        ok = [f for f in files if (has_colors or 'cores' not in f.name)
+              and (rating >= 4.7 or 'qualidade' not in f.name)]
+        recent = json.loads(self.db.get_meta('figurinhas_recentes', '[]') or '[]')
+        fresh = [f for f in ok if f.name not in recent] or ok
+        if has_colors and any('cores' in f.name for f in fresh) and random.random() < 0.4:
+            fresh = [f for f in fresh if 'cores' in f.name]   # produto com cores: às vezes avisa das cores
+        choice = random.choice(fresh)
+        self.db.set_meta('figurinhas_recentes', json.dumps((recent + [choice.name])[-6:]))
+        return str(choice)
 
     def next_slot(self, post: Dict) -> datetime:
         """Próximo horário livre da agenda para o post (os já postados contam no limite do dia)."""

@@ -180,8 +180,11 @@ class VideoProcessor:
             return None
 
     def prepend_cover(self, cover_path: str, video_path: str, output_path: str,
-                      seconds: float = 1.0) -> Optional[str]:
-        """Vídeo final: a capa parada por `seconds` na abertura, seguida do vídeo."""
+                      seconds: float = 1.0, sticker: Optional[str] = None) -> Optional[str]:
+        """
+        Vídeo final: a capa parada por `seconds` na abertura, seguida do vídeo. `sticker`: figurinha (PNG) que
+        aparece no alto à direita do vídeo (não da capa), com entrada e saída suaves.
+        """
         try:
             has_audio = bool(subprocess.run(
                 ['ffprobe', '-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index',
@@ -190,14 +193,20 @@ class VideoProcessor:
                    f"pad={self.width}:{self.height}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={self.fps},format=yuv420p"
             cmd = ['ffmpeg', '-loglevel', 'error', '-loop', '1', '-t', str(seconds), '-i', cover_path,
                    '-i', video_path]
+            st = ''
+            if sticker:   # figurinha: entrada 3 (ou 2 sem áudio); o vídeo passa a se chamar [v]
+                cmd += ['-loop', '1', '-i', sticker]
+                idx = 2
+                st = self._sticker_graph(idx)
+            vid = '[vs]' if sticker else '[v]'
             if has_audio:
                 cmd += ['-f', 'lavfi', '-t', str(seconds), '-i', 'anullsrc=r=44100:cl=stereo',
                         '-filter_complex',
-                        f"[0:v]{size}[c];[1:v]{size}[v];[1:a]aresample=44100[a];"
-                        f"[c][2:a][v][a]concat=n=2:v=1:a=1[outv][outa]",
+                        f"[0:v]{size}[c];[1:v]{size}[v];{st}[1:a]aresample=44100[a];"
+                        f"[c][{3 if sticker else 2}:a]{vid}[a]concat=n=2:v=1:a=1[outv][outa]",
                         '-map', '[outv]', '-map', '[outa]', '-c:a', 'aac', '-b:a', '128k']
             else:
-                cmd += ['-filter_complex', f"[0:v]{size}[c];[1:v]{size}[v];[c][v]concat=n=2:v=1:a=0[outv]",
+                cmd += ['-filter_complex', f"[0:v]{size}[c];[1:v]{size}[v];{st}[c]{vid}concat=n=2:v=1:a=0[outv]",
                         '-map', '[outv]']
             cmd += ['-c:v', 'libx264', '-crf', '23', '-preset', 'medium', '-movflags', '+faststart',
                     '-y', output_path]
@@ -210,6 +219,24 @@ class VideoProcessor:
         except Exception as e:
             logger.error(f"Erro ao juntar capa e vídeo: {e}")
             return None
+
+    def _sticker_graph(self, idx: int) -> str:
+        """[v] + figurinha → [vs]: no alto à direita, com opacidade, fade de entrada/saída e um 'pop' de escala."""
+        import os
+        w = int(self.width * float(os.getenv('FIGURINHA_LARGURA', '0.30')))
+        alpha = float(os.getenv('FIGURINHA_OPACIDADE', '0.70'))
+        start = float(os.getenv('FIGURINHA_INICIO', '2'))
+        dur = float(os.getenv('FIGURINHA_DURACAO', '3'))
+        x = int(self.width * float(os.getenv('FIGURINHA_X', '0.60')))
+        y = int(self.height * float(os.getenv('FIGURINHA_Y', '0.115')))
+        end = start + dur
+        # pop: começa em 70% do tamanho e cresce até 100% em 0,25 s (centro fixo)
+        grow = f"min(1\\,0.7+max(0\\,t-{start:.2f})*1.2)"
+        return (f"[{idx}:v]format=rgba,scale={w}:-1,colorchannelmixer=aa={alpha:.2f},"
+                f"fade=in:st={start:.2f}:d=0.25:alpha=1,fade=out:st={end - 0.3:.2f}:d=0.3:alpha=1,"
+                f"scale=w='iw*{grow}':h='ih*{grow}':eval=frame[st];"
+                f"[v][st]overlay=x='{x}+({w}-w)/2':y='{y}+({w}-w)/4':shortest=1:"
+                f"enable='between(t,{start:.2f},{end:.2f})'[vs];")
 
     def get_video_info(self, video_path: str) -> dict:
         """Extrai informações do vídeo (duração, resolução, etc)"""
