@@ -22,14 +22,14 @@ logger = logging.getLogger(__name__)
 
 TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '5'))
 CTA_SECONDS = float(os.getenv('CTA_SEGUNDOS', '5'))
-CTAS = [
+CTAS = [   # sem preço, desconto ou cupom (regra de compliance; a Shopee pune promessa que o anúncio não cumpre)
     'Adicione já ao carrinho! 🛒',
-    'Compre agora e aproveite o desconto! 🛒',
+    'Toque na sacolinha e confira! 🛒',
     'Clique na sacolinha e garanta o seu! 🛒',
     'Leva esse achadinho pra casa! 🛒',
     'Já coloca no carrinho e garante o seu! 🛒',
-    'Aproveita o preço especial! 🛒',
-    'Compre com o cupom! 🛒',
+    'Confere as cores na sacolinha! 🛒',
+    'Salva esse achado e confere! 🛒',
 ]
 MAX_EXTRA_CHECKS = 10   # outras lojas conferidas pela IA (em paralelo)
 MAX_BETTER = 5          # opções de comissão maior oferecidas para troca
