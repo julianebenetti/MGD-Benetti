@@ -98,6 +98,21 @@ Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo,
   segue sendo o carro-chefe. A escova vende bem, mas o link paga ~2%: o mesmo modelo (Mondial ER-10 5 em 1) paga
   8% (≈ R$ 19) em outras lojas.
 
+## Levantamento de 22/11/2026 (Insights, conta pedrita.bambam.store)
+
+- **Últimos 7 dias (15–21/11):** 5 vídeos com receita · **51,3 mil visualizações (+1.583%)** · tempo médio 27 s ·
+  558 cliques · 11 pedidos (+57%) · R$ 869,60 vendidos · **comissão R$ 72,40 (+122%)**. Vendas por dia: 15/11 ~R$ 310,
+  17/11 ~R$ 290, depois da punição 18/11 ~R$ 50, 19/11 ~R$ 10, 20–21/11 ~R$ 55/dia.
+- **Últimos 30 dias (23/10–21/11):** 13 vídeos com receita · 54 mil visualizações · tempo médio 1 min 10 s ·
+  1,6 mil cliques · 30 pedidos · R$ 2 mil · **comissão R$ 162**.
+- **O que vendeu (30 dias):** vestido midi floral 11 itens, **R$ 83,10 (51%)** · Papai Noel 3, R$ 22,60 · escova
+  rotativa 4 itens, R$ 892 vendidos e só R$ 17 de comissão (~2%) · porta-cartão (vídeo de 31/10) 1, R$ 10 ·
+  macaquinho plus size 1, R$ 8,40 · sapatilha, suporte PS5 R$ 7,30 cada · centavos: árvore MDF, lego, luminárias,
+  almofada, vestido infantil, película (R$ 0,70).
+- **Leitura:** as visualizações se mantiveram (~50 mil/semana), mas as vendas caíram depois da punição de 17/11 e
+  ainda não voltaram ao nível de 15–17/11. Vídeos antigos seguem fazendo quase tudo (vestido de agosto, escova de
+  2025); os produtos novos de novembro venderam pouco ou centavos.
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar
