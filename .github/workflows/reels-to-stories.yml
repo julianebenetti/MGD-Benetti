@@ -1,0 +1,43 @@
+name: Reels para Stories
+
+on:
+  schedule:
+    - cron: '15 */3 * * *'   # a cada 3h
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Simular sem publicar (1 = sim)'
+        default: '0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reels-to-stories
+  cancel-in-progress: false
+
+jobs:
+  stories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Postar Reels novos como Stories
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: python reels-to-stories.py
+
+      - name: Salvar estado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stories-state.json
+          git diff --staged --quiet || git commit -m "Stories sync $(date +'%d/%m/%Y %H:%M')"
+          git pull --rebase origin ${{ github.ref_name }} || true
+          git push
