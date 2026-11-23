@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795386137,
-  "updated_at_br": "22/11/2026 19:17",
+  "updated_at": 1795392104,
+  "updated_at_br": "22/11/2026 20:57",
   "period_days": 90,
-  "total_orders": 5337,
-  "total_conversions": 5101,
+  "total_orders": 5336,
+  "total_conversions": 5100,
   "orders": [
     {
       "ID do pedido": "2611220EDJCQ9E",
@@ -133404,31 +133404,6 @@
       "conversionId": "241315606165650",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-25"
-    },
-    {
-      "ID do pedido": "26082591RMDXCK",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-24 22:52:18",
-      "Sub_id1": "17Jul26CalcaJogger",
-      "Valor de Compra(R$)": "59.99",
-      "Comissao liquida do afiliado(R$)": "2.96351",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "1.20%",
-      "Comissao Shopee(R$)": "2.3996",
-      "Comissao do vendedor(R$)": "0.71988",
-      "Comissao total do pedido(R$)": "3.11948",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Fiprolex Gato: Leve 3 pague 2 Pipetas Antipulgas e Carrapatos - ENVIO IMEDIATO",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22993117002",
-      "ID da loja": "1006956971",
-      "Nome da loja": "BaratoPets",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241311138125519",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-24"
     }
   ]
 }
