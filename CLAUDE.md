@@ -51,6 +51,9 @@
   envios com desconto real na Shopee (≥ 20% OFF, campo priceDiscountRate; o post mostra o "De:" riscado). Não repetir produto:
   Divulgador ignora o que passou pelo PostZap nos últimos 15 dias; a rajada joga pro fim o que saiu nos últimos 2 dias; vendidos
   voltam pra fila só depois de 5 dias. Tema **🧽 Limpeza da casa** (rotina diária: mop, rodo, pano microfibra…) ligado, sob Casa.
+  Desde 24Nov26: Divulgador também minera a lista dos **mais vendidos da Shopee** (productOfferV2 listType 2) e marca
+  **⚡ OFERTA RELÂMPAGO** (≥ 40% OFF em produto que vende muito, sobe no ranking); 6 ofertas por rodada; temas de uma categoria
+  (ex.: Limpeza → Casa) entram na mineração da faixa dessa categoria.
 - **Nichos que mais vendem** (shopee_pedidos, Ago25–Jul26, pedidos concluídos/pendentes): Moda lidera de longe
   (23 mil pedidos, R$ 75,7 mil de comissão — vestido, conjunto e calça são os campeões; calça tem a maior comissão média,
   R$ 6,52), depois Infantil, Beleza, Casa/decoração, Cozinha, Pet, Móveis (ticket R$ 86, comissão média R$ 3,22),

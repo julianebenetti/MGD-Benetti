@@ -2097,7 +2097,7 @@ DIVULGADOR_PADRAO = {
     'ativo': False,
     'modo': 'aprovar',                      # aprovar: manda as sugestões ao FILA POST ZAP | automatico: já aprova (rajadas)
     'horarios': ['05:40', '09:40', '11:40', '14:40', '17:40', '19:40'],   # 20 min antes de cada faixa de nicho
-    'por_rodada': 4,                        # quantos posts novos por rodada
+    'por_rodada': 6,                        # quantos posts novos por rodada
     # O que mais vende nos seus pedidos (Ago25–Jul26): vestido, conjunto e calça lideram de longe
     'palavras': ['vestido feminino', 'conjunto feminino', 'calça feminina', 'legging', 'sutiã', 'moletom feminino', 'pijama feminino',
                  'secador de cabelo', 'escova secadora', 'perfume feminino', 'shampoo',
@@ -2114,6 +2114,8 @@ DIVULGADOR_PADRAO = {
     'nao_repetir_dias': 15,                 # não sugere de novo produto que passou pelo PostZap nesses dias
     'desconto_min': 20,                     # % de desconto pra contar como "promoção de verdade"
     'metade_promo': True,                   # pelo menos metade das sugestões (e dos envios) em promoção de verdade
+    'relampago_min': 40,                    # ⚡ oferta relâmpago: desconto ≥ 40% em produto que vende muito
+    'top_shopee': True,                     # também minera a lista dos mais vendidos da Shopee (sem palavra-chave)
 }
 
 
@@ -2142,6 +2144,13 @@ def divulgador_cfg():
             set_cfg('divulgador', json.dumps(salvo, ensure_ascii=False))
             d.update(focos_ativos=fa, nao_repetir_dias=salvo['nao_repetir_dias'])
         set_cfg('migr_limpeza', '1')
+    if get_cfg('migr_mais_ofertas') != '1':   # 24Nov26: mais ofertas por rodada (4 → 6)
+        salvo = get_json('divulgador', {})
+        if salvo and int(salvo.get('por_rodada') or 4) < 6:
+            salvo['por_rodada'] = 6
+            set_cfg('divulgador', json.dumps(salvo, ensure_ascii=False))
+            d['por_rodada'] = 6
+        set_cfg('migr_mais_ofertas', '1')
     return d
 
 
@@ -2194,6 +2203,33 @@ def minerar(d=None, limite_busca=20):
                                     * (float(d.get('peso_foco', 1.6)) if focos else 1)
                                     * peso_votado(classificar_nicho(n.get('productName'), palavra), focos)})
                 achados.append(n)
+    if d.get('top_shopee', True) and get_cfg('sem_top_shopee') != '1':   # 🔥 mais vendidos da Shopee (lista "top performing")
+        try:
+            nodes = shopee_gql(f'{{productOfferV2(listType:2,sortType:2,limit:50){{nodes{{{campos}}}}}}}')['productOfferV2']['nodes']
+        except Exception as e:
+            nodes = []
+            if 'listType' in str(e):
+                set_cfg('sem_top_shopee', '1')
+            log.warning(f'Divulgador: lista dos mais vendidos falhou: {e}')
+        for n in nodes:
+            chave = f"{n.get('shopId')}:{n.get('itemId')}"
+            if chave in vistos or chave in recentes:
+                continue
+            vistos.add(chave)
+            nome = n.get('productName') or ''
+            com, nota, vendas = comissao_reais(n), float(n.get('ratingStar') or 0), int(n.get('sales') or 0)
+            nic = classificar_nicho(nome)
+            if bloqueado(nome) or com < piso_comissao(nic, d) or nota < float(d['nota_min']) or vendas < int(d['vendas_min']):
+                continue
+            desc = int(float(n.get('priceDiscountRate') or 0))
+            focos = [f for f in classificar_focos(nome) if f in d.get('focos_ativos', [])]
+            n.update({'chave': chave, 'comissao_rs': com, 'palavra': '🔥 mais vendidos Shopee', 'focos': focos, 'desconto': desc,
+                      'pontos': (com / piso_comissao(nic, d)) * (1 + min(vendas, 20000) / 2000) * (nota / 5) * (1 + min(desc, 70) / 50) * 1.2})
+            achados.append(n)
+    for n in achados:                          # ⚡ relâmpago: desconto grande em produto que vende muito → sobe no ranking
+        n['relampago'] = n['desconto'] >= int(d.get('relampago_min', 40)) and int(n.get('sales') or 0) >= int(d['vendas_min'])
+        if n['relampago']:
+            n['pontos'] *= 1.5
     achados.sort(key=lambda x: -x['pontos'])
     total = int(d['por_rodada'])
     escolhidos, por_palavra = [], {}
@@ -2202,9 +2238,10 @@ def minerar(d=None, limite_busca=20):
         for n in lista:                        # variedade: no máximo 1 por palavra-chave na rodada
             if len(escolhidos) >= ate:
                 return
-            if por_palavra.get(n['palavra']) or n in escolhidos:
+            lim = 2 if n['palavra'] == '🔥 mais vendidos Shopee' else 1
+            if por_palavra.get(n['palavra'], 0) >= lim or n in escolhidos:
                 continue
-            por_palavra[n['palavra']] = 1
+            por_palavra[n['palavra']] = por_palavra.get(n['palavra'], 0) + 1
             escolhidos.append(n)
     if d.get('metade_promo'):                  # primeiro, pelo menos metade em promoção de verdade
         pegar([n for n in achados if n['desconto'] >= int(d.get('desconto_min', 20))], (total + 1) // 2)
@@ -2233,7 +2270,8 @@ def rodar_divulgador(manual=False):
     alvo = nichos_da_hora(r, agora() + timedelta(minutes=40))     # o nicho da faixa que vai começar
     if alvo and not manual:
         palavras = [w for w in d['palavras'] if classificar_nicho(w) in alvo]
-        focos_alvo = [f for f in d.get('focos_ativos', []) if f in alvo]      # foco escolhido para a faixa
+        pais = temas_pai(d)
+        focos_alvo = [f for f in d.get('focos_ativos', []) if f in alvo or pais.get(f) in alvo]   # foco da faixa + temas da categoria
         if palavras or focos_alvo:
             d = dict(d, palavras=palavras, focos_ativos=focos_alvo or d.get('focos_ativos', []))
     escolhidos = minerar(d)
@@ -2249,6 +2287,7 @@ def rodar_divulgador(manual=False):
                           'focos': classificar_focos(n['productName'], n['palavra']),
                           'imagem': n.get('imageUrl', ''), 'preco': br(n.get('priceMin')),
                           'desconto_pct': n.get('desconto', 0),
+                          **({'chamada': f"⚡ OFERTA RELÂMPAGO: {n['desconto']}% OFF!"} if n.get('relampago') else {}),
                           'preco_de': br(float(n['priceMin']) / (1 - n['desconto'] / 100))
                                       if n.get('desconto', 0) >= 10 and n.get('priceMin') else ''})
         except Exception as e:
@@ -2267,7 +2306,7 @@ def rodar_divulgador(manual=False):
             fid = cur.lastrowid
         mostrar_previa(inst, jid, fid)
         info = (f"🤖 *Post #{fid}* · {' · '.join([p.get('nicho', '')] + p.get('focos', []))} · comissão R$ {br(n['comissao_rs'])} · {int(n.get('sales') or 0)} vendas · "
-                f"⭐ {n.get('ratingStar')}" + (f" · 🔥 {n['desconto']}% OFF" if n.get('desconto') else ' · sem desconto') + f" · busca \"{n['palavra']}\"")
+                f"⭐ {n.get('ratingStar')}" + (f" · {'⚡ RELÂMPAGO ' if n.get('relampago') else '🔥 '}{n['desconto']}% OFF" if n.get('desconto') else ' · sem desconto') + f" · busca \"{n['palavra']}\"")
         responder(inst, jid, info + ('\n✅ Já aprovado (sai na próxima rajada). Responda *0* em cima para cancelar.'
                                      if auto else f'\n\n{MENU_CURTO}'), fid=fid)
         feitos += 1
