@@ -950,7 +950,7 @@ class Bot:
         Figurinha do vídeo (assets/figurinhas), variando: nunca a mesma de um dos últimos vídeos. 'cores' só em
         produto com variações (cartão de cores na capa); 'qualidade' só com nota 4,7+. FIGURINHAS=nao desliga.
         """
-        if os.getenv('FIGURINHAS', 'sim').strip().lower() in ('nao', 'não', '0', 'false'):
+        if os.getenv('FIGURINHAS', 'nao').strip().lower() not in ('sim', '1', 'true'):   # desligadas desde 24/11
             return None
         folder = BASE / 'assets' / 'figurinhas'
         files = sorted(folder.glob('*.png'))

@@ -113,6 +113,12 @@ Lista do dia muda para: 15 mais buscados · **10 casa e decoração (nicho novo,
   ainda não voltaram ao nível de 15–17/11. Vídeos antigos seguem fazendo quase tudo (vestido de agosto, escova de
   2025); os produtos novos de novembro venderam pouco ou centavos.
 
+## Decisão de 24/11/2026
+
+Vídeos estão sendo entregues (~50 mil visualizações/semana) mas vendem pouco. **Teste:** vídeos limpos, **sem
+figurinhas e sem o botão de compra (CTA) no fim**. Comparar a conversão (pedidos ÷ cliques e ÷ visualizações) nos
+próximos levantamentos com o período anterior (15–21/11: 558 cliques, 11 pedidos = 2,0% dos cliques).
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar

@@ -110,7 +110,9 @@ class Pipeline:
                                 "Mande o link do PRODUTO respondendo esta mensagem que eu refaço.")
 
         cta_text = random.choice(CTAS)
-        cta_png = self.cover.cta_overlay(cta_text, str(self.output_dir / f"{Path(video_file).stem}.cta.png"))
+        # botão de compra no fim do vídeo: desligado desde 24/11 (teste de conversão sem CTA); VIDEO_CTA=sim religa
+        cta_png = self.cover.cta_overlay(cta_text, str(self.output_dir / f"{Path(video_file).stem}.cta.png")) \
+            if os.getenv('VIDEO_CTA', 'nao').strip().lower() in ('sim', '1', 'true') else None
         rendering = self.workers.submit(self.video.render, video_file, self.output_dir, cta_png, CTA_SECONDS)
 
         if trust_link:
