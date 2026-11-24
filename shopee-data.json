@@ -1,6 +1,6 @@
 {
-  "updated_at": 1795497259,
-  "updated_at_br": "24/11/2026 02:09",
+  "updated_at": 1795503119,
+  "updated_at_br": "24/11/2026 03:47",
   "period_days": 90,
   "total_orders": 5436,
   "total_conversions": 5200,
@@ -29907,7 +29907,7 @@
     },
     {
       "ID do pedido": "2611124BXU3M75",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-12 02:38:06",
       "Sub_id1": "06Nov26VEAmacaquinhoamarracao",
       "Valor de Compra(R$)": "34.66",
@@ -29919,7 +29919,7 @@
       "Comissao total do pedido(R$)": "4.1592",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Blusa Plus Size Feminina Canelado Manga Flare Tule Elegante Confortável Estampa G ao G3",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23599149985",
       "ID da loja": "378105180",
       "Nome da loja": "agulha magica",
@@ -29927,12 +29927,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248150285179276",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-12"
     },
     {
       "ID do pedido": "2611124BXU3M75",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-12 02:38:06",
       "Sub_id1": "06Nov26VEAmacaquinhoamarracao",
       "Valor de Compra(R$)": "34.66",
@@ -29944,7 +29944,7 @@
       "Comissao total do pedido(R$)": "4.1592",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Blusa Plus Size Feminina Canelado Manga Flare Tule Elegante Confortável Estampa G ao G3",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23599149985",
       "ID da loja": "378105180",
       "Nome da loja": "agulha magica",
@@ -29952,7 +29952,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248150285179276",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-12"
     },
     {
