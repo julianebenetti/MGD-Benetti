@@ -952,8 +952,25 @@ def registrar_estado(inst, st):
     with _lock, db() as c:
         c.execute('INSERT INTO chip_eventos (instancia, estado, numero, nome, quando) VALUES (?,?,?,?,?)',
                   (inst, st, numero, nome, agora().isoformat()))
+    anterior = get_cfg(f'estado_{inst}')
     set_cfg(f'estado_{inst}', st)
     log.info(f'Chip {inst}: {"conectado " + numero if st == "open" else "desconectado"}')
+    if anterior and anterior != st:              # avisa no FILA POST ZAP (por outro chip conectado)
+        def _avisar():
+            try:
+                jid_f, inst_f = destino_fila()
+                if not jid_f:
+                    return
+                e = eng_cfg()
+                pedidos = e.get('inbox_ativo') and (not e.get('inbox_chips') or inst in e['inbox_chips'])
+                if st == 'open':
+                    responder(inst_f, jid_f, f'✅ *{inst}* conectou de novo ({numero or "número ?"}).')
+                else:
+                    responder(inst_f, jid_f, f'🔴 *{inst}* DESCONECTOU. ' + ('Ele atende os pedidos "QUERO" no privado: enquanto estiver fora, '
+                              'ninguém recebe resposta. ' if pedidos else '') + 'Reconecte em 🔗 WhatsApp (ler o QR Code).')
+            except Exception as ex:
+                log.warning(f'Aviso de chip: {ex}')
+        threading.Thread(target=_avisar, daemon=True).start()
 
 
 def monitor_chips():
@@ -1744,7 +1761,11 @@ def receber_webhook(payload):
         quem = [jid, key.get('remoteJidAlt'), key.get('senderPn'), data.get('sender')]
     if not autorizado([x for x in quem if x]):
         if not jid.endswith('@g.us') and texto0 and inbox_deve_responder(inst, jid, texto0) and not (key.get('id') and _marcar_visto(key['id'])):
-            threading.Thread(target=pedido_inbox, args=(inst, jid, texto0), daemon=True).start()   # alguém pedindo produto
+            idade = time.time() - float(data.get('messageTimestamp') or time.time())
+            if idade > 30 * 60:                  # chegou atrasado (chip estava desconectado): não responde frio, te avisa
+                threading.Thread(target=avisar_pedido_atrasado, args=(inst, jid, texto0, idade), daemon=True).start()
+            else:
+                threading.Thread(target=pedido_inbox, args=(inst, jid, texto0), daemon=True).start()   # alguém pedindo produto
         return
     if key.get('id') and _marcar_visto(key['id']):   # já tratada por outro chip, ou é resposta do próprio PostZap
         return
@@ -2851,6 +2872,18 @@ def inbox_deve_responder(inst, jid, texto):
     if time.time() - ultimo < float(e.get('inbox_silencio_h', 12)) * 3600:
         return False
     return True
+
+
+def avisar_pedido_atrasado(inst, jid, texto, idade):
+    """Pedido "QUERO" que só chegou agora (chip estava fora do ar): responde com desculpa + ofertas e te avisa."""
+    horas = int(idade // 3600)
+    jid_f, inst_f = destino_fila()
+    if jid_f:
+        responder(inst_f, jid_f, f'⏰ Pedido no privado do *{inst}* que só chegou agora ({horas}h de atraso — o chip estava '
+                                 f'desconectado):\n+{digitos(jid)}: "{texto[:200]}"\nJá mandei as ofertas pra ela com um pedido de desculpas.')
+    if horas < 24 * 7:                          # até 1 semana: ainda vale responder
+        responder(inst, jid, 'Oi! Desculpa a demora pra te responder 🙏💜 Olha o que eu achei pra você:')
+        pedido_inbox(inst, jid, texto)
 
 
 def pedido_inbox(inst, jid, texto):
