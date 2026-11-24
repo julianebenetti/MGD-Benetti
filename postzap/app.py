@@ -1858,7 +1858,7 @@ def montar_post_do_link(url):
 
 
 MENU_CURTO = ("↩️ *Responda em cima desta mensagem* (ou da foto) com: *1* postar · *1 vip* · *2* chamada · *3* De · "
-              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *8* nicho · *0* descartar\n"
+              "*4* Por · *5 20h* · *6* cupom · *7* estilo · *8* nicho · *9* foto Pinterest (*9 0* = original) · *0* descartar\n"
               "Para liberar tudo de uma vez: *aprovar todos* (ou *aprovar todos vip*)")
 
 
@@ -2082,6 +2082,22 @@ def _tratar(inst, numero, texto, citado=''):
             return responder(inst, numero, '🗂️ Nichos: ' + ', '.join(NICHOS) + '. Ex.: *8 cozinha*', fid=fid)
         regravar(item, nicho=alvo)
         return responder(inst, numero, f'🗂️ Post #{fid} agora é do nicho {alvo}.', fid=fid)
+    if cmd == '9':
+        if resto.strip() == '0':
+            foto_original(fid)
+            mostrar_previa(inst, numero, fid)
+            return responder(inst, numero, f'↩️ Post #{fid}: voltou a foto original da Shopee.\n\n{MENU_CURTO}', fid=fid)
+        responder(inst, numero, f'✨ Criando a foto estilo Pinterest do post #{fid}… (uns 30 segundos)', fid=fid)
+        def _f():
+            try:
+                foto_pinterest(fid)
+                mostrar_previa(inst, numero, fid)
+                responder(inst, numero, f'✨ Post #{fid} com foto nova! Confira se o produto ficou igual ao real '
+                                        f'(cor, estampa, formato). Não gostou? *9 0* volta a original.\n\n{MENU_CURTO}', fid=fid)
+            except Exception as ex:
+                responder(inst, numero, f'⚠️ Não consegui criar a foto do post #{fid}: {str(ex)[:150]}', fid=fid)
+        threading.Thread(target=_f, daemon=True).start()
+        return
     if cmd == '0':
         with _lock, db() as c:
             ja_foi = c.execute('SELECT COUNT(*) FROM envios WHERE fila_id=? AND ok=1', (fid,)).fetchone()[0]
@@ -2407,6 +2423,92 @@ def _erro_http(e):
         return (d.get('error', {}) or {}).get('message', '') or str(d)[:140]
     except Exception:
         return str(e)
+
+
+CENARIO_PINTEREST = {
+    '👗 Moda': 'styled on a wooden hanger or neatly folded in a bright minimalist boutique or cozy bedroom corner, soft daylight, '
+              'neutral beige and blush tones, dried flowers nearby',
+    '🏠 Casa e decoração': 'in a bright, tidy, cozy Scandinavian-style home interior, natural light, plants, linen textures',
+    '🍳 Cozinha e utensílios': 'on a clean light marble kitchen countertop with a coffee cup, fresh herbs and soft morning light',
+    '🔌 Eletrodomésticos': 'on a clean modern kitchen or living room counter, bright natural light, minimalist styling',
+    '💇 Beleza e cabelo': 'on a vanity table with soft pink tones, a mirror, flowers and a towel, soft glow light',
+    '🛋️ Móveis': 'in a beautifully decorated bright room, styled with plants, rug and warm natural light',
+    '🧸 Infantil': "in a soft pastel child's room with toys and natural light, cozy and cheerful",
+    '🐶 Pet': 'in a cozy bright living room with a happy pet nearby, warm natural light',
+    '🎧 Eletrônicos': 'on a tidy aesthetic desk setup with plants and soft natural light',
+}
+
+
+def _baixar_foto(dados):
+    import base64
+    if dados.get('midia') and Path(dados['midia']).exists() and not dados.get('foto_pinterest'):
+        return Path(dados['midia']).read_text()
+    url = dados.get('imagem_original') or dados.get('imagem') or ''
+    if not url:
+        raise RuntimeError('esse post não tem foto do produto')
+    if url.startswith('http'):
+        with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'}), timeout=60) as r:
+            return base64.b64encode(r.read()).decode()
+    return url
+
+
+def foto_pinterest(fid):
+    """Foto do produto → cena estilo Pinterest pelo Gemini, mantendo o produto idêntico. Guarda a original pra voltar."""
+    it = item_fila(fid)
+    if not it:
+        raise RuntimeError('post não encontrado')
+    dados = json.loads(it.get('dados') or '{}')
+    foto = _baixar_foto(dados)
+    key = chave_env('GEMINI_API_KEY') or chave_env('GOOGLE_API_KEY')
+    if not key:
+        raise RuntimeError('sem chave do Gemini (GEMINI_API_KEY)')
+    nicho = nicho_do_item(it)
+    cena = CENARIO_PINTEREST.get(nicho, 'in a bright, aesthetic, cozy lifestyle setting with soft natural light')
+    prompt = ("Create a beautiful Pinterest-style lifestyle product photo. Place EXACTLY this product from the reference image " + cena +
+              ". CRITICAL: keep the product 100% identical to the reference — same colors, print, pattern, shape, proportions, "
+              "details and quantity; do not add, remove or redesign anything on the product. Do not add any person's face. "
+              "Remove any text, price tags, logos, watermarks or collage borders from the original. Square 1:1, high-end editorial look, "
+              "no text at all.")
+    corpo = {'contents': [{'parts': [{'inlineData': {'mimeType': 'image/jpeg' if foto.startswith('/9j') else 'image/png', 'data': foto}},
+                                     {'text': prompt}]}],
+             'generationConfig': {'responseModalities': ['IMAGE'], 'imageConfig': {'aspectRatio': '1:1'}}}
+    modelo = os.getenv('GEMINI_IMAGE_MODEL', '') or 'gemini-2.5-flash-image'
+    req = urllib.request.Request(f'https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent',
+                                 data=json.dumps(corpo).encode(), headers={'x-goog-api-key': key, 'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=180) as r:
+            d = json.load(r)
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(_erro_http(e)[:200])
+    nova = next((pt.get('inlineData', pt.get('inline_data', {})).get('data') for c in d.get('candidates', [])
+                 for pt in (c.get('content') or {}).get('parts', []) if (pt.get('inlineData') or pt.get('inline_data'))), None)
+    if not nova:
+        raise RuntimeError('o Gemini não devolveu imagem (pode ter recusado o produto)')
+    nova = reduzir_imagem(nova)
+    MIDIA_DIR.mkdir(exist_ok=True)
+    arq = MIDIA_DIR / f"pin_{fid}_{int(time.time())}.b64"
+    arq.write_text(nova)
+    if not dados.get('foto_pinterest'):
+        dados['midia_original'] = dados.get('midia', '')
+        dados['imagem_original'] = dados.get('imagem_original') or dados.get('imagem', '')
+    dados.update(midia=str(arq), midia_tipo='image', mimetype='image/jpeg' if nova.startswith('/9j') else 'image/png', foto_pinterest=True)
+    with _lock, db() as c:
+        c.execute('UPDATE fila SET dados=? WHERE id=?', (json.dumps(dados, ensure_ascii=False), fid))
+
+
+def foto_original(fid):
+    it = item_fila(fid)
+    dados = json.loads((it or {}).get('dados') or '{}')
+    if not dados.get('foto_pinterest'):
+        return
+    dados.pop('foto_pinterest', None)
+    if dados.get('midia_original'):
+        dados['midia'] = dados.pop('midia_original')
+    else:
+        dados.pop('midia', None)
+        dados.pop('midia_original', None)
+    with _lock, db() as c:
+        c.execute('UPDATE fila SET dados=? WHERE id=?', (json.dumps(dados, ensure_ascii=False), fid))
 
 
 def _img_gemini(prompt, erros):
@@ -3603,6 +3705,7 @@ class H(BaseHTTPRequestHandler):
                         if r.get('status') in ('rascunho', 'aprovado', 'erro') and r.get('origem') != 'aviso':
                             _s = situacao_produto(r.get('chave'), r['id'])
                             r['repetido'] = aviso_repetido(_s).replace('*', '') if (_s['saiu'] or _s['fila']) else ''
+                        r['foto_pinterest'] = bool(_d.get('foto_pinterest'))
                         r['grupos_enviados'] = c.execute('SELECT COUNT(DISTINCT jid) FROM envios WHERE fila_id=? AND ok=1',
                                                          (r['id'],)).fetchone()[0]
                 with db() as c:
@@ -3985,6 +4088,22 @@ class H(BaseHTTPRequestHandler):
             sit = situacao_produto(ids)
             return self.send_json({'msg': ('🔁 Esse produto ' + aviso_repetido(sit).replace('*', '') + '.') if (sit['fila'] or sit['saiu'])
                                    else '✅ Produto novo: nunca passou pelo PostZap. Pode mandar!'})
+        if p == '/api/fila/foto_pinterest':        # ✨ foto estilo Pinterest (em segundo plano) | volta a original
+            fid = int(b.get('id') or 0)
+            if b.get('original'):
+                foto_original(fid)
+                return self.send_json({'ok': True})
+            def _f():
+                try:
+                    foto_pinterest(fid)
+                    set_cfg(f'pin_{fid}', 'ok')
+                except Exception as ex:
+                    set_cfg(f'pin_{fid}', 'erro: ' + str(ex)[:200])
+            set_cfg(f'pin_{fid}', 'gerando')
+            threading.Thread(target=_f, daemon=True).start()
+            return self.send_json({'ok': True})
+        if p == '/api/fila/foto_pinterest_status':
+            return self.send_json({'st': get_cfg(f"pin_{int(b.get('id') or 0)}")})
         if p == '/api/fila/repostar':
             fid = repostar(int(b.get('id') or 0))
             if not fid:

@@ -54,6 +54,9 @@
   Desde 24Nov26: Divulgador também minera a lista dos **mais vendidos da Shopee** (productOfferV2 listType 2) e marca
   **⚡ OFERTA RELÂMPAGO** (≥ 40% OFF em produto que vende muito, sobe no ranking); 6 ofertas por rodada; temas de uma categoria
   (ex.: Limpeza → Casa) entram na mineração da faixa dessa categoria.
+- **✨ Foto Pinterest (24Nov26, opção manual escolhida pela Juliane):** botão no cartão da aprovação ou *9* no FILA POST ZAP; o Gemini
+  recria a foto do produto em cena estilo Pinterest mantendo o produto idêntico (cor, estampa, formato); *9 0* volta a original.
+  Criada antes do envio, não atrasa as rajadas. ~US$ 0,04 por foto.
 - **Nichos que mais vendem** (shopee_pedidos, Ago25–Jul26, pedidos concluídos/pendentes): Moda lidera de longe
   (23 mil pedidos, R$ 75,7 mil de comissão — vestido, conjunto e calça são os campeões; calça tem a maior comissão média,
   R$ 6,52), depois Infantil, Beleza, Casa/decoração, Cozinha, Pet, Móveis (ticket R$ 86, comissão média R$ 3,22),

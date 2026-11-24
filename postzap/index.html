@@ -739,7 +739,7 @@ async function carregarFila(){
     ${it.agendado_para ? ' · 🕒 ' + esc(fdata(it.agendado_para, true)) : ''}
     ${it.enviado_em ? ' · enviado ' + esc(fdata(it.enviado_em, true)) : ''}</div>
     <div class="row" style="align-items:flex-start;gap:10px">
-      ${it.thumb ? `<a href="${B}api/midia/${it.id}" target="_blank"><img src="${B}api/midia/${it.id}" alt="imagem do post" loading="lazy"
+      ${it.thumb ? `<a href="${B}api/midia/${it.id}?v=${it.foto_pinterest ? 'p' : 'o'}" target="_blank"><img src="${B}api/midia/${it.id}?v=${it.foto_pinterest ? 'p' : 'o'}" alt="imagem do post" loading="lazy"
         style="width:120px;height:120px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);background:var(--bg)"
         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'muted',textContent:'(sem imagem)'}))"></a>` : ''}
       <pre style="flex:1;margin:0;white-space:pre-wrap;font:13px/1.4 inherit;background:var(--bg);padding:8px;border-radius:8px">${esc(it.texto || (JSON.parse(it.dados || '{}').enquete ? '📊 ' + JSON.parse(it.dados).enquete.pergunta + '\n• ' + JSON.parse(it.dados).enquete.opcoes.join('\n• ') : ''))}</pre></div>
@@ -748,6 +748,9 @@ async function carregarFila(){
     ${it.link && it.status === 'enviado' ? `<p class="muted" style="margin:4px 0">👆 <b>${it.cliques || 0} clique(s)</b>${(it.cliques_grupo || []).length ? ' · ' +
       it.cliques_grupo.map(g => esc(g.nome) + ': ' + g.n).join(' · ') : ''}${it.sub_ids ? ' · Sub IDs Shopee: ' + it.sub_ids.map(esc).join(' / ') : ''}</p>` : ''}
     <p class="row" style="margin:0">
+    ${it.thumb && it.origem !== 'aviso' && ['rascunho','erro','aprovado'].includes(it.status) ? (it.foto_pinterest
+      ? `<button class="b" onclick="fotoPin(${it.id}, true)">↩️ Foto original</button>`
+      : `<button class="b" id="pin${it.id}" onclick="fotoPin(${it.id})">✨ Foto Pinterest</button>`) : ''}
     ${['rascunho','erro'].includes(it.status) ? `<button class="b p" onclick="aprovar(${it.id})">✅ Aprovar</button><button class="b" onclick="editar(${it.id})">✏️ Editar</button>` : ''}
     ${it.status==='aprovado' ? `<button class="b" onclick="editar(${it.id})">✏️ Editar (grupos, texto, horário)</button><button class="b" onclick="acao('voltar',${it.id})">↩️ Voltar p/ rascunho</button>` : ''}
     ${!['enviando','enviado'].includes(it.status) ? `<button class="b" onclick="acao('descartar',${it.id})">🗑️ Descartar</button>` : ''}</p></div>`;
@@ -849,6 +852,17 @@ async function jaPostei(){
   const link = $('#jaLink').value.trim(); if (!link) return;
   $('#jaRes').textContent = 'Conferindo…';
   try { $('#jaRes').textContent = (await api('ja_postei', {link})).msg; } catch(e){ $('#jaRes').textContent = '⚠️ ' + e.message; }
+}
+async function fotoPin(id, original){
+  if (original) { await api('fila/foto_pinterest', {id, original: true}); return carregarFila(); }
+  const bt = $('#pin' + id); if (bt) { bt.disabled = true; bt.textContent = '✨ Criando… (uns 30 s)'; }
+  await api('fila/foto_pinterest', {id});
+  for (let k = 0; k < 20; k++) {
+    await new Promise(r => setTimeout(r, 5000));
+    const st = (await api('fila/foto_pinterest_status', {id})).st || '';
+    if (st === 'ok') { await carregarFila(); return alert('✨ Foto nova pronta! Confira se o produto ficou igual ao real (cor, estampa, formato). Se não gostar, toque em ↩️ Foto original.'); }
+    if (st.startsWith('erro')) { if (bt) { bt.disabled = false; bt.textContent = '✨ Foto Pinterest'; } return alert('⚠️ Não deu: ' + st.slice(6)); }
+  }
 }
 async function repostar(id){
   try { const j = await api('fila/repostar', {id}); alert(`✅ Voltou pra fila como #${j.id}: sai numa das próximas rajadas.`); carregarFila(); }
