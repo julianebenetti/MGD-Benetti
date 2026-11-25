@@ -29,6 +29,7 @@ import ideas  # noqa: E402
 import lia_sender  # noqa: E402
 import scheduler  # noqa: E402  (lê a configuração da agenda do .env)
 from pipeline import DetailMismatch, Pipeline, PipelineError, VariationMismatch  # noqa: E402
+import pipeline as pipeline_mod  # noqa: E402
 import prompts  # noqa: E402
 import reviews  # noqa: E402
 import estudo  # noqa: E402
@@ -744,6 +745,8 @@ class Bot:
         # anúncio (inclusive outra cor/estampa/modelo). Só passa idêntico; o resto só com "Agendar mesmo assim".
         confirmed = post['metadata'].get('validacao_forcada') or \
             (post['metadata'].get('origem') == 'pack' and not PACK_CHECK)
+        if pipeline_mod.ACCEPT_VARIATION and result == 'variacao':
+            result = 'sim'   # só outra cor do mesmo produto: aceito (a capa mostra as variações)
         if result != 'sim' and not confirmed:
             self.db.update_post(post['id'], status='editado')
             post = self.db.get_post(post['id'])
@@ -778,10 +781,10 @@ class Bot:
         buttons.append([('❌ Descartar', f"dc:{post['id']}")])
         origin = "Tirei da Agenda e voltei para cá" if from_agenda else "Não agendei"
         self.tg.send_text(
-            EDITADOS, f"🔎 <b>Validação: o produto divulgado não é idêntico ao vídeo</b>\n"
-                      f"{e(post['product_name'][:80])}\n{what}: {e(reason)}\n\n"
-                      f"A Shopee pune isso como \"produto irrelevante\" (o produto divulgado é o que ela confere). "
-                      f"{origin}.{alt_text}",
+            EDITADOS, f"🔎 <b>Diferenças entre o vídeo e o anúncio</b> ({what.lower()})\n"
+                      f"📦 {e(post['product_name'][:80])}\n\n{e(reason)}\n\n"
+                      f"<i>Cor diferente não conta (a capa mostra as variações).</i>\n\n"
+                      f"<b>O que fazer:</b> a Shopee pune isso como \"produto irrelevante\". {origin}.{alt_text}",
             reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
             markup=keyboard(*buttons))
 

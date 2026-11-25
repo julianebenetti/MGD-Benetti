@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '5'))
 CTA_SECONDS = float(os.getenv('CTA_SEGUNDOS', '5'))
+# outra cor/estampa do mesmo produto é aceita (a capa mostra o cartão de variações); VARIACAO_OK=nao volta a barrar
+ACCEPT_VARIATION = os.getenv('VARIACAO_OK', 'sim').strip().lower() not in ('nao', 'não', '0', 'false')
 CTAS = [   # sem preço, desconto ou cupom (regra de compliance; a Shopee pune promessa que o anúncio não cumpre)
     'Adicione já ao carrinho! 🛒',
     'Toque na sacolinha e confira! 🛒',
@@ -81,7 +83,7 @@ class Pipeline:
         return [(p, r, m) for p, (r, m) in zip(candidates, results)]
 
     def _confirmed(self, video_path: str, candidates: List[Dict], wanted: int, max_checks: int = 99,
-                   accept_variation: bool = False, strict: bool = False) -> Tuple[List[Dict], List[str], List[str]]:
+                   accept_variation: bool = ACCEPT_VARIATION, strict: bool = False) -> Tuple[List[Dict], List[str], List[str]]:
         """Produtos confirmados, motivos das recusas e motivos de 'outra variação' (quando não aceita)."""
         found, reasons, variations = [], [], []
         for product, resultado, motivo in self._check_all(video_path, candidates[:max_checks], strict):
@@ -90,9 +92,10 @@ class Pipeline:
             if resultado == 'sim' or (accept_variation and resultado == 'variacao'):
                 found.append(product)
             elif resultado == 'variacao':
-                variations.append(f"• {product['productName']}: {motivo}")
+                variations.append(f"📦 {product['productName'][:70]}\n{motivo}")
             else:
-                reasons.append(f"• {product['productName']}: {resultado} ({motivo})")
+                label = {'nao': 'diferente', 'incerto': 'não deu para confirmar'}.get(resultado, resultado)
+                reasons.append(f"📦 {product['productName'][:70]} ({label})\n{motivo}")
         return found, reasons, variations
 
     def prepare(self, video_file: str, link: str, text: str, used_headlines, trust_link: bool = False) -> Dict:
@@ -127,8 +130,9 @@ class Pipeline:
                                     "mensagem com o link de um anúncio cuja foto seja igual ao vídeo. Toque ✅ Pode seguir para usar este link "
                                     "assim mesmo, ou responda esta mensagem com o link da variação certa.")
         if not main_found:
-            raise DetailMismatch("O produto do vídeo não está idêntico ao anúncio:\n"
-                                + "\n".join(reasons) + "\n\nA Shopee pune isso como \"produto irrelevante\". Se o vídeo "
+            raise DetailMismatch("🔎 Diferenças entre o vídeo e o anúncio\n\n"
+                                + "\n\n".join(reasons) + "\n\n(Cor diferente não conta: a capa mostra as variações.)"
+                                "\n\nO que fazer: a Shopee pune isso como \"produto irrelevante\". Se o vídeo "
                                 "foi gerado por IA, gere de novo mantendo o produto igual à foto do anúncio (mesmos "
                                 "detalhes) e mande de novo. Se o anúncio certo é outro, responda esta mensagem com o link.")
         main = main_found[0]
@@ -205,7 +209,7 @@ class Pipeline:
         products, links, removed = [post['products'][0]], [post['links'][0]], []
         warnings = []
         for (product, result, reason), link in zip(checks[1:], post['links'][1:]):
-            if result == 'sim' or product.get('escolhido'):   # link que você escolheu: fica, só avisa
+            if result == 'sim' or (ACCEPT_VARIATION and result == 'variacao') or product.get('escolhido'):   # link que você escolheu: fica, só avisa
                 products.append(product)
                 links.append(link)
                 if result != 'sim':
@@ -219,7 +223,7 @@ class Pipeline:
         missing = TOTAL_LINKS - len(products)
         if missing > 0 and reserves:
             for product, result, _ in self._check_all(video, reserves[:missing + 3], strict=True):
-                if result == 'sim' and len(products) < TOTAL_LINKS:
+                if (result == 'sim' or (ACCEPT_VARIATION and result == 'variacao')) and len(products) < TOTAL_LINKS:
                     products.append(product)
                     links.append(self.shopee.affiliate_link(product, post['sub_id']))
                     added.append(product.get('shopName', ''))

@@ -26,6 +26,33 @@ SCHEMA = {
     'additionalProperties': False,
 }
 
+# Conferência vídeo × anúncio com as diferenças em tópicos (pedido de 25/11: texto corrido confundia).
+DIFF_TYPES = ['cor/estampa', 'modelo/design', 'quantidade', 'detalhe/peça', 'tamanho/proporção', 'texto/marca',
+              'outro produto']
+MATCH_SCHEMA = {
+    'type': 'object',
+    'properties': {
+        'resultado': {'type': 'string', 'enum': ['sim', 'variacao', 'nao', 'incerto']},
+        'diferencas': {'type': 'array', 'items': {
+            'type': 'object',
+            'properties': {'tipo': {'type': 'string', 'enum': DIFF_TYPES},
+                           'video': {'type': 'string'}, 'anuncio': {'type': 'string'}},
+            'required': ['tipo', 'video', 'anuncio'], 'additionalProperties': False}},
+        'motivo': {'type': 'string'},
+    },
+    'required': ['resultado', 'diferencas', 'motivo'],
+    'additionalProperties': False,
+}
+
+DIFF_NOTE = """
+
+Liste em "diferencas" CADA diferença visível entre o produto do vídeo e o da foto do anúncio, uma por item:
+"tipo" (uma das categorias), "video" (o que aparece no vídeo, curto) e "anuncio" (o que aparece na foto, curto).
+Ex.: {{"tipo": "quantidade", "video": "1 balde", "anuncio": "kit com 10 baldes"}}. Sem diferenças, lista vazia.
+"resultado": "sim" se não há diferença; "variacao" se a ÚNICA diferença é cor/estampa (o anúncio vende outras
+cores: isso é aceito); "nao" se há qualquer outra diferença; "incerto" se não dá para afirmar.
+"motivo": uma frase curta de resumo, em português."""
+
 PROMPT = """As primeiras imagens são quadros de um vídeo de divulgação. A última é a foto oficial do anúncio na Shopee.
 Produto do anúncio: "{name}"
 
@@ -107,6 +134,14 @@ def _image_block(b64: str) -> Dict:
     return {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/jpeg', 'data': b64}}
 
 
+def format_diffs(diffs: List[Dict], summary: str) -> str:
+    """As diferenças em tópicos: "• Quantidade: vídeo 1 balde · anúncio kit com 10"; sem lista, o resumo."""
+    if not diffs:
+        return summary
+    lines = [f"• {d['tipo'].capitalize()}: vídeo {d['video']} · anúncio {d['anuncio']}" for d in diffs]
+    return '\n'.join(lines)
+
+
 def check_match(video_path: str, product: Dict, strict: bool = False) -> Tuple[str, str]:
     """
     Devolve (resultado, motivo); resultado é 'sim', 'variacao', 'nao' ou 'incerto'. `strict`: validação antes de
@@ -120,10 +155,14 @@ def check_match(video_path: str, product: Dict, strict: bool = False) -> Tuple[s
         content.append(_image_block(_jpeg_b64(Image.open(io.BytesIO(photo.content)), side)))
         n, txt = kit_quantity(product['productName'])
         content.append({'type': 'text', 'text': PROMPT.format(name=product['productName']) + (STRICT_NOTE if strict else '')
-                        + (QUANTITY_NOTE.format(n=n, txt=txt) if n else '')})
-        data = ask_json(content, SCHEMA)
-        logger.info(f"Conferência '{product['productName']}': {data['resultado']} ({data['motivo']})")
-        return data['resultado'], data['motivo']
+                        + (QUANTITY_NOTE.format(n=n, txt=txt) if n else '') + DIFF_NOTE})
+        data = ask_json(content, MATCH_SCHEMA)
+        diffs = data.get('diferencas') or []
+        result = data['resultado']
+        if diffs and all(d['tipo'] == 'cor/estampa' for d in diffs) and result == 'nao':
+            result = 'variacao'   # só a cor muda: o anúncio vende as cores (a capa mostra as variações)
+        logger.info(f"Conferência '{product['productName']}': {result} ({data['motivo']}; {diffs})")
+        return result, format_diffs(diffs, data['motivo'])
     except Exception as e:
         logger.error(f"Conferência vídeo × produto falhou: {e}")
         return 'incerto', f'não foi possível conferir ({e})'
