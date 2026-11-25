@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v13';
+const KEY = 'minhaPauta.v14';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -234,9 +234,9 @@ const SEED = [
   D('Postar no feed com o link do produto','Facebook',{type:'daily'},{obs:'Link também na descrição do produto'}),
   D('Fazer o 1º comentário com o link do produto','Facebook'),
   // WhatsApp
-  D('Post Zap: 1ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'08:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
-  D('Post Zap: 2ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'12:30',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
-  D('Post Zap: 3ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'17:30',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
+  D('Post Zap: 1ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'10:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
+  D('Post Zap: 2ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'15:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
+  D('Post Zap: 3ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'20:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
 ];
 
 let S = load();
