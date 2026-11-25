@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v16';
+const KEY = 'minhaPauta.v17';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -222,7 +222,10 @@ INSIGHTS['Instagram'] = {
     'Foco agora: <b>tráfego orgânico</b>. Os anúncios (turbinar Reels) estão pausados.',
     'Meta: <b>5 Reels de teste por dia</b>, cada um com a <b>sacolinha</b> do produto pra a pessoa já comprar. Só aumentar se o Instagram aceitar e o alcance se mantiver.',
     'Fluxo: vídeo com link → aba <b>Pack</b> → o robô monta a capa → aba <b>Postar</b> → vai sozinho pro Instagram como Reel de teste.',
-    'O único passo manual é o <b>link do produto</b> (sub-ID <b>sacolinha</b> + nome do produto), cadastrado em cada Reel.'
+    'O único passo manual é o <b>link do produto</b> (sub-ID <b>sacolinha</b> + nome do produto), cadastrado em cada Reel dentro do Instagram.'
+  ],
+  depois: [
+    '<b>Story com link</b> e <b>Destaque com link</b>: pegar os Reels postados na página normal e colocar no Story e no Destaque. Ainda não comecei; desenhar a rotina quando for começar.'
   ]
 };
 const SEED = [
@@ -234,12 +237,10 @@ const SEED = [
   D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado o vídeo vai pra aba Agendas'}),
   D('Telegram: autorizar a postagem nas 3 contas (aba Postagens)','Shopee Vídeo',{type:'daily'},{obs:'As postagens saem às 9h, 11h, 13h, 17h, 19h e 20h'}),
   // Instagram
-  D('Postar Reel com sacolinha','Instagram',{type:'daily'},{obs:'Usar o vídeo da Shopee Vídeo e colocar a sacolinha'}),
+  D('Postar Reel com sacolinha','Instagram',{type:'daily'},{obs:'Usar o vídeo da Shopee Vídeo e colocar a sacolinha · quantidade por dia a definir'}),
   D('Garimpar 5 vídeos com link nos grupos de packs do Telegram','Instagram',{type:'daily'},{obs:'Pra os Reels de teste · meta de 5 por dia'}),
   D('Enviar os vídeos com o link pra Central de Post Instagram/Meta (aba Pack)','Instagram',{type:'daily'},{obs:'O robô monta a capa e manda pra aba Postar, que posta como Reel de teste'}),
-  D('Cadastrar o link do produto (sacolinha) em cada Reel de teste','Instagram',{type:'daily'},{obs:'Pegar na Central de Post o link convertido: sub-ID sacolinha + nome do produto'}),
-  D('Postar Story com link','Instagram'),
-  D('Atualizar Destaque com link','Instagram'),
+  D('Cadastrar o link do produto (sacolinha) em cada Reel de teste, no Instagram','Instagram',{type:'daily'},{obs:'Pegar na Central de Post o link convertido: sub-ID sacolinha + nome do produto'}),
   // Facebook
   D('Escolher produto no Mercado Livre e criar a foto no Gemini','Facebook'),
   D('Postar no feed com o link do produto','Facebook',{type:'daily'},{obs:'Link também na descrição do produto'}),
@@ -345,7 +346,7 @@ function render(){
     :'<div class="empty">Nenhum lote pendente. Um lote novo aparece sozinho a cada dia. A LIA exclui o vídeo na madrugada do dia que ela indica em “Baixe até”, então o último dia pra baixar é a noite anterior.</div>')+'</div>':'';
 
   const ins=INSIGHTS[filtro];
-  $('#insights').innerHTML=ins?`<div class="insight"><h3>💡 Insights · ${esc(filtro)}</h3><b style="font-size:14px">${ins.titulo}</b><ul>${ins.itens.map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
+  $('#insights').innerHTML=ins?`<div class="insight"><h3>💡 Insights · ${esc(filtro)}</h3><b style="font-size:14px">${ins.titulo}</b><ul>${ins.itens.map(i=>`<li>${i}</li>`).join('')}</ul>${ins.depois?'<b style="font-size:14px;display:block;margin-top:10px">📌 Para desenhar depois</b><ul>'+ins.depois.map(i=>'<li>'+i+'</li>').join('')+'</ul>':''}</div>`:'';
 
   const lista=doDia(dia).filter(a=>filtro==='Todos'||a.canal===filtro);
   const pend=lista.filter(a=>!isDone(a.id,dia));
