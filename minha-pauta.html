@@ -176,7 +176,7 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
   <h3 id="lTitle">Novo lote da LIA</h3>
   <div class="two">
     <div class="f"><label>Gerado em</label><input type="date" id="lGerado"></div>
-    <div class="f"><label>Último dia pra baixar</label><input type="date" id="lExpira"></div>
+    <div class="f"><label>Último dia pra baixar (à noite)</label><input type="date" id="lExpira"></div>
   </div>
   <div class="two">
     <div class="f"><label>Quantidade de vídeos</label><input type="number" id="lQtd" min="1"></div>
@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v11';
+const KEY = 'minhaPauta.v12';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -218,8 +218,8 @@ const INSIGHTS = {
 };
 const SEED = [
   // Shopee Vídeo
-  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · ficam 7 dias na LIA e depois são excluídos'}),
-  D('LIA Vídeos: revisar, aprovar (final de 10 s ou 8 s) e baixar os vídeos','Shopee Vídeo',{type:'daily'},{obs:'Só libera o download depois de aprovar · vídeo some 7 dias após ser gerado · comece pelos que vencem primeiro'}),
+  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · ficam 7 dias na LIA e são excluídos na madrugada do último dia'}),
+  D('LIA Vídeos: aprovar (final de 10 s ou 8 s) e baixar os vídeos','Shopee Vídeo',{type:'daily'},{time:'20:00',obs:'Só libera o download depois de aprovar · a LIA exclui na madrugada · comece pelo lote que vence primeiro'}),
   D('Telegram: enviar os 40 vídeos com os links na aba Envios','Shopee Vídeo',{type:'daily'},{obs:'Canal Shopee Vídeo'}),
   D('Telegram: conferir os vídeos na aba Editados e descartar os com problema','Shopee Vídeo',{type:'daily'},{obs:'Descartar evita punição (pontuação negativa) na Shopee Vídeo'}),
   D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado o vídeo vai pra aba Agendas'}),
@@ -238,15 +238,31 @@ const SEED = [
 ];
 
 let S = load();
+save();
 let view = 'hoje', filtro = 'Todos', editId = null;
 let dia = iso(new Date());
 
 function uid(){return Math.random().toString(36).slice(2,10)}
 function iso(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
 function parse(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function mkLote(d){return {id:uid(),gerado:d,expira:addDays(d,5),qtd:40,baixado:false,enviado:false,obs:'',auto:true}}
+// A LIA gera 1 lote por dia, na madrugada: cria o lote de cada dia sozinho.
+function ensureLotes(st){
+  st.lotes=st.lotes||[];
+  const hojeS=iso(new Date());
+  if(!st.lotesInit){ // primeira vez: o que ainda estava na LIA em 25/11/2026 (242 vídeos = ~6 lotes)
+    st.lotesInit=1;
+    ['2026-11-20','2026-11-21','2026-11-22','2026-11-23','2026-11-24','2026-11-25'].forEach(d=>{
+      if(!st.lotes.some(l=>l.gerado===d))st.lotes.push(mkLote(d));
+    });
+  }
+  let last=st.lotes.reduce((m,l)=>l.gerado&&l.gerado>m?l.gerado:m,'');
+  for(let i=0;last&&last<hojeS&&i<14;i++){last=addDays(last,1);st.lotes.push(mkLote(last))}
+  return st;
+}
 function load(){
-  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts){r.lotes=r.lotes||[];return r}}catch(e){}
-  return {acts:SEED.map(a=>({...a,id:uid()})),done:{},lotes:[]};
+  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts)return ensureLotes(r)}catch(e){}
+  return ensureLotes({acts:SEED.map(a=>({...a,id:uid()})),done:{},lotes:[]});
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Não consegui salvar neste navegador')}}
 function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
@@ -298,7 +314,7 @@ function render(){
   const pend2=S.lotes.filter(l=>!l.baixado||!l.enviado).sort((a,b)=>a.expira.localeCompare(b.expira));
   const risco=S.lotes.filter(l=>!l.baixado&&dd(l.expira)<=0);
   $('#alerta').innerHTML=risco.length?risco.map(l=>{const n=dd(l.expira);
-    return `<div class="alerta">⚠️ ${n===0?'O lote de '+l.qtd+' vídeos expira HOJE':'O lote de '+l.qtd+' vídeos venceu há '+(-n)+' dia(s)'}. ${n===0?'Baixe agora na LIA Vídeos antes de perder!':'Confira na LIA Vídeos se ainda dá pra baixar.'}</div>`}).join(''):'';
+    return `<div class="alerta">⚠️ ${n===0?'Último dia pra baixar o lote de '+l.qtd+' vídeos (gerado em '+(l.gerado?dm(l.gerado):'—')+'): HOJE':'O lote de '+l.qtd+' vídeos venceu há '+(-n)+' dia(s)'}. ${n===0?'Na madrugada ele é excluído da LIA. Baixe hoje à noite!':'Confira na LIA Vídeos se ainda dá pra baixar.'}</div>`}).join(''):'';
   const mostrarLotes=filtro==='Todos'||filtro==='Shopee Vídeo';
   $('#lotesBox').innerHTML=mostrarLotes?`<h2>📦 Lotes da LIA <button class="btn sm" id="lAdd">+ Lote</button></h2><div class="card lotes">`+
     (pend2.length?pend2.map(l=>{
@@ -306,14 +322,14 @@ function render(){
       let cls,txt;
       if(l.baixado){cls='ok';txt='baixado'}
       else if(n<0){cls='venc';txt='vencido há '+(-n)+' dia(s)'}
-      else if(n===0){cls='hoje';txt='expira HOJE'}
-      else if(n===1){cls='amanha';txt='expira amanhã'}
-      else{cls='';txt='expira em '+n+' dias ('+dm(l.expira)+')'}
+      else if(n===0){cls='hoje';txt='último dia: HOJE'}
+      else if(n===1){cls='amanha';txt='último dia: amanhã'}
+      else{cls='';txt='baixar até '+dm(l.expira)}
       return `<div class="lote"><div><b>${l.qtd} vídeos</b> · gerado ${l.gerado?dm(l.gerado):'—'} <span class="pill ${cls}">${txt}</span>${l.obs?'<div class="meta">'+esc(l.obs)+'</div>':''}</div>
       <div class="act2"><label class="check"><input type="checkbox" data-lb="${l.id}" ${l.baixado?'checked':''}>Baixado</label>
       <label class="check"><input type="checkbox" data-le="${l.id}" ${l.enviado?'checked':''}>No Telegram</label>
       <button class="btn sm" data-ledit="${l.id}">Editar</button></div></div>`}).join('')
-    :'<div class="empty">Nenhum lote pendente. Cadastre cada lote gerado na LIA: o vídeo é excluído 7 dias depois de gerado (o último dia pra baixar é o 7º, contando o dia da geração).</div>')+'</div>':'';
+    :'<div class="empty">Nenhum lote pendente. Um lote novo aparece sozinho a cada dia. A LIA exclui o vídeo na madrugada do dia que ela indica em “Baixe até”, então o último dia pra baixar é a noite anterior.</div>')+'</div>':'';
 
   const ins=INSIGHTS[filtro];
   $('#insights').innerHTML=ins?`<div class="insight"><h3>💡 Insights · ${esc(filtro)}</h3><b style="font-size:14px">${ins.titulo}</b><ul>${ins.itens.map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
@@ -412,13 +428,13 @@ document.addEventListener('change',e=>{
 let editL=null,expTouched=false;
 function addDays(sd,n){const d=parse(sd);d.setDate(d.getDate()+n);return iso(d)}
 $('#lExpira').oninput=()=>{expTouched=true};
-$('#lGerado').onchange=()=>{if(!expTouched&&$('#lGerado').value)$('#lExpira').value=addDays($('#lGerado').value,6)};
+$('#lGerado').onchange=()=>{if(!expTouched&&$('#lGerado').value)$('#lExpira').value=addDays($('#lGerado').value,5)};
 function openL(id){
   editL=id||null;
   const l=id?S.lotes.find(x=>x.id===id):{gerado:iso(new Date()),expira:'',qtd:40,obs:''};
   $('#lTitle').textContent=id?'Editar lote':'Novo lote da LIA';
   expTouched=!!id;
-  $('#lGerado').value=l.gerado||'';$('#lExpira').value=l.expira||(l.gerado?addDays(l.gerado,6):'');$('#lQtd').value=l.qtd;$('#lObs').value=l.obs||'';
+  $('#lGerado').value=l.gerado||'';$('#lExpira').value=l.expira||(l.gerado?addDays(l.gerado,5):'');$('#lQtd').value=l.qtd;$('#lObs').value=l.obs||'';
   $('#lDel').style.visibility=id?'visible':'hidden';
   $('#modalL').classList.add('open');
 }
