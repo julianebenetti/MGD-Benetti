@@ -130,6 +130,15 @@ próximos levantamentos com o período anterior (15–21/11: 558 cliques, 11 ped
   igual à queda de 01–14/11 depois das punições de outubro. O que ainda vende são vídeos antigos (vestido de agosto,
   porta-cartão de 31/10). Os vídeos sem CTA começaram a sair só agora: o teste ainda não dá para medir.
 
+## Relatório de Vendas do criador (app Shopee Vídeo, 25/11/2026)
+
+- **7 dias (18–24/11):** **75 vídeos com produto, só 4 com receita** · 8 itens · R$ 380,10 · 474 cliques ·
+  **conversão 0,1%** (−0,1).
+- **30 dias (26/10–24/11):** **352 vídeos com produto (+281), só 19 com receita (5%)** · 51 itens (−162) ·
+  R$ 3,1 mil (−18,1 mil) · 1,6 mil cliques (−2,8 mil) · conversão 0,1% (−0,2).
+- **Leitura:** o volume subiu muito (352 vídeos/mês) e as vendas caíram: 95% dos vídeos não vendem nada. Mais
+  vídeos não trouxeram mais vendas (igual ao estudo de 05/11). Público igual: 45+ = 51%.
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar
