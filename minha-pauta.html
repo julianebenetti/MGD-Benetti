@@ -176,7 +176,7 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
   <h3 id="lTitle">Novo lote da LIA</h3>
   <div class="two">
     <div class="f"><label>Gerado em</label><input type="date" id="lGerado"></div>
-    <div class="f"><label>Expira em</label><input type="date" id="lExpira"></div>
+    <div class="f"><label>Último dia pra baixar</label><input type="date" id="lExpira"></div>
   </div>
   <div class="two">
     <div class="f"><label>Quantidade de vídeos</label><input type="number" id="lQtd" min="1"></div>
@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v10';
+const KEY = 'minhaPauta.v11';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -218,8 +218,8 @@ const INSIGHTS = {
 };
 const SEED = [
   // Shopee Vídeo
-  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · cada lote tem prazo: veja Lotes da LIA'}),
-  D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Baixar antes de expirar: comece pelo lote que vence primeiro (Lotes da LIA)'}),
+  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · ficam 7 dias na LIA e depois são excluídos'}),
+  D('LIA Vídeos: revisar, aprovar (final de 10 s ou 8 s) e baixar os vídeos','Shopee Vídeo',{type:'daily'},{obs:'Só libera o download depois de aprovar · vídeo some 7 dias após ser gerado · comece pelos que vencem primeiro'}),
   D('Telegram: enviar os 40 vídeos com os links na aba Envios','Shopee Vídeo',{type:'daily'},{obs:'Canal Shopee Vídeo'}),
   D('Telegram: conferir os vídeos na aba Editados e descartar os com problema','Shopee Vídeo',{type:'daily'},{obs:'Descartar evita punição (pontuação negativa) na Shopee Vídeo'}),
   D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado o vídeo vai pra aba Agendas'}),
@@ -313,7 +313,7 @@ function render(){
       <div class="act2"><label class="check"><input type="checkbox" data-lb="${l.id}" ${l.baixado?'checked':''}>Baixado</label>
       <label class="check"><input type="checkbox" data-le="${l.id}" ${l.enviado?'checked':''}>No Telegram</label>
       <button class="btn sm" data-ledit="${l.id}">Editar</button></div></div>`}).join('')
-    :'<div class="empty">Nenhum lote pendente. Quando mandar gerar um lote na LIA, cadastre aqui com a data em que ele expira.</div>')+'</div>':'';
+    :'<div class="empty">Nenhum lote pendente. Cadastre cada lote gerado na LIA: o vídeo é excluído 7 dias depois de gerado (o último dia pra baixar é o 7º, contando o dia da geração).</div>')+'</div>':'';
 
   const ins=INSIGHTS[filtro];
   $('#insights').innerHTML=ins?`<div class="insight"><h3>💡 Insights · ${esc(filtro)}</h3><b style="font-size:14px">${ins.titulo}</b><ul>${ins.itens.map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
@@ -409,12 +409,16 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{
   if(e.target.dataset.ck)setDone(e.target.dataset.ck,dia,e.target.checked);
 });
-let editL=null;
+let editL=null,expTouched=false;
+function addDays(sd,n){const d=parse(sd);d.setDate(d.getDate()+n);return iso(d)}
+$('#lExpira').oninput=()=>{expTouched=true};
+$('#lGerado').onchange=()=>{if(!expTouched&&$('#lGerado').value)$('#lExpira').value=addDays($('#lGerado').value,6)};
 function openL(id){
   editL=id||null;
   const l=id?S.lotes.find(x=>x.id===id):{gerado:iso(new Date()),expira:'',qtd:40,obs:''};
   $('#lTitle').textContent=id?'Editar lote':'Novo lote da LIA';
-  $('#lGerado').value=l.gerado||'';$('#lExpira').value=l.expira||'';$('#lQtd').value=l.qtd;$('#lObs').value=l.obs||'';
+  expTouched=!!id;
+  $('#lGerado').value=l.gerado||'';$('#lExpira').value=l.expira||(l.gerado?addDays(l.gerado,6):'');$('#lQtd').value=l.qtd;$('#lObs').value=l.obs||'';
   $('#lDel').style.visibility=id?'visible':'hidden';
   $('#modalL').classList.add('open');
 }
