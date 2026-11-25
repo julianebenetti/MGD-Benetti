@@ -1,0 +1,8 @@
+[
+  {
+    "id": "exemplo-1",
+    "produto": "Nome do produto (exemplo)",
+    "imagem": "imagens/exemplo-1.jpg",
+    "link": "https://exemplo.com/link-do-produto"
+  }
+]

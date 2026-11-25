@@ -1,2 +1,8 @@
 __pycache__/
 *.pyc
+
+facebook-post/.env
+facebook-post/estado.json
+facebook-post/fila.json
+facebook-post/imagens/
+facebook-post/robo.log
