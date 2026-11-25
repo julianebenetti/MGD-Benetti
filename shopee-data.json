@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795575491,
-  "updated_at_br": "24/11/2026 23:53",
+  "updated_at": 1795579407,
+  "updated_at_br": "25/11/2026 00:58",
   "period_days": 90,
-  "total_orders": 5528,
-  "total_conversions": 5290,
+  "total_orders": 5527,
+  "total_conversions": 5289,
   "orders": [
     {
       "ID do pedido": "2611245DFJ9H01",
@@ -138178,31 +138178,6 @@
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241507140135405",
       "conversionStatus": "COMPLETED",
-      "data": "2026-08-27"
-    },
-    {
-      "ID do pedido": "260827EK8UXKKU",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-08-27 03:48:56",
-      "Sub_id1": "29Jul26VEACalcaJoggerRapaz",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "8.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "Calça Jogger Preta Masculina Dry Fit Com Fitas Esportiva",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "22492676165",
-      "ID da loja": "413762733",
-      "Nome da loja": "ALAN.FONTE.888",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "241501735183630",
-      "conversionStatus": "CANCELLED",
       "data": "2026-08-27"
     }
   ]
