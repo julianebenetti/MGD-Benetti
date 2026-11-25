@@ -119,6 +119,17 @@ Vídeos estão sendo entregues (~50 mil visualizações/semana) mas vendem pouco
 figurinhas e sem o botão de compra (CTA) no fim**. Comparar a conversão (pedidos ÷ cliques e ÷ visualizações) nos
 próximos levantamentos com o período anterior (15–21/11: 558 cliques, 11 pedidos = 2,0% dos cliques).
 
+## Levantamento de 25/11/2026 (Insights, conta pedrita.bambam.store)
+
+- **Últimos 7 dias (18–24/11):** 3 vídeos com receita · **2,9 mil visualizações (−94%)** · tempo médio 12 s (−65%) ·
+  475 cliques · 5 pedidos (−50%) · R$ 225,20 · **comissão R$ 34,40**. Vendas: ~R$ 50/dia até 22/11, **zero em 23 e
+  24/11**. Conversão 5/475 = 1,1% dos cliques (antes 2,0%).
+- **Mês (01–24/11):** 53,6 mil visualizações · 1,5 mil cliques · 26 pedidos · **comissão R$ 142,10**; vestido midi
+  12 itens, **R$ 91,30 (64%)**.
+- **Leitura:** a entrega CAIU DE NOVO depois da punição de 17/11 (de ~50 mil para 2,9 mil visualizações/semana),
+  igual à queda de 01–14/11 depois das punições de outubro. O que ainda vende são vídeos antigos (vestido de agosto,
+  porta-cartão de 31/10). Os vídeos sem CTA começaram a sair só agora: o teste ainda não dá para medir.
+
 ## Próximos levantamentos
 
 A cada 14 dias o robô manda o levantamento em 📊 Relatório (o próximo por volta de **20/11/2026**). Junto, mandar
