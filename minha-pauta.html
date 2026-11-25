@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v20';
+const KEY = 'minhaPauta.v21';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -233,8 +233,12 @@ INSIGHTS['Facebook'] = {
   titulo: 'Produtos do Mercado Livre no feed',
   itens: [
     'Estratégia aprendida num grupo e que <b>tem gerado bastante venda</b>: testar.',
-    'Passo a passo: pegar a imagem do produto no <b>Mercado Livre</b> → recriar no <b>Gemini</b>, estilizada e com as informações do produto → postar no <b>feed</b> com o link do produto na <b>legenda</b> → repetir o link no <b>1º comentário</b>.',
+    'Passo a passo: pegar a imagem do produto no <b>Mercado Livre</b> → recriar no <b>Gemini</b>, estilizada e com as informações do produto → colocar na <b>fila do robô</b> → o robô posta na <b>Página</b> com o link na <b>legenda</b> e repete o link no <b>1º comentário</b>.',
+    'Só funciona em <b>Página</b>, não no perfil pessoal. Começar com <b>2 a 5 posts por dia</b>, variando imagem e legenda (conteúdo repetido ou copiado perde alcance).',
     'Quantidade de posts por dia: <b>a definir</b>.'
+  ],
+  depois: [
+    '<b>Ligar o robô</b>: gerar o token da Página no app da Meta, guardar no .env do VPS e copiar a pasta facebook-post (o passo a passo está no README dela). Depois, ligar na Central de Post Instagram/Meta.'
   ]
 };
 INSIGHTS['TikTok'] = {
@@ -266,10 +270,9 @@ const SEED = [
   D('Enviar os vídeos com o link pra Central de Post Instagram/Meta (aba Pack)','Instagram',{type:'daily'},{obs:'O robô monta a capa e manda pra aba Postar, que posta como Reel de teste'}),
   D('Cadastrar o link do produto (sacolinha) em cada Reel de teste, no Instagram','Instagram',{type:'daily'},{obs:'Pegar na Central de Post o link convertido: sub-ID sacolinha + nome do produto'}),
   // Facebook
-  D('Escolher o produto no Mercado Livre e pegar a imagem','Facebook',{type:'daily'},{obs:'Pegar também o link do produto'}),
+  D('Escolher o produto no Mercado Livre e pegar a imagem e o link','Facebook',{type:'daily'}),
   D('Gemini: recriar a imagem estilizada com as informações do produto','Facebook'),
-  D('Postar a imagem no feed do Facebook com o link do produto na legenda','Facebook'),
-  D('Colocar o link do produto no 1º comentário da postagem','Facebook'),
+  D('Colocar o produto na fila do robô (imagem + link)','Facebook',{type:'daily'},{obs:'O robô posta na Página com o link na legenda e no 1º comentário'}),
   // WhatsApp
   D('Post Zap: 1ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'10:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
   D('Post Zap: 2ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'15:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
