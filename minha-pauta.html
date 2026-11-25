@@ -162,14 +162,35 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
 const CANAIS = [
   ['TikTok','#ddd3f2'],['TikTok Shop','#ddd3f2'],
   ['Shopee','#fbdcc4'],['Shopee Vídeo','#fbdcc4'],['Tráfego pago','#cfe3fa'],
-  ['Grupos de WhatsApp','#cdeedd'],['Status do WhatsApp','#cdeedd'],['Instagram','#f7d3df']
+  ['Grupos de WhatsApp','#cdeedd'],['Status do WhatsApp','#cdeedd'],['Instagram','#f7d3df'],
+  ['Facebook','#d6dcfa'],['Mercado Livre','#fdf0a8'],['Pinterest','#fbc9c9']
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v2';
+const KEY = 'minhaPauta.v3';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
-const SEED = []; // começa vazio: as atividades são cadastradas pela própria Juliane
+const SEED = [
+  // Shopee Vídeo
+  D('Postar 10 vídeos de ofertas relâmpago','Shopee Vídeo',{type:'daily'},{obs:'Produtos abaixo de R$ 49,90 · já impulsionados pela loja vendem mais'}),
+  D('Postar os vídeos diários nas 3 contas','Shopee Vídeo'),
+  D('Verificar vendas mensais do item antes de subir','Shopee Vídeo',{type:'daily'},{obs:'Vende agora ou foi bom só meses atrás?'}),
+  D('Ranquear o vídeo por retenção','Shopee Vídeo'),
+  D('Conferir taxa de conversão','Shopee Vídeo'),
+  D('LIA Vídeos: criar os vídeos e aprovar','Shopee Vídeo',{type:'daily'},{obs:'Vídeos da LIA +40'}),
+  D('Aprovar os editados no Telegram','Shopee Vídeo'),
+  // Instagram
+  D('Postar Reel com sacolinha','Instagram',{type:'daily'},{obs:'Usar o vídeo da Shopee Vídeo e colocar a sacolinha'}),
+  D('Postar Reel de teste com sacolinha','Instagram'),
+  D('Postar Story com link','Instagram'),
+  D('Atualizar Destaque com link','Instagram'),
+  // Facebook
+  D('Escolher produto no Mercado Livre e criar a foto no Gemini','Facebook'),
+  D('Postar no feed com o link do produto','Facebook',{type:'daily'},{obs:'Link também na descrição do produto'}),
+  D('Fazer o 1º comentário com o link do produto','Facebook'),
+  // WhatsApp
+  D('Enviar as ofertas diárias','Grupos de WhatsApp'),
+];
 
 let S = load();
 let view = 'hoje', filtro = 'Todos', editId = null;
