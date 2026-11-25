@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minha Pauta</title>
+<style>
+:root{
+  --bg:#fbf7f8; --card:#ffffff; --line:#eee6e9; --text:#1c1a1b; --muted:#7a7075;
+  --hero:#f0d5e3; --accent:#c2548a; --ok:#2f8f5b; --warn:#b45309;
+  --r:18px; --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);padding-bottom:80px}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px}
+header{position:sticky;top:0;z-index:5;background:rgba(251,247,248,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:14px 0 8px;font-weight:800;font-size:20px;letter-spacing:-.5px}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--hero);display:grid;place-items:center}
+.logo i{width:20px;height:20px;border-radius:6px;background:#22a45d;display:block}
+nav{display:flex;gap:6px;padding-bottom:10px;overflow-x:auto}
+nav button{border:0;background:none;font:600 15px var(--font);padding:9px 14px;border-radius:12px;color:var(--text);white-space:nowrap;cursor:pointer}
+nav button.on{background:var(--hero)}
+.hero{margin:16px 0;background:var(--hero);border-radius:var(--r);padding:22px}
+.hero small{letter-spacing:.14em;font-weight:700;font-size:11px}
+.hero h1{margin:6px 0 4px;font-size:30px;letter-spacing:-1px}
+.hero p{margin:0;color:#4a4044}
+.daybar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.daybar b{font-size:14px}
+input[type=date],input[type=text],input[type=time],input[type=number],select,textarea{
+  font:15px var(--font);border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;color:var(--text);width:100%}
+.daybar input{width:auto}
+.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 14px;font:600 14px var(--font);cursor:pointer;color:var(--text)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{padding:7px 12px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.chip{border:2px solid transparent;border-radius:12px;padding:9px 14px;font:600 14px var(--font);cursor:pointer;color:var(--text)}
+.chip.on{border-color:var(--text)}
+h2{font-size:22px;letter-spacing:-.6px;margin:26px 0 12px;display:flex;justify-content:space-between;align-items:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.focus{border-left:5px solid var(--accent)}
+.focus small{letter-spacing:.14em;font-weight:700;font-size:11px;color:var(--muted)}
+.focus h3{margin:6px 0;font-size:22px;letter-spacing:-.5px}
+.meta{color:var(--muted);font-size:14px}
+.row{display:grid;grid-template-columns:64px 1fr;gap:6px 12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}
+.row .t{font-weight:700;font-size:14px}
+.row .ti{font-weight:700;font-size:16px;letter-spacing:-.3px}
+.row.done .ti{text-decoration:line-through;color:var(--muted)}
+.row .act{grid-column:1/-1;display:flex;justify-content:flex-end;align-items:center;gap:12px}
+.tag{display:inline-block;font-size:12px;border-radius:8px;padding:2px 8px;margin-top:4px;color:var(--text)}
+label.check{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;cursor:pointer}
+label.check input{appearance:none;width:26px;height:26px;border:2px solid #9a8f95;border-radius:8px;margin:0;display:grid;place-items:center;cursor:pointer;background:#fff}
+label.check input:checked{background:var(--ok);border-color:var(--ok)}
+label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-weight:800}
+.bar{height:12px;background:#eadfe4;border-radius:99px;overflow:hidden;margin-top:10px}
+.bar i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.empty{color:var(--muted);padding:6px 0}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wd{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center;cursor:pointer}
+.wd.today{border-color:var(--accent);border-width:2px}
+.wd.sel{background:var(--hero)}
+.wd small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}
+.wd b{display:block;font-size:18px;margin:2px 0}
+.wd span{font-size:12px;color:var(--muted)}
+.wd.full span{color:var(--ok);font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:20}
+.modal.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:20px;max-height:92vh;overflow:auto}
+.sheet h3{margin:0 0 14px;font-size:20px}
+.f{margin-bottom:12px}.f>label{display:block;font-size:13px;font-weight:700;margin-bottom:5px;color:var(--muted)}
+.days{display:flex;gap:6px;flex-wrap:wrap}
+.days label{border:1px solid var(--line);border-radius:10px;padding:8px 11px;font-size:14px;cursor:pointer}
+.days input{display:none}.days input:checked+span{font-weight:800;color:var(--accent)}
+.days label:has(input:checked){background:var(--hero);border-color:var(--accent)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foot{display:flex;gap:10px;justify-content:space-between;margin-top:16px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;border-radius:12px;padding:10px 16px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:30}
+.toast.on{opacity:1}
+.view{display:none}.view.on{display:block}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><div class="logo"><i></i></div>Minha Pauta.</div>
+  <nav id="nav">
+    <button data-v="hoje" class="on">🕒 Hoje</button>
+    <button data-v="semana">📅 Pauta semanal</button>
+    <button data-v="todas">🗂 Atividades</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section class="hero">
+    <small>ESTÚDIO EDITORIAL</small>
+    <h1 id="heroTitle">Minha pauta de hoje</h1>
+    <p id="heroDate"></p>
+  </section>
+
+  <div class="daybar">
+    <b>Dia da pauta</b>
+    <input type="date" id="dia">
+    <button class="btn sm" id="hojeBtn">Voltar para hoje</button>
+  </div>
+  <div class="chips" id="chips"></div>
+
+  <!-- HOJE -->
+  <div class="view on" id="v-hoje">
+    <h2>Em foco</h2>
+    <div id="foco"></div>
+    <h2>Atividades do dia <button class="btn sm" data-add>+ Atividade</button></h2>
+    <div class="card" id="lista"></div>
+    <h2>Progresso do dia</h2>
+    <div class="card"><b id="progTxt"></b><div class="bar"><i id="progBar"></i></div></div>
+  </div>
+
+  <!-- SEMANA -->
+  <div class="view" id="v-semana">
+    <h2>Semana</h2>
+    <div class="week" id="semana"></div>
+    <p class="meta">Toque num dia para ver a pauta dele.</p>
+  </div>
+
+  <!-- TODAS -->
+  <div class="view" id="v-todas">
+    <h2>Todas as atividades <button class="btn sm" data-add>+ Atividade</button></h2>
+    <div class="card" id="todas"></div>
+    <h2>Backup</h2>
+    <div class="card">
+      <p class="meta" style="margin-top:0">Por enquanto os dados ficam salvos neste aparelho. Exporte de vez em quando.</p>
+      <button class="btn sm" id="exp">Exportar</button>
+      <button class="btn sm" id="imp">Importar</button>
+      <input type="file" id="impFile" accept="application/json" hidden>
+    </div>
+  </div>
+</main>
+
+<div class="modal" id="modal"><div class="sheet">
+  <h3 id="mTitle">Nova atividade</h3>
+  <div class="f"><label>Atividade</label><input type="text" id="fTitulo" placeholder="Ex.: Postar um vídeo no TikTok"></div>
+  <div class="two">
+    <div class="f"><label>Canal</label><select id="fCanal"></select></div>
+    <div class="f"><label>Horário (opcional)</label><input type="time" id="fHora"></div>
+  </div>
+  <div class="f"><label>Repete</label>
+    <select id="fRec">
+      <option value="daily">Todos os dias</option>
+      <option value="weekly">Dias da semana</option>
+      <option value="monthly">Todo mês, num dia</option>
+      <option value="once">Só uma vez (na data escolhida)</option>
+    </select></div>
+  <div class="f" id="fDiasBox"><label>Dias</label><div class="days" id="fDias"></div></div>
+  <div class="f" id="fDomBox"><label>Dia do mês</label><input type="number" id="fDom" min="1" max="31"></div>
+  <div class="f"><label>Observação (opcional)</label><input type="text" id="fObs" placeholder="Ex.: Aluguel · Rubens · R$ 600,00"></div>
+  <div class="foot">
+    <button class="btn" id="fDel" style="color:#b91c1c">Excluir</button>
+    <div style="display:flex;gap:10px"><button class="btn" id="fCancel">Cancelar</button><button class="btn pri" id="fSave">Salvar</button></div>
+  </div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CANAIS = [
+  ['Obrigações do meu pai','#e6dfcf'],['TikTok','#ddd3f2'],['TikTok Shop','#ddd3f2'],
+  ['Shopee','#fbdcc4'],['Shopee Vídeo','#fbdcc4'],['Tráfego pago','#cfe3fa'],
+  ['Grupos de WhatsApp','#cdeedd'],['Status do WhatsApp','#cdeedd'],['Instagram','#f7d3df'],
+  ['Instagram Bembunitim','#f7d3df'],['Bembunitim','#f7d3df'],['SHEIN','#fbe9b4']
+];
+const COR = Object.fromEntries(CANAIS);
+const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const KEY = 'minhaPauta.v1';
+
+const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
+const SEED = [
+  D('Postar um vídeo no TikTok','TikTok'),
+  D('Postar um vídeo na Shopee Vídeo','Shopee Vídeo'),
+  D('Instagram Bembunitim · postar um Reel do ateliê','Instagram Bembunitim'),
+  D('Postar o 1º Reel de achadinho','Instagram'),
+  D('Postar o 2º Reel de achadinho','Instagram'),
+  D('Verificar pedidos','Bembunitim'),
+  D('Verificar o WhatsApp','Bembunitim'),
+  D('Responder clientes','Bembunitim'),
+  D('Postar o 1º Story','Bembunitim'),
+  D('Postar o 2º Story','Bembunitim'),
+  D('Postar o 3º Story (opcional)','Bembunitim'),
+  D('Postar o 1º produto da Shopee','Status do WhatsApp'),
+  D('Postar o 2º produto da Shopee','Status do WhatsApp'),
+  D('Postar o 1º produto do Mercado Livre','Status do WhatsApp'),
+  D('Postar o 2º produto do Mercado Livre','Status do WhatsApp'),
+  D('Pagamento de remédios','Obrigações do meu pai',{type:'monthly',dom:25},{obs:'Pagamentos · vence todo dia 25'}),
+  D('Casa no Porto Velho','Obrigações do meu pai',{type:'monthly',dom:25},{obs:'Aluguéis · Rubens · R$ 600,00'}),
+  D('Loja no DiviShop','Obrigações do meu pai',{type:'monthly',dom:25},{obs:'Aluguéis · Renata'}),
+  D('Fazendinha — Nossa Senhora da Conceição','Obrigações do meu pai',{type:'monthly',dom:25},{obs:'Aluguéis · Fábio'}),
+  D('Casa — Nossa Senhora da Conceição','Obrigações do meu pai',{type:'monthly',dom:25},{obs:'Aluguéis · Éder'}),
+];
+
+let S = load();
+let view = 'hoje', filtro = 'Todos', editId = null;
+let dia = iso(new Date());
+
+function uid(){return Math.random().toString(36).slice(2,10)}
+function iso(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
+function parse(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+function load(){
+  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts)return r}catch(e){}
+  return {acts:SEED.map(a=>({...a,id:uid()})),done:{}};
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Não consegui salvar neste navegador')}}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
+const $=s=>document.querySelector(s);
+
+function ocorre(a,dateStr){
+  const d=parse(dateStr),r=a.rec||{type:'daily'};
+  if(r.type==='daily')return true;
+  if(r.type==='weekly')return (r.days||[]).includes(d.getDay());
+  if(r.type==='monthly'){
+    const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+    return d.getDate()===Math.min(r.dom||1,last);
+  }
+  if(r.type==='once')return r.date===dateStr;
+  return false;
+}
+function recTxt(a){
+  const r=a.rec||{};
+  if(r.type==='daily')return 'Diária';
+  if(r.type==='weekly')return (r.days||[]).map(i=>DIAS[i]).join(', ');
+  if(r.type==='monthly')return `Todo dia ${r.dom}`;
+  return 'Uma vez';
+}
+const isDone=(id,d)=>!!(S.done[d]&&S.done[d][id]);
+function setDone(id,d,v){
+  S.done[d]=S.done[d]||{};
+  if(v)S.done[d][id]=true;else delete S.done[d][id];
+  save();render();
+}
+function doDia(d){
+  return S.acts.filter(a=>ocorre(a,d)).sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+}
+
+function render(){
+  const dt=parse(dia);
+  $('#dia').value=dia;
+  $('#heroDate').textContent=dt.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  $('#heroTitle').textContent = dia===iso(new Date())?'Minha pauta de hoje':'Pauta do dia';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===view));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+view));
+
+  $('#chips').innerHTML=['Todos',...CANAIS.map(c=>c[0])].map(c=>
+    `<button class="chip ${filtro===c?'on':''}" style="background:${c==='Todos'?'#e9e6ea':COR[c]}" data-c="${c}">${c}</button>`).join('');
+
+  const lista=doDia(dia).filter(a=>filtro==='Todos'||a.canal===filtro);
+  const pend=lista.filter(a=>!isDone(a.id,dia));
+  const row=a=>{
+    const d=isDone(a.id,dia);
+    return `<div class="row ${d?'done':''}">
+      <div class="t">${a.time||'A definir'}</div>
+      <div><div class="ti">${esc(a.title)}</div>
+      <span class="tag" style="background:${COR[a.canal]||'#eee'}">${esc(a.canal)}</span>
+      <span class="meta"> ${recTxt(a)}${a.obs?' · '+esc(a.obs):''}</span></div>
+      <div class="act"><button class="btn sm" data-edit="${a.id}">Editar</button>
+      <label class="check"><input type="checkbox" data-ck="${a.id}" ${d?'checked':''}>Feita</label></div>
+    </div>`};
+  $('#lista').innerHTML=lista.length?lista.map(row).join(''):'<div class="empty">Nenhuma atividade para este dia. Use “+ Atividade”.</div>';
+
+  const f=pend[0];
+  $('#foco').innerHTML=f?`<div class="card focus" style="border-left-color:${COR[f.canal]||'#c2548a'}">
+    <small>PRÓXIMA AÇÃO</small><h3>${esc(f.title)}</h3>
+    <div class="meta">${f.time||'Horário a definir'} · ${esc(f.canal)} · ${recTxt(f)}</div>
+    <div style="margin-top:12px"><label class="check"><input type="checkbox" data-ck="${f.id}">Feita</label></div></div>`
+    :`<div class="card">${lista.length?'🎉 Tudo feito por hoje!':'Sua agenda está em dia.'}</div>`;
+
+  const tot=lista.length,ok=tot-pend.length;
+  $('#progTxt').textContent=`${ok} de ${tot} ações concluídas`;
+  $('#progBar').style.width=(tot?ok/tot*100:0)+'%';
+
+  // semana
+  const ini=new Date(dt);ini.setDate(dt.getDate()-dt.getDay());
+  let w='';
+  for(let i=0;i<7;i++){
+    const d=new Date(ini);d.setDate(ini.getDate()+i);const s=iso(d);
+    const l=doDia(s),n=l.filter(a=>isDone(a.id,s)).length;
+    w+=`<div class="wd ${s===iso(new Date())?'today':''} ${s===dia?'sel':''} ${l.length&&n===l.length?'full':''}" data-d="${s}">
+      <small>${DIAS[i]}</small><b>${d.getDate()}</b><span>${n}/${l.length}</span></div>`;
+  }
+  $('#semana').innerHTML=w;
+
+  // todas
+  $('#todas').innerHTML=S.acts.length?S.acts.map(a=>`<div class="row" style="grid-template-columns:1fr">
+    <div><div class="ti">${esc(a.title)}</div>
+    <span class="tag" style="background:${COR[a.canal]||'#eee'}">${esc(a.canal)}</span>
+    <span class="meta"> ${a.time||'sem horário'} · ${recTxt(a)}${a.obs?' · '+esc(a.obs):''}</span></div>
+    <div class="act"><button class="btn sm" data-edit="${a.id}">Editar</button></div></div>`).join(''):'<div class="empty">Nenhuma atividade.</div>';
+}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+// ---- modal
+function recUI(){
+  const t=$('#fRec').value;
+  $('#fDiasBox').style.display=t==='weekly'?'':'none';
+  $('#fDomBox').style.display=t==='monthly'?'':'none';
+}
+function openModal(id){
+  editId=id||null;
+  const a=id?S.acts.find(x=>x.id===id):{title:'',canal:filtro!=='Todos'?filtro:CANAIS[1][0],time:'',rec:{type:'daily'},obs:''};
+  $('#mTitle').textContent=id?'Editar atividade':'Nova atividade';
+  $('#fTitulo').value=a.title;
+  $('#fCanal').innerHTML=CANAIS.map(c=>`<option ${c[0]===a.canal?'selected':''}>${c[0]}</option>`).join('');
+  $('#fHora').value=a.time||'';
+  $('#fRec').value=a.rec.type;
+  $('#fDias').innerHTML=DIAS.map((d,i)=>`<label><input type="checkbox" value="${i}" ${(a.rec.days||[]).includes(i)?'checked':''}><span>${d}</span></label>`).join('');
+  $('#fDom').value=a.rec.dom||parse(dia).getDate();
+  $('#fObs').value=a.obs||'';
+  $('#fDel').style.visibility=id?'visible':'hidden';
+  recUI();$('#modal').classList.add('open');
+}
+function closeModal(){$('#modal').classList.remove('open')}
+function saveModal(){
+  const title=$('#fTitulo').value.trim();
+  if(!title){toast('Dê um nome para a atividade');return}
+  const type=$('#fRec').value;
+  const rec={type};
+  if(type==='weekly'){rec.days=[...document.querySelectorAll('#fDias input:checked')].map(i=>+i.value);if(!rec.days.length){toast('Escolha ao menos um dia');return}}
+  if(type==='monthly')rec.dom=Math.min(31,Math.max(1,+$('#fDom').value||1));
+  if(type==='once')rec.date=dia;
+  const a={title,canal:$('#fCanal').value,time:$('#fHora').value,rec,obs:$('#fObs').value.trim()};
+  if(editId){Object.assign(S.acts.find(x=>x.id===editId),a)}else S.acts.push({id:uid(),...a});
+  save();closeModal();render();toast('Salvo');
+}
+
+// ---- eventos
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.dataset.v){view=t.dataset.v;render()}
+  else if(t.dataset.c){filtro=t.dataset.c;render()}
+  else if(t.dataset.edit)openModal(t.dataset.edit);
+  else if(t.hasAttribute('data-add'))openModal();
+  else if(t.closest('.wd')){dia=t.closest('.wd').dataset.d;view='hoje';render()}
+});
+document.addEventListener('change',e=>{
+  if(e.target.dataset.ck)setDone(e.target.dataset.ck,dia,e.target.checked);
+});
+$('#dia').onchange=e=>{if(e.target.value){dia=e.target.value;render()}};
+$('#hojeBtn').onclick=()=>{dia=iso(new Date());render()};
+$('#fRec').onchange=recUI;
+$('#fCancel').onclick=closeModal;
+$('#fSave').onclick=saveModal;
+$('#fDel').onclick=()=>{if(confirm('Excluir esta atividade?')){S.acts=S.acts.filter(a=>a.id!==editId);save();closeModal();render()}};
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
+$('#exp').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));
+  a.download='minha-pauta-backup.json';a.click();
+};
+$('#imp').onclick=()=>$('#impFile').click();
+$('#impFile').onchange=async e=>{
+  try{const j=JSON.parse(await e.target.files[0].text());if(!j.acts)throw 0;S=j;save();render();toast('Importado')}catch(x){toast('Arquivo inválido')}
+};
+render();
+</script>
+</body>
+</html>
