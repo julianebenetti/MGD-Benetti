@@ -167,19 +167,20 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v4';
+const KEY = 'minhaPauta.v5';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const SEED = [
   // Shopee Vídeo
   D('Postar 10 vídeos de ofertas relâmpago','Shopee Vídeo',{type:'daily'},{obs:'Produtos abaixo de R$ 49,90 · já impulsionados pela loja vendem mais'}),
-  D('Postar os vídeos diários nas 3 contas','Shopee Vídeo'),
   D('Verificar vendas mensais do item antes de subir','Shopee Vídeo',{type:'daily'},{obs:'Vende agora ou foi bom só meses atrás?'}),
   D('Ranquear o vídeo por retenção','Shopee Vídeo'),
   D('Conferir taxa de conversão','Shopee Vídeo'),
   D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Os vídeos são gerados na madrugada'}),
   D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada anterior'}),
   D('Telegram: enviar os 40 vídeos com os links na aba Envios','Shopee Vídeo',{type:'daily'},{obs:'Canal Shopee Vídeo'}),
+  D('Telegram: conferir os vídeos na aba Editados','Shopee Vídeo',{type:'daily'},{obs:'Ver se há algum vídeo com problema'}),
+  D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado vai pra aba Agendas e posta sozinho'}),
   // Instagram
   D('Postar Reel com sacolinha','Instagram',{type:'daily'},{obs:'Usar o vídeo da Shopee Vídeo e colocar a sacolinha'}),
   D('Postar Reel de teste com sacolinha','Instagram'),
