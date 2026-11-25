@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v17';
+const KEY = 'minhaPauta.v18';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -221,6 +221,7 @@ INSIGHTS['Instagram'] = {
   itens: [
     'Foco agora: <b>tráfego orgânico</b>. Os anúncios (turbinar Reels) estão pausados.',
     'Meta: <b>5 Reels de teste por dia</b>, cada um com a <b>sacolinha</b> do produto pra a pessoa já comprar. Só aumentar se o Instagram aceitar e o alcance se mantiver.',
+    '<b>Limite não oficial</b>: o Instagram não divulga o limite diário dos Reels de teste (fala-se em ~20, mas varia por conta). Não passar de <b>5 a 8 por dia</b> sem acompanhar o alcance; se cair, voltar atrás. Passar do limite da conta pode gerar bloqueio.',
     'Fluxo: vídeo com link → aba <b>Pack</b> → o robô monta a capa → aba <b>Postar</b> → vai sozinho pro Instagram como Reel de teste.',
     'O único passo manual é o <b>link do produto</b> (sub-ID <b>sacolinha</b> + nome do produto), cadastrado em cada Reel dentro do Instagram.'
   ],
