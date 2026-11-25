@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795638031,
-  "updated_at_br": "25/11/2026 17:15",
+  "updated_at": 1795644877,
+  "updated_at_br": "25/11/2026 19:09",
   "period_days": 90,
-  "total_orders": 5656,
-  "total_conversions": 5413,
+  "total_orders": 5653,
+  "total_conversions": 5410,
   "orders": [
     {
       "ID do pedido": "2611257X2JE8QS",
@@ -3182,7 +3182,7 @@
     },
     {
       "ID do pedido": "2611246S488J3R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-24 15:25:44",
       "Sub_id1": "19Nov26VEAcoletesensorialV2",
       "Valor de Compra(R$)": "28.32",
@@ -3194,7 +3194,7 @@
       "Comissao total do pedido(R$)": "0.8496",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Short Saída de Praia Feminino Crochê Moda Verão Tricot Leve Estiloso Look Praia Tendência",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58218243251",
       "ID da loja": "1772999326",
       "Nome da loja": "Ipanema Tricô",
@@ -3202,7 +3202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249233144865184",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-24"
     },
     {
@@ -3282,7 +3282,7 @@
     },
     {
       "ID do pedido": "2611246S488J3M",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-24 15:25:44",
       "Sub_id1": "19Nov26VEAcoletesensorialV2",
       "Valor de Compra(R$)": "75",
@@ -3294,7 +3294,7 @@
       "Comissao total do pedido(R$)": "4.05",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Conjunto Feminino Blusa Regata e Short Com Bolso Cintura Alta Duna Não Amassa Verão",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "19398035948",
       "ID da loja": "587972509",
       "Nome da loja": "JACQUIER STORE",
@@ -3302,7 +3302,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249233144865184",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-24"
     },
     {
@@ -4382,7 +4382,7 @@
     },
     {
       "ID do pedido": "26112465U1MVGR",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-24 09:40:33",
       "Sub_id1": "19Nov26VEAcoletesensorialV2",
       "Valor de Compra(R$)": "67.2",
@@ -4394,7 +4394,7 @@
       "Comissao total do pedido(R$)": "2.016",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Calça Sarja Masculina Plus Size Com 4 Bolso Com Lycra Conforto",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22194967280",
       "ID da loja": "1242844198",
       "Nome da loja": "LUCAS MODAS123",
@@ -4402,7 +4402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249212434847995",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-24"
     },
     {
@@ -6807,7 +6807,7 @@
     },
     {
       "ID do pedido": "2611244F04G4JK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-23 17:19:09",
       "Sub_id1": "",
       "Valor de Compra(R$)": "55.99",
@@ -6819,7 +6819,7 @@
       "Comissao total do pedido(R$)": "1.6797",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vestido Longo Tecido Malha Premium Moda Elegante",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58265938883",
       "ID da loja": "789917167",
       "Nome da loja": "WidiStore_79",
@@ -6827,7 +6827,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249153549806188",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-23"
     },
     {
@@ -9132,7 +9132,7 @@
     },
     {
       "ID do pedido": "2611232MC7J1J9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-22 23:50:05",
       "Sub_id1": "",
       "Valor de Compra(R$)": "28.9",
@@ -9144,7 +9144,7 @@
       "Comissao total do pedido(R$)": "1.2138",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Coador de Café Aço Inox 103 Grande Reutilizável - Filtro Permanente Sem Papel Camada Dupla",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58257969797",
       "ID da loja": "271959144",
       "Nome da loja": "Oceani Imports",
@@ -9152,7 +9152,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249090604898858",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-22"
     },
     {
@@ -14857,7 +14857,7 @@
     },
     {
       "ID do pedido": "261121VCEJKED6",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-21 15:50:46",
       "Sub_id1": "",
       "Valor de Compra(R$)": "19.95",
@@ -14869,7 +14869,7 @@
       "Comissao total do pedido(R$)": "0.5985",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "BARRADO SEMANINHA PARA PANO DE PRATO /TOALHINHAS /7 UNIDADADES - 0,18 cm x 1,45 CMX0,50CM CADA FAIXA",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23994910078",
       "ID da loja": "630889811",
       "Nome da loja": "TalesWEAR",
@@ -14877,7 +14877,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248975446845327",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-21"
     },
     {
@@ -20257,7 +20257,7 @@
     },
     {
       "ID do pedido": "261120S95NWMQA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-20 10:14:08",
       "Sub_id1": "19Nov26VEAconjuntoassimetricoV2",
       "Valor de Compra(R$)": "35.99",
@@ -20269,7 +20269,7 @@
       "Comissao total do pedido(R$)": "1.0797",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Mini Projetor De Luz Noturna Estrela De Astronauta Decoração Para Galáxia Luz De Luminaria Girado Céu Estrelada",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22897433377",
       "ID da loja": "398188570",
       "Nome da loja": "Kaym Black",
@@ -20277,7 +20277,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248868847891853",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-20"
     },
     {
@@ -23307,7 +23307,7 @@
     },
     {
       "ID do pedido": "261119PW4Q2V9R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-19 11:33:31",
       "Sub_id1": "",
       "Valor de Compra(R$)": "79.99",
@@ -23319,7 +23319,7 @@
       "Comissao total do pedido(R$)": "2.3997",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Latas Leite Em Pó Semidesnatado Instantâneo Itambé 300gr",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58269083101",
       "ID da loja": "282789579",
       "Nome da loja": "Shopp Top",
@@ -23327,12 +23327,12 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248787211183008",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-19"
     },
     {
       "ID do pedido": "261119PW4Q2V9Q",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-19 11:33:31",
       "Sub_id1": "",
       "Valor de Compra(R$)": "57.9",
@@ -23344,7 +23344,7 @@
       "Comissao total do pedido(R$)": "1.737",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "2 Latas Leite em Pó Semidesnatado Instantâneo Itambé Lata 300g",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22093695845",
       "ID da loja": "600409991",
       "Nome da loja": "R LANA NUTRIÇÃO E SAÚDE",
@@ -23352,7 +23352,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248787211183008",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-19"
     },
     {
@@ -25182,7 +25182,7 @@
     },
     {
       "ID do pedido": "261119NA9DHFQ9",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-18 20:23:29",
       "Sub_id1": "",
       "Valor de Compra(R$)": "24.43",
@@ -25194,7 +25194,7 @@
       "Comissao total do pedido(R$)": "1.90554",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "psyllium 100% Original 120 capsulas  psyllium Fibra Solúvel Fibra Alimentar",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22793190963",
       "ID da loja": "422233111",
       "Nome da loja": "Nobre_Ervas",
@@ -25202,7 +25202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248732608115246",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-18"
     },
     {
@@ -26657,7 +26657,7 @@
     },
     {
       "ID do pedido": "261118MHVQ4WK7",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-18 13:06:52",
       "Sub_id1": "",
       "Valor de Compra(R$)": "119.7",
@@ -26669,7 +26669,7 @@
       "Comissao total do pedido(R$)": "6.4638",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Unidades Caneca Inox 180ml com Cabo e Tampa Lançamento",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22097326839",
       "ID da loja": "871489241",
       "Nome da loja": "AtacadoMF- Preço e Qualidade",
@@ -26677,7 +26677,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248706412180957",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-18"
     },
     {
@@ -33907,7 +33907,7 @@
     },
     {
       "ID do pedido": "261114ARS5SKBA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-14 15:43:32",
       "Sub_id1": "06Nov26VEAmacaquinhoplus",
       "Valor de Compra(R$)": "19.99",
@@ -33919,7 +33919,7 @@
       "Comissao total do pedido(R$)": "0.5997",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Palmilha Ortopédica Gel 4D Nuvem Plantar Esporão Alto Conforto Anatômica Absorção Corrige Pisada",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58259851961",
       "ID da loja": "784998133",
       "Nome da loja": "LOJA KTW CRISTAIS",
@@ -33927,7 +33927,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248370212134658",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-14"
     },
     {
@@ -34407,7 +34407,7 @@
     },
     {
       "ID do pedido": "26111495K5X9T1",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-14 00:27:30",
       "Sub_id1": "28Out26VEAtapetehigienicoV3",
       "Valor de Compra(R$)": "79.9",
@@ -34419,7 +34419,7 @@
       "Comissao total do pedido(R$)": "3.5955",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Tapete Higiênico Para Cachorro 50 Unidades 50x60cm Com Gel Absorvente Fralda Manta Pet Cão",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "44915338553",
       "ID da loja": "1505860882",
       "Nome da loja": "Usual Mix",
@@ -34427,7 +34427,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248315250121549",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-14"
     },
     {
@@ -39982,7 +39982,7 @@
     },
     {
       "ID do pedido": "26111240MURM05",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-11 23:15:39",
       "Sub_id1": "10Nov26VEAbebeabigail",
       "Valor de Compra(R$)": "44.9",
@@ -39994,7 +39994,7 @@
       "Comissao total do pedido(R$)": "2.694",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Luminária Emergência 30 Leds Recarregável Bivolt Glight",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "54717528884",
       "ID da loja": "819132141",
       "Nome da loja": "Acabamentos Frei Galvão",
@@ -40002,7 +40002,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248138139164604",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-11"
     },
     {
@@ -41157,7 +41157,7 @@
     },
     {
       "ID do pedido": "2611123K39NGJ0",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-11 19:13:12",
       "Sub_id1": "06Nov26VEAmacaquinhoamarracao",
       "Valor de Compra(R$)": "94.49",
@@ -41169,7 +41169,7 @@
       "Comissao total do pedido(R$)": "5.6694",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "2 Tubos Fixodent Original Creme Fixador de Prótese 68g - O Melhor Preço do Brasil",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58201720660",
       "ID da loja": "1548696999",
       "Nome da loja": "Evandro Jose Da Silva Magazine",
@@ -41177,7 +41177,7 @@
       "buyerType": "NEW",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248123591114071",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-11"
     },
     {
@@ -42382,7 +42382,7 @@
     },
     {
       "ID do pedido": "26111133XCGF9R",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-11 14:42:03",
       "Sub_id1": "06Nov26VEAconjuntoalcinha",
       "Valor de Compra(R$)": "56.9",
@@ -42394,7 +42394,7 @@
       "Comissao total do pedido(R$)": "4.0968",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit 3 Tecido Reposição para Cadeira de Praia Refil Tecido Escolha a Cor",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "20899678420",
       "ID da loja": "655544349",
       "Nome da loja": "GahsEcommerce",
@@ -42402,7 +42402,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248107320197308",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-11"
     },
     {
@@ -141327,81 +141327,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241568035107029",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-27"
-    },
-    {
-      "ID do pedido": "260828GGS1JEFC",
-      "Status do Pedido": "CANCELLED",
-      "Horario do pedido": "2026-08-27 22:09:36",
-      "Sub_id1": "26Ago26VIPtopajustavel",
-      "Valor de Compra(R$)": "0",
-      "Comissao liquida do afiliado(R$)": "0",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "1.50%",
-      "Comissao Shopee(R$)": "0",
-      "Comissao do vendedor(R$)": "0",
-      "Comissao total do pedido(R$)": "0",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Max Blazer Longo neoprene Sobretudo Feminina Acinturado",
-      "Status do item do afiliado": "CANCELLED",
-      "ID do item": "7194943392",
-      "ID da loja": "491787282",
-      "Nome da loja": "ACOTONYFASHION",
-      "Quantidade": "0",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241567776195337",
-      "conversionStatus": "CANCELLED",
-      "data": "2026-08-27"
-    },
-    {
-      "ID do pedido": "260828GEE6T9G2",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-27 21:27:45",
-      "Sub_id1": "31Jul26VIPcalcinhaalgodao",
-      "Valor de Compra(R$)": "52.97",
-      "Comissao liquida do afiliado(R$)": "10.56752",
-      "Taxa de comissao Shopee do item": "8.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "4.2376",
-      "Comissao do vendedor(R$)": "6.8861",
-      "Comissao total do pedido(R$)": "11.1237",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21555426052",
-      "ID da loja": "653366546",
-      "Nome da loja": "Atacado Rylú",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "241565265119669",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-27"
-    },
-    {
-      "ID do pedido": "260828GE78MEXW",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-27 21:23:53",
-      "Sub_id1": "31Jul26VIPcalcinhaalgodao",
-      "Valor de Compra(R$)": "52.97",
-      "Comissao liquida do afiliado(R$)": "10.56752",
-      "Taxa de comissao Shopee do item": "8.00%",
-      "Taxa de comissao do vendedor do item": "13.00%",
-      "Comissao Shopee(R$)": "4.2376",
-      "Comissao do vendedor(R$)": "6.8861",
-      "Comissao total do pedido(R$)": "11.1237",
-      "Tipo de atribuicao": "Pedido na mesma loja",
-      "Nome do Item": "kit 10 ou 5 Calcinhas lisas tanga básica 100% algodão antialérgica  - 101",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "21555426052",
-      "ID da loja": "653366546",
-      "Nome da loja": "Atacado Rylú",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_SAME_SHOP",
-      "conversionId": "241565032133470",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-27"
     }
