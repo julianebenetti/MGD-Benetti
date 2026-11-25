@@ -80,6 +80,15 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
 .insight h3{margin:0 0 8px;font-size:17px}
 .insight ul{margin:0;padding-left:20px;line-height:1.5;font-size:15px}
 .insight li{margin-bottom:5px}
+.alerta{background:#fde8e8;border:2px solid #e04848;color:#7a1414;border-radius:var(--r);padding:14px 16px;margin-bottom:12px;font-weight:700;line-height:1.4}
+.lotes{margin-bottom:6px}
+.lote{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-bottom:1px solid var(--line)}
+.lote:last-child{border:0}
+.pill{display:inline-block;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:800;background:#eee}
+.pill.hoje,.pill.venc{background:#e04848;color:#fff}
+.pill.amanha{background:#f6a23b;color:#fff}
+.pill.ok{background:#d9f0e2;color:#1d6b43}
+.lote .act2{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .view{display:none}.view.on{display:block}
 </style>
 </head>
@@ -109,6 +118,8 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
 
   <!-- HOJE -->
   <div class="view on" id="v-hoje">
+    <div id="alerta"></div>
+    <div id="lotesBox"></div>
     <div id="insights"></div>
     <h2>Em foco</h2>
     <div id="foco"></div>
@@ -161,6 +172,21 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
     <div style="display:flex;gap:10px"><button class="btn" id="fCancel">Cancelar</button><button class="btn pri" id="fSave">Salvar</button></div>
   </div>
 </div></div>
+<div class="modal" id="modalL"><div class="sheet">
+  <h3 id="lTitle">Novo lote da LIA</h3>
+  <div class="two">
+    <div class="f"><label>Gerado em</label><input type="date" id="lGerado"></div>
+    <div class="f"><label>Expira em</label><input type="date" id="lExpira"></div>
+  </div>
+  <div class="two">
+    <div class="f"><label>Quantidade de vídeos</label><input type="number" id="lQtd" min="1"></div>
+    <div class="f"><label>Observação (opcional)</label><input type="text" id="lObs"></div>
+  </div>
+  <div class="foot">
+    <button class="btn" id="lDel" style="color:#b91c1c">Excluir</button>
+    <div style="display:flex;gap:10px"><button class="btn" id="lCancel">Cancelar</button><button class="btn pri" id="lSave">Salvar</button></div>
+  </div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -172,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v9';
+const KEY = 'minhaPauta.v10';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -192,8 +218,8 @@ const INSIGHTS = {
 };
 const SEED = [
   // Shopee Vídeo
-  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · vão ser usados daqui a 2 dias'}),
-  D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Os que foram gerados há 2 dias'}),
+  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · cada lote tem prazo: veja Lotes da LIA'}),
+  D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Baixar antes de expirar: comece pelo lote que vence primeiro (Lotes da LIA)'}),
   D('Telegram: enviar os 40 vídeos com os links na aba Envios','Shopee Vídeo',{type:'daily'},{obs:'Canal Shopee Vídeo'}),
   D('Telegram: conferir os vídeos na aba Editados e descartar os com problema','Shopee Vídeo',{type:'daily'},{obs:'Descartar evita punição (pontuação negativa) na Shopee Vídeo'}),
   D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado o vídeo vai pra aba Agendas'}),
@@ -219,8 +245,8 @@ function uid(){return Math.random().toString(36).slice(2,10)}
 function iso(d){const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
 function parse(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
 function load(){
-  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts)return r}catch(e){}
-  return {acts:SEED.map(a=>({...a,id:uid()})),done:{}};
+  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts){r.lotes=r.lotes||[];return r}}catch(e){}
+  return {acts:SEED.map(a=>({...a,id:uid()})),done:{},lotes:[]};
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Não consegui salvar neste navegador')}}
 function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
@@ -264,6 +290,30 @@ function render(){
 
   $('#chips').innerHTML=['Todos',...CANAIS.map(c=>c[0])].map(c=>
     `<button class="chip ${filtro===c?'on':''}" style="background:${c==='Todos'?'#e9e6ea':COR[c]}" data-c="${c}">${c}</button>`).join('');
+
+  // lotes da LIA (prazo de validade dos vídeos)
+  const hojeS=iso(new Date());
+  const dd=e=>Math.round((parse(e)-parse(hojeS))/86400000);
+  const dm=x=>x.slice(8)+'/'+x.slice(5,7);
+  const pend2=S.lotes.filter(l=>!l.baixado||!l.enviado).sort((a,b)=>a.expira.localeCompare(b.expira));
+  const risco=S.lotes.filter(l=>!l.baixado&&dd(l.expira)<=0);
+  $('#alerta').innerHTML=risco.length?risco.map(l=>{const n=dd(l.expira);
+    return `<div class="alerta">⚠️ ${n===0?'O lote de '+l.qtd+' vídeos expira HOJE':'O lote de '+l.qtd+' vídeos venceu há '+(-n)+' dia(s)'}. ${n===0?'Baixe agora na LIA Vídeos antes de perder!':'Confira na LIA Vídeos se ainda dá pra baixar.'}</div>`}).join(''):'';
+  const mostrarLotes=filtro==='Todos'||filtro==='Shopee Vídeo';
+  $('#lotesBox').innerHTML=mostrarLotes?`<h2>📦 Lotes da LIA <button class="btn sm" id="lAdd">+ Lote</button></h2><div class="card lotes">`+
+    (pend2.length?pend2.map(l=>{
+      const n=dd(l.expira);
+      let cls,txt;
+      if(l.baixado){cls='ok';txt='baixado'}
+      else if(n<0){cls='venc';txt='vencido há '+(-n)+' dia(s)'}
+      else if(n===0){cls='hoje';txt='expira HOJE'}
+      else if(n===1){cls='amanha';txt='expira amanhã'}
+      else{cls='';txt='expira em '+n+' dias ('+dm(l.expira)+')'}
+      return `<div class="lote"><div><b>${l.qtd} vídeos</b> · gerado ${l.gerado?dm(l.gerado):'—'} <span class="pill ${cls}">${txt}</span>${l.obs?'<div class="meta">'+esc(l.obs)+'</div>':''}</div>
+      <div class="act2"><label class="check"><input type="checkbox" data-lb="${l.id}" ${l.baixado?'checked':''}>Baixado</label>
+      <label class="check"><input type="checkbox" data-le="${l.id}" ${l.enviado?'checked':''}>No Telegram</label>
+      <button class="btn sm" data-ledit="${l.id}">Editar</button></div></div>`}).join('')
+    :'<div class="empty">Nenhum lote pendente. Quando mandar gerar um lote na LIA, cadastre aqui com a data em que ele expira.</div>')+'</div>':'';
 
   const ins=INSIGHTS[filtro];
   $('#insights').innerHTML=ins?`<div class="insight"><h3>💡 Insights · ${esc(filtro)}</h3><b style="font-size:14px">${ins.titulo}</b><ul>${ins.itens.map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
@@ -358,6 +408,39 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   if(e.target.dataset.ck)setDone(e.target.dataset.ck,dia,e.target.checked);
+});
+let editL=null;
+function openL(id){
+  editL=id||null;
+  const l=id?S.lotes.find(x=>x.id===id):{gerado:iso(new Date()),expira:'',qtd:40,obs:''};
+  $('#lTitle').textContent=id?'Editar lote':'Novo lote da LIA';
+  $('#lGerado').value=l.gerado||'';$('#lExpira').value=l.expira||'';$('#lQtd').value=l.qtd;$('#lObs').value=l.obs||'';
+  $('#lDel').style.visibility=id?'visible':'hidden';
+  $('#modalL').classList.add('open');
+}
+const closeL=()=>$('#modalL').classList.remove('open');
+$('#lCancel').onclick=closeL;
+$('#modalL').onclick=e=>{if(e.target.id==='modalL')closeL()};
+$('#lSave').onclick=()=>{
+  const expira=$('#lExpira').value;
+  if(!expira){toast('Informe quando o lote expira');return}
+  const d={gerado:$('#lGerado').value,expira,qtd:+$('#lQtd').value||40,obs:$('#lObs').value.trim()};
+  if(editL)Object.assign(S.lotes.find(x=>x.id===editL),d);else S.lotes.push({id:uid(),baixado:false,enviado:false,...d});
+  save();closeL();render();toast('Lote salvo');
+};
+$('#lDel').onclick=()=>{if(confirm('Excluir este lote?')){S.lotes=S.lotes.filter(x=>x.id!==editL);save();closeL();render()}};
+document.addEventListener('click',e=>{
+  const t=e.target;
+  if(t.id==='lAdd')openL();
+  else if(t.dataset.ledit)openL(t.dataset.ledit);
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  const l=S.lotes.find(x=>x.id===(t.dataset.lb||t.dataset.le));
+  if(!l)return;
+  if(t.dataset.lb)l.baixado=t.checked;
+  if(t.dataset.le)l.enviado=t.checked;
+  save();render();
 });
 $('#dia').onchange=e=>{if(e.target.value){dia=e.target.value;render()}};
 $('#hojeBtn').onclick=()=>{dia=iso(new Date());render()};
