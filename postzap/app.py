@@ -1778,7 +1778,22 @@ def receber_webhook(payload):
         ctx = ((msg.get('extendedTextMessage') or {}).get('contextInfo') or (msg.get('imageMessage') or {}).get('contextInfo')
                or data.get('contextInfo') or {})
         citado = ctx.get('stanzaId') or ''         # respondeu em cima de qual mensagem
+        if not jid.endswith('@g.us') and not parece_comando(texto, citado) and not (conversa_get(jid) or {}).get('esperando'):
+            return                               # conversa normal no privado entre admins: o robô fica quieto
         threading.Thread(target=tratar_mensagem, args=(inst, jid, texto, info, citado), daemon=True).start()
+
+
+def parece_comando(texto, citado=''):
+    """No privado, o robô só responde a admin quando é coisa pra ele: link, /todos, comando de post ou resposta em cima de uma prévia."""
+    t = texto.strip().lower()
+    if re.search(r'https?://', t) or t.startswith('/todos') or re.match(r'^#?\d+(\s|$)', t):
+        return True
+    if t in ('pendentes', 'fila', 'lista') or t.startswith('aprovar todos'):
+        return True
+    if citado:
+        with db() as c:
+            return bool(c.execute('SELECT 1 FROM previas WHERE msg_id=?', (citado,)).fetchone())
+    return False
 
 
 _filas_conversa = {}
