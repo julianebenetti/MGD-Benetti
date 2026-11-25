@@ -162,31 +162,14 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
 const CANAIS = [
   ['TikTok','#ddd3f2'],['TikTok Shop','#ddd3f2'],
   ['Shopee','#fbdcc4'],['Shopee Vídeo','#fbdcc4'],['Tráfego pago','#cfe3fa'],
-  ['Grupos de WhatsApp','#cdeedd'],['Status do WhatsApp','#cdeedd'],['Instagram','#f7d3df'],
-  ['Instagram Bembunitim','#f7d3df'],['Bembunitim','#f7d3df'],['SHEIN','#fbe9b4']
+  ['Grupos de WhatsApp','#cdeedd'],['Status do WhatsApp','#cdeedd'],['Instagram','#f7d3df']
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v1';
+const KEY = 'minhaPauta.v2';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
-const SEED = [
-  D('Postar um vídeo no TikTok','TikTok'),
-  D('Postar um vídeo na Shopee Vídeo','Shopee Vídeo'),
-  D('Instagram Bembunitim · postar um Reel do ateliê','Instagram Bembunitim'),
-  D('Postar o 1º Reel de achadinho','Instagram'),
-  D('Postar o 2º Reel de achadinho','Instagram'),
-  D('Verificar pedidos','Bembunitim'),
-  D('Verificar o WhatsApp','Bembunitim'),
-  D('Responder clientes','Bembunitim'),
-  D('Postar o 1º Story','Bembunitim'),
-  D('Postar o 2º Story','Bembunitim'),
-  D('Postar o 3º Story (opcional)','Bembunitim'),
-  D('Postar o 1º produto da Shopee','Status do WhatsApp'),
-  D('Postar o 2º produto da Shopee','Status do WhatsApp'),
-  D('Postar o 1º produto do Mercado Livre','Status do WhatsApp'),
-  D('Postar o 2º produto do Mercado Livre','Status do WhatsApp'),
-];
+const SEED = []; // começa vazio: as atividades são cadastradas pela própria Juliane
 
 let S = load();
 let view = 'hoje', filtro = 'Todos', editId = null;
@@ -295,7 +278,7 @@ function recUI(){
 }
 function openModal(id){
   editId=id||null;
-  const a=id?S.acts.find(x=>x.id===id):{title:'',canal:filtro!=='Todos'?filtro:CANAIS[1][0],time:'',rec:{type:'daily'},obs:''};
+  const a=id?S.acts.find(x=>x.id===id):{title:'',canal:filtro!=='Todos'?filtro:CANAIS[0][0],time:'',rec:{type:'daily'},obs:''};
   $('#mTitle').textContent=id?'Editar atividade':'Nova atividade';
   $('#fTitulo').value=a.title;
   $('#fCanal').innerHTML=CANAIS.map(c=>`<option ${c[0]===a.canal?'selected':''}>${c[0]}</option>`).join('');
