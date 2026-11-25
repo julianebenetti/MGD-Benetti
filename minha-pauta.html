@@ -167,7 +167,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v5';
+const KEY = 'minhaPauta.v6';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const SEED = [
@@ -180,7 +180,8 @@ const SEED = [
   D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada anterior'}),
   D('Telegram: enviar os 40 vídeos com os links na aba Envios','Shopee Vídeo',{type:'daily'},{obs:'Canal Shopee Vídeo'}),
   D('Telegram: conferir os vídeos na aba Editados','Shopee Vídeo',{type:'daily'},{obs:'Ver se há algum vídeo com problema'}),
-  D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado vai pra aba Agendas e posta sozinho'}),
+  D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado o vídeo vai pra aba Agendas'}),
+  D('Telegram: autorizar a postagem nas 3 contas (aba Postagens)','Shopee Vídeo',{type:'daily'},{obs:'Os vídeos agendados aparecem na 1ª aba; depois de autorizar, postam sozinhos'}),
   // Instagram
   D('Postar Reel com sacolinha','Instagram',{type:'daily'},{obs:'Usar o vídeo da Shopee Vídeo e colocar a sacolinha'}),
   D('Postar Reel de teste com sacolinha','Instagram'),
