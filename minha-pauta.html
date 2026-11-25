@@ -198,7 +198,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v19';
+const KEY = 'minhaPauta.v20';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -235,6 +235,21 @@ INSIGHTS['Facebook'] = {
     'Estratégia aprendida num grupo e que <b>tem gerado bastante venda</b>: testar.',
     'Passo a passo: pegar a imagem do produto no <b>Mercado Livre</b> → recriar no <b>Gemini</b>, estilizada e com as informações do produto → postar no <b>feed</b> com o link do produto na <b>legenda</b> → repetir o link no <b>1º comentário</b>.',
     'Quantidade de posts por dia: <b>a definir</b>.'
+  ]
+};
+INSIGHTS['TikTok'] = {
+  titulo: 'Canal em pausa',
+  itens: [
+    'Sei que dá pra vender pelo TikTok, mas <b>por enquanto não consigo trabalhar nele</b>. Sem rotina por agora.',
+    'Quando voltar, desenhar a rotina aqui.'
+  ]
+};
+INSIGHTS['TikTok Shop'] = INSIGHTS['TikTok'];
+INSIGHTS['Pinterest'] = {
+  titulo: 'Canal em pausa',
+  itens: [
+    'Sei que dá pra vender pelo Pinterest, mas <b>por enquanto não consigo trabalhar nele</b>. Sem rotina por agora.',
+    'Quando começar, desenhar a rotina aqui.'
   ]
 };
 const SEED = [
