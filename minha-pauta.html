@@ -172,7 +172,7 @@ const CANAIS = [
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const KEY = 'minhaPauta.v8';
+const KEY = 'minhaPauta.v9';
 
 const D = (t,c,rec={type:'daily'},extra={}) => ({title:t,canal:c,time:'',rec,obs:'',...extra});
 const INSIGHTS = {
@@ -192,12 +192,12 @@ const INSIGHTS = {
 };
 const SEED = [
   // Shopee Vídeo
-  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Os vídeos são gerados na madrugada'}),
-  D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada anterior'}),
+  D('LIA Vídeos: colocar os 40 links e mandar gerar','Shopee Vídeo',{type:'daily'},{obs:'Gerados na madrugada · vão ser usados daqui a 2 dias'}),
+  D('LIA Vídeos: baixar os 40 vídeos criados','Shopee Vídeo',{type:'daily'},{obs:'Os que foram gerados há 2 dias'}),
   D('Telegram: enviar os 40 vídeos com os links na aba Envios','Shopee Vídeo',{type:'daily'},{obs:'Canal Shopee Vídeo'}),
   D('Telegram: conferir os vídeos na aba Editados e descartar os com problema','Shopee Vídeo',{type:'daily'},{obs:'Descartar evita punição (pontuação negativa) na Shopee Vídeo'}),
   D('Telegram: colocar as variações e mandar aprovar','Shopee Vídeo',{type:'daily'},{obs:'Depois de aprovado o vídeo vai pra aba Agendas'}),
-  D('Telegram: autorizar a postagem nas 3 contas (aba Postagens)','Shopee Vídeo',{type:'daily'},{obs:'Fazer antes das 9h: as postagens saem às 9h, 11h, 13h, 17h, 19h e 20h'}),
+  D('Telegram: autorizar a postagem nas 3 contas (aba Postagens)','Shopee Vídeo',{type:'daily'},{obs:'As postagens saem às 9h, 11h, 13h, 17h, 19h e 20h'}),
   // Instagram
   D('Postar Reel com sacolinha','Instagram',{type:'daily'},{obs:'Usar o vídeo da Shopee Vídeo e colocar a sacolinha'}),
   D('Postar Reel de teste com sacolinha','Instagram'),
