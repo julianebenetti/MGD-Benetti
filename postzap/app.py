@@ -2386,6 +2386,7 @@ ENG_PADRAO = {
     'inbox_chips': [],                      # chips que atendem pedidos (vazio = todos); desmarque o seu WhatsApp pessoal
     'inbox_silencio_h': 12,                 # se VOCÊ falou com a pessoa nas últimas X horas, o robô fica quieto
     'monitor_ativo': False, 'monitor_grupos': [], 'monitor_telegram': [],
+    'monitor_cupons': True, 'cupom_validade_h': 3,   # cupons achados: liga/desliga e some sozinho depois de N horas (pode ter acabado)
 }
 
 
@@ -3201,7 +3202,7 @@ def processar_achado(texto, fonte, midia=None):
             continue
         except Exception as e:
             log.warning(f'Monitor: {e}')
-    if not shopee and CUPOM_RE.search(texto):     # cupom/bug sem link da Shopee: vira aviso para revisar (sem links de outros)
+    if not shopee and CUPOM_RE.search(texto) and eng_cfg().get('monitor_cupons', True):     # cupom/bug sem link da Shopee: vira aviso para revisar (sem links de outros)
         limpo = re.sub(r'https?://\S+', '', texto).strip()
         dados_c = {}
         if midia:                                # mantém a foto da mensagem original pra você conseguir avaliar
@@ -3288,8 +3289,35 @@ def agenda_de_hoje():
     return {'itens': sorted(out, key=lambda x: x['hora']), 'convite_proximo': prox}
 
 
+def _avisos_agendados():
+    with db() as c:
+        return c.execute("SELECT id, produto, agendado_para FROM fila WHERE origem='aviso' AND status='aprovado' AND agendado_para>? "
+                         "ORDER BY agendado_para", (agora().isoformat()[:16],)).fetchall()
+
+
+def vencer_cupons():
+    """Cupom achado que ninguém aprovou em N horas provavelmente acabou: sai da aprovação sozinho."""
+    horas = int(eng_cfg().get('cupom_validade_h', 3))
+    with _lock, db() as c:
+        c.execute("UPDATE fila SET status='descartado', erro='cupom vencido (não aprovado a tempo)' WHERE status='rascunho' "
+                  "AND chave LIKE 'cupom:%' AND criado_em<?", ((agora() - timedelta(hours=horas)).isoformat(),))
+
+
+def grupos_em_uso():
+    """Grupos que receberam posts nos últimos 30 dias (ou os marcados em 👥 Grupos)."""
+    with db() as c:
+        usados = [r[0] for r in c.execute("SELECT DISTINCT jid FROM envios WHERE ok=1 AND quando>=?",
+                                          ((agora() - timedelta(days=30)).isoformat(),))]
+    fila = grupos_fila()
+    return [j for j in usados if j not in fila] or grupos_ativos()
+
+
 def agenda_engajamento():
     while True:
+        try:
+            vencer_cupons()
+        except Exception as ex:
+            log.warning(f'Cupons vencidos: {ex}')
         try:
             e = eng_cfg()
             hoje, hm = agora().date().isoformat(), agora().strftime('%H:%M')
@@ -3651,7 +3679,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send_json(dict(eng_cfg(), votos=resultado_votos(7), pedidos=pedidos, enquete_hoje={'pergunta': pq, 'opcoes': po},
                                            link_pedido=link_pedido() if eng_cfg().get('inbox_ativo') else '',
                                            chips=[{'chip': i, **{k: v for k, v in historico_chip(i).items() if k == 'eventos'}} for i in instancias()],
-                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), amiga_img=AMIGA_IA.exists(), amiga_img_status=get_cfg('amiga_img_status', ''), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], amiga_lista=[j for j, _ in grupos_para_amiga()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
+                                           enquete_hora_hoje=hora_da_enquete(), convite_imgs=[Path(x).name for x in imagens_convite()], convite_suas=bool(get_json('convite_imgs', [])), monitor_stat=get_json('monitor_stat', {}), agenda_hoje=agenda_de_hoje(), avisos_agendados=[dict(r) for r in _avisos_agendados()], grupos_uso=len(grupos_em_uso()), amiga_img=AMIGA_IA.exists(), amiga_img_status=get_cfg('amiga_img_status', ''), grupos_admin=[{'jid': j, 'nome': n} for j, n in _grupos_admin()], amiga_lista=[j for j, _ in grupos_para_amiga()], banco_padrao={'dia': BANCO_DIA, 'noite': BANCO_NOITE},
                                            pacotes=[{'pergunta': a, 'opcoes': o} for a, o in PACOTES_ENQUETE],
                                            opcoes_possiveis=NICHOS + focos_nomes()))
             if p == '/api/historico':
@@ -3901,7 +3929,7 @@ class H(BaseHTTPRequestHandler):
                                                  'preco': br(n.get('priceMin'))} for n in minerar()]})
         if p == '/api/engajamento':
             e = eng_cfg()
-            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'noite_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo', 'convite_ativo', 'amiga_ativo'):
+            for k in ('msg_ativo', 'msg_imagem', 'noite_ativo', 'noite_imagem', 'enquete_ativo', 'aprovar', 'inbox_ativo', 'monitor_ativo', 'convite_ativo', 'amiga_ativo', 'monitor_cupons'):
                 if k in b:
                     e[k] = bool(b[k])
             if b.get('enquete_hora_modo') in ('aleatorio', 'fixo'):
@@ -3912,6 +3940,8 @@ class H(BaseHTTPRequestHandler):
                 e['enquete_modo'] = b['enquete_modo']
             if str(b.get('enquete_troca_dias', '')).isdigit():
                 e['enquete_troca_dias'] = max(1, min(14, int(b['enquete_troca_dias'])))
+            if str(b.get('cupom_validade_h', '')).isdigit():
+                e['cupom_validade_h'] = max(1, min(72, int(b['cupom_validade_h'])))
             if isinstance(b.get('amiga_dias'), list):
                 e['amiga_dias'] = sorted({int(x) for x in b['amiga_dias'] if str(x).isdigit() and int(x) < 7})
             if isinstance(b.get('amiga_grupos'), list):
@@ -4103,6 +4133,35 @@ class H(BaseHTTPRequestHandler):
             sit = situacao_produto(ids)
             return self.send_json({'msg': ('🔁 Esse produto ' + aviso_repetido(sit).replace('*', '') + '.') if (sit['fila'] or sit['saiu'])
                                    else '✅ Produto novo: nunca passou pelo PostZap. Pode mandar!'})
+        if p == '/api/aviso/agendar':                # 📣 aviso com arte, sai sozinho nos horários escolhidos (sem aprovação)
+            import base64
+            texto = str(b.get('texto') or '').strip()[:3000]
+            horarios = [h for h in (b.get('horarios') or []) if re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}', str(h))]
+            if not horarios or not (texto or b.get('imagem')):
+                return self.send_json({'erro': 'escreva a mensagem (ou ponha a arte) e escolha pelo menos um horário'}, 400)
+            dados = {}
+            m = re.match(r'data:image/(png|jpeg|jpg|webp);base64,(.+)', str(b.get('imagem') or ''), re.S)
+            if m:
+                MIDIA_DIR.mkdir(exist_ok=True)
+                arq = MIDIA_DIR / f"aviso_{int(time.time())}.b64"
+                arq.write_text(reduzir_imagem(m.group(2)))
+                dados = {'midia': str(arq), 'midia_tipo': 'image', 'mimetype': 'image/jpeg'}
+            grupos = [g for g in (b.get('grupos') or []) if str(g).endswith('@g.us')] or grupos_em_uso()
+            if not grupos:
+                return self.send_json({'erro': 'nenhum grupo encontrado: marque os grupos em 👥 Grupos'}, 400)
+            ids = []
+            with _lock, db() as c:
+                for h in sorted(set(horarios)):
+                    cur = c.execute('INSERT INTO fila (origem, chave, produto, texto, grupos, criado_em, dados, status, aprovado_em, agendado_para) '
+                                    'VALUES (?,?,?,?,?,?,?,?,?,?)',
+                                    ('aviso', '', '📣 ' + (str(b.get('titulo') or '').strip() or (texto.split(chr(10))[0][:50] or 'Aviso')),
+                                     texto, json.dumps(grupos), agora().isoformat(), json.dumps(dados), 'aprovado', agora().isoformat(), h + ':00'))
+                    ids.append(cur.lastrowid)
+            return self.send_json({'ids': ids, 'grupos': len(grupos)})
+        if p == '/api/aviso/cancelar':
+            with _lock, db() as c:
+                c.execute("UPDATE fila SET status='descartado' WHERE id=? AND origem='aviso' AND status='aprovado'", (int(b.get('id') or 0),))
+            return self.send_json({'ok': True})
         if p == '/api/fila/foto_pinterest':        # ✨ foto estilo Pinterest (em segundo plano) | volta a original
             fid = int(b.get('id') or 0)
             if b.get('original'):
