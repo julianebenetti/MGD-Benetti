@@ -89,6 +89,9 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
 .pill.amanha{background:#f6a23b;color:#fff}
 .pill.ok{background:#d9f0e2;color:#1d6b43}
 .lote .act2{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.conta{padding:12px 0;border-bottom:1px solid var(--line)}
+.conta:last-child{border:0}
+.cf{margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .view{display:none}.view.on{display:block}
 </style>
 </head>
@@ -99,6 +102,7 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
     <button data-v="hoje" class="on">🕒 Hoje</button>
     <button data-v="semana">📅 Pauta semanal</button>
     <button data-v="todas">🗂 Atividades</button>
+    <button data-v="contas">👤 Contas</button>
   </nav>
 </div></header>
 
@@ -147,6 +151,11 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
       <button class="btn sm" id="imp">Importar</button>
       <input type="file" id="impFile" accept="application/json" hidden>
     </div>
+  </div>
+  <!-- CONTAS -->
+  <div class="view" id="v-contas">
+    <p class="meta">Só dados de identificação, pra copiar rápido. <b>Nunca coloque senhas, códigos de verificação ou tokens aqui.</b></p>
+    <div id="contas"></div>
   </div>
 </main>
 
@@ -241,6 +250,37 @@ INSIGHTS['Facebook'] = {
     '<b>Ligar o robô</b>: gerar o token da Página no app da Meta, guardar no .env do VPS e copiar a pasta facebook-post (o passo a passo está no README dela). Depois, ligar na Central de Post Instagram/Meta.'
   ]
 };
+const CONTAS = [
+  { titulo: '📸 Instagram', itens: [
+    { nome: 'BBC', sub: '@bbestchoice_ (confirmar)', link: 'https://instagram.com/bbestchoice_',
+      campos: [['ID do Instagram (painel da Meta)', '1174215722445866', true]],
+      nota: 'Em 26/11 o Central Post recebeu "Application does not have permission for this action" ao publicar automaticamente nesta conta (provável). Investigar.' },
+    { nome: 'vip', sub: 'etiqueta do Central Post', campos: [['@ do Instagram', 'a preencher']] },
+    { nome: 'vea', sub: 'etiqueta do Central Post', campos: [['@ do Instagram', 'a preencher']] }
+  ]},
+  { titulo: '🛍️ Shopee Vídeo · contas da LiA', itens: [
+    { nome: 'achadosrelampagos2', sub: 'perfil: cenira', campos: [['ID de afiliado', '18361131385', true], ['Aparelho da LiA', 'Celular da Valentina']],
+      nota: 'Chave de segurança não configurada. Ocupação e nicho de categoria não preenchidos (14/11/2026).' },
+    { nome: 'benetti_shop_', sub: 'perfil: Benetti Shop', campos: [['ID de afiliado', '18328170891', true], ['Aparelho da LiA', 'Celular da Valentina'], ['Ocupação', 'Criador de conteúdo em tempo integral']] },
+    { nome: 'pedrita.bambam.store', campos: [['Aparelho da LiA', 'Celular da Valentina'], ['ID de afiliado', 'não informado']],
+      nota: 'Teve um vídeo removido por "Produto irrelevante" em 12/10/2026 (histórico).' }
+  ]},
+  { titulo: '🆕 Shopee Vídeo · contas em criação', itens: [
+    { nome: 'creatorlucabenetti01', sub: 'a criar', campos: [['Nome do e-mail', 'Creator Luca Benetti']], nota: 'Usuário e nicho a definir.' },
+    { nome: 'creatorlucabenetti02', sub: 'a criar', campos: [['Nome do e-mail', 'Creator Luca Benetti']], nota: 'Usuário e nicho a definir.' },
+    { nome: 'creatorlucabenetti03', sub: 'a criar', campos: [['Nome do e-mail', 'Creator Luca Benetti']], nota: 'Usuário e nicho a definir.' }
+  ]}
+];
+function renderContas() {
+  const el = document.getElementById('contas');
+  if (!el) return;
+  el.innerHTML = CONTAS.map(g => '<h2>' + g.titulo + '</h2><div class="card">' + g.itens.map(c =>
+    '<div class="conta"><div class="ti">' + esc(c.nome) + (c.sub ? ' <span class="meta">· ' + esc(c.sub) + '</span>' : '') + '</div>' +
+    c.campos.map(f => '<div class="cf"><span class="meta">' + esc(f[0]) + '</span> <b>' + esc(f[1]) + '</b>' +
+      (f[2] ? ' <button class="btn sm" data-copy="' + esc(f[1]) + '">Copiar</button>' : '') + '</div>').join('') +
+    (c.link ? '<div class="cf"><a href="' + esc(c.link) + '" target="_blank" rel="noopener">Abrir perfil ↗</a></div>' : '') +
+    (c.nota ? '<div class="meta" style="margin-top:6px">' + esc(c.nota) + '</div>' : '') + '</div>').join('') + '</div>').join('');
+}
 INSIGHTS['TikTok'] = {
   titulo: 'Canal em pausa',
   itens: [
@@ -339,6 +379,7 @@ function doDia(d){
 }
 
 function render(){
+  renderContas();
   const dt=parse(dia);
   $('#dia').value=dia;
   $('#heroDate').textContent=dt.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
@@ -503,6 +544,13 @@ document.addEventListener('change',e=>{
   if(t.dataset.lb)l.baixado=t.checked;
   if(t.dataset.le)l.enviado=t.checked;
   save();render();
+});
+document.addEventListener('click',e=>{
+  const v=e.target.dataset&&e.target.dataset.copy;
+  if(v===undefined)return;
+  const ok=()=>toast('Copiado: '+v);
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(v).then(ok,()=>toast('Não consegui copiar'));
+  else{const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();try{document.execCommand('copy');ok()}catch(x){toast('Não consegui copiar')}t.remove()}
 });
 $('#dia').onchange=e=>{if(e.target.value){dia=e.target.value;render()}};
 $('#hojeBtn').onclick=()=>{dia=iso(new Date());render()};
