@@ -22,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 TOTAL_LINKS = int(os.getenv('LINKS_POR_VIDEO', '5'))
 CTA_SECONDS = float(os.getenv('CTA_SEGUNDOS', '5'))
-# outra cor/estampa do mesmo produto é aceita (a capa mostra o cartão de variações); VARIACAO_OK=nao volta a barrar
-ACCEPT_VARIATION = os.getenv('VARIACAO_OK', 'sim').strip().lower() not in ('nao', 'não', '0', 'false')
+# outra cor/estampa: barrada (25/11 a Shopee puniu o vestido vermelho com link de foto verde); VARIACAO_OK=sim aceita
+ACCEPT_VARIATION = os.getenv('VARIACAO_OK', 'nao').strip().lower() in ('sim', '1', 'true')   # 26/11: cor diferente deu punição
 CTAS = [   # sem preço, desconto ou cupom (regra de compliance; a Shopee pune promessa que o anúncio não cumpre)
     'Adicione já ao carrinho! 🛒',
     'Toque na sacolinha e confira! 🛒',
@@ -131,7 +131,7 @@ class Pipeline:
                                     "assim mesmo, ou responda esta mensagem com o link da variação certa.")
         if not main_found:
             raise DetailMismatch("🔎 Diferenças entre o vídeo e o anúncio\n\n"
-                                + "\n\n".join(reasons) + "\n\n(Cor diferente não conta: a capa mostra as variações.)"
+                                + "\n\n".join(reasons) + "\n\n(Cor diferente também conta: a Shopee confere a cor da foto do anúncio.)"
                                 "\n\nO que fazer: a Shopee pune isso como \"produto irrelevante\". Se o vídeo "
                                 "foi gerado por IA, gere de novo mantendo o produto igual à foto do anúncio (mesmos "
                                 "detalhes) e mande de novo. Se o anúncio certo é outro, responda esta mensagem com o link.")

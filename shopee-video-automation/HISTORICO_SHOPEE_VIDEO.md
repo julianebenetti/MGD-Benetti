@@ -22,6 +22,7 @@ marco, e o **levantamento automático a cada 14 dias** (`/estudo` para pedir na 
 | 31/10 | Agenda em lotes de 5, 30 vídeos/dia. Postagens também na outra conta do Shopee Vídeo. LiA lança app de criar vídeos a partir de links. |
 | 05/11 | **Primeiro estudo só com Shopee Vídeo** (relatório Canal = vídeo, abaixo). |
 | 06/11 | Decisões do estudo (abaixo). Criado este histórico e o levantamento automático. |
+| **25/11** | **"Produto irrelevante": vídeo do vestido midi VERMELHO (postado 25/11 20:12) com link cuja foto é o vestido VERDE. Banida até 28/11 21:43.** Apelação bem-sucedida; pontos em 7. Robô volta a barrar cor diferente da foto do anúncio. |
 | **17/11** | **"Produto irrelevante": vídeo do casaco de pelo teddy feminino (postado 17/11 20:29), removido em 1 min. 8 pontos, banida até 20/11 20:30.** Apelação em andamento. |
 
 ## Estudo de 05/11/2026 (relatório Canal = vídeo, 07/09 a 04/11)

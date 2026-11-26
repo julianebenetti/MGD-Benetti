@@ -783,7 +783,7 @@ class Bot:
         self.tg.send_text(
             EDITADOS, f"🔎 <b>Diferenças entre o vídeo e o anúncio</b> ({what.lower()})\n"
                       f"📦 {e(post['product_name'][:80])}\n\n{e(reason)}\n\n"
-                      f"<i>Cor diferente não conta (a capa mostra as variações).</i>\n\n"
+                      f"<i>Cor diferente também conta: a Shopee confere a cor da foto do anúncio.</i>\n\n"
                       f"<b>O que fazer:</b> a Shopee pune isso como \"produto irrelevante\". {origin}.{alt_text}",
             reply_to=post['editados_msgs'][2] if len(post['editados_msgs']) > 2 else None,
             markup=keyboard(*buttons))
