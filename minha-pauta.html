@@ -11,9 +11,10 @@
   --r:18px; --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);padding-bottom:80px}
 .wrap{max-width:720px;margin:0 auto;padding:0 16px}
-header{position:sticky;top:0;z-index:5;background:rgba(251,247,248,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(251,247,248,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:10px;padding:14px 0 8px;font-weight:800;font-size:20px;letter-spacing:-.5px}
 .logo{width:34px;height:34px;border-radius:10px;background:var(--hero);display:grid;place-items:center}
 .logo i{width:20px;height:20px;border-radius:6px;background:#22a45d;display:block}
@@ -146,10 +147,10 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
     <div class="card" id="todas"></div>
     <h2>Backup</h2>
     <div class="card">
-      <p class="meta" style="margin-top:0">Por enquanto os dados ficam salvos neste aparelho. Exporte de vez em quando.</p>
-      <button class="btn sm" id="exp">Exportar</button>
-      <button class="btn sm" id="imp">Importar</button>
-      <input type="file" id="impFile" accept="application/json" hidden>
+      <p class="meta" style="margin-top:0">Por enquanto os dados ficam salvos só neste aparelho e neste navegador. Copie o backup de vez em quando e guarde num lugar seguro.</p>
+      <button class="btn sm" id="exp">Copiar backup</button>
+      <button class="btn sm" id="imp">Restaurar backup</button>
+      <textarea id="bk" rows="6" hidden placeholder="Cole aqui o backup e toque em Restaurar backup de novo"></textarea>
     </div>
   </div>
   <!-- CONTAS -->
@@ -533,7 +534,7 @@ $('#lSave').onclick=()=>{
   if(editL)Object.assign(S.lotes.find(x=>x.id===editL),d);else S.lotes.push({id:uid(),baixado:false,enviado:false,...d});
   save();closeL();render();toast('Lote salvo');
 };
-$('#lDel').onclick=()=>{if(confirm('Excluir este lote?')){S.lotes=S.lotes.filter(x=>x.id!==editL);save();closeL();render()}};
+$('#lDel').onclick=e=>confirmar(e.target,'Excluir',()=>{S.lotes=S.lotes.filter(x=>x.id!==editL);save();closeL();render()});
 document.addEventListener('click',e=>{
   const t=e.target;
   if(t.id==='lAdd')openL();
@@ -559,16 +560,22 @@ $('#hojeBtn').onclick=()=>{dia=iso(new Date());render()};
 $('#fRec').onchange=recUI;
 $('#fCancel').onclick=closeModal;
 $('#fSave').onclick=saveModal;
-$('#fDel').onclick=()=>{if(confirm('Excluir esta atividade?')){S.acts=S.acts.filter(a=>a.id!==editId);save();closeModal();render()}};
+function confirmar(btn,rotulo,acao){
+  if(btn.dataset.sure){clearTimeout(btn._t);delete btn.dataset.sure;btn.textContent=rotulo;acao();return}
+  btn.dataset.sure='1';btn.textContent='Toque de novo para excluir';
+  btn._t=setTimeout(()=>{delete btn.dataset.sure;btn.textContent=rotulo},4000);
+}
+$('#fDel').onclick=e=>confirmar(e.target,'Excluir',()=>{S.acts=S.acts.filter(a=>a.id!==editId);save();closeModal();render()});
 $('#modal').onclick=e=>{if(e.target.id==='modal')closeModal()};
 $('#exp').onclick=()=>{
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));
-  a.download='minha-pauta-backup.json';a.click();
+  const txt=JSON.stringify(S);
+  const mostrar=()=>{const t=$('#bk');t.hidden=false;t.value=txt;t.select();toast('Copie o texto da caixa')};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>toast('Backup copiado'),mostrar);else mostrar();
 };
-$('#imp').onclick=()=>$('#impFile').click();
-$('#impFile').onchange=async e=>{
-  try{const j=JSON.parse(await e.target.files[0].text());if(!j.acts)throw 0;S=j;save();render();toast('Importado')}catch(x){toast('Arquivo inválido')}
+$('#imp').onclick=()=>{
+  const t=$('#bk');
+  if(t.hidden||!t.value.trim()){t.hidden=false;t.value='';t.focus();toast('Cole o backup na caixa e toque em Restaurar de novo');return}
+  try{const j=JSON.parse(t.value);if(!j.acts)throw 0;j.lotes=j.lotes||[];S=j;save();render();t.hidden=true;t.value='';toast('Backup restaurado')}catch(x){toast('Backup inválido')}
 };
 render();
 </script>
