@@ -16,6 +16,7 @@ for (const f of r.stdout.split('\n').filter(Boolean)) {
   if (!itens.length) continue;
   achou = true;
   console.log('Arquivo: ' + f + '\n');
+  if (Array.isArray(j.permissoes)) console.log('Permissões concedidas à conexão: ' + j.permissoes.filter((x) => typeof x === 'string').join(', ') + '\n');
   for (const [nome, c] of itens) {
     console.log('- ' + nome + ' | Página: ' + (c.pageName || '?') + ' (' + (c.pageId || '?') + ') | Instagram: @' + String(c.igUsername || c.instagram || '?').replace(/^@/, '') + ' (' + (c.igId || c.igBusinessAccountId || '?') + ')');
   }
