@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "defaultMode": "auto",
+    "allow": [
+      "mcp__Supabase__execute_sql",
+      "mcp__Shopee_MCP__buscar_produtos",
+      "mcp__Claude_Code_Remote__get_trigger",
+      "mcp__Claude_Code_Remote__update_trigger",
+      "mcp__Claude_Code_Remote__list_triggers"
+    ]
+  }
+}
