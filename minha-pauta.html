@@ -204,7 +204,8 @@ const CANAIS = [
   ['TikTok','#ddd3f2'],['TikTok Shop','#ddd3f2'],
   ['Shopee','#fbdcc4'],['Shopee Vídeo','#fbdcc4'],['Tráfego pago','#cfe3fa'],
   ['Grupos de WhatsApp','#cdeedd'],['Status do WhatsApp','#cdeedd'],['Instagram','#f7d3df'],
-  ['Facebook','#d6dcfa'],['Mercado Livre','#fdf0a8'],['Pinterest','#fbc9c9']
+  ['Facebook','#d6dcfa'],['Mercado Livre','#fdf0a8'],['Pinterest','#fbc9c9'],
+  ['Mentoria (dólar)','#dfe9c6']
 ];
 const COR = Object.fromEntries(CANAIS);
 const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -322,6 +323,15 @@ const SEED = [
   D('Post Zap: 3ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'19:30',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
 ];
 
+// Atividades novas que entram também em quem já usa a agenda (uma vez só; se apagar, não volta)
+const SEED_EXTRA = [
+  { k: 'mentoria-dolar-2026-11', a: D('Estudar e criar com a mentoria de vendas em dólar', 'Mentoria (dólar)', { type: 'daily' }, { obs: 'Voltar a estudar e criar. Dias e horário a definir.' }) }
+];
+function ensureSeed(st){
+  st.seedsAplicadas = st.seedsAplicadas || [];
+  for (const x of SEED_EXTRA) if (!st.seedsAplicadas.includes(x.k)) { st.acts.push({ ...x.a, id: uid() }); st.seedsAplicadas.push(x.k); }
+  return st;
+}
 let S = load();
 save();
 let view = 'hoje', filtro = 'Todos', editId = null;
@@ -346,8 +356,8 @@ function ensureLotes(st){
   return st;
 }
 function load(){
-  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts)return ensureLotes(r)}catch(e){}
-  return ensureLotes({acts:SEED.map(a=>({...a,id:uid()})),done:{},lotes:[]});
+  try{const r=JSON.parse(localStorage.getItem(KEY));if(r&&r.acts)return ensureSeed(ensureLotes(r))}catch(e){}
+  return ensureSeed(ensureLotes({acts:SEED.map(a=>({...a,id:uid()})),done:{},lotes:[]}));
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Não consegui salvar neste navegador')}}
 function toast(t){const e=document.getElementById('toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1800)}
