@@ -269,6 +269,9 @@ class Bot:
             self.d["postados"].append({"pagina": chave, "id": item["id"], "quando": agora().isoformat(timespec="seconds"), "simulado": True})
             self.salvar()
             return self.dizer(topic, f"🧪 (modo teste) Eu postaria agora na {pg.get('nome', chave)}: {resumo}")
+        if not pg.get("token") or pg["token"] == "PENDENTE":
+            reg["pausado"] = True
+            return self.dizer(topic, f"🔑 Falta o token da Página {pg.get('nome', chave)}; não postei e pausei esta Página. Rode `node obter-tokens-paginas.js` e depois /retomar.")
         c = dict(fp.cfg())
         c.update(page_id=pg["page_id"], token=pg["token"])
         ex = self.extra.get(chave, {})
@@ -342,6 +345,8 @@ def main():
     if not cfg["paginas"].exists():
         sys.exit("Falta o paginas.json. Rode antes: node obter-tokens-paginas.js")
     bot = Bot(cfg)
+    if cfg["enviar"] and any((v.get("token") in (None, "", "PENDENTE")) for v in bot.paginas.values()):
+        sys.exit("BOT_ENVIAR=sim, mas há Páginas sem token de verdade no paginas.json. Rode: node obter-tokens-paginas.js")
     print("Bot do Facebook no ar · " + ("ENVIANDO DE VERDADE" if cfg["enviar"] else "MODO TESTE (nada é postado)") + " · Páginas: " + ", ".join(bot.paginas), flush=True)
     while True:
         try:

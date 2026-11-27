@@ -22,6 +22,24 @@ const TOKEN = process.env.FB_SYSTEM_TOKEN || '';
 // chave curta -> ID da Página (ajuste aqui se mudar de Página)
 const PAGINAS = { bbc: '1247549898433750', vea: '264864416717882', vip: '1136231269570276' };
 const PRECISA = ['pages_manage_posts', 'pages_manage_engagement'];
+const NOMES = { bbc: 'Benetti Best Choice', vea: 'Vem Economizar Achadinhos', vip: 'Vemeconomizarvip' };
+
+// --teste: cria o paginas.json só com nomes e IDs (token "PENDENTE") para testar o bot SEM postar de verdade.
+if (process.argv.includes('--teste')) {
+  const arq = path.join(AQUI, 'paginas.json');
+  try {
+    const atual = JSON.parse(fs.readFileSync(arq, 'utf8'));
+    if (Object.values(atual).some((p) => p && p.token && p.token !== 'PENDENTE')) {
+      console.error('Já existe um paginas.json com tokens de verdade. Não vou sobrescrever.');
+      process.exit(1);
+    }
+  } catch (e) { /* não existe ainda */ }
+  const t = {};
+  for (const [k, id] of Object.entries(PAGINAS)) t[k] = { page_id: id, nome: NOMES[k] || k, token: 'PENDENTE' };
+  fs.writeFileSync(arq, JSON.stringify(t, null, 2), { mode: 0o600 });
+  console.log('Criado ' + arq + ' (modo teste, sem tokens). O bot só simula; para postar de verdade rode este script sem --teste.');
+  process.exit(0);
+}
 
 async function graph(caminho, params) {
   const url = BASE + '/' + VERSAO + '/' + caminho + '?' + new URLSearchParams(params);
