@@ -2612,7 +2612,7 @@ class Bot:
             p['tema'] = 'Oferta Relâmpago' + (f" · {p['horario']}" if p.get('horario') else '')
         if not ok:
             self.tg.send_text(target, f"⚡ Recebi {len(products)} produto(s) da Oferta Relâmpago ({source}), mas nenhum "
-                                      f"passou nas regras (comissão ≥ {ideas._brl(ideas.IDEAS_MIN_COMMISSION)}, nota ≥ 4,5, "
+                                      f"passou nas regras (comissão ≥ {ideas._brl(ideas.IDEAS_MIN_COMMISSION)}, nota ≥ {ideas.MIN_RATING}, "
                                       "sem suplementos).")
             return
         today = scheduler.now().date()
