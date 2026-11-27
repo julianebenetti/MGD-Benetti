@@ -66,7 +66,7 @@ certa (foto + link na legenda + link no 1º comentário) e avisa na própria aba
 8. **Valendo:** quando estiver satisfeita, `BOT_ENVIAR=sim` no `.env` e `sudo systemctl restart facebook-bot`.
 
 ## Comandos (em qualquer aba)
-`/fila` · `/postados` · `/pausar` · `/retomar` · `/limpar sim` · `/status` · `/ajuda` · `/aqui bbc|vea|vip`
+`/fila` · `/postados` · `/desempenho` · `/pausar` · `/retomar` · `/limpar sim` · `/status` · `/ajuda` · `/aqui bbc|vea|vip`
 
 ## Por Página (opcional)
 Copie `config-bot.exemplo.json` para `config-bot.json` e ajuste `limite_dia`, `intervalo_min` e, se quiser, `legenda`/`comentario`
@@ -109,3 +109,8 @@ Quanto mais posts, mais atenção ao **alcance**: a Meta reduz a entrega de cont
 O bot grava `publico/postados.json` a cada mudança (produto, sub-ID, link, link do post, status; **sem tokens**). A agenda lê esse arquivo
 na aba **📜 Postados**, com filtro por Página e por status (Postados / Na fila / Falhou). Para isso funcionar a agenda precisa estar no
 mesmo endereço do VPS: veja `pauta-vps/README.md`.
+
+## 📈 Desempenho (/desempenho)
+Precisa do token com `read_insights` (o `obter-tokens-paginas.js` avisa). `/desempenho` (ou `/desempenho 10`) mede os últimos posts de verdade:
+**alcance** (tenta `post_impressions_unique`, depois `post_media_view`, depois `post_impressions`), reações, comentários e compartilhamentos.
+O que a Meta não entregar aparece como `—`. O resultado também vai para a aba **Postados** da agenda. Vendas: relatório da Shopee, filtrando `facebook-`.

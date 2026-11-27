@@ -84,7 +84,8 @@ class Bot:
                     "subid": i.get("subid", ""), "link": i.get("link", ""),
                     "url_post": p.get("url") or (f"https://www.facebook.com/{p['post_id']}" if p.get("post_id") else ""),
                     "quando": p.get("quando") or i.get("criado"), "status": i["status"],
-                    "comentario_ok": p.get("comentario_ok", True), "simulado": bool(p.get("simulado"))})
+                    "comentario_ok": p.get("comentario_ok", True), "simulado": bool(p.get("simulado")),
+                    "desempenho": {k: v for k, v in (p.get("desempenho") or {}).items() if k in ("alcance", "reacoes", "comentarios", "compartilhamentos", "medido")}})
             itens.sort(key=lambda x: x["quando"] or "", reverse=True)
             dados = {"atualizado": agora().isoformat(timespec="seconds"),
                      "paginas": {k: {"nome": v.get("nome", k), "nicho": self.extra.get(k, {}).get("nicho", "")} for k, v in self.paginas.items()},
@@ -230,6 +231,8 @@ class Bot:
             self.dizer(thread, f"✅ Esta aba agora é da Página {self.nome(arg)}. Mande uma foto com o link na legenda.")
         elif cmd == "/status":
             self.dizer(thread, self.resumo())
+        elif cmd == "/desempenho":
+            self.desempenho(thread, chave, max(1, min(int(arg) if arg.isdigit() else 5, 10)))
         elif cmd == "/postados":
             n = int(arg) if arg.isdigit() else 10
             linhas = self.historico(chave, max(1, min(n, 30)))
@@ -266,6 +269,54 @@ class Bot:
         else:
             self.dizer(thread, self.ajuda())
 
+    METRICAS_ALCANCE = ("post_impressions_unique", "post_media_view", "post_impressions")
+
+    def medir(self, chave, post_id):
+        """Reações, comentários, compartilhamentos e alcance de um post. Cada parte que a Meta recusar fica de fora."""
+        pg = self.paginas[chave]
+        c = dict(fp.cfg())
+        c.update(page_id=pg["page_id"], token=pg["token"])
+        r = {}
+        try:
+            d = fp.api(c, "GET", post_id, {"fields": "reactions.summary(true).limit(0),comments.summary(true).limit(0),shares"})
+            r["reacoes"] = d.get("reactions", {}).get("summary", {}).get("total_count")
+            r["comentarios"] = d.get("comments", {}).get("summary", {}).get("total_count")
+            r["compartilhamentos"] = (d.get("shares") or {}).get("count", 0)
+        except Exception as e:
+            r["erro"] = str(e)[:120]
+        for metrica in self.METRICAS_ALCANCE:
+            try:
+                d = fp.api(c, "GET", f"{post_id}/insights", {"metric": metrica})
+                vals = (d.get("data") or [{}])[0].get("values") or []
+                if vals:
+                    r["alcance"], r["metrica"] = vals[0].get("value"), metrica
+                    break
+            except Exception:
+                continue
+        r["medido"] = agora().isoformat(timespec="seconds")
+        return r
+
+    def desempenho(self, thread, chave, n):
+        pend = [p for p in self.d["postados"] if (chave is None or p["pagina"] == chave) and p.get("post_id") and not p.get("simulado")]
+        pend = sorted(pend, key=lambda p: p["quando"], reverse=True)[:n]
+        if not pend:
+            return self.dizer(thread, "Nada postado de verdade ainda para medir.")
+        por_id = {i["id"]: i for i in self.d["fila"]}
+        linhas, sem_alcance = [], False
+        for p in pend:
+            p["desempenho"] = self.medir(p["pagina"], p["post_id"])
+            x = p["desempenho"]
+            nome = (por_id.get(p["id"], {}).get("produto") or "?").splitlines()[0][:32]
+            if x.get("erro") and x.get("reacoes") is None:
+                linhas.append(f"• {nome}: não consegui medir ({x['erro']})")
+                continue
+            alc = f"👁 {x['alcance']}" if x.get("alcance") is not None else "👁 —"
+            sem_alcance = sem_alcance or x.get("alcance") is None
+            linhas.append(f"• {nome} [{self.nome(p['pagina'])}]: {alc} · ❤️ {x.get('reacoes', 0)} · 💬 {x.get('comentarios', 0)} · 🔁 {x.get('compartilhamentos', 0)}")
+        self.salvar()
+        rodape = "\n(— = a Meta não entregou o alcance desse post; vídeos e posts muito recentes costumam demorar.)" if sem_alcance else ""
+        self.dizer(thread, "📈 Desempenho dos últimos posts\n" + "\n".join(linhas) + rodape)
+
     def historico(self, chave, n):
         por_id = {i["id"]: i for i in self.d["fila"]}
         regs = sorted((p for p in self.d["postados"] if chave is None or p["pagina"] == chave), key=lambda p: p["quando"], reverse=True)[:n]
@@ -288,6 +339,7 @@ class Bot:
                 "• Mande uma FOTO com o nome do produto e o link na legenda.\n"
                 "• /fila — o que está esperando nesta aba\n"
                 "• /postados — o que já foi pro Facebook (ex.: /postados 20)\n"
+                "• /desempenho — alcance, reações e comentários dos últimos posts\n"
                 "• 👀 na foto = na fila · 👍 = postado · 👎 = falhou\n"
                 "• /pausar e /retomar — controla esta Página\n"
                 "• /limpar sim — esvazia a fila desta aba\n"

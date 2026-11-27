@@ -346,6 +346,7 @@ function renderPostados() {
     '<div class="ti">' + (i.tipo === 'video' ? '🎬 ' : '🖼️ ') + esc(i.produto || '(sem nome)') + '</div>' +
     '<div class="meta">' + fmtQuando(i.quando) + ' · <span class="tag" style="background:' + (PG_COR[i.pagina] || '#eee') + '">' + esc(nomePg(i.pagina)) + '</span>' +
     (i.simulado ? ' · 🧪 teste' : '') + (i.status === 'postado' && i.comentario_ok === false ? ' · ⚠️ sem o comentário' : '') + '</div>' +
+    (i.desempenho && i.desempenho.medido ? '<div class="meta" style="margin-top:4px">👁 ' + (i.desempenho.alcance == null ? '—' : i.desempenho.alcance) + ' · ❤️ ' + (i.desempenho.reacoes ?? 0) + ' · 💬 ' + (i.desempenho.comentarios ?? 0) + ' · 🔁 ' + (i.desempenho.compartilhamentos ?? 0) + ' <span style="opacity:.7">(medido ' + fmtQuando(i.desempenho.medido) + ')</span></div>' : '') +
     (i.subid ? '<div class="cf"><span class="meta">sub-ID</span> <b>' + esc(i.subid) + '</b> <button class="btn sm" data-copy="' + esc(i.subid) + '">Copiar</button></div>' : '') +
     (i.url_post ? '<div class="cf"><a href="' + esc(i.url_post) + '" target="_blank" rel="noopener">Abrir post no Facebook ↗</a></div>' : '') +
     '</div></div>').join('') : '<div class="empty">Nada aqui' + (pgFiltro === 'todas' ? '' : ' para esta Página') + ' em “' + ST_NOME[stFiltro] + '”.</div>') + '</div>';
