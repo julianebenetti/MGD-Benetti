@@ -230,7 +230,8 @@ class Bot:
             return self.dizer(thread, "⚠️ Esse link já foi enviado para esta Página. Não repeti.")
         if len(self.pendentes(chave)) >= self.c["max_fila"]:
             return self.dizer(thread, f"✋ A fila desta Página já tem {self.c['max_fila']} itens. Espere sair alguns ou use /limpar sim.")
-        produto = re.sub(r"\n{3,}", "\n\n", URL_RE.sub("", texto)).strip() or "Achadinho"
+        nome_dado = re.sub(r"\n{3,}", "\n\n", URL_RE.sub("", texto)).strip()
+        produto = nome_dado or "Achadinho"
         iid = f"{int(time.time())}-{m['message_id']}"
         try:
             imagem = self.baixar_foto(m["photo"][-1]["file_id"], iid)
@@ -239,8 +240,9 @@ class Bot:
         self.d["fila"].append({"id": iid, "pagina": chave, "produto": produto, "link": link, "imagem": imagem,
                                "status": "pendente", "falhas": 0, "criado": agora().isoformat(timespec="seconds")})
         self.salvar()
+        aviso = "" if nome_dado else "\n💡 Sem o nome do produto, a legenda sai só como \"Achadinho\". Escreva o nome antes do link na legenda da foto."
         self.dizer(thread, f"📥 Na fila — {self.nome(chave)}: posição {len(self.pendentes(chave))}.\n"
-                           f"Hoje {self.postados_hoje(chave)}/{self.limite(chave)} · próximo post ~{self.estimar(chave)}")
+                           f"Hoje {self.postados_hoje(chave)}/{self.limite(chave)} · próximo post ~{self.estimar(chave)}" + aviso)
 
     # ---------- postagem ----------
     def tick(self):

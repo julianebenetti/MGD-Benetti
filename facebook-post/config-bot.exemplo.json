@@ -1,5 +1,17 @@
 {
-  "bbc": { "nicho": "preencher", "limite_dia": 3, "intervalo_min": 120 },
-  "vea": { "nicho": "preencher", "limite_dia": 3, "intervalo_min": 120 },
-  "vip": { "nicho": "preencher", "limite_dia": 3, "intervalo_min": 120 }
+  "bbc": {
+    "nicho": "Casa / Decoração / Utilidades (confirmar nome completo)",
+    "limite_dia": 3,
+    "intervalo_min": 120
+  },
+  "vea": {
+    "nicho": "Moda e Beleza",
+    "limite_dia": 3,
+    "intervalo_min": 120
+  },
+  "vip": {
+    "nicho": "Eletrônicos / Big Sazonal",
+    "limite_dia": 3,
+    "intervalo_min": 120
+  }
 }
