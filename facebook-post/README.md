@@ -104,3 +104,8 @@ Quanto mais posts, mais atenção ao **alcance**: a Meta reduz a entrega de cont
 - **Reação na foto/vídeo que você mandou:** 👀 na fila · 👍 postado · 👎 falhou. Fila cancelada com `/limpar sim` tira a reação.
 - A confirmação "✅ Postado" e os avisos vêm como **resposta à própria foto/vídeo**.
 - O histórico completo fica em `dados.json` (não vai para o GitHub).
+
+## 📅 Histórico na agenda (aba Postados)
+O bot grava `publico/postados.json` a cada mudança (produto, sub-ID, link, link do post, status; **sem tokens**). A agenda lê esse arquivo
+na aba **📜 Postados**, com filtro por Página e por status (Postados / Na fila / Falhou). Para isso funcionar a agenda precisa estar no
+mesmo endereço do VPS: veja `pauta-vps/README.md`.

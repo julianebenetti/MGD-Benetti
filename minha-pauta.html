@@ -103,6 +103,7 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
     <button data-v="hoje" class="on">🕒 Hoje</button>
     <button data-v="semana">📅 Pauta semanal</button>
     <button data-v="todas">🗂 Atividades</button>
+    <button data-v="postados">📜 Postados</button>
     <button data-v="contas">👤 Contas</button>
   </nav>
 </div></header>
@@ -152,6 +153,11 @@ label.check input:checked::after{content:"✓";color:#fff;font-size:17px;font-we
       <button class="btn sm" id="imp">Restaurar backup</button>
       <textarea id="bk" rows="6" hidden placeholder="Cole aqui o backup e toque em Restaurar backup de novo"></textarea>
     </div>
+  </div>
+  <!-- POSTADOS -->
+  <div class="view" id="v-postados">
+    <h2>Postados no Facebook</h2>
+    <div id="postadosBox"></div>
   </div>
   <!-- CONTAS -->
   <div class="view" id="v-contas">
@@ -241,15 +247,16 @@ INSIGHTS['Instagram'] = {
   ]
 };
 INSIGHTS['Facebook'] = {
-  titulo: 'Produtos do Mercado Livre no feed',
+  titulo: 'Produtos nas 3 Páginas (um nicho por Página)',
   itens: [
-    'Estratégia aprendida num grupo e que <b>tem gerado bastante venda</b>: testar.',
-    'Passo a passo: pegar a imagem do produto no <b>Mercado Livre</b> → recriar no <b>Gemini</b>, estilizada e com as informações do produto → colocar na <b>fila do robô</b> → o robô posta na <b>Página</b> com o link na <b>legenda</b> e repete o link no <b>1º comentário</b>.',
-    'Só funciona em <b>Página</b>, não no perfil pessoal. Começar com <b>2 a 5 posts por dia</b>, variando imagem e legenda (conteúdo repetido ou copiado perde alcance).',
-    'Quantidade de posts por dia: <b>a definir</b>.'
+    'Estratégia aprendida num grupo e que <b>tem gerado bastante venda</b>: foto do produto recriada no <b>Gemini</b>, com o link na <b>legenda</b> e repetido no <b>1º comentário</b>.',
+    'Fluxo: mandar <b>foto ou vídeo + nome + link</b> na aba da Página, no Telegram → o robô converte o link da Shopee com <b>sub-ID rastreável</b> (<b>facebook-sigla-produto</b>) → posta na Página e comenta o link.',
+    'Abas: <b>BBC</b> (Casa / Decoração / Utilidades, confirmar), <b>VEA</b> (Moda e Beleza) e <b>VIP</b> (Eletrônicos / Big Sazonal). Cada Página recebe produtos diferentes: conteúdo repetido perde alcance.',
+    'Limite por Página: começa em <b>3 posts por dia</b> e pode subir aos poucos. Acompanhar o alcance antes de aumentar.',
+    'Mercado Livre: <b>em pausa por enquanto</b> (preciso entender melhor a empresa antes de anunciar).'
   ],
   depois: [
-    '<b>Ligar o robô</b>: gerar o token da Página no app da Meta, guardar no .env do VPS e copiar a pasta facebook-post (o passo a passo está no README dela). Depois, ligar na Central de Post Instagram/Meta.'
+    'Ver o <b>histórico do que já foi postado</b> na aba <b>Postados</b> desta agenda (ela lê os dados do VPS, então abra a agenda pelo endereço do VPS).'
   ]
 };
 const CONTAS = [
@@ -285,6 +292,72 @@ function renderContas() {
     (c.link ? '<div class="cf"><a href="' + esc(c.link) + '" target="_blank" rel="noopener">Abrir perfil ↗</a></div>' : '') +
     (c.nota ? '<div class="meta" style="margin-top:6px">' + esc(c.nota) + '</div>' : '') + '</div>').join('') + '</div>').join('');
 }
+// ---- aba Postados: lê o histórico que o robô do Facebook grava no VPS (mesmo endereço da agenda)
+const URL_POSTADOS = '/facebook/postados.json';
+const PG_COR = { bbc: '#fdf0a8', vea: '#f7d3df', vip: '#d6dcfa' };
+const ST_NOME = { postado: 'Postados', pendente: 'Na fila', falhou: 'Falhou' };
+let POST = null, postErro = '', pgFiltro = 'todas', stFiltro = 'postado', mostrarTestes = false;
+async function carregarPostados() {
+  postErro = '';
+  try {
+    const r = await fetch(URL_POSTADOS, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    POST = await r.json();
+    try { localStorage.setItem('minhaPauta.postados', JSON.stringify(POST)); } catch (e) {}
+  } catch (e) {
+    postErro = String((e && e.message) || e);
+    try { POST = POST || JSON.parse(localStorage.getItem('minhaPauta.postados')); } catch (x) {}
+  }
+  renderPostados();
+}
+function fmtQuando(q) {
+  if (!q) return '—';
+  const d = new Date(q);
+  return isNaN(d) ? '—' : d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+function renderPostados() {
+  const el = document.getElementById('postadosBox');
+  if (!el) return;
+  if (!POST) {
+    el.innerHTML = '<div class="card"><div class="empty">' + (postErro
+      ? 'Não consegui carregar o histórico (' + esc(postErro) + '). Esta aba lê os dados do VPS: abra a agenda pelo endereço do VPS.'
+      : 'Carregando…') + '</div></div>';
+    return;
+  }
+  const paginas = POST.paginas || {};
+  const base = (POST.itens || []).filter(i => (mostrarTestes || !i.simulado) && (pgFiltro === 'todas' || i.pagina === pgFiltro));
+  const conta = st => base.filter(i => i.status === st).length;
+  const hojeStr = new Date().toDateString();
+  const hoje = base.filter(i => i.status === 'postado' && i.quando && new Date(i.quando).toDateString() === hojeStr).length;
+  const lista = base.filter(i => i.status === stFiltro);
+  const nomePg = k => (paginas[k] && paginas[k].nome) || k;
+  let h = '<div class="chips">' + ['todas', ...Object.keys(paginas)].map(k =>
+    '<button class="chip ' + (pgFiltro === k ? 'on' : '') + '" style="background:' + (k === 'todas' ? '#e9e6ea' : (PG_COR[k] || '#eee')) + '" data-pg="' + esc(k) + '">' +
+    (k === 'todas' ? 'Todas as Páginas' : esc(nomePg(k))) + '</button>').join('') + '</div>';
+  h += '<div class="chips" style="margin-top:8px">' + Object.keys(ST_NOME).map(st =>
+    '<button class="chip ' + (stFiltro === st ? 'on' : '') + '" style="background:#fff;border-color:' + (stFiltro === st ? 'var(--text)' : 'var(--line)') + '" data-st="' + st + '">' +
+    ST_NOME[st] + ' (' + conta(st) + ')</button>').join('') + '</div>';
+  h += '<p class="meta" style="margin:10px 0">Hoje: <b>' + hoje + '</b> postado(s) · atualizado em ' + fmtQuando(POST.atualizado) +
+    (postErro ? ' · <b>sem conexão, mostrando a última cópia</b>' : '') +
+    ' <button class="btn sm" id="pAtualizar">Atualizar</button> ' +
+    '<label class="check" style="display:inline-flex;margin-left:8px;font-weight:600;font-size:13px"><input type="checkbox" id="ptestes" ' + (mostrarTestes ? 'checked' : '') + '>Mostrar testes</label></p>';
+  h += '<div class="card">' + (lista.length ? lista.map(i =>
+    '<div class="row" style="grid-template-columns:1fr"><div>' +
+    '<div class="ti">' + (i.tipo === 'video' ? '🎬 ' : '🖼️ ') + esc(i.produto || '(sem nome)') + '</div>' +
+    '<div class="meta">' + fmtQuando(i.quando) + ' · <span class="tag" style="background:' + (PG_COR[i.pagina] || '#eee') + '">' + esc(nomePg(i.pagina)) + '</span>' +
+    (i.simulado ? ' · 🧪 teste' : '') + (i.status === 'postado' && i.comentario_ok === false ? ' · ⚠️ sem o comentário' : '') + '</div>' +
+    (i.subid ? '<div class="cf"><span class="meta">sub-ID</span> <b>' + esc(i.subid) + '</b> <button class="btn sm" data-copy="' + esc(i.subid) + '">Copiar</button></div>' : '') +
+    (i.url_post ? '<div class="cf"><a href="' + esc(i.url_post) + '" target="_blank" rel="noopener">Abrir post no Facebook ↗</a></div>' : '') +
+    '</div></div>').join('') : '<div class="empty">Nada aqui' + (pgFiltro === 'todas' ? '' : ' para esta Página') + ' em “' + ST_NOME[stFiltro] + '”.</div>') + '</div>';
+  el.innerHTML = h;
+}
+document.addEventListener('click', e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.pg) { pgFiltro = t.dataset.pg; renderPostados(); }
+  else if (t.dataset && t.dataset.st) { stFiltro = t.dataset.st; renderPostados(); }
+  else if (t.id === 'pAtualizar') carregarPostados();
+});
+document.addEventListener('change', e => { if (e.target.id === 'ptestes') { mostrarTestes = e.target.checked; renderPostados(); } });
 INSIGHTS['TikTok'] = {
   titulo: 'Canal em pausa',
   itens: [
@@ -314,9 +387,9 @@ const SEED = [
   D('Enviar os vídeos com o link pra Central de Post Instagram/Meta (aba Pack)','Instagram',{type:'daily'},{obs:'O robô monta a capa e manda pra aba Postar, que posta como Reel de teste'}),
   D('Cadastrar o link do produto (sacolinha) em cada Reel de teste, no Instagram','Instagram',{type:'daily'},{obs:'Pegar na Central de Post o link convertido: sub-ID sacolinha + nome do produto'}),
   // Facebook
-  D('Escolher o produto no Mercado Livre e pegar a imagem e o link','Facebook',{type:'daily'}),
+  D('Escolher o produto e pegar a imagem e o link','Facebook',{type:'daily'}),
   D('Gemini: recriar a imagem estilizada com as informações do produto','Facebook'),
-  D('Colocar o produto na fila do robô (imagem + link)','Facebook',{type:'daily'},{obs:'O robô posta na Página com o link na legenda e no 1º comentário'}),
+  D('Mandar foto ou vídeo + nome + link na aba da Página (Telegram)','Facebook',{type:'daily'},{obs:'O robô converte o link, posta na Página e comenta o link'}),
   // WhatsApp
   D('Post Zap: 1ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'10:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
   D('Post Zap: 2ª conferência (aprovar pendentes e ajustar)','Grupos de WhatsApp',{type:'daily'},{time:'15:00',obs:'Ver se há post esperando aprovação · tirar o que não faz sentido'}),
@@ -327,9 +400,18 @@ const SEED = [
 const SEED_EXTRA = [
   { k: 'mentoria-dolar-2026-11', a: D('Estudar e criar com a mentoria de vendas em dólar', 'Mentoria (dólar)', { type: 'daily' }, { obs: 'Voltar a estudar e criar. Dias e horário a definir.' }) }
 ];
+const RENOMEAR = [
+  { k: 'fb-sem-ml-1', de: 'Escolher o produto no Mercado Livre e pegar a imagem e o link', para: 'Escolher o produto e pegar a imagem e o link' },
+  { k: 'fb-sem-ml-2', de: 'Colocar o produto na fila do robô (imagem + link)', para: 'Mandar foto ou vídeo + nome + link na aba da Página (Telegram)', obs: 'O robô converte o link, posta na Página e comenta o link' }
+];
 function ensureSeed(st){
   st.seedsAplicadas = st.seedsAplicadas || [];
   for (const x of SEED_EXTRA) if (!st.seedsAplicadas.includes(x.k)) { st.acts.push({ ...x.a, id: uid() }); st.seedsAplicadas.push(x.k); }
+  for (const r of RENOMEAR) if (!st.seedsAplicadas.includes(r.k)) {
+    const a = st.acts.find(x => x.title === r.de);
+    if (a) { a.title = r.para; if (r.obs) a.obs = r.obs; }
+    st.seedsAplicadas.push(r.k);
+  }
   return st;
 }
 let S = load();
@@ -393,6 +475,7 @@ function doDia(d){
 
 function render(){
   renderContas();
+  renderPostados();
   const dt=parse(dia);
   $('#dia').value=dia;
   $('#heroDate').textContent=dt.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
@@ -512,7 +595,7 @@ function saveModal(){
 // ---- eventos
 document.addEventListener('click',e=>{
   const t=e.target;
-  if(t.dataset.v){view=t.dataset.v;render()}
+  if(t.dataset.v){view=t.dataset.v;render();if(view==='postados')carregarPostados()}
   else if(t.dataset.c){filtro=t.dataset.c;render()}
   else if(t.dataset.edit)openModal(t.dataset.edit);
   else if(t.hasAttribute('data-add'))openModal();
