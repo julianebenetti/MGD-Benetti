@@ -66,7 +66,7 @@ certa (foto + link na legenda + link no 1º comentário) e avisa na própria aba
 8. **Valendo:** quando estiver satisfeita, `BOT_ENVIAR=sim` no `.env` e `sudo systemctl restart facebook-bot`.
 
 ## Comandos (em qualquer aba)
-`/fila` · `/pausar` · `/retomar` · `/limpar sim` · `/status` · `/ajuda` · `/aqui bbc|vea|vip`
+`/fila` · `/postados` · `/pausar` · `/retomar` · `/limpar sim` · `/status` · `/ajuda` · `/aqui bbc|vea|vip`
 
 ## Por Página (opcional)
 Copie `config-bot.exemplo.json` para `config-bot.json` e ajuste `limite_dia`, `intervalo_min` e, se quiser, `legenda`/`comentario`
@@ -98,3 +98,9 @@ Edite no `.env` e reinicie (`sudo systemctl restart facebook-bot`):
 - **Aquecimento** (recomendado): `BOT_LIMITE_DIA=5`, `BOT_AUMENTO_DIA=1`, `BOT_LIMITE_MAX=12` começa em 5 e sobe 1 por dia até 12.
 - Por Página, no `config-bot.json`: `limite_dia`, `limite_max`, `aumento_dia`, `intervalo_min`.
 Quanto mais posts, mais atenção ao **alcance**: a Meta reduz a entrega de conteúdo repetitivo. Se o alcance cair, baixe o limite.
+
+## 📜 Como saber o que já foi postado
+- **`/postados`** (na aba da Página; ou no Geral para todas): lista os últimos 10 (`/postados 20` para mais) com hora, nome, sub-ID e o link do post.
+- **Reação na foto/vídeo que você mandou:** 👀 na fila · 👍 postado · 👎 falhou. Fila cancelada com `/limpar sim` tira a reação.
+- A confirmação "✅ Postado" e os avisos vêm como **resposta à própria foto/vídeo**.
+- O histórico completo fica em `dados.json` (não vai para o GitHub).

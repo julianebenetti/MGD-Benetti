@@ -74,14 +74,27 @@ class Bot:
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"Telegram respondeu {e.code}: {e.read().decode(errors='replace')[:200]}")
 
-    def dizer(self, thread, texto):
+    def dizer(self, thread, texto, reply_to=None):
         d = {"chat_id": self.c["tg_chat"], "text": texto, "disable_web_page_preview": True}
         if thread:
             d["message_thread_id"] = thread
+        if reply_to:
+            d["reply_to_message_id"] = reply_to
+            d["allow_sending_without_reply"] = True
         try:
             self.tg("sendMessage", d)
         except Exception as e:
             print("não consegui avisar no Telegram:", e, file=sys.stderr)
+
+    def reagir(self, message_id, emoji):
+        """👀 na fila · 👍 postado · 👎 falhou. Sem emoji = tira a reação. Se o Telegram recusar, ignora."""
+        if not message_id:
+            return
+        try:
+            self.tg("setMessageReaction", {"chat_id": self.c["tg_chat"], "message_id": message_id,
+                                           "reaction": [{"type": "emoji", "emoji": emoji}] if emoji else []})
+        except Exception as e:
+            print("reação não aplicada:", e, file=sys.stderr)
 
     def baixar(self, file_id, nome):
         info = self.tg("getFile", {"file_id": file_id})["result"]
@@ -186,6 +199,11 @@ class Bot:
             self.dizer(thread, f"✅ Esta aba agora é da Página {self.nome(arg)}. Mande uma foto com o link na legenda.")
         elif cmd == "/status":
             self.dizer(thread, self.resumo())
+        elif cmd == "/postados":
+            n = int(arg) if arg.isdigit() else 10
+            linhas = self.historico(chave, max(1, min(n, 30)))
+            titulo = f"📜 Últimos postados — {self.nome(chave)}" if chave else "📜 Últimos postados — todas as Páginas"
+            self.dizer(thread, titulo + "\n" + ("\n".join(linhas) if linhas else "Nada postado ainda."))
         elif cmd in ("/ajuda", "/start", "/help"):
             self.dizer(thread, self.ajuda())
         elif not chave:
@@ -211,15 +229,35 @@ class Bot:
             n = 0
             for i in self.pendentes(chave):
                 i["status"] = "cancelado"
+                self.reagir(i.get("msg_id"), None)
                 n += 1
             self.dizer(thread, f"🧹 {n} item(ns) cancelado(s).")
         else:
             self.dizer(thread, self.ajuda())
 
+    def historico(self, chave, n):
+        por_id = {i["id"]: i for i in self.d["fila"]}
+        regs = sorted((p for p in self.d["postados"] if chave is None or p["pagina"] == chave), key=lambda p: p["quando"], reverse=True)[:n]
+        linhas = []
+        for p in regs:
+            it = por_id.get(p["id"], {})
+            quando = datetime.fromisoformat(p["quando"]).astimezone(BR).strftime("%d/%m %H:%M")
+            nome = (it.get("produto") or "?").splitlines()[0][:40]
+            base = f"{quando} {'🎬' if it.get('tipo') == 'video' else '🖼️'} {nome}" + (f" [{self.nome(p['pagina'])}]" if chave is None else "")
+            if p.get("simulado"):
+                linhas.append(f"🧪 {base} (teste, não foi ao Facebook)")
+                continue
+            url = p.get("url") or (f"https://www.facebook.com/{p['post_id']}" if p.get("post_id") else "")
+            linhas.append(f"✅ {base}" + (f" · sub-ID {it['subid']}" if it.get("subid") else "") + (f"\n   {url}" if url else "") +
+                          ("" if p.get("comentario_ok", True) else "\n   ⚠️ sem o comentário"))
+        return linhas
+
     def ajuda(self):
         return ("🤖 Robô do Facebook\n"
                 "• Mande uma FOTO com o nome do produto e o link na legenda.\n"
                 "• /fila — o que está esperando nesta aba\n"
+                "• /postados — o que já foi pro Facebook (ex.: /postados 20)\n"
+                "• 👀 na foto = na fila · 👍 = postado · 👎 = falhou\n"
                 "• /pausar e /retomar — controla esta Página\n"
                 "• /limpar sim — esvazia a fila desta aba\n"
                 "• /status — resumo de todas as Páginas\n"
@@ -280,13 +318,14 @@ class Bot:
             return self.dizer(thread, f"❌ Não consegui baixar o arquivo: {e}")
         self.d["fila"].append({"id": iid, "pagina": chave, "tipo": tipo, "produto": produto, "link": link, "link_original": original,
                                "subid": subid, "item_id": item_id, "imagem": caminho, "status": "pendente", "falhas": 0,
-                               "criado": agora().isoformat(timespec="seconds")})
+                               "msg_id": m["message_id"], "criado": agora().isoformat(timespec="seconds")})
         self.salvar()
         linhas = [f"📥 Na fila — {self.nome(chave)} ({'vídeo' if tipo == 'video' else 'foto'}): posição {len(self.pendentes(chave))}.",
                   f"Hoje {self.postados_hoje(chave)}/{self.limite(chave)} · próximo post ~{self.estimar(chave)}"]
         if subid:
             linhas.append(f"🔗 Link convertido · sub-ID: {subid}")
-        self.dizer(thread, "\n".join(linhas + avisos))
+        self.dizer(thread, "\n".join(linhas + avisos), reply_to=m["message_id"])
+        self.reagir(m["message_id"], "👀")
 
     # ---------- postagem ----------
     def tick(self):
@@ -349,10 +388,12 @@ class Bot:
             item["status"] = "postado"
             reg["pausas_seguidas"] = 0
             self.d["postados"].append({"pagina": chave, "id": item["id"], "quando": agora().isoformat(timespec="seconds"),
-                                       "post_id": post_id, "comentario_ok": comentou})
+                                       "post_id": post_id, "url": url_post, "comentario_ok": comentou})
             self.salvar()
             self.dizer(topic, f"✅ {'Vídeo postado' if video else 'Postado'} na {pg.get('nome', chave)}: {resumo}\n{url_post}" +
-                              ("" if comentou else "\n⚠️ O post saiu, mas o comentário com o link falhou. Coloque o link à mão."))
+                              ("" if comentou else "\n⚠️ O post saiu, mas o comentário com o link falhou. Coloque o link à mão."),
+                       reply_to=item.get("msg_id"))
+            self.reagir(item.get("msg_id"), "👍")
         except Exception as e:
             msg = str(e)
             item["falhas"] = item.get("falhas", 0) + 1
@@ -367,7 +408,8 @@ class Bot:
                     self.dizer(topic, f"⏸️ A Meta pediu calma ({msg[:120]}). Pausei esta Página por {self.c['pausa_horas']:g} h.")
             elif item["falhas"] >= self.c["max_tentativas"]:
                 item["status"] = "falhou"
-                self.dizer(topic, f"❌ Desisti de: {resumo}\nMotivo: {msg[:200]}")
+                self.dizer(topic, f"❌ Desisti de: {resumo}\nMotivo: {msg[:200]}", reply_to=item.get("msg_id"))
+                self.reagir(item.get("msg_id"), "👎")
             else:
                 item["proxima"] = time.time() + 1800
                 self.dizer(topic, f"⚠️ Não consegui postar ({msg[:150]}). Tento de novo em 30 min.")
