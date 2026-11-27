@@ -49,6 +49,33 @@ async function graph(caminho, params) {
   return j;
 }
 
+// --da-conexao [arquivo]: pega os tokens das Páginas do meta-conexao.json da Central (sem copiar token nenhum).
+const iCon = process.argv.indexOf('--da-conexao');
+if (iCon >= 0) {
+  const dado = process.argv[iCon + 1];
+  const origem = dado && !dado.startsWith('--') ? dado : '/opt/central-post/data/meta-conexao.json';
+  let con;
+  try { con = JSON.parse(fs.readFileSync(origem, 'utf8')); } catch (e) { console.error('Não consegui ler ' + origem + ': ' + e.message); process.exit(1); }
+  const concedidas = Array.isArray(con.permissoes) ? con.permissoes : [];
+  const falta = PRECISA.filter((x) => !concedidas.includes(x));
+  const contas = Object.values(con.contas || {});
+  const saida = {};
+  for (const [chave, id] of Object.entries(PAGINAS)) {
+    const c = contas.find((x) => x && String(x.pageId) === id);
+    if (!c || !c.token) { console.log('✖ ' + chave + ' (' + id + '): essa Página não está na conexão (refaça a conexão e marque a Página).'); continue; }
+    saida[chave] = { page_id: id, nome: c.pageName || NOMES[chave] || chave, token: c.token };
+    console.log('✅ ' + chave + ' — ' + saida[chave].nome);
+  }
+  console.log('\nPermissões da conexão: ' + (falta.length ? 'FALTAM ' + falta.join(', ') : 'pode publicar e comentar'));
+  if (falta.length) { console.error('Não gravei nada: a conexão ainda não tem as permissões de publicar/comentar.'); process.exit(1); }
+  if (!Object.keys(saida).length) { console.error('Nenhuma Página encontrada; nada gravado.'); process.exit(1); }
+  const arq = path.join(AQUI, 'paginas.json');
+  fs.writeFileSync(arq, JSON.stringify(saida, null, 2), { mode: 0o600 });
+  fs.chmodSync(arq, 0o600);
+  console.log('Gravado em ' + arq + ' (somente o administrador lê).');
+  process.exit(0);
+}
+
 (async () => {
   if (!TOKEN) { console.error('Faltou FB_SYSTEM_TOKEN no arquivo .env (veja o passo a passo).'); process.exit(1); }
   const saida = {};
