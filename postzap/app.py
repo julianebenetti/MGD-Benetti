@@ -506,7 +506,7 @@ _REGRAS_NICHO = [   # a primeira que bate vale (ordem importa: "forma para air f
                            r'batedeira|panela (el[eé]trica|de press[aã]o el)|mixer|processador|ferro de passar|purificador|'
                            r'sanduicheira|grill|forno el[eé]trico|chaleira el|geladeira|lava|umidificador|climatizador'),
     ('🎧 Eletrônicos', r'fone|smartwatch|rel[oó]gio intelig|celular|carregador|caixa de som|\btv\b|notebook|mouse|teclado|'
-                      r'c[aâ]mera|smart|bluetooth|power ?bank|tablet|projetor|ring light|cabo usb'),
+                      r'c[aâ]mera|smart|l[aâ]mpada inteligente|bluetooth|power ?bank|tablet|projetor|ring light|cabo usb'),
     ('🛋️ Móveis', r'cadeira|\bmesa\b|guarda-?roupa|arm[aá]rio|sof[aá]|\brack\b|cama box|colch[aã]o|estante|c[oô]moda|'
                   r'penteadeira|gaveteiro|paneleiro|banqueta|escrivaninha'),
     ('🏠 Casa e decoração', r'[aá]rvore de natal|pisca[- ]?pisca|enfeite|guirlanda|pres[eé]pio|bolas? de natal|mesa posta|'
@@ -2134,7 +2134,10 @@ DIVULGADOR_PADRAO = {
                  'secador de cabelo', 'escova secadora', 'perfume feminino', 'shampoo',
                  'jogo de lençol', 'cortina', 'tapete sala', 'organizador', 'toalha de banho', 'cobertor', 'travesseiro',
                  'cadeira', 'colchão', 'guarda-roupa', 'penteadeira', 'gaveteiro', 'estante',
-                 'aspirador', 'ventilador', 'climatizador', 'air fryer', 'jogo de panelas', 'brinquedo infantil'],
+                 'aspirador', 'ventilador', 'climatizador', 'air fryer', 'jogo de panelas', 'brinquedo infantil',
+                 'liquidificador', 'cafeteira', 'aspirador robô', 'mixer', 'panela elétrica', 'ferro de passar',
+                 'fone bluetooth', 'smartwatch', 'caixa de som bluetooth', 'carregador turbo', 'ring light', 'lâmpada smart',
+                 'luminária', 'quadro decorativo', 'espelho decorativo', 'jogo de cama', 'kit tapete banheiro', 'almofada decorativa'],
     # Focos (público/ocasião): palavras próprias, ligar/desligar e prioridade no ranking (os grupos são de plus size)
     'focos_ativos': [n for n, v in TEMAS_PRONTOS.items() if v[2]],
     'palavras_foco': {n: list(v[1]) for n, v in TEMAS_PRONTOS.items()},
@@ -2175,6 +2178,14 @@ def divulgador_cfg():
             set_cfg('divulgador', json.dumps(salvo, ensure_ascii=False))
             d.update(focos_ativos=fa, nao_repetir_dias=salvo['nao_repetir_dias'])
         set_cfg('migr_limpeza', '1')
+    if get_cfg('migr_palavras_casa_eletro') != '1':   # 27Nov26: mais palavras de eletrônicos, eletro e casa
+        salvo = get_json('divulgador', {})
+        novas = DIVULGADOR_PADRAO['palavras']
+        if salvo.get('palavras'):
+            salvo['palavras'] = list(dict.fromkeys(list(salvo['palavras']) + novas))[:60]
+            set_cfg('divulgador', json.dumps(salvo, ensure_ascii=False))
+            d['palavras'] = salvo['palavras']
+        set_cfg('migr_palavras_casa_eletro', '1')
     if get_cfg('migr_mais_ofertas') != '1':   # 24Nov26: mais ofertas por rodada (4 → 6)
         salvo = get_json('divulgador', {})
         if salvo and int(salvo.get('por_rodada') or 4) < 6:
@@ -2225,7 +2236,7 @@ def minerar(d=None, limite_busca=20):
                         or nota < float(d['nota_min']) \
                         or vendas < int(d['vendas_min']):
                     continue
-                piso = piso_comissao(classificar_nicho(n.get('productName'), palavra), d)
+                piso = max(piso_comissao(classificar_nicho(n.get('productName'), palavra), d), float(d['comissao_min']) * 0.6)
                 focos = [f for f in classificar_focos(n.get('productName'), palavra) if f in d.get('focos_ativos', [])]
                 desc = int(float(n.get('priceDiscountRate') or 0))
                 n.update({'chave': chave, 'comissao_rs': com, 'palavra': palavra, 'focos': focos, 'desconto': desc,
@@ -2250,6 +2261,8 @@ def minerar(d=None, limite_busca=20):
             nome = n.get('productName') or ''
             com, nota, vendas = comissao_reais(n), float(n.get('ratingStar') or 0), int(n.get('sales') or 0)
             nic = classificar_nicho(nome)
+            if d.get('so_nichos') and nic not in d['so_nichos'] and not set(classificar_focos(nome)) & set(d['so_nichos']):
+                continue                         # fora da faixa de horário
             if bloqueado(nome) or com < piso_comissao(nic, d) or nota < float(d['nota_min']) or vendas < int(d['vendas_min']):
                 continue
             desc = int(float(n.get('priceDiscountRate') or 0))
@@ -2263,16 +2276,20 @@ def minerar(d=None, limite_busca=20):
             n['pontos'] *= 1.5
     achados.sort(key=lambda x: -x['pontos'])
     total = int(d['por_rodada'])
-    escolhidos, por_palavra = [], {}
+    escolhidos, por_palavra, por_nicho = [], {}, {}
 
     def pegar(lista, ate):
         for n in lista:                        # variedade: no máximo 1 por palavra-chave na rodada
             if len(escolhidos) >= ate:
                 return
             lim = 2 if n['palavra'] == '🔥 mais vendidos Shopee' else 1
+            nic = classificar_nicho(n.get('productName'), n['palavra'])
             if por_palavra.get(n['palavra'], 0) >= lim or n in escolhidos:
                 continue
+            if not d.get('so_nichos') and por_nicho.get(nic, 0) >= max(2, total // 3):
+                continue                         # rodada sem faixa: no máximo ~1/3 de um mesmo nicho (moda não domina)
             por_palavra[n['palavra']] = por_palavra.get(n['palavra'], 0) + 1
+            por_nicho[nic] = por_nicho.get(nic, 0) + 1
             escolhidos.append(n)
     if d.get('metade_promo'):                  # primeiro, pelo menos metade em promoção de verdade
         pegar([n for n in achados if n['desconto'] >= int(d.get('desconto_min', 20))], (total + 1) // 2)
@@ -2303,8 +2320,8 @@ def rodar_divulgador(manual=False):
         palavras = [w for w in d['palavras'] if classificar_nicho(w) in alvo]
         pais = temas_pai(d)
         focos_alvo = [f for f in d.get('focos_ativos', []) if f in alvo or pais.get(f) in alvo]   # foco da faixa + temas da categoria
-        if palavras or focos_alvo:
-            d = dict(d, palavras=palavras, focos_ativos=focos_alvo or d.get('focos_ativos', []))
+        if palavras or focos_alvo:               # só o que é da faixa (antes caía em TODOS os temas e a moda dominava)
+            d = dict(d, palavras=palavras, focos_ativos=focos_alvo, so_nichos=list(alvo))
     escolhidos = minerar(d)
     if not escolhidos:
         return 0, 'Nenhum produto novo passou nos filtros agora.'
@@ -3908,7 +3925,7 @@ class H(BaseHTTPRequestHandler):
             if str(b.get('peso_foco', '')).replace('.', '', 1).isdigit():
                 d['peso_foco'] = min(5.0, max(1.0, float(b['peso_foco'])))
             if isinstance(b.get('palavras'), list):
-                d['palavras'] = [x.strip() for x in b['palavras'] if x.strip()][:40]
+                d['palavras'] = [x.strip() for x in b['palavras'] if x.strip()][:60]
             for k, tipo in (('por_rodada', int), ('comissao_min', float), ('comissao_min_moda', float), ('nota_min', float), ('vendas_min', int),
                             ('nao_repetir_dias', int), ('desconto_min', int)):
                 if str(b.get(k, '')).replace('.', '', 1).replace(',', '', 1).isdigit():

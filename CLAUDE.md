@@ -53,7 +53,9 @@
   voltam pra fila só depois de 5 dias. Tema **🧽 Limpeza da casa** (rotina diária: mop, rodo, pano microfibra…) ligado, sob Casa.
   Desde 24Nov26: Divulgador também minera a lista dos **mais vendidos da Shopee** (productOfferV2 listType 2) e marca
   **⚡ OFERTA RELÂMPAGO** (≥ 40% OFF em produto que vende muito, sobe no ranking); 6 ofertas por rodada; temas de uma categoria
-  (ex.: Limpeza → Casa) entram na mineração da faixa dessa categoria.
+  (ex.: Limpeza → Casa) entram na mineração da faixa dessa categoria. 27Nov26: na faixa de um nicho só entra o que é dele (antes
+  caía em todos os temas e a moda dominava); rodada sem faixa tem no máximo ~1/3 de um mesmo nicho; mais palavras de
+  eletrônicos, eletrodomésticos e casa.
 - **✨ Foto Pinterest (24Nov26, opção manual escolhida pela Juliane):** botão no cartão da aprovação ou *9* no FILA POST ZAP; o Gemini
   recria a foto do produto em cena estilo Pinterest mantendo o produto idêntico (cor, estampa, formato); *9 0* volta a original.
   Criada antes do envio, não atrasa as rajadas. ~US$ 0,04 por foto.
