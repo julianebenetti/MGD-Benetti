@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "AfiliDash Avaliações",
-  "version": "1.0",
-  "description": "Quando você abre um produto na Shopee, manda para o robô as avaliações que a própria página já carregou (não faz pedidos à Shopee).",
+  "version": "1.1",
+  "description": "Manda para o robô as avaliações do produto e a lista da Oferta Relâmpago que a própria página já carregou (não faz pedidos à Shopee).",
   "host_permissions": ["__ORIGEM__/*"],
   "background": {"service_worker": "background.js"},
   "content_scripts": [

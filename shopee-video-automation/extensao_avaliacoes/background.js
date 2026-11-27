@@ -34,7 +34,32 @@ async function flush(tabId) {
   }
 }
 
+// ⚡ Oferta Relâmpago: junta os produtos por 5 s e manda de uma vez
+const flash = {};
+let flashTimer = null;
+async function flushFlash(tabId) {
+  const items = Object.values(flash);
+  for (const k of Object.keys(flash)) delete flash[k];
+  if (!items.length) return;
+  try {
+    const resp = await fetch(self.AFILIDASH.url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Chave': self.AFILIDASH.chave},
+      body: JSON.stringify({tipo: 'relampago', items})
+    });
+    badge(tabId, resp.ok ? '⚡' + items.length : '!', resp.ok ? '#ee4d2d' : '#dc2626');
+  } catch (e) {
+    badge(tabId, '!', '#dc2626');
+  }
+}
+
 chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg && msg.__afilidash === 'relampago') {
+    for (const it of msg.items || []) flash[`${it.shopid}/${it.itemid}`] = it;
+    clearTimeout(flashTimer);
+    flashTimer = setTimeout(() => flushFlash(sender.tab && sender.tab.id), 5000);
+    return;
+  }
   if (!msg || msg.__afilidash !== 'avaliacoes') return;
   const ids = idsFromUrl(msg.page || '');
   for (const r of msg.ratings || []) {

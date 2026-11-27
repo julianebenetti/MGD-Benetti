@@ -74,6 +74,11 @@ vinhetas (~4 s); o robô junta cada vídeo com a vinheta de outro (sorteio, vinh
 ficar igual ao de quem comprou o mesmo pack, e cada um segue o caminho do 📥 Envios (conferência com o anúncio, capa,
 ✅ Editados). Monta 90 s depois do último vídeo (`PACK_ESPERA`) ou com **`/montar`**. Imagens são ignoradas.
 
+**⚡ Oferta Relâmpago** — o robô nunca abre a Shopee. Duas entradas: (1) a extensão do Chrome (`/extensao`, versão 1.1)
+copia a lista que a página de Oferta Relâmpago já carregou quando você a abre; (2) prints da tela de Oferta Relâmpago
+mandados em 💡 Ideias com a legenda `/relampago` (álbum vale como um pedido). O robô confere cada produto pela API
+(comissão ≥ R$ 3, nota, sem suplementos) e manda a lista ⚡ com os links da LiA.
+
 **💡 Ideias** — todo dia às 7:30 (`IDEIAS_HORA`) e quando você pede **`/sugestoes`** (numa fila só delas; se a
 **A lista do dia** (06/11): 🔥 **10 mais buscados** · 🏠 **10 casa e decoração** (nicho novo, em teste) ·
 💇 **5 beleza/cabelo** · 🎄 **10 Natal** (de 15/10 a 24/12; fora disso as vagas vão para casa) · 👗 **15 moda** ·

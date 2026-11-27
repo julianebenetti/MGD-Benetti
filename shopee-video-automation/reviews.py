@@ -57,6 +57,22 @@ def _clean(payload) -> tuple:
     return item_id, shop_id, reviews
 
 
+def save_flash(db, items: list) -> int:
+    """Guarda os produtos da Oferta Relâmpago que a extensão mandou; o robô monta a lista em 💡 Ideias."""
+    clean = []
+    for it in items[:300]:
+        try:
+            clean.append({'shopId': int(it.get('shopid')), 'itemId': int(it.get('itemid')),
+                          'nome': str(it.get('nome') or '')[:200], 'fim': int(it.get('fim') or 0)})
+        except (TypeError, ValueError):
+            continue
+    if clean:
+        old = json.loads(db.get_meta('relampago_fila', '[]') or '[]')
+        db.set_meta('relampago_fila', json.dumps((old + clean)[-500:], ensure_ascii=False))
+        db.set_meta('relampago_recebido', str(time.time()))
+    return len(clean)
+
+
 def serve(db, key: str, port: int = PORT) -> ThreadingHTTPServer:
     """Recebe as avaliações da extensão: POST com o JSON {itemId, shopId, reviews} e o cabeçalho X-Chave."""
     class Handler(BaseHTTPRequestHandler):
@@ -80,7 +96,13 @@ def serve(db, key: str, port: int = PORT) -> ThreadingHTTPServer:
                 self._reply(413, {'ok': False})
                 return
             try:
-                item_id, shop_id, reviews = _clean(json.loads(self.rfile.read(size)))
+                payload = json.loads(self.rfile.read(size))
+                if isinstance(payload, dict) and payload.get('tipo') == 'relampago':
+                    n = save_flash(db, payload.get('items') or [])
+                    logger.info(f"Oferta Relâmpago recebida da extensão: {n} produto(s)")
+                    self._reply(200, {'ok': True, 'total': n})
+                    return
+                item_id, shop_id, reviews = _clean(payload)
             except (ValueError, json.JSONDecodeError, AttributeError) as e:
                 self._reply(400, {'ok': False, 'erro': str(e)[:100]})
                 return

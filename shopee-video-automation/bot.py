@@ -197,7 +197,9 @@ class Bot:
                        # de Editados (capa, legenda, headline, print) não esperam atrás deles
                        'approve': queue.Queue(), 'tidy': queue.Queue()}
         self.approving: set = set()
-        self.running: Dict[int, tuple] = {}   # trabalho em andamento em cada fila: (tipo, início)   # posts com agendamento na fila ou em andamento
+        self.running: Dict[int, tuple] = {}
+        self.flash_prints: List[Dict] = []   # prints da Oferta Relâmpago esperando o álbum terminar
+        self.flash_albums: set = set()   # trabalho em andamento em cada fila: (tipo, início)   # posts com agendamento na fila ou em andamento
         self.pending: List[Dict] = []
         self.album_links: Dict[str, Dict] = {}
         self.prompt_prints: List[tuple] = []   # (quando, álbum, file_id) de prints mandados no 🎬 Prompts
@@ -214,7 +216,7 @@ class Bot:
     def submit(self, job: tuple):
         kind = job[0]
         name = 'video' if kind in ('video', 'pack', 'pack_alts') else 'lia' if kind in ('lia', 'lia_check', 'lia_retro') else \
-            'ideas' if kind in ('ideas', 'idea_links', 'datafeed') else \
+            'ideas' if kind in ('ideas', 'idea_links', 'datafeed', 'flash') else \
             'approve' if kind in ('approve', 'use_identical') else \
             'tidy' if kind in ('tidy', 'clean_agenda') else 'report' if kind in ('report', 'sales', 'validate_agenda', 'prompt', 'narrations', 'prompt_narr', 'extension', 'sales_watch', 'winners', 'study', 'panel') \
             else 'ui'
@@ -1620,6 +1622,7 @@ class Bot:
     def tick(self):
         self.watchdog()
         self.pack_tick()
+        self.flash_tick()
         for album in [a for a, v in self.album_links.items() if time.time() - v['at'] > BATCH_LINK_TTL]:
             del self.album_links[album]
         for p in self.pending:  # cada vídeo sem link é perguntado sozinho; os outros seguem
@@ -2511,6 +2514,119 @@ class Bot:
             self.tg.send_text(thread, f"⚠️ A lista saiu, mas os links para a LiA falharam ({html.escape(str(e)[:120])}). "
                                       "Mande /linksideias para tentar de novo.")
 
+    # ---------- ⚡ Oferta Relâmpago (extensão do Chrome ou prints; o robô nunca abre a Shopee) ----------
+
+    def flash_tick(self):
+        """Produtos da Oferta Relâmpago chegaram pela extensão: espera 1 min sem novidade e monta a lista."""
+        if self.flash_prints and time.time() - self.flash_prints[-1]['at'] > 15:   # prints: junta e monta uma lista
+            prints, self.flash_prints = self.flash_prints, []
+            self.submit(('flash', prints[0]['thread'], [], 'prints', [p['file_id'] for p in prints]))
+        got = float(self.db.get_meta('relampago_recebido', '0') or 0)
+        if got and time.time() - got > 60 and self.db.get_meta('relampago_fila', '[]') not in ('', '[]'):
+            items = json.loads(self.db.get_meta('relampago_fila') or '[]')
+            self.db.set_meta('relampago_fila', '[]')
+            self.db.set_meta('relampago_recebido', '0')
+            self.submit(('flash', IDEIAS, items, 'extensão'))
+
+    def on_flash_print(self, msg: Dict, thread: Optional[int]):
+        """Prints da tela de Oferta Relâmpago com a legenda /relampago (um álbum vale como um pedido só)."""
+        file_id = msg['photo'][-1]['file_id'] if msg.get('photo') else msg['document']['file_id']
+        if msg.get('media_group_id'):
+            self.flash_albums.add(msg['media_group_id'])   # as outras fotos do álbum vêm sem legenda
+        self.tg.react(msg['message_id'], '👌')
+        self.flash_prints.append({'file_id': file_id, 'thread': thread or IDEIAS, 'at': time.time()})
+
+    FLASH_SCHEMA = {'type': 'object', 'properties': {'produtos': {'type': 'array', 'items': {
+        'type': 'object', 'properties': {'nome': {'type': 'string'}, 'horario': {'type': 'string'}},
+        'required': ['nome', 'horario'], 'additionalProperties': False}}},
+        'required': ['produtos'], 'additionalProperties': False}
+
+    def flash_from_print(self, file_id: str) -> List[Dict]:
+        """Lê os nomes dos produtos no print (IA) e acha cada um na API de afiliados."""
+        from ai_client import ask_json
+        from product_matcher import _image_block, _jpeg_b64
+        from PIL import Image
+        path = self.tg.download(file_id, BASE / 'downloads' / 'relampago')
+        prompt = ("Este é um print da tela de Oferta Relâmpago da Shopee. Liste cada produto que aparece, com o NOME "
+                  "como está escrito (completo, sem inventar) e o horário da oferta se aparecer (ex.: '14:00 - 16:00'; "
+                  "vazio se não aparecer). Ignore banners e propagandas.")
+        data = ask_json([_image_block(_jpeg_b64(Image.open(path), 1280)), {'type': 'text', 'text': prompt}],
+                        self.FLASH_SCHEMA, name='relampago')
+        out = []
+        for p in data.get('produtos', [])[:30]:
+            name = (p.get('nome') or '').strip()
+            if len(name) < 8:
+                continue
+            try:
+                found = self.pipeline.shopee.search(name, limit=10)
+            except Exception as e:
+                logger.warning(f"Relâmpago: busca '{name[:40]}' falhou ({e})")
+                continue
+            words = set(ideas._plain(name))
+            best = max(found, key=lambda n: len(words & set(ideas._plain(n.get('productName', '')))), default=None)
+            if best and len(words & set(ideas._plain(best.get('productName', '')))) >= max(3, len(words) // 2):
+                out.append({**best, 'horario': p.get('horario', '')})
+        return out
+
+    def job_flash(self, thread: Optional[int], items: List[Dict], source: str, file_ids=None):
+        """Confere os produtos da Oferta Relâmpago pela API e manda a lista ⚡ em 💡 Ideias, com os links da LiA."""
+        target = thread or IDEIAS
+        products = []
+        try:
+            if file_ids:
+                seen = set()
+                for fid in ([file_ids] if isinstance(file_ids, str) else file_ids):
+                    for p in self.flash_from_print(fid):
+                        if f"{p['shopId']}:{p['itemId']}" not in seen:
+                            seen.add(f"{p['shopId']}:{p['itemId']}")
+                            products.append(p)
+            else:
+                seen = set()
+                for it in items:
+                    key = f"{it['shopId']}:{it['itemId']}"
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    try:
+                        p = self.pipeline.shopee.product_by_ids(it['shopId'], it['itemId'])
+                    except Exception as e:
+                        logger.warning(f"Relâmpago: produto {key} falhou ({e})")
+                        continue
+                    if p:
+                        fim = int(it.get('fim') or 0)
+                        products.append({**p, 'horario': datetime.fromtimestamp(fim, scheduler.TZ).strftime('até %H:%M')
+                                         if fim > 1e9 else ''})
+                    if len(products) >= 60:
+                        break
+        except Exception as e:
+            logger.exception("Oferta Relâmpago falhou")
+            self.tg.send_text(target, f"⚠️ Não consegui montar a Oferta Relâmpago ({html.escape(str(e)[:150])}).")
+            return
+        ok = [p for p in products if float(p.get('ratingStar') or 0) >= ideas.MIN_RATING
+              and commission_value(p) >= ideas.IDEAS_MIN_COMMISSION
+              and not ideas.BLOCKED.search(p.get('productName', ''))
+              and not ideas.FORBIDDEN.search(p.get('productName', ''))]
+        ok.sort(key=lambda p: commission_value(p) * (1 + (ideas.month_sales(p) or 0) / 1000), reverse=True)
+        ok = ok[:20]
+        for p in ok:
+            p['tema'] = 'Oferta Relâmpago' + (f" · {p['horario']}" if p.get('horario') else '')
+        if not ok:
+            self.tg.send_text(target, f"⚡ Recebi {len(products)} produto(s) da Oferta Relâmpago ({source}), mas nenhum "
+                                      f"passou nas regras (comissão ≥ {ideas._brl(ideas.IDEAS_MIN_COMMISSION)}, nota ≥ 4,5, "
+                                      "sem suplementos).")
+            return
+        today = scheduler.now().date()
+        sections = [('relampago', f"⚡ Oferta Relâmpago agora ({source})", ok)]
+        for message in ideas.render_sections(sections, today, heading='⚡ Oferta Relâmpago'):
+            self.tg.send_text(target, message)
+        self.tg.send_text(target, "<i>Na narração e na capa, não fale do preço da oferta: ele vale só por algumas horas e o "
+                                  "vídeo fica no ar por meses.</i>")
+        try:
+            self.send_idea_links(target, ideas.section_rows(sections), today)
+        except Exception as e:
+            logger.exception("Links da Oferta Relâmpago falharam")
+            self.tg.send_text(target, f"⚠️ A lista saiu, mas os links para a LiA falharam ({html.escape(str(e)[:120])}).")
+
     def send_idea_links(self, thread: Optional[int], rows: List[Dict], today: date):
         """
         Os links de afiliado das ideias do dia (sub_id LIA-<data>-<produto>, para ver as vendas dos vídeos feitos no
@@ -2794,6 +2910,8 @@ class Bot:
                     self.job_pack_alternatives(*job[1:])
                 elif job[0] == 'pack':
                     self.job_pack(*job[1:])
+                elif job[0] == 'flash':
+                    self.job_flash(*job[1:])
                 elif job[0] == 'datafeed':
                     self.job_datafeed(*job[1:])
                 elif job[0] == 'ideas':
@@ -2827,6 +2945,12 @@ class Bot:
             return
         thread = msg.get('message_thread_id')
         command = (msg.get('text') or '').strip()
+        caption = (msg.get('caption') or '').strip().lower()
+        is_image = msg.get('photo') or msg.get('document', {}).get('mime_type', '').startswith('image/')
+        if is_image and (caption.startswith('/relampago') or caption.startswith('/relâmpago')
+                         or (msg.get('media_group_id') and msg['media_group_id'] in self.flash_albums)):
+            self.on_flash_print(msg, thread)
+            return
         if msg.get('document') and (msg.get('caption') or '').strip().lower().startswith('/datafeed'):
             self.on_datafeed_file(msg, thread)
             return
@@ -3033,6 +3157,9 @@ class Bot:
             "• /sugestoes pet: 🐾 pet\n"
             "• /sugestoes tapete: 🐾 só tapete higiênico\n"
             "• /sugestoes oportunidades: 🌱 poucas vendas ainda / comissão extra\n\n"
+            "<b>⚡ Oferta Relâmpago</b>\n"
+            "• No computador: abra a página de Oferta Relâmpago da Shopee com a extensão AfiliDash ligada\n"
+            "• No celular: mande aqui os prints da tela de Oferta Relâmpago com a legenda /relampago\n\n"
             "<b>🔗 Links para o app da LiA</b> (lotes de até 20, um link por linha)\n"
             "• /linksideias: os links da última lista\n"
             "• /linksideias 25/10: as ideias de um dia\n"
