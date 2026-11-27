@@ -90,8 +90,9 @@ if (iCon >= 0) {
         const d = (await graph('debug_token', { input_token: p.access_token, access_token: TOKEN })).data || {};
         const sc = d.scopes || [];
         const falta = PRECISA.filter((x) => !sc.includes(x));
+        const semIns = !sc.includes('read_insights') ? ' · sem read_insights (sem alcance)' : ' · com read_insights';
         info = ' · validade: ' + (d.expires_at ? new Date(d.expires_at * 1000).toLocaleDateString('pt-BR') : 'nunca') +
-               ' · ' + (falta.length ? 'FALTAM permissões: ' + falta.join(', ') : 'pode publicar e comentar') + (d.is_valid === false ? ' · TOKEN INVÁLIDO' : '');
+               ' · ' + (falta.length ? 'FALTAM permissões: ' + falta.join(', ') : 'pode publicar e comentar') + semIns + (d.is_valid === false ? ' · TOKEN INVÁLIDO' : '');
       } catch (e) { info = ' · (não consegui conferir as permissões: ' + e.message + ')'; }
       console.log('✅ ' + chave + ' — ' + p.name + info);
     } catch (e) { falhas++; console.log('✖ ' + chave + ' (' + id + '): ' + e.message); }
