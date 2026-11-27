@@ -37,7 +37,7 @@ def cfg():
     return {
         "page_id": os.environ.get("FB_PAGE_ID", ""),
         "token": os.environ.get("FB_PAGE_TOKEN", ""),
-        "versao": os.environ.get("FB_GRAPH_VERSION", "v24.0"),
+        "versao": os.environ.get("FB_GRAPH_VERSION", "v25.0"),
         "base": os.environ.get("FB_GRAPH_BASE", "https://graph.facebook.com"),
         "limite_dia": int(os.environ.get("FB_LIMITE_DIA", "3")),
         "espera_comentario": int(os.environ.get("FB_ESPERA_COMENTARIO_SEG", "20")),

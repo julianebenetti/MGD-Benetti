@@ -42,3 +42,36 @@ Os nomes das telas da Meta mudam; confirme na documentação oficial (developers
 - Prefira imagem própria (a do Gemini com texto seu) em vez de imagem copiada de outro site.
 - Mantenha a linha de **divulgação de afiliado** na legenda.
 - Se a Meta aposentar a versão da API (`FB_GRAPH_VERSION`), atualize no `.env`.
+
+---
+
+# 🤖 Bot do Telegram: uma aba por Página
+
+Você manda **uma foto com o nome do produto e o link na legenda** numa aba do Telegram; o bot enfileira, posta na Página
+certa (foto + link na legenda + link no 1º comentário) e avisa na própria aba. Limites por Página (padrão: 3 posts/dia,
+2 h de intervalo, só entre 8h e 22h, fila de até 30, 3 tentativas, pausa de 6 h se a Meta pedir calma).
+
+**Começa em MODO TESTE:** não posta nada de verdade até você colocar `BOT_ENVIAR=sim` no `.env`.
+
+## Passo a passo (uma vez só)
+1. **Tokens das Páginas:** gere o token do usuário do sistema (Gerenciador de Negócios), coloque em `FB_SYSTEM_TOKEN` no `.env`
+   e rode `node obter-tokens-paginas.js`. Ele cria o `paginas.json` (permissão 600). Depois apague `FB_SYSTEM_TOKEN` do `.env`.
+2. **Bot do Telegram:** no @BotFather mande `/newbot`, escolha nome e usuário, e coloque o token em `TG_BOT_TOKEN` no `.env`.
+   Ainda no @BotFather: `/setprivacy` → escolha o bot → **Disable** (assim ele enxerga as fotos nas abas).
+3. **Grupo:** crie um grupo, ative **Tópicos** (Editar grupo → Tópicos), crie 3 abas (uma por Página/nicho) e **adicione o bot como administrador**.
+4. **ID do grupo:** escreva qualquer coisa no grupo e rode `python3 bot_telegram.py --descobrir-chat`. Coloque o número em `TG_CHAT_ID`.
+5. **Ligar o bot:** `sudo bash instalar-servico.sh` (reinicia sozinho; logs: `journalctl -u facebook-bot -f`).
+6. **Ligar cada aba a uma Página:** dentro de cada aba, mande `/aqui bbc`, `/aqui vea` ou `/aqui vip`.
+7. **Testar:** mande uma foto com legenda `Nome do produto` + link. No modo teste ele responde "🧪 Eu postaria agora...".
+8. **Valendo:** quando estiver satisfeita, `BOT_ENVIAR=sim` no `.env` e `sudo systemctl restart facebook-bot`.
+
+## Comandos (em qualquer aba)
+`/fila` · `/pausar` · `/retomar` · `/limpar sim` · `/status` · `/ajuda` · `/aqui bbc|vea|vip`
+
+## Por Página (opcional)
+Copie `config-bot.exemplo.json` para `config-bot.json` e ajuste `limite_dia`, `intervalo_min` e, se quiser, `legenda`/`comentario`
+próprios (use `{produto}` e `{link}`; `\n` quebra linha).
+
+## Cuidados
+- Não mande o **mesmo produto** para as 3 Páginas; a Meta trata conteúdo repetido como spam. Nichos separados ajudam.
+- Se o bot avisar "A Meta pediu calma 3 vezes", pare e veja o status da Página no Facebook antes de `/retomar`.

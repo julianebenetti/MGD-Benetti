@@ -1,0 +1,5 @@
+{
+  "bbc": { "nicho": "preencher", "limite_dia": 3, "intervalo_min": 120 },
+  "vea": { "nicho": "preencher", "limite_dia": 3, "intervalo_min": 120 },
+  "vip": { "nicho": "preencher", "limite_dia": 3, "intervalo_min": 120 }
+}
