@@ -57,12 +57,43 @@ class Bot:
         self.paginas = fp.ler_json(cfg["paginas"], {})      # chave -> {page_id, nome, token}
         self.extra = fp.ler_json(cfg["config"], {})         # chave -> {nicho, limite_dia, intervalo_min, legenda, comentario}
         self.d = fp.ler_json(cfg["dados"], {"offset": 0, "paginas": {}, "fila": [], "postados": []})
+        if cfg["dados"].exists():
+            self.exportar()
 
     # ---------- infraestrutura ----------
     def salvar(self):
         tmp = Path(str(self.c["dados"]) + ".tmp")
         tmp.write_text(json.dumps(self.d, ensure_ascii=False, indent=1), encoding="utf-8")
         os.replace(tmp, self.c["dados"])
+        self.exportar()
+
+    def exportar(self):
+        """Grava publico/postados.json (sem tokens nem caminhos) para a aba "Postados" da agenda ler."""
+        try:
+            pasta = AQUI / "publico"
+            pasta.mkdir(exist_ok=True)
+            por_id = {p["id"]: p for p in self.d["postados"]}
+            itens = []
+            for i in self.d["fila"]:
+                if i["status"] == "cancelado":
+                    continue
+                p = por_id.get(i["id"], {})
+                itens.append({
+                    "id": i["id"], "pagina": i["pagina"], "tipo": i.get("tipo", "foto"),
+                    "produto": (i.get("produto") or "").strip().splitlines()[0][:120] if (i.get("produto") or "").strip() else "",
+                    "subid": i.get("subid", ""), "link": i.get("link", ""),
+                    "url_post": p.get("url") or (f"https://www.facebook.com/{p['post_id']}" if p.get("post_id") else ""),
+                    "quando": p.get("quando") or i.get("criado"), "status": i["status"],
+                    "comentario_ok": p.get("comentario_ok", True), "simulado": bool(p.get("simulado"))})
+            itens.sort(key=lambda x: x["quando"] or "", reverse=True)
+            dados = {"atualizado": agora().isoformat(timespec="seconds"),
+                     "paginas": {k: {"nome": v.get("nome", k), "nicho": self.extra.get(k, {}).get("nicho", "")} for k, v in self.paginas.items()},
+                     "itens": itens[:300]}
+            tmp = pasta / "postados.json.tmp"
+            tmp.write_text(json.dumps(dados, ensure_ascii=False), encoding="utf-8")
+            os.replace(tmp, pasta / "postados.json")
+        except Exception as e:
+            print("não consegui exportar o histórico:", e, file=sys.stderr)
 
     def tg(self, metodo, dados=None, espera=60):
         req = urllib.request.Request(
