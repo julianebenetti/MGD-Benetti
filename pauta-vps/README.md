@@ -8,7 +8,7 @@ endereço do histórico do robô do Facebook (`/facebook/postados.json`). É iss
 ```
 curl -fsSL https://raw.githubusercontent.com/julianebenetti/MGD-Benetti/claude/eager-wozniak-yxsgfc/pauta-vps/instalar.sh | sudo bash
 ```
-Ele baixa a agenda, cria a senha (usuário `agenda`; só na primeira vez) e gera `/etc/nginx/snippets/pauta.conf`.
+Ele baixa a agenda, cria a senha (usuário `Benetti`; só na primeira vez) e gera `/etc/nginx/snippets/pauta.conf`.
 Depois é preciso **uma vez** acrescentar `include /etc/nginx/snippets/pauta.conf;` dentro do `server { }` HTTPS do site e rodar
 `sudo nginx -t && sudo systemctl reload nginx`. Para atualizar a agenda depois, é só rodar o mesmo comando de novo.
 

@@ -9,7 +9,7 @@ BRANCH="${BRANCH:-claude/eager-wozniak-yxsgfc}"
 DIR="${DIR:-/opt/minha-pauta}"
 SNIPPET="${SNIPPET:-/etc/nginx/snippets/pauta.conf}"
 HTPASS="${HTPASS:-/etc/nginx/.htpasswd-pauta}"
-USUARIO="${PAUTA_USUARIO:-agenda}"
+USUARIO="${PAUTA_USUARIO:-Benetti}"
 HIST="${HIST:-/opt/facebook-post/facebook-post}"
 SUDO=""; [ "$(id -u)" != 0 ] && SUDO="sudo"
 
