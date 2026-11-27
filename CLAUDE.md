@@ -47,6 +47,8 @@
   suplementos/vitaminas/colágeno/whey. Ao mudar critérios de curadoria, ajustar também as palavras/filtros dele.
   **Exceção (decisão da Juliane, 18Nov26): 👗 Moda tem piso de R$ 4** no PostZap (Divulgador e lista de produtos) —
   o público do WhatsApp gosta de produto barato. Os demais nichos continuam com piso de R$ 9.
+  **Exceções de piso no PostZap (pedido da Juliane, 27Nov26; editáveis no 🤖 Divulgador):** Casa e decoração R$ 5, Cozinha R$ 4,
+  Beleza R$ 5, Infantil R$ 4, Pet R$ 4. Eletrodomésticos, Eletrônicos e Móveis seguem em R$ 9. (O Garimpo continua com R$ 9 / moda R$ 4.)
 - **Promoção de verdade e sem repetir (decisão da Juliane, 21Nov26):** pelo menos **metade** das sugestões do Divulgador e dos
   envios com desconto real na Shopee (≥ 20% OFF, campo priceDiscountRate; o post mostra o "De:" riscado). Não repetir produto:
   Divulgador ignora o que passou pelo PostZap nos últimos 15 dias; a rajada joga pro fim o que saiu nos últimos 2 dias; vendidos
@@ -69,7 +71,7 @@
   e **itens de Natal**. No PostZap isso é organizado como **temas da mineração** (focos) por cima do nicho (👗 Moda, 🏠 Casa…),
   cada um com liga/desliga e palavras próprias no Divulgador: prontos ➕ Plus Size, ✝️ Evangélica, 🎄 Natal (ligados),
   🎆 Réveillon, ☀️ Verão e praia, 🎒 Volta às aulas, 👙 Moda íntima, 👟 Calçados, 👜 Bolsas e acessórios, 🏋️ Fitness,
-  🎁 Presentes, 🧔 Masculino (desligados); ela pode criar outros. Temas ligados a uma categoria usam a cor dela e aparecem
+  🎁 Presentes, 🧔 Masculino, 🔧 Ferramentas e carro, 🪴 Jardim e plantas, 🧳 Viagem (desligados); ela pode criar outros. Temas ligados a uma categoria usam a cor dela e aparecem
   embaixo dela na grade de horários (Plus Size, Evangélica, Réveillon, Verão, Moda íntima, Calçados, Bolsas, Fitness,
   Masculino → Moda; Natal → Casa; Volta às aulas → Infantil; Presentes = várias categorias). Plus Size e Evangélica são
   independentes (plus size não é só roupa evangélica).

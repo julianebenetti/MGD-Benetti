@@ -212,6 +212,8 @@ nav .sep{align-self:center;color:var(--mut);padding:0 6px 0 12px;margin-left:6px
           <div class="v">R$ <input id="dvCom" type="number" min="9" step="0.5"></div></div>
         <div class="q"><div class="t"><b>👗 Comissão mínima para MODA?</b><small>Exceção: o público do WhatsApp gosta de moda barata.</small></div>
           <div class="v">R$ <input id="dvComModa" type="number" min="1" step="0.5"></div></div>
+        <div class="q" style="display:block"><div class="t"><b>🏷️ Exceções de comissão por nicho</b><small>Nichos de produto barato que vendem bem nos seus pedidos e ficavam de fora com R$ 9. Vazio = usa o mínimo geral.</small></div>
+          <div id="dvPisos" class="row" style="margin-top:6px;gap:6px;flex-wrap:wrap"></div></div>
         <div class="q"><div class="t"><b>⭐ Nota mínima do produto?</b></div>
           <div class="v"><input id="dvNota" type="number" min="0" max="5" step="0.1"></div></div>
         <div class="q"><div class="t"><b>🛒 Mínimo de vendas do produto?</b></div>
@@ -1173,6 +1175,8 @@ async function carregarDiv(){
   try { $('#dvCfg').open = localStorage.dvCfg === '1'; } catch(e){}
   $('#dvAtivo').checked = d.ativo; document.querySelectorAll('input[name=dvModo]').forEach(r => r.checked = r.value === d.modo);
   $('#dvHor').value = d.horarios.join(', '); $('#dvQtd').value = d.por_rodada; $('#dvCom').value = d.comissao_min; $('#dvComModa').value = d.comissao_min_moda;
+  const ps = {...(d.pisos_padrao || {}), ...(d.pisos || {})};
+  $('#dvPisos').innerHTML = (d.nichos || []).filter(n => n !== '👗 Moda' && n !== '📦 Outros').map(n => `<label class="chk" style="border:0;padding:4px 8px;border-radius:8px;background:var(--bg)">${esc(n)} R$ <input class="dvPiso" data-n="${esc(n)}" type="number" min="1" step="0.5" style="width:70px" value="${ps[n] ?? ''}" placeholder="${d.comissao_min}"></label>`).join('');
   $('#dvNota').value = d.nota_min; $('#dvVend').value = d.vendas_min; $('#dvRep').value = d.nao_repetir_dias; $('#dvPromo').checked = d.metade_promo !== false; $('#dvDesc').value = d.desconto_min || 20;
   $('#dvPal').value = d.palavras.join('\n'); $('#dvPeso').value = d.peso_foco;
   $('#dvFocos').innerHTML = '';
@@ -1182,7 +1186,7 @@ async function carregarDiv(){
 async function salvarDiv(){
   await api('divulgador', {ativo: $('#dvAtivo').checked, modo: (document.querySelector('input[name=dvModo]:checked') || {}).value,
     horarios: $('#dvHor').value.split(',').map(x => x.trim().padStart(5, '0')).filter(Boolean), por_rodada: $('#dvQtd').value,
-    comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value, metade_promo: $('#dvPromo').checked, desconto_min: $('#dvDesc').value,
+    comissao_min: $('#dvCom').value, comissao_min_moda: $('#dvComModa').value, pisos: Object.fromEntries([...document.querySelectorAll('.dvPiso')].filter(i => i.value).map(i => [i.dataset.n, i.value])), nota_min: $('#dvNota').value, vendas_min: $('#dvVend').value, nao_repetir_dias: $('#dvRep').value, metade_promo: $('#dvPromo').checked, desconto_min: $('#dvDesc').value,
     palavras: $('#dvPal').value.split('\n'), peso_foco: $('#dvPeso').value,
     focos_ativos: [...document.querySelectorAll('.dvFocoAt:checked')].map(i => i.value),
     palavras_foco: Object.fromEntries([...document.querySelectorAll('.dvFocoPal')].map(t => [t.dataset.foco, t.value.split('\n')])),

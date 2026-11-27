@@ -563,13 +563,21 @@ TEMAS_PRONTOS = {
                           r'escova sanit|desentup|dispenser|lixeira|limpa (vidro|piso)|tira manchas|flanela|organizador de limpeza',
                           ['mop giratório', 'kit limpeza casa', 'rodo mágico', 'pano microfibra', 'vassoura mágica',
                            'escova sanitária', 'balde mop', 'esponja limpeza', 'lixeira banheiro', 'dispenser detergente pia'], True),
+    '🔧 Ferramentas e carro': (r'ferramenta|parafusadeira|furadeira|chave (de fenda|catraca)|maleta|automotiv|\bcarro\b|aspirador automotivo|'
+                              r'suporte (veicular|celular carro)|cera automotiva|organizador porta-malas',
+                              ['parafusadeira', 'jogo de ferramentas', 'aspirador automotivo', 'suporte celular carro', 'kit limpeza carro'], False),
+    '🪴 Jardim e plantas': (r'jardim|planta|vaso|regador|horta|grama sint|mangueira|adubo|terr[aá]rio',
+                           ['vaso para plantas', 'kit jardinagem', 'mangueira jardim', 'planta artificial', 'suporte para plantas'], False),
+    '🧳 Viagem': (r'mala de viagem|\bmala\b|necessaire|organizador de mala|travesseiro de pesco[cç]o|viagem',
+                 ['mala de viagem', 'kit organizador de mala', 'necessaire', 'travesseiro de pescoço'], False),
     '🧔 Masculino': (r'masculin|\bhomem\b|cueca|barba|camisa polo|bermuda',
                     ['camiseta masculina', 'bermuda masculina', 'kit cueca', 'tênis masculino', 'kit barba'], False),
 }
 TEMA_PAI_PRONTO = {'➕ Plus Size': '👗 Moda', '✝️ Evangélica': '👗 Moda', '🎆 Réveillon': '👗 Moda',
                    '☀️ Verão e praia': '👗 Moda', '🎄 Natal': '🏠 Casa e decoração', '🎒 Volta às aulas': '🧸 Infantil',
                    '👙 Moda íntima': '👗 Moda', '👟 Calçados': '👗 Moda', '👜 Bolsas e acessórios': '👗 Moda',
-                   '🏋️ Fitness': '👗 Moda', '🧔 Masculino': '👗 Moda', '🧽 Limpeza da casa': '🏠 Casa e decoração'}     # 🎁 Presentes: várias categorias (cor própria)
+                   '🏋️ Fitness': '👗 Moda', '🧔 Masculino': '👗 Moda', '🧽 Limpeza da casa': '🏠 Casa e decoração',
+                   '🪴 Jardim e plantas': '🏠 Casa e decoração', '🔧 Ferramentas e carro': '🔌 Eletrodomésticos'}     # 🎁 Presentes: várias categorias (cor própria)
 FOCOS = list(TEMAS_PRONTOS)          # nomes dos temas prontos (os criados por ela vêm de focos_nomes())
 _REGRAS_FOCO = [(n, v[0]) for n, v in TEMAS_PRONTOS.items()]
 
@@ -2153,11 +2161,18 @@ DIVULGADOR_PADRAO = {
 }
 
 
+PISOS_PADRAO = {   # exceções por nicho (27Nov26): nichos de ticket baixo que vendem bem nos pedidos dela e ficavam de fora com R$ 9
+    '🏠 Casa e decoração': 5.0, '🍳 Cozinha e utensílios': 4.0, '💇 Beleza e cabelo': 5.0, '🧸 Infantil': 4.0, '🐶 Pet': 4.0}
+
+
 def piso_comissao(nicho, d=None):
-    """Piso de comissão (R$ por venda): R$ 9 em geral; 👗 Moda tem piso próprio (padrão R$ 4)."""
+    """Piso de comissão (R$ por venda): R$ 9 em geral; 👗 Moda e os nichos de ticket baixo têm piso próprio."""
     d = d or divulgador_cfg()
     if nicho == '👗 Moda':
         return float(d.get('comissao_min_moda', 4.0))
+    pisos = {**PISOS_PADRAO, **(d.get('pisos') or {})}
+    if nicho in pisos:
+        return float(pisos[nicho])
     return float(d.get('comissao_min', 9.0))
 
 
@@ -3688,7 +3703,7 @@ class H(BaseHTTPRequestHandler):
                                       c.execute('SELECT instancia, admin FROM grupo_chips WHERE jid=?', (r['jid'],))]
                 return self.send_json({'grupos': rows, 'listas': listas()})
             if p == '/api/divulgador':
-                return self.send_json(dict(divulgador_cfg(), prontos=FOCOS, temas_pai=temas_pai(), nichos=NICHOS))
+                return self.send_json(dict(divulgador_cfg(), prontos=FOCOS, temas_pai=temas_pai(), nichos=NICHOS, pisos_padrao=PISOS_PADRAO))
             if p == '/api/engajamento':
                 with db() as c:
                     pedidos = [dict(r) for r in c.execute('SELECT texto, resultado, quando FROM pedidos_inbox ORDER BY id DESC LIMIT 30')]
@@ -3932,6 +3947,9 @@ class H(BaseHTTPRequestHandler):
                     d[k] = tipo(str(b[k]).replace(',', '.'))
             if 'metade_promo' in b:
                 d['metade_promo'] = bool(b['metade_promo'])
+            if isinstance(b.get('pisos'), dict):
+                d['pisos'] = {k: max(1.0, min(50.0, float(str(v).replace(',', '.')))) for k, v in b['pisos'].items()
+                              if k in NICHOS and str(v).replace(',', '.').replace('.', '', 1).isdigit()}
             d['comissao_min'] = max(9.0, d['comissao_min'])          # piso do Garimpo: nunca abaixo de R$ 9
             d['comissao_min_moda'] = max(1.0, d.get('comissao_min_moda', 4.0))
             set_cfg('divulgador', json.dumps(d, ensure_ascii=False))
