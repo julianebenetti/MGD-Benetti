@@ -9,11 +9,12 @@ Segurança: por padrão o robô NÃO posta de verdade (modo teste). Só posta co
 Comandos (em qualquer aba): /aqui bbc · /fila · /pausar · /retomar · /limpar sim · /status · /ajuda
 """
 import json, os, re, sys, time, urllib.error, urllib.request
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import facebook_post as fp
+import shopee_link
 
 AQUI = fp.AQUI
 BR = ZoneInfo("America/Sao_Paulo")
@@ -37,6 +38,9 @@ def carregar_config():
         "enviar": e("BOT_ENVIAR", "nao").strip().lower() in ("sim", "1", "true", "yes"),
         "janela": (int(ini or 8), int(fim or 22)),
         "limite_dia": int(e("BOT_LIMITE_DIA", "3")),
+        "limite_max": int(e("BOT_LIMITE_MAX", e("BOT_LIMITE_DIA", "3"))),
+        "aumento_dia": int(e("BOT_AUMENTO_DIA", "0")),
+        "converter": e("BOT_CONVERTER_SHOPEE", "sim").strip().lower() in ("sim", "1", "true", "yes"),
         "intervalo_min": int(e("BOT_INTERVALO_MIN", "120")),
         "max_fila": int(e("BOT_MAX_FILA", "30")),
         "max_tentativas": int(e("BOT_MAX_TENTATIVAS", "3")),
@@ -79,13 +83,13 @@ class Bot:
         except Exception as e:
             print("não consegui avisar no Telegram:", e, file=sys.stderr)
 
-    def baixar_foto(self, file_id, nome):
+    def baixar(self, file_id, nome):
         info = self.tg("getFile", {"file_id": file_id})["result"]
         url = f"{self.c['tg_base']}/file/bot{self.c['tg_token']}/{info['file_path']}"
         pasta = AQUI / "imagens"
         pasta.mkdir(exist_ok=True)
-        destino = pasta / f"{nome}.jpg"
-        with urllib.request.urlopen(url, timeout=60) as r:
+        destino = pasta / f"{nome}{Path(info['file_path']).suffix or '.jpg'}"
+        with urllib.request.urlopen(url, timeout=180) as r:
             destino.write_bytes(r.read())
         return str(destino)
 
@@ -94,7 +98,16 @@ class Bot:
         return self.paginas.get(chave, {}).get("nome", chave)
 
     def limite(self, chave):
-        return int(self.extra.get(chave, {}).get("limite_dia", self.c["limite_dia"]))
+        """Posts por dia. Com BOT_AUMENTO_DIA > 0 o limite sobe devagar (aquecimento) até BOT_LIMITE_MAX."""
+        ex = self.extra.get(chave, {})
+        base = int(ex.get("limite_dia", self.c["limite_dia"]))
+        maximo = int(ex.get("limite_max", self.c["limite_max"]))
+        aumento = int(ex.get("aumento_dia", self.c["aumento_dia"]))
+        if aumento <= 0 or maximo <= base:
+            return base
+        inicio = self.d["paginas"].get(chave, {}).get("inicio")
+        dias = (agora().date() - date.fromisoformat(inicio)).days if inicio else 0
+        return min(maximo, base + aumento * max(0, dias))
 
     def intervalo(self, chave):
         return int(self.extra.get(chave, {}).get("intervalo_min", self.c["intervalo_min"]))
@@ -150,7 +163,10 @@ class Bot:
         if texto.startswith("/"):
             return self.comando(thread, texto)
         if m.get("photo"):
-            return self.novo_item(thread, m, texto)
+            return self.novo_item(thread, m, texto, "foto")
+        doc = m.get("document") or {}
+        if m.get("video") or str(doc.get("mime_type", "")).startswith("video/"):
+            return self.novo_item(thread, m, texto, "video")
         if self.chave_da_aba(thread) and URL_RE.search(texto):
             self.dizer(thread, "📷 Mande a FOTO do produto com o link na legenda.")
 
@@ -218,31 +234,59 @@ class Bot:
             linhas.append(f"• {self.nome(k)}: {estado} · fila {len(self.pendentes(k))} · hoje {self.postados_hoje(k)}/{self.limite(k)}")
         return "\n".join(linhas)
 
-    def novo_item(self, thread, m, texto):
+    def novo_item(self, thread, m, texto, tipo="foto"):
         chave = self.chave_da_aba(thread)
         if not chave:
             return self.dizer(thread, "Esta aba ainda não está ligada a uma Página. Use /aqui " + " | ".join(self.paginas) + ".")
         links = URL_RE.findall(texto)
         if not links:
-            return self.dizer(thread, "🔗 Falta o link do produto na legenda da foto.")
-        link = links[0].rstrip(".,);")
-        if any(i["pagina"] == chave and i["link"] == link and i["status"] in ("pendente", "postado") for i in self.d["fila"]):
+            return self.dizer(thread, "🔗 Falta o link do produto na legenda.")
+        original = links[0].rstrip(".,);")
+        nome_dado = re.sub(r"\n{3,}", "\n\n", URL_RE.sub("", texto)).strip()
+        if any(i["pagina"] == chave and i["status"] in ("pendente", "postado") and i.get("link_original") == original for i in self.d["fila"]):
             return self.dizer(thread, "⚠️ Esse link já foi enviado para esta Página. Não repeti.")
         if len(self.pendentes(chave)) >= self.c["max_fila"]:
             return self.dizer(thread, f"✋ A fila desta Página já tem {self.c['max_fila']} itens. Espere sair alguns ou use /limpar sim.")
-        nome_dado = re.sub(r"\n{3,}", "\n\n", URL_RE.sub("", texto)).strip()
-        produto = nome_dado or "Achadinho"
+        # arquivo do Telegram (foto ou vídeo)
+        if tipo == "video":
+            arq = m.get("video") or m.get("document") or {}
+            if int(arq.get("file_size") or 0) > 20 * 1024 * 1024:
+                return self.dizer(thread, "🎬 Esse vídeo passa de 20 MB, o limite do Telegram para bots baixarem. Mande uma versão menor (ou comprimida).")
+            file_id = arq.get("file_id")
+        else:
+            file_id = m["photo"][-1]["file_id"]
+        # conversão do link (Shopee) com sub-ID rastreável + nome do produto
+        link, produto, avisos, subid, item_id = original, nome_dado, [], "", None
+        if self.c["converter"] and shopee_link.eh_shopee(original):
+            if not shopee_link.disponivel():
+                avisos.append("⚠️ Sem as chaves da Shopee: o link vai do jeito que veio, SEM rastreio.")
+            else:
+                try:
+                    conv = shopee_link.converter(original, chave, nome_dado)
+                    link, subid, item_id = conv["link"], conv["subid"], conv["item_id"]
+                    if not nome_dado:
+                        produto = conv["nome"][:120]
+                except Exception as e:
+                    avisos.append(f"⚠️ Não consegui converter o link ({e}). Ele vai como veio, SEM rastreio.")
+            if item_id and any(i["pagina"] == chave and i["status"] in ("pendente", "postado") and i.get("item_id") == item_id for i in self.d["fila"]):
+                return self.dizer(thread, "⚠️ Esse produto já foi enviado para esta Página. Não repeti.")
+        if not produto:
+            produto = "Achadinho"
+            avisos.append("💡 Sem o nome do produto, a legenda sai só como \"Achadinho\". Escreva o nome antes do link.")
         iid = f"{int(time.time())}-{m['message_id']}"
         try:
-            imagem = self.baixar_foto(m["photo"][-1]["file_id"], iid)
+            caminho = self.baixar(file_id, iid)
         except Exception as e:
-            return self.dizer(thread, f"❌ Não consegui baixar a foto: {e}")
-        self.d["fila"].append({"id": iid, "pagina": chave, "produto": produto, "link": link, "imagem": imagem,
-                               "status": "pendente", "falhas": 0, "criado": agora().isoformat(timespec="seconds")})
+            return self.dizer(thread, f"❌ Não consegui baixar o arquivo: {e}")
+        self.d["fila"].append({"id": iid, "pagina": chave, "tipo": tipo, "produto": produto, "link": link, "link_original": original,
+                               "subid": subid, "item_id": item_id, "imagem": caminho, "status": "pendente", "falhas": 0,
+                               "criado": agora().isoformat(timespec="seconds")})
         self.salvar()
-        aviso = "" if nome_dado else "\n💡 Sem o nome do produto, a legenda sai só como \"Achadinho\". Escreva o nome antes do link na legenda da foto."
-        self.dizer(thread, f"📥 Na fila — {self.nome(chave)}: posição {len(self.pendentes(chave))}.\n"
-                           f"Hoje {self.postados_hoje(chave)}/{self.limite(chave)} · próximo post ~{self.estimar(chave)}" + aviso)
+        linhas = [f"📥 Na fila — {self.nome(chave)} ({'vídeo' if tipo == 'video' else 'foto'}): posição {len(self.pendentes(chave))}.",
+                  f"Hoje {self.postados_hoje(chave)}/{self.limite(chave)} · próximo post ~{self.estimar(chave)}"]
+        if subid:
+            linhas.append(f"🔗 Link convertido · sub-ID: {subid}")
+        self.dizer(thread, "\n".join(linhas + avisos))
 
     # ---------- postagem ----------
     def tick(self):
@@ -265,12 +309,14 @@ class Bot:
 
     def postar(self, chave, reg, item):
         topic, pg = reg["topic"], self.paginas[chave]
+        reg.setdefault("inicio", agora().date().isoformat())
         resumo = item["produto"].splitlines()[0][:60]
+        video = item.get("tipo") == "video"
         if not self.c["enviar"]:
             item["status"] = "postado"
             self.d["postados"].append({"pagina": chave, "id": item["id"], "quando": agora().isoformat(timespec="seconds"), "simulado": True})
             self.salvar()
-            return self.dizer(topic, f"🧪 (modo teste) Eu postaria agora na {pg.get('nome', chave)}: {resumo}")
+            return self.dizer(topic, f"🧪 (modo teste) Eu postaria {'o vídeo' if video else 'agora'} na {pg.get('nome', chave)}: {resumo}")
         if not pg.get("token") or pg["token"] == "PENDENTE":
             reg["pausado"] = True
             return self.dizer(topic, f"🔑 Falta o token da Página {pg.get('nome', chave)}; não postei e pausei esta Página. Rode `node obter-tokens-paginas.js` e depois /retomar.")
@@ -283,21 +329,29 @@ class Bot:
             c["comentario"] = ex["comentario"].replace("\\n", "\n")
         legenda, comentario = fp.textos(c, item)
         try:
-            r = fp.api(c, "POST", f"{pg['page_id']}/photos", {"caption": legenda, "published": "true"}, arquivo=item["imagem"])
-            post_id = r.get("post_id") or r.get("id")
+            if video:
+                r = fp.api(c, "POST", f"{pg['page_id']}/videos", {"description": legenda, "published": "true"}, arquivo=item["imagem"])
+                post_id = r.get("id")
+                url_post = f"https://www.facebook.com/watch/?v={post_id}"
+            else:
+                r = fp.api(c, "POST", f"{pg['page_id']}/photos", {"caption": legenda, "published": "true"}, arquivo=item["imagem"])
+                post_id = r.get("post_id") or r.get("id")
+                url_post = f"https://www.facebook.com/{post_id}"
             comentou = False
-            try:
-                time.sleep(c["espera_comentario"])
-                fp.api(c, "POST", f"{post_id}/comments", {"message": comentario})
-                comentou = True
-            except Exception as e:
-                print("comentário falhou:", e, file=sys.stderr)
+            for tentativa in range(2 if video else 1):  # vídeo pode demorar a processar: tenta o comentário 2 vezes
+                try:
+                    time.sleep(int(os.environ.get("FB_ESPERA_VIDEO_SEG", "30")) if video else c["espera_comentario"])
+                    fp.api(c, "POST", f"{post_id}/comments", {"message": comentario})
+                    comentou = True
+                    break
+                except Exception as e:
+                    print("comentário falhou:", e, file=sys.stderr)
             item["status"] = "postado"
             reg["pausas_seguidas"] = 0
             self.d["postados"].append({"pagina": chave, "id": item["id"], "quando": agora().isoformat(timespec="seconds"),
                                        "post_id": post_id, "comentario_ok": comentou})
             self.salvar()
-            self.dizer(topic, f"✅ Postado na {pg.get('nome', chave)}: {resumo}\nhttps://www.facebook.com/{post_id}" +
+            self.dizer(topic, f"✅ {'Vídeo postado' if video else 'Postado'} na {pg.get('nome', chave)}: {resumo}\n{url_post}" +
                               ("" if comentou else "\n⚠️ O post saiu, mas o comentário com o link falhou. Coloque o link à mão."))
         except Exception as e:
             msg = str(e)

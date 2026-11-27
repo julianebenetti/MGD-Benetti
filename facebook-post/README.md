@@ -75,3 +75,26 @@ próprios (use `{produto}` e `{link}`; `\n` quebra linha).
 ## Cuidados
 - Não mande o **mesmo produto** para as 3 Páginas; a Meta trata conteúdo repetido como spam. Nichos separados ajudam.
 - Se o bot avisar "A Meta pediu calma 3 vezes", pare e veja o status da Página no Facebook antes de `/retomar`.
+
+---
+
+## 🎬 Vídeos
+Mande um **vídeo** (até **20 MB**, limite do Telegram para bots) com a legenda `Nome do produto` + link, igual à foto. O robô posta em
+`/{página}/videos` e comenta o link no vídeo (tenta 2 vezes, porque o vídeo demora a processar). Acima de 20 MB ele avisa e não enfileira.
+
+## 🔗 Link rastreável (Shopee)
+Se o link for da Shopee (curto `s.shopee.com.br` ou completo), o robô **acha o produto, lê o nome oficial e gera o seu link de afiliado
+com sub-ID** no padrão do robô da Shopee Vídeo: `facebook` + sigla da Página + nome breve, em partes separadas
+(ex.: `facebook-vea-MacaquinhoCaneladoFe`; o relatório da Shopee junta com `-`). Repetição na mesma Página ganha `V2`, `V3`...
+- Sem nome na legenda, a legenda usa o **nome oficial do produto**.
+- Se a Shopee falhar, o post segue com o link original e o robô avisa **"SEM rastreio"**.
+- Links de outras lojas (Mercado Livre etc.) vão como vieram.
+- As chaves vêm do `.env` do robô da Shopee Vídeo (`SHOPEE_ENV`), só leitura. `BOT_CONVERTER_SHOPEE=nao` desliga.
+
+## 📈 Mais posts por dia
+Edite no `.env` e reinicie (`sudo systemctl restart facebook-bot`):
+- `BOT_LIMITE_DIA` (posts por Página por dia) e `BOT_INTERVALO_MIN` (minutos entre posts). Com a janela 8h–22h (14 h),
+  intervalo de 60 min permite até 14 posts/dia por Página; 90 min, até 9.
+- **Aquecimento** (recomendado): `BOT_LIMITE_DIA=5`, `BOT_AUMENTO_DIA=1`, `BOT_LIMITE_MAX=12` começa em 5 e sobe 1 por dia até 12.
+- Por Página, no `config-bot.json`: `limite_dia`, `limite_max`, `aumento_dia`, `intervalo_min`.
+Quanto mais posts, mais atenção ao **alcance**: a Meta reduz a entrega de conteúdo repetitivo. Se o alcance cair, baixe o limite.
