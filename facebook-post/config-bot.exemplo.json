@@ -7,7 +7,15 @@
   "vea": {
     "nicho": "Moda e Beleza",
     "limite_dia": 3,
-    "intervalo_min": 120
+    "intervalo_min": 120,
+    "legendas": [
+      "{produto}\n\n💖 Separei pra você: {link}\n\n⚠️ Link de afiliado. Preço e estoque podem mudar.",
+      "Olha que lindo! 😍\n{produto}\n\n👉 {link}\n\n⚠️ Contém link de afiliado."
+    ],
+    "comentarios": [
+      "🛒 Compre aqui: {link}",
+      "👉 O link do produto: {link}"
+    ]
   },
   "vip": {
     "nicho": "Eletrônicos / Big Sazonal",

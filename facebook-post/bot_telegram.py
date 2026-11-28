@@ -22,6 +22,34 @@ URL_RE = re.compile(r"https?://\S+")
 ERRO_DE_LIMITE = re.compile(r"too many actions|spam|restrict|request limit|rate limit|2207042|2207051|\(#4\)|\(#17\)|\(#32\)|\(#368\)", re.I)
 
 
+# Modelos de legenda e de 1º comentário: o robô sorteia um por post (sem repetir o último da mesma Página).
+# {produto} = o texto que você escreveu na legenda (ou o nome oficial); {link} = seu link de afiliado.
+# Para trocar, use "legendas" e "comentarios" por Página no config-bot.json.
+LEGENDAS_PADRAO = [
+    "{produto}\n\n🛒 Compre aqui: {link}\n\n⚠️ Link de afiliado. Preço e estoque podem mudar.",
+    "Olha que achado! 😍\n{produto}\n\n👉 Veja no link: {link}\n\n⚠️ Contém link de afiliado. Valores sujeitos a alteração.",
+    "{produto}\n\n✨ Separei esse pra você. Confira: {link}\n\n⚠️ Link de afiliado; o preço pode mudar.",
+    "Achadinho do dia 🛍️\n\n{produto}\n\n🔗 {link}\n\n⚠️ Link de afiliado. Confira o preço atual na loja.",
+    "{produto}\n\nGostou? É só tocar no link 👇\n{link}\n\n⚠️ Este post tem link de afiliado.",
+    "Quem aí estava procurando isso? 👀\n{produto}\n\n🛒 {link}\n\n⚠️ Link de afiliado. Preço e estoque sujeitos a mudança.",
+    "{produto}\n\n💡 Vale dar uma olhada: {link}\n\n⚠️ Link de afiliado, o preço pode variar.",
+]
+COMENTARIOS_PADRAO = [
+    "🛒 Compre aqui: {link}",
+    "👉 O link do produto: {link}",
+    "🔗 Veja o preço atual: {link}",
+    "Link pra você conferir: {link}",
+    "🛍️ Aqui está o link: {link}",
+]
+
+
+def sortear(opcoes, ultimo):
+    """Escolhe um modelo diferente do último usado (se houver mais de um)."""
+    import random
+    candidatos = [o for o in opcoes if o != ultimo] or list(opcoes)
+    return random.choice(candidatos)
+
+
 def agora():
     return datetime.now(BR)
 
@@ -445,10 +473,10 @@ class Bot:
         c = dict(fp.cfg())
         c.update(page_id=pg["page_id"], token=pg["token"])
         ex = self.extra.get(chave, {})
-        if ex.get("legenda"):
-            c["legenda"] = ex["legenda"].replace("\\n", "\n")
-        if ex.get("comentario"):
-            c["comentario"] = ex["comentario"].replace("\\n", "\n")
+        legendas = [x.replace("\\n", "\n") for x in (ex.get("legendas") or ([ex["legenda"]] if ex.get("legenda") else LEGENDAS_PADRAO))]
+        comentarios = [x.replace("\\n", "\n") for x in (ex.get("comentarios") or ([ex["comentario"]] if ex.get("comentario") else COMENTARIOS_PADRAO))]
+        c["legenda"] = sortear(legendas, reg.get("ultima_legenda"))
+        c["comentario"] = sortear(comentarios, reg.get("ultimo_comentario"))
         legenda, comentario = fp.textos(c, item)
         try:
             if video:
@@ -469,6 +497,7 @@ class Bot:
                 except Exception as e:
                     print("comentário falhou:", e, file=sys.stderr)
             item["status"] = "postado"
+            reg["ultima_legenda"], reg["ultimo_comentario"] = c["legenda"], c["comentario"]
             reg["pausas_seguidas"] = 0
             self.d["postados"].append({"pagina": chave, "id": item["id"], "quando": agora().isoformat(timespec="seconds"),
                                        "post_id": post_id, "url": url_post, "comentario_ok": comentou})

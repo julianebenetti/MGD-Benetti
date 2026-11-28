@@ -114,3 +114,9 @@ mesmo endereço do VPS: veja `pauta-vps/README.md`.
 Precisa do token com `read_insights` (o `obter-tokens-paginas.js` avisa). `/desempenho` (ou `/desempenho 10`) mede os últimos posts de verdade:
 **alcance** (tenta `post_impressions_unique`, depois `post_media_view`, depois `post_impressions`), reações, comentários e compartilhamentos.
 O que a Meta não entregar aparece como `—`. O resultado também vai para a aba **Postados** da agenda. Vendas: relatório da Shopee, filtrando `facebook-`.
+
+## ✍️ Variações de legenda e comentário
+Cada post usa uma legenda e um 1º comentário **sorteados** de uma lista (7 legendas e 5 comentários prontos), **sem repetir o último usado na mesma Página**.
+Todos os modelos têm o aviso de link de afiliado. Para ter os seus, use `legendas` e `comentarios` por Página no `config-bot.json`
+(veja `config-bot.exemplo.json`; `{produto}` e `{link}` são preenchidos sozinhos). Dica: escreva o nome do produto e **uma frase sua** na legenda
+da foto; ela entra no lugar de `{produto}` e deixa cada post diferente.
