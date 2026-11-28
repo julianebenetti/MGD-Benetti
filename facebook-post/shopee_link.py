@@ -166,4 +166,5 @@ def converter(link, sigla, nome_digitado=""):
         raise ErroShopee("não achei o nome do produto")
     subs = sub_ids_para(sigla, nome)
     novo = link_curto(f"https://shopee.com.br/product/{shop_id}/{item_id}", subs)
-    return {"link": novo, "nome": nome, "subid": "-".join(subs), "item_id": item_id, "shop_id": shop_id}
+    return {"link": novo, "nome": nome, "subid": "-".join(subs), "item_id": item_id, "shop_id": shop_id,
+            "nota": (p or {}).get("ratingStar"), "vendas": (p or {}).get("sales")}

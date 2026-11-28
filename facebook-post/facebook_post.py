@@ -15,7 +15,7 @@ Uso:
   python3 facebook_post.py --enviar                # posta o próximo produto da fila
   python3 facebook_post.py --enviar --quantos 2    # posta os 2 próximos
 """
-import argparse, json, mimetypes, os, random, sys, time, urllib.error, urllib.parse, urllib.request, uuid
+import argparse, json, mimetypes, os, random, re, sys, time, urllib.error, urllib.parse, urllib.request, uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -85,11 +85,14 @@ def salvar_json(caminho, obj):
     Path(caminho).write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def textos(c, item):
-    legenda = item.get("legenda") or c["legenda"].format(produto=item["produto"], link=item["link"])
+def textos(c, item, **extra):
+    campos = {"prova": "", "hashtags": ""}
+    campos.update(extra)
+    legenda = item.get("legenda") or c["legenda"].format(produto=item["produto"], link=item["link"], **campos)
+    legenda = re.sub(r"\n{3,}", "\n\n", legenda).strip()
     if item["link"] not in legenda:
         legenda += f"\n\n🛒 {item['link']}"
-    comentario = item.get("comentario") or c["comentario"].format(produto=item["produto"], link=item["link"])
+    comentario = item.get("comentario") or c["comentario"].format(produto=item["produto"], link=item["link"], **campos)
     return legenda, comentario
 
 

@@ -26,6 +26,9 @@ ERRO_DE_LIMITE = re.compile(r"too many actions|spam|restrict|request limit|rate 
 # {produto} = o texto que você escreveu na legenda (ou o nome oficial); {link} = seu link de afiliado.
 # Para trocar, use "legendas" e "comentarios" por Página no config-bot.json.
 LEGENDAS_PADRAO = [
+    "Achei na Shopee: {produto} 😍{prova}\n\n👉 Link aqui 👇\n{link}\n\n{hashtags}\n\n⚠️ Link de afiliado. Preço e estoque podem mudar.",
+    "{produto} ✨{prova}\n\n🛒 Confira aqui 👇\n{link}\n\n{hashtags}\n\n⚠️ Contém link de afiliado.",
+    "Olha que achado! 😍\n{produto}{prova}\n\n👉 Link aqui 👇\n{link}\n\n{hashtags}\n\n⚠️ Link de afiliado; o preço pode mudar.",
     "{produto}\n\n🛒 Compre aqui: {link}\n\n⚠️ Link de afiliado. Preço e estoque podem mudar.",
     "Olha que achado! 😍\n{produto}\n\n👉 Veja no link: {link}\n\n⚠️ Contém link de afiliado. Valores sujeitos a alteração.",
     "{produto}\n\n✨ Separei esse pra você. Confira: {link}\n\n⚠️ Link de afiliado; o preço pode mudar.",
@@ -35,12 +38,41 @@ LEGENDAS_PADRAO = [
     "{produto}\n\n💡 Vale dar uma olhada: {link}\n\n⚠️ Link de afiliado, o preço pode variar.",
 ]
 COMENTARIOS_PADRAO = [
+    "Compre aqui 👇\n{link}",
+    "👉 Link do produto 👇\n{link}",
     "🛒 Compre aqui: {link}",
     "👉 O link do produto: {link}",
     "🔗 Veja o preço atual: {link}",
     "Link pra você conferir: {link}",
     "🛍️ Aqui está o link: {link}",
 ]
+
+
+def prova_social(nota, vendas):
+    """'\nNota 4.7 ⭐ e mais de 50 mil vendidos' só com dados reais da Shopee (nota >= 4 e vendas >= 100); senão, vazio."""
+    try:
+        n, v = float(nota), int(float(vendas))
+    except (TypeError, ValueError):
+        return ""
+    if n < 4.0 or v < 100:
+        return ""
+    qtd = f"{v // 1000} mil" if v >= 1000 else f"{v // 100 * 100}"
+    return f"\nNota {n:.1f}".replace(".", ",") + f" ⭐ e mais de {qtd} vendidos"
+
+
+def hashtags_do_produto(nome, extras):
+    import unicodedata
+    t = unicodedata.normalize("NFKD", nome or "").encode("ascii", "ignore").decode().lower()
+    palavras = []
+    for w in re.findall(r"[a-z0-9]+", t):
+        if len(w) >= 4 and not w.isdigit() and w not in palavras and w not in ("para", "com", "cada", "kit", "unidades"):
+            palavras.append(w)
+    tags = ["#achadinhosshopee"] + [f"#{w}" for w in palavras[:3]] + [h if h.startswith("#") else f"#{h}" for h in (extras or [])]
+    vistos = []
+    for h in tags:
+        if h.lower() not in [x.lower() for x in vistos]:
+            vistos.append(h)
+    return " ".join(vistos[:7])
 
 
 def sortear(opcoes, ultimo):
@@ -406,6 +438,7 @@ class Bot:
             file_id = m["photo"][-1]["file_id"]
         # conversão do link (Shopee) com sub-ID rastreável + nome do produto
         link, produto, avisos, subid, item_id = original, nome_dado, [], "", None
+        nota = vendas = nome_oficial = None
         if self.c["converter"] and shopee_link.eh_shopee(original):
             if not shopee_link.disponivel():
                 avisos.append("⚠️ Sem as chaves da Shopee: o link vai do jeito que veio, SEM rastreio.")
@@ -413,6 +446,7 @@ class Bot:
                 try:
                     conv = shopee_link.converter(original, chave, nome_dado)
                     link, subid, item_id = conv["link"], conv["subid"], conv["item_id"]
+                    nota, vendas, nome_oficial = conv.get("nota"), conv.get("vendas"), conv.get("nome")
                     if not nome_dado:
                         produto = conv["nome"][:120]
                 except Exception as e:
@@ -428,7 +462,7 @@ class Bot:
         except Exception as e:
             return self.dizer(thread, f"❌ Não consegui baixar o arquivo: {e}")
         self.d["fila"].append({"id": iid, "pagina": chave, "tipo": tipo, "produto": produto, "link": link, "link_original": original,
-                               "subid": subid, "item_id": item_id, "imagem": caminho, "status": "pendente", "falhas": 0,
+                               "subid": subid, "item_id": item_id, "nota": nota, "vendas": vendas, "nome_oficial": nome_oficial, "imagem": caminho, "status": "pendente", "falhas": 0,
                                "msg_id": m["message_id"], "criado": agora().isoformat(timespec="seconds")})
         self.salvar()
         linhas = [f"📥 Na fila — {self.nome(chave)} ({'vídeo' if tipo == 'video' else 'foto'}): posição {len(self.pendentes(chave))}.",
@@ -477,7 +511,8 @@ class Bot:
         comentarios = [x.replace("\\n", "\n") for x in (ex.get("comentarios") or ([ex["comentario"]] if ex.get("comentario") else COMENTARIOS_PADRAO))]
         c["legenda"] = sortear(legendas, reg.get("ultima_legenda"))
         c["comentario"] = sortear(comentarios, reg.get("ultimo_comentario"))
-        legenda, comentario = fp.textos(c, item)
+        legenda, comentario = fp.textos(c, item, prova=prova_social(item.get("nota"), item.get("vendas")),
+                                        hashtags=hashtags_do_produto(item.get("nome_oficial") or item.get("produto"), ex.get("hashtags")))
         try:
             if video:
                 r = fp.api(c, "POST", f"{pg['page_id']}/videos", {"description": legenda, "published": "true"}, arquivo=item["imagem"])

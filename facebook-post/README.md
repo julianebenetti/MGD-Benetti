@@ -120,3 +120,19 @@ Cada post usa uma legenda e um 1º comentário **sorteados** de uma lista (7 leg
 Todos os modelos têm o aviso de link de afiliado. Para ter os seus, use `legendas` e `comentarios` por Página no `config-bot.json`
 (veja `config-bot.exemplo.json`; `{produto}` e `{link}` são preenchidos sozinhos). Dica: escreva o nome do produto e **uma frase sua** na legenda
 da foto; ela entra no lugar de `{produto}` e deixa cada post diferente.
+
+## 🛍️ Estilo vitrine (descrição + nota e vendas + "Link aqui 👇" + hashtags)
+As primeiras legendas da lista seguem este formato (inspirado em páginas de achadinhos; só o formato, nunca o texto nem a imagem de outra pessoa):
+```
+Achei na Shopee: <o que você escreveu na legenda da foto> 😍
+Nota 4,7 ⭐ e mais de 52 mil vendidos          <- vem da Shopee; some se a nota for < 4 ou as vendas < 100
+
+👉 Link aqui 👇
+<seu link de afiliado>
+
+#achadinhosshopee #palavras-do-nome-do-produto #as-da-sua-Página
+
+⚠️ Link de afiliado. Preço e estoque podem mudar.
+```
+O comentário é `Compre aqui 👇` + link. **A descrição é você quem escreve** na legenda da foto (medidas, cores, para que serve). O robô não inventa características.
+As hashtags saem do **nome oficial** do produto + as da Página (`hashtags` no `config-bot.json`).
