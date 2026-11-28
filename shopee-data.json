@@ -1,9 +1,9 @@
 {
-  "updated_at": 1795855808,
-  "updated_at_br": "28/11/2026 05:44",
+  "updated_at": 1795864932,
+  "updated_at_br": "28/11/2026 08:16",
   "period_days": 90,
-  "total_orders": 6222,
-  "total_conversions": 5949,
+  "total_orders": 6220,
+  "total_conversions": 5947,
   "orders": [
     {
       "ID do pedido": "261127D0D3UFF3",
@@ -16157,7 +16157,7 @@
     },
     {
       "ID do pedido": "2611269Y7S3K42",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-25 21:53:05",
       "Sub_id1": "SacolinhaVEAcoletesensorial",
       "Valor de Compra(R$)": "65.26",
@@ -16169,7 +16169,7 @@
       "Comissao total do pedido(R$)": "1.9578",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "🎁 Super Kit 48 Carrinhos de Fricção + Pista 🚗 | Presente para Menino | Container Colecionável🎄",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23294309688",
       "ID da loja": "1059934694",
       "Nome da loja": "HAIYAN ZHAO",
@@ -16177,7 +16177,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249342784854155",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-25"
     },
     {
@@ -28482,7 +28482,7 @@
     },
     {
       "ID do pedido": "261123418SFEWA",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-23 13:13:27",
       "Sub_id1": "",
       "Valor de Compra(R$)": "26.09",
@@ -28494,7 +28494,7 @@
       "Comissao total do pedido(R$)": "1.5654",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "120 Copos Descartável Perolado Diamante Premium Aniversário Festa Copinho Plastico Azul Rose Gold Perolizado Candy",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "23693098304",
       "ID da loja": "1088940665",
       "Nome da loja": "Petersul Distribuidora",
@@ -28502,7 +28502,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249138807858711",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-23"
     },
     {
@@ -31182,7 +31182,7 @@
     },
     {
       "ID do pedido": "26112321W594RJ",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-22 18:19:32",
       "Sub_id1": "",
       "Valor de Compra(R$)": "74.9",
@@ -31194,7 +31194,7 @@
       "Comissao total do pedido(R$)": "2.247",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Colcha Cobre Leito Boutis Ultrasonic Dupla Face 3 Peças Com Porta Travesseiro Estampada",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "26880336953",
       "ID da loja": "311485828",
       "Nome da loja": "LuckBaby",
@@ -31202,7 +31202,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "249070771834136",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-22"
     },
     {
@@ -34232,7 +34232,7 @@
     },
     {
       "ID do pedido": "261122VXN6VMMK",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-21 21:16:36",
       "Sub_id1": "",
       "Valor de Compra(R$)": "25.88",
@@ -34244,7 +34244,7 @@
       "Comissao total do pedido(R$)": "0.7764",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Kit Capilar MIX DE SILICONE SOUL 03 itens Shampoo Condicionador Mascara Salão Hidratação Tratamento",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "22694970570",
       "ID da loja": "1727583250",
       "Nome da loja": "COLORÊ COSMÉTICOS",
@@ -34252,7 +34252,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248994996807307",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-21"
     },
     {
@@ -40607,7 +40607,7 @@
     },
     {
       "ID do pedido": "261120SBQ48FJB",
-      "Status do Pedido": "PENDING",
+      "Status do Pedido": "COMPLETED",
       "Horario do pedido": "2026-11-20 10:59:40",
       "Sub_id1": "",
       "Valor de Compra(R$)": "60.72",
@@ -40619,7 +40619,7 @@
       "Comissao total do pedido(R$)": "2.91456",
       "Tipo de atribuicao": "Pedido em loja diferente",
       "Nome do Item": "Vestido Casual Jeans Tencel com Botões e Bolsos para Mulheres Moda Verão Confortável",
-      "Status do item do afiliado": "PENDING",
+      "Status do item do afiliado": "COMPLETED",
       "ID do item": "58267993808",
       "ID da loja": "1415032509",
       "Nome da loja": "ES-LOWYN ORION",
@@ -40627,7 +40627,7 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "248871580840185",
-      "conversionStatus": "PENDING",
+      "conversionStatus": "COMPLETED",
       "data": "2026-11-20"
     },
     {
@@ -155502,56 +155502,6 @@
       "buyerType": "EXISTING",
       "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
       "conversionId": "241789005140416",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-30"
-    },
-    {
-      "ID do pedido": "260830PTA01GVE",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-30 10:16:07",
-      "Sub_id1": "26Ago26VEAtopajustavel",
-      "Valor de Compra(R$)": "24.98",
-      "Comissao liquida do afiliado(R$)": "1.80356",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "3.60%",
-      "Comissao Shopee(R$)": "0.9992",
-      "Comissao do vendedor(R$)": "0.89928",
-      "Comissao total do pedido(R$)": "1.89848",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Inox Torneira  Prata/Preto Com Chuveiro Com Rotação De 360° Cozinha Luxo Parede Promoção",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "23397314933",
-      "ID da loja": "530370669",
-      "Nome da loja": "FAST MO",
-      "Quantidade": "1",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241784167121682",
-      "conversionStatus": "COMPLETED",
-      "data": "2026-08-30"
-    },
-    {
-      "ID do pedido": "260830PRUUSJHG",
-      "Status do Pedido": "COMPLETED",
-      "Horario do pedido": "2026-08-30 09:50:19",
-      "Sub_id1": "31Jul26VEAcalcinhaalgodao",
-      "Valor de Compra(R$)": "50.94",
-      "Comissao liquida do afiliado(R$)": "3.38751",
-      "Taxa de comissao Shopee do item": "4.00%",
-      "Taxa de comissao do vendedor do item": "3.00%",
-      "Comissao Shopee(R$)": "2.0376",
-      "Comissao do vendedor(R$)": "1.5282",
-      "Comissao total do pedido(R$)": "3.5658",
-      "Tipo de atribuicao": "Pedido em loja diferente",
-      "Nome do Item": "Escova De Cabelo Térmica Aleatório Cerdas De Javali Mista Madeira",
-      "Status do item do afiliado": "COMPLETED",
-      "ID do item": "22894165424",
-      "ID da loja": "415175805",
-      "Nome da loja": "Isabela Top",
-      "Quantidade": "2",
-      "buyerType": "EXISTING",
-      "attributionType": "ORDERED_IN_DIFFERENT_SHOP",
-      "conversionId": "241782619168278",
       "conversionStatus": "COMPLETED",
       "data": "2026-08-30"
     }
