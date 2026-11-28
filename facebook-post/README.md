@@ -136,3 +136,8 @@ Nota 4,7 ⭐ e mais de 52 mil vendidos          <- vem da Shopee; some se a nota
 ```
 O comentário é `Compre aqui 👇` + link. **A descrição é você quem escreve** na legenda da foto (medidas, cores, para que serve). O robô não inventa características.
 As hashtags saem do **nome oficial** do produto + as da Página (`hashtags` no `config-bot.json`).
+
+## ⏱️ Uma postagem por hora
+No `.env`: `BOT_JANELA=6-23`, `BOT_INTERVALO_MIN=60`, `BOT_LIMITE_DIA=17`, `BOT_MAX_FILA=80`. Cada Página posta até 1 item por hora (mais uma folga
+aleatória de 0 a `BOT_VARIACAO_MIN` minutos). 17 horas x 3 Páginas = até 51 posts por dia. Para isso funcionar, a fila precisa ter produtos: mande vários de uma vez.
+As proteções continuam: se a Meta pedir calma o robô pausa a Página, e 3 pausas seguidas param tudo até `/retomar`.

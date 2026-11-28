@@ -8,7 +8,7 @@ Você manda uma FOTO com o nome do produto e o link na legenda numa aba; o robô
 Segurança: por padrão o robô NÃO posta de verdade (modo teste). Só posta com BOT_ENVIAR=sim no .env.
 Comandos (em qualquer aba): /aqui bbc · /fila · /pausar · /retomar · /limpar sim · /status · /ajuda
 """
-import json, os, re, sys, time, urllib.error, urllib.request
+import json, os, random, re, sys, time, urllib.error, urllib.request
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -102,6 +102,7 @@ def carregar_config():
         "aumento_dia": int(e("BOT_AUMENTO_DIA", "0")),
         "converter": e("BOT_CONVERTER_SHOPEE", "sim").strip().lower() in ("sim", "1", "true", "yes"),
         "intervalo_min": int(e("BOT_INTERVALO_MIN", "120")),
+        "variacao_min": int(e("BOT_VARIACAO_MIN", "10")),
         "max_fila": int(e("BOT_MAX_FILA", "30")),
         "max_tentativas": int(e("BOT_MAX_TENTATIVAS", "3")),
         "pausa_horas": float(e("BOT_PAUSA_HORAS", "6")),
@@ -485,7 +486,7 @@ class Bot:
             if self.postados_hoje(chave) >= self.limite(chave):
                 continue
             ult = self.ultimo_post(chave)
-            if ult and n - ult.astimezone(BR) < timedelta(minutes=self.intervalo(chave)):
+            if ult and n - ult.astimezone(BR) < timedelta(minutes=self.intervalo(chave), seconds=reg.get("folga_s", 0)):
                 continue
             item = next((i for i in self.pendentes(chave) if i.get("proxima", 0) <= time.time()), None)
             if item:
@@ -533,6 +534,7 @@ class Bot:
                     print("comentário falhou:", e, file=sys.stderr)
             item["status"] = "postado"
             reg["ultima_legenda"], reg["ultimo_comentario"] = c["legenda"], c["comentario"]
+            reg["folga_s"] = random.randint(0, max(0, self.c["variacao_min"])) * 60  # folga extra sorteada: o ritmo não fica robótico
             reg["pausas_seguidas"] = 0
             self.d["postados"].append({"pagina": chave, "id": item["id"], "quando": agora().isoformat(timespec="seconds"),
                                        "post_id": post_id, "url": url_post, "comentario_ok": comentou})
